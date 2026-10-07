@@ -229,8 +229,9 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
 	return false;
 }
 
-/*! Converts one file artefact read from the working copy or the exhibit
- *  store: getData, then its JSON file — the same sequence for each of them.
+/*! Converts one artefact read from the working copy — its files or the hives
+ *  it lives in: getData, then its JSON file — the same sequence for each of
+ *  them.
  *  An artefact that could not be read says so in its file (writeNotCollected).
  *  @tparam Collector the artefact's class: getData(), toJson(), clear()
  *  @param wanted the configuration's switch
@@ -239,7 +240,7 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
  *  @param key its configuration key
  *  @param step the console's step */
 template <class Collector>
-void convertFileArtefact(bool wanted, const char* file, Text label, const wchar_t* key, Text step) {
+void convertArtefact(bool wanted, const char* file, Text label, const wchar_t* key, Text step) {
 	if (!requested(wanted, file, label, key)) return;
 	Collector collector;
 	printStep(step);
@@ -938,60 +939,60 @@ void convertArtefacts(bool systemAvailable) {
 
 	/* Registry persistence beyond Run: read while SOFTWARE and CurrentControlSet
 	   are still open (a missing one leaves its rules unread, not failed). */
-	convertFileArtefact<Persistence>(conf.artefacts.persistence, "persistence.json", Text::ArtefactPersistence,
-	                                 L"artefacts.persistence", Text::StepPersistence);
-	convertFileArtefact<OfficeTrustRecords>(conf.artefacts.officeTrustRecords, "office_trust_records.json", Text::ArtefactOfficeTrustRecords,
-	                         L"artefacts.office_trust_records", Text::StepOfficeTrustRecords);
-	convertFileArtefact<TypedPaths>(conf.artefacts.typedPaths, "typed_paths.json", Text::ArtefactTypedPaths,
-	                         L"artefacts.typed_paths", Text::StepTypedPaths);
-	convertFileArtefact<WordWheelQueries>(conf.artefacts.wordWheelQuery, "word_wheel_query.json", Text::ArtefactWordWheelQueries,
-	                         L"artefacts.word_wheel_query", Text::StepWordWheelQueries);
-	convertFileArtefact<RootCertificates>(conf.artefacts.rootCertificates, "root_certificates.json", Text::ArtefactRootCertificates,
-	                         L"artefacts.root_certificates", Text::StepRootCertificates);
-	convertFileArtefact<InternetSettingsSet>(conf.artefacts.internetSettings, "internet_settings.json", Text::ArtefactInternetSettingsSet,
-	                         L"artefacts.internet_settings", Text::StepInternetSettingsSet);
-	convertFileArtefact<Firewall>(conf.artefacts.firewall, "firewall.json", Text::ArtefactFirewall,
-	                         L"artefacts.firewall", Text::StepFirewall);
+	convertArtefact<Persistence>(conf.artefacts.persistence, "persistence.json", Text::ArtefactPersistence,
+	                             L"artefacts.persistence", Text::StepPersistence);
+	convertArtefact<OfficeTrustRecords>(conf.artefacts.officeTrustRecords, "office_trust_records.json", Text::ArtefactOfficeTrustRecords,
+	                     L"artefacts.office_trust_records", Text::StepOfficeTrustRecords);
+	convertArtefact<TypedPaths>(conf.artefacts.typedPaths, "typed_paths.json", Text::ArtefactTypedPaths,
+	                     L"artefacts.typed_paths", Text::StepTypedPaths);
+	convertArtefact<WordWheelQueries>(conf.artefacts.wordWheelQuery, "word_wheel_query.json", Text::ArtefactWordWheelQueries,
+	                     L"artefacts.word_wheel_query", Text::StepWordWheelQueries);
+	convertArtefact<RootCertificates>(conf.artefacts.rootCertificates, "root_certificates.json", Text::ArtefactRootCertificates,
+	                     L"artefacts.root_certificates", Text::StepRootCertificates);
+	convertArtefact<InternetSettingsSet>(conf.artefacts.internetSettings, "internet_settings.json", Text::ArtefactInternetSettingsSet,
+	                     L"artefacts.internet_settings", Text::StepInternetSettingsSet);
+	convertArtefact<Firewall>(conf.artefacts.firewall, "firewall.json", Text::ArtefactFirewall,
+	                     L"artefacts.firewall", Text::StepFirewall);
 
-	convertFileArtefact<InstalledPrograms>(conf.artefacts.installedPrograms, "installed_programs.json", Text::ArtefactInstalledPrograms,
-	                         L"artefacts.installed_programs", Text::StepInstalledPrograms);
+	convertArtefact<InstalledPrograms>(conf.artefacts.installedPrograms, "installed_programs.json", Text::ArtefactInstalledPrograms,
+	                     L"artefacts.installed_programs", Text::StepInstalledPrograms);
 
-	convertFileArtefact<DefenderConfiguration>(conf.artefacts.defenderConfiguration, "defender_configuration.json", Text::ArtefactDefenderConfiguration,
-	                         L"artefacts.defender_configuration", Text::StepDefenderConfiguration);
+	convertArtefact<DefenderConfiguration>(conf.artefacts.defenderConfiguration, "defender_configuration.json", Text::ArtefactDefenderConfiguration,
+	                     L"artefacts.defender_configuration", Text::StepDefenderConfiguration);
 
-	convertFileArtefact<ExplorerRecentDocs>(conf.artefacts.explorerRecentDocs, "explorer_recent_docs.json", Text::ArtefactExplorerRecentDocs,
-	                         L"artefacts.explorer_recent_docs", Text::StepExplorerRecentDocs);
+	convertArtefact<ExplorerRecentDocs>(conf.artefacts.explorerRecentDocs, "explorer_recent_docs.json", Text::ArtefactExplorerRecentDocs,
+	                     L"artefacts.explorer_recent_docs", Text::StepExplorerRecentDocs);
 
-	convertFileArtefact<MountPoints>(conf.artefacts.mountPoints, "mount_points.json", Text::ArtefactMountPoints,
-	                         L"artefacts.mount_points", Text::StepMountPoints);
+	convertArtefact<MountPoints>(conf.artefacts.mountPoints, "mount_points.json", Text::ArtefactMountPoints,
+	                     L"artefacts.mount_points", Text::StepMountPoints);
 
-	convertFileArtefact<KnownNetworks>(conf.artefacts.knownNetworks, "known_networks.json", Text::ArtefactKnownNetworks,
-	                         L"artefacts.known_networks", Text::StepKnownNetworks);
+	convertArtefact<KnownNetworks>(conf.artefacts.knownNetworks, "known_networks.json", Text::ArtefactKnownNetworks,
+	                     L"artefacts.known_networks", Text::StepKnownNetworks);
 
-	convertFileArtefact<ProgramUsages>(conf.artefacts.programUsages, "program_usage.json", Text::ArtefactProgramUsages,
-	                         L"artefacts.program_usage", Text::StepProgramUsages);
+	convertArtefact<ProgramUsages>(conf.artefacts.programUsages, "program_usage.json", Text::ArtefactProgramUsages,
+	                     L"artefacts.program_usage", Text::StepProgramUsages);
 
-	convertFileArtefact<Devices>(conf.artefacts.devices, "devices.json", Text::ArtefactDevices,
-	                         L"artefacts.devices", Text::StepDevices);
+	convertArtefact<Devices>(conf.artefacts.devices, "devices.json", Text::ArtefactDevices,
+	                     L"artefacts.devices", Text::StepDevices);
 
-	convertFileArtefact<NetworkShares>(conf.artefacts.networkShares, "network_shares.json", Text::ArtefactNetworkShares,
-	                         L"artefacts.network_shares", Text::StepNetworkShares);
+	convertArtefact<NetworkShares>(conf.artefacts.networkShares, "network_shares.json", Text::ArtefactNetworkShares,
+	                     L"artefacts.network_shares", Text::StepNetworkShares);
 
-	convertFileArtefact<NetworkConfiguration>(conf.artefacts.networkConfiguration, "network_configuration.json", Text::ArtefactNetworkConfiguration,
-	                         L"artefacts.network_configuration", Text::StepNetworkConfiguration);
+	convertArtefact<NetworkConfiguration>(conf.artefacts.networkConfiguration, "network_configuration.json", Text::ArtefactNetworkConfiguration,
+	                     L"artefacts.network_configuration", Text::StepNetworkConfiguration);
 
-	convertFileArtefact<EventLogConfiguration>(conf.artefacts.eventLogConfiguration, "event_log_configuration.json", Text::ArtefactEventLogConfiguration,
-	                         L"artefacts.event_log_configuration", Text::StepEventLogConfiguration);
+	convertArtefact<EventLogConfiguration>(conf.artefacts.eventLogConfiguration, "event_log_configuration.json", Text::ArtefactEventLogConfiguration,
+	                     L"artefacts.event_log_configuration", Text::StepEventLogConfiguration);
 
-	convertFileArtefact<ActivitiesCaches>(conf.artefacts.activitiesCache, "activities_cache.json", Text::ArtefactActivitiesCache,
-	                         L"artefacts.activities_cache", Text::StepActivitiesCache);
+	convertArtefact<ActivitiesCaches>(conf.artefacts.activitiesCache, "activities_cache.json", Text::ArtefactActivitiesCache,
+	                     L"artefacts.activities_cache", Text::StepActivitiesCache);
 
-	convertFileArtefact<SearchIndex>(conf.artefacts.searchIndex, "search_index.json", Text::ArtefactSearchIndex,
-	                         L"artefacts.search_index", Text::StepSearchIndex);
-	convertFileArtefact<RdpClient>(conf.artefacts.rdpClient, "rdp_client.json", Text::ArtefactRdpClient,
-	                         L"artefacts.rdp_client", Text::StepRdpClient);
-	convertFileArtefact<RdpServer>(conf.artefacts.rdpServer, "rdp_server.json", Text::ArtefactRdpServer,
-	                         L"artefacts.rdp_server", Text::StepRdpServer);
+	convertArtefact<SearchIndex>(conf.artefacts.searchIndex, "search_index.json", Text::ArtefactSearchIndex,
+	                     L"artefacts.search_index", Text::StepSearchIndex);
+	convertArtefact<RdpClient>(conf.artefacts.rdpClient, "rdp_client.json", Text::ArtefactRdpClient,
+	                     L"artefacts.rdp_client", Text::StepRdpClient);
+	convertArtefact<RdpServer>(conf.artefacts.rdpServer, "rdp_server.json", Text::ArtefactRdpServer,
+	                     L"artefacts.rdp_server", Text::StepRdpServer);
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a
@@ -1146,49 +1147,49 @@ void convertArtefacts(bool systemAvailable) {
 		jumplistCustoms.clear();
 	}
 	}   // artefacts.jump_lists
-	convertFileArtefact<PowerShellHistories>(conf.artefacts.powershellHistory, "powershell_history.json",
-	                                         Text::ArtefactPowerShellHistory, L"artefacts.powershell_history",
-	                                         Text::StepPowerShellHistory);
-	convertFileArtefact<SetupApiLogs>(conf.artefacts.setupApi, "setupapi.json", Text::ArtefactSetupApi,
-	                                  L"artefacts.setupapi", Text::StepSetupApi);
-	convertFileArtefact<RecycleBin>(conf.artefacts.recycleBin, "recycle_bin.json", Text::ArtefactRecycleBin,
-	                                L"artefacts.recycle_bin", Text::StepRecycleBin);
-	convertFileArtefact<HostsFile>(conf.artefacts.hosts, "hosts.json", Text::ArtefactHosts,
-	                               L"artefacts.hosts", Text::StepHosts);
-	convertFileArtefact<ErrorReports>(conf.artefacts.errorReports, "error_reports.json", Text::ArtefactErrorReports,
-	                                  L"artefacts.error_reports", Text::StepErrorReports);
-	convertFileArtefact<DefenderLogs>(conf.artefacts.defender, "defender_log.json", Text::ArtefactDefenderLogs,
-	                                  L"artefacts.defender", Text::StepDefenderLogs);
-	convertFileArtefact<DefenderDetections>(conf.artefacts.defender, "defender_detections.json", Text::ArtefactDefenderDetections,
-	                                        L"artefacts.defender", Text::StepDefenderDetections);
-	convertFileArtefact<DefenderQuarantine>(conf.artefacts.defender, "defender_quarantine.json", Text::ArtefactDefenderQuarantine,
-	                                        L"artefacts.defender", Text::StepDefenderQuarantine);
-	convertFileArtefact<WmiPersistence>(conf.artefacts.wmi, "wmi_persistence.json", Text::ArtefactWmiPersistence,
-	                                    L"artefacts.wmi", Text::StepWmiPersistence);
-	convertFileArtefact<Srum>(conf.artefacts.srum, "srum.json", Text::ArtefactSrum, L"artefacts.srum", Text::StepSrum);
-	convertFileArtefact<BitsJobs>(conf.artefacts.bits, "bits_jobs.json", Text::ArtefactBitsJobs, L"artefacts.bits", Text::StepBitsJobs);
-	convertFileArtefact<FatVolumes>(conf.artefacts.fatVolumes, "fat_volumes.json", Text::ArtefactFatVolumes,
-	                                L"artefacts.fat_volumes", Text::StepFatVolumes);
-	convertFileArtefact<SecurityHive>(conf.artefacts.security, "security.json", Text::ArtefactSecurityHive,
-	                                  L"artefacts.security", Text::StepSecurityHive);
-	convertFileArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",
-	                                    Text::ArtefactStartupFolders, L"artefacts.startup_folders",
-	                                    Text::StepStartupFolders);
-	convertFileArtefact<Shortcuts>(conf.artefacts.shortcuts, "shortcuts.json", Text::ArtefactShortcuts,
-	                               L"artefacts.shortcuts", Text::StepShortcuts);
-	convertFileArtefact<SecurityDescriptors>(conf.artefacts.securityDescriptors, "security_descriptors.json",
-	                                         Text::ArtefactSecurityDescriptors, L"artefacts.security_descriptors",
-	                                         Text::StepSecurityDescriptors);
-	convertFileArtefact<NtfsVolumes>(conf.artefacts.ntfsVolumes, "ntfs_volumes.json", Text::ArtefactNtfsVolumes,
-	                                 L"artefacts.ntfs_volumes", Text::StepNtfsVolumes);
-	convertFileArtefact<DpapiMasterKeys>(conf.artefacts.dpapiMasterKeys, "dpapi_master_keys.json",
-	                                     Text::ArtefactDpapiMasterKeys, L"artefacts.dpapi_master_keys",
-	                                     Text::StepDpapiMasterKeys);
-	convertFileArtefact<UserShellFolders>(conf.artefacts.userShellFolders, "user_shell_folders.json",
-	                                      Text::ArtefactUserShellFolders, L"artefacts.user_shell_folders",
-	                                      Text::StepUserShellFolders);
-	convertFileArtefact<WebClient>(conf.artefacts.webClient, "web_client.json", Text::ArtefactWebClient,
-	                               L"artefacts.web_client", Text::StepWebClient);
+	convertArtefact<PowerShellHistories>(conf.artefacts.powershellHistory, "powershell_history.json",
+	                                     Text::ArtefactPowerShellHistory, L"artefacts.powershell_history",
+	                                     Text::StepPowerShellHistory);
+	convertArtefact<SetupApiLogs>(conf.artefacts.setupApi, "setupapi.json", Text::ArtefactSetupApi,
+	                              L"artefacts.setupapi", Text::StepSetupApi);
+	convertArtefact<RecycleBin>(conf.artefacts.recycleBin, "recycle_bin.json", Text::ArtefactRecycleBin,
+	                            L"artefacts.recycle_bin", Text::StepRecycleBin);
+	convertArtefact<HostsFile>(conf.artefacts.hosts, "hosts.json", Text::ArtefactHosts,
+	                           L"artefacts.hosts", Text::StepHosts);
+	convertArtefact<ErrorReports>(conf.artefacts.errorReports, "error_reports.json", Text::ArtefactErrorReports,
+	                              L"artefacts.error_reports", Text::StepErrorReports);
+	convertArtefact<DefenderLogs>(conf.artefacts.defender, "defender_log.json", Text::ArtefactDefenderLogs,
+	                              L"artefacts.defender", Text::StepDefenderLogs);
+	convertArtefact<DefenderDetections>(conf.artefacts.defender, "defender_detections.json", Text::ArtefactDefenderDetections,
+	                                    L"artefacts.defender", Text::StepDefenderDetections);
+	convertArtefact<DefenderQuarantine>(conf.artefacts.defender, "defender_quarantine.json", Text::ArtefactDefenderQuarantine,
+	                                    L"artefacts.defender", Text::StepDefenderQuarantine);
+	convertArtefact<WmiPersistence>(conf.artefacts.wmi, "wmi_persistence.json", Text::ArtefactWmiPersistence,
+	                                L"artefacts.wmi", Text::StepWmiPersistence);
+	convertArtefact<Srum>(conf.artefacts.srum, "srum.json", Text::ArtefactSrum, L"artefacts.srum", Text::StepSrum);
+	convertArtefact<BitsJobs>(conf.artefacts.bits, "bits_jobs.json", Text::ArtefactBitsJobs, L"artefacts.bits", Text::StepBitsJobs);
+	convertArtefact<FatVolumes>(conf.artefacts.fatVolumes, "fat_volumes.json", Text::ArtefactFatVolumes,
+	                            L"artefacts.fat_volumes", Text::StepFatVolumes);
+	convertArtefact<SecurityHive>(conf.artefacts.security, "security.json", Text::ArtefactSecurityHive,
+	                              L"artefacts.security", Text::StepSecurityHive);
+	convertArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",
+	                                Text::ArtefactStartupFolders, L"artefacts.startup_folders",
+	                                Text::StepStartupFolders);
+	convertArtefact<Shortcuts>(conf.artefacts.shortcuts, "shortcuts.json", Text::ArtefactShortcuts,
+	                           L"artefacts.shortcuts", Text::StepShortcuts);
+	convertArtefact<SecurityDescriptors>(conf.artefacts.securityDescriptors, "security_descriptors.json",
+	                                     Text::ArtefactSecurityDescriptors, L"artefacts.security_descriptors",
+	                                     Text::StepSecurityDescriptors);
+	convertArtefact<NtfsVolumes>(conf.artefacts.ntfsVolumes, "ntfs_volumes.json", Text::ArtefactNtfsVolumes,
+	                             L"artefacts.ntfs_volumes", Text::StepNtfsVolumes);
+	convertArtefact<DpapiMasterKeys>(conf.artefacts.dpapiMasterKeys, "dpapi_master_keys.json",
+	                                 Text::ArtefactDpapiMasterKeys, L"artefacts.dpapi_master_keys",
+	                                 Text::StepDpapiMasterKeys);
+	convertArtefact<UserShellFolders>(conf.artefacts.userShellFolders, "user_shell_folders.json",
+	                                  Text::ArtefactUserShellFolders, L"artefacts.user_shell_folders",
+	                                  Text::StepUserShellFolders);
+	convertArtefact<WebClient>(conf.artefacts.webClient, "web_client.json", Text::ArtefactWebClient,
+	                           L"artefacts.web_client", Text::StepWebClient);
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 
 	/************************
