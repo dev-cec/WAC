@@ -24,7 +24,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Inventaire (grep des conversions locales et des en-têtes inclus pour une seule fonction) — voir le journal du 2026-10-07
-- [x] Lecture little-endian : 13 copies → readLittleEndian<T> (pointeur ou vecteur borné), writeLittleEndian<T>
+- [x] Lecture little-endian : 13 copies → readLittleEndian<T> (pointeur ou vecteur borné), writeLittleEndian<T> (d8005c5)
+- [x] FILETIME ↔ 64 bits : 7 fonctions locales et 39 assemblages → filetimeFromTicks / ticksFromFiletime (conversions.h)
 - [ ] Déplacement dans tools, suppression des doublons
 - [ ] Conversion d'une collecte avant/après, JSON comparés
 
