@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P2 | fort |
+| fait (c81510f) | P2 | fort |
 
 ## Pourquoi
 Messages et pièces jointes, y compris les copies ouvertes depuis le client (cache OLK, Content.Outlook).
@@ -39,7 +39,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Thunderbird : mbox_mail (mbox lu ligne à ligne, MIME, mots encodés, base64 — passé dans conversions.h, 965bf62 —, quoted-printable, RFC 2231, date en UTC) ; profils prélevés entiers ; Thunderbird 157.0.1 installé dans la VM ; témoin section 42 (serveur POP3 local, USER/PASS, mot de passe factice tapé à l'invite) ; check_thunderbird par mailbox/email de Python : vert en cycle court dans les deux collectes
 - [x] Copies ouvertes : Content.Outlook et données du nouvel Outlook (Olk), prélevées sans décodage
 - [x] Documentation FR + EN (manuel, guide des tests : 174 contrôles, validation), PDF
-- [ ] Cycle complet — lancé
+- [x] Cycle complet : 462 ✅, courriels verts dans les deux collectes ; un ❌ étranger (témoin Chrome tué trop tôt, ligne de téléchargement non validée dans History) — harnais corrigé à part, revérifié par un cycle --only=web_client vert
 
 ## Journal
 - (vide)
@@ -54,3 +54,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-07 : artefact Outlook écrit et compilé, témoin et contrôle écrits ; non commité.
 - 2026-10-07 : partie Thunderbird écrite (mbox_mail, lecture des profils dans emails, témoin section 42 avec serveur POP3 local, check_thunderbird par mailbox/email de Python, tests unitaires) ; non compilée. Installeur Thunderbird 157.0.1 (win64, fr) dans vmtest/tools/thunderbird, SHA-256 b0096146…d52b identique au SHA256SUMS de Mozilla. L'artefact sera commité d'un seul tenant (Outlook + Thunderbird) une fois Thunderbird validé.
 - 2026-10-07 : le témoin Thunderbird mis au point dans la VM : Thunderbird ne relève pas sans authentification (pop3AuthMechNotSupported) ; en NTLM (SSPI) il demande aussi un mot de passe, et la relève au démarrage n'est qu'une vérification sans download_on_biff. Retenu : USER/PASS, réponse à l'invite par SendKeys depuis la session de « wac ». Fichiers de débogage retirés de la VM.
+- 2026-10-07 : **Close**. Commits : 9b81061 (lecteur PST/OST), 965bf62 (base64 dans conversions.h), c81510f (artefact emails, Thunderbird, témoins, documentation) ; harnais : correctif de fermeture de Chrome.
