@@ -46,7 +46,6 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-024](B-024-msys2.md) | Compilation MSYS2 à éprouver sur un vrai Windows | en cours | P3 | faible |
 | [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | à faire | P2 | fort |
 | [B-029](B-029-variante-element-archive.md) | Variante d'élément d'archive mal décodée (à reproduire) | à faire | P3 | faible |
 | [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à décider (étude) | P2 | fort |
