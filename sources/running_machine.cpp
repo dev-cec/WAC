@@ -67,10 +67,8 @@ Json observeVolumes() {
 			log(2, L"🔥GetVolumeInformationW " + std::wstring(volume), GetLastError());
 			continue;
 		}
-		wchar_t hexadecimal[9] = L"";
-		swprintf(hexadecimal, 9, L"%08X", serialNumber);
 		Json v = Json::obj();
-		v.add(L"Serial", Json::str(hexadecimal));
+		v.add(L"Serial", Json::str(to_hex(serialNumber, 8, HexLetters::Upper)));
 		v.add(L"MountPoint", Json::str(mountPoint));
 		// Which volumes hold executables to collect: fixed ones, not the collection medium.
 		v.add(L"DriveType", Json::num((unsigned long long)GetDriveTypeW(volume)));

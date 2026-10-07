@@ -83,9 +83,7 @@ std::vector<std::wstring> valueStrings(DWORD type, const std::vector<BYTE>& data
 		DWORD v = 0;
 		memcpy(&v, data.data(), sizeof(DWORD));
 		// Eight digits, as the registry editor shows a DWORD: 0x00000200.
-		wchar_t text[11];
-		swprintf(text, 11, L"0x%08X", (unsigned)v);
-		out.push_back(text);
+		out.push_back(to_hex((unsigned)v, 8, HexLetters::Upper, true));
 	}
 	return out;
 }

@@ -41,9 +41,7 @@ std::wstring reasonNames(uint32_t reason) {
 			left &= ~n.bit;
 		}
 	if (left) {
-		wchar_t hex[16];
-		swprintf(hex, 16, L"0x%08X", left);
-		text += (text.empty() ? L"" : L", ") + std::wstring(hex);
+		text += (text.empty() ? L"" : L", ") + to_hex(left, 8, HexLetters::Upper, true);
 	}
 	return text;
 }

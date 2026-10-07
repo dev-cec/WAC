@@ -47,9 +47,7 @@ std::wstring signatureVolume(const std::wstring& letter) {
 	if (!GetVolumeInformationW(root.c_str(), nullptr, 0, &serial, nullptr, nullptr,
 	                           fs, (DWORD)(sizeof(fs) / sizeof(fs[0]))))
 		return L"";
-	wchar_t hex[16] = { 0 };
-	swprintf(hex, 16, L"%08X", (unsigned)serial);
-	return std::wstring(hex) + L" | " + fs;
+	return to_hex((unsigned)serial, 8, HexLetters::Upper) + L" | " + fs;
 }
 
 //! Volume letter of a source path "X:\...".
@@ -436,9 +434,8 @@ HRESULT ExhibitStoreWriteManifest() {
 		   symbol server. An authentic Microsoft binary that was not copied can
 		   thus be fetched again, identical, and its fingerprint checked. */
 		if (m.peTimeDateStamp && m.peSizeOfImage) {
-			wchar_t stamp[9] = L"", size[9] = L"";
-			swprintf(stamp, 9, L"%08X", m.peTimeDateStamp);
-			swprintf(size, 9, L"%x", m.peSizeOfImage);      // lower case, as the symbol server writes it
+			const std::wstring stamp = to_hex(m.peTimeDateStamp, 8, HexLetters::Upper);
+			const std::wstring size = to_hex(m.peSizeOfImage, 1);      // lower case, as the symbol server writes it
 			const std::wstring name = e.volumePath.substr(e.volumePath.find_last_of(L'\\') + 1);
 			o.add(L"PeTimeDateStamp", Json::str(stamp));
 			o.add(L"PeSizeOfImage", Json::str(size));

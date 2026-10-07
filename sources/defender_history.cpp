@@ -165,18 +165,6 @@ void nameFields(const std::vector<DetectionField>& f, DefenderDetection& d, std:
 	}
 }
 
-//! Upper-case hexadecimal of a value.
-std::wstring hexOf(const std::vector<uint8_t>& v) {
-	return toHexadecimal(v.data(), v.size());
-}
-
-//! A tag, "0x6010".
-std::wstring tagText(uint32_t tag, int digits) {
-	wchar_t text[16];
-	swprintf(text, 16, L"0x%0*X", digits, tag);
-	return text;
-}
-
 // Quarantine: identifiers (low 12 bits of the tag) confirmed against a file of known dates.
 const uint16_t TAG_RESOURCE_DATA = 0x002, TAG_ATTRIBUTES = 0x00A, TAG_CREATED = 0x00F,
                TAG_MODIFIED = 0x011, TAG_SIZE = 0x012;
@@ -300,7 +288,7 @@ Json DetectionField::valueToJson() const {
 	if (type == FIELD_FILETIME && value.size() == 8) return Json::str(timeToIso8601Utc(filetimeFromTicks(readLittleEndian<uint64_t>(v))));
 	if (type == FIELD_STRING) return Json::str(fieldString(*this));
 	if (type == FIELD_GUID && value.size() == 16) return Json::str(guid_to_wstring(v));
-	return Json::str(hexOf(value));
+	return Json::str(toHexadecimal(value.data(), value.size()));
 }
 
 bool parseDetectionHistory(const std::vector<uint8_t>& bytes, DefenderDetection& d) {
@@ -373,7 +361,7 @@ Json DefenderDetection::toJson() const {
 		for (const DetectionField& f : unnamed) {
 			Json item = Json::obj();
 			item.add(L"Offset", Json::num((unsigned long long)f.offset));
-			item.add(L"Type", Json::str(tagText(f.type, 2)));
+			item.add(L"Type", Json::str(to_hex(f.type, 2, HexLetters::Upper, true)));
 			item.add(L"Value", f.valueToJson());
 			list.push(std::move(item));
 		}
@@ -421,7 +409,7 @@ bool quarantinedContent(const std::vector<uint8_t>& head, uint64_t total, size_t
 
 std::wstring QuarantineResource::resourceDataSha1() const {
 	const QuarantineField* f = fieldOf(fields, TAG_RESOURCE_DATA);
-	return f && f->value.size() == 20 ? hexOf(f->value) : std::wstring();
+	return f && f->value.size() == 20 ? toHexadecimal(f->value.data(), f->value.size()) : std::wstring();
 }
 
 Json QuarantineResource::toJson() const {
@@ -441,13 +429,13 @@ Json QuarantineResource::toJson() const {
 		const uint16_t id = f.tag & 0x0FFF;
 		if (id == TAG_RESOURCE_DATA || id == TAG_SIZE || id == TAG_CREATED || id == TAG_MODIFIED || id == TAG_ATTRIBUTES) continue;
 		Json item = Json::obj();
-		item.add(L"Tag", Json::str(tagText(f.tag, 4)));
+		item.add(L"Tag", Json::str(to_hex(f.tag, 4, HexLetters::Upper, true)));
 		// Type 2 a UTF-16 string, 3 a 32-bit number, 5 and 6 a 64-bit one (6 also holds the dates).
 		const unsigned kind = f.tag >> 12;
 		if (kind == 2) item.add(L"Value", Json::str(readWideZ(f.value.data(), f.value.size(), 0)));
 		else if (kind == 3 && f.value.size() == 4) item.add(L"Value", Json::num(readLittleEndian<uint32_t>(f.value.data())));
 		else if ((kind == 5 || kind == 6) && f.value.size() == 8) item.add(L"Value", Json::num(readLittleEndian<uint64_t>(f.value.data())));
-		else item.add(L"Value", Json::str(hexOf(f.value)));
+		else item.add(L"Value", Json::str(toHexadecimal(f.value.data(), f.value.size())));
 		others.push(std::move(item));
 	}
 	if (!others.empty()) o.add(L"OtherFields", std::move(others));

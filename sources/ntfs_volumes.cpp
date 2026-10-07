@@ -49,12 +49,6 @@ bool readExhibit(const std::wstring& key, std::vector<uint8_t>& bytes) {
  *  @param value the integer
  *  @param digits the number of digits
  *  @return the digits */
-std::wstring upperHex(uint64_t value, int digits) {
-	std::wstring text = to_hex(value, digits);
-	for (wchar_t& c : text) c = (wchar_t)towupper(c);
-	return text;
-}
-
 } // namespace
 
 bool parseNtfsBootSector(const uint8_t* data, size_t size, NtfsBootSector& boot) {
@@ -90,8 +84,8 @@ Json NtfsVolumeInfo::toJson() const {
 	Json o = Json::obj();
 	o.add(L"Volume", Json::str(volume));
 	if (boot) {
-		o.add(L"VolumeSerial", Json::str(upperHex(boot->serialNumber & 0xFFFFFFFFULL, 8)));   // as shortcuts and Prefetch files record it
-		o.add(L"VolumeSerial64", Json::str(upperHex(boot->serialNumber, 16)));
+		o.add(L"VolumeSerial", Json::str(to_hex(boot->serialNumber & 0xFFFFFFFFULL, 8, HexLetters::Upper)));   // as shortcuts and Prefetch files record it
+		o.add(L"VolumeSerial64", Json::str(to_hex(boot->serialNumber, 16, HexLetters::Upper)));
 		o.add(L"BytesPerSector", Json::num((unsigned long long)boot->bytesPerSector));
 		o.add(L"BytesPerCluster", Json::num((unsigned long long)boot->bytesPerCluster));
 		o.add(L"TotalSectors", Json::num((unsigned long long)boot->totalSectors));
@@ -104,7 +98,7 @@ Json NtfsVolumeInfo::toJson() const {
 		Json j = Json::obj();
 		j.add(L"MaximumSize", Json::num((unsigned long long)journal->maximumSize));
 		j.add(L"AllocationDelta", Json::num((unsigned long long)journal->allocationDelta));
-		j.add(L"UsnJournalId", Json::str(upperHex(journal->journalId, 16)));
+		j.add(L"UsnJournalId", Json::str(to_hex(journal->journalId, 16, HexLetters::Upper)));
 		// The journal's identifier is the FILETIME of its creation.
 		const FILETIME created = filetimeFromTicks(journal->journalId);
 		addDate(j, L"Created", created);

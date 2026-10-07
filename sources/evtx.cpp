@@ -17,12 +17,6 @@ namespace {
 /*! A hexadecimal integer as Windows renders it in an event's XML ("0x3e7",
  *  "0x0"): the form an analyst reads in the Event Viewer and searches for.
  *  It was written "3e7", and "00" for zero (B-015, against Windows' XML). */
-std::wstring windowsHex(uint64_t value) {
-	wchar_t text[24];
-	swprintf(text, 24, L"0x%llx", (unsigned long long)value);
-	return text;
-}
-
 // ---------------------------------------------------------------------------
 //  Bounded reads
 // ---------------------------------------------------------------------------
@@ -255,8 +249,8 @@ private:
 		}
 		case T_SIZE:
 			// Matched to a 32- or 64-bit hexadecimal integer depending on the size.
-			return size >= 8 ? windowsHex(read64(c, tc, off))
-			     : size >= 4 ? windowsHex(read32(c, tc, off)) : L"";
+			return size >= 8 ? to_hex(read64(c, tc, off), 1, HexLetters::Lower, true)
+			     : size >= 4 ? to_hex(read32(c, tc, off), 1, HexLetters::Lower, true) : L"";
 		case T_FILETIME: {
 			if (size < 8) return L"";
 			const uint64_t v = read64(c, tc, off);
@@ -276,8 +270,8 @@ private:
 			return timeToIso8601Utc(ft, Precision::Millisecond);   // a SYSTEMTIME stops at the millisecond
 		}
 		case T_SID:  return sidToText(d, size);
-		case T_HEX32: return size >= 4 ? windowsHex((uint32_t)read32(c, tc, off)) : L"";
-		case T_HEX64: return size >= 8 ? windowsHex(read64(c, tc, off)) : L"";
+		case T_HEX32: return size >= 4 ? to_hex((uint32_t)read32(c, tc, off), 1, HexLetters::Lower, true) : L"";
+		case T_HEX64: return size >= 8 ? to_hex(read64(c, tc, off), 1, HexLetters::Lower, true) : L"";
 		case T_BINXML:
 		case T_EVTXML: {
 			/*  A value can hold a whole BinXML fragment: that is the case of

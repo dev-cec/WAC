@@ -77,9 +77,7 @@ VolumeInfo::VolumeInfo(LPBYTE data, int index, size_t limit) {
 	   getVolumeLetter() uses it too (see tools.cpp). */
 	{
 		const unsigned int number = *reinterpret_cast<unsigned int*>(indVolume + 16);
-		wchar_t hexa[9] = L"";
-		swprintf(hexa, 9, L"%08X", number);
-		serialNumber = hexa;
+		serialNumber = to_hex(number, 8, HexLetters::Upper);
 	}
 	mountPoint = getVolumeLetter(serialNumber);
 	int dirsOffset = *reinterpret_cast<int*>(indVolume + 28);
@@ -312,9 +310,7 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 	   A first assignment from the raw bytes, just above, was dead too: it was
 	   overwritten two lines further down. */
 	const unsigned int hash = *reinterpret_cast<unsigned int*>(data + 76);
-	wchar_t hexa[9] = L"";
-	swprintf(hexa, 9, L"%08X", hash);
-	hash_string = hexa;
+	hash_string = to_hex(hash, 8, HexLetters::Upper);
 
 	// check the version
 	if (version < 30) {

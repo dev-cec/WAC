@@ -176,3 +176,30 @@ inline std::wstring normalizeGuid(const std::wstring& guid) {
 	if (!text.empty() && text.front() != L'{') text = L"{" + text + L"}";
 	return text;
 }
+
+//! The case of the letters of a hexadecimal number.
+enum class HexLetters { Lower, Upper };
+
+/*! Writes an integer in lower-case hexadecimal, on the WIDTH OF ITS TYPE.
+*
+* A template rather than one `long long` signature: every value used to be
+* widened to 64 bits first, so a negative 32-bit value — an HRESULT such as
+* 0x80070005 — came out as "ffffffff80070005". The value is now read as the
+* unsigned type of the same width. A `char` is written as a number, never as
+* a character.
+* @param value the integer
+* @param minDigits minimum number of digits, left-padded with zeros (2 by
+*        default; 1 for no padding, e.g. the stream names of a jump list)
+* @param letters lower case (the default) or upper case
+* @param prefixed "0x" before the digits
+* @return the digits, "0x" first if prefixed */
+template <typename T>
+std::wstring to_hex(T value, int minDigits = 2, HexLetters letters = HexLetters::Lower, bool prefixed = false) {
+	static_assert(std::is_integral_v<T>, "to_hex: integer types only");
+	unsigned long long bits = static_cast<std::make_unsigned_t<T>>(value);
+	const wchar_t* digits = letters == HexLetters::Upper ? L"0123456789ABCDEF" : L"0123456789abcdef";
+	std::wstring text;
+	do { text.insert(text.begin(), digits[bits & 0xF]); bits >>= 4; } while (bits);
+	if ((int)text.size() < minDigits) text.insert(0, (size_t)minDigits - text.size(), L'0');
+	return prefixed ? L"0x" + text : text;
+}

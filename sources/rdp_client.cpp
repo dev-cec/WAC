@@ -205,11 +205,8 @@ HRESULT RdpClient::getData() {
 				t.add(L"Index", Json::num((unsigned long long)i));
 				t.add(L"Width", Json::num((unsigned long long)tiles[i].width));
 				t.add(L"Height", Json::num((unsigned long long)tiles[i].height));
-				wchar_t key[16];
-				swprintf(key, 16, L"0x%08X", tiles[i].key1);
-				t.add(L"Key1", Json::str(key));
-				swprintf(key, 16, L"0x%08X", tiles[i].key2);
-				t.add(L"Key2", Json::str(key));
+				t.add(L"Key1", Json::str(to_hex(tiles[i].key1, 8, HexLetters::Upper, true)));
+				t.add(L"Key2", Json::str(to_hex(tiles[i].key2, 8, HexLetters::Upper, true)));
 				t.add(L"PixelsSha256", Json::str(digest.hexDigest()));
 				if (out) t.add(L"Image", Json::str(image));
 				else log(2, L"🔥RDP tile image not written: " + image);

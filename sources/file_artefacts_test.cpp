@@ -921,6 +921,9 @@ int wmain() {
 	userShellFolders();
 	sqliteReader();
 	prefetchReference();
+	check(to_hex(0x0BD30981u, 8, HexLetters::Upper) == L"0BD30981" && to_hex(0x200u, 8, HexLetters::Upper, true) == L"0x00000200"
+	      && to_hex(0ULL, 1, HexLetters::Lower, true) == L"0x0" && to_hex((uint8_t)0xAB) == L"ab" && to_hex(-1, 1) == L"ffffffff",
+	      "to_hex: the forms it replaced (%08X, 0x%08X, 0x%llx), two digits by default, a negative as its unsigned bits");
 	chromiumHistory();
 	check(urlValueNumber(L"url1") == 1 && urlValueNumber(L"URL25") == 25 && urlValueNumber(L"url") == 0
 	      && urlValueNumber(L"url1a") == 0 && urlValueNumber(L"urlx") == 0 && urlValueNumber(L"url1234567890") == 0

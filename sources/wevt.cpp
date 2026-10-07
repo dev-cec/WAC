@@ -202,14 +202,6 @@ std::wstring tableText(const TableMessages* table, uint32_t id) {
 	return text;
 }
 
-//! @return the number in hexadecimal, "0x" and its digits in the given case
-std::wstring hexadecimal(uint64_t number, bool upper) {
-	const wchar_t* digits = upper ? L"0123456789ABCDEF" : L"0123456789abcdef";
-	std::wstring text;
-	do { text.insert(text.begin(), digits[number & 0xF]); number >>= 4; } while (number);
-	return L"0x" + text;
-}
-
 } // namespace
 
 std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, const TableMessages& messages,
@@ -261,19 +253,19 @@ std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, cons
 		if (text.empty()) text = tableText(system.errors, code);
 		if (!text.empty()) return text;
 		return item.outType == OUT_HRESULT && system.errors
-		       ? L"Unknown HResult Error code: " + hexadecimal(code & ~0x10000000u, false) : value;
+		       ? L"Unknown HResult Error code: " + to_hex(code & ~0x10000000u, 1, (false) ? HexLetters::Upper : HexLetters::Lower, true) : value;
 	}
 	if (item.outType == OUT_NTSTATUS) {
 		const std::wstring text = tableText(system.ntStatus, code);
 		return text.empty() ? value : text;
 	}
-	if (item.outType == OUT_ERROR_CODE) return hexadecimal(code, true);
+	if (item.outType == OUT_ERROR_CODE) return to_hex(code, 1, (true) ? HexLetters::Upper : HexLetters::Lower, true);
 	if (item.inType == IN_POINTER) return value;
 	if (item.inType == IN_HEX32 || item.inType == IN_HEX64 || (item.outType >= OUT_HEX_FIRST && item.outType <= OUT_HEX_LAST)) {
 		// An input of 32 bits or less shows its own bits: a negative Int32 is not 64 bits wide.
 		const uint8_t IN_UINT32 = 0x08;
 		if (item.inType <= IN_UINT32 || item.inType == IN_HEX32) number &= 0xFFFFFFFFu;
-		return hexadecimal(number, true);
+		return to_hex(number, 1, (true) ? HexLetters::Upper : HexLetters::Lower, true);
 	}
 	return value;
 }
