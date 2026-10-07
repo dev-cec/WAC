@@ -69,10 +69,15 @@ bool         g_elevated         = false;
 
 /*! Current timestamp, in UTC and in the suspect's local time: the same time
  *  zone as every other local date of the collection (the running machine's
- *  until the suspect's SYSTEM hive is read). */
+ *  until the suspect's SYSTEM hive is read).
+ *  PRECISE CLOCK. The timestamps are written to the 100 ns, and Windows'
+ *  object-access audit, which the test VM sets against them, is that
+ *  precise. GetSystemTimeAsFileTime moves only at each clock tick, up to
+ *  15.6 ms: reads of the exhibit store made during its copy showed 0.4 ms
+ *  after the copy's own record, as if made after it. */
 void now(std::wstring& utc, std::wstring& local, FILETIME* nowFiletime = nullptr) {
 	FILETIME ft = { 0, 0 };
-	GetSystemTimeAsFileTime(&ft);
+	GetSystemTimePreciseAsFileTime(&ft);
 	utc = timeToIso8601Utc(ft);
 	local = utcTimeToIso8601Local(ft);
 	if (nowFiletime) *nowFiletime = ft;
