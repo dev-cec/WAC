@@ -51,7 +51,6 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 | [B-026](B-026-thumbcache.md) | Cache des miniatures (thumbcache) | en cours | P3 | moyen |
 | [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | à faire | P2 | fort |
 | [B-029](B-029-variante-element-archive.md) | Variante d'élément d'archive mal décodée (à reproduire) | à faire | P3 | faible |
-| [B-030](B-030-conversions-dans-tools.md) | Regrouper toutes les fonctions de conversion dans tools (fin de refactoring) | en cours | P2 | moyen |
 | [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à décider (étude) | P2 | fort |
 | [B-025](B-025-version-2-0.md) | Version 2.0.0 (montée majeure), juste avant l'article DFIR | à faire | P2 | faible |
 | [B-018](B-018-article-dfir.md) | Article de présentation (2 pages, magazine DFIR), après la 2.0.0 et avant la 3.0 | à faire | P3 | moyen |
