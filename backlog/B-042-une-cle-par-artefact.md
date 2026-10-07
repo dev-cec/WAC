@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P2 | moyen |
+| en cours | P2 | moyen |
 
 ## Pourquoi
 Règle de l'utilisateur (2026-10-07) : aucun artefact n'est prélevé systématiquement, chacun a sa clé sous `artefacts:` de `wac.yml`. Les ruches, les catalogues — et les journaux d'événements quand un autre artefact les lit — ne sont pas des artefacts mais des **dépendances**, prélevées dès qu'un artefact demandé en a besoin (comme la $MFT pour `usn_journal` ou `zone_identifiers`). Une clé absente vaut `true` (décision du même jour).
@@ -26,11 +26,14 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Manuel FR + EN : liste des clés et table artefact → dépendances.
 
 ## Tâches
-- [ ] Inventaire complet sortie → clé → dépendances
-- [ ] Clés, conversion et cibles
+- [x] Inventaire complet sortie → clé → dépendances
+- [x] Renommage convertFileArtefact → convertArtefact (b4c6386)
+- [ ] Clés, conversion et cibles — écrit et compilé sans avertissement, non commité (tools.h, config.cpp, main.cpp, raw_collect.cpp, translations)
 - [ ] wac.yml livré et wac.yml du harnais
 - [ ] Contrôle `--configuration` étendu, cycle complet
 - [ ] Documentation FR + EN
 
 ## Journal
 - 2026-10-07 : créée sur la règle de l'utilisateur ; clé absente = true (choix explicite). Dans l'immédiat, `rdp_server: false` ajouté au wac.yml configuré du harnais (161391c), sans exception dans le contrôle.
+- 2026-10-07 : inventaire. Clés nouvelles : `events` (ex-`conf._events`, désormais vrai par défaut comme les autres), `operating_system` (OperatingSystem.json, prélevé d'office jusqu'ici), `usbstor`, `mounted_devices`, `bam`, `muicache`, `amcache`, `userassist`, `run_keys`, `shimcache`, `shellbags`, `mru`, `mru_apps`, `users`, `local_groups`, `registry_backups` (RegBack) ; `registry` supprimée. Dépendances : ruches des utilisateurs si muicache, userassist, run_keys, shellbags, mru, mru_apps (+ les artefacts déjà listés dans needsUserHives) ; journaux si events ou rdp_server (needsEventLogs) ; Amcache.hve pour amcache seul ; SYSTEM, SOFTWARE, SAM, SECURITY, DEFAULT toujours (fuseau, profils, noms des comptes). Les treize blocs copiés de la phase registre remplacés par convertArtefact (version à plusieurs sorties pour Amcache) : chaque artefact en échec écrit désormais son fichier « non prélevé ».
+- 2026-10-07 : en cours — reste : wac.yml livré, wac.yml et `wants registry` du harnais, contrôle `--configuration`, tests, cycle, documentation.
