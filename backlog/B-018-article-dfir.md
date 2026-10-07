@@ -6,6 +6,7 @@
 
 ## Pourquoi
 Faire connaître et relire WAC par des pairs : c'est aussi la meilleure validation externe.
+A faire en dernier.
 
 ## Source
 Dossiers de validation et d'innocuité, mesures du cycle VM.

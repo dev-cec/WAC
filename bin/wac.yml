@@ -76,3 +76,5 @@ artefacts:
   event_log_configuration:    true  # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)
   activities_cache:           true  # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
   search_index:               true  # Windows Search index: path, dates, size, owner, summary of each indexed item, deleted ones included
+  rdp_client:                 true  # outgoing RDP connections: servers reached, .rdp files, bitmap cache tiles
+  rdp_server:                 true  # incoming RDP connections: authentications, sessions, sources (event logs)
