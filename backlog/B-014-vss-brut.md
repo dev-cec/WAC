@@ -26,3 +26,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - (vide)
+- 2026-10-07 : reportée en 3.0 (décision utilisateur).

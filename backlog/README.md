@@ -46,7 +46,6 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider | P3 | fort |
 | [B-017](B-017-emails.md) | Courriels et pièces jointes | à faire | P2 | fort |
 | [B-024](B-024-msys2.md) | Compilation MSYS2 à éprouver sur un vrai Windows | à faire | P3 | faible |
 | [B-026](B-026-thumbcache.md) | Cache des miniatures (thumbcache) | à faire | P3 | moyen |
@@ -68,6 +67,7 @@ versions serveur, artefacts propres aux serveurs (web, Active Directory).
 | [B-038](B-038-compatibilite-windows-server.md) | Collecte compatible avec les versions serveur, de Server 2003 à 2026 (prérequis de B-035) | à faire | P3 | fort |
 | [B-035](B-035-web-serveur.md) | Web côté serveur : journaux, code des sites, bases de données (clé `web_server`) — après B-039 et B-038 | à faire | P3 | fort |
 | [B-041](B-041-active-directory.md) | Artefacts de compromission d'Active Directory (contrôleurs de domaine) | à faire | P2 | fort |
+| [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider (reportée en 3.0) | P3 | fort |
 | [B-037](B-037-compatibilite-windows-xp.md) | Collecte compatible avec toutes les versions de Windows depuis XP SP1 (après B-039) | à faire | P3 | fort |
 
 ## Réalisé

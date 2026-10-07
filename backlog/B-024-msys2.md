@@ -14,7 +14,7 @@ build-windows.sh gère MSYS2 MINGW64 mais n'y a jamais tourné.
 WAC.exe fonctionnel, mêmes imports.
 
 ## Référence indépendante
-Cycle VM avec le binaire compilé sous MSYS2.
+Cycle VM avec le binaire compilé sous MSYS2. MSYS2 installé dans un clone de la VM (ou une VM dédiée), jamais dans win11-test : la machine des cycles reste sans outil de développement (décision utilisateur 2026-10-07).
 
 ## Critères d'acceptation
 En plus de la définition de « fini » commune (backlog/README.md) :
@@ -25,3 +25,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - (vide)
+- 2026-10-07 : lieu décidé — clone dédié de la VM.
