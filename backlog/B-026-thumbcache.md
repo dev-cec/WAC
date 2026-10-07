@@ -26,8 +26,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Prélèvement brut (Explorer\*.db de chaque profil, iconcache compris), conversion (thumbcache.json), images exportées (thumbcache\<SID>\<fichier>\<hachage>.<ext>) — clé `thumbcache`
 - [x] Test unitaire : vecteur d'en-tête réel (somme écrite par Windows), cache construit, octet échantillonné ou non, longueurs forgées, fichier coupé, disposition Windows 7 ; 164 contrôles, mutation de l'étendue de l'en-tête prise
 - [x] Témoin (section 41) et contrôle check_thumbcache : sommes de toutes les entrées, identifiant = hachage, témoin par System.ThumbnailCacheId et SHA-256 de l'image exportée
-- [ ] Cycle --only=thumbcache, puis cycle complet
-- [ ] Documentation FR + EN
+- [x] Cycle --only=thumbcache : 835 entrées de 9 caches, toutes les sommes d'en-tête et les 777 sommes de données valides ; témoin bb6699708ece7c92 retrouvé dans thumbcache_96.db (96×60, BMP), SHA-256 de l'image exportée identique
+- [x] Documentation FR + EN : manuel (thumbcache.json, clé), guide des tests (164 contrôles), dossier de validation ; PDF
+- [ ] Cycle complet — lancé
 
 ## Journal
 - 2026-09-29 : détaché de B-012.
