@@ -807,11 +807,12 @@ than cosmetic ones:
   format said Unicode, so it came out truncated at its first character;
 - per-loaded-file **`$MFT` references** in Prefetch, never parsed at all — they
   identify a file on the volume independently of its name, so a renamed or
-  deleted executable can still be found. 9 117 references on the test machine,
-  all passing the plausibility check. **Known limitation**: they come out on 155
-  of 279 Prefetch files; on the other 124 the metrics block is not read and the
-  reason is not yet established. The format version is now emitted for each
-  Prefetch, which is what a diagnosis needs;
+  deleted executable can still be found. Their split was wrong too (sequence
+  read on four bytes, the entry's high bits lost): 14 975 references are now
+  identical, entry and sequence, to the `$MFT` of the same collection. Many
+  Prefetch files carry none, and that is Windows: a program run once has all
+  its references written as zeros (192 files out of 192 on the test machine),
+  and WAC does not emit a null reference;
 - four **announced string lengths** that were read but never used to bound the
   read itself, leaving the parsers to run to the next zero byte, wherever that
   fell;

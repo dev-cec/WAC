@@ -1055,7 +1055,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[\fichier{prefetchs.json}] Prefetch files: program, run count and times,
         volumes, and list of loaded files with their \path|$MFT| reference (and
-        their fingerprints with \opt{binary}).
+        their fingerprints with \opt{binary}). A missing reference is not a
+        failed read: Windows writes it as zero, for every file of a program run
+        only once and for some of the others.
   \item[\fichier{amcache\_application\_files.json},
         \fichier{amcache\_applications.json},
         \fichier{amcache\_inventory.json}] Amcache inventory, table by table

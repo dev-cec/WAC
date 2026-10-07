@@ -4,24 +4,23 @@
 #include "prefetchs.h"
 #include <map>
 #include "consigne.h"
+#include "ntfs_reference.h"
+#include <cstring>
 
+/*  WHAT WAS WRONG. The reference was split by hand: the sequence read on FOUR
+    bytes at offset 6 — its two bytes plus the first two of whatever followed
+    (the next metric entry, or two bytes past the end of the volume's block of
+    references) — and the entry's high 16 bits multiplied by 2^24 in an
+    unsigned short, hence always lost. Measured on the test machine: sequences
+    of 770 703 362, and 3 652 references whose sequence was not the $MFT's.
+    The eight bytes are now read as one integer and split by the only function
+    that does it (ntfs_reference.h). */
 MFTInformation::MFTInformation(LPBYTE data) {
-	sequenceNumber = *reinterpret_cast<unsigned int*>(data + 6);
-	unsigned int entryIndex1 = *reinterpret_cast<unsigned int*>(data);
-	unsigned short int entryIndex2 = *reinterpret_cast<unsigned short int*>(data + 4);
-	if (entryIndex2 == 0)
-	{
-		entryIndex = entryIndex1;
-	}
-	else
-	{
-		entryIndex2 *= (unsigned short)16777216; //2^24
-		entryIndex = entryIndex1 + entryIndex2;
-	}
-	if (sequenceNumber == 0)
-	{
-		sequenceNumber = NULL;
-	}
+	uint64_t raw;
+	memcpy(&raw, data, sizeof raw);
+	const NtfsReference reference = splitNtfsReference(raw);
+	entryIndex = reference.entry;
+	sequenceNumber = reference.sequence;
 }
 
 Json MFTInformation::toJson() {
@@ -48,8 +47,9 @@ Json Filename::toJson() {
 	o.add(L"Filename", Json::str(filename));
 	o.add(L"FullPath", Json::str(fullPath));
 	addFingerprints(o, fingerprint);
-	// Emitted only if it was read: a pair of zeros would read as a valid reference
-	// to record 0 of the $MFT, which is the $MFT itself.
+	// Emitted only if Windows wrote it (see the metrics array in Prefetch::parse):
+	// a pair of zeros would read as a valid reference to record 0 of the $MFT,
+	// which is the $MFT itself.
 	if (referenceKnown) o.add(L"MftReference", reference.toJson());
 	return o;
 }
@@ -425,9 +425,13 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 		    to the wrong file.
 		    Rebuilding the offsets by summing the lengths does not work:
 		    multiWstring_to_vector discards the empty strings while advancing its
-		    position, so that the sum drifts by two bytes at every empty one —
-		    measured on a real machine, 124 Prefetch files out of 279 then got no
-		    reference at all. */
+		    position, so that the sum drifts by two bytes at every empty one.
+		    WHY SO MANY FILES HAVE NO REFERENCE. Not a reading failure: Windows
+		    writes the references as zeros. Measured on the 455 Prefetch files of
+		    the test machine, by an independent dump of the decompressed array:
+		    a program run once has all its references null (192 files out of
+		    192); after further runs, 25 files stay entirely null and 182 are
+		    partly so — mostly entries whose flags carry 0x1. */
 		for (int k = 0; k < kept; ++k) {
 			LPBYTE m = data + start + (size_t)k * METRIC_SIZE;
 			const unsigned int nameOffset = *reinterpret_cast<unsigned int*>(m + 12);

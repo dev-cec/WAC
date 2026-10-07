@@ -276,6 +276,7 @@ def cross_checks(folder):
     found += guarded(check_processes, folder)
     found += guarded(check_network, folder, boot)
     found += guarded(check_prefetchs, folder)
+    found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_shimcache_dates, folder)
     found += guarded(check_jumplist_entries, folder)
     found += guarded(check_events, folder)
@@ -2755,6 +2756,49 @@ def check_mft_timeline(folder):
         print(f"  ✅ usn_journal.json: {len(usn)} record(s) on {len(by_volume)} volume(s), numbers rising, "
               f"none after the collection ({incomplete} path(s) incomplete)")
     return found
+
+
+def check_prefetch_mft_references(folder):
+    """A Prefetch's $MFT references against the $MFT of the same collection.
+
+    Two independent sources: the metrics array written by the prefetcher, and
+    the volume's own records (mft.json, hard links included). Where the loaded
+    file's path still names the record the reference gives, the sequence must
+    be the record's. A reference to another record, or to a path gone, is a
+    file replaced or deleted since the prefetcher wrote it: not a defect. It is
+    this check that caught the split by hand — the sequence read on four bytes
+    (770 703 362 for a sequence of 2): 14 940 references out of 14 975.
+    """
+    prefetchs, mft = load(folder, "prefetchs.json"), load(folder, "mft.json")
+    if not isinstance(prefetchs, list) or not isinstance(mft, list):
+        print("  ⏭️  prefetchs.json or mft.json absent: $MFT references not cross-checked")
+        return 0
+    records = {}
+    for e in mft:
+        for path in [e.get("Path")] + (e.get("HardLinkPaths") or []):
+            if path:
+                records[path.lower()] = (e.get("Entry"), e.get("Sequence"))
+    same, moved, wrong = 0, 0, []
+    for p in prefetchs:
+        for f in p.get("FileNames") or []:
+            ref, path = f.get("MftReference"), f.get("FullPath")
+            record = records.get((path or "").lower()) if ref else None
+            if record is None or record[0] != ref.get("EntryIndex"):
+                moved += record is None and ref is not None and path is not None
+                continue
+            if record[1] == ref.get("SequenceNumber"):
+                same += 1
+            else:
+                wrong.append((path, ref, record))
+    if wrong or not same:
+        print(f"  ❌ prefetchs.json: {len(wrong)} $MFT reference(s) whose sequence is not the record's, "
+              f"{same} identical")
+        for path, ref, record in wrong[:3]:
+            print(f"        {path}: {ref} in the Prefetch, {record} in the $MFT")
+        return 1
+    print(f"  ✅ prefetchs.json: {same} $MFT reference(s) identical to the $MFT's record "
+          f"(entry and sequence); {moved} to a path gone since")
+    return 0
 
 
 def check_prefetchs(folder):

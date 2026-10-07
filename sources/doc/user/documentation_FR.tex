@@ -1077,7 +1077,10 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[\fichier{prefetchs.json}] fichiers Prefetch : programme, nombre et dates
         d'exécution, volumes, et liste des fichiers chargés avec leur référence
-        \path|$MFT| (et leurs empreintes avec \opt{binary}).
+        \path|$MFT| (et leurs empreintes avec \opt{binary}). Une référence
+        absente n'est pas une lecture ratée : Windows l'écrit à zéro, pour tous
+        les fichiers d'un programme lancé une seule fois et pour une partie des
+        autres.
   \item[\fichier{amcache\_application\_files.json},
         \fichier{amcache\_applications.json},
         \fichier{amcache\_inventory.json}] inventaire Amcache, table par

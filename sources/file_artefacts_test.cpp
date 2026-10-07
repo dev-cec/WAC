@@ -40,6 +40,8 @@
 #include "rdp_server.h"
 #include "wevt.h"
 #include "conversions.h"
+#include "prefetchs.h"
+#include "ntfs_reference.h"
 #include "registry_common.h"
 #include "sqlite3.h"
 #include "sha.h"
@@ -885,6 +887,21 @@ void loginsAndCookies() {
 	std::filesystem::remove_all(root, ec);
 }
 
+/*! A Prefetch metric entry's $MFT reference: eight bytes, 48 of entry and 16
+ *  of sequence, followed by the next entry. The split by hand read the
+ *  sequence on four bytes — taking two from what follows — and lost the
+ *  entry's high 16 bits; both are given values that show it. */
+void prefetchReference() {
+	const uint8_t bytes[10] = { 0x44, 0x19, 0x00, 0x00, 0x01, 0x00,   // entry 0x1_0000_1944
+	                            0x02, 0x00,                           // sequence 2
+	                            0xEF, 0x2D };                         // the next entry's first bytes
+	const MFTInformation reference(const_cast<LPBYTE>(bytes));
+	check(reference.entryIndex == 0x100001944ULL, "prefetch: $MFT reference entry on 48 bits");
+	check(reference.sequenceNumber == 2, "prefetch: sequence on 16 bits, nothing read beyond the 8 bytes");
+	const NtfsReference split = splitNtfsReference(0xFFFF800000000005ULL);
+	check(split.entry == 0x800000000005ULL && split.sequence == 0xFFFF, "ntfs reference: high bits to the sequence only");
+}
+
 } // namespace
 
 int wmain() {
@@ -903,6 +920,7 @@ int wmain() {
 	dpapiMasterKeys();
 	userShellFolders();
 	sqliteReader();
+	prefetchReference();
 	chromiumHistory();
 	check(urlValueNumber(L"url1") == 1 && urlValueNumber(L"URL25") == 25 && urlValueNumber(L"url") == 0
 	      && urlValueNumber(L"url1a") == 0 && urlValueNumber(L"urlx") == 0 && urlValueNumber(L"url1234567890") == 0

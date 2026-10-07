@@ -40,14 +40,14 @@
 /*! A file reference in the $MFT: what identifies a file on the volume
  *  independently of its name. */
 struct MFTInformation {
-	unsigned int entryIndex = 0;     //!< record number in the $MFT
-	unsigned int sequenceNumber = 0; //!< sequence number, which a reuse of the record increments
+	uint64_t entryIndex = 0;     //!< record number in the $MFT (48 bits)
+	uint16_t sequenceNumber = 0; //!< sequence number, which a reuse of the record increments
 
 	//! Builds an empty reference.
 	MFTInformation() {}
 
 	/*! Reads a reference from a Prefetch file.
-	 *  @param data the six bytes of the reference. */
+	 *  @param data the eight bytes of the reference; the caller checks they are in the buffer. */
 	MFTInformation(LPBYTE data);
 
 	/*! Converts the reference to JSON.
