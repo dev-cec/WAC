@@ -46,7 +46,6 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-011](B-011-rdp-cache.md) | Cache bitmap RDP et connexions RDP sortantes | à faire | P3 | moyen |
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider | P3 | fort |
 | [B-017](B-017-emails.md) | Courriels et pièces jointes | à faire | P2 | fort |
 | [B-022](B-022-prefetch-metriques.md) | Prefetch : métriques absentes sur 124 fichiers sur 279 | à faire | P2 | moyen |
