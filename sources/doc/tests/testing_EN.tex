@@ -574,6 +574,27 @@ bash sources/raw_volume_test.sh /tmp/mft build-windows/raw_hive_test.exe
 
 Reference: 3 checks, no failure; the reader before the fix fails 2 of them.
 
+\section{Outlook's mail: \texttt{pst\_test}}
+
+A PST read wrong — a block decrypted with the wrong table, a heap item cut one
+byte off, a compressed block inflated short — still gives valid JSON.
+\fichier{pst\_fixtures.sh} downloads, pinned by their SHA-256, java-libpst's
+test files (Apache 2.0: two Unicode PSTs and an OST of Outlook 2013, 4~KiB
+pages and compressed blocks) and a PST of the EDRM Enron v2 corpus (CC-BY 3.0
+US), and has each message read by pypff, libpff's reader written independently
+of \wac{}. \texttt{pst\_test} compares, message by message: subject, sender,
+delivery and submission times, the name, size and SHA-256 of every
+attachment, the SHA-256 of the body.
+
+\begin{lstlisting}
+PYTHON=vmtest/tools/pff-venv/bin/python bash sources/pst_fixtures.sh /tmp/pstfx
+cd build-windows/tests && wine pst_test.exe Z:/tmp/pstfx
+\end{lstlisting}
+
+Reference: 1,800 checks, no failure; the 256 messages pypff reads identical,
+and the 4 items of the Enron PST pypff cannot read read by \wac{}. With the
+decryption removed, 253 failures.
+
 \section{Internet Explorer's indexes: \texttt{ie\_index\_dat\_test}}
 
 Checks the decoder of Internet Explorer 5 to 9's \fichier{index.dat} files

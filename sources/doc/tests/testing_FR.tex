@@ -596,6 +596,27 @@ bash sources/raw_volume_test.sh /tmp/mft build-windows/raw_hive_test.exe
 Référence : 3 contrôles, aucun échec ; le lecteur d'avant le correctif en
 échoue 2.
 
+\section{Courriels d'Outlook : \texttt{pst\_test}}
+
+Un PST lu de travers — un bloc déchiffré avec la mauvaise table, un élément du
+tas coupé d'un octet, un bloc compressé décompressé trop court — donne encore
+un JSON valide. \fichier{pst\_fixtures.sh} télécharge, épinglés par leur
+SHA-256, les fichiers de test de java-libpst (Apache 2.0 : deux PST Unicode et
+un OST d'Outlook 2013, pages de 4~Kio et blocs compressés) et un PST du corpus
+EDRM Enron v2 (CC-BY 3.0 US), et fait lire chaque message par pypff, le lecteur
+de libpff écrit indépendamment de \wac{}. \texttt{pst\_test} compare, message
+par message : objet, expéditeur, dates de remise et d'envoi, nom, taille et
+SHA-256 de chaque pièce jointe, SHA-256 du corps.
+
+\begin{lstlisting}
+PYTHON=vmtest/tools/pff-venv/bin/python bash sources/pst_fixtures.sh /tmp/pstfx
+cd build-windows/tests && wine pst_test.exe Z:/tmp/pstfx
+\end{lstlisting}
+
+Référence : 1~800 contrôles, aucun échec ; les 256 messages que lit pypff
+identiques, et les 4 éléments du PST Enron que pypff ne lit pas lus par
+\wac{}. Le déchiffrement retiré, 253 échecs.
+
 \section{Index d'Internet Explorer : \texttt{ie\_index\_dat\_test}}
 
 Vérifie le décodeur des \fichier{index.dat} d'Internet Explorer 5 à 9
