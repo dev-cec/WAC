@@ -22,10 +22,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Clone de la VM : win11-msys2 (disque système copié, /home/sebastien/vms/win11-msys2.qcow2 ; disque de données, clés USB et ISO de transfert détachés : le clone ne touche aucun témoin)
-- [ ] MSYS2 MINGW64 installé dans le clone, sources copiées, build-windows.sh lancé
+- [x] MSYS2 MINGW64 installé dans le clone (archive de base épinglée par le SHA-256 de GitHub, e9ea7da6…1290 ; g++ 16.2.0), sources du commit 101bb81 copiées (git archive), build-windows.sh lancé
 - [ ] Imports comparés au binaire de Linux, cycle VM avec le binaire de MSYS2
 
 ## Journal
 - (vide)
 - 2026-10-07 : lieu décidé — clone dédié de la VM.
 - 2026-10-07 : en cours. win11-test arrêtée proprement pour le clonage, puis redémarrée ; elle ne démarrait plus — son ISO d'installation (Téléchargements/Win11_25H2_French_x64_v2.iso) n'existe plus : support éjecté de sa configuration et de celle du clone (virsh change-media … --eject --config), sans autre changement.
+- 2026-10-07 : premier constat — l'aide de build-windows.sh demandait libiconv, qui ne fournit sous MSYS2 que les bibliothèques ; l'exécutable iconv vient de mingw-w64-x86_64-iconv : message corrigé.
