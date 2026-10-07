@@ -31,7 +31,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Couche LTP : tas (HN), B-arbre sur tas (BTH), contexte de propriétés (PC), table (TC)
 - [x] Messagerie (pst_messages) : dossiers, messages, destinataires, pièces jointes, objets intégrés (méthode 5) — pst_test : 1 800 contrôles, les 256 messages lus par pypff identiques champ par champ (objet, expéditeur, dates, pièces jointes nom/taille/SHA-256, corps), et les 4 que pypff ne lit pas lus par WAC
 - [x] Mutation vue échouer (déchiffrement retiré : 253 échecs) ; lecteur commité (9b81061), guide des tests FR + EN
-- [ ] Artefact emails : export des pièces jointes et des corps, JSON
+- [x] Artefact emails (Outlook) : emails.json (une fiche par boîte, une par message), corps et pièces jointes exportés avec leur SHA-256, nom de pièce jointe jamais pris pour chemin (rang + extension simple) ; parcours message par message (un OST de plusieurs Go jamais tenu en mémoire) ; clé emails, prélèvement Outlook Files, AppData\Local\Microsoft\Outlook, Content.Outlook
+- [x] Témoin VM : le PST Enron épinglé déposé une fois dans Outlook Files de « wac » ; check_emails confronte emails.json à la référence pypff
+- [ ] Cycle --only=emails
 - [ ] Thunderbird : mbox des profils, MIME (en-têtes encodés, multipart, base64, quoted-printable), pièces jointes ; Thunderbird installé dans la VM, message témoin, confronté au module mailbox de Python
 - [ ] Copies ouvertes : Content.Outlook (INetCache), cache OLK, prélevées
 - [ ] Clé emails, prélèvement (Outlook Files, AppData\Local\Microsoft\Outlook, profils Thunderbird), conversion, documentation FR + EN, cycle complet
@@ -46,3 +48,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-07 : déjà dans WAC : DEFLATE (inflate.cpp), base64 (authenticode.h, à ramener dans conversions.h quand il servira hors d'Authenticode).
 - 2026-10-07 : format relevé sur le corpus. PST : version 23 (Unicode), chiffrement 1 (permutation : table mpbbI de [MS-PST] §5.1). OST d'Outlook 2013 : version 36, pages de B-arbre de 4 096 octets (remorque de 24 octets à 4 072), blocs alignés sur 512 avec une remorque de 24 octets portant la taille décompressée ; 62 blocs sur 310 compressés, en flux zlib (0x78 0x9C, DEFLATE, Adler-32). Chiffrement 2 (« cyclique ») : aucun échantillon — non décodé, et dit. Format ANSI (versions 14/15, Outlook 97-2002) : hors corpus, non décodé.
 - 2026-10-07 : lecteur écrit (pst_file, pst_messages, pst_test, pst_fixtures.sh). Deux écarts du premier passage expliqués : (1) les pièces jointes d'un rendez-vous sont des objets intégrés (PtypObject, méthode 5) — la valeur nomme un sous-nœud, dont pypff rend les octets ; WAC aussi, et décode en plus ses propriétés comme un message ; (2) pypff ne donne pas d'attribut subject à un élément de disponibilité (IPM.Microsoft.ScheduleData.FreeBusy) bien que le fichier porte « LocalFreebusy » : la référence lit alors la propriété 0x0037 dans le jeu d'enregistrements de pypff. Non commité.
+- 2026-10-07 : artefact Outlook écrit et compilé, témoin et contrôle écrits ; non commité.
