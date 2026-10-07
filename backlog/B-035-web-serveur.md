@@ -41,3 +41,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : décision utilisateur — prélever la base de données du site si elle est présente (taille à étudier) ; le web est séparé en deux artefacts, chacun avec sa clé dans `wac.yml` : client (B-016) et serveur (cette fiche).
 - 2026-10-02 : décision utilisateur — passée en P3 : peu de serveurs web sous Windows ; tout ce qui touche au client d'abord.
 - 2026-10-06 : prérequis ajoutés à la demande de l'utilisateur : B-039 (artefacts par version de Windows), puis B-038 (versions serveur, de 2003 à 2026).
+- 2026-10-07 : décision utilisateur — version 3.0, avec la rétrocompatibilité.

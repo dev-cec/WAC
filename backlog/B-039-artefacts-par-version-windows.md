@@ -47,3 +47,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-06 : créée à la demande de l'utilisateur — prérequis de B-035 (web côté serveur) et de B-037 (compatibilité XP).
 - 2026-10-06 : objectif précisé par l'utilisateur — la fiche doit faciliter l'arrivée des prochaines versions de Windows et des nouveaux formats d'artefacts.
 - 2026-10-06 : demande utilisateur — garde-fou vérifiant la présence d'un artefact avant de le prélever, pour un artefact coché dans `wac.yml` qui n'existe pas sur la version examinée.
+- 2026-10-07 : décision utilisateur — version 3.0 ; prérequis aussi de B-041 (Active Directory).

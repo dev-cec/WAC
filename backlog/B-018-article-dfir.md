@@ -6,7 +6,7 @@
 
 ## Pourquoi
 Faire connaître et relire WAC par des pairs : c'est aussi la meilleure validation externe.
-A faire en dernier.
+À faire après la version 2.0.0 (B-025) et avant la version 3.0 (rétrocompatibilité, B-037, B-038, B-039).
 
 ## Source
 Dossiers de validation et d'innocuité, mesures du cycle VM.
@@ -28,3 +28,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - (vide)
+- 2026-10-07 : décision utilisateur — l'article suit la montée en 2.0.0 et précède la rétrocompatibilité, qui fera la version 3.0.

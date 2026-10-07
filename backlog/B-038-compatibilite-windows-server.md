@@ -37,3 +37,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
 
 ## Journal
 - 2026-10-06 : créée à la demande de l'utilisateur — compatibilité avec les versions serveur de Windows, de 2003 à 2026, avant B-035 ; les artefacts sont sensiblement ceux du client de même génération.
+- 2026-10-07 : décision utilisateur — version 3.0, avec les artefacts de compromission d'Active Directory (B-041).
