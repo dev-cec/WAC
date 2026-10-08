@@ -2,6 +2,7 @@
  *  \brief System Resource Usage Monitor (see srum.h).
  */
 #include "srum.h"
+#include "ese_recovery.h"
 #include "consigne.h"
 #include <cstring>
 #include <cwctype>
@@ -56,6 +57,9 @@ HRESULT Srum::getData() {
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(conf.systemDrive.substr(0, 2)) + DATABASE);
 	if (found == index.end() || found->second.workingFile.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	// The last hour is in SRU*.log, collected with the database: replayed into the copy first (B-046).
+	const EseReplay replayed = ReplayEseLogsOnce(found->second.workingFile, found->second.sourcePath);
+	if (replayed.attempted && !replayed.applied) log(1, L"⚠️SRUM logs not replayed: " + replayed.detail);
 	const HRESULT opened = database_.open(found->second.workingFile);
 	if (opened != ERROR_SUCCESS) return opened;
 	if (database_.dirtyShutdown())

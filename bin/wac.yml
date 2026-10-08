@@ -6,8 +6,6 @@
 # some that are gone. Write it again with --write-config.
 wac_version: 1.4.0
 
-# true: collect and convert on this machine; false: collect only (convert later, elsewhere, with --convert).
-convert: false
 
 # Executables: none; unverified (collect those whose signature does not hold);
 # all (collect every one, its signature verdict recorded).

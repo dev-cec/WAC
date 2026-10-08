@@ -2,6 +2,7 @@
  *  \brief The web, client side (see web_client.h).
  */
 #include "web_client.h"
+#include "ese_recovery.h"
 #include "sqlite_reader.h"
 #include "registry_common.h"
 #include "ese_database.h"
@@ -789,6 +790,11 @@ HRESULT WebClient::getData() {
 		base.browser = L"WebCache";
 		base.sid = std::get<0>(profileEntry);
 		base.source = originalPath(cache.wstring());
+		/* Its latest entries may still be in its transaction logs, collected
+		   with it: replayed into the copy first (B-046). */
+		const EseReplay replayed = ReplayEseLogsOnce(cache.wstring(), base.source);
+		if (replayed.attempted && !replayed.applied)
+			log(1, L"⚠️WebCache logs not replayed: its latest entries may be missing — " + base.source);
 		if (readWebCache(cache.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥WebCache not read: " + base.source);
 	}
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {

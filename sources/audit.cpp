@@ -21,6 +21,11 @@ const wchar_t* HIVE_REPLAY  = L"Application of the transaction logs to the COPIE
                               L"never to the original one. The original content of every replaced page "
                               L"is kept in an undo journal: the raw copy stays "
                               L"reconstructible byte for byte.";
+const wchar_t* ESE_REPLAY   = L"Application of the transaction logs to the COPIED ESE database by "
+                              L"Windows' own engine (esent.dll, loaded from System32 for this purpose), "
+                              L"in the working copy's folder: the logs' database is mapped to the copy, "
+                              L"any other is treated as missing; the original database and the exhibit "
+                              L"store are not opened, the engine's events and counters are off.";
 const wchar_t* SCM          = L"A single read-only enumeration of the service manager "
                               L"(EnumServicesStatusExW), to read the current state. No "
                               L"handle opened service by service: the configuration comes "

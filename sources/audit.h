@@ -51,6 +51,9 @@ namespace Footprint {
 	//! Replay of the transaction logs into a COPIED hive, with an undo log
 	//! (see hive_recover.h).
 	extern const wchar_t* HIVE_REPLAY;
+	//! Replay of the transaction logs into a COPIED ESE database by esent.dll
+	//! (see ese_recovery.h).
+	extern const wchar_t* ESE_REPLAY;
 	//! A single read-only enumeration of the service manager: reads the current
 	//! state without opening a handle per service.
 	extern const wchar_t* SCM;

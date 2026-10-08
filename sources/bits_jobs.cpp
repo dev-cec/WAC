@@ -3,6 +3,7 @@
  */
 #include "conversions.h"
 #include "bits_jobs.h"
+#include "ese_recovery.h"
 #include "consigne.h"
 #include "ese_database.h"
 #include <algorithm>
@@ -178,6 +179,9 @@ HRESULT BitsJobs::getData() {
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(conf.systemDrive.substr(0, 2)) + DATABASE);
 	if (found == index.end() || found->second.workingFile.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	// Its latest changes are in its edb*.log, collected with it: replayed into the copy first (B-046).
+	const EseReplay replayed = ReplayEseLogsOnce(found->second.workingFile, found->second.sourcePath);
+	if (replayed.attempted && !replayed.applied) log(1, L"⚠️BITS database logs not replayed: " + replayed.detail);
 	EseDatabase database;
 	const HRESULT opened = database.open(found->second.workingFile);
 	if (opened != ERROR_SUCCESS) return opened;
