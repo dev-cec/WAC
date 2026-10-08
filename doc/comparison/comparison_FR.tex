@@ -430,7 +430,7 @@ d'innocuité, et la lecture brute des volumes, visible d'un EDR.
         (0 ou $-1$).
   \item[SHA-1 partiel de l'Amcache signalé] Pour un fichier de plus de 30\,Mio,
         Amcache ne hache que les 31\,457\,280 premiers octets (mesuré sur
-        \fichier{mrt.exe}). \wac{} le dit (\champ{Sha1CoversBytes}) ; sans cela,
+        \fichier{mrt.exe}). \wac{} le dit (\champ{AmcacheSha1CoversBytes}) ; sans cela,
         la comparaison avec le SHA-1 du fichier entier ferait conclure à tort à
         une modification.
   \item[Pas de champ trompeur] L'indicateur « exécuté » du ShimCache, que donne

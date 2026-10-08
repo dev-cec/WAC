@@ -17,8 +17,8 @@
  *  later Windows adds is not lost either. Values are converted only where the
  *  conversion was checked:
  *    - `FileId` of an executable and `DriverId` of a driver ("0000" + 40
- *      hexadecimal digits) give `Sha1`; for a file larger than 30 MiB, Amcache
- *      hashed only its first 31,457,280 bytes, which `Sha1CoversBytes` says;
+ *      hexadecimal digits) give `AmcacheSha1`; for a file larger than 30 MiB, Amcache
+ *      hashed only its first 31,457,280 bytes, which `AmcacheSha1CoversBytes` says;
  *    - `LinkDate`, InventoryApplication's `InstallDate` and a driver's
  *      `DriverLastWriteTime`, text dates, are UTC (measured against the PE
  *      header, the folder's creation and the driver file's own date);

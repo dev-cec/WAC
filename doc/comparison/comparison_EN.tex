@@ -415,7 +415,7 @@ volumes, visible to an EDR.
         $-1$).
   \item[Partial Amcache SHA-1 flagged] For a file larger than 30\,MiB, Amcache
         hashes only the first 31,457,280 bytes (measured on \fichier{mrt.exe}).
-        \wac{} says so (\champ{Sha1CoversBytes}); without it, comparing with the
+        \wac{} says so (\champ{AmcacheSha1CoversBytes}); without it, comparing with the
         whole file's SHA-1 would wrongly conclude to a modification.
   \item[No misleading field] The ShimCache ``executed'' flag, which
         AppCompatCacheParser gives, says ``no'' for 105 of the 117 binaries that

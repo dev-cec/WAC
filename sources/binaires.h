@@ -81,7 +81,7 @@ struct BinarySummary {
 const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath);
 
 /*! Adds the three fingerprints to a JSON object, under the keys
- *  `<prefix>Md5<suffix>`, `<prefix>Sha1<suffix>`, `<prefix>Sha256<suffix>`.
+ *  `<prefix>MD5<suffix>`, `<prefix>SHA1<suffix>`, `<prefix>SHA256<suffix>`.
  *  A missing fingerprint is not emitted: an empty field would read as a
  *  software defect. */
 void addFingerprints(Json& o, const BinaryFingerprint& e,

@@ -20,7 +20,7 @@ void addValue(AmcacheEntry& e, const std::wstring& name, DWORD type, const std::
 	const bool driver = e.table == L"InventoryDriverBinary";
 	// "0000" + the SHA-1 of the file: FileId of an executable, DriverId of a driver.
 	if ((name == L"FileId" || (name == L"DriverId" && driver)) && text.size() == 44 && text.compare(0, 4, L"0000") == 0)
-		e.values.emplace_back(L"Sha1", Json::str(text.substr(4)));
+		e.values.emplace_back(L"AmcacheSha1", Json::str(text.substr(4)));
 	else if (!text.empty() && (name == L"LinkDate" || (name == L"InstallDate" && e.table == L"InventoryApplication")
 	                           || (name == L"DriverLastWriteTime" && driver)))
 		addUtcTextDate(e.values, name, text);
@@ -74,7 +74,7 @@ AmcacheEntry::AmcacheEntry(ORHKEY key, const std::wstring& _table, const std::ws
 	for (const auto& [n, v] : values) {
 		// With --binary, the file the entry names is fingerprinted if it is still there.
 		if (n == L"LongPath" && v.kind() == Json::Kind::Str) fingerprint = FingerprintFile(v.text());
-		if (n == L"Sha1") sha1 = true;
+		if (n == L"AmcacheSha1") sha1 = true;
 		if (n == L"Size" && v.kind() == Json::Kind::Num) size = std::stoull(v.text());
 	}
 	/* Amcache hashes only the first 31,457,280 bytes (30 MiB) of a file: the
@@ -83,7 +83,7 @@ AmcacheEntry::AmcacheEntry(ORHKEY key, const std::wstring& _table, const std::ws
 	   concludes to a modified file from a hash that never covered it whole. */
 	const unsigned long long AMCACHE_HASHED_BYTES = 31457280ULL;
 	if (sha1 && size > AMCACHE_HASHED_BYTES)
-		values.emplace_back(L"Sha1CoversBytes", Json::num(AMCACHE_HASHED_BYTES));
+		values.emplace_back(L"AmcacheSha1CoversBytes", Json::num(AMCACHE_HASHED_BYTES));
 }
 
 Json AmcacheEntry::toJson(bool withTable) const {

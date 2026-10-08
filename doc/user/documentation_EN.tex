@@ -1076,12 +1076,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \fichier{amcache\_applications.json},
         \fichier{amcache\_inventory.json}] Amcache inventory, table by table
         and value by value, with the last write time of each entry: the
-        executables (path, publisher, version, size, link date, \champ{Sha1}),
+        executables (path, publisher, version, size, link date, \champ{AmcacheSha1}),
         the installed applications, and in the third file the drivers (with
-        their \champ{Sha1}), devices, containers, driver packages and
+        their \champ{AmcacheSha1}), devices, containers, driver packages and
         shortcuts, each with its \champ{Table}. \textbf{Beware}: for a file
         larger than 30~MiB, Amcache hashes only the first 31,457,280 bytes;
-        \champ{Sha1CoversBytes} says so, and that SHA-1 does not compare with the
+        \champ{AmcacheSha1CoversBytes} says so, and that SHA-1 does not compare with the
         whole file's.
   \item[\fichier{shimcache.json}] compatibility cache: path and modification date
         of the file, position in the cache (\champ{CachePosition}, 0 for the most
