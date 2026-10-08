@@ -47,6 +47,7 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
 | [B-045](B-045-scripts-en-echec.md) | Scripts de WinSxS et WindowsApps en échec 0x80004005 à la lecture des exécutables | en cours | P2 | faible |
+| [B-046](B-046-journaux-ese.md) | Journaux ESE ni prélevés ni rejoués : activité récente de la WebCache manquée | à décider | P1 | fort |
 | [B-025](B-025-version-2-0.md) | Version 2.0.0 (montée majeure), juste avant l'article DFIR | à faire | P2 | faible |
 | [B-018](B-018-article-dfir.md) | Article de présentation (2 pages, magazine DFIR), après la 2.0.0 et avant la 3.0 | à faire | P3 | moyen |
 
