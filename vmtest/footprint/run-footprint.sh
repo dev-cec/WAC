@@ -40,12 +40,11 @@ RESULTS="$HERE/results"
 declare -A COMMAND=(
   [control]='ver'
   [wac-collect]='cd /d K:\WAC && WAC.exe --output=collect < nul'
-  [wac-full]='cd /d K:\WAC && WAC.exe --full --output=full < nul'
   [kape-targets]='K:\KAPE\KAPE\kape.exe --tsource C: --target !SANS_Triage --tdest K:\out\kape-targets --tflush'
   [kape-modules]='K:\KAPE\KAPE\kape.exe --tsource C: --target !SANS_Triage --tdest K:\out\kape-tdest --tflush --module !EZParser --mdest K:\out\kape-mdest --mflush'
   [ez-live]='K:\ez-live.cmd'
 )
-ORDER=(control wac-collect wac-full kape-targets kape-modules ez-live)
+ORDER=(control wac-collect kape-targets kape-modules ez-live)
 RUNS=("${@:-${ORDER[@]}}")
 for run in "${RUNS[@]}"; do [[ -n "${COMMAND[$run]:-}" ]] || { echo "unknown run: $run (runs: ${ORDER[*]})"; exit 2; }; done
 

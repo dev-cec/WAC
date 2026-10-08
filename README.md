@@ -150,8 +150,7 @@ whose signature holds is fingerprinted rather than copied, like a Microsoft
 one. Without a trust set, every third-party binary is collected.
 
 **What to collect is a file, not a command line.** `wac.yml`, next to
-`WAC.exe`, holds the procedure: collection or full run, binaries rule, and one
-switch per artefact. The file applied is recorded in `investigation.json`.
+`WAC.exe`, holds the procedure: binaries rule, and one switch per artefact. The file applied is recorded in `investigation.json`.
 
 One file per artefact, plus `investigation.json` (see below). The output schema
 is documented by the code itself: every field carries a doc comment explaining
@@ -170,7 +169,7 @@ Windows program of the collection cannot run there.
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:
 
 ```
-usage: wac [--config=file | --write-config] [--collect | --full | --convert=folder] [--language=fr|en] [--dump] [--events] [--binary | --binary-all] [--threads=N] [--output=output] [--loglevel=2] [--debug]
+usage: wac [--config=file | --write-config] [--collect | --convert=folder] [--language=fr|en] [--dump] [--events] [--binary | --binary-all] [--threads=N] [--output=output] [--loglevel=2] [--debug]
        wac --update-trust[=folder]
         --help or /? : show this help
         --language=fr|en : language of the console (French by default; also
@@ -181,7 +180,7 @@ usage: wac [--config=file | --write-config] [--collect | --full | --convert=fold
                     and disallowed certificates, checks their signatures, and
                     writes the trust set into folder (by default `trust`, next
                     to WAC.exe), to be carried on the key (see below)
-        --collect : collection only, on the examined machine: live snapshots and
+        --collect : (the default) collection, on the examined machine: live snapshots and
                     raw extraction into the sealed exhibit store; nothing is
                     converted. With --events, the resource files of every event
                     provider; with --binary, every executable of every fixed
@@ -194,11 +193,11 @@ usage: wac [--config=file | --write-config] [--collect | --full | --convert=fold
                     exhibit store, conversion.json as its log
         --dump : add hexa value in json files for shellbags and LNK files
         --events : extract and parse the .evtx event logs (adds ~117 MB to the collection)
-        --binary : in a full run, fingerprint every file CITED by an artefact,
-                   read raw; the cited executables, libraries, drivers and
-                   scripts not authenticated as Microsoft are also collected.
-                   With --collect, every executable of every fixed NTFS volume
-                   instead, cited or not (see --collect)
+        --binary : at collection, every executable, library, driver and
+                   script of every fixed NTFS volume is read raw and verified
+                   in memory; those not authenticated are collected (see
+                   --collect). At conversion, every file CITED by an artefact
+                   gets the fingerprints of its exhibit
         --binary-all : like --binary, but every executable is collected,
                    authenticated or not; the signature is still checked and
                    its verdict recorded in the manifest
@@ -225,12 +224,11 @@ All options are optional and **disabled by default**.
 Rather than typing the options at every collection, write the procedure once
 in `wac.yml`, next to `WAC.exe`: WAC applies it first, and an option given on
 the command line overrides it. `WAC.exe --write-config` writes the reference
-file, commented — the recommended procedure: collection only, unverified
-binaries collected, event logs included.
+file, commented — the recommended procedure: unverified binaries collected,
+event logs included.
 
 ```yaml
 wac_version: 1.4.0      # version of WAC the file is written for (--write-config)
-convert: false          # true: collect and convert here; false: collect only (--convert elsewhere)
 binary: unverified      # none | unverified | all
 threads: 0              # analysis threads for the binaries, 0: automatic
 output: output
@@ -261,9 +259,8 @@ artefacts:              # one key per artefact; a missing key is true
 - An artefact switched off is not read at all, and its JSON file says so
   (`CollectionStatus: NotRequested`, with the key): never mistaken for a
   failure or for an absence of traces.
-- `--config=<file>` reads another file; `--full` collects and converts here
-  although the file says `convert: false`.
-- Without `wac.yml`, WAC behaves as before: full run, options as given.
+- `--config=<file>` reads another file.
+- Without `wac.yml`, WAC collects every artefact, options as given.
 - The YAML is read by libyaml 0.2.5, the reference implementation, compiled
   into `WAC.exe` (`third_party/libyaml-0.2.5`, see its `VENDORED.md`).
 
@@ -343,17 +340,17 @@ A WAC run does two different things:
    Prefetch, shortcuts…) into JSON. This part only needs the sealed exhibit
    store, **not** the machine.
 
-Running the conversion on the examined machine adds work there that nothing
-requires:
+WAC **never does both in the same run**: it collects on the examined machine,
+and converts elsewhere. Running the conversion on the examined machine would
+add work there that nothing requires:
 
 - minutes of processing in WAC's memory, which Windows may page out to
   `pagefile.sys` — on the very disk under examination;
 - a process that stays longer on the machine, seen and logged by its security
   software;
-- if WAC crashes, a Windows Error Reporting file written on the machine.
-
-The conversion never reads the machine's own files or registry — only the
-copies on the collection medium — but it still runs there.
+- if WAC crashes, a Windows Error Reporting file written on the machine;
+- system libraries loaded to decode (the ESE engine, to replay a database's
+  transaction logs).
 
 Good forensic practice says to avoid exactly that:
 
@@ -373,32 +370,25 @@ Separating the two stages brings three things:
   byte-identical JSON files, and the analysis can be redone later — with a
   corrected WAC, or by a third party — without going back to the machine.
 
-### Which mode to choose
-
-**By default: `--collect` on the examined machine, then `--convert` on an
-analysis workstation.**
+### The two commands
 
 ```
 E:\> WAC.exe --collect --events --binary --output=accounting-pc-01     (examined machine, as administrator)
 D:\> WAC.exe --convert=E:\accounting-pc-01 --events --binary           (analysis workstation)
 ```
 
-| | Full run (\<default\>) | `--collect` | `--convert=folder` |
-|---|---|---|---|
-| Runs on | the examined machine | the examined machine | an analysis workstation |
-| Does | collection **and** conversion, in one run | collection only: live snapshots, raw extraction, sealed exhibit store — **nothing converted** | checks the seal and every fingerprint, then converts; the exhibit store is only read |
-| `--binary` examines | only the files **cited by the artefacts**; a binary no artefact cites is not examined | **every executable of every fixed NTFS volume**, cited or not | what the collection took |
-| `--binary` collects | the cited executables **not authenticated**, with their fingerprints; the authenticated ones are fingerprinted, not copied | the executables **not authenticated**, with their fingerprints; the authenticated ones are fingerprinted, not copied | — |
-| `--binary-all` collects | **every** cited executable, authenticated or not, with its signature verdict | **every** executable, authenticated or not, with its signature verdict | — |
-| Traces on the examined machine | the collection's **and the conversion's** (processing, memory, a longer process, a crash report if it crashes) | the collection's only | **none**: the machine is not involved |
-| Duration on the test VM (`--events --binary`) | 3 min 30 s | 8 min 30 s — the extra time is *reading* every volume, which writes nothing to it | 56 s |
-| Reproducible | partly: its exhibit store is sealed, but holds neither the authenticated binaries it cited nor any record of them, and converting it again is not a tested path | yes, through `--convert` | yes: two conversions give identical JSON files |
+`--collect` is the default, said explicitly: `WAC.exe` alone collects.
 
-**Use the full run only in specific cases, and say so in the report:**
-
-- the results are needed on the spot and no analysis workstation is at hand;
-- the machine must be released within minutes, and the 8 minutes of a
-  `--collect --binary` cannot be afforded.
+| | `--collect` (the default) | `--convert=folder` |
+|---|---|---|
+| Runs on | the examined machine | an analysis workstation |
+| Does | live snapshots, raw extraction, sealed exhibit store — **nothing converted** | checks the seal and every fingerprint, then converts; the exhibit store is only read |
+| `--binary` examines | **every executable of every fixed NTFS volume**, cited or not — the artefacts that will cite them are not decoded yet | what the collection took |
+| `--binary` collects | the executables **not authenticated**, with their fingerprints; the authenticated ones are fingerprinted, not copied | — |
+| `--binary-all` collects | **every** executable, authenticated or not, with its signature verdict | — |
+| Traces on the examined machine | the collection's only | **none**: the machine is not involved |
+| Duration on the test VM (`--events --binary`) | 8 min 30 s — reading every volume, which writes nothing to it | 56 s |
+| Reproducible | yes, through `--convert` | yes: two conversions give identical JSON files |
 
 **`--binary` or `--binary-all`.** Both read every executable raw and verify
 its signature in memory; they differ in what they **copy**. An executable is
@@ -409,10 +399,7 @@ a trust set is on the key (`--update-trust`) and its signature holds against
 it: chain to a root Microsoft trusts for code signing, valid at the signing
 time, not revoked, not a vulnerable driver. Every other one — unsigned,
 modified, unknown, or third-party without a usable trust set — is *not
-authenticated*. The table describes a `--collect`;
-a full run applies the same rules to the executables the artefacts cite, the
-fingerprints of the authenticated ones going into the artefact JSON files
-instead of the manifest.
+authenticated*.
 
 | | `--binary` (the usual choice) | `--binary-all` |
 |---|---|---|
@@ -639,7 +626,7 @@ or its XML form) signs the UTF-16LE text that precedes it — verified on every
 signed script of the test VM, and a one-word change makes it rejected. A WSH
 script (`.vbs`, `.js`, `.wsf`) signed only inline is still collected: its
 signed digest covers a normalised form of the text that could not be
-established with certainty. On the test VM, a full run's cited binaries went
+established with certainty. On the test VM, the binaries the artefacts cite went
 from 2 131 collected (3.3 GB) before this check to 75 (250 MB) now; the scripts
 still collected are the unsigned ones. Store applications, signed per package
 rather than per file, are verified through the package signature and its block
@@ -700,8 +687,9 @@ point is not the ratio but the shape: the streamed figure does not grow with the
 size of the logs, so it cannot reach the level where Windows starts paging — and
 paging writes to `pagefile.sys`, on the disk one is trying not to modify.
 
-End to end, the offline path now takes **4 min 33 s** for a full run with `--events`
-and `--binary` on the test VM (170 344 events from 404 logs), against about
+End to end, the offline path took **4 min 33 s** to collect and convert in one
+run (a mode since removed: WAC collects or converts, B-047) with `--events` and
+`--binary` on the test VM (170 344 events from 404 logs), against about
 20 minutes for the old API path; it has not yet been timed on physical
 hardware.
 

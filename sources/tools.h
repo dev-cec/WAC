@@ -59,16 +59,16 @@ struct TimeZoneInfo {
 	bool  valid = false;           //!< true if the reading succeeded
 };
 
-/*! What a run of WAC does.
+/*! What a run of WAC does: it collects, or it converts — never both.
  *
- *  WHY THREE MODES. Good forensic practice separates the collection, on the
- *  examined machine, from the analysis, on a controlled workstation (ISO/IEC
- *  27037 and 27042): the fewer actions on the examined system, the fewer
- *  traces; and a conversion made from the sealed exhibit store can be redone,
- *  by anyone, with a corrected WAC. */
+ *  WHY. Good forensic practice separates the collection, on the examined
+ *  machine, from the analysis, on a controlled workstation (ISO/IEC 27037 and
+ *  27042): the fewer actions on the examined system, the fewer traces; and a
+ *  conversion made from the sealed exhibit store can be redone, by anyone,
+ *  with a corrected WAC. A mode that converted on the examined machine as well
+ *  (--full, convert: true) is gone (backlog B-047). */
 enum class RunMode {
-	Full,     //!< collection and conversion in one run, on the examined machine (default)
-	Collect,  //!< --collect: live snapshots, raw extraction, sealed exhibit store; nothing converted
+	Collect,  //!< the default, or --collect: live snapshots, raw extraction, sealed exhibit store; nothing converted
 	Convert   //!< --convert=<folder>: conversion of a collection made earlier, from its checked exhibit store
 };
 
@@ -202,7 +202,7 @@ struct AppliConf {
 		 *  @return true if one of them is switched on */
 		bool needsEventLogs() const { return events || rdpServer; }
 	} artefacts;
-	RunMode mode = RunMode::Full; //!< what this run does (see RunMode)
+	RunMode mode = RunMode::Collect; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
 	/*! System drive of the examined machine, with its colon ("C:").
 	*

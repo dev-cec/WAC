@@ -46,7 +46,7 @@ void refused(const std::string& text, int line, const std::string& what) {
 int main() {
 	const std::string sample =
 		"\xEF\xBB\xBF# WAC configuration\n"
-		"convert: false        # collection only\n"
+		"dump: false           # no raw hexadecimal\n"
 		"binary: unverified\n"
 		"output: \"D:\\\\cases\\\\2026-042\"\n"
 		"artefacts:\n"
@@ -57,15 +57,15 @@ int main() {
 	YamlNode root;
 	std::string error;
 	check(YamlParse(sample, root, error), "sample refused: " + error);
-	const YamlNode* convert = root.child("convert");
-	check(convert && !convert->mapping && convert->scalar == "false" && convert->line == 2, "convert read wrong");
+	const YamlNode* dump = root.child("dump");
+	check(dump && !dump->mapping && dump->scalar == "false" && dump->line == 2, "dump read wrong");
 	check(root.child("binary") && root.child("binary")->scalar == "unverified", "binary read wrong");
 	check(root.child("output") && root.child("output")->scalar == "D:\\cases\\2026-042", "double-quoted escapes read wrong");
 	const YamlNode* artefacts = root.child("artefacts");
 	check(artefacts && artefacts->mapping && artefacts->children.size() == 3, "nested mapping read wrong");
 	check(artefacts && artefacts->child("events") && artefacts->child("events")->scalar == "yes, all", "single-quoted value read wrong");
 	check(artefacts && artefacts->child("prefetch") && artefacts->child("prefetch")->line == 9, "line numbers wrong");
-	check(root.children.size() == 4 && root.children[0].first == "convert" && root.children[3].first == "artefacts",
+	check(root.children.size() == 4 && root.children[0].first == "dump" && root.children[3].first == "artefacts",
 	      "order of the keys not kept");
 
 	YamlNode empty;

@@ -13,8 +13,7 @@
  *
  *  What is interpretation — naming the owner of a process, merging a service's
  *  state with its configuration — is left to the conversion, which reads the
- *  snapshot back. The full mode (collection and conversion in one run) goes
- *  through the same snapshot: one code path for both.
+ *  snapshot back.
  */
 #pragma once
 #include <windows.h>

@@ -58,7 +58,7 @@ HRESULT RecycleBin::getData() {
 	log(0, L"ℹ️Recycle bin :");
 	/* Through the manifest, like the change journal: the `$I` are found by
 	   their path on the examined machine, "X:\$Recycle.Bin\<SID>\$I…", on
-	   whichever volume, in a full run as in a conversion. */
+	   whichever volume. */
 	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
 		if (key.size() < 3 || key.compare(2, 14, L"\\$recycle.bin\\") != 0 || exhibit.workingFile.empty()) continue;
 		const std::filesystem::path source(exhibit.sourcePath);

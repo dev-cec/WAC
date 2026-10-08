@@ -286,7 +286,7 @@ def analyse(folder, run, control=None):
 
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
-    runs = [r for r in ["control", "wac-collect", "wac-full", "kape-targets", "kape-modules", "ez-live"]
+    runs = [r for r in ["control", "wac-collect", "kape-targets", "kape-modules", "ez-live"]
             if os.path.exists(os.path.join(root, r, "run.json"))]
     if "control" not in runs:
         sys.exit("no control run: nothing to subtract")

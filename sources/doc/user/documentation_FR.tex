@@ -232,10 +232,9 @@ logiciel ajouté, 1~volume) :
 \begin{center}
 \begin{tabular}{@{}L{7.4cm}rrr@{}}
 \toprule
-Mode & Consigne & Copie de travail & Durée \\
+Collecte & Consigne & Copie de travail & Durée \\
 \midrule
-Exécution complète, \opt{events} \opt{binary} (binaires cités) & 1,2~Go & 0,6~Go & 3~min~30 \\
-Collecte seule, \opt{collect} \opt{events} \opt{binary} (tous les exécutables) & 2,7~Go & 0,3~Go & 8~min~30 \\
+\opt{collect} \opt{events} \opt{binary} (tous les exécutables) & 2,7~Go & 0,3~Go & 8~min~30 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -250,8 +249,7 @@ Contenu & Consigne \\
 Métadonnées NTFS : \path|$MFT| (380~Mo), \path|$LogFile| (64~Mo),
   \path|$UsnJrnl:$J| (35~Mo, sur 3,6~Go logiques : NTFS a libéré le début,
   qui n'est pas copié) & 480~Mo \\
-Binaires copiés, exécution complète : les 62 binaires cités non authentifiés & 250~Mo \\
-Binaires copiés, collecte seule : 2\,853 non authentifiés sur 44\,446 lus & 1,2~Go \\
+Binaires copiés : 2\,853 non authentifiés sur 44\,446 lus & 1,2~Go \\
 Journaux d'événements (\opt{events}) & 170~Mo \\
 Ruches, Prefetch, raccourcis, listes de sauts & 180 à 230~Mo \\
 \bottomrule
@@ -321,12 +319,10 @@ Plutôt que de retaper les options à chaque collecte, la procédure s'écrit un
 fois dans \fichier{wac.yml}, à côté de \fichier{WAC.exe} : \wac{} l'applique
 d'abord, et une option donnée en ligne de commande la surcharge.
 \opt{write-config} écrit le fichier de référence, commenté — la procédure
-recommandée : collecte seule, binaires non vérifiés prélevés, journaux
-d'événements compris.
+recommandée : binaires non vérifiés prélevés, journaux d'événements compris.
 
 \begin{lstlisting}
 wac_version: 1.4.0      # version de WAC pour laquelle le fichier est écrit (--write-config)
-convert: false          # true : collecte et conversion ici ; false : collecte seule
 binary: unverified      # none | unverified | all
 threads: 0              # fils d'analyse des binaires, 0 : automatique
 output: output
@@ -431,10 +427,9 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   \item Un artefact désactivé n'est pas lu du tout, et son fichier JSON le dit
     (\champ{CollectionStatus} \texttt{NotRequested}, avec la clé) : jamais
     confondu avec un échec ou une absence de traces.
-  \item \opt{config=fichier} lit un autre fichier ; \opt{full} collecte et
-    convertit ici bien que le fichier dise \texttt{convert: false}.
-  \item Sans \fichier{wac.yml}, \wac{} fait une exécution complète de tous
-    les artefacts, journaux d'événements compris, options telles que données.
+  \item \opt{config=fichier} lit un autre fichier.
+  \item Sans \fichier{wac.yml}, \wac{} collecte tous les artefacts, journaux
+    d'événements compris, options telles que données.
 \end{itemize}
 
 \section{Options}
@@ -444,9 +439,9 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
 \normalfont\bfseries Option & \bfseries Effet \\
 \midrule
 \endhead
--{}-collect & Collecte seule, sur la machine examinée : relevés en direct et
-  extraction brute dans la consigne scellée, rien n'est converti. Voir
-  chapitre~\ref{chap:separation}. \\
+-{}-collect & Le mode par défaut, dit explicitement : collecte, sur la machine
+  examinée — relevés en direct et extraction brute dans la consigne scellée,
+  rien n'est converti. Voir chapitre~\ref{chap:separation}. \\
 -{}-convert=\newline dossier & Conversion seule, sur un poste d'analyse, de la collecte
   faite avec \opt{collect} dans ce dossier, après vérification du sceau et de
   chaque empreinte. Voir chapitre~\ref{chap:separation}. \\
@@ -455,10 +450,11 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   défaut (clé \texttt{events}). Chaque événement reçoit son message lisible,
   reconstitué à partir des ressources de son fournisseur. Environ 250~Mo de
   copies. \\
--{}-binary & Calcule les empreintes (MD5, SHA-1, SHA-256) de chaque fichier cité
-  par un artefact, par lecture directe du disque. Les exécutables, bibliothèques,
-  pilotes et scripts cités sont en outre \textbf{prélevés} dans la consigne. Voir
-  section~\ref{sec:binary}. \\
+-{}-binary & À la collecte, lit directement chaque exécutable, bibliothèque,
+  pilote, script et document à macros des volumes fixes, vérifie sa signature en
+  mémoire et \textbf{prélève} dans la consigne ceux qu'elle n'authentifie pas ;
+  à la conversion, chaque fichier cité par un artefact reçoit les empreintes de
+  sa pièce. Voir section~\ref{sec:binary}. \\
 -{}-binary-all & Comme \opt{binary}, mais \textbf{tout} exécutable est prélevé,
   authentifié ou non ; la signature est tout de même vérifiée, et le manifeste
   dit pour chacun si elle est valide. Pour les dossiers où le contenu même doit
@@ -680,13 +676,14 @@ Une exécution de \wac{} fait deux choses différentes :
         que de la consigne, \textbf{pas} de la machine.
 \end{enumerate}
 
-Sans option de mode, les deux se font sur la machine examinée. La conversion y
-ajoute un travail que rien n'impose : des minutes de traitement dans la mémoire
-de \wac{}, que Windows peut paginer dans \fichier{pagefile.sys}, sur le disque
-même qu'on examine ; un processus présent plus longtemps, vu et journalisé par
-les protections de la machine ; en cas de plantage, un rapport d'erreur Windows
-écrit sur la machine. Elle ne lit pourtant ni les fichiers ni le registre de la
-machine, seulement les copies du support de collecte, mais elle s'y exécute.
+\wac{} ne fait \textbf{jamais les deux dans la même exécution} : il collecte
+sur la machine examinée, et convertit ailleurs. Convertir sur la machine y
+ajouterait un travail que rien n'impose : des minutes de traitement dans la
+mémoire de \wac{}, que Windows peut paginer dans \fichier{pagefile.sys}, sur le
+disque même qu'on examine ; un processus présent plus longtemps, vu et
+journalisé par les protections de la machine ; en cas de plantage, un rapport
+d'erreur Windows écrit sur la machine ; et des bibliothèques du système chargées
+pour décoder (le moteur ESE pour rejouer les journaux d'une base).
 
 C'est précisément ce que les bonnes pratiques demandent d'éviter :
 \begin{itemize}
@@ -713,28 +710,13 @@ Séparer les deux étapes apporte trois choses :
         \wac{} ou par un tiers, sans revenir sur la machine.
 \end{itemize}
 
-\section{Quel mode choisir}
+\section{Les réglages de la collecte}
 
 \begin{itemize}
-  \item \textbf{Par défaut : \opt{collect} sur la machine, \opt{convert} sur le
-        poste d'analyse.} C'est la procédure qui laisse le moins de traces sur la
-        machine examinée, garde les preuves scellées et permet de refaire et de
-        vérifier l'analyse.
-  \item \textbf{Exécution complète} (sans option de mode) : à réserver aux cas
-        particuliers, à signaler au rapport — un tri dont les résultats sont
-        attendus sur place sans poste d'analyse, une machine à rendre en quelques
-        minutes. Sa conversion ne lit que les copies du support de collecte,
-        jamais les fichiers ni le registre de la machine, mais elle s'exécute sur
-        celle-ci : des minutes de traitement en mémoire (que Windows peut paginer
-        dans \fichier{pagefile.sys}), un processus plus long, un rapport
-        d'erreur Windows en cas de plantage.
-  \item \textbf{Portée de \opt{binary}} : en exécution complète, seuls les
-        fichiers \textbf{cités par les artefacts} sont lus ; un binaire du disque
-        qu'aucun artefact ne cite n'est pas examiné. Avec \opt{collect}, ce sont
-        \textbf{tous les exécutables de tous les volumes fixes NTFS}, cités ou non.
-        La collecte seule dure plus longtemps pour cette raison (8~min~30
-        contre 3~min~30 sur la machine de test) : ce temps est de la lecture,
-        qui n'écrit rien sur la machine.
+  \item \textbf{Portée de \opt{binary}} : la collecte lit \textbf{tous les
+        exécutables de tous les volumes fixes NTFS}, cités ou non, car elle ne
+        sait pas encore lesquels les artefacts citeront. Ce temps (8~min~30 sur
+        la machine de test) est de la lecture, qui n'écrit rien sur la machine.
   \item \textbf{\opt{binary-all}} : quand le contenu de chaque exécutable doit
         figurer dans la consigne (analyse de logiciel malveillant, demande des
         fichiers eux-mêmes), pour environ 20~Go.
@@ -774,7 +756,7 @@ La conversion ne pouvant plus rien demander à la machine, la collecte prend
   \item avec \opt{binary}, \textbf{tous} les exécutables, bibliothèques,
         pilotes, scripts et documents à macros de \textbf{tous les volumes fixes
         NTFS} — un profil sur \fichier{D:} compris —, lus directement et
-        vérifiés en mémoire, comme en exécution complète (section~\ref{sec:binary}) :
+        vérifiés en mémoire (section~\ref{sec:binary}) :
         \begin{itemize}
           \item authentifié (catalogue, signature intégrée, paquet du Store), ou
                 binaire tiers dont la signature tient face au jeu de confiance de
@@ -844,8 +826,7 @@ identiques, ce que le harnais de test vérifie à chaque cycle.
         qu'un document écrit ou modifié par quiconque ne peut pas être.
   \item Un fichier cité qui ne peut porter ni code ni macro (\fichier{docx},
         \fichier{xlsx}, \fichier{pdf}, donnée) n'est pas prélevé : en
-        conversion, il n'a donc \textbf{pas d'empreinte}, là où l'exécution
-        complète la calcule sur le disque.
+        conversion, il n'a donc \textbf{pas d'empreinte}.
   \item Un exécutable authentifié n'est pas copié : à la conversion, il a son
         empreinte Authenticode et son verdict, mais pas de MD5, SHA-1 ni
         SHA-256 — ceux-ci ne sont calculés que pour ce qui est prélevé.

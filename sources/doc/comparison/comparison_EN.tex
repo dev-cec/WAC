@@ -226,18 +226,16 @@ reports.
 KAPE, \texttt{!SANS\_Triage} & 127\,s (115\,s) & 2,291 files & 2,286 files, 1.25\,GB \\
 KAPE, \texttt{!SANS\_Triage} and \texttt{!EZParser} modules & 235\,s (223\,s) & 2,288 files, 14 tools & 2,345 files, 1.63\,GB \\
 EZ tools on the live machine (6 tools) & 132\,s & \$MFT, logs, hives, Prefetch, Amcache, ShimCache & 36 CSV, 0.55\,GB \\
-\wac{}, collection only (default setting) & 592\,s (588\,s) & 11,830 exhibits, 67,882 recorded & 8,240 files, 4.9\,GB \\
-\wac{}, collection and conversion (\opt{full}) & 544\,s (536\,s) & 2,604 exhibits & 6,441 files, 5.7\,GB \\
+\wac{}, collection (default setting) & 592\,s (588\,s) & 11,830 exhibits, 67,882 recorded & 8,240 files, 4.9\,GB \\
 \bottomrule
 \end{longtable}
 
-The collection alone is the longest because it reads \emph{every} executable of
+\wac{}'s collection is the longest because it reads \emph{every} executable of
 the machine: the conversion will happen elsewhere, and it does not know yet
 which ones the artefacts will cite. It computes their fingerprints, checks their
 signature and copies only those whose signature does not hold; hence 67,882
-exhibits recorded for 11,830 copied. With the conversion on site (\opt{full}),
-\wac{} reads only the executables the artefacts cite; the key receives the
-working copy and the JSON as well. KAPE copies the files of its targets without
+exhibits recorded for 11,830 copied. The conversion, on the analysis
+workstation, reads nothing of the machine (chapter~\ref{chap:traces}). KAPE copies the files of its targets without
 examining them.
 
 % ============================================================ 4
@@ -245,7 +243,7 @@ examining them.
 
 \section{The same exhibits, different files}
 
-Same runs as the previous section: \wac{} collecting only, KAPE with
+Same runs as the previous section: \wac{}'s collection, KAPE with
 \texttt{!SANS\_Triage}, compared by the original path of every exhibit
 (\wac{}'s manifest, KAPE's copy log).
 
@@ -330,7 +328,7 @@ elevated rights, as an examiner from an elevated prompt.
 \textbf{Tool} & \textbf{Files written on C:} & \textbf{Registry written} &
   \textbf{Windows' reactions} \\
 \midrule\endhead
-\wac{} (collection, \opt{full}) & none & none & Amcache: one entry during the
+\wac{} (collection) & none & none & Amcache: one entry during the
   run; ShimCache: one entry at shutdown \\
 KAPE, targets & none & 4 Internet Settings \texttt{ZoneMap} values in the
   user's hive; 169 open-or-create calls (certificate stores, policies) &

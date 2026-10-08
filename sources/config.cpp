@@ -125,12 +125,7 @@ bool applySettings(const YamlNode& root, AppliConf& conf, std::string& error) {
 		return refuse(error, *version, text(Text::ConfigurationVersionMismatch, { wide(version->scalar), WacVersion() }));
 	for (const auto& [key, node] : root.children) {
 		if (key == VERSION_KEY) continue;
-		if (key == "convert") {
-			bool convert = true;
-			if (!readBool(*node, key, convert, error)) return false;
-			conf.mode = convert ? RunMode::Full : RunMode::Collect;
-		}
-		else if (key == "binary") {
+		if (key == "binary") {
 			if (!scalar(*node, key, error)) return false;
 			if (node->scalar == "none") conf.binary = conf.binaryAll = false;
 			else if (node->scalar == "unverified") { conf.binary = true; conf.binaryAll = false; }

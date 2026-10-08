@@ -38,7 +38,7 @@ std::unique_ptr<FileSource> g_reader;
 std::map<std::wstring, BinaryFingerprint> g_cache;      // key: lowercase path
 std::map<std::wstring, std::wstring> g_byContent;    // SHA-256 -> exhibit in the store
 size_t g_read = 0, g_collected = 0, g_sansPlace = 0, g_duplicates = 0;
-unsigned long long g_bytes = 0, g_avoidedBytes = 0;
+unsigned long long g_bytes = 0;
 size_t g_authenticated = 0, g_catalogsRead = 0;
 size_t g_deltas = 0;                                    // Windows differential files met (--collect)
 
@@ -58,7 +58,6 @@ private:
 	unsigned long long& counter_;
 	const unsigned long long start_;
 };
-unsigned long long g_authenticatedBytes = 0;
 size_t g_thirdPartyCleared = 0;                          // third-party binaries cleared by their chain
 std::set<std::wstring> g_catalogsUsed;
 /*! Catalogs read but not signed by Microsoft — third-party drivers and
@@ -431,14 +430,12 @@ std::unique_ptr<FileSource> openReader() {
 	return std::make_unique<FatAwareReader>();
 }
 
-/*! True while the collection medium keeps its reserve. In a full run, each
- *  collected exhibit will also be copied to the working directory at the end:
- *  that room is already owed. A --collect run makes no working copy of the
- *  binaries (the conversion rebuilds it elsewhere), so nothing is owed. */
+/*! True while the collection medium keeps its reserve. A collection makes no
+ *  working copy of the binaries (the conversion rebuilds it elsewhere): no
+ *  room is owed beyond the reserve. */
 bool roomLeft() {
 	const unsigned long long free = ExhibitStoreFreeSpace();
-	const unsigned long long owed = conf.mode == RunMode::Collect ? 0 : g_bytes;
-	return free == 0 || free >= RESERVE + owed;
+	return free == 0 || free >= RESERVE;
 }
 
 /*! A new file of the incoming directory (see stagingFolder).
@@ -475,7 +472,6 @@ HRESULT recordStaged(const std::wstring& path, const std::wstring& staged, HRESU
 			ExhibitStoreAddDuplicate(line, method + L" ; content identical (SHA-256) "
 			                                        L"to an exhibit already recorded, not copied again", verdict);
 			++g_duplicates;
-			g_avoidedBytes += line.fingerprints.bytes;
 		}
 		else {
 			std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
@@ -606,12 +602,10 @@ bool cleared(const VerdictMicrosoft& verdict) {
 void noteVerdict(const VerdictMicrosoft& verdict, const RawHiveExtraction& line, const PackageFile* package) {
 	if (verdict.chainTrusted && !verdict.microsoft) {
 		++g_thirdPartyCleared;
-		g_authenticatedBytes += line.fingerprints.bytes;
 		return;
 	}
 	if (!verdict.microsoft) return;
 	++g_authenticated;
-	g_authenticatedBytes += line.fingerprints.bytes;
 	/* By the verdict's own field: the prefix of its label used to be looked
 	   for as "catalogue " while the label says "catalog " — no catalog that
 	   justified an authentication ever reached the exhibit store. */
@@ -690,7 +684,7 @@ void checkVulnerableDriver(const std::wstring& path, const RawHiveExtraction& li
 	verdict.chainReason = why;
 }
 
-/*! A binary read in stream — a full run's cited binaries —, whose chain
+/*! A binary read in stream — a cited binary of the collection —, whose chain
  *  holds: read again, raw, into memory, for its version resource, so that the
  *  file rules of the driver lists are judged on it rather than assumed.
  *  Candidates to being cleared only, and bounded in size.
@@ -901,12 +895,9 @@ BinarySummary BinariesSummary() {
 	b.read = g_read;
 	b.collectedCount = g_collected;
 	b.collectedBytes = g_bytes;
-	b.sansPlace = g_sansPlace;
 	b.duplicates = g_duplicates;
-	b.avoidedBytes = g_avoidedBytes;
 	b.authenticated = g_authenticated;
 	b.thirdPartyCleared = g_thirdPartyCleared;
-	b.authenticatedBytes = g_authenticatedBytes;
 	b.catalogsRead = g_catalogsRead;
 	b.catalogsUsed = g_catalogsUsed.size();
 	return b;

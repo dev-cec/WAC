@@ -106,10 +106,10 @@ def check_configuration(folder):
     items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
     paths = [str(i.get("SourcePath", "")).lower() for i in items]
     wrong = []
-    if settings.get("convert") == "false":
-        converted = [f for f in os.listdir(folder) if f.endswith(".json") and f != "investigation.json"]
-        if converted:
-            wrong.append(f"convert: false, yet converted: {converted[:3]}")
+    # A collection converts nothing (B-047): investigation.json is its only JSON.
+    converted = [f for f in os.listdir(folder) if f.endswith(".json") and f != "investigation.json"]
+    if converted:
+        wrong.append(f"a collection, yet converted: {converted[:3]}")
     if settings.get("binary") == "none" and any("--binary" in str(i.get("Method", "")) for i in items):
         wrong.append("binary: none, yet executables collected")
     rules = [("artefacts.prefetch", lambda p: "\\windows\\prefetch\\" in p),
@@ -398,20 +398,7 @@ def check_third_party_chains(folder):
         print("  ⏭️  services, processes and tasks not requested: third-party chains not checked")
         return 0
     if not checked:
-        # A full run records the binaries it clears in the artefacts, not in the manifest (B'6):
-        # their verdict, "Third party (...)", is in the artefacts' JSON.
-        cleared = 0
-        for name in glob.glob(os.path.join(folder, "*.json")):
-            try:
-                with open(name, encoding="utf-8-sig") as f:
-                    cleared += f.read().count('"Signature": "Third party (')
-            except OSError:
-                pass
-        if cleared:
-            print(f"  ✅ {cleared} third-party binaries cleared by their chain, recorded in the artefacts "
-                  "(none left to collect in the manifest)")
-            return 0
-        print("  ❌ trust set usable, yet no third-party chain checked, in the manifest or the artefacts")
+        print("  ❌ trust set usable, yet no third-party chain checked in the manifest")
         return 1
     reference_path = os.path.join(folder, "reference", "third-party-signatures.txt")
     if not os.path.exists(reference_path):
@@ -992,7 +979,9 @@ def check_events(folder):
 # The labels of the operations recorded in investigation.json. Both languages are
 # recognised, so that archived results (French labels, before 2026-09-24) stay
 # checkable.
-REPLAY_OP = ("Replay of the transaction logs", "Rejeu des journaux")
+# The hives' replays: an ESE database's replay (ese_recovery.h) keeps no undo
+# journal — its raw copy stays in the exhibit store, untouched.
+REPLAY_OP = ("Replay of the transaction logs of a copied hive", "Rejeu des journaux")
 NOT_APPLIED = ("(not applied)", "non applique")
 UNDO_MARK = ("undo:", "annulation :")
 PATCH_OP = ("Repair of a copied hive (patch applied)",
@@ -1858,14 +1847,10 @@ def check_small_file_artefacts(folder):
 
     # A script with many hard links, its resident $DATA in an extension
     # record (B-045): read raw, with the SHA-256 Windows gives.
-    # Collected by the collection alone, which reads every executable of the
-    # volume and takes the unsigned ones; a run that converts on site reads
-    # only the executables its artefacts cite, which a Run value's script is not.
+    # The collection reads every executable of the volume and takes the
+    # unsigned ones: the script is among them.
     manifest = load(folder, os.path.join("exhibits", "MANIFEST.json"))
-    collection_only = isinstance(manifest, dict) and "--collect" in str((manifest.get("Tool") or {}).get("CommandLine", ""))
-    if isinstance(manifest, dict) and "links" in reference and not collection_only:
-        print("  ⏭️  not a collection alone (--collect): the many-links script is not taken, not checked")
-    if collection_only and "links" in reference:
+    if isinstance(manifest, dict) and "links" in reference:
         path, sha256, listed = reference["links"].split("|")
         items = [o for o in manifest.get("Items", []) if str(o.get("SourcePath", "")).lower() == path.lower()]
         ok = listed == "list" and items and all(o.get("Result") == "OK" and str(o.get("SHA256", "")).upper() == sha256.upper()
@@ -3841,7 +3826,12 @@ def check_network(folder, boot):
     else:
         print("  ⏭️  netstat reference absent: listener cross-check skipped")
 
-    owned = [c for c in connections if c.get("ProcessId")]
+    # A half-closed connection (FIN_WAIT2, CLOSING, LAST_ACK, TIME_WAIT)
+    # outlives its process, the kernel keeping its former PID: no observed
+    # process owns it, rightly — seen with Chrome's push channel (port 5228),
+    # in FIN_WAIT2 after the witness's Chrome had exited.
+    closing = {"FIN_WAIT1", "FIN_WAIT2", "CLOSING", "LAST_ACK", "TIME_WAIT"}
+    owned = [c for c in connections if c.get("ProcessId") and c.get("State") not in closing]
     unnamed = [c for c in owned if not c.get("Process")]
     if os.path.exists(os.path.join(folder, "processes.json")) and len(unnamed) > max(2, len(owned) // 20):
         print(f"  ❌ network.json: {len(unnamed)}/{len(owned)} connection(s) owned by no observed process")

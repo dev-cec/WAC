@@ -11,7 +11,6 @@
  *  WHAT IT HOLDS: one setting per top-level key, then `artefacts:`, one
  *  switch per artefact — all the hives being one artefact, `registry`:
  *
- *      convert: true          # true: collect and convert here; false: collect only
  *      binary: none           # none | unverified | all
  *      threads: 0             # analysis threads for the binaries, 0: automatic
  *      output: output

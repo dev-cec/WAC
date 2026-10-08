@@ -302,7 +302,9 @@ if [[ $RAWONLY -eq 1 ]]; then
   exit 0
 fi
 
-echo "== 4. Run of WAC (SYSTEM) == ($(date +%H:%M:%S))"
+echo "== 4. Run of WAC (SYSTEM): collection, then its conversion == ($(date +%H:%M:%S))"
+# WAC collects OR converts, never both (B-047): the collection into "out", then
+# the conversion of "out" — run.log holds both, one after the other.
 # --output must be a simple name (WAC refuses backslashes): created under cwd.
 # A collection that stops midway still produces valid JSON files: the absence
 # of JSON errors therefore does NOT prove that WAC went to the end.
@@ -312,7 +314,8 @@ CODE=0
 # the next (636 MiB seen after a series of runs), which makes fetching it
 # useless and hides the traces of the current run.
 $QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
-$QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
+$QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
+[[ "$CODE" == "0" ]] && { $QGA run --shell "cd /d $VMDIR && WAC.exe --convert=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 >> run.log 2>&1" || CODE=$?; }
 $QGA read "$VMDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
 
 if [[ -f "$OUTPUT/run.log" ]] && grep -qaiE 'terminate called|Unhandled exception|Exception non gérée' "$OUTPUT/run.log"; then
@@ -508,7 +511,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # guarantee:
   #   - the collection converts nothing, and seals its exhibit store;
   #   - the conversion refuses a retouched exhibit, and says why;
-  #   - the JSON of the conversion pass the checks of a full run;
+  #   - the JSON of the conversion pass the same checks as those of step 4;
   #   - two conversions of one collection give the same JSON (determinism).
   SPLIT_OUT="$OUTPUT/split"
   # Runs WAC in the VM. $1 name of its console log, then its arguments.
@@ -721,13 +724,12 @@ if [[ -n "$ONLY" ]]; then
 else
 echo "== 8. Collection driven by wac.yml, without any option == ($(date +%H:%M:%S))"
 # The procedure written in wac.yml next to WAC.exe, and WAC.exe run alone: the
-# collection must follow the file — collect only, no binaries, some artefacts
+# collection must follow the file — nothing converted, no binaries, some artefacts
 # switched off — and record it (investigation.json, Tool.Configuration).
 CONFIG_OUT="$OUTPUT/configured"
 cat > "$OUTPUT/wac.yml" <<YML
 # wac.yml of the test cycle
 wac_version: $WAC_VERSION
-convert: false
 binary: none
 output: configured
 artefacts:

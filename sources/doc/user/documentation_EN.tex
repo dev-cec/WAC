@@ -227,10 +227,9 @@ machine (Windows~11 without added software, 1~volume):
 \begin{center}
 \begin{tabular}{@{}L{7.4cm}rrr@{}}
 \toprule
-Mode & Exhibit store & Working copy & Time \\
+Collection & Exhibit store & Working copy & Time \\
 \midrule
-Full run, \opt{events} \opt{binary} (referenced binaries) & 1.2~GB & 0.6~GB & 3~min~30 \\
-Collection only, \opt{collect} \opt{events} \opt{binary} (every executable) & 2.7~GB & 0.3~GB & 8~min~30 \\
+\opt{collect} \opt{events} \opt{binary} (every executable) & 2.7~GB & 0.3~GB & 8~min~30 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -245,8 +244,7 @@ Content & Exhibit store \\
 NTFS metadata: \path|$MFT| (380~MB), \path|$LogFile| (64~MB),
   \path|$UsnJrnl:$J| (35~MB, out of 3.6~GB logical: NTFS freed the start,
   which is not copied) & 480~MB \\
-Binaries copied, full run: the 62 referenced binaries not authenticated & 250~MB \\
-Binaries copied, collection only: 2,853 not authenticated out of 44,446 read & 1.2~GB \\
+Binaries copied: 2,853 not authenticated out of 44,446 read & 1.2~GB \\
 Event logs (\opt{events}) & 170~MB \\
 Hives, Prefetch, shortcuts, jump lists & 180 to 230~MB \\
 \bottomrule
@@ -316,12 +314,10 @@ Rather than typing the options at every collection, the procedure is written
 once in \fichier{wac.yml}, next to \fichier{WAC.exe}: \wac{} applies it
 first, and an option given on the command line overrides it.
 \opt{write-config} writes the reference file, commented — the recommended
-procedure: collection only, unverified binaries collected, event logs
-included.
+procedure: unverified binaries collected, event logs included.
 
 \begin{lstlisting}
 wac_version: 1.4.0      # version of WAC the file is written for (--write-config)
-convert: false          # true: collect and convert here; false: collect only
 binary: unverified      # none | unverified | all
 threads: 0              # analysis threads for the binaries, 0: automatic
 output: output
@@ -425,9 +421,8 @@ artefacts:              # one key per artefact; a missing key is true
   \item An artefact switched off is not read at all, and its JSON file says so
     (\champ{CollectionStatus} \texttt{NotRequested}, with the key): never
     mistaken for a failure or an absence of traces.
-  \item \opt{config=file} reads another file; \opt{full} collects and converts
-    here although the file says \texttt{convert: false}.
-  \item Without \fichier{wac.yml}, \wac{} runs every artefact, event logs
+  \item \opt{config=file} reads another file.
+  \item Without \fichier{wac.yml}, \wac{} collects every artefact, event logs
     included, options as given.
 \end{itemize}
 
@@ -438,9 +433,9 @@ artefacts:              # one key per artefact; a missing key is true
 \normalfont\bfseries Option & \bfseries Effect \\
 \midrule
 \endhead
--{}-collect & Collection only, on the examined machine: live observations and
-  raw extraction into the sealed exhibit store; nothing is converted. See
-  chapter~\ref{chap:separation}. \\
+-{}-collect & The default mode, said explicitly: collection, on the examined
+  machine — live observations and raw extraction into the sealed exhibit store,
+  nothing converted. See chapter~\ref{chap:separation}. \\
 -{}-convert=folder & Conversion only, on an analysis workstation, of the
   collection made with \opt{collect} in that folder, after checking the seal
   and every fingerprint. See chapter~\ref{chap:separation}. \\
@@ -448,10 +443,11 @@ artefacts:              # one key per artefact; a missing key is true
   says \texttt{events: false}; otherwise they are taken by default (key
   \texttt{events}). Each event gets its readable message, rebuilt from its
   provider's resources. About 250~MB of copies. \\
--{}-binary & Fingerprints (MD5, SHA-1, SHA-256) every file referenced by an
-  artefact, by reading the disk directly. Referenced executables, libraries,
-  drivers and scripts are also \textbf{collected} into the exhibit store. See
-  section~\ref{sec:binary}. \\
+-{}-binary & At collection, reads directly every executable, library, driver,
+  script and macro document of the fixed volumes, checks its signature in memory
+  and \textbf{collects} into the exhibit store those it does not authenticate;
+  at conversion, every file an artefact cites gets its exhibit's fingerprints.
+  See section~\ref{sec:binary}. \\
 -{}-binary-all & Like \opt{binary}, but \textbf{every} executable is collected,
   authenticated or not; the signature is checked all the same, and the manifest
   says for each whether it holds. For the cases where the content itself must
@@ -670,13 +666,14 @@ A run of \wac{} does two different things:
         exhibit store, \textbf{not} the machine.
 \end{enumerate}
 
-Without a mode option, both run on the examined machine. The conversion adds
-work there that nothing requires: minutes of processing in \wac{}'s memory,
-which Windows may page out to \fichier{pagefile.sys}, on the very disk under
-examination; a process present for longer, seen and logged by the machine's
-security software; if it crashes, a Windows error report written on the
-machine. It reads neither the machine's files nor its registry, only the copies
-on the collection medium, but it runs there.
+\wac{} \textbf{never does both in the same run}: it collects on the examined
+machine, and converts elsewhere. Converting on the machine would add work there
+that nothing requires: minutes of processing in \wac{}'s memory, which Windows
+may page out to \fichier{pagefile.sys}, on the very disk under examination; a
+process present for longer, seen and logged by the machine's security
+software; if it crashes, a Windows error report written on the machine; and
+system libraries loaded to decode (the ESE engine, to replay a database's
+logs).
 
 That is exactly what good practice asks to avoid:
 \begin{itemize}
@@ -702,27 +699,13 @@ Separating the two stages brings three things:
         back to the machine.
 \end{itemize}
 
-\section{Which mode}
+\section{The collection's settings}
 
 \begin{itemize}
-  \item \textbf{By default: \opt{collect} on the machine, \opt{convert} on the
-        analysis workstation.} It is the procedure that leaves the fewest traces
-        on the examined machine, keeps the evidence sealed, and allows the
-        analysis to be redone and checked.
-  \item \textbf{Full run} (no mode option): for specific cases, to be stated in
-        the report — a triage whose results are needed on the spot with no
-        analysis workstation, a machine to be released within minutes. Its
-        conversion reads only the copies on the collection medium, never the
-        machine's files or registry, but it runs on it: minutes of processing
-        in memory (which Windows may page to \fichier{pagefile.sys}), a longer
-        process, a Windows error report if it crashes.
-  \item \textbf{Scope of \opt{binary}}: in a full run, only the files
-        \textbf{cited by the artefacts} are read; a binary on the disk that no
-        artefact cites is not examined. With \opt{collect}, it is \textbf{every
-        executable of every fixed NTFS volume}, cited or not. The collection
-        alone takes longer for that reason (8~min~30 against 3~min~30 on the
-        test machine): that time is reading, which writes nothing to the
-        machine.
+  \item \textbf{Scope of \opt{binary}}: the collection reads \textbf{every
+        executable of every fixed NTFS volume}, cited or not, since it does not
+        know yet which ones the artefacts will cite. That time (8~min~30 on the
+        test machine) is reading, which writes nothing to the machine.
   \item \textbf{\opt{binary-all}}: when the content of every executable must be
         in the exhibit store (malware analysis, request for the files
         themselves), for about 20~GB.
@@ -761,8 +744,8 @@ takes \textbf{everything it will read}:
         Windows~11;
   \item with \opt{binary}, \textbf{every} executable, library, driver, script
         and macro document of \textbf{every fixed NTFS volume} — a profile on
-        \fichier{D:} included —, read directly and verified in memory, as in a
-        full run (section~\ref{sec:binary}):
+        \fichier{D:} included —, read directly and verified in memory
+        (section~\ref{sec:binary}):
         \begin{itemize}
           \item authenticated (catalog, embedded signature, Store package), or a
                 third-party binary whose signature holds against the trust set of
@@ -833,8 +816,7 @@ which the test harness checks on every cycle.
         written or modified by anyone cannot be.
   \item A cited file that can carry neither code nor macro (\fichier{docx},
         \fichier{xlsx}, \fichier{pdf}, data) is not collected: at conversion it
-        therefore has \textbf{no fingerprint}, whereas the full run computes it
-        on the disk.
+        therefore has \textbf{no fingerprint}.
   \item An authenticated executable is not copied: at conversion it has its
         Authenticode digest and its verdict, but no MD5, SHA-1 or SHA-256 —
         those are computed only for what is collected.

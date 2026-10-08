@@ -197,7 +197,9 @@ volume other than the system's, with their witnesses.
 
 The cycle chains: upload of \fichier{WAC.exe} and \fichier{raw\_hive\_test.exe}
 into the VM, validation of the raw extraction of a hive (\texttt{reg load} must
-refuse it until it is repaired, then accept it), run of \wac{}, then fetch, into
+refuse it until it is repaired, then accept it), a collection by \wac{} then the
+conversion of that collection — \wac{} never does both in the same run —, then
+fetch, into
 the folder \fichier{vmtest/results/<timestamp>/}, of:
 
 \begin{itemize}

@@ -73,7 +73,7 @@ int wmain(int argc, wchar_t** argv) {
 		ConfigurationFile f;
 		std::string error;
 		check(LoadConfiguration((g_folder / "absent.yml").wstring(), c, f, error) && !f.present, "absent file: refused or applied");
-		check(c.mode == RunMode::Full && !c.binary && c.artefacts.events && c.artefacts.amcache && c.artefacts.operatingSystem,
+		check(c.mode == RunMode::Collect && !c.binary && c.artefacts.events && c.artefacts.amcache && c.artefacts.operatingSystem,
 		      "absent file: defaults changed — every artefact is on");
 	}
 	// Every setting applied.
@@ -81,7 +81,7 @@ int wmain(int argc, wchar_t** argv) {
 		AppliConf c;
 		ConfigurationFile f;
 		std::string error;
-		const std::string text = "convert: false\nbinary: all\nthreads: 3\noutput: case42\nlog_level: 2\ndump: true\nlanguage: en\n"
+		const std::string text = "binary: all\nthreads: 3\noutput: case42\nlog_level: 2\ndump: true\nlanguage: en\n"
 		                         "artefacts:\n  amcache: false\n  events: false\n  prefetch: false\n  sessions: false\n"
 		                         "  network: false\n";
 		check(LoadConfiguration(file("all.yml", text), c, f, error), "all settings: refused: " + error);
@@ -111,7 +111,9 @@ int wmain(int argc, wchar_t** argv) {
 		check(c.mode == RunMode::Collect && c.binary && !c.binaryAll && c.artefacts.events && c.artefacts.users
 		      && c.language == Language::French, "reference file not applied as it says");
 	}
-	refused("unknown.yml", "convert: false\nbinaries: all\n", 2, "unknown setting");
+	refused("unknown.yml", "threads: 2\nbinaries: all\n", 2, "unknown setting");
+	// Collection OR conversion (B-047): the setting that converted on the examined machine is gone.
+	refused("convert.yml", "convert: true\n", 1, "unknown setting");
 	// THE VERSION. Read from this executable's resources, as WAC.exe reads its own.
 	check(!WacVersion().empty(), "no version in the executable's resources");
 	{

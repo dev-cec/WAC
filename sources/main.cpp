@@ -484,51 +484,22 @@ void loadTrustSet() {
 }
 
 /*! Closes the phase of the cited binaries: the volumes kept open to read them
- *  are closed, the phase is recorded and, in a full run, the collected
- *  exhibits are copied to the working directory — like any exhibit, even an
- *  unmodified one: that is the procedure. A --collect run records its
- *  collection itself (collectForConversion) and makes no working copy. */
+ *  are closed and, under --convert, the fingerprints of the files the
+ *  artefacts cite are recorded. A collection records its own binaries
+ *  (collectForConversion). */
 void closeBinaries() {
 	if (!conf.binary) return;
 	BinariesFinish();
 	if (conf.mode == RunMode::Collect) return;
 	const BinarySummary b = BinariesSummary();
-	std::wstring summary = std::to_wstring(b.files) + L" cited, " + std::to_wstring(b.read)
+	const std::wstring summary = std::to_wstring(b.files) + L" cited, " + std::to_wstring(b.read)
 	                   + L" read, " + std::to_wstring(b.authenticated) + L" authenticated as Microsoft, "
-	                   + std::to_wstring(b.thirdPartyCleared) + L" third-party cleared by their chain";
-	if (conf.mode == RunMode::Full) {
-		summary += L" and not collected (" + std::to_wstring(b.authenticatedBytes / 1024 / 1024)
-		         + L" MiB saved), " + std::to_wstring(b.collectedCount) + L" collected ("
-		         + std::to_wstring(b.collectedBytes / 1024 / 1024) + L" MiB)";
-		if (b.duplicates) summary += L", " + std::to_wstring(b.duplicates) + L" duplicate content(s) not copied again";
-		if (b.sansPlace) summary += L", " + std::to_wstring(b.sansPlace) + L" hashed without a copy, medium full";
-	}
-	summary += L"; signature catalogs: " + std::to_wstring(b.catalogsRead) + L" read into memory";
-	if (conf.mode == RunMode::Full)
-		summary += L", " + std::to_wstring(b.catalogsUsed) + L" recorded as exhibit(s)";
-	if (conf.mode == RunMode::Convert) {
-		auditRecord(L"Fingerprints of the files cited by the artefacts (" + summary + L")",
-		            L"exhibit store of the collection, read-only; authenticity verified in memory "
-		            L"with the collected catalogs; a file the collection does not hold has no fingerprint",
-		            ERROR_SUCCESS, Footprint::EXHIBIT_READ);
-		return;
-	}
+	                   + std::to_wstring(b.thirdPartyCleared) + L" third-party cleared by their chain"
+	                   + L"; signature catalogs: " + std::to_wstring(b.catalogsRead) + L" read into memory";
 	auditRecord(L"Fingerprints of the files cited by the artefacts (" + summary + L")",
-	            L"raw NTFS reading; authenticity verified in memory (Windows catalogs, "
-	            L"embedded signatures), with no API and no service; unauthenticated binaries "
-	            L"copied into " + exhibitStoreFolder(),
-	            ERROR_SUCCESS, Footprint::VOLUME_BRUT);
-	printStep(Text::StepCopyBinaries);
-	size_t copies = 0;
-	unsigned long long copiedBytes = 0;
-	const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &copiedBytes);
-	auditRecord(L"Copy of the exhibit store into the working directory ("
-	            + std::to_wstring(copies) + L" file(s), "
-	            + std::to_wstring(copiedBytes / 1024 / 1024) + L" MiB)",
-	            exhibitStoreFolder() + L" -> " + workingFolder(),
-	            hrCopy, Footprint::USB_WRITE);
-	if (FAILED(hrCopy)) printError(hrCopy);
-	else printSuccess();
+	            L"exhibit store of the collection, read-only; authenticity verified in memory "
+	            L"with the collected catalogs; a file the collection does not hold has no fingerprint",
+	            ERROR_SUCCESS, Footprint::EXHIBIT_READ);
 }
 
 /*! Writes the manifest and its seal: the last operation on the exhibit store
@@ -691,8 +662,8 @@ void convertNtfsMetadata() {
 }
 
 /*! Converts the artefacts into JSON, from the working copy: registry, files,
- *  event logs. Runs in a full run and under --convert; a --collect run stops
- *  before it (see RunMode).
+ *  event logs. Runs under --convert only; a collection stops before it (see
+ *  RunMode).
  * @param systemAvailable the SYSTEM hive is open (conf.System) */
 void convertArtefacts(bool systemAvailable) {
 	HRESULT hresult;
@@ -1244,7 +1215,7 @@ int wmain(int argc, wchar_t* argv[])
 		if (languageGiven) conf.language = chosen;
 		setLanguage(conf.language);
 	}
-	bool collect = conf.mode == RunMode::Collect, outputGiven = false;
+	bool collectGiven = false, outputGiven = false;
 	std::wstring convertFolder;
 	if (commandLine.size() > 1) { // at least one argument, the first being the program's own name
 		// command-line arguments
@@ -1268,10 +1239,9 @@ int wmain(int argc, wchar_t* argv[])
 					exit(1);
 				}
 			}
-			else if (arg == L"--collect") collect = true;
+			else if (arg == L"--collect") collectGiven = true;   // the default, said explicitly
 			else if (arg.substr(0, 9) == L"--config=") continue;         // read above
 			else if (arg.substr(0, 11) == L"--language=") continue;      // read above
-			else if (arg == L"--full") collect = false;                    // the file said collect only: not this time
 			else if (arg.substr(0, 10) == L"--convert=" && arg.size() > 10) convertFolder = arg.substr(10);
 			else if (arg.substr(0, 9) == L"--output=") {
 				outputGiven = true;
@@ -1318,7 +1288,7 @@ int wmain(int argc, wchar_t* argv[])
 	/* The mode. A conversion reads a collection and writes next to it: the
 	   collection's folder IS its output, hence --output makes no sense with it. */
 	if (!convertFolder.empty()) {
-		if (collect || outputGiven) {
+		if (collectGiven || outputGiven) {
 			printError(text(Text::ConvertExcludesCollect));
 			showHelp();
 			exit(1);
@@ -1326,7 +1296,7 @@ int wmain(int argc, wchar_t* argv[])
 		conf.mode = RunMode::Convert;
 		conf._outputDir = convertFolder;
 	}
-	else conf.mode = collect ? RunMode::Collect : RunMode::Full;   // the file's convert:, unless --collect or --full
+	else conf.mode = RunMode::Collect;
 
 	// Investigation log: opened as early as possible, so that the start timestamp
 	// really brackets the whole collection (see audit.h).
@@ -1445,7 +1415,7 @@ int wmain(int argc, wchar_t* argv[])
 		printError(hresult);
 		log(2, L"🔥SYSTEM hive unavailable: the artefacts that depend on it are not collected", hresult);
 		auditRecord(L"Opening of the SYSTEM hive", systemHive, hresult, Footprint::HIVE_COPY);
-		if (conf.mode != RunMode::Collect)      // --collect converts nothing
+		if (conf.mode == RunMode::Convert)      // a collection converts nothing
 		for (const auto& [file, wanted] : { std::pair<const char*, bool>{ "Usbstor.json", conf.artefacts.usbstor },
 		                                    { "mounted_device.json", conf.artefacts.mountedDevices },
 		                                    { "bams.json", conf.artefacts.bam }, { "shimcache.json", conf.artefacts.shimcache },
@@ -1464,7 +1434,7 @@ int wmain(int argc, wchar_t* argv[])
 		printError(hresult);
 		log(2, L"🔥SOFTWARE hive unavailable: the artefacts that depend on it are not collected", hresult);
 		auditRecord(L"Opening of the SOFTWARE hive", softwareHive, hresult, Footprint::HIVE_COPY);
-		if (conf.mode != RunMode::Collect)
+		if (conf.mode == RunMode::Convert)
 			writeNotCollected("run.json", L"depends on the SOFTWARE hive, which is unavailable", hresult);
 	}
 	else printSuccess();

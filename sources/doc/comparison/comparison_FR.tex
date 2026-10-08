@@ -231,18 +231,16 @@ celle de la tâche qui le lance, entre parenthèses celle que l'outil annonce.
 KAPE, \texttt{!SANS\_Triage} & 127\,s (115\,s) & 2\,291 fichiers & 2\,286 fichiers, 1,25\,Go \\
 KAPE, \texttt{!SANS\_Triage} et modules \texttt{!EZParser} & 235\,s (223\,s) & 2\,288 fichiers, 14 outils & 2\,345 fichiers, 1,63\,Go \\
 Outils EZ sur la machine vivante (6 outils) & 132\,s & \$MFT, journaux, ruches, Prefetch, Amcache, ShimCache & 36 CSV, 0,55\,Go \\
-\wac{}, collecte seule (réglage par défaut) & 592\,s (588\,s) & 11\,830 pièces, 67\,882 consignées & 8\,240 fichiers, 4,9\,Go \\
-\wac{}, collecte et conversion (\opt{full}) & 544\,s (536\,s) & 2\,604 pièces & 6\,441 fichiers, 5,7\,Go \\
+\wac{}, collecte (réglage par défaut) & 592\,s (588\,s) & 11\,830 pièces, 67\,882 consignées & 8\,240 fichiers, 4,9\,Go \\
 \bottomrule
 \end{longtable}
 
-La collecte seule est la plus longue parce qu'elle lit \emph{chaque} exécutable
+La collecte de \wac{} est la plus longue parce qu'elle lit \emph{chaque} exécutable
 de la machine : la conversion se fera ailleurs, et elle ne sait pas encore
 lesquels les artefacts citeront. Elle en calcule les empreintes, vérifie leur
 signature et ne copie que ceux dont la signature ne tient pas ; d'où 67\,882
-pièces consignées pour 11\,830 copiées. Avec la conversion sur place
-(\opt{full}), \wac{} ne lit que les exécutables que les artefacts citent ; la
-clé reçoit en plus la copie de travail et les JSON. KAPE copie les fichiers de
+pièces consignées pour 11\,830 copiées. La conversion, sur le poste d'analyse,
+ne relit rien de la machine (chapitre~\ref{chap:traces}). KAPE copie les fichiers de
 ses cibles sans les examiner.
 
 % ============================================================ 4
@@ -250,7 +248,7 @@ ses cibles sans les examiner.
 
 \section{Les mêmes pièces, des fichiers différents}
 
-Mêmes exécutions que la section précédente : \wac{} en collecte seule, KAPE
+Mêmes exécutions que la section précédente : la collecte de \wac{}, KAPE
 avec \texttt{!SANS\_Triage}, comparés par le chemin d'origine de chaque pièce
 (manifeste de \wac{}, journal de copie de KAPE).
 
@@ -339,7 +337,7 @@ de l'utilisateur, avec ses droits élevés, comme un examinateur depuis une invi
 \textbf{Outil} & \textbf{Fichiers écrits sur C:} & \textbf{Registre écrit} &
   \textbf{Réactions de Windows} \\
 \midrule\endhead
-\wac{} (collecte, \opt{full}) & aucun & aucun & Amcache : une entrée pendant
+\wac{} (collecte) & aucun & aucun & Amcache : une entrée pendant
   l'exécution ; ShimCache : une entrée à l'arrêt \\
 KAPE, cibles & aucun & 4 valeurs \texttt{ZoneMap} d'Internet Settings dans la
   ruche de l'utilisateur ; 169 ouvertures en création (magasins de
