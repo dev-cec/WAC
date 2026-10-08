@@ -100,7 +100,7 @@ Format `<major>.<minor>.<bugfix>`, written in `sources/WAC.rc` only
 (executable's properties; WAC reads it back at run time). To release: commit
 the sources, run `./bump-version.sh --bugfix|--minor|--major` (increments,
 rebuilds, stages `WAC.rc` and `bin`, regenerates the code documentation
-`sources/doc/html` with the same version), commit.
+`doc/html` with the same version), commit.
 
 ## Compatibility pieces (`third_party/` folder)
 | Item | Role |

@@ -389,13 +389,8 @@ vmtest/footprint/__pycache__/
 
 # Fichiers auxiliaires de Doxygen, regeneres a chaque passe. Le HTML lui-meme
 # reste versionne (c'est la documentation livree), mais pas ces index binaires.
-sources/doc/html/*.tmp
-sources/doc/*.tag
-
-# Sortie doxygen parasite a la racine : la configuration ecrit dans sources/doc,
-# mais un lancement depuis un autre repertoire courant depose une copie des
-# ressources HTML ici. Rien a versionner.
-/doc/
+doc/html/*.tmp
+doc/*.tag
 
 # LaTeX intermediate files of every document (user manual, tests,
 # validation, harmlessness): only the .tex and the PDF are versioned.

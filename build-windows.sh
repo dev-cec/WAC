@@ -34,8 +34,8 @@ case "$(uname -s)" in
   MINGW64_NT*)
     TOOL_PREFIX=
     # Git Bash (Git for Windows), with MinGW-Builds' compiler — win32 threads,
-    # msvcrt — first in the PATH: build-windows.cmd sets it (sources/doc/BUILD_EN.md, B-024).
-    MISSING="MinGW-Builds x86_64-13.2.0-release-win32-seh-msvcrt first in the PATH (build-windows.cmd, sources/doc/BUILD_EN.md)" ;;
+    # msvcrt — first in the PATH: build-windows.cmd sets it (doc/BUILD_EN.md, B-024).
+    MISSING="MinGW-Builds x86_64-13.2.0-release-win32-seh-msvcrt first in the PATH (build-windows.cmd, doc/BUILD_EN.md)" ;;
   *)
     echo "Unsupported system $(uname -s): build on Linux, or in the MSYS2 MINGW64 shell on Windows." >&2
     exit 1 ;;

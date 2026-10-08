@@ -104,7 +104,7 @@ Format `<majeur>.<mineure>.<correctif>`, écrit dans `sources/WAC.rc` seulement
 (propriétés de l'exécutable ; WAC la relit à l'exécution). Pour publier :
 commiter les sources, lancer `./bump-version.sh --bugfix|--minor|--major`
 (incrémente, recompile, indexe `WAC.rc` et `bin`, régénère la documentation du
-code `sources/doc/html` avec la même version), commiter.
+code `doc/html` avec la même version), commiter.
 
 ## Briques de compatibilité (dossier `third_party/`)
 | Élément | Rôle |
