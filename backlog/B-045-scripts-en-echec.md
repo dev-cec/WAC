@@ -21,9 +21,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Plus aucun `0x80004005` sur ces fichiers, empreintes égales à `Get-FileHash`.
 
 ## Tâches
-- [ ] Reproduire sur un fichier, trouver la cause
+- [x] Reproduire sur un fichier, trouver la cause
 - [ ] Corriger, contrôle dans le cycle (collecte avec lecture de chaque exécutable)
 
 ## Journal
 - 2026-10-08 : créée pendant B-027.
 - 2026-10-08 : en cours — recherche de la cause.
+- 2026-10-08 : cause trouvée. Les 144 fichiers sont de petits scripts à nombreux liens physiques (winrm.cmd : 7 liens, 33 octets) : leurs $FILE_NAME débordent l'enregistrement, NTFS déplace des attributs dans un enregistrement d'extension listé par $ATTRIBUTE_LIST — dont le $DATA RÉSIDENT. extractDataUnchecked ne cherchait dans la liste que des fragments non résidents : E_FAIL. Correctif : findResidentAttr, qui servait à $INDEX_ROOT, prend un nom de flux et sert aussi à $DATA. Vérifié sur le clone de mesure : collecte seule, plus aucun 0x80004005, les 144 fichiers au SHA-256 de Get-FileHash. Témoin du cycle : C:\wactest\b045\wac-links.cmd (8 liens à noms longs, $ATTRIBUTE_LIST vérifié par fsutil), cité par une valeur Run ; contrôle check-json (collecte seule) : échoue avec le binaire d'avant (0x80004005), passe avec le correctif. Cycle complet de non-régression lancé.
