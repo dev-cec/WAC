@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P2 | faible |
+| en cours | P2 | faible |
 
 ## Pourquoi
 Le lot d'artefacts et l'i18n sont des modifications majeures.
@@ -26,3 +26,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-10-07 : décision utilisateur — passage en version 2.0.0 et non 1.5.0 : l'ensemble des modifications (lot d'artefacts, i18n, collecte et conversion séparées, consigne intouchable, volumes partagés…) constitue une montée de version majeure. À faire juste avant l'article DFIR (B-018), lui-même en dernier.
+- 2026-10-08 : en cours — bump-version.sh complété (document de comparaison, phrases qui citent la version).

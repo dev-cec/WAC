@@ -43,8 +43,13 @@ VERSION=$("$HERE/wac-version.sh")
 # page of each manual (PDFs rebuilt when XeLaTeX is there).
 sed -i -E "s#badge/version-[0-9]+\.[0-9]+\.[0-9]+-green#badge/version-$VERSION-green#" "$HERE/README.md"
 DOCS=("$HERE"/sources/doc/user/documentation_{FR,EN}.tex "$HERE"/sources/doc/tests/testing_{FR,EN}.tex "$HERE"/sources/doc/validation/validation_{FR,EN}.tex
-      "$HERE"/sources/doc/harmlessness/harmlessness_{FR,EN}.tex)
+      "$HERE"/sources/doc/harmlessness/harmlessness_{FR,EN}.tex "$HERE"/sources/doc/comparison/comparison_{FR,EN}.tex)
 sed -i -E "s#^(Version du logiciel|Software version) & [0-9]+\.[0-9]+\.[0-9]+ #\1 \& $VERSION #" "${DOCS[@]}"
+# The other sentences that name the version: the manuals' scope, the import
+# list of the harmlessness file, the comparison's test bench.
+sed -i -E "s#(Ce document décrit la version|This document describes version) [0-9]+\.[0-9]+\.[0-9]+#\1 $VERSION#" "$HERE"/sources/doc/user/documentation_{FR,EN}.tex
+sed -i -E "s#^(Pour la version|For version) [0-9]+\.[0-9]+\.[0-9]+,#\1 $VERSION,#" "$HERE"/sources/doc/harmlessness/harmlessness_{FR,EN}.tex
+sed -i -E "s#^(\\\\wac\{\} & version) [0-9]+\.[0-9]+\.[0-9]+ #\1 $VERSION #" "$HERE"/sources/doc/comparison/comparison_{FR,EN}.tex
 # The wac.yml shown in the user manuals carries the version, as --write-config writes it.
 sed -i -E "s#^wac_version: [0-9]+\.[0-9]+\.[0-9]+ #wac_version: $VERSION #" "$HERE"/sources/doc/user/documentation_{FR,EN}.tex "$HERE/README.md"
 if command -v xelatex >/dev/null; then
