@@ -1076,7 +1076,8 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
   reading the output, verifying the exhibit store and the traces left on the
   examined machine. `verify-exhibits.ps1|.sh` (English) and
   `verifier-consigne.ps1|.sh` (French) check the seal and every exhibit of a
-  collection, from Windows or Linux; `sources/verify_exhibits_test.sh` tests the
+  collection, from Windows or Linux — their sources in `sources/scripts`,
+  copied into `bin/` with `WAC.exe` by the build; `sources/verify_exhibits_test.sh` tests the
   two `.sh` on forged collections. The English cover
   page, `doc/cover_EN.png`, is generated from the French one by
   `doc/translate-cover.py`, which repaints its text in the same fonts and

@@ -12,7 +12,7 @@
 
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SCRIPTS=("$HERE/doc/user/verify-exhibits.sh" "$HERE/doc/user/verifier-consigne.sh")
+SCRIPTS=("$HERE/scripts/verify-exhibits.sh" "$HERE/scripts/verifier-consigne.sh")
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 checks=0; failures=0

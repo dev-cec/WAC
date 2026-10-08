@@ -262,8 +262,8 @@ echo "No process-starting function imported."
 # decision. The test executables stay in build-windows/tests.
 # The scripts travel with the binary: the investigator verifies a collection
 # with what came in the same folder, from Windows (.ps1) or from a Linux
-# investigation machine (.sh). Their source stays beside the user manual,
-# which lists them.
+# investigation machine (.sh). Their source is in sources/scripts; the user
+# manuals list them from there.
 BIN="$ROOT/bin"
 VERIFICATION_SCRIPTS=(verify-exhibits.ps1 verifier-consigne.ps1 verify-exhibits.sh verifier-consigne.sh)
 mkdir -p "$BIN"
@@ -276,7 +276,7 @@ VERSION="$("$ROOT/wac-version.sh")"
 sed "s/@WAC_VERSION@/$VERSION/" "$SRC/wac.yml" > "$BIN/wac.yml"
 grep -q "^wac_version: $VERSION\$" "$BIN/wac.yml" || { echo "bin/wac.yml: wac_version not written" >&2; exit 1; }
 for f in "${VERIFICATION_SCRIPTS[@]}"; do
-  cp "$SRC/doc/user/$f" "$BIN/$f"
+  cp "$SRC/scripts/$f" "$BIN/$f"
 done
 ( cd "$BIN" && sha256sum WAC.exe $( [[ -f raw_hive_test.exe ]] && echo raw_hive_test.exe ) wac.yml \
     "${VERIFICATION_SCRIPTS[@]}" > SHA256SUMS )

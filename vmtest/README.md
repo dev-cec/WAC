@@ -83,7 +83,7 @@ wrong values in valid JSON:
 | script whose dates are forged back to 2001: 2001 in `$STANDARD_INFORMATION`, the real date in `$FILE_NAME` | `$FILE_NAME` dates recorded in the manifest |
 | retrieval keys (`PeTimeDateStamp`, `PeSizeOfImage`) / PE headers read by PowerShell | an authentic binary not copied can be fetched again from Microsoft |
 | `--binary-all`: every executable copied, each with its verdict | the package check required "not copied" even under `--binary-all` |
-| `verify-exhibits.ps1` (shipped with the documentation) accepts the collection | it would have reported every fingerprint-only exhibit as altered |
+| `verify-exhibits.ps1` (shipped with WAC.exe in `bin/`) accepts the collection | it would have reported every fingerprint-only exhibit as altered |
 
 **WAC's log accumulates.** It is opened in append mode: without purging, it grows
 from one test to the next — 636 MB after a series of runs, which made fetching
