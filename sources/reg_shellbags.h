@@ -39,6 +39,7 @@ public:
 	unsigned int level = 0;  //!< depth in the tree, which the output JSON reproduces
 	std::wstring sid = L"";      //!< SID of the user who browsed the folder
 	std::wstring source = L"";   //!< the key the shellbag comes from
+	std::wstring hive;           //!< the user hive that key is in: UsrClass.dat or NTUSER.DAT
 	std::vector<std::unique_ptr<IdList>> shellitems; //!< the folder's PIDL, item by item
 	std::vector<Shellbag> children;    //!< the folders browsed below this one
 	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the PARENT key, which holds this folder's value (UTC)

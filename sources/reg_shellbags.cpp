@@ -9,6 +9,7 @@ Json Shellbag::toJson() const {
 	o.add(L"ID",      Json::num(id));
 	o.add(L"Parent",  Json::num(Parent));
 	addUser(o, sid);
+	o.add(L"Hive",    Json::str(hive));
 	o.add(L"Source",  Json::str(source));
 	log(3, L"🔈timeToIso8601 lastWriteTime");
 	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
@@ -28,38 +29,51 @@ Json Shellbag::toJson() const {
 }
 
 
+namespace {
+
+/*! Where Windows keeps a user's shellbags. UsrClass.dat holds those of
+ *  Explorer's folders; NTUSER.DAT keeps another tree — network locations,
+ *  "Computers and Devices", the desktop —, which SBECmd reads too and WAC used
+ *  to miss (compared on the test VM). */
+const struct { const wchar_t* file; const wchar_t* hive; const wchar_t* key; } SHELLBAG_TREES[] = {
+	{ L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat", L"UsrClass.dat", L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU" },
+	{ L"\\ntuser.dat", L"NTUSER.DAT", L"Software\\Microsoft\\Windows\\Shell\\BagMRU" },
+};
+
+//! Names the hive of a tree just read, down to its leaves.
+void setHive(Shellbag& bag, const std::wstring& hive) {
+	bag.hive = hive;
+	for (Shellbag& child : bag.children) setHive(child, hive);
+}
+
+} // namespace
+
 HRESULT Shellbags::getData(int _level) {
-
-	HRESULT hresult = NULL;
-	ORHKEY hKey = NULL;
-	ORHKEY Offhive = NULL;
-	std::wstring hive = L"";
 	level = _level;
-	//HKEY_USERS
-	for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
-		// open the user hive
-		log(3, L"🔈replaceAll profile");
-		hive = extractedPath(std::get<1>(profileEntry)) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
-		log(3, L"🔈OROpenHive " + std::get<1>(profileEntry) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
-		hresult = OROpenHive(hive.c_str(), &Offhive);
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥OROpenHive " + std::get<1>(profileEntry) + +L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat", hresult);
-			continue;
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+		for (const auto& tree : SHELLBAG_TREES) {
+			const std::wstring hive = extractedPath(std::get<1>(profileEntry)) + tree.file;
+			ORHKEY offhive = NULL;
+			HRESULT hresult = OROpenHive(hive.c_str(), &offhive);
+			if (hresult != ERROR_SUCCESS) {
+				log(2, L"🔥OROpenHive " + std::get<1>(profileEntry) + tree.file, hresult);
+				continue;
+			}
+			ORHKEY hKey = NULL;
+			hresult = OROpenKey(offhive, tree.key, &hKey);
+			if (hresult != ERROR_SUCCESS) {
+				// A user who never browsed a folder of that kind has no such tree.
+				log(2, L"❇️No " + std::wstring(tree.key) + L" in " + tree.hive + L" of " + std::get<0>(profileEntry));
+				ORCloseHive(offhive);
+				continue;
+			}
+			const size_t first = shellbags.size();
+			hresult = parse(hKey, std::get<0>(profileEntry), L"BagMRU", &shellbags, 1, false);
+			if (hresult != ERROR_SUCCESS) log(2, L"🔥parse " + std::wstring(tree.key), hresult);
+			for (size_t k = first; k < shellbags.size(); ++k) setHive(shellbags[k], tree.hive);
+			ORCloseKey(hKey);
+			ORCloseHive(offhive);
 		}
-
-		log(3, L"🔈OROpenKey Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU");
-		hresult = OROpenKey(Offhive, L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU", &hKey);
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥OROpenHive OROpenKey Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU", hresult);
-			ORCloseHive(Offhive);
-			continue;
-		}
-
-		log(3, L"🔈parse hKey");
-		hresult = parse(hKey, std::get<0>(profileEntry), L"BagMRU", &shellbags, 1, false);
-		if (hresult != ERROR_SUCCESS) log(2, L"🔥parse hKey", hresult);
-		ORCloseKey(hKey);
-		ORCloseHive(Offhive);
 	}
 	return ERROR_SUCCESS;
 }
