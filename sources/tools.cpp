@@ -207,12 +207,11 @@ void printSuccess() {
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
-std::wstring stepTimes(double minimum) {
+std::wstring stepTimes() {
 	std::wstring text;
 	for (const auto& [label, seconds] : g_stepTimes) {
-		if (seconds < minimum) continue;
 		wchar_t value[32];
-		swprintf(value, 32, L"%.1f s", seconds);
+		swprintf(value, 32, L"%.2f s", seconds);
 		text += (text.empty() ? L"" : L"; ") + label + L" " + value;
 	}
 	return text;

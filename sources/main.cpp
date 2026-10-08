@@ -1491,9 +1491,10 @@ int wmain(int argc, wchar_t* argv[])
 	            conf._outputDir, ERROR_SUCCESS,
 	            Footprint::USB_WRITE);
 
-	/* Where the run's time went, step by step (over half a second): what the
-	   dates of the operations alone could not tell (backlog B-033). */
-	auditRecord(L"Time per step: " + stepTimes(0.5), L"WAC's own steps, as printed", ERROR_SUCCESS, Footprint::NONE);
+	/* Where the run's time went, step by step — every step, the short ones
+	   too: the comparison with the other tools sets each artefact's step
+	   against the tool that decodes it, and the shared steps apart (B-033). */
+	auditRecord(L"Time per step: " + stepTimes(), L"WAC's own steps, as printed", ERROR_SUCCESS, Footprint::NONE);
 
 	printStep(conf.mode == RunMode::Convert ? Text::StepWriteConversionLog : Text::StepWriteInvestigationLog);
 	log(3, L"🔈auditWrite");

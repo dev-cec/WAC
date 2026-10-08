@@ -403,9 +403,8 @@ void printSuccess();
 /*! The steps printed so far and their time, from printStep to their OK or
  *  their error (backlog B-033): where a collection's time goes, artefact by
  *  artefact.
- *  @param minimum the shortest step given, in seconds
- *  @return "label 12.3 s; label 4.0 s…", in the order of the run */
-std::wstring stepTimes(double minimum);
+ *  @return "label 12.31 s; label 0.04 s…", every step, in the order of the run */
+std::wstring stepTimes();
 
 /*! Prints a progress line rewritten in place (carriage return).
 *
