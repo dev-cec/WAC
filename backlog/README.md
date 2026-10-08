@@ -46,8 +46,6 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-047](B-047-collecte-ou-conversion.md) | Collecte ou conversion, jamais les deux : suppression du mode --full | en cours | P1 | moyen |
-| [B-046](B-046-journaux-ese.md) | Journaux ESE ni prélevés ni rejoués : activité récente de la WebCache manquée | en cours | P1 | fort |
 | [B-025](B-025-version-2-0.md) | Version 2.0.0 (montée majeure), juste avant l'article DFIR | à faire | P2 | faible |
 | [B-018](B-018-article-dfir.md) | Article de présentation (2 pages, magazine DFIR), après la 2.0.0 et avant la 3.0 | à faire | P3 | moyen |
 
