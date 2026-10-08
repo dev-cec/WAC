@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P2 | fort |
+| en cours | P2 | fort |
 
 ## Pourquoi
 L'innocuité de WAC est aujourd'hui mesurée seule (dates et USN de fichiers témoins). La question d'un examinateur est comparative : qu'est-ce que chaque outil laisse réellement sur la machine examinée ? Prefetch, Amcache, ShimCache, BAM, UserAssist, journaux d'événements (4688, 4663, 7045…), fichiers temporaires, clés de registre créées, pilotes chargés, journal USN, $LogFile. Dernière tâche du backlog, après les artefacts (demande utilisateur 2026-09-30).
@@ -42,3 +42,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-09-30 : demande utilisateur — dernière tâche, comparaison WAC / KAPE / EZ sous bac à sable ; Sysmon et audit en option.
 - Lien : B-015 compare le contenu prélevé ; B-027 compare les traces laissées.
 - 2026-10-07 : méthode révisée sur proposition de l'utilisateur — USN borné comme source des fichiers, Sysmon pour l'auteur, différence ciblée des ruches et journaux ; plus de montage d'image ni de différence complète de la $MFT.
+- 2026-10-08 : en cours — clone dédié de la VM, Sysmon, outils sur clé USB.
