@@ -243,6 +243,18 @@ if "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWORK)" >/dev/null; 
 fi
 echo "No network library imported."
 
+# Nor any function that starts a process: a program started by WAC would leave
+# its own execution traces on the examined machine (Prefetch, BAM, ShimCache).
+# The screen used to be cleared by system("cls"), a cmd.exe each run, which
+# the compared footprint measure showed (backlog B-027).
+SPAWN='system|_wsystem|_w?spawn[lv]p?e?|_w?exec[lv]p?e?|_w?popen|CreateProcess[AW]?|CreateProcessAsUser[AW]|CreateProcessWithLogonW|CreateProcessWithTokenW|ShellExecute[AW]|ShellExecuteEx[AW]|WinExec'
+if "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -qE "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$"; then
+  echo "ERROR: WAC.exe imports a function that starts a process:"
+  "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -E "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$"
+  exit 1
+fi
+echo "No process-starting function imported."
+
 # --- bin: the last build, ready to download ------------------------------
 # The executables, the reference configuration (sources/wac.yml, also built into
 # WAC.exe) and the scripts that verify a collection, copied where the

@@ -1122,6 +1122,24 @@ void convertArtefacts(bool systemAvailable) {
 
 }
 
+/*! Clears the console WAC writes to, through the console API.
+ *  It used to be system("cls"): a cmd.exe started by WAC on the examined
+ *  machine — a process creation, and the Prefetch of CMD.EXE updated — for a
+ *  cosmetic effect (measured, backlog B-027). Without it, WAC imports no
+ *  function that starts a process. When the output is not a console (a file,
+ *  a pipe), the calls fail and nothing is done.
+ *  @param console the console's output handle */
+void clearConsole(HANDLE console) {
+	CONSOLE_SCREEN_BUFFER_INFO screen;
+	if (!GetConsoleScreenBufferInfo(console, &screen)) return;
+	const DWORD cells = (DWORD)screen.dwSize.X * (DWORD)screen.dwSize.Y;
+	const COORD origin = { 0, 0 };
+	DWORD written = 0;
+	if (!FillConsoleOutputCharacterW(console, L' ', cells, origin, &written)) return;
+	if (!FillConsoleOutputAttribute(console, screen.wAttributes, cells, origin, &written)) return;
+	if (!SetConsoleCursorPosition(console, origin)) log(3, L"🔈console cursor not moved");
+}
+
 /*! Runs a collection.
  *  wmain: the runtime hands the arguments in UTF-16, as Windows holds them —
  *  CommandLineToArgvW (shell32) is no longer needed for that.
@@ -1148,7 +1166,7 @@ int wmain(int argc, wchar_t* argv[])
 	 * buffer would therefore not be enough. */
 	setvbuf(stdout, NULL, _IONBF, 0);
 
-	system("cls");//clear screen
+	clearConsole(conf.hConsole);
 
 	log(3, L"🔈asciiart");
 	asciiart();

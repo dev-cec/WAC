@@ -237,6 +237,12 @@ the current directory.
   \item Load a driver, create or change a service, a scheduled task, a
         start-up key.
   \item Open a process, read its memory, inject code.
+  \item Start a process: no function that creates one is imported
+        (\texttt{system}, \texttt{CreateProcess}, \texttt{ShellExecute},
+        \texttt{WinExec}). Clearing the screen at start-up used to run
+        \fichier{cmd.exe /c cls}, with its execution traces; the compared
+        measure of the footprint (B-027) showed it, and the screen is now
+        cleared through the console API.
   \item Enable a privilege (\texttt{AdjustTokenPrivileges}): the raw reading
         of a volume needs administrator rights only.
   \item Open a network connection, resolve an account name with the domain
