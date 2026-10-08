@@ -47,6 +47,7 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
 | [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | en cours | P2 | fort |
+| [B-045](B-045-scripts-en-echec.md) | Scripts de WinSxS et WindowsApps en échec 0x80004005 à la lecture des exécutables | à faire | P2 | faible |
 | [B-025](B-025-version-2-0.md) | Version 2.0.0 (montée majeure), juste avant l'article DFIR | à faire | P2 | faible |
 | [B-018](B-018-article-dfir.md) | Article de présentation (2 pages, magazine DFIR), après la 2.0.0 et avant la 3.0 | à faire | P3 | moyen |
 
