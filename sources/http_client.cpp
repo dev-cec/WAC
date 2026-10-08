@@ -2,6 +2,7 @@
  *  \brief HTTP download through WinHTTP loaded at run time (see http_client.h).
  */
 #include "http_client.h"
+#include "system_library.h"
 #include <windows.h>
 #include <winhttp.h>
 #include <algorithm>
@@ -26,13 +27,6 @@ struct HttpClient::Api {
 
 namespace {
 
-//! Resolves one export into `target`. @return false if absent
-template <typename F>
-bool resolve(HMODULE module, const char* name, F& target) {
-	target = reinterpret_cast<F>(reinterpret_cast<void*>(GetProcAddress(module, name)));
-	return target != nullptr;
-}
-
 //! "text: error N", the last Win32 error appended.
 std::string failure(const char* text) {
 	return std::string(text) + ": error " + std::to_string(GetLastError());
@@ -46,17 +40,17 @@ const DWORD READ_BLOCK = 64 * 1024;
 
 HttpClient::HttpClient() : api_(new Api) {
 	// From System32 only: a winhttp.dll planted next to WAC.exe is not loaded.
-	api_->module = LoadLibraryExW(L"winhttp.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+	api_->module = loadSystemLibrary(L"winhttp.dll");
 	if (!api_->module) { reason_ = failure("winhttp.dll not loaded"); return; }
 	Api& a = *api_;
-	if (!resolve(a.module, "WinHttpOpen", a.open) || !resolve(a.module, "WinHttpSetTimeouts", a.setTimeouts)
-	    || !resolve(a.module, "WinHttpCrackUrl", a.crackUrl) || !resolve(a.module, "WinHttpConnect", a.connect)
-	    || !resolve(a.module, "WinHttpOpenRequest", a.openRequest)
-	    || !resolve(a.module, "WinHttpSendRequest", a.sendRequest)
-	    || !resolve(a.module, "WinHttpReceiveResponse", a.receiveResponse)
-	    || !resolve(a.module, "WinHttpQueryHeaders", a.queryHeaders)
-	    || !resolve(a.module, "WinHttpReadData", a.readData)
-	    || !resolve(a.module, "WinHttpCloseHandle", a.closeHandle)) {
+	if (!resolveExport(a.module, "WinHttpOpen", a.open) || !resolveExport(a.module, "WinHttpSetTimeouts", a.setTimeouts)
+	    || !resolveExport(a.module, "WinHttpCrackUrl", a.crackUrl) || !resolveExport(a.module, "WinHttpConnect", a.connect)
+	    || !resolveExport(a.module, "WinHttpOpenRequest", a.openRequest)
+	    || !resolveExport(a.module, "WinHttpSendRequest", a.sendRequest)
+	    || !resolveExport(a.module, "WinHttpReceiveResponse", a.receiveResponse)
+	    || !resolveExport(a.module, "WinHttpQueryHeaders", a.queryHeaders)
+	    || !resolveExport(a.module, "WinHttpReadData", a.readData)
+	    || !resolveExport(a.module, "WinHttpCloseHandle", a.closeHandle)) {
 		reason_ = "winhttp.dll without an expected function";
 		return;
 	}

@@ -8,6 +8,7 @@
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include "network.h"
+#include "system_library.h"
 #include "ip_address.h"
 #include "live_snapshot.h"
 #include <algorithm>
@@ -28,24 +29,17 @@ struct IpHelper {
 	~IpHelper() { if (module) FreeLibrary(module); }
 };
 
-//! One function of the loaded module. @return false if it is missing
-template <typename F>
-bool resolve(HMODULE module, const char* name, F& target) {
-	target = reinterpret_cast<F>(reinterpret_cast<void*>(GetProcAddress(module, name)));
-	return target != nullptr;
-}
-
 /*! Loads iphlpapi.dll from System32 — never from the current folder — and its
  *  functions. @return ERROR_SUCCESS, or why it could not be loaded */
 HRESULT load(IpHelper& api) {
-	api.module = LoadLibraryExW(L"iphlpapi.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+	api.module = loadSystemLibrary(L"iphlpapi.dll");
 	if (!api.module) return HRESULT_FROM_WIN32(GetLastError());
-	const bool complete = resolve(api.module, "GetExtendedTcpTable", api.tcpTable)
-	    && resolve(api.module, "GetExtendedUdpTable", api.udpTable)
-	    && resolve(api.module, "GetIpNetTable2", api.neighbourTable)
-	    && resolve(api.module, "GetIpForwardTable2", api.routeTable)
-	    && resolve(api.module, "FreeMibTable", api.freeTable)
-	    && resolve(api.module, "GetAdaptersAddresses", api.adapters);
+	const bool complete = resolveExport(api.module, "GetExtendedTcpTable", api.tcpTable)
+	    && resolveExport(api.module, "GetExtendedUdpTable", api.udpTable)
+	    && resolveExport(api.module, "GetIpNetTable2", api.neighbourTable)
+	    && resolveExport(api.module, "GetIpForwardTable2", api.routeTable)
+	    && resolveExport(api.module, "FreeMibTable", api.freeTable)
+	    && resolveExport(api.module, "GetAdaptersAddresses", api.adapters);
 	return complete ? ERROR_SUCCESS : HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
 }
 
