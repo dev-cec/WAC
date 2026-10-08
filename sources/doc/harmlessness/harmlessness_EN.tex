@@ -318,11 +318,13 @@ For version 1.4.0, apart from \fichier{msvcrt.dll} (the C library):
     the output folder, its working copy or its staging folder.
 \end{description}
 
-\textbf{Dynamic loads.} Two libraries only, from \path|System32|
+\textbf{Dynamic loads.} Three libraries only, from \path|System32|
 (\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32}): \fichier{iphlpapi.dll}, for the
 network state, when \texttt{artefacts.network} is asked for;
-\fichier{winhttp.dll}, for \opt{update-trust} alone, which does not run on the
-examined machine.
+\fichier{winhttp.dll}, for \opt{update-trust} alone, and \fichier{esent.dll},
+which replays a copied ESE database's logs (WebCache, SRUM, BITS) into the
+working copy, at conversion alone — neither of the last two runs on the
+examined machine: \wac{} collects there, and never converts there.
 
 \section{The guards of the build}
 

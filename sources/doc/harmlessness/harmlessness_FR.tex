@@ -325,11 +325,14 @@ Pour la version 1.4.0, hors \fichier{msvcrt.dll} (la bibliothèque C) :
     dossier de sortie, sa copie de travail ou son dossier d'attente.
 \end{description}
 
-\textbf{Chargements dynamiques.} Deux bibliothèques seulement, depuis
+\textbf{Chargements dynamiques.} Trois bibliothèques seulement, depuis
 \path|System32| (\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32}) :
 \fichier{iphlpapi.dll}, pour l'état réseau, quand \texttt{artefacts.network}
-est demandé ; \fichier{winhttp.dll}, pour \opt{update-trust} seul, qui ne
-s'exécute pas sur la machine examinée.
+est demandé ; \fichier{winhttp.dll}, pour \opt{update-trust} seul, et
+\fichier{esent.dll}, qui rejoue les journaux d'une base ESE copiée (WebCache,
+SRUM, BITS) dans la copie de travail, à la conversion seule — ni l'une ni
+l'autre ne s'exécute sur la machine examinée : \wac{} y collecte, et n'y
+convertit jamais.
 
 \section{Les garde-fous de la compilation}
 
