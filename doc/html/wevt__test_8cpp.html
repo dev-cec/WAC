@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -119,7 +119,7 @@ Functions</h2></td></tr>
 <div class="textblock"><p>Exercises the chain that produces an event's plain-text message. </p>
 <p>WHY THIS TEST. The chain has FIVE links — registry, PE resources, WEVT_TEMPLATE, MESSAGETABLE, substitution — and each of them fails in silence: the field disappears, the collection stays valid, and nothing says which link broke. Two defects were caught this way while writing that code:</p><ul>
 <li>a provider's descriptors are EIGHT bytes long, not four. Read four by four, the blocks are never found: 0 events described on a provider that describes 202.</li>
-<li>an event descriptor is 48 bytes long, not 44. With a step of 44, only one record in twelve is coherent, and no error is raised. The step is therefore DEDUCED from the block's declared size.</li>
+<li>an event descriptor is 48 bytes long, not 44. With a step of 44, only one record in twelve is coherent, and no error is raised. A third was caught later (B-023): the step was then deduced from the EVNT block's declared size, which also covers data after the descriptors — 52 bytes for AppReadiness.dll, 81 events of 175 kept. The step is 48.</li>
 </ul>
 <p>Usage: wevt_test <code>&lt;file.dll&gt;</code> <code>&lt;file.dll.mui&gt;</code> <code>&lt;guid&gt;</code> [id[:version] ...] Both files are those of a real provider: the metadata are in the binary, the texts in its localised satellite.</p>
 <p>Excluded from WAC's build by the "_test.cpp" pattern. Native build: g++ -std=c++17 -I. <a class="el" href="pe__resource_8cpp.html" title="Walk of the resource tree of a PE binary.">pe_resource.cpp</a> <a class="el" href="wevt_8cpp.html" title="Parsing of MESSAGETABLE and WEVT_TEMPLATE, and substitution of the marks.">wevt.cpp</a> <a class="el" href="wevt__test_8cpp.html" title="Exercises the chain that produces an event&#39;s plain-text message.">wevt_test.cpp</a> -o wevt_test </p>

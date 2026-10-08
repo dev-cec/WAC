@@ -13,6 +13,5 @@ var structAutomaticDestination =
     [ "ole", "structAutomaticDestination.html#adf146dff12607de34518ef2d43227c1d", null ],
     [ "path", "structAutomaticDestination.html#a0fe0f080144bfe7970e7498a52d06ed5", null ],
     [ "pathOriginal", "structAutomaticDestination.html#afbdec4d12e621372d254167bd778ec6e", null ],
-    [ "Sid", "structAutomaticDestination.html#a69f421d1791d7f8e781d34627f0d3e5e", null ],
-    [ "SidName", "structAutomaticDestination.html#aa951a989bf7a48dc3a4da917601f4f40", null ]
+    [ "Sid", "structAutomaticDestination.html#a69f421d1791d7f8e781d34627f0d3e5e", null ]
 ];

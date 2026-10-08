@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('events_8h.html',''); initResizable(); 
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">events.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -107,6 +108,8 @@ $(document).ready(function(){initNavTree('events_8h.html',''); initResizable(); 
 <div class="textblock"><code>#include &lt;windows.h&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
+<code>#include &lt;set&gt;</code><br />
+<code>#include &lt;utility&gt;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="json_8h_source.html">json.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="xml__light_8h_source.html">xml_light.h</a>&quot;</code><br />
@@ -119,13 +122,57 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvents.html">Events</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a7c0de7bd7804e97f9f9e0cb8e273d706" id="r_a7c0de7bd7804e97f9f9e0cb8e273d706"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="events_8h.html#a7c0de7bd7804e97f9f9e0cb8e273d706">EventProvidersCited</a> (std::set&lt; std::wstring &gt; &amp;guids, std::set&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;sources)</td></tr>
+<tr class="separator:a7c0de7bd7804e97f9f9e0cb8e273d706"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Windows event logs. </p>
 <p>Read OFFLINE from the <code>.evtx</code> files extracted by raw reading, and no longer through the <code>wevtapi</code> API. That was the last collector to solicit a service of the examined machine (<code>EventLog</code>): that service can write its own entries while it is being queried, the call took about twenty minutes under Windows 11, and the collection grew to more than a gigabyte of working set — hence paging, hence writes to the very disk one strives not to modify.</p>
 <p>PROCESSING CHAIN raw_collect extracts <code>\Windows\System32\winevt\Logs\*.evtx</code> onto the collection medium (raw NTFS reading, no file opened) <a class="el" href="evtx_8h.html" title="READING WINDOWS EVENT LOGS (.evtx), OFFLINE.">evtx.h</a> decodes each record into XML text xml_light parses that XML — the same reader as the scheduled tasks, rather than a second decoder specific to the events <a class="el" href="events_8cpp.html" title="Filling of the events from the decoded XML.">events.cpp</a> fills the structure below and writes it AS IT GOES</p>
 <p>WHAT THE OFFLINE READING DOES NOT GIVE. <code>EvtFormatMessage</code> returned, for about one event in seven, the plain-text message. That text is not in the log: it comes from the provider's resource file, which would have to be parsed in its own right (the <code>WEVT_TEMPLATE</code> resource and the message table of a PE binary). The field is therefore omitted rather than written empty. All the data of the event itself — identifier, timestamp, provider, channel, SID, process, and the whole of <code>EventData</code> — are present. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a7c0de7bd7804e97f9f9e0cb8e273d706" name="a7c0de7bd7804e97f9f9e0cb8e273d706"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c0de7bd7804e97f9f9e0cb8e273d706">&#9670;&#160;</a></span>EventProvidersCited()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT EventProvidersCited </td>
+          <td>(</td>
+          <td class="paramtype">std::set&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>guids</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::set&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sources</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Collection of every extracted log.</p>
+<p>No array of events is kept: each one is written then forgotten (see <a class="el" href="classJsonArrayWriter.html">JsonArrayWriter</a>). That is what brings the collection of the logs down to a constant memory footprint, whatever the size of the logs.</p>
+<p>The providers the collected event logs cite, for &ndash;collect: their GUIDs, and the (log, source) pair of every event, read in the logs extracted to the exhibit store — only the System section of each record, no message. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">guids</td><td>receives the providers' GUIDs </td></tr>
+    <tr><td class="paramname">sources</td><td>receives the (log, source) pairs </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND if no log was extracted </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

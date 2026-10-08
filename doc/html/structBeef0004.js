@@ -2,9 +2,7 @@ var structBeef0004 =
 [
     [ "Beef0004", "structBeef0004.html#a44d4347465a7d29d0b92f60c066872d8", null ],
     [ "toJson", "structBeef0004.html#a4f569851e0c4d042835a8deace086ae1", null ],
-    [ "accessedDate", "structBeef0004.html#a8348fad99be4dcb479f76e9c57e934f3", null ],
     [ "accessedDateUtc", "structBeef0004.html#a61b9365fd5c5e7ec4194ae2c1150e5f6", null ],
-    [ "creationDate", "structBeef0004.html#aee25527734903ddac642d84517941133", null ],
     [ "creationDateUtc", "structBeef0004.html#aadd2f5be135d9bb4fbb5e2513894aadb", null ],
     [ "ExtensionVersion", "structBeef0004.html#afb11899bc275cc6593c9eff3741d3cbf", null ],
     [ "identifier", "structBeef0004.html#aee3b667716368fac31453bb3a8e11ed2", null ],

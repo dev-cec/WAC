@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -111,6 +111,7 @@ $(document).ready(function(){initNavTree('users_8h.html',''); initResizable(); }
 <code>#include &quot;<a class="el" href="offline__registry_8h_source.html">offline_registry.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="trans__id_8h_source.html">trans_id.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="sam__secrets_8h_source.html">sam_secrets.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="json_8h_source.html">json.h</a>&quot;</code><br />
 </div>
 <p><a href="users_8h_source.html">Go to the source code of this file.</a></p>
@@ -140,7 +141,7 @@ Functions</h2></td></tr>
 </ul>
 <p>STRUCTURE OF THE SAM Each account is a subkey named after its RID in hexadecimal on 8 digits, carrying two binary values:</p><ul>
 <li><code>F</code>: the fixed-size fields — timestamps, RID, account flags, logon counters (offsets documented below);</li>
-<li><code>V</code>: the variable-size fields — name, full name, comment, paths, preceded by a table of offsets relative to 0xCC. The password hashes (<code>V</code>, offsets 0x9C and 0xA8) are DELIBERATELY IGNORED: they establish no fact useful to the investigation, and their presence in an output file would create a risk for nothing in return.</li>
+<li><code>V</code>: the variable-size fields — name, full name, comment, paths, and the encrypted NT and LM hashes (offsets 0x9C and 0xA8), preceded by a table of offsets relative to 0xCC. The NT and LM hashes are decrypted and emitted (<a class="el" href="sam__secrets_8h.html" title="Decryption of the SAM password hashes, for an offline investigation.">sam_secrets.h</a>): a weak or empty password used by an attacker reads as a legitimate logon, and WAE confronts the hashes, offline, with those of known weak passwords. A hash is one-way — it names a password without revealing it.</li>
 </ul>
 <p>The full SID is rebuilt from the machine SID, read in the <code>V</code> value of <code>SAM\\Domains\\Account</code>, and the account's RID. </p>
 </div><h2 class="groupheader">Function Documentation</h2>

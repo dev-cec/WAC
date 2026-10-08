@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -128,8 +128,11 @@ $(document).ready(function(){initNavTree('running__machine_8h_source.html',''); 
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>HRESULT <a class="code hl_function" href="running__machine_8h.html#a6aca12cc0b8b76d011ecdd2dc65cb3aa">snapshotRunningMachine</a>();</div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
 <div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="keyword">const</span> <a class="code hl_struct" href="structRunningMachine.html">RunningMachine</a>&amp; <a class="code hl_function" href="running__machine_8h.html#ae65285bc40f0c829e47e0894a7bc227d">runningMachine</a>();</div>
-<div class="ttc" id="arunning__machine_8h_html_a6aca12cc0b8b76d011ecdd2dc65cb3aa"><div class="ttname"><a href="running__machine_8h.html#a6aca12cc0b8b76d011ecdd2dc65cb3aa">snapshotRunningMachine</a></div><div class="ttdeci">HRESULT snapshotRunningMachine()</div><div class="ttdef"><b>Definition</b> running_machine.cpp:86</div></div>
-<div class="ttc" id="arunning__machine_8h_html_ae65285bc40f0c829e47e0894a7bc227d"><div class="ttname"><a href="running__machine_8h.html#ae65285bc40f0c829e47e0894a7bc227d">runningMachine</a></div><div class="ttdeci">const RunningMachine &amp; runningMachine()</div><div class="ttdef"><b>Definition</b> running_machine.cpp:109</div></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>std::vector&lt;std::wstring&gt; <a class="code hl_function" href="running__machine_8h.html#a7fcb67eb8458577b505d08d504db6530">fixedNtfsVolumes</a>();</div>
+<div class="ttc" id="arunning__machine_8h_html_a6aca12cc0b8b76d011ecdd2dc65cb3aa"><div class="ttname"><a href="running__machine_8h.html#a6aca12cc0b8b76d011ecdd2dc65cb3aa">snapshotRunningMachine</a></div><div class="ttdeci">HRESULT snapshotRunningMachine()</div><div class="ttdef"><b>Definition</b> running_machine.cpp:84</div></div>
+<div class="ttc" id="arunning__machine_8h_html_a7fcb67eb8458577b505d08d504db6530"><div class="ttname"><a href="running__machine_8h.html#a7fcb67eb8458577b505d08d504db6530">fixedNtfsVolumes</a></div><div class="ttdeci">std::vector&lt; std::wstring &gt; fixedNtfsVolumes()</div><div class="ttdef"><b>Definition</b> running_machine.cpp:167</div></div>
+<div class="ttc" id="arunning__machine_8h_html_ae65285bc40f0c829e47e0894a7bc227d"><div class="ttname"><a href="running__machine_8h.html#ae65285bc40f0c829e47e0894a7bc227d">runningMachine</a></div><div class="ttdeci">const RunningMachine &amp; runningMachine()</div><div class="ttdef"><b>Definition</b> running_machine.cpp:107</div></div>
 <div class="ttc" id="astructRunningMachine_1_1Volume_html"><div class="ttname"><a href="structRunningMachine_1_1Volume.html">RunningMachine::Volume</a></div><div class="ttdef"><b>Definition</b> running_machine.h:32</div></div>
 <div class="ttc" id="astructRunningMachine_1_1Volume_html_a30d03405a91e81012d741bd1ed0e53f2"><div class="ttname"><a href="structRunningMachine_1_1Volume.html#a30d03405a91e81012d741bd1ed0e53f2">RunningMachine::Volume::mountPoint</a></div><div class="ttdeci">std::wstring mountPoint</div><div class="ttdoc">&quot;C:&quot;</div><div class="ttdef"><b>Definition</b> running_machine.h:33</div></div>
 <div class="ttc" id="astructRunningMachine_1_1Volume_html_a5dd9487923826aade0f1d0543fed0884"><div class="ttname"><a href="structRunningMachine_1_1Volume.html#a5dd9487923826aade0f1d0543fed0884">RunningMachine::Volume::driveType</a></div><div class="ttdeci">UINT driveType</div><div class="ttdoc">GetDriveTypeW: DRIVE_FIXED, DRIVE_REMOVABLE…</div><div class="ttdef"><b>Definition</b> running_machine.h:34</div></div>

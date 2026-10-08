@@ -5,6 +5,7 @@ var structEvent =
     [ "toJson", "structEvent.html#ac83247741a82814a4adcf83cbd9545a8", null ],
     [ "evtEventData", "structEvent.html#a71647f03eadce96ebc1a8be134997ac1", null ],
     [ "evtEventMessage", "structEvent.html#aa097f313be20ae3f527b1fea4b952109", null ],
+    [ "evtRecovered", "structEvent.html#a71b2b0695b5e13daced0283b8ddac925", null ],
     [ "evtSourceLog", "structEvent.html#a9d49bce59c56ed87c96e22d921901743", null ],
     [ "evtSystemActivityID", "structEvent.html#a7cdb803bdb0f332eb6b73dd6ca7306e6", null ],
     [ "evtSystemChannel", "structEvent.html#afc35472407c394a9351e87e7e21c6447", null ],
@@ -24,8 +25,11 @@ var structEvent =
     [ "evtSystemTimeCreated", "structEvent.html#af53ee1226bfbff2c70233c5ad244f0a7", null ],
     [ "evtSystemUserID", "structEvent.html#a8c56425487221d463b7dcce89e3ebb82", null ],
     [ "evtSystemVersion", "structEvent.html#a5d53d627bbb45262e3a5f99894cf068a", null ],
-    [ "guidPourMessage", "structEvent.html#adcd8f67a4048897d435c806afdfa18ee", null ],
-    [ "idPourMessage", "structEvent.html#a46a8dad38d7cb9f88f6bdd06a6512ccd", null ],
-    [ "rawValues", "structEvent.html#a87d52e43fc651704be2220d757ae8310", null ],
-    [ "versionPourMessage", "structEvent.html#a1fca9d1921fc196a3480851cde860211", null ]
+    [ "messageEventId", "structEvent.html#a405659b4ba212541bef65d7ba28227fd", null ],
+    [ "messageProviderGuid", "structEvent.html#a1e93f008db2a3f1c58f856bd3790ec0c", null ],
+    [ "messageQualifiers", "structEvent.html#aef3fccacc4ff9b60aba81be4f1ac9e50", null ],
+    [ "messageSource", "structEvent.html#a0caeb7e06a3037518eb9db0247466f6d", null ],
+    [ "messageVersion", "structEvent.html#a8554701296aaf954a5d718fd7be235d2", null ],
+    [ "rawNames", "structEvent.html#a66b061577a5419ede23dc40b0c5deb3e", null ],
+    [ "rawValues", "structEvent.html#a87d52e43fc651704be2220d757ae8310", null ]
 ];

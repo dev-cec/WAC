@@ -1,0 +1,25 @@
+var registry__lot3_8h =
+[
+    [ "InstalledProgram", "structInstalledProgram.html", "structInstalledProgram" ],
+    [ "InstalledPrograms", "classInstalledPrograms.html", "classInstalledPrograms" ],
+    [ "DefenderExclusion", "structDefenderExclusion.html", "structDefenderExclusion" ],
+    [ "DefenderSettings", "structDefenderSettings.html", "structDefenderSettings" ],
+    [ "DefenderConfiguration", "classDefenderConfiguration.html", "classDefenderConfiguration" ],
+    [ "ExplorerRecentDoc", "structExplorerRecentDoc.html", "structExplorerRecentDoc" ],
+    [ "ExplorerRecentDocs", "classExplorerRecentDocs.html", "classExplorerRecentDocs" ],
+    [ "MountPoint", "structMountPoint.html", "structMountPoint" ],
+    [ "MountPoints", "classMountPoints.html", "classMountPoints" ],
+    [ "KnownNetwork", "structKnownNetwork.html", "structKnownNetwork" ],
+    [ "KnownNetwork::Signature", "structKnownNetwork_1_1Signature.html", "structKnownNetwork_1_1Signature" ],
+    [ "KnownNetworks", "classKnownNetworks.html", "classKnownNetworks" ],
+    [ "ProgramUsage", "structProgramUsage.html", "structProgramUsage" ],
+    [ "ProgramUsages", "classProgramUsages.html", "classProgramUsages" ],
+    [ "DeviceTrace", "structDeviceTrace.html", "structDeviceTrace" ],
+    [ "Devices", "classDevices.html", "classDevices" ],
+    [ "NetworkShare", "structNetworkShare.html", "structNetworkShare" ],
+    [ "NetworkShares", "classNetworkShares.html", "classNetworkShares" ],
+    [ "NetworkAdapterConfiguration", "structNetworkAdapterConfiguration.html", "structNetworkAdapterConfiguration" ],
+    [ "NetworkConfiguration", "classNetworkConfiguration.html", "classNetworkConfiguration" ],
+    [ "EventLogChannel", "structEventLogChannel.html", "structEventLogChannel" ],
+    [ "EventLogConfiguration", "classEventLogConfiguration.html", "classEventLogConfiguration" ]
+];

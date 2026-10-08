@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -119,6 +119,8 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:add3b36b24f347ee5b2470cb853f107f4" id="r_add3b36b24f347ee5b2470cb853f107f4"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxRecord.html#add3b36b24f347ee5b2470cb853f107f4">xml</a></td></tr>
 <tr class="memdesc:add3b36b24f347ee5b2470cb853f107f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">event body, as XML  <br /></td></tr>
 <tr class="separator:add3b36b24f347ee5b2470cb853f107f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7175d834f1246f129f2fc0f909e82bc" id="r_af7175d834f1246f129f2fc0f909e82bc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxRecord.html#af7175d834f1246f129f2fc0f909e82bc">recovered</a> = false</td></tr>
+<tr class="separator:af7175d834f1246f129f2fc0f909e82bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One event record, as read from the file. </p>
@@ -136,6 +138,21 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>record number </p>
+
+</div>
+</div>
+<a id="af7175d834f1246f129f2fc0f909e82bc" name="af7175d834f1246f129f2fc0f909e82bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7175d834f1246f129f2fc0f909e82bc">&#9670;&#160;</a></span>recovered</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool EvtxRecord::recovered = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Found past the free-space offset of a chunk whose header declares no live record: an event of a cleared log, which Windows no longer shows. Kept, since it is the trace the clearing meant to erase, but flagged so that it is never read as a live event. </p>
 
 </div>
 </div>

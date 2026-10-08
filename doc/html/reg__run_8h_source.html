@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -100,62 +100,73 @@ $(document).ready(function(){initNavTree('reg__run_8h_source.html',''); initResi
 </div><!--header-->
 <div class="contents">
 <a href="reg__run_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#pragma once</span></div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#include &quot;<a class="code" href="offline__registry_8h.html">offline_registry.h</a>&quot;</span></div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#include &lt;filesystem&gt;</span></div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#include &lt;fstream&gt;</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#include &quot;usb.h&quot;</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
-<div class="foldopen" id="foldopen00033" data-start="{" data-end="};">
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="structRun.html">   33</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structRun.html">Run</a> {</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno"><a class="line" href="structRun.html#a588499d88dd78a0b19a70de14ad6e784">   35</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#a588499d88dd78a0b19a70de14ad6e784">Sid</a> = L<span class="stringliteral">&quot;&quot;</span>;     </div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="structRun.html#a1b22973a4bce424fdfc77d92ea1377fc">   36</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#a1b22973a4bce424fdfc77d92ea1377fc">SidName</a> = L<span class="stringliteral">&quot;&quot;</span>; </div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="structRun.html#a199906bea1d643678ed961eacf53c6c5">   37</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#a199906bea1d643678ed961eacf53c6c5">Key</a> = L<span class="stringliteral">&quot;&quot;</span>;     </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="structRun.html#a8aac1b40b1c849c309b727cb2c7dc10e">   38</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#a8aac1b40b1c849c309b727cb2c7dc10e">Name</a> = L<span class="stringliteral">&quot;&quot;</span>;    </div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="structRun.html#adb6a6b9a227dce24fcafb241b8208b93">   39</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#adb6a6b9a227dce24fcafb241b8208b93">Value</a> = L<span class="stringliteral">&quot;&quot;</span>;   </div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="structRun.html#a53d3760c102a5741c3719ce20b392672">   40</a></span>    FILETIME <a class="code hl_variable" href="structRun.html#a53d3760c102a5741c3719ce20b392672">lastWriteTimeUtc</a> = { 0 }; </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#include &quot;<a class="code" href="offline__registry_8h.html">offline_registry.h</a>&quot;</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#include &lt;optional&gt;</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#include &lt;filesystem&gt;</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="preprocessor">#include &lt;fstream&gt;</span></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="preprocessor">#include &quot;usb.h&quot;</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span> </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <a class="code hl_class" href="classJson.html">Json</a> toJson();</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    <span class="keywordtype">void</span> clear();</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>};</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
+<div class="foldopen" id="foldopen00044" data-start="{" data-end="};">
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="structRun.html">   44</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structRun.html">Run</a> {</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno"><a class="line" href="structRun.html#ab61d2ddb6064a2def410e657edbc1911">   46</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#ab61d2ddb6064a2def410e657edbc1911">Hive</a> = L<span class="stringliteral">&quot;&quot;</span>;    </div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="structRun.html#a588499d88dd78a0b19a70de14ad6e784">   47</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#a588499d88dd78a0b19a70de14ad6e784">Sid</a> = L<span class="stringliteral">&quot;&quot;</span>;     </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="structRun.html#a199906bea1d643678ed961eacf53c6c5">   48</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#a199906bea1d643678ed961eacf53c6c5">Key</a> = L<span class="stringliteral">&quot;&quot;</span>;     </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="structRun.html#a8aac1b40b1c849c309b727cb2c7dc10e">   49</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#a8aac1b40b1c849c309b727cb2c7dc10e">Name</a> = L<span class="stringliteral">&quot;&quot;</span>;    </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="structRun.html#a0626a32ec791d7a42aa9ad68c6612ba4">   50</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#a0626a32ec791d7a42aa9ad68c6612ba4">Type</a> = L<span class="stringliteral">&quot;&quot;</span>;    </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structRun.html#adb6a6b9a227dce24fcafb241b8208b93">   51</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#adb6a6b9a227dce24fcafb241b8208b93">Value</a> = L<span class="stringliteral">&quot;&quot;</span>;   </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="structRun.html#a53d3760c102a5741c3719ce20b392672">   52</a></span>    FILETIME <a class="code hl_variable" href="structRun.html#a53d3760c102a5741c3719ce20b392672">lastWriteTimeUtc</a> = { 0 }; </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="structRun.html#a2f9992248cc34fa0f5aa67650e417600">   53</a></span>    std::wstring <a class="code hl_variable" href="structRun.html#a2f9992248cc34fa0f5aa67650e417600">status</a> = L<span class="stringliteral">&quot;&quot;</span>;  </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="structRun.html#a84ee5112f22beb5d32068d0ce9a36a30">   54</a></span>    FILETIME <a class="code hl_variable" href="structRun.html#a84ee5112f22beb5d32068d0ce9a36a30">changedUtc</a> = { 0 };  </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno"><a class="line" href="structRun.html#a90ae7cb02ef6278290b3b37a64b61784">   55</a></span>    std::optional&lt;DWORD&gt; <a class="code hl_variable" href="structRun.html#a90ae7cb02ef6278290b3b37a64b61784">notification</a>; </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="structRun.html#a425f2b55464d8039c881c1605e05f6b3">toJson</a>();</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structRun.html#a053648e7a7d86cb262b8080b77305369">clear</a>();</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>};</div>
 </div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
-<div class="foldopen" id="foldopen00051" data-start="{" data-end="};">
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="structRuns.html">   51</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structRuns.html">Runs</a> {</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno"><a class="line" href="structRuns.html#a4e548488a4c98b07248d884720207a47">   53</a></span>    std::vector&lt;Run&gt; <a class="code hl_variable" href="structRuns.html#a4e548488a4c98b07248d884720207a47">runs</a>;  </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    HRESULT <a class="code hl_function" href="structRuns.html#a93f69405ea59102d78b12ea7e0fa86ff">getData</a>();</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    HRESULT <a class="code hl_function" href="structRuns.html#a894681f9d1e81a19e7a91fb2da9fbec8">toJson</a>();</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structRuns.html#acfd69fc28aac7b095a40e89ddc62d0e3">clear</a>();</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>};</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="foldopen" id="foldopen00066" data-start="{" data-end="};">
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno"><a class="line" href="structRuns.html">   66</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structRuns.html">Runs</a> {</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno"><a class="line" href="structRuns.html#a4e548488a4c98b07248d884720207a47">   68</a></span>    std::vector&lt;Run&gt; <a class="code hl_variable" href="structRuns.html#a4e548488a4c98b07248d884720207a47">runs</a>;  </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    HRESULT <a class="code hl_function" href="structRuns.html#a93f69405ea59102d78b12ea7e0fa86ff">getData</a>();</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    HRESULT <a class="code hl_function" href="structRuns.html#a894681f9d1e81a19e7a91fb2da9fbec8">toJson</a>();</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="structRuns.html#acfd69fc28aac7b095a40e89ddc62d0e3">clear</a>();</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>};</div>
 </div>
-<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:60</div></div>
+<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:62</div></div>
 <div class="ttc" id="aoffline__registry_8h_html"><div class="ttname"><a href="offline__registry_8h.html">offline_registry.h</a></div><div class="ttdoc">WAC's own offline registry reader: the part of Microsoft's Offline Registry API (offreg) that WAC use...</div></div>
-<div class="ttc" id="astructRun_html"><div class="ttname"><a href="structRun.html">Run</a></div><div class="ttdef"><b>Definition</b> reg_run.h:33</div></div>
-<div class="ttc" id="astructRun_html_a199906bea1d643678ed961eacf53c6c5"><div class="ttname"><a href="structRun.html#a199906bea1d643678ed961eacf53c6c5">Run::Key</a></div><div class="ttdeci">std::wstring Key</div><div class="ttdoc">the key it comes from: Run or RunOnce</div><div class="ttdef"><b>Definition</b> reg_run.h:37</div></div>
-<div class="ttc" id="astructRun_html_a1b22973a4bce424fdfc77d92ea1377fc"><div class="ttname"><a href="structRun.html#a1b22973a4bce424fdfc77d92ea1377fc">Run::SidName</a></div><div class="ttdeci">std::wstring SidName</div><div class="ttdoc">name of that user</div><div class="ttdef"><b>Definition</b> reg_run.h:36</div></div>
-<div class="ttc" id="astructRun_html_a53d3760c102a5741c3719ce20b392672"><div class="ttname"><a href="structRun.html#a53d3760c102a5741c3719ce20b392672">Run::lastWriteTimeUtc</a></div><div class="ttdeci">FILETIME lastWriteTimeUtc</div><div class="ttdoc">last write to the KEY, UTC (the local time is derived at output)</div><div class="ttdef"><b>Definition</b> reg_run.h:40</div></div>
-<div class="ttc" id="astructRun_html_a588499d88dd78a0b19a70de14ad6e784"><div class="ttname"><a href="structRun.html#a588499d88dd78a0b19a70de14ad6e784">Run::Sid</a></div><div class="ttdeci">std::wstring Sid</div><div class="ttdoc">SID of the user the entry belongs to, empty if machine-wide.</div><div class="ttdef"><b>Definition</b> reg_run.h:35</div></div>
-<div class="ttc" id="astructRun_html_a8aac1b40b1c849c309b727cb2c7dc10e"><div class="ttname"><a href="structRun.html#a8aac1b40b1c849c309b727cb2c7dc10e">Run::Name</a></div><div class="ttdeci">std::wstring Name</div><div class="ttdoc">name of the value, which the entry chooses freely</div><div class="ttdef"><b>Definition</b> reg_run.h:38</div></div>
-<div class="ttc" id="astructRun_html_adb6a6b9a227dce24fcafb241b8208b93"><div class="ttname"><a href="structRun.html#adb6a6b9a227dce24fcafb241b8208b93">Run::Value</a></div><div class="ttdeci">std::wstring Value</div><div class="ttdoc">the command line started</div><div class="ttdef"><b>Definition</b> reg_run.h:39</div></div>
-<div class="ttc" id="astructRuns_html"><div class="ttname"><a href="structRuns.html">Runs</a></div><div class="ttdef"><b>Definition</b> reg_run.h:51</div></div>
-<div class="ttc" id="astructRuns_html_a4e548488a4c98b07248d884720207a47"><div class="ttname"><a href="structRuns.html#a4e548488a4c98b07248d884720207a47">Runs::runs</a></div><div class="ttdeci">std::vector&lt; Run &gt; runs</div><div class="ttdoc">the entries, in the order they were read</div><div class="ttdef"><b>Definition</b> reg_run.h:53</div></div>
-<div class="ttc" id="astructRuns_html_a894681f9d1e81a19e7a91fb2da9fbec8"><div class="ttname"><a href="structRuns.html#a894681f9d1e81a19e7a91fb2da9fbec8">Runs::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> reg_run.cpp:143</div></div>
-<div class="ttc" id="astructRuns_html_a93f69405ea59102d78b12ea7e0fa86ff"><div class="ttname"><a href="structRuns.html#a93f69405ea59102d78b12ea7e0fa86ff">Runs::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> reg_run.cpp:23</div></div>
-<div class="ttc" id="astructRuns_html_acfd69fc28aac7b095a40e89ddc62d0e3"><div class="ttname"><a href="structRuns.html#acfd69fc28aac7b095a40e89ddc62d0e3">Runs::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Releases the memory held by the entries.</div><div class="ttdef"><b>Definition</b> reg_run.cpp:150</div></div>
+<div class="ttc" id="astructRun_html"><div class="ttname"><a href="structRun.html">Run</a></div><div class="ttdef"><b>Definition</b> reg_run.h:44</div></div>
+<div class="ttc" id="astructRun_html_a053648e7a7d86cb262b8080b77305369"><div class="ttname"><a href="structRun.html#a053648e7a7d86cb262b8080b77305369">Run::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Releases the memory held by the entry.</div><div class="ttdef"><b>Definition</b> reg_run.cpp:25</div></div>
+<div class="ttc" id="astructRun_html_a0626a32ec791d7a42aa9ad68c6612ba4"><div class="ttname"><a href="structRun.html#a0626a32ec791d7a42aa9ad68c6612ba4">Run::Type</a></div><div class="ttdeci">std::wstring Type</div><div class="ttdoc">REG_SZ, or REG_EXPAND_SZ: the command holds variables% Windows expands.</div><div class="ttdef"><b>Definition</b> reg_run.h:50</div></div>
+<div class="ttc" id="astructRun_html_a199906bea1d643678ed961eacf53c6c5"><div class="ttname"><a href="structRun.html#a199906bea1d643678ed961eacf53c6c5">Run::Key</a></div><div class="ttdeci">std::wstring Key</div><div class="ttdoc">the key it comes from: Run or RunOnce</div><div class="ttdef"><b>Definition</b> reg_run.h:48</div></div>
+<div class="ttc" id="astructRun_html_a2f9992248cc34fa0f5aa67650e417600"><div class="ttname"><a href="structRun.html#a2f9992248cc34fa0f5aa67650e417600">Run::status</a></div><div class="ttdeci">std::wstring status</div><div class="ttdoc">StartupApproved: the status code, first 4 bytes in hexadecimal as stored.</div><div class="ttdef"><b>Definition</b> reg_run.h:53</div></div>
+<div class="ttc" id="astructRun_html_a425f2b55464d8039c881c1605e05f6b3"><div class="ttname"><a href="structRun.html#a425f2b55464d8039c881c1605e05f6b3">Run::toJson</a></div><div class="ttdeci">Json toJson()</div><div class="ttdef"><b>Definition</b> reg_run.cpp:6</div></div>
+<div class="ttc" id="astructRun_html_a53d3760c102a5741c3719ce20b392672"><div class="ttname"><a href="structRun.html#a53d3760c102a5741c3719ce20b392672">Run::lastWriteTimeUtc</a></div><div class="ttdeci">FILETIME lastWriteTimeUtc</div><div class="ttdoc">last write to the KEY, UTC (the local time is derived at output)</div><div class="ttdef"><b>Definition</b> reg_run.h:52</div></div>
+<div class="ttc" id="astructRun_html_a588499d88dd78a0b19a70de14ad6e784"><div class="ttname"><a href="structRun.html#a588499d88dd78a0b19a70de14ad6e784">Run::Sid</a></div><div class="ttdeci">std::wstring Sid</div><div class="ttdoc">SID of the user the entry belongs to, empty if machine-wide.</div><div class="ttdef"><b>Definition</b> reg_run.h:47</div></div>
+<div class="ttc" id="astructRun_html_a84ee5112f22beb5d32068d0ce9a36a30"><div class="ttname"><a href="structRun.html#a84ee5112f22beb5d32068d0ce9a36a30">Run::changedUtc</a></div><div class="ttdeci">FILETIME changedUtc</div><div class="ttdoc">StartupApproved: when the user changed the state (bytes 4 to 12, a FILETIME)</div><div class="ttdef"><b>Definition</b> reg_run.h:54</div></div>
+<div class="ttc" id="astructRun_html_a8aac1b40b1c849c309b727cb2c7dc10e"><div class="ttname"><a href="structRun.html#a8aac1b40b1c849c309b727cb2c7dc10e">Run::Name</a></div><div class="ttdeci">std::wstring Name</div><div class="ttdoc">name of the value, which the entry chooses freely</div><div class="ttdef"><b>Definition</b> reg_run.h:49</div></div>
+<div class="ttc" id="astructRun_html_a90ae7cb02ef6278290b3b37a64b61784"><div class="ttname"><a href="structRun.html#a90ae7cb02ef6278290b3b37a64b61784">Run::notification</a></div><div class="ttdeci">std::optional&lt; DWORD &gt; notification</div><div class="ttdoc">RunNotification: the value, as stored.</div><div class="ttdef"><b>Definition</b> reg_run.h:55</div></div>
+<div class="ttc" id="astructRun_html_ab61d2ddb6064a2def410e657edbc1911"><div class="ttname"><a href="structRun.html#ab61d2ddb6064a2def410e657edbc1911">Run::Hive</a></div><div class="ttdeci">std::wstring Hive</div><div class="ttdoc">the hive it comes from: SOFTWARE, DEFAULT or NTUSER.DAT</div><div class="ttdef"><b>Definition</b> reg_run.h:46</div></div>
+<div class="ttc" id="astructRun_html_adb6a6b9a227dce24fcafb241b8208b93"><div class="ttname"><a href="structRun.html#adb6a6b9a227dce24fcafb241b8208b93">Run::Value</a></div><div class="ttdeci">std::wstring Value</div><div class="ttdoc">the command line started, as written</div><div class="ttdef"><b>Definition</b> reg_run.h:51</div></div>
+<div class="ttc" id="astructRuns_html"><div class="ttname"><a href="structRuns.html">Runs</a></div><div class="ttdef"><b>Definition</b> reg_run.h:66</div></div>
+<div class="ttc" id="astructRuns_html_a4e548488a4c98b07248d884720207a47"><div class="ttname"><a href="structRuns.html#a4e548488a4c98b07248d884720207a47">Runs::runs</a></div><div class="ttdeci">std::vector&lt; Run &gt; runs</div><div class="ttdoc">the entries, in the order they were read</div><div class="ttdef"><b>Definition</b> reg_run.h:68</div></div>
+<div class="ttc" id="astructRuns_html_a894681f9d1e81a19e7a91fb2da9fbec8"><div class="ttname"><a href="structRuns.html#a894681f9d1e81a19e7a91fb2da9fbec8">Runs::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> reg_run.cpp:164</div></div>
+<div class="ttc" id="astructRuns_html_a93f69405ea59102d78b12ea7e0fa86ff"><div class="ttname"><a href="structRuns.html#a93f69405ea59102d78b12ea7e0fa86ff">Runs::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> reg_run.cpp:144</div></div>
+<div class="ttc" id="astructRuns_html_acfd69fc28aac7b095a40e89ddc62d0e3"><div class="ttname"><a href="structRuns.html#acfd69fc28aac7b095a40e89ddc62d0e3">Runs::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Releases the memory held by the entries.</div><div class="ttdef"><b>Definition</b> reg_run.cpp:171</div></div>
 <div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div><div class="ttdoc">Shared tools: configuration, console display, log, registry reads, time formatting,...</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

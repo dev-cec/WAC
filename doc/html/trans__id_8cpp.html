@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -545,7 +545,7 @@ Support". </p><dl class="params"><dt>Parameters</dt><dd>
 </div><div class="memdoc">
 <p>Canonical names of the PROPERTYKEYs: "{fmtid}/pid" -&gt; name.</p>
 <p>WHY A TABLE, AND WHERE IT COMES FROM. The names were asked of PSGetNameFromPropertyKey, in propsys.dll — a library of the EXAMINED machine, whose answer depended on its Windows version, on the software installed there, and even on the state of the process: on a real machine {FFAE9DB7-1C8D-43FF-818C-84403AA3732D}/100 was resolved 11 times (registry phase) and not resolved 12 times (file phase) within one collection. A static table is deterministic and works identically on a dead image.</p>
-<p>Generated from the property schema of Windows 11 (build 26100) by vmtest/property-schema.cpp (PSEnumeratePropertyDescriptions, PDEF_ALL): 1698 properties. Keys in lower case: to_FriendlyName normalises before looking up. A property outside the table keeps its raw key. </p>
+<p>Generated from the property schema of Windows 11 (build 26100) by vmtest/guest/property-schema.cpp (PSEnumeratePropertyDescriptions, PDEF_ALL): 1698 properties. Keys in lower case: to_FriendlyName normalises before looking up. A property outside the table keeps its raw key. </p>
 
 </div>
 </div>

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -161,6 +161,20 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ab8a44b52998608616a7d5d605f17d9fd" id="r_ab8a44b52998608616a7d5d605f17d9fd"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUser.html#ab8a44b52998608616a7d5d605f17d9fd">keyLastWriteUtc</a> = { 0, 0 }</td></tr>
 <tr class="memdesc:ab8a44b52998608616a7d5d605f17d9fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">creation / modification of the account  <br /></td></tr>
 <tr class="separator:ab8a44b52998608616a7d5d605f17d9fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52d24d4c05ff066a0290533c741a5c60" id="r_a52d24d4c05ff066a0290533c741a5c60"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUser.html#a52d24d4c05ff066a0290533c741a5c60">ntHash</a></td></tr>
+<tr class="memdesc:a52d24d4c05ff066a0290533c741a5c60"><td class="mdescLeft">&#160;</td><td class="mdescRight">current NT hash  <br /></td></tr>
+<tr class="separator:a52d24d4c05ff066a0290533c741a5c60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d25998b2f20c94a1660a06a57664c9a" id="r_a6d25998b2f20c94a1660a06a57664c9a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUser.html#a6d25998b2f20c94a1660a06a57664c9a">lmHash</a></td></tr>
+<tr class="memdesc:a6d25998b2f20c94a1660a06a57664c9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">current LM hash  <br /></td></tr>
+<tr class="separator:a6d25998b2f20c94a1660a06a57664c9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fc2d31628cccc74a020961b24633991" id="r_a2fc2d31628cccc74a020961b24633991"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUser.html#a2fc2d31628cccc74a020961b24633991">ntHistory</a></td></tr>
+<tr class="memdesc:a2fc2d31628cccc74a020961b24633991"><td class="mdescLeft">&#160;</td><td class="mdescRight">previous NT hashes, newest first  <br /></td></tr>
+<tr class="separator:a2fc2d31628cccc74a020961b24633991"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba00b1543a9708ec3f625ff77da182f3" id="r_aba00b1543a9708ec3f625ff77da182f3"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUser.html#aba00b1543a9708ec3f625ff77da182f3">lmHistory</a></td></tr>
+<tr class="memdesc:aba00b1543a9708ec3f625ff77da182f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">previous LM hashes, newest first  <br /></td></tr>
+<tr class="separator:aba00b1543a9708ec3f625ff77da182f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba1f64fcde4cce63ac8b1eec4ea9f3df" id="r_aba1f64fcde4cce63ac8b1eec4ea9f3df"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUser.html#aba1f64fcde4cce63ac8b1eec4ea9f3df">securityQuestions</a></td></tr>
+<tr class="separator:aba1f64fcde4cce63ac8b1eec4ea9f3df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One local account of the examined machine. </p>
@@ -347,6 +361,38 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a6d25998b2f20c94a1660a06a57664c9a" name="a6d25998b2f20c94a1660a06a57664c9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d25998b2f20c94a1660a06a57664c9a">&#9670;&#160;</a></span>lmHash</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring User::lmHash</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>current LM hash </p>
+
+</div>
+</div>
+<a id="aba00b1543a9708ec3f625ff77da182f3" name="aba00b1543a9708ec3f625ff77da182f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba00b1543a9708ec3f625ff77da182f3">&#9670;&#160;</a></span>lmHistory</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::wstring&gt; User::lmHistory</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>previous LM hashes, newest first </p>
+
+</div>
+</div>
 <a id="ac04080788ffed767fbb71a6c8041fca9" name="ac04080788ffed767fbb71a6c8041fca9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac04080788ffed767fbb71a6c8041fca9">&#9670;&#160;</a></span>logonCount</h2>
 
@@ -376,6 +422,38 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>logon name </p>
+
+</div>
+</div>
+<a id="a52d24d4c05ff066a0290533c741a5c60" name="a52d24d4c05ff066a0290533c741a5c60"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52d24d4c05ff066a0290533c741a5c60">&#9670;&#160;</a></span>ntHash</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring User::ntHash</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>current NT hash </p>
+
+</div>
+</div>
+<a id="a2fc2d31628cccc74a020961b24633991" name="a2fc2d31628cccc74a020961b24633991"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2fc2d31628cccc74a020961b24633991">&#9670;&#160;</a></span>ntHistory</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::wstring&gt; User::ntHistory</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>previous NT hashes, newest first </p>
 
 </div>
 </div>
@@ -424,6 +502,20 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>relative identifier, which names the subkey </p>
+
+</div>
+</div>
+<a id="aba1f64fcde4cce63ac8b1eec4ea9f3df" name="aba1f64fcde4cce63ac8b1eec4ea9f3df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba1f64fcde4cce63ac8b1eec4ea9f3df">&#9670;&#160;</a></span>securityQuestions</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::pair&lt;std::wstring, std::wstring&gt; &gt; User::securityQuestions</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

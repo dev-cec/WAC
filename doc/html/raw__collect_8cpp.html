@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -117,6 +117,17 @@ $(document).ready(function(){initNavTree('raw__collect_8cpp.html',''); initResiz
 <code>#include &quot;<a class="el" href="raw__hive_8h_source.html">raw_hive.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hive__recover_8h_source.html">hive_recover.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="quickdigest5_8h_source.html">quickdigest5.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="powershell__history_8h_source.html">powershell_history.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="activities__cache_8h_source.html">activities_cache.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="search__index_8h_source.html">search_index.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="rdp__client_8h_source.html">rdp_client.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="thumbcache_8h_source.html">thumbcache.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="emails_8h_source.html">emails.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="running__machine_8h_source.html">running_machine.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="startup__folders_8h_source.html">startup_folders.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="shortcuts_8h_source.html">shortcuts.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="dpapi__master__keys_8h_source.html">dpapi_master_keys.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="web__client_8h_source.html">web_client.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -155,6 +166,11 @@ the machine". The count per directory is therefore logged, so that the report te
 <p>&lt; volume letter, without the colon</p>
 <p>&lt; path relative to that volume's root</p>
 <p>&lt; destination on the collection medium</p>
+<p>&lt; the folder, with its letter or relative to the system volume</p>
+<p>&lt; filter, empty for every file</p>
+<p>&lt; guard against an abnormal tree</p>
+<p>&lt; for the investigation log</p>
+<p>&lt; a subfolder another artefact extracts, same form as absolute; empty for none</p>
 
 </div>
 </div>
@@ -173,7 +189,7 @@ the machine". The count per directory is therefore logged, so that the report te
       </table>
 </div><div class="memdoc">
 <p>Extracts the NTFS metadata of the system volume, for the file system's timeline: <code>$MFT</code> (every file, present or deleted, with its dates), <code>$Extend\$UsnJrnl:$J</code> (the change journal: creations, renames, deletions) and <code>$LogFile</code> (the transaction journal, raw only), as wac.yml asks (artefacts.mft, usn_journal, log_file). The change journal needs the <code>$MFT</code> for its paths: it is extracted for either.</p>
-<p>These files weigh up to gigabytes: they are read IN PLACE by the conversion, from the exhibit store, and not copied to the working directory (READ_IN_PLACE).</p>
+<p>These files weigh up to gigabytes, and are copied to the working directory like every exhibit: the conversion reads them there, never in the exhibit store (backlog B-040).</p>
 <dl class="section return"><dt>Returns</dt><dd>S_OK, S_FALSE if one could not be extracted, or ERROR_EMPTY if none is asked for </dd></dl>
 
 </div>

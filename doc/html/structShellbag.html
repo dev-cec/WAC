@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -125,21 +125,27 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a1be999b8b2057110ea1d2a56e8748c56" id="r_a1be999b8b2057110ea1d2a56e8748c56"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#a1be999b8b2057110ea1d2a56e8748c56">sid</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a1be999b8b2057110ea1d2a56e8748c56"><td class="mdescLeft">&#160;</td><td class="mdescRight">SID of the user who browsed the folder.  <br /></td></tr>
 <tr class="separator:a1be999b8b2057110ea1d2a56e8748c56"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f9aa35997fee9a610b87dfc90b03b47" id="r_a7f9aa35997fee9a610b87dfc90b03b47"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#a7f9aa35997fee9a610b87dfc90b03b47">sidName</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:a7f9aa35997fee9a610b87dfc90b03b47"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of that user  <br /></td></tr>
-<tr class="separator:a7f9aa35997fee9a610b87dfc90b03b47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba476a36cb06874c7ada72c57bf199f1" id="r_aba476a36cb06874c7ada72c57bf199f1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#aba476a36cb06874c7ada72c57bf199f1">source</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:aba476a36cb06874c7ada72c57bf199f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">the key the shellbag comes from  <br /></td></tr>
 <tr class="separator:aba476a36cb06874c7ada72c57bf199f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abfe48ee528635c7a4e33175dc137de37" id="r_abfe48ee528635c7a4e33175dc137de37"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::unique_ptr&lt; <a class="el" href="structIdList.html">IdList</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#abfe48ee528635c7a4e33175dc137de37">shellitems</a></td></tr>
 <tr class="memdesc:abfe48ee528635c7a4e33175dc137de37"><td class="mdescLeft">&#160;</td><td class="mdescRight">the folder's PIDL, item by item  <br /></td></tr>
 <tr class="separator:abfe48ee528635c7a4e33175dc137de37"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2043681af0c230a086f829280dfa79cd" id="r_a2043681af0c230a086f829280dfa79cd"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structShellbag.html">Shellbag</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#a2043681af0c230a086f829280dfa79cd">childs</a></td></tr>
-<tr class="memdesc:a2043681af0c230a086f829280dfa79cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">the folders browsed below this one  <br /></td></tr>
-<tr class="separator:a2043681af0c230a086f829280dfa79cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3c059ea79008c1f13d6d6f1bdf37941" id="r_af3c059ea79008c1f13d6d6f1bdf37941"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structShellbag.html">Shellbag</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#af3c059ea79008c1f13d6d6f1bdf37941">children</a></td></tr>
+<tr class="memdesc:af3c059ea79008c1f13d6d6f1bdf37941"><td class="mdescLeft">&#160;</td><td class="mdescRight">the folders browsed below this one  <br /></td></tr>
+<tr class="separator:af3c059ea79008c1f13d6d6f1bdf37941"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad790ebcca27e10789ed30cca109a4bef" id="r_ad790ebcca27e10789ed30cca109a4bef"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#ad790ebcca27e10789ed30cca109a4bef">lastWriteTimeUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:ad790ebcca27e10789ed30cca109a4bef"><td class="mdescLeft">&#160;</td><td class="mdescRight">last write to the KEY, UTC (the local time is derived at output)  <br /></td></tr>
+<tr class="memdesc:ad790ebcca27e10789ed30cca109a4bef"><td class="mdescLeft">&#160;</td><td class="mdescRight">last write to the PARENT key, which holds this folder's value (UTC)  <br /></td></tr>
 <tr class="separator:ad790ebcca27e10789ed30cca109a4bef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68c6cdccbd94611665f4645dacbb7e85" id="r_a68c6cdccbd94611665f4645dacbb7e85"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#a68c6cdccbd94611665f4645dacbb7e85">keyLastWriteTimeUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:a68c6cdccbd94611665f4645dacbb7e85"><td class="mdescLeft">&#160;</td><td class="mdescRight">last write to the folder's OWN key: its addition, or the browsing of a subfolder (UTC)  <br /></td></tr>
+<tr class="separator:a68c6cdccbd94611665f4645dacbb7e85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae68e9b2a9a976c80f51d40ab280c363c" id="r_ae68e9b2a9a976c80f51d40ab280c363c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#ae68e9b2a9a976c80f51d40ab280c363c">mruPosition</a> = 0</td></tr>
+<tr class="memdesc:ae68e9b2a9a976c80f51d40ab280c363c"><td class="mdescLeft">&#160;</td><td class="mdescRight">rank among its siblings in MRUListEx, 0 for the most recently browsed  <br /></td></tr>
+<tr class="separator:ae68e9b2a9a976c80f51d40ab280c363c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a854537c0d06a0fd86cf41846df0319e5" id="r_a854537c0d06a0fd86cf41846df0319e5"><td class="memItemLeft" align="right" valign="top">std::optional&lt; unsigned int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellbag.html#a854537c0d06a0fd86cf41846df0319e5">nodeSlot</a></td></tr>
+<tr class="memdesc:a854537c0d06a0fd86cf41846df0319e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">NodeSlot: number of the Bags key holding the folder's view settings.  <br /></td></tr>
+<tr class="separator:a854537c0d06a0fd86cf41846df0319e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One shellbag: a folder that was browsed, and the folders browsed under it. </p>
@@ -163,14 +169,14 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a2043681af0c230a086f829280dfa79cd" name="a2043681af0c230a086f829280dfa79cd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2043681af0c230a086f829280dfa79cd">&#9670;&#160;</a></span>childs</h2>
+<a id="af3c059ea79008c1f13d6d6f1bdf37941" name="af3c059ea79008c1f13d6d6f1bdf37941"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3c059ea79008c1f13d6d6f1bdf37941">&#9670;&#160;</a></span>children</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;<a class="el" href="structShellbag.html">Shellbag</a>&gt; Shellbag::childs</td>
+          <td class="memname">std::vector&lt;<a class="el" href="structShellbag.html">Shellbag</a>&gt; Shellbag::children</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -195,6 +201,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a68c6cdccbd94611665f4645dacbb7e85" name="a68c6cdccbd94611665f4645dacbb7e85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a68c6cdccbd94611665f4645dacbb7e85">&#9670;&#160;</a></span>keyLastWriteTimeUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME Shellbag::keyLastWriteTimeUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>last write to the folder's OWN key: its addition, or the browsing of a subfolder (UTC) </p>
+
+</div>
+</div>
 <a id="ad790ebcca27e10789ed30cca109a4bef" name="ad790ebcca27e10789ed30cca109a4bef"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad790ebcca27e10789ed30cca109a4bef">&#9670;&#160;</a></span>lastWriteTimeUtc</h2>
 
@@ -207,7 +229,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>last write to the KEY, UTC (the local time is derived at output) </p>
+<p>last write to the PARENT key, which holds this folder's value (UTC) </p>
 
 </div>
 </div>
@@ -224,6 +246,38 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>depth in the tree, which the output JSON reproduces </p>
+
+</div>
+</div>
+<a id="ae68e9b2a9a976c80f51d40ab280c363c" name="ae68e9b2a9a976c80f51d40ab280c363c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae68e9b2a9a976c80f51d40ab280c363c">&#9670;&#160;</a></span>mruPosition</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Shellbag::mruPosition = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>rank among its siblings in MRUListEx, 0 for the most recently browsed </p>
+
+</div>
+</div>
+<a id="a854537c0d06a0fd86cf41846df0319e5" name="a854537c0d06a0fd86cf41846df0319e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a854537c0d06a0fd86cf41846df0319e5">&#9670;&#160;</a></span>nodeSlot</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt;unsigned int&gt; Shellbag::nodeSlot</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>NodeSlot: number of the Bags key holding the folder's view settings. </p>
 
 </div>
 </div>
@@ -272,22 +326,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>SID of the user who browsed the folder. </p>
-
-</div>
-</div>
-<a id="a7f9aa35997fee9a610b87dfc90b03b47" name="a7f9aa35997fee9a610b87dfc90b03b47"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7f9aa35997fee9a610b87dfc90b03b47">&#9670;&#160;</a></span>sidName</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring Shellbag::sidName = L&quot;&quot;</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>name of that user </p>
 
 </div>
 </div>

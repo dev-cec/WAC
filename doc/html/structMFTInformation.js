@@ -4,6 +4,6 @@ var structMFTInformation =
     [ "MFTInformation", "structMFTInformation.html#ad3d351baa5dc3ec55a37f50912b37af9", null ],
     [ "clear", "structMFTInformation.html#af482903748d0bc0e5ac44b61a7fdb683", null ],
     [ "toJson", "structMFTInformation.html#a32272f199959be6aede8202265ed907a", null ],
-    [ "entryIndex", "structMFTInformation.html#a9a2d806c560501a2c0c02086c16f1812", null ],
-    [ "sequenceNumber", "structMFTInformation.html#ad2197869192111fd0084761d3cb5eb3d", null ]
+    [ "entryIndex", "structMFTInformation.html#aefb585212e169548ac7509c34eecd1d0", null ],
+    [ "sequenceNumber", "structMFTInformation.html#a96aaf5a8e34fafdf0e8af1744d637a5f", null ]
 ];

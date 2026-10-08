@@ -1,13 +1,14 @@
 var searchData=
 [
-  ['action_0',['Action',['../structAction.html',1,'']]],
-  ['amcacheapplication_1',['AmcacheApplication',['../structAmcacheApplication.html',1,'']]],
-  ['amcacheapplicationfile_2',['AmcacheApplicationFile',['../structAmcacheApplicationFile.html',1,'']]],
-  ['amcacheapplicationfiles_3',['AmcacheApplicationFiles',['../structAmcacheApplicationFiles.html',1,'']]],
-  ['amcacheapplications_4',['AmcacheApplications',['../structAmcacheApplications.html',1,'']]],
-  ['api_5',['Api',['../structHttpClient_1_1Api.html',1,'HttpClient']]],
-  ['appliconf_6',['AppliConf',['../structAppliConf.html',1,'']]],
-  ['archivefile_7',['ArchiveFile',['../structArchiveFile.html',1,'']]],
-  ['archivefilecontent_8',['ArchiveFileContent',['../structArchiveFileContent.html',1,'']]],
-  ['automaticdestination_9',['AutomaticDestination',['../structAutomaticDestination.html',1,'']]]
+  ['accountright_0',['AccountRight',['../structAccountRight.html',1,'']]],
+  ['accountsecrets_1',['AccountSecrets',['../structAccountSecrets.html',1,'']]],
+  ['action_2',['Action',['../structAction.html',1,'']]],
+  ['activitiescaches_3',['ActivitiesCaches',['../classActivitiesCaches.html',1,'']]],
+  ['amcache_4',['Amcache',['../structAmcache.html',1,'']]],
+  ['amcacheentry_5',['AmcacheEntry',['../structAmcacheEntry.html',1,'']]],
+  ['api_6',['Api',['../structHttpClient_1_1Api.html',1,'HttpClient']]],
+  ['appliconf_7',['AppliConf',['../structAppliConf.html',1,'']]],
+  ['archivefile_8',['ArchiveFile',['../structArchiveFile.html',1,'']]],
+  ['archivefilecontent_9',['ArchiveFileContent',['../structArchiveFileContent.html',1,'']]],
+  ['automaticdestination_10',['AutomaticDestination',['../structAutomaticDestination.html',1,'']]]
 ];

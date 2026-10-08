@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -106,7 +106,7 @@ $(document).ready(function(){initNavTree('sessions_8h_source.html',''); initResi
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#include &lt;filesystem&gt;</span></div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#include &lt;fstream&gt;</span></div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#include &lt;Sddl.h&gt;</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#include &lt;sddl.h&gt;</span></div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#include &lt;wtsapi32.h&gt;</span></div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#include &lt;winternl.h&gt;</span></div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="sessions_8h.html#a02179d6d0af6163a233da56ec5a575ad">   25</a></span><span class="preprocessor">#define _NTDEF_ </span><span class="comment">// avoids the type conflicts between ntsecapi.h and winternl.h</span></div>
@@ -151,13 +151,13 @@ $(document).ready(function(){initNavTree('sessions_8h_source.html',''); initResi
 </div>
 <div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span> </div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>HRESULT <a class="code hl_function" href="sessions_8h.html#a2f2b840870137a0011fd4473b7c30a0d">writeSessionsFromSnapshot</a>();</div>
-<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:60</div></div>
+<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:62</div></div>
 <div class="ttc" id="ajson_8h_html"><div class="ttname"><a href="json_8h.html">json.h</a></div><div class="ttdoc">Centralised JSON serialiser for WAC, and the reader of the JSON it writes back (exhibit manifest,...</div></div>
-<div class="ttc" id="asessions_8h_html_a2f2b840870137a0011fd4473b7c30a0d"><div class="ttname"><a href="sessions_8h.html#a2f2b840870137a0011fd4473b7c30a0d">writeSessionsFromSnapshot</a></div><div class="ttdeci">HRESULT writeSessionsFromSnapshot()</div><div class="ttdef"><b>Definition</b> sessions.cpp:118</div></div>
+<div class="ttc" id="asessions_8h_html_a2f2b840870137a0011fd4473b7c30a0d"><div class="ttname"><a href="sessions_8h.html#a2f2b840870137a0011fd4473b7c30a0d">writeSessionsFromSnapshot</a></div><div class="ttdeci">HRESULT writeSessionsFromSnapshot()</div><div class="ttdef"><b>Definition</b> sessions.cpp:117</div></div>
 <div class="ttc" id="astructSession_html"><div class="ttname"><a href="structSession.html">Session</a></div><div class="ttdef"><b>Definition</b> sessions.h:34</div></div>
 <div class="ttc" id="astructSession_html_a0309ee0fd9a7033455cd26c5e8a5346f"><div class="ttname"><a href="structSession.html#a0309ee0fd9a7033455cd26c5e8a5346f">Session::sessionId</a></div><div class="ttdeci">LONGLONG sessionId</div><div class="ttdoc">LUID of the session, as Windows numbers it.</div><div class="ttdef"><b>Definition</b> sessions.h:57</div></div>
 <div class="ttc" id="astructSession_html_a2321e7ddc4a990932cf1cc0ec6ec9caa"><div class="ttname"><a href="structSession.html#a2321e7ddc4a990932cf1cc0ec6ec9caa">Session::logonTypeName</a></div><div class="ttdeci">std::wstring logonTypeName</div><div class="ttdoc">logonType spelled out</div><div class="ttdef"><b>Definition</b> sessions.h:40</div></div>
-<div class="ttc" id="astructSession_html_a47a25f08b075beda52d052fb3d7454dd"><div class="ttname"><a href="structSession.html#a47a25f08b075beda52d052fb3d7454dd">Session::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Releases the memory held by the session.</div><div class="ttdef"><b>Definition</b> sessions.cpp:83</div></div>
+<div class="ttc" id="astructSession_html_a47a25f08b075beda52d052fb3d7454dd"><div class="ttname"><a href="structSession.html#a47a25f08b075beda52d052fb3d7454dd">Session::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Releases the memory held by the session.</div><div class="ttdef"><b>Definition</b> sessions.cpp:82</div></div>
 <div class="ttc" id="astructSession_html_a52880b7b4dc23cd4ab8998df60901719"><div class="ttname"><a href="structSession.html#a52880b7b4dc23cd4ab8998df60901719">Session::logonName</a></div><div class="ttdeci">std::wstring logonName</div><div class="ttdoc">name of the account logged on</div><div class="ttdef"><b>Definition</b> sessions.h:38</div></div>
 <div class="ttc" id="astructSession_html_a5cabcec3ffeca33baae9905989ee5075"><div class="ttname"><a href="structSession.html#a5cabcec3ffeca33baae9905989ee5075">Session::sid</a></div><div class="ttdeci">std::wstring sid</div><div class="ttdef"><b>Definition</b> sessions.h:50</div></div>
 <div class="ttc" id="astructSession_html_aa57393e024125d6899bb6c069adf7db1"><div class="ttname"><a href="structSession.html#aa57393e024125d6899bb6c069adf7db1">Session::logonType</a></div><div class="ttdeci">ULONG logonType</div><div class="ttdoc">kind of logon: interactive, network, service…</div><div class="ttdef"><b>Definition</b> sessions.h:41</div></div>
@@ -167,10 +167,10 @@ $(document).ready(function(){initNavTree('sessions_8h_source.html',''); initResi
 <div class="ttc" id="astructSession_html_af5a7d00228ad12e6fda63c5c4a90eb95"><div class="ttname"><a href="structSession.html#af5a7d00228ad12e6fda63c5c4a90eb95">Session::toJson</a></div><div class="ttdeci">Json toJson() const</div><div class="ttdef"><b>Definition</b> sessions.cpp:62</div></div>
 <div class="ttc" id="astructSession_html_af6b7428ef6166677a8e64145c57a0980"><div class="ttname"><a href="structSession.html#af6b7428ef6166677a8e64145c57a0980">Session::knownRole</a></div><div class="ttdeci">std::wstring knownRole</div><div class="ttdef"><b>Definition</b> sessions.h:56</div></div>
 <div class="ttc" id="astructSessions_html"><div class="ttname"><a href="structSessions.html">Sessions</a></div><div class="ttdef"><b>Definition</b> sessions.h:72</div></div>
-<div class="ttc" id="astructSessions_html_a5807afc66ff7aecb9b7a55ba2b39b4ec"><div class="ttname"><a href="structSessions.html#a5807afc66ff7aecb9b7a55ba2b39b4ec">Sessions::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Releases the memory held by the sessions.</div><div class="ttdef"><b>Definition</b> sessions.cpp:143</div></div>
+<div class="ttc" id="astructSessions_html_a5807afc66ff7aecb9b7a55ba2b39b4ec"><div class="ttname"><a href="structSessions.html#a5807afc66ff7aecb9b7a55ba2b39b4ec">Sessions::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Releases the memory held by the sessions.</div><div class="ttdef"><b>Definition</b> sessions.cpp:141</div></div>
 <div class="ttc" id="astructSessions_html_abce0c624d110f9813f77c68c742c90fd"><div class="ttname"><a href="structSessions.html#abce0c624d110f9813f77c68c742c90fd">Sessions::sessions</a></div><div class="ttdeci">std::vector&lt; Session &gt; sessions</div><div class="ttdoc">the sessions, in the order LSA listed them</div><div class="ttdef"><b>Definition</b> sessions.h:73</div></div>
-<div class="ttc" id="astructSessions_html_ac45e8917adc81cab3a461be5ae961ad8"><div class="ttname"><a href="structSessions.html#ac45e8917adc81cab3a461be5ae961ad8">Sessions::snapshot</a></div><div class="ttdeci">HRESULT snapshot()</div><div class="ttdef"><b>Definition</b> sessions.cpp:111</div></div>
-<div class="ttc" id="astructSessions_html_af9497bb8ee3183da3bc85286a5fc9ffb"><div class="ttname"><a href="structSessions.html#af9497bb8ee3183da3bc85286a5fc9ffb">Sessions::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> sessions.cpp:87</div></div>
+<div class="ttc" id="astructSessions_html_ac45e8917adc81cab3a461be5ae961ad8"><div class="ttname"><a href="structSessions.html#ac45e8917adc81cab3a461be5ae961ad8">Sessions::snapshot</a></div><div class="ttdeci">HRESULT snapshot()</div><div class="ttdef"><b>Definition</b> sessions.cpp:110</div></div>
+<div class="ttc" id="astructSessions_html_af9497bb8ee3183da3bc85286a5fc9ffb"><div class="ttname"><a href="structSessions.html#af9497bb8ee3183da3bc85286a5fc9ffb">Sessions::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> sessions.cpp:86</div></div>
 <div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div><div class="ttdoc">Shared tools: configuration, console display, log, registry reads, time formatting,...</div></div>
 <div class="ttc" id="atrans__id_8h_html"><div class="ttname"><a href="trans__id_8h.html">trans_id.h</a></div><div class="ttdoc">Lookup tables: a raw identifier -&gt; a readable label.</div></div>
 </div><!-- fragment --></div><!-- contents -->

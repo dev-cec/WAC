@@ -4,7 +4,7 @@ var searchData=
   ['xml_5flight_2ecpp_1',['xml_light.cpp',['../xml__light_8cpp.html',1,'']]],
   ['xml_5flight_2eh_2',['xml_light.h',['../xml__light_8h.html',1,'']]],
   ['xmlnode_3',['XmlNode',['../structXmlNode.html',1,'']]],
-  ['xmlparse_4',['xmlparse',['../xml__light_8cpp.html#a2a059cf8317ef9e1e9982c32dc6b91bf',1,'xmlParse(const std::wstring &amp;content):&#160;xml_light.cpp'],['../xml__light_8h.html#a2a059cf8317ef9e1e9982c32dc6b91bf',1,'xmlParse(const std::wstring &amp;content):&#160;xml_light.cpp']]],
+  ['xmlparse_4',['xmlparse',['../xml__light_8cpp.html#a0f6e645fab01047c254d16bed908e494',1,'xmlParse(const std::wstring &amp;content, bool keepText):&#160;xml_light.cpp'],['../xml__light_8h.html#a09ad3dcbfed1e2484fa4b53247587756',1,'xmlParse(const std::wstring &amp;content, bool keepText=false):&#160;xml_light.cpp']]],
   ['xmlreadfile_5',['xmlreadfile',['../xml__light_8cpp.html#a2c8b880642b0a4d5c6ffb0e937f30a81',1,'xmlReadFile(const std::wstring &amp;path):&#160;xml_light.cpp'],['../xml__light_8h.html#a2c8b880642b0a4d5c6ffb0e937f30a81',1,'xmlReadFile(const std::wstring &amp;path):&#160;xml_light.cpp']]],
   ['xpress_2ecpp_6',['xpress.cpp',['../xpress_8cpp.html',1,'']]],
   ['xpress_2eh_7',['xpress.h',['../xpress_8h.html',1,'']]],

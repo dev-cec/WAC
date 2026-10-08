@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -147,6 +147,11 @@ the machine". The count per directory is therefore logged, so that the report te
 <p>&lt; volume letter, without the colon</p>
 <p>&lt; path relative to that volume's root</p>
 <p>&lt; destination on the collection medium</p>
+<p>&lt; the folder, with its letter or relative to the system volume</p>
+<p>&lt; filter, empty for every file</p>
+<p>&lt; guard against an abnormal tree</p>
+<p>&lt; for the investigation log</p>
+<p>&lt; a subfolder another artefact extracts, same form as absolute; empty for none</p>
 
 </div>
 </div>
@@ -165,7 +170,7 @@ the machine". The count per directory is therefore logged, so that the report te
       </table>
 </div><div class="memdoc">
 <p>Extracts the NTFS metadata of the system volume, for the file system's timeline: <code>$MFT</code> (every file, present or deleted, with its dates), <code>$Extend\$UsnJrnl:$J</code> (the change journal: creations, renames, deletions) and <code>$LogFile</code> (the transaction journal, raw only), as wac.yml asks (artefacts.mft, usn_journal, log_file). The change journal needs the <code>$MFT</code> for its paths: it is extracted for either.</p>
-<p>These files weigh up to gigabytes: they are read IN PLACE by the conversion, from the exhibit store, and not copied to the working directory (READ_IN_PLACE).</p>
+<p>These files weigh up to gigabytes, and are copied to the working directory like every exhibit: the conversion reads them there, never in the exhibit store (backlog B-040).</p>
 <dl class="section return"><dt>Returns</dt><dd>S_OK, S_FALSE if one could not be extracted, or ERROR_EMPTY if none is asked for </dd></dl>
 
 </div>

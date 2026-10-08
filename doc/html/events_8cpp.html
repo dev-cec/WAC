@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -96,6 +96,8 @@ $(document).ready(function(){initNavTree('events_8cpp.html',''); initResizable()
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">events.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -105,11 +107,59 @@ $(document).ready(function(){initNavTree('events_8cpp.html',''); initResizable()
 <div class="textblock"><code>#include &quot;<a class="el" href="events_8h_source.html">events.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="evtx_8h_source.html">evtx.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="event__messages_8h_source.html">event_messages.h</a>&quot;</code><br />
+<code>#include &lt;filesystem&gt;</code><br />
+<code>#include &quot;<a class="el" href="raw__hive_8h_source.html">raw_hive.h</a>&quot;</code><br />
+<code>#include &lt;chrono&gt;</code><br />
 <code>#include &lt;cwchar&gt;</code><br />
-</div><a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a7c0de7bd7804e97f9f9e0cb8e273d706" id="r_a7c0de7bd7804e97f9f9e0cb8e273d706"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="events_8cpp.html#a7c0de7bd7804e97f9f9e0cb8e273d706">EventProvidersCited</a> (std::set&lt; std::wstring &gt; &amp;guids, std::set&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;sources)</td></tr>
+<tr class="separator:a7c0de7bd7804e97f9f9e0cb8e273d706"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Filling of the events from the decoded XML. </p>
 <p>See <a class="el" href="events_8h.html" title="Windows event logs.">events.h</a> for the processing chain and what the offline reading brings. The comments here bear on the correspondence between a record's XML and the output fields. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a7c0de7bd7804e97f9f9e0cb8e273d706" name="a7c0de7bd7804e97f9f9e0cb8e273d706"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c0de7bd7804e97f9f9e0cb8e273d706">&#9670;&#160;</a></span>EventProvidersCited()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT EventProvidersCited </td>
+          <td>(</td>
+          <td class="paramtype">std::set&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>guids</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::set&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sources</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Collection of every extracted log.</p>
+<p>No array of events is kept: each one is written then forgotten (see <a class="el" href="classJsonArrayWriter.html">JsonArrayWriter</a>). That is what brings the collection of the logs down to a constant memory footprint, whatever the size of the logs.</p>
+<p>The providers the collected event logs cite, for &ndash;collect: their GUIDs, and the (log, source) pair of every event, read in the logs extracted to the exhibit store — only the System section of each record, no message. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">guids</td><td>receives the providers' GUIDs </td></tr>
+    <tr><td class="paramname">sources</td><td>receives the (log, source) pairs </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND if no log was extracted </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

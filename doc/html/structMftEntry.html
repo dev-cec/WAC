@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,8 +116,8 @@ Classes</h2></td></tr>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a9f758e1cea586d361efd5c75dc13e29e" id="r_a9f758e1cea586d361efd5c75dc13e29e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a9f758e1cea586d361efd5c75dc13e29e">parse</a> (const uint8_t *record, size_t recordSize, uint64_t number)</td></tr>
 <tr class="separator:a9f758e1cea586d361efd5c75dc13e29e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a587837dc9e5ba9d2bfcf5f41fc62bb07" id="r_a587837dc9e5ba9d2bfcf5f41fc62bb07"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a587837dc9e5ba9d2bfcf5f41fc62bb07">toJson</a> (const std::wstring &amp;path, bool pathComplete, const std::vector&lt; std::wstring &gt; &amp;hardLinkPaths) const</td></tr>
-<tr class="separator:a587837dc9e5ba9d2bfcf5f41fc62bb07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a123446fe11b5562ff39ee0280f3967" id="r_a5a123446fe11b5562ff39ee0280f3967"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a5a123446fe11b5562ff39ee0280f3967">toJson</a> (const std::wstring &amp;path, bool pathComplete, const std::vector&lt; std::wstring &gt; &amp;hardLinkPaths, const std::wstring &amp;volume) const</td></tr>
+<tr class="separator:a5a123446fe11b5562ff39ee0280f3967"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b340e57676f7aee947a3ba78cc55bac" id="r_a9b340e57676f7aee947a3ba78cc55bac"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a9b340e57676f7aee947a3ba78cc55bac">isShownName</a> (const <a class="el" href="structMftEntry_1_1Link.html">Link</a> &amp;link) const</td></tr>
 <tr class="memdesc:a9b340e57676f7aee947a3ba78cc55bac"><td class="mdescLeft">&#160;</td><td class="mdescRight">True if the link is the name shown as <code>name</code> (same directory, same name).  <br /></td></tr>
 <tr class="separator:a9b340e57676f7aee947a3ba78cc55bac"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -159,9 +159,23 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ab42df8e6ed9d2ab44b7bf191d679081e" id="r_ab42df8e6ed9d2ab44b7bf191d679081e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#ab42df8e6ed9d2ab44b7bf191d679081e">streams</a></td></tr>
 <tr class="memdesc:ab42df8e6ed9d2ab44b7bf191d679081e"><td class="mdescLeft">&#160;</td><td class="mdescRight">named $DATA streams: Zone.Identifier (downloaded), hidden data…  <br /></td></tr>
 <tr class="separator:ab42df8e6ed9d2ab44b7bf191d679081e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad29b3eb7532896f3dd4c5fc19cca02e1" id="r_ad29b3eb7532896f3dd4c5fc19cca02e1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#ad29b3eb7532896f3dd4c5fc19cca02e1">zoneIdentifier</a> = false</td></tr>
+<tr class="memdesc:ad29b3eb7532896f3dd4c5fc19cca02e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">the record has a Zone.Identifier stream  <br /></td></tr>
+<tr class="separator:ad29b3eb7532896f3dd4c5fc19cca02e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6aebdcae7f2cf484dbe2ea898b24b91" id="r_aa6aebdcae7f2cf484dbe2ea898b24b91"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#aa6aebdcae7f2cf484dbe2ea898b24b91">zoneIdentifierResident</a> = false</td></tr>
+<tr class="memdesc:aa6aebdcae7f2cf484dbe2ea898b24b91"><td class="mdescLeft">&#160;</td><td class="mdescRight">its content is in the record (<code>zoneIdentifierContent</code>)  <br /></td></tr>
+<tr class="separator:aa6aebdcae7f2cf484dbe2ea898b24b91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5cf42c2c05f664a3686c094010f43f29" id="r_a5cf42c2c05f664a3686c094010f43f29"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a5cf42c2c05f664a3686c094010f43f29">zoneIdentifierContent</a></td></tr>
+<tr class="memdesc:a5cf42c2c05f664a3686c094010f43f29"><td class="mdescLeft">&#160;</td><td class="mdescRight">the stream's bytes, when resident  <br /></td></tr>
+<tr class="separator:a5cf42c2c05f664a3686c094010f43f29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91055bc1228f32e7b64767b89b7de166" id="r_a91055bc1228f32e7b64767b89b7de166"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a91055bc1228f32e7b64767b89b7de166">zoneIdentifierSize</a> = 0</td></tr>
+<tr class="memdesc:a91055bc1228f32e7b64767b89b7de166"><td class="mdescLeft">&#160;</td><td class="mdescRight">the stream's size  <br /></td></tr>
+<tr class="separator:a91055bc1228f32e7b64767b89b7de166"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9130ed9adf7c3b8403697825c08f7148" id="r_a9130ed9adf7c3b8403697825c08f7148"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a9130ed9adf7c3b8403697825c08f7148">attributes</a> = 0</td></tr>
 <tr class="memdesc:a9130ed9adf7c3b8403697825c08f7148"><td class="mdescLeft">&#160;</td><td class="mdescRight">file attributes of $STANDARD_INFORMATION (a field of bits)  <br /></td></tr>
 <tr class="separator:a9130ed9adf7c3b8403697825c08f7148"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af18de8736fd3da8bfda843563cffc3ff" id="r_af18de8736fd3da8bfda843563cffc3ff"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#af18de8736fd3da8bfda843563cffc3ff">securityId</a> = 0</td></tr>
+<tr class="separator:af18de8736fd3da8bfda843563cffc3ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30a727882a8369faf2df95f7303c71ae" id="r_a30a727882a8369faf2df95f7303c71ae"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a30a727882a8369faf2df95f7303c71ae">created</a> = { 0 }</td></tr>
 <tr class="separator:a30a727882a8369faf2df95f7303c71ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a659e13567eb1edbc2015aa22a746af4e" id="r_a659e13567eb1edbc2015aa22a746af4e"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a659e13567eb1edbc2015aa22a746af4e">modified</a> = { 0 }</td></tr>
@@ -183,6 +197,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a2165b0cbbfc3401fae902c42c5497b19" id="r_a2165b0cbbfc3401fae902c42c5497b19"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a2165b0cbbfc3401fae902c42c5497b19">baseEntry</a> = 0</td></tr>
 <tr class="memdesc:a2165b0cbbfc3401fae902c42c5497b19"><td class="mdescLeft">&#160;</td><td class="mdescRight">for an extension record: the record it extends; 0 otherwise  <br /></td></tr>
 <tr class="separator:a2165b0cbbfc3401fae902c42c5497b19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36bd8334c66b582328fd25c92b86f234" id="r_a36bd8334c66b582328fd25c92b86f234"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html#a36bd8334c66b582328fd25c92b86f234">baseSequence</a> = 0</td></tr>
+<tr class="memdesc:a36bd8334c66b582328fd25c92b86f234"><td class="mdescLeft">&#160;</td><td class="mdescRight">…and that record's sequence number when it was extended  <br /></td></tr>
+<tr class="separator:a36bd8334c66b582328fd25c92b86f234"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One record of the $MFT: a file or a directory, present or deleted. </p>
@@ -258,8 +275,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a587837dc9e5ba9d2bfcf5f41fc62bb07" name="a587837dc9e5ba9d2bfcf5f41fc62bb07"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a587837dc9e5ba9d2bfcf5f41fc62bb07">&#9670;&#160;</a></span>toJson()</h2>
+<a id="a5a123446fe11b5562ff39ee0280f3967" name="a5a123446fe11b5562ff39ee0280f3967"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5a123446fe11b5562ff39ee0280f3967">&#9670;&#160;</a></span>toJson()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -280,7 +297,13 @@ Public Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
-          <td class="paramname"><em>hardLinkPaths</em>&#160;</td>
+          <td class="paramname"><em>hardLinkPaths</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volume</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -294,6 +317,7 @@ Public Attributes</h2></td></tr>
     <tr><td class="paramname">path</td><td>its path, rebuilt by <a class="el" href="structMft.html#a36655d090014146eac295d2d852eb410">Mft::pathOf</a> </td></tr>
     <tr><td class="paramname">pathComplete</td><td>false if a parent could not be named </td></tr>
     <tr><td class="paramname">hardLinkPaths</td><td>the paths of its other names (hard links) </td></tr>
+    <tr><td class="paramname">volume</td><td>the volume the record belongs to ("C:"): its numbers are only meaningful there </td></tr>
   </table>
   </dd>
 </dl>
@@ -347,6 +371,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>for an extension record: the record it extends; 0 otherwise </p>
+
+</div>
+</div>
+<a id="a36bd8334c66b582328fd25c92b86f234" name="a36bd8334c66b582328fd25c92b86f234"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a36bd8334c66b582328fd25c92b86f234">&#9670;&#160;</a></span>baseSequence</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t MftEntry::baseSequence = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>…and that record's sequence number when it was extended </p>
 
 </div>
 </div>
@@ -577,6 +617,21 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="af18de8736fd3da8bfda843563cffc3ff" name="af18de8736fd3da8bfda843563cffc3ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af18de8736fd3da8bfda843563cffc3ff">&#9670;&#160;</a></span>securityId</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t MftEntry::securityId = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Number of the file's security descriptor in $Secure:$SDS (security_descriptors.json): owner and ACLs. 0 when the $STANDARD_INFORMATION is the short one of NTFS 1.2, without it. </p>
+
+</div>
+</div>
 <a id="a9a7cbeb7983e36f2fa6601228e67fbef" name="a9a7cbeb7983e36f2fa6601228e67fbef"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9a7cbeb7983e36f2fa6601228e67fbef">&#9670;&#160;</a></span>sequence</h2>
 
@@ -638,6 +693,71 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>named $DATA streams: Zone.Identifier (downloaded), hidden data… </p>
+
+</div>
+</div>
+<a id="ad29b3eb7532896f3dd4c5fc19cca02e1" name="ad29b3eb7532896f3dd4c5fc19cca02e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad29b3eb7532896f3dd4c5fc19cca02e1">&#9670;&#160;</a></span>zoneIdentifier</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool MftEntry::zoneIdentifier = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the record has a Zone.Identifier stream </p>
+<p>The Zone.Identifier stream ("Mark of the Web", written by browsers and mail clients on what they download). Almost always resident — held in the record itself —, so the copy of the $MFT carries its content, with no further read of the examined machine. </p>
+
+</div>
+</div>
+<a id="a5cf42c2c05f664a3686c094010f43f29" name="a5cf42c2c05f664a3686c094010f43f29"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5cf42c2c05f664a3686c094010f43f29">&#9670;&#160;</a></span>zoneIdentifierContent</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string MftEntry::zoneIdentifierContent</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the stream's bytes, when resident </p>
+
+</div>
+</div>
+<a id="aa6aebdcae7f2cf484dbe2ea898b24b91" name="aa6aebdcae7f2cf484dbe2ea898b24b91"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa6aebdcae7f2cf484dbe2ea898b24b91">&#9670;&#160;</a></span>zoneIdentifierResident</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool MftEntry::zoneIdentifierResident = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>its content is in the record (<code>zoneIdentifierContent</code>) </p>
+
+</div>
+</div>
+<a id="a91055bc1228f32e7b64767b89b7de166" name="a91055bc1228f32e7b64767b89b7de166"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a91055bc1228f32e7b64767b89b7de166">&#9670;&#160;</a></span>zoneIdentifierSize</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t MftEntry::zoneIdentifierSize = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the stream's size </p>
 
 </div>
 </div>

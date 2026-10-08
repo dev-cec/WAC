@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['text_0',['Text',['../sqlite__reader_8h.html#a5c41670f18324eca0c2ea25882bfed61a9dffbf69ffba8bc38bc4e01abf4b1675',1,'sqlite_reader.h']]],
+  ['timeelapsed_1',['TimeElapsed',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4abf99cf7e56562e0125e9a648597239f8',1,'translations.h']]],
+  ['trustauthorities_2',['TrustAuthorities',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a235fc6202c1efebedb780c6e3f54eb9e',1,'translations.h']]],
+  ['trustcodesigningauthorities_3',['TrustCodeSigningAuthorities',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4aefabcc6779a3a6bde49f27d51a413373',1,'translations.h']]],
+  ['trustdisallowed_4',['TrustDisallowed',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ac638fe9fd70f999541f856c5f5387ee2',1,'translations.h']]],
+  ['trustdownloading_5',['TrustDownloading',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4af9dea764274f19aff0cc65f43c7973e0',1,'translations.h']]],
+  ['trustdriverblocklist_6',['TrustDriverBlocklist',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4acf3f07460453fc81437e63bddb14e8fc',1,'translations.h']]],
+  ['trustfolder_7',['TrustFolder',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a7470319c85d646af0f1a5ba7f43e84b2',1,'translations.h']]],
+  ['trustnoroot_8',['TrustNoRoot',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ad9361da05a158dd2d7849f3f3b5ac50d',1,'translations.h']]],
+  ['trustobtained_9',['TrustObtained',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ae182fb44137c5dc5d6787f51b23f33bd',1,'translations.h']]],
+  ['trustrevocationlists_10',['TrustRevocationLists',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a7ef5e9e2afe3a20350bf1af177f5d9d9',1,'translations.h']]],
+  ['trustrevocationwanted_11',['TrustRevocationWanted',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ada3792daaf513ee60a37ea744c0af3b7',1,'translations.h']]],
+  ['trustrootcertificates_12',['TrustRootCertificates',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a1c953c55e1437215a5e8dc8160c69d16',1,'translations.h']]],
+  ['trustroots_13',['TrustRoots',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a574b7a361f5687857fe1efdf43305dd2',1,'translations.h']]],
+  ['trustrootsmissing_14',['TrustRootsMissing',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a747dd5d74cc78eb83dd70d7f7574e285',1,'translations.h']]],
+  ['trustwriting_15',['TrustWriting',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4aab6c555b0394b06380e82beaea77ea66',1,'translations.h']]]
+];

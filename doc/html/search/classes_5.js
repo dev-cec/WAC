@@ -1,11 +1,19 @@
 var searchData=
 [
-  ['fatdatetime_0',['FatDateTime',['../structFatDateTime.html',1,'']]],
-  ['favoriteshellitem_1',['FavoriteShellitem',['../structFavoriteShellitem.html',1,'']]],
-  ['fileattributes_2',['FileAttributes',['../structFileAttributes.html',1,'']]],
-  ['fileentryshellitem_3',['FileEntryShellItem',['../structFileEntryShellItem.html',1,'']]],
-  ['filename_4',['Filename',['../structFilename.html',1,'']]],
-  ['filesource_5',['FileSource',['../classFileSource.html',1,'']]],
-  ['foldertypenames_6',['FolderTypeNames',['../structFolderTypeNames.html',1,'']]],
-  ['fsflags_7',['FsFlags',['../structFsFlags.html',1,'']]]
+  ['fatawarereader_0',['FatAwareReader',['../classFatAwareReader.html',1,'']]],
+  ['fatdatetime_1',['FatDateTime',['../structFatDateTime.html',1,'']]],
+  ['fatentry_2',['FatEntry',['../structFatEntry.html',1,'']]],
+  ['fatvolume_3',['FatVolume',['../classFatVolume.html',1,'']]],
+  ['fatvolumeentry_4',['FatVolumeEntry',['../structFatVolumeEntry.html',1,'']]],
+  ['fatvolumes_5',['FatVolumes',['../classFatVolumes.html',1,'']]],
+  ['favoriteshellitem_6',['FavoriteShellitem',['../structFavoriteShellitem.html',1,'']]],
+  ['fileattributes_7',['FileAttributes',['../structFileAttributes.html',1,'']]],
+  ['fileentryshellitem_8',['FileEntryShellItem',['../structFileEntryShellItem.html',1,'']]],
+  ['filename_9',['Filename',['../structFilename.html',1,'']]],
+  ['filesource_10',['FileSource',['../classFileSource.html',1,'']]],
+  ['filevolumesource_11',['FileVolumeSource',['../classFileVolumeSource.html',1,'']]],
+  ['firewall_12',['Firewall',['../classFirewall.html',1,'']]],
+  ['firewallrule_13',['FirewallRule',['../structFirewallRule.html',1,'']]],
+  ['foldertypenames_14',['FolderTypeNames',['../structFolderTypeNames.html',1,'']]],
+  ['fsflags_15',['FsFlags',['../structFsFlags.html',1,'']]]
 ];

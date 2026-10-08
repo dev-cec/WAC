@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -105,12 +105,13 @@ $(document).ready(function(){initNavTree('version__info_8cpp.html',''); initResi
 <p>The version resource of a PE (see <a class="el" href="version__info_8h.html" title="THE VERSION RESOURCE of a PE (VS_VERSIONINFO): what a binary says it is.">version_info.h</a>).  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="version__info_8h_source.html">version_info.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="portable__conversions_8h_source.html">portable_conversions.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a37b4b731f230cb45804adf8ac2f1c625" id="r_a37b4b731f230cb45804adf8ac2f1c625"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="version__info_8cpp.html#a37b4b731f230cb45804adf8ac2f1c625">ReadVersionInfo</a> (const std::vector&lt; uint8_t &gt; &amp;resource, <a class="el" href="structVersionInfo.html">VersionInfo</a> &amp;info)</td></tr>
 <tr class="separator:a37b4b731f230cb45804adf8ac2f1c625"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad55ee9ea70ac6e3062be630455e99bce" id="r_ad55ee9ea70ac6e3062be630455e99bce"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="version__info_8cpp.html#ad55ee9ea70ac6e3062be630455e99bce">ParseFileVersion</a> (const std::wstring &amp;text, uint64_t &amp;version)</td></tr>
+<tr class="memitem:ad55ee9ea70ac6e3062be630455e99bce" id="r_ad55ee9ea70ac6e3062be630455e99bce"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="version__info_8cpp.html#ad55ee9ea70ac6e3062be630455e99bce">ParseFileVersion</a> (const std::wstring &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>, uint64_t &amp;version)</td></tr>
 <tr class="separator:ad55ee9ea70ac6e3062be630455e99bce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>

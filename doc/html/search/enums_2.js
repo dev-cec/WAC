@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['kind_0',['Kind',['../classJson.html#a82938661c4953d873b5c8a204337fd57',1,'Json']]]
+  ['hexletters_0',['HexLetters',['../conversions_8h.html#a2d620cc94517351d3a467f847aa450ed',1,'conversions.h']]]
 ];

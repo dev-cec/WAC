@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -108,18 +108,22 @@ $(document).ready(function(){initNavTree('structMft.html',''); initResizable(); 
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aac898648c4381080c4a1cbc7d49df67c" id="r_aac898648c4381080c4a1cbc7d49df67c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#aac898648c4381080c4a1cbc7d49df67c">getData</a> ()</td></tr>
-<tr class="separator:aac898648c4381080c4a1cbc7d49df67c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5b44bfbb58cfb3b4d1a4947e76470d5" id="r_ac5b44bfbb58cfb3b4d1a4947e76470d5"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#ac5b44bfbb58cfb3b4d1a4947e76470d5">toJson</a> ()</td></tr>
-<tr class="separator:ac5b44bfbb58cfb3b4d1a4947e76470d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3d0b15bb632a628d5c61aa7d8ddd0e5" id="r_ab3d0b15bb632a628d5c61aa7d8ddd0e5"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#ab3d0b15bb632a628d5c61aa7d8ddd0e5">getData</a> (const std::wstring &amp;<a class="el" href="structMft.html#ae216c0b46af9e2ad4544e5495968db5f">volume</a>)</td></tr>
+<tr class="separator:ab3d0b15bb632a628d5c61aa7d8ddd0e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae216c0b46af9e2ad4544e5495968db5f" id="r_ae216c0b46af9e2ad4544e5495968db5f"><td class="memItemLeft" align="right" valign="top">const std::wstring &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#ae216c0b46af9e2ad4544e5495968db5f">volume</a> () const</td></tr>
+<tr class="separator:ae216c0b46af9e2ad4544e5495968db5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89cec7e2d422d26f8cee8fbde1fed430" id="r_a89cec7e2d422d26f8cee8fbde1fed430"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#a89cec7e2d422d26f8cee8fbde1fed430">toJson</a> (<a class="el" href="classJsonArrayWriter.html">JsonArrayWriter</a> &amp;out) const</td></tr>
+<tr class="separator:a89cec7e2d422d26f8cee8fbde1fed430"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36655d090014146eac295d2d852eb410" id="r_a36655d090014146eac295d2d852eb410"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#a36655d090014146eac295d2d852eb410">pathOf</a> (uint64_t entry, uint16_t sequence, bool &amp;complete) const</td></tr>
 <tr class="separator:a36655d090014146eac295d2d852eb410"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a553a7e68ee4115c11bdc4886c7397a2c" id="r_a553a7e68ee4115c11bdc4886c7397a2c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#a553a7e68ee4115c11bdc4886c7397a2c">forEachFile</a> (const std::function&lt; void(const <a class="el" href="structMftEntry.html">MftEntry</a> &amp;, const std::wstring &amp;, bool)&gt; &amp;visit) const</td></tr>
+<tr class="separator:a553a7e68ee4115c11bdc4886c7397a2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea06d7530832453217b838d41444f614" id="r_aea06d7530832453217b838d41444f614"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#aea06d7530832453217b838d41444f614">clear</a> ()</td></tr>
 <tr class="memdesc:aea06d7530832453217b838d41444f614"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases the memory held by the index.  <br /></td></tr>
 <tr class="separator:aea06d7530832453217b838d41444f614"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The $MFT of the system volume, read from its exhibit. </p>
+<div class="textblock"><p>The $MFT of one NTFS volume, read from its exhibit. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="aea06d7530832453217b838d41444f614" name="aea06d7530832453217b838d41444f614"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aea06d7530832453217b838d41444f614">&#9670;&#160;</a></span>clear()</h2>
@@ -140,8 +144,33 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aac898648c4381080c4a1cbc7d49df67c" name="aac898648c4381080c4a1cbc7d49df67c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aac898648c4381080c4a1cbc7d49df67c">&#9670;&#160;</a></span>getData()</h2>
+<a id="a553a7e68ee4115c11bdc4886c7397a2c" name="a553a7e68ee4115c11bdc4886c7397a2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a553a7e68ee4115c11bdc4886c7397a2c">&#9670;&#160;</a></span>forEachFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT Mft::forEachFile </td>
+          <td>(</td>
+          <td class="paramtype">const std::function&lt; void(const <a class="el" href="structMftEntry.html">MftEntry</a> &amp;, const std::wstring &amp;, bool)&gt; &amp;&#160;</td>
+          <td class="paramname"><em>visit</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Walks every file and directory of the $MFT, each completed with what its extension records carry, with its path. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">visit</td><td>called with each record, its path and whether the path is complete </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why the exhibit could not be read </dd></dl>
+
+</div>
+</div>
+<a id="ab3d0b15bb632a628d5c61aa7d8ddd0e5" name="ab3d0b15bb632a628d5c61aa7d8ddd0e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab3d0b15bb632a628d5c61aa7d8ddd0e5">&#9670;&#160;</a></span>getData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -149,12 +178,19 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">HRESULT Mft::getData </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volume</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Loads the $MFT exhibit and keeps each record's name and parent, for the paths (of mft.json and of the change journal). </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, ERROR_FILE_NOT_FOUND if the collection holds no $MFT, or ERROR_INVALID_DATA if it is not one </dd></dl>
+<p>Loads the $MFT exhibit of a volume and keeps each record's name and parent, for the paths (of mft.json and of the change journal). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volume</td><td>the volume, "C:", "G:"… </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, ERROR_FILE_NOT_FOUND if the collection holds no $MFT of that volume, or ERROR_INVALID_DATA if it is not one </dd></dl>
 
 </div>
 </div>
@@ -201,8 +237,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ac5b44bfbb58cfb3b4d1a4947e76470d5" name="ac5b44bfbb58cfb3b4d1a4947e76470d5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5b44bfbb58cfb3b4d1a4947e76470d5">&#9670;&#160;</a></span>toJson()</h2>
+<a id="a89cec7e2d422d26f8cee8fbde1fed430" name="a89cec7e2d422d26f8cee8fbde1fed430"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89cec7e2d422d26f8cee8fbde1fed430">&#9670;&#160;</a></span>toJson()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -210,12 +246,45 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">HRESULT Mft::toJson </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td class="paramtype"><a class="el" href="classJsonArrayWriter.html">JsonArrayWriter</a> &amp;&#160;</td>
+          <td class="paramname"><em>out</em></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Writes <code>mft.json</code> as it goes: one object per record, present or deleted. </p><dl class="section return"><dt>Returns</dt><dd>the result of the write </dd></dl>
+<p>Writes the volume's records into mft.json as it goes: one object per record, present or deleted. Every volume goes into the same file. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">out</td><td>the writer of mft.json </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why the exhibit could not be read </dd></dl>
+
+</div>
+</div>
+<a id="ae216c0b46af9e2ad4544e5495968db5f" name="ae216c0b46af9e2ad4544e5495968db5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae216c0b46af9e2ad4544e5495968db5f">&#9670;&#160;</a></span>volume()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::wstring &amp; Mft::volume </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>the volume loaded, "C:"… </dd></dl>
 
 </div>
 </div>

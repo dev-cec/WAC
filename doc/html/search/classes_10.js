@@ -1,17 +1,7 @@
 var searchData=
 [
-  ['rawattribute_0',['RawAttribute',['../structRawAttribute.html',1,'']]],
-  ['rawdirentry_1',['RawDirEntry',['../structRawDirEntry.html',1,'']]],
-  ['rawhiveextraction_2',['RawHiveExtraction',['../structRawHiveExtraction.html',1,'']]],
-  ['rawhivefingerprints_3',['RawHiveFingerprints',['../structRawHiveFingerprints.html',1,'']]],
-  ['rawreader_4',['RawReader',['../classRawReader.html',1,'']]],
-  ['rawreadtimes_5',['RawReadTimes',['../structRawReadTimes.html',1,'']]],
-  ['recentdoc_6',['RecentDoc',['../structRecentDoc.html',1,'']]],
-  ['recentdocs_7',['RecentDocs',['../structRecentDocs.html',1,'']]],
-  ['revocationlists_8',['RevocationLists',['../structRevocationLists.html',1,'']]],
-  ['rootfolder_9',['RootFolder',['../structRootFolder.html',1,'']]],
-  ['route_10',['Route',['../structRoute.html',1,'']]],
-  ['run_11',['Run',['../structRun.html',1,'']]],
-  ['runningmachine_12',['RunningMachine',['../structRunningMachine.html',1,'']]],
-  ['runs_13',['Runs',['../structRuns.html',1,'']]]
+  ['quarantineentry_0',['QuarantineEntry',['../structQuarantineEntry.html',1,'']]],
+  ['quarantinefield_1',['QuarantineField',['../structQuarantineField.html',1,'']]],
+  ['quarantineresource_2',['QuarantineResource',['../structQuarantineResource.html',1,'']]],
+  ['quickdigest5_3',['QuickDigest5',['../classQuickDigest5.html',1,'']]]
 ];

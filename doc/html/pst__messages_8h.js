@@ -1,0 +1,25 @@
+var pst__messages_8h =
+[
+    [ "PstAttachment", "structPstAttachment.html", "structPstAttachment" ],
+    [ "PstRecipient", "structPstRecipient.html", "structPstRecipient" ],
+    [ "PstMessage", "structPstMessage.html", "structPstMessage" ],
+    [ "forEachPstMessage", "pst__messages_8h.html#a30ef98941c4afc5af3354ed5dcfed2bd", null ],
+    [ "PST_BODY", "pst__messages_8h.html#a53ca8b7ef2a2f12bf8246e046f5b60ae", null ],
+    [ "PST_CLIENT_SUBMIT_TIME", "pst__messages_8h.html#a7beb333aa7d0b5d7c3e8c96eb9a2ec8b", null ],
+    [ "PST_CREATION_TIME", "pst__messages_8h.html#a90415342dc981f1c53457bc253f8e4a5", null ],
+    [ "PST_DELIVERY_TIME", "pst__messages_8h.html#a4f7576f92d9aa76f04850b921f33bca5", null ],
+    [ "PST_DISPLAY_BCC", "pst__messages_8h.html#a732cc0071c8504361aa1fec9fbbcc75c", null ],
+    [ "PST_DISPLAY_CC", "pst__messages_8h.html#afcbbff92fbb6c53040201f2874d009b7", null ],
+    [ "PST_DISPLAY_NAME", "pst__messages_8h.html#aa587fa7d559ac8fcb2fb3aba117b6729", null ],
+    [ "PST_DISPLAY_TO", "pst__messages_8h.html#a22561792bf34b4bf6f334a98ab10de27", null ],
+    [ "PST_HTML", "pst__messages_8h.html#a8cc76848aab6ae20c4ae1aaa45400a1a", null ],
+    [ "PST_INTERNET_MESSAGE_ID", "pst__messages_8h.html#a39f151cd385f408acd4296e5260ce9ae", null ],
+    [ "PST_LAST_MODIFICATION_TIME", "pst__messages_8h.html#ae80a448d57c48f837d2e8fcb693d0e39", null ],
+    [ "PST_MESSAGE_CLASS", "pst__messages_8h.html#a234d6895f209ea93267a1102b3511d58", null ],
+    [ "PST_MESSAGE_SIZE", "pst__messages_8h.html#ad2dd46396426db249cdfaf49279a39c6", null ],
+    [ "PST_SENDER_ADDRESS", "pst__messages_8h.html#a153c0f5a8b85acfd452e47ba4452fb0b", null ],
+    [ "PST_SENDER_NAME", "pst__messages_8h.html#a7c8bff470fb142d19c50a9bb2d3a759d", null ],
+    [ "PST_SENT_REPRESENTING_NAME", "pst__messages_8h.html#a0699a5445dce203e80665a63652a17c9", null ],
+    [ "PST_SUBJECT", "pst__messages_8h.html#a9da433f7d13e9ce67509903f0524512d", null ],
+    [ "PST_TRANSPORT_HEADERS", "pst__messages_8h.html#a17f69392f98ec9fe9402a50fc6f5e072", null ]
+];

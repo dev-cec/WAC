@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -117,8 +117,10 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a81f0a3b8b50abd04b2266826da62c704" id="r_a81f0a3b8b50abd04b2266826da62c704"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcache.html#a81f0a3b8b50abd04b2266826da62c704">path</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:a81f0a3b8b50abd04b2266826da62c704"><td class="mdescLeft">&#160;</td><td class="mdescRight">path of the binary the entry names  <br /></td></tr>
+<tr class="memdesc:a81f0a3b8b50abd04b2266826da62c704"><td class="mdescLeft">&#160;</td><td class="mdescRight">path of the binary the entry names (tab-separated fields for a packaged application)  <br /></td></tr>
 <tr class="separator:a81f0a3b8b50abd04b2266826da62c704"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b92f10946a0a7e4956dade96d191dcd" id="r_a2b92f10946a0a7e4956dade96d191dcd"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcache.html#a2b92f10946a0a7e4956dade96d191dcd">position</a> = 0</td></tr>
+<tr class="separator:a2b92f10946a0a7e4956dade96d191dcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9713fad1b909b71af03e9613065504f1" id="r_a9713fad1b909b71af03e9613065504f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structBinaryFingerprint.html">BinaryFingerprint</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcache.html#a9713fad1b909b71af03e9613065504f1">fingerprint</a></td></tr>
 <tr class="memdesc:a9713fad1b909b71af03e9613065504f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">fingerprints of that file, if <code>--binary</code> was given  <br /></td></tr>
 <tr class="separator:a9713fad1b909b71af03e9613065504f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -230,7 +232,22 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>path of the binary the entry names </p>
+<p>path of the binary the entry names (tab-separated fields for a packaged application) </p>
+
+</div>
+</div>
+<a id="a2b92f10946a0a7e4956dade96d191dcd" name="a2b92f10946a0a7e4956dade96d191dcd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b92f10946a0a7e4956dade96d191dcd">&#9670;&#160;</a></span>position</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t Shimcache::position = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Rank in the cache, 0 for the most recent entry: the order is the information, and survives a consumer that sorts the array. </p>
 
 </div>
 </div>

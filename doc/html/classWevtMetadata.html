@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -114,6 +114,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a3eae68da1bc9d95279893309278d9375" id="r_a3eae68da1bc9d95279893309278d9375"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classWevtMetadata.html#a3eae68da1bc9d95279893309278d9375">size</a> () const</td></tr>
 <tr class="memdesc:a3eae68da1bc9d95279893309278d9375"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of events described.  <br /></td></tr>
 <tr class="separator:a3eae68da1bc9d95279893309278d9375"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16d0b998d5b64f529f52dc79af0f2c75" id="r_a16d0b998d5b64f529f52dc79af0f2c75"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="structWevtItem.html">WevtItem</a> &gt; *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classWevtMetadata.html#a16d0b998d5b64f529f52dc79af0f2c75">items</a> (uint16_t eventId, uint8_t version) const</td></tr>
+<tr class="separator:a16d0b998d5b64f529f52dc79af0f2c75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a993c9ab2798d42b863c5d0afd0c95216" id="r_a993c9ab2798d42b863c5d0afd0c95216"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structWevtValueMap.html">WevtValueMap</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classWevtMetadata.html#a993c9ab2798d42b863c5d0afd0c95216">valueMap</a> (uint32_t offset) const</td></tr>
+<tr class="separator:a993c9ab2798d42b863c5d0afd0c95216"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structEvent.html">Event</a> metadata of a provider (the WEVT_TEMPLATE resource). </p>
@@ -151,6 +155,35 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of events described </dd></dl>
+
+</div>
+</div>
+<a id="a16d0b998d5b64f529f52dc79af0f2c75" name="a16d0b998d5b64f529f52dc79af0f2c75"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a16d0b998d5b64f529f52dc79af0f2c75">&#9670;&#160;</a></span>items()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt; <a class="el" href="structWevtItem.html">WevtItem</a> &gt; * WevtMetadata::items </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>eventId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The items of an event's template, in the order of its data — the version tried first, then the identifier alone, as messageId. </p><dl class="section return"><dt>Returns</dt><dd>the items, or nullptr if the event has no template </dd></dl>
 
 </div>
 </div>
@@ -209,6 +242,31 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Number of events described. </p>
+
+</div>
+</div>
+<a id="a993c9ab2798d42b863c5d0afd0c95216" name="a993c9ab2798d42b863c5d0afd0c95216"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a993c9ab2798d42b863c5d0afd0c95216">&#9670;&#160;</a></span>valueMap()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structWevtValueMap.html">WevtValueMap</a> * WevtMetadata::valueMap </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>offset</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">offset</td><td>a map's offset, as an item gives it </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the value map, or nullptr </dd></dl>
 
 </div>
 </div>

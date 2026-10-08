@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -109,6 +109,7 @@ $(document).ready(function(){initNavTree('reg__run_8h.html',''); initResizable()
 <code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="offline__registry_8h_source.html">offline_registry.h</a>&quot;</code><br />
 <code>#include &lt;string&gt;</code><br />
+<code>#include &lt;optional&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
@@ -127,8 +128,9 @@ Classes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Programs started automatically at logon: <a class="el" href="structRun.html">Run</a> and RunOnce keys. </p>
 <p>WHAT IT SHOWS. These four keys are the first place a program installs itself to survive a reboot, and the most-used persistence of commodity malware. <code><a class="el" href="structRun.html">Run</a></code> starts its values at every logon; <code>RunOnce</code> starts them once, then Windows deletes the value — so a RunOnce value still present was written since the last logon, or never ran.</p>
-<p>WHERE IT IS READ. Machine-wide in SOFTWARE (<code>Microsoft\Windows\CurrentVersion\<a class="el" href="structRun.html">Run</a></code> and <code>RunOnce</code>), and per user in each NTUSER.DAT (<code>Software\Microsoft\Windows\CurrentVersion\<a class="el" href="structRun.html">Run</a></code>, <code>RunOnce</code>), which tells whose logon starts the program.</p>
-<p>The key's last write time dates the last change to the whole key, not to one value: it bounds when the entry appeared, it does not date it. </p>
+<p>WHERE IT IS READ. Machine-wide in SOFTWARE (<code>Microsoft\Windows\CurrentVersion\<a class="el" href="structRun.html">Run</a></code> and <code>RunOnce</code>), and per user in each NTUSER.DAT (<code>Software\Microsoft\Windows\CurrentVersion\<a class="el" href="structRun.html">Run</a></code>, <code>RunOnce</code>), which tells whose logon starts the program, and in the DEFAULT hive, the profile of the system account.</p>
+<p>The key's last write time dates the last change to the whole key, not to one value: it bounds when the entry appeared, it does not date it.</p>
+<p>ALSO READ (B-031, against RECmd's Kroll batch): the 32-bit programs' <a class="el" href="structRun.html">Run</a> and RunOnce (<code>WOW6432Node</code>, machine-wide); <code>Explorer\StartupApproved\<a class="el" href="structRun.html">Run</a></code>, <code>Run32</code> and <code>StartupFolder</code>, where Windows records an entry's state as the user set it in Task Manager or Settings — a status code (the first four bytes, as stored: their meaning is not measured, so not interpreted) and the instant of the change; <code>RunNotification</code>, one <code>StartupTNoti&lt;name&gt;</code> per startup entry Windows noticed, its state as stored. A StartupApproved or RunNotification name without a <a class="el" href="structRun.html">Run</a> value is an entry since removed. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

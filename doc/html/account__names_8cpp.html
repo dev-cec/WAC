@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -121,10 +121,47 @@ Functions</h2></td></tr>
 <tr class="separator:a65c8e3b7f555514165f7e701a3e207e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab29ec2bd73a4de1536739ac5cd16ecff" id="r_ab29ec2bd73a4de1536739ac5cd16ecff"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="account__names_8cpp.html#ab29ec2bd73a4de1536739ac5cd16ecff">getNameFromSid</a> (std::wstring _sid)</td></tr>
 <tr class="separator:ab29ec2bd73a4de1536739ac5cd16ecff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6ff8959f12a2e202311a9b02d08396c" id="r_af6ff8959f12a2e202311a9b02d08396c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="account__names_8cpp.html#af6ff8959f12a2e202311a9b02d08396c">addUser</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;sid)</td></tr>
+<tr class="separator:af6ff8959f12a2e202311a9b02d08396c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Offline names of the SIDs (see <a class="el" href="account__names_8h.html" title="Names of the SIDs, resolved OFFLINE from the examined machine&#39;s hives — never by asking the running s...">account_names.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="af6ff8959f12a2e202311a9b02d08396c" name="af6ff8959f12a2e202311a9b02d08396c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af6ff8959f12a2e202311a9b02d08396c">&#9670;&#160;</a></span>addUser()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addUser </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>o</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>sid</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds the user an entry belongs to: <code>SID</code>, and <code>SIDName</code> as resolved offline in the examined machine's hives — or, for the Default profile, <code>Profile: "Default"</code> (see DEFAULT_PROFILE_SID). The one place that writes them, for every artefact. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>the entry's object </td></tr>
+    <tr><td class="paramname">sid</td><td>the user's SID; empty for an entry of the machine (nothing emitted) Implemented in <a class="el" href="account__names_8cpp.html" title="Offline names of the SIDs (see account_names.h).">account_names.cpp</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="ab29ec2bd73a4de1536739ac5cd16ecff" name="ab29ec2bd73a4de1536739ac5cd16ecff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab29ec2bd73a4de1536739ac5cd16ecff">&#9670;&#160;</a></span>getNameFromSid()</h2>
 

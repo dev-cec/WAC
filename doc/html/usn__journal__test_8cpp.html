@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -135,7 +135,7 @@ Variables</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Checks the change journal decoder against the compiler's record layout, the journal walk, and hostile records. </p>
 <p>WHY THIS TEST. The decoder reads USN records with its own offsets; a wrong one gives dates, names or references that are valid and false. Here the records are built with structures whose layout comes from the compiler, not from the decoder: every field must come back as written. Version 2 is MinGW's USN_RECORD (winioctl.h); version 3, which MinGW does not declare, is written below from Microsoft's documentation of USN_RECORD_V3, and its published offsets are checked at compile time.</p>
-<p>Then a journal is laid out as NTFS leaves it — records of both versions, a range record (version 4), zeros between pages — behind a leading offset (LeadingSparseBytes), and read through <a class="el" href="structUsnJournal.html#a00830c99cd67f39bdf26241954ec0f88">UsnJournal::getData</a>: every record must be found, the numbers must be the offsets in the whole stream, and the paths must be rebuilt through the $MFT of mft_fixtures.sh.</p>
+<p>Then a journal is laid out as NTFS leaves it — records of both versions, a range record (version 4), zeros between pages — behind a leading offset (LeadingSparseBytes), and read through <a class="el" href="structUsnJournal.html#ac51638db3d354ada33a4c4b9de372227">UsnJournal::getData</a>: every record must be found, the numbers must be the offsets in the whole stream, and the paths must be rebuilt through the $MFT of mft_fixtures.sh.</p>
 <p>Finally every record, damaged at random, is decoded against a PAGE_NOACCESS page on both sides (<a class="el" href="guard__page_8h.html" title="Test support: an input placed against a PAGE_NOACCESS page.">guard_page.h</a>).</p>
 <p>Usage: usn_journal_test <code>&lt;folder of mft_fixtures.sh&gt;</code> Built by <code>build-windows.sh --test</code>; runs under Wine or on Windows. </p>
 </div><h2 class="groupheader">Function Documentation</h2>

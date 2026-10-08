@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -123,7 +123,7 @@ Variables</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Checks that wac.yml is applied exactly, and refused when it holds what WAC does not understand. </p>
-<p>WHY THIS TEST. The configuration decides what a collection takes. A value applied wrongly, or a typo accepted, changes the procedure and nothing shows it. Each setting is applied and checked; each kind of mistake — unknown key, unknown artefact, value outside the ones allowed, a section where a value is expected — must refuse the file, naming the line; the reference file WAC writes (&ndash;write-config) must read back as it says.</p>
+<p>WHY THIS TEST. The configuration decides what a collection takes. A value applied wrongly, or a typo accepted, changes the procedure and nothing shows it. Each setting is applied and checked; each kind of mistake — unknown key, unknown artefact, value outside the ones allowed, a section where a value is expected — must refuse the file, naming the line; the reference file WAC writes (&ndash;write-config) must read back as it says, and carry the executable's version; a file of another version, or without one, is refused before any of its settings is read. The refusals are shown in the console's language: checked in English, and once in French, with its values placed where the French wording puts them.</p>
 <p>Usage (runs under wine): config_test.exe <code>&lt;scratch folder&gt;</code> </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="aa3a67a95d5205c37194aa17a9e4255e3" name="aa3a67a95d5205c37194aa17a9e4255e3"></a>

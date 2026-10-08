@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -120,10 +120,14 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aa3b50b93a413d7024bd193df6070d44f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8d78915cb8975e9ca71b0abfaf48840" id="r_aa8d78915cb8975e9ca71b0abfaf48840"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#aa8d78915cb8975e9ca71b0abfaf48840">parseLNK</a> (LPBYTE buffer, size_t size)</td></tr>
 <tr class="separator:aa8d78915cb8975e9ca71b0abfaf48840"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c27b96c13437c25238876e3198203a6" id="r_a1c27b96c13437c25238876e3198203a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#a1c27b96c13437c25238876e3198203a6">parseExtraData</a> (LPBYTE buffer, size_t size, size_t at)</td></tr>
+<tr class="separator:a1c27b96c13437c25238876e3198203a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae78978ce7653746cb933ad97bdc04cef" id="r_ae78978ce7653746cb933ad97bdc04cef"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#ae78978ce7653746cb933ad97bdc04cef">RecentDoc</a> (std::filesystem::path _path, std::wstring _sid)</td></tr>
 <tr class="separator:ae78978ce7653746cb933ad97bdc04cef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af501edc675fb4bcebe3b08956c862f6e" id="r_af501edc675fb4bcebe3b08956c862f6e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#af501edc675fb4bcebe3b08956c862f6e">RecentDoc</a> (LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid)</td></tr>
 <tr class="separator:af501edc675fb4bcebe3b08956c862f6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3ff65febbdc82b6bdd67c72693b88f4" id="r_aa3ff65febbdc82b6bdd67c72693b88f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#aa3ff65febbdc82b6bdd67c72693b88f4">addExtraData</a> (<a class="el" href="classJson.html">Json</a> &amp;o)</td></tr>
+<tr class="separator:aa3ff65febbdc82b6bdd67c72693b88f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af58fdeb82ad390a3a171535cc21e5e29" id="r_af58fdeb82ad390a3a171535cc21e5e29"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#af58fdeb82ad390a3a171535cc21e5e29">toJson</a> ()</td></tr>
 <tr class="separator:af58fdeb82ad390a3a171535cc21e5e29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af15bb7889021d9d5d94a142add483ab2" id="r_af15bb7889021d9d5d94a142add483ab2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#af15bb7889021d9d5d94a142add483ab2">clear</a> ()</td></tr>
@@ -222,6 +226,39 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:adabdbaa8a33122b9df676452dfc052e1" id="r_adabdbaa8a33122b9df676452dfc052e1"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structIdList.html">IdList</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#adabdbaa8a33122b9df676452dfc052e1">idLists</a></td></tr>
 <tr class="memdesc:adabdbaa8a33122b9df676452dfc052e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">the target's PIDL, item by item  <br /></td></tr>
 <tr class="separator:adabdbaa8a33122b9df676452dfc052e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a320d9d2599f604c15e186ff26d6f625c" id="r_a320d9d2599f604c15e186ff26d6f625c"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#a320d9d2599f604c15e186ff26d6f625c">extraDataBlocks</a></td></tr>
+<tr class="memdesc:a320d9d2599f604c15e186ff26d6f625c"><td class="mdescLeft">&#160;</td><td class="mdescRight">names of the blocks present, in order (unknown ones by signature)  <br /></td></tr>
+<tr class="separator:a320d9d2599f604c15e186ff26d6f625c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff148db68e9c19c5e46179997a76106b" id="r_aff148db68e9c19c5e46179997a76106b"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="structLinkTracking.html">LinkTracking</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#aff148db68e9c19c5e46179997a76106b">tracking</a></td></tr>
+<tr class="memdesc:aff148db68e9c19c5e46179997a76106b"><td class="mdescLeft">&#160;</td><td class="mdescRight">TrackerDataBlock: DROID and birth DROID of the target.  <br /></td></tr>
+<tr class="separator:aff148db68e9c19c5e46179997a76106b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0c3ee9362163254be80e0a22230a9bf" id="r_ac0c3ee9362163254be80e0a22230a9bf"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#ac0c3ee9362163254be80e0a22230a9bf">machineId</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:ac0c3ee9362163254be80e0a22230a9bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">TrackerDataBlock: NetBIOS name of the machine the target was on.  <br /></td></tr>
+<tr class="separator:ac0c3ee9362163254be80e0a22230a9bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f47c52c090299c4db2d98d8d64a9802" id="r_a9f47c52c090299c4db2d98d8d64a9802"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#a9f47c52c090299c4db2d98d8d64a9802">targetEnvironment</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a9f47c52c090299c4db2d98d8d64a9802"><td class="mdescLeft">&#160;</td><td class="mdescRight">EnvironmentVariableDataBlock: target path with its variables (USERPROFILE…)  <br /></td></tr>
+<tr class="separator:a9f47c52c090299c4db2d98d8d64a9802"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2eb1c5ff52f87116a3b42e190ac77517" id="r_a2eb1c5ff52f87116a3b42e190ac77517"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#a2eb1c5ff52f87116a3b42e190ac77517">iconEnvironment</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a2eb1c5ff52f87116a3b42e190ac77517"><td class="mdescLeft">&#160;</td><td class="mdescRight">IconEnvironmentDataBlock: icon path with its variables.  <br /></td></tr>
+<tr class="separator:a2eb1c5ff52f87116a3b42e190ac77517"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3036542769c5c8302645a8068da8f1c" id="r_aa3036542769c5c8302645a8068da8f1c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#aa3036542769c5c8302645a8068da8f1c">darwinData</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:aa3036542769c5c8302645a8068da8f1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">DarwinDataBlock: Windows Installer descriptor of the target.  <br /></td></tr>
+<tr class="separator:aa3036542769c5c8302645a8068da8f1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5eb2e56175870f02d681a7e1a3c4f17" id="r_ac5eb2e56175870f02d681a7e1a3c4f17"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#ac5eb2e56175870f02d681a7e1a3c4f17">shimLayer</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:ac5eb2e56175870f02d681a7e1a3c4f17"><td class="mdescLeft">&#160;</td><td class="mdescRight">ShimDataBlock: compatibility layer applied to the target.  <br /></td></tr>
+<tr class="separator:ac5eb2e56175870f02d681a7e1a3c4f17"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab62f597409d469959808101bda8450d" id="r_aab62f597409d469959808101bda8450d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#aab62f597409d469959808101bda8450d">knownFolderId</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:aab62f597409d469959808101bda8450d"><td class="mdescLeft">&#160;</td><td class="mdescRight">KnownFolderDataBlock: GUID of the known folder of the target.  <br /></td></tr>
+<tr class="separator:aab62f597409d469959808101bda8450d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a916d2f407c1b48e8e19f1f30bf79f600" id="r_a916d2f407c1b48e8e19f1f30bf79f600"><td class="memItemLeft" align="right" valign="top">std::optional&lt; unsigned int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#a916d2f407c1b48e8e19f1f30bf79f600">specialFolderId</a></td></tr>
+<tr class="memdesc:a916d2f407c1b48e8e19f1f30bf79f600"><td class="mdescLeft">&#160;</td><td class="mdescRight">SpecialFolderDataBlock: CSIDL of the target's folder.  <br /></td></tr>
+<tr class="separator:a916d2f407c1b48e8e19f1f30bf79f600"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaeb09911789ccdeed917ee73f8fbf09b" id="r_aaeb09911789ccdeed917ee73f8fbf09b"><td class="memItemLeft" align="right" valign="top">std::optional&lt; unsigned int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#aaeb09911789ccdeed917ee73f8fbf09b">consoleCodePage</a></td></tr>
+<tr class="memdesc:aaeb09911789ccdeed917ee73f8fbf09b"><td class="mdescLeft">&#160;</td><td class="mdescRight">ConsoleFEDataBlock: code page of the console.  <br /></td></tr>
+<tr class="separator:aaeb09911789ccdeed917ee73f8fbf09b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcfcbac0554848d7bd5fe747d62b3f56" id="r_adcfcbac0554848d7bd5fe747d62b3f56"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structSPS.html">SPS</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecentDoc.html#adcfcbac0554848d7bd5fe747d62b3f56">propertyStores</a></td></tr>
+<tr class="memdesc:adcfcbac0554848d7bd5fe747d62b3f56"><td class="mdescLeft">&#160;</td><td class="mdescRight">PropertyStoreDataBlock: the target's properties.  <br /></td></tr>
+<tr class="separator:adcfcbac0554848d7bd5fe747d62b3f56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One recent document: a .lnk shortcut, and the file it points to. </p>
@@ -365,6 +402,30 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="aa3ff65febbdc82b6bdd67c72693b88f4" name="aa3ff65febbdc82b6bdd67c72693b88f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3ff65febbdc82b6bdd67c72693b88f4">&#9670;&#160;</a></span>addExtraData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RecentDoc::addExtraData </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>o</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds the ExtraData fields to the shortcut's JSON: nothing if it has none. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>the shortcut's object </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="af15bb7889021d9d5d94a142add483ab2" name="af15bb7889021d9d5d94a142add483ab2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af15bb7889021d9d5d94a142add483ab2">&#9670;&#160;</a></span>clear()</h2>
 
@@ -435,6 +496,48 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Moves a shortcut (its unique_ptr go along). </p>
+
+</div>
+</div>
+<a id="a1c27b96c13437c25238876e3198203a6" name="a1c27b96c13437c25238876e3198203a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c27b96c13437c25238876e3198203a6">&#9670;&#160;</a></span>parseExtraData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RecentDoc::parseExtraData </td>
+          <td>(</td>
+          <td class="paramtype">LPBYTE&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>at</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the ExtraData blocks, up to the terminal block. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">buffer</td><td>the bytes of the shortcut </td></tr>
+    <tr><td class="paramname">size</td><td>size of that buffer </td></tr>
+    <tr><td class="paramname">at</td><td>offset of the first block, just after the StringData </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -542,6 +645,38 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="aaeb09911789ccdeed917ee73f8fbf09b" name="aaeb09911789ccdeed917ee73f8fbf09b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaeb09911789ccdeed917ee73f8fbf09b">&#9670;&#160;</a></span>consoleCodePage</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt;unsigned int&gt; RecentDoc::consoleCodePage</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ConsoleFEDataBlock: code page of the console. </p>
+
+</div>
+</div>
+<a id="aa3036542769c5c8302645a8068da8f1c" name="aa3036542769c5c8302645a8068da8f1c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3036542769c5c8302645a8068da8f1c">&#9670;&#160;</a></span>darwinData</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::darwinData = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>DarwinDataBlock: Windows Installer descriptor of the target. </p>
+
+</div>
+</div>
 <a id="af327ac0e33f4fffe6a0cb2e1c4e73337" name="af327ac0e33f4fffe6a0cb2e1c4e73337"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af327ac0e33f4fffe6a0cb2e1c4e73337">&#9670;&#160;</a></span>description</h2>
 
@@ -555,6 +690,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>description carried by the shortcut </p>
+
+</div>
+</div>
+<a id="a320d9d2599f604c15e186ff26d6f625c" name="a320d9d2599f604c15e186ff26d6f625c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a320d9d2599f604c15e186ff26d6f625c">&#9670;&#160;</a></span>extraDataBlocks</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::wstring&gt; RecentDoc::extraDataBlocks</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>names of the blocks present, in order (unknown ones by signature) </p>
 
 </div>
 </div>
@@ -606,6 +757,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a2eb1c5ff52f87116a3b42e190ac77517" name="a2eb1c5ff52f87116a3b42e190ac77517"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2eb1c5ff52f87116a3b42e190ac77517">&#9670;&#160;</a></span>iconEnvironment</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::iconEnvironment = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>IconEnvironmentDataBlock: icon path with its variables. </p>
+
+</div>
+</div>
 <a id="ad7d42cf54034e5c2f7ceda5dc9565b01" name="ad7d42cf54034e5c2f7ceda5dc9565b01"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad7d42cf54034e5c2f7ceda5dc9565b01">&#9670;&#160;</a></span>iconIndex</h2>
 
@@ -651,6 +818,38 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>the target's PIDL, item by item </p>
+
+</div>
+</div>
+<a id="aab62f597409d469959808101bda8450d" name="aab62f597409d469959808101bda8450d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab62f597409d469959808101bda8450d">&#9670;&#160;</a></span>knownFolderId</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::knownFolderId = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>KnownFolderDataBlock: GUID of the known folder of the target. </p>
+
+</div>
+</div>
+<a id="ac0c3ee9362163254be80e0a22230a9bf" name="ac0c3ee9362163254be80e0a22230a9bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac0c3ee9362163254be80e0a22230a9bf">&#9670;&#160;</a></span>machineId</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::machineId = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>TrackerDataBlock: NetBIOS name of the machine the target was on. </p>
 
 </div>
 </div>
@@ -750,6 +949,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="adcfcbac0554848d7bd5fe747d62b3f56" name="adcfcbac0554848d7bd5fe747d62b3f56"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adcfcbac0554848d7bd5fe747d62b3f56">&#9670;&#160;</a></span>propertyStores</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="structSPS.html">SPS</a>&gt; RecentDoc::propertyStores</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>PropertyStoreDataBlock: the target's properties. </p>
+
+</div>
+</div>
 <a id="acf2fe815a5eff7a3a38d839744f5f2ff" name="acf2fe815a5eff7a3a38d839744f5f2ff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acf2fe815a5eff7a3a38d839744f5f2ff">&#9670;&#160;</a></span>relativePath</h2>
 
@@ -763,6 +978,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>path of the target, relative to the shortcut </p>
+
+</div>
+</div>
+<a id="ac5eb2e56175870f02d681a7e1a3c4f17" name="ac5eb2e56175870f02d681a7e1a3c4f17"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5eb2e56175870f02d681a7e1a3c4f17">&#9670;&#160;</a></span>shimLayer</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::shimLayer = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ShimDataBlock: compatibility layer applied to the target. </p>
 
 </div>
 </div>
@@ -830,6 +1061,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a916d2f407c1b48e8e19f1f30bf79f600" name="a916d2f407c1b48e8e19f1f30bf79f600"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a916d2f407c1b48e8e19f1f30bf79f600">&#9670;&#160;</a></span>specialFolderId</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt;unsigned int&gt; RecentDoc::specialFolderId</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>SpecialFolderDataBlock: CSIDL of the target's folder. </p>
+
+</div>
+</div>
 <a id="ae4ad99b84c20dfa86edf61aba90425eb" name="ae4ad99b84c20dfa86edf61aba90425eb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae4ad99b84c20dfa86edf61aba90425eb">&#9670;&#160;</a></span>target</h2>
 
@@ -878,6 +1125,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a9f47c52c090299c4db2d98d8d64a9802" name="a9f47c52c090299c4db2d98d8d64a9802"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f47c52c090299c4db2d98d8d64a9802">&#9670;&#160;</a></span>targetEnvironment</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecentDoc::targetEnvironment = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>EnvironmentVariableDataBlock: target path with its variables (USERPROFILE…) </p>
+
+</div>
+</div>
 <a id="a7884983bfdb9cba541cf398705f4bbfd" name="a7884983bfdb9cba541cf398705f4bbfd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7884983bfdb9cba541cf398705f4bbfd">&#9670;&#160;</a></span>targetFingerprint</h2>
 
@@ -907,6 +1170,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>last modification of the target, UTC </p>
+
+</div>
+</div>
+<a id="aff148db68e9c19c5e46179997a76106b" name="aff148db68e9c19c5e46179997a76106b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff148db68e9c19c5e46179997a76106b">&#9670;&#160;</a></span>tracking</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt;<a class="el" href="structLinkTracking.html">LinkTracking</a>&gt; RecentDoc::tracking</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>TrackerDataBlock: DROID and birth DROID of the target. </p>
 
 </div>
 </div>

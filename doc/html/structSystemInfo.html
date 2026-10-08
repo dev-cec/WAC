@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('structSystemInfo.html',''); initResiza
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structSystemInfo-members.html">List of all members</a>  </div>
@@ -106,10 +107,17 @@ $(document).ready(function(){initNavTree('structSystemInfo.html',''); initResiza
 
 <p><code>#include &lt;<a class="el" href="system_8h_source.html">system.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo_1_1Setting.html">Setting</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a30d08c80ceb0a7549eedf65598a581d0" id="r_a30d08c80ceb0a7549eedf65598a581d0"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a30d08c80ceb0a7549eedf65598a581d0">getData</a> ()</td></tr>
 <tr class="separator:a30d08c80ceb0a7549eedf65598a581d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a837014882d4664c4b45c4b0fb375a769" id="r_a837014882d4664c4b45c4b0fb375a769"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a837014882d4664c4b45c4b0fb375a769">readSettings</a> ()</td></tr>
+<tr class="separator:a837014882d4664c4b45c4b0fb375a769"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0335587687e107ba193aa7afc1236acb" id="r_a0335587687e107ba193aa7afc1236acb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a0335587687e107ba193aa7afc1236acb">toJson</a> ()</td></tr>
 <tr class="separator:a0335587687e107ba193aa7afc1236acb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71ad6e847cd0db030452d3a58e4545ec" id="r_a71ad6e847cd0db030452d3a58e4545ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a71ad6e847cd0db030452d3a58e4545ec">clear</a> ()</td></tr>
@@ -189,6 +197,14 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a82bb467bddb2ae052806fa6f631fc0d8" id="r_a82bb467bddb2ae052806fa6f631fc0d8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a82bb467bddb2ae052806fa6f631fc0d8">bootFromKernel</a> = false</td></tr>
 <tr class="memdesc:a82bb467bddb2ae052806fa6f631fc0d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">true: time read in the kernel, otherwise estimated  <br /></td></tr>
 <tr class="separator:a82bb467bddb2ae052806fa6f631fc0d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a020930305f606fb4d065ed83cc311067" id="r_a020930305f606fb4d065ed83cc311067"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structSystemInfo_1_1Setting.html">Setting</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a020930305f606fb4d065ed83cc311067">settings</a></td></tr>
+<tr class="memdesc:a020930305f606fb4d065ed83cc311067"><td class="mdescLeft">&#160;</td><td class="mdescRight">the settings found (see the table in <a class="el" href="system_8cpp.html" title="Offline reading of the system information (see system.h).">system.cpp</a>)  <br /></td></tr>
+<tr class="separator:a020930305f606fb4d065ed83cc311067"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7b67390b254c7f89a76e72cb7b7fdea" id="r_af7b67390b254c7f89a76e72cb7b7fdea"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#af7b67390b254c7f89a76e72cb7b7fdea">shutdownTimeUtc</a> = { 0, 0 }</td></tr>
+<tr class="memdesc:af7b67390b254c7f89a76e72cb7b7fdea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Control\Windows\ShutdownTime: the last orderly shutdown (UTC)  <br /></td></tr>
+<tr class="separator:af7b67390b254c7f89a76e72cb7b7fdea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09166af24652b05bda884be1d4669619" id="r_a09166af24652b05bda884be1d4669619"><td class="memItemLeft" align="right" valign="top">std::optional&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a09166af24652b05bda884be1d4669619">ntfsLastAccessUpdated</a></td></tr>
+<tr class="separator:a09166af24652b05bda884be1d4669619"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>System information of the examined machine: identity, installation, and the instant of the collection. </p>
@@ -227,6 +243,24 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Reads the system information in the hives already open. Requires <code>conf.System</code>; <code>conf.Software</code> and <code>conf.CurrentControlSet</code> are used if available. A field without a source stays empty and is not emitted. </p>
+
+</div>
+</div>
+<a id="a837014882d4664c4b45c4b0fb375a769" name="a837014882d4664c4b45c4b0fb375a769"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a837014882d4664c4b45c4b0fb375a769">&#9670;&#160;</a></span>readSettings()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void SystemInfo::readSettings </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the settings that decide how the other artefacts read (<code>settings</code>, <code>shutdownTimeUtc</code>, <code>ntfsLastAccessUpdated</code>). </p>
 
 </div>
 </div>
@@ -472,6 +506,21 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a09166af24652b05bda884be1d4669619" name="a09166af24652b05bda884be1d4669619"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09166af24652b05bda884be1d4669619">&#9670;&#160;</a></span>ntfsLastAccessUpdated</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt;bool&gt; SystemInfo::ntfsLastAccessUpdated</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Whether NTFS updates the files' last access time: NtfsDisableLastAccessUpdate with its low bit clear (0, 0x80000000: on; 1, 0x80000001: off). Absent when the value is. With it off, a last access date says nothing. </p>
+
+</div>
+</div>
 <a id="affa03a18f5068286ef3f96a0c0253f8f" name="affa03a18f5068286ef3f96a0c0253f8f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#affa03a18f5068286ef3f96a0c0253f8f">&#9670;&#160;</a></span>osArchitecture</h2>
 
@@ -581,6 +630,38 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>CSDVersion, if present. </p>
+
+</div>
+</div>
+<a id="a020930305f606fb4d065ed83cc311067" name="a020930305f606fb4d065ed83cc311067"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a020930305f606fb4d065ed83cc311067">&#9670;&#160;</a></span>settings</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="structSystemInfo_1_1Setting.html">Setting</a>&gt; SystemInfo::settings</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the settings found (see the table in <a class="el" href="system_8cpp.html" title="Offline reading of the system information (see system.h).">system.cpp</a>) </p>
+
+</div>
+</div>
+<a id="af7b67390b254c7f89a76e72cb7b7fdea" name="af7b67390b254c7f89a76e72cb7b7fdea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7b67390b254c7f89a76e72cb7b7fdea">&#9670;&#160;</a></span>shutdownTimeUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME SystemInfo::shutdownTimeUtc = { 0, 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Control\Windows\ShutdownTime: the last orderly shutdown (UTC) </p>
 
 </div>
 </div>

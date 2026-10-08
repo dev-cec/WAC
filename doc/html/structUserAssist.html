@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -122,9 +122,6 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a556b4c407330c0a0ce4c4886c8f8aa3f" id="r_a556b4c407330c0a0ce4c4886c8f8aa3f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a556b4c407330c0a0ce4c4886c8f8aa3f">Sid</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a556b4c407330c0a0ce4c4886c8f8aa3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">SID of the user who started it.  <br /></td></tr>
 <tr class="separator:a556b4c407330c0a0ce4c4886c8f8aa3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff003e36aec98671bb143a34787c9958" id="r_aff003e36aec98671bb143a34787c9958"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#aff003e36aec98671bb143a34787c9958">SidName</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:aff003e36aec98671bb143a34787c9958"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of that user  <br /></td></tr>
-<tr class="separator:aff003e36aec98671bb143a34787c9958"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa49227090ce0422a8ee62e67caa82e5" id="r_afa49227090ce0422a8ee62e67caa82e5"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#afa49227090ce0422a8ee62e67caa82e5">Class</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:afa49227090ce0422a8ee62e67caa82e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">GUID of the subkey: shortcuts, or executables.  <br /></td></tr>
 <tr class="separator:afa49227090ce0422a8ee62e67caa82e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -136,6 +133,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a5ba8b3e449ec33c381c7f5db6403ea93" id="r_a5ba8b3e449ec33c381c7f5db6403ea93"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a5ba8b3e449ec33c381c7f5db6403ea93">FocusCount</a> = 0</td></tr>
 <tr class="memdesc:a5ba8b3e449ec33c381c7f5db6403ea93"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of times the window received the focus  <br /></td></tr>
 <tr class="separator:a5ba8b3e449ec33c381c7f5db6403ea93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee34fa909378a40e4a9b10da56b8c11b" id="r_aee34fa909378a40e4a9b10da56b8c11b"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#aee34fa909378a40e4a9b10da56b8c11b">FocusTimeMs</a> = 0</td></tr>
+<tr class="memdesc:aee34fa909378a40e4a9b10da56b8c11b"><td class="mdescLeft">&#160;</td><td class="mdescRight">total time the window had the focus, in milliseconds (offset 12)  <br /></td></tr>
+<tr class="separator:aee34fa909378a40e4a9b10da56b8c11b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a04a92cffe7c9881f0eac6713adbde7" id="r_a2a04a92cffe7c9881f0eac6713adbde7"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a2a04a92cffe7c9881f0eac6713adbde7">lastRunUtc</a> = { 0, 0 }</td></tr>
 <tr class="memdesc:a2a04a92cffe7c9881f0eac6713adbde7"><td class="mdescLeft">&#160;</td><td class="mdescRight">last run, in UTC as the value stores it  <br /></td></tr>
 <tr class="separator:a2a04a92cffe7c9881f0eac6713adbde7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -307,6 +307,22 @@ Static Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="aee34fa909378a40e4a9b10da56b8c11b" name="aee34fa909378a40e4a9b10da56b8c11b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee34fa909378a40e4a9b10da56b8c11b">&#9670;&#160;</a></span>FocusTimeMs</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int UserAssist::FocusTimeMs = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>total time the window had the focus, in milliseconds (offset 12) </p>
+
+</div>
+</div>
 <a id="a2a04a92cffe7c9881f0eac6713adbde7" name="a2a04a92cffe7c9881f0eac6713adbde7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2a04a92cffe7c9881f0eac6713adbde7">&#9670;&#160;</a></span>lastRunUtc</h2>
 
@@ -351,22 +367,6 @@ Static Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>SID of the user who started it. </p>
-
-</div>
-</div>
-<a id="aff003e36aec98671bb143a34787c9958" name="aff003e36aec98671bb143a34787c9958"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aff003e36aec98671bb143a34787c9958">&#9670;&#160;</a></span>SidName</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring UserAssist::SidName = L&quot;&quot;</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>name of that user </p>
 
 </div>
 </div>

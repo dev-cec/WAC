@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -162,6 +162,8 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a1ac8a14ed178ba686fb561b6f6921e3a" id="r_a1ac8a14ed178ba686fb561b6f6921e3a"><td class="memTemplParams" colspan="2">template&lt;typename T , typename  = std::enable_if_t&lt;std::is_integral_v&lt;T&gt; &amp;&amp; !std::is_same_v&lt;T, bool&gt;&gt;&gt; </td></tr>
 <tr class="memitem:a1ac8a14ed178ba686fb561b6f6921e3a"><td class="memTemplItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classJson.html#a1ac8a14ed178ba686fb561b6f6921e3a">num</a> (T v)</td></tr>
 <tr class="separator:a1ac8a14ed178ba686fb561b6f6921e3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a718293301df299840a3bd0c53d6bf3ca" id="r_a718293301df299840a3bd0c53d6bf3ca"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#a718293301df299840a3bd0c53d6bf3ca">real</a> (double v)</td></tr>
+<tr class="separator:a718293301df299840a3bd0c53d6bf3ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac903a965330a365eafdd789477f6ff62" id="r_ac903a965330a365eafdd789477f6ff62"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classJson.html#ac903a965330a365eafdd789477f6ff62">parse</a> (const std::wstring &amp;<a class="el" href="classJson.html#a64c0aca20e18d831b02d7653d6ec4007">text</a>, <a class="el" href="classJson.html">Json</a> &amp;out, std::wstring &amp;error)</td></tr>
 <tr class="separator:ac903a965330a365eafdd789477f6ff62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -242,7 +244,7 @@ Static Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Adds a key/value pair to an object — UNLESS the value is empty.</p>
 <p>THE ONE RULE: a field without a value is not emitted. An empty key reads as a failed read, and cannot be told apart from "the source does not hold
-that value". The rule used to be applied collector by collector, hence unevenly: a real collection still counted 129,837 <code>null</code> in events.json, and empty strings or arrays in scheduled tasks, Amcache, <a class="el" href="structShimcache.html">Shimcache</a>, shortcuts, shellbags… It now lives here, where every field goes through, so that the next collector cannot forget it.</p>
+that value". The rule used to be applied collector by collector, hence unevenly: a real collection still counted 129,837 <code>null</code> in events.json, and empty strings or arrays in scheduled tasks, <a class="el" href="structAmcache.html">Amcache</a>, <a class="el" href="structShimcache.html">Shimcache</a>, shortcuts, shellbags… It now lives here, where every field goes through, so that the next collector cannot forget it.</p>
 <p>Empty means: <code>null</code>, an empty string, an object or array with no element. A zero number and a false boolean are values, and are emitted. Array elements (<code>push</code>) are not concerned: a file with no entry stays "[]", which means "no entry found".</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -686,6 +688,39 @@ template&lt;typename T , typename  = std::enable_if_t&lt;std::is_integral_v&lt;T
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>this array, so calls can be chained. </dd></dl>
+
+</div>
+</div>
+<a id="a718293301df299840a3bd0c53d6bf3ca" name="a718293301df299840a3bd0c53d6bf3ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a718293301df299840a3bd0c53d6bf3ca">&#9670;&#160;</a></span>real()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="classJson.html">Json</a> Json::real </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>v</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>A floating-point number, with the 17 significant digits that give the same double back. NaN and infinities have no JSON form: null, which <code>add</code> does not emit. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">v</td><td>the number. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>that number, unquoted. </dd></dl>
 
 </div>
 </div>

@@ -1,7 +1,9 @@
 var structSystemInfo =
 [
+    [ "Setting", "structSystemInfo_1_1Setting.html", "structSystemInfo_1_1Setting" ],
     [ "clear", "structSystemInfo.html#a71ad6e847cd0db030452d3a58e4545ec", null ],
     [ "getData", "structSystemInfo.html#a30d08c80ceb0a7549eedf65598a581d0", null ],
+    [ "readSettings", "structSystemInfo.html#a837014882d4664c4b45c4b0fb375a769", null ],
     [ "toJson", "structSystemInfo.html#a0335587687e107ba193aa7afc1236acb", null ],
     [ "bootFromKernel", "structSystemInfo.html#a82bb467bddb2ae052806fa6f631fc0d8", null ],
     [ "buildLabEx", "structSystemInfo.html#a3c1cac8a1022062307ec66f5040861a0", null ],
@@ -17,6 +19,7 @@ var structSystemInfo =
     [ "lastBootUpTimeUtc", "structSystemInfo.html#a6a14aa4c781d7a752df834e91384c0ed", null ],
     [ "machineGuid", "structSystemInfo.html#a7c355fcf690a6fd92b54f0a3696054c1", null ],
     [ "netbiosName", "structSystemInfo.html#a120e6ab17b88f69bbc14598501ecfeeb", null ],
+    [ "ntfsLastAccessUpdated", "structSystemInfo.html#a09166af24652b05bda884be1d4669619", null ],
     [ "osArchitecture", "structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f", null ],
     [ "osName", "structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae", null ],
     [ "productId", "structSystemInfo.html#a1144acf60476ffa77a6498c3d5961565", null ],
@@ -24,6 +27,8 @@ var structSystemInfo =
     [ "registeredOrganization", "structSystemInfo.html#a57be43eaef409e65a09f0e9bb371f6d0", null ],
     [ "registeredOwner", "structSystemInfo.html#a0b1cc8b073aaf67b135cfda5143fc86f", null ],
     [ "servicePack", "structSystemInfo.html#add303e00ebd5388785258d3f6a1d4722", null ],
+    [ "settings", "structSystemInfo.html#a020930305f606fb4d065ed83cc311067", null ],
+    [ "shutdownTimeUtc", "structSystemInfo.html#af7b67390b254c7f89a76e72cb7b7fdea", null ],
     [ "systemRoot", "structSystemInfo.html#ad451c86f5c64f831d42dbb056c76f236", null ],
     [ "uptimeSeconds", "structSystemInfo.html#a2552f53a3a8dd307872dd737f4f8d9f7", null ],
     [ "version", "structSystemInfo.html#abdd27a19219607efb8eaae5f908f4617", null ]

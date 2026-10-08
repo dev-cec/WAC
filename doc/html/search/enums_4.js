@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['runmode_0',['RunMode',['../tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947e',1,'tools.h']]]
+  ['language_0',['Language',['../translations_8h.html#a315ca917ad583797f709ea477dd28705',1,'translations.h']]]
 ];

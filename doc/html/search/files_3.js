@@ -1,13 +1,9 @@
 var searchData=
 [
-  ['event_5fmessages_2ecpp_0',['event_messages.cpp',['../event__messages_8cpp.html',1,'']]],
-  ['event_5fmessages_2eh_1',['event_messages.h',['../event__messages_8h.html',1,'']]],
-  ['event_5fmessages_5ftest_2ecpp_2',['event_messages_test.cpp',['../event__messages__test_8cpp.html',1,'']]],
-  ['events_2ecpp_3',['events.cpp',['../events_8cpp.html',1,'']]],
-  ['events_2eh_4',['events.h',['../events_8h.html',1,'']]],
-  ['evtx_2ecpp_5',['evtx.cpp',['../evtx_8cpp.html',1,'']]],
-  ['evtx_2eh_6',['evtx.h',['../evtx_8h.html',1,'']]],
-  ['evtx_5ftest_2ecpp_7',['evtx_test.cpp',['../evtx__test_8cpp.html',1,'']]],
-  ['exhibit_5freader_2ecpp_8',['exhibit_reader.cpp',['../exhibit__reader_8cpp.html',1,'']]],
-  ['exhibit_5freader_2eh_9',['exhibit_reader.h',['../exhibit__reader_8h.html',1,'']]]
+  ['defender_5fhistory_2ecpp_0',['defender_history.cpp',['../defender__history_8cpp.html',1,'']]],
+  ['defender_5fhistory_2eh_1',['defender_history.h',['../defender__history_8h.html',1,'']]],
+  ['defender_5flog_2ecpp_2',['defender_log.cpp',['../defender__log_8cpp.html',1,'']]],
+  ['defender_5flog_2eh_3',['defender_log.h',['../defender__log_8h.html',1,'']]],
+  ['dpapi_5fmaster_5fkeys_2ecpp_4',['dpapi_master_keys.cpp',['../dpapi__master__keys_8cpp.html',1,'']]],
+  ['dpapi_5fmaster_5fkeys_2eh_5',['dpapi_master_keys.h',['../dpapi__master__keys_8h.html',1,'']]]
 ];

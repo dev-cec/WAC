@@ -7,6 +7,5 @@ var structMru =
     [ "level", "structMru.html#a2c9849f72a0a743f53f36007716bbc8e", null ],
     [ "shellitems", "structMru.html#af11fae5cbf279f3e6650adf66ab7969e", null ],
     [ "sid", "structMru.html#a999b39c93359008e952e8ffc18430784", null ],
-    [ "sidName", "structMru.html#a30a4ce75191b6434809038627a9ea675", null ],
     [ "source", "structMru.html#aae2bf8e58487b59f5a79c73c2e294fa6", null ]
 ];

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('structAppliConf_1_1CollectedArtefacts.
 
 <div class="header">
   <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structAppliConf_1_1CollectedArtefacts-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">AppliConf::CollectedArtefacts Struct Reference</div></div>
@@ -105,11 +106,63 @@ $(document).ready(function(){initNavTree('structAppliConf_1_1CollectedArtefacts.
 
 <p><code>#include &lt;<a class="el" href="tools_8h_source.html">tools.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:acb36b8ae3585be71268d31c087698fc0" id="r_acb36b8ae3585be71268d31c087698fc0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#acb36b8ae3585be71268d31c087698fc0">needsUserHives</a> () const</td></tr>
+<tr class="separator:acb36b8ae3585be71268d31c087698fc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeaea80d101e068d8d236f9330a55d7d7" id="r_aeaea80d101e068d8d236f9330a55d7d7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aeaea80d101e068d8d236f9330a55d7d7">needsEventLogs</a> () const</td></tr>
+<tr class="separator:aeaea80d101e068d8d236f9330a55d7d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a615aee83e18879e5cb6b7d44cdac73bd" id="r_a615aee83e18879e5cb6b7d44cdac73bd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a615aee83e18879e5cb6b7d44cdac73bd">registry</a> = true</td></tr>
-<tr class="memdesc:a615aee83e18879e5cb6b7d44cdac73bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">the hives, and every artefact read in them  <br /></td></tr>
-<tr class="separator:a615aee83e18879e5cb6b7d44cdac73bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8979abc9fab85381ef5b5a9f02bd8f1f" id="r_a8979abc9fab85381ef5b5a9f02bd8f1f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a8979abc9fab85381ef5b5a9f02bd8f1f">events</a> = true</td></tr>
+<tr class="memdesc:a8979abc9fab85381ef5b5a9f02bd8f1f"><td class="mdescLeft">&#160;</td><td class="mdescRight">the event logs, with their messages  <br /></td></tr>
+<tr class="separator:a8979abc9fab85381ef5b5a9f02bd8f1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab77ef0acfc7e5c81557a859a6713e1af" id="r_ab77ef0acfc7e5c81557a859a6713e1af"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ab77ef0acfc7e5c81557a859a6713e1af">operatingSystem</a> = true</td></tr>
+<tr class="memdesc:ab77ef0acfc7e5c81557a859a6713e1af"><td class="mdescLeft">&#160;</td><td class="mdescRight">version, installation, computer name, uptime (SYSTEM, SOFTWARE)  <br /></td></tr>
+<tr class="separator:ab77ef0acfc7e5c81557a859a6713e1af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea4fd668e7be6b328a1a82dc63466669" id="r_aea4fd668e7be6b328a1a82dc63466669"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aea4fd668e7be6b328a1a82dc63466669">usbstor</a> = true</td></tr>
+<tr class="memdesc:aea4fd668e7be6b328a1a82dc63466669"><td class="mdescLeft">&#160;</td><td class="mdescRight">USB mass storage devices (Enum\USBSTOR)  <br /></td></tr>
+<tr class="separator:aea4fd668e7be6b328a1a82dc63466669"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abeebefe4b65bb69d6f9c25c33ecc6dfc" id="r_abeebefe4b65bb69d6f9c25c33ecc6dfc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#abeebefe4b65bb69d6f9c25c33ecc6dfc">mountedDevices</a> = true</td></tr>
+<tr class="memdesc:abeebefe4b65bb69d6f9c25c33ecc6dfc"><td class="mdescLeft">&#160;</td><td class="mdescRight">volumes and drive letters the machine knew (<a class="el" href="structMountedDevices.html">MountedDevices</a>)  <br /></td></tr>
+<tr class="separator:abeebefe4b65bb69d6f9c25c33ecc6dfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10c7fb0c53340699d3fa3818b9bf30ae" id="r_a10c7fb0c53340699d3fa3818b9bf30ae"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a10c7fb0c53340699d3fa3818b9bf30ae">bam</a> = true</td></tr>
+<tr class="memdesc:a10c7fb0c53340699d3fa3818b9bf30ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">last execution of each program per user (Background Activity Moderator)  <br /></td></tr>
+<tr class="separator:a10c7fb0c53340699d3fa3818b9bf30ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9bdfea35a57eb08135ff10c38144c00" id="r_ac9bdfea35a57eb08135ff10c38144c00"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ac9bdfea35a57eb08135ff10c38144c00">muiCache</a> = true</td></tr>
+<tr class="memdesc:ac9bdfea35a57eb08135ff10c38144c00"><td class="mdescLeft">&#160;</td><td class="mdescRight">names of the programs each user launched (usrClass.dat)  <br /></td></tr>
+<tr class="separator:ac9bdfea35a57eb08135ff10c38144c00"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeddcfea018a2026748880369c795402e" id="r_aeddcfea018a2026748880369c795402e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aeddcfea018a2026748880369c795402e">amcache</a> = true</td></tr>
+<tr class="memdesc:aeddcfea018a2026748880369c795402e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Amcache.hve: applications, executables and drivers seen.  <br /></td></tr>
+<tr class="separator:aeddcfea018a2026748880369c795402e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adba5a81cdf460c4b918c872b59c748ea" id="r_adba5a81cdf460c4b918c872b59c748ea"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#adba5a81cdf460c4b918c872b59c748ea">userAssist</a> = true</td></tr>
+<tr class="memdesc:adba5a81cdf460c4b918c872b59c748ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">programs each user launched from Explorer, with count and date  <br /></td></tr>
+<tr class="separator:adba5a81cdf460c4b918c872b59c748ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96f6c812a5c9138ae06d6e5e5cf2e835" id="r_a96f6c812a5c9138ae06d6e5e5cf2e835"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a96f6c812a5c9138ae06d6e5e5cf2e835">runKeys</a> = true</td></tr>
+<tr class="memdesc:a96f6c812a5c9138ae06d6e5e5cf2e835"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structRun.html">Run</a> and RunOnce keys of the machine and of each user.  <br /></td></tr>
+<tr class="separator:a96f6c812a5c9138ae06d6e5e5cf2e835"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae886881056b4c2dafa32b8c5f9b2edb8" id="r_ae886881056b4c2dafa32b8c5f9b2edb8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ae886881056b4c2dafa32b8c5f9b2edb8">shimcache</a> = true</td></tr>
+<tr class="memdesc:ae886881056b4c2dafa32b8c5f9b2edb8"><td class="mdescLeft">&#160;</td><td class="mdescRight">application compatibility cache (AppCompatCache)  <br /></td></tr>
+<tr class="separator:ae886881056b4c2dafa32b8c5f9b2edb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a442ba35c1a81757aa252614f44b34273" id="r_a442ba35c1a81757aa252614f44b34273"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a442ba35c1a81757aa252614f44b34273">shellbags</a> = true</td></tr>
+<tr class="memdesc:a442ba35c1a81757aa252614f44b34273"><td class="mdescLeft">&#160;</td><td class="mdescRight">folders each user browsed in Explorer  <br /></td></tr>
+<tr class="separator:a442ba35c1a81757aa252614f44b34273"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01ebbcae23110fb39425a523cfadb146" id="r_a01ebbcae23110fb39425a523cfadb146"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a01ebbcae23110fb39425a523cfadb146">mru</a> = true</td></tr>
+<tr class="memdesc:a01ebbcae23110fb39425a523cfadb146"><td class="mdescLeft">&#160;</td><td class="mdescRight">files each user opened or saved through the common dialogs  <br /></td></tr>
+<tr class="separator:a01ebbcae23110fb39425a523cfadb146"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f170078d35c00d2bad75e3914dd79d0" id="r_a6f170078d35c00d2bad75e3914dd79d0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a6f170078d35c00d2bad75e3914dd79d0">mruApps</a> = true</td></tr>
+<tr class="memdesc:a6f170078d35c00d2bad75e3914dd79d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">programs used to open or save those files  <br /></td></tr>
+<tr class="separator:a6f170078d35c00d2bad75e3914dd79d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2eb60cde911be0e03194f4353a86f07" id="r_aa2eb60cde911be0e03194f4353a86f07"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aa2eb60cde911be0e03194f4353a86f07">users</a> = true</td></tr>
+<tr class="memdesc:aa2eb60cde911be0e03194f4353a86f07"><td class="mdescLeft">&#160;</td><td class="mdescRight">local accounts (SAM): logons, failures, flags, password hashes  <br /></td></tr>
+<tr class="separator:aa2eb60cde911be0e03194f4353a86f07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab64b9534d1566057ca00834e6ee578ca" id="r_ab64b9534d1566057ca00834e6ee578ca"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ab64b9534d1566057ca00834e6ee578ca">localGroups</a> = true</td></tr>
+<tr class="memdesc:ab64b9534d1566057ca00834e6ee578ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">members of each local group (SAM)  <br /></td></tr>
+<tr class="separator:ab64b9534d1566057ca00834e6ee578ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af04ab18d6fa0adc3cd5f050e11b631cb" id="r_af04ab18d6fa0adc3cd5f050e11b631cb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af04ab18d6fa0adc3cd5f050e11b631cb">registryBackups</a> = true</td></tr>
+<tr class="memdesc:af04ab18d6fa0adc3cd5f050e11b631cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">RegBack: the machine's older hives, raw copy only.  <br /></td></tr>
+<tr class="separator:af04ab18d6fa0adc3cd5f050e11b631cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a7e05993ef3334d54eac63f132be3c1" id="r_a0a7e05993ef3334d54eac63f132be3c1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a0a7e05993ef3334d54eac63f132be3c1">scheduledTasks</a> = true</td></tr>
 <tr class="separator:a0a7e05993ef3334d54eac63f132be3c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab740beaf95023c115b79ea420ec06232" id="r_ab740beaf95023c115b79ea420ec06232"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ab740beaf95023c115b79ea420ec06232">services</a> = true</td></tr>
@@ -137,12 +190,479 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:aebe99f8ac3ea54f64d3d9dee4ef43afa"><td class="mdescLeft">&#160;</td><td class="mdescRight">$UsnJrnl:$J, raw, and usn_journal.json: the change journal  <br /></td></tr>
 <tr class="separator:aebe99f8ac3ea54f64d3d9dee4ef43afa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5df94dae29ebecfbaf8bd45f949ae281" id="r_a5df94dae29ebecfbaf8bd45f949ae281"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a5df94dae29ebecfbaf8bd45f949ae281">logFile</a> = true</td></tr>
-<tr class="memdesc:a5df94dae29ebecfbaf8bd45f949ae281"><td class="mdescLeft">&#160;</td><td class="mdescRight">$LogFile, raw only: the NTFS transaction journal  <br /></td></tr>
+<tr class="memdesc:a5df94dae29ebecfbaf8bd45f949ae281"><td class="mdescLeft">&#160;</td><td class="mdescRight">$LogFile and $TxfLog, raw only: the NTFS and transactional NTFS journals  <br /></td></tr>
 <tr class="separator:a5df94dae29ebecfbaf8bd45f949ae281"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a48c5a6504727896bdea146d555499a" id="r_a2a48c5a6504727896bdea146d555499a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a2a48c5a6504727896bdea146d555499a">powershellHistory</a> = true</td></tr>
+<tr class="memdesc:a2a48c5a6504727896bdea146d555499a"><td class="mdescLeft">&#160;</td><td class="mdescRight">PSReadLine histories of every profile.  <br /></td></tr>
+<tr class="separator:a2a48c5a6504727896bdea146d555499a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af67bb713cccdd38cbf9fa413254b2ebc" id="r_af67bb713cccdd38cbf9fa413254b2ebc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af67bb713cccdd38cbf9fa413254b2ebc">setupApi</a> = true</td></tr>
+<tr class="memdesc:af67bb713cccdd38cbf9fa413254b2ebc"><td class="mdescLeft">&#160;</td><td class="mdescRight">setupapi.dev.log: device installations, first USB connections  <br /></td></tr>
+<tr class="separator:af67bb713cccdd38cbf9fa413254b2ebc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a533b1fca201739fc3b3798ff444e9fb3" id="r_a533b1fca201739fc3b3798ff444e9fb3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a533b1fca201739fc3b3798ff444e9fb3">recycleBin</a> = true</td></tr>
+<tr class="memdesc:a533b1fca201739fc3b3798ff444e9fb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">the $I of every volume's recycle bin  <br /></td></tr>
+<tr class="separator:a533b1fca201739fc3b3798ff444e9fb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2d65c03096c89153018baca7b9bd22d" id="r_aa2d65c03096c89153018baca7b9bd22d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aa2d65c03096c89153018baca7b9bd22d">hosts</a> = true</td></tr>
+<tr class="memdesc:aa2d65c03096c89153018baca7b9bd22d"><td class="mdescLeft">&#160;</td><td class="mdescRight">the hosts file  <br /></td></tr>
+<tr class="separator:aa2d65c03096c89153018baca7b9bd22d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90b13e62a987bcbabae490fbc2bb3941" id="r_a90b13e62a987bcbabae490fbc2bb3941"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a90b13e62a987bcbabae490fbc2bb3941">errorReports</a> = true</td></tr>
+<tr class="memdesc:a90b13e62a987bcbabae490fbc2bb3941"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows Error Reporting: Report.wer of the machine and of each profile.  <br /></td></tr>
+<tr class="separator:a90b13e62a987bcbabae490fbc2bb3941"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bfe696388652390725f346fcc16490b" id="r_a0bfe696388652390725f346fcc16490b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a0bfe696388652390725f346fcc16490b">defender</a> = true</td></tr>
+<tr class="memdesc:a0bfe696388652390725f346fcc16490b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Microsoft Defender: support logs (MPLog), detection history, quarantine.  <br /></td></tr>
+<tr class="separator:a0bfe696388652390725f346fcc16490b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a07e8564c10c39e373fd5fac9628806" id="r_a4a07e8564c10c39e373fd5fac9628806"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a4a07e8564c10c39e373fd5fac9628806">startupFolders</a> = true</td></tr>
+<tr class="memdesc:a4a07e8564c10c39e373fd5fac9628806"><td class="mdescLeft">&#160;</td><td class="mdescRight">startup folders of all users and of each profile  <br /></td></tr>
+<tr class="separator:a4a07e8564c10c39e373fd5fac9628806"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b7dd0c1a5df36b1d54f08939b92b040" id="r_a1b7dd0c1a5df36b1d54f08939b92b040"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a1b7dd0c1a5df36b1d54f08939b92b040">shortcuts</a> = true</td></tr>
+<tr class="memdesc:a1b7dd0c1a5df36b1d54f08939b92b040"><td class="mdescLeft">&#160;</td><td class="mdescRight">shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar  <br /></td></tr>
+<tr class="separator:a1b7dd0c1a5df36b1d54f08939b92b040"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a410c74d9746ecab9bfc7ca90c18ac2bc" id="r_a410c74d9746ecab9bfc7ca90c18ac2bc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a410c74d9746ecab9bfc7ca90c18ac2bc">securityDescriptors</a> = true</td></tr>
+<tr class="memdesc:a410c74d9746ecab9bfc7ca90c18ac2bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">$Secure:$SDS of every NTFS volume: owner and ACLs of every file  <br /></td></tr>
+<tr class="separator:a410c74d9746ecab9bfc7ca90c18ac2bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8f6a99097d4e03a09b119a530b98e57" id="r_aa8f6a99097d4e03a09b119a530b98e57"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aa8f6a99097d4e03a09b119a530b98e57">ntfsVolumes</a> = true</td></tr>
+<tr class="memdesc:aa8f6a99097d4e03a09b119a530b98e57"><td class="mdescLeft">&#160;</td><td class="mdescRight">$Boot and $UsnJrnl:$Max of every NTFS volume: serial, geometry, journal creation  <br /></td></tr>
+<tr class="separator:aa8f6a99097d4e03a09b119a530b98e57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a63f1b824a882fe809587ed93006acf80" id="r_a63f1b824a882fe809587ed93006acf80"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a63f1b824a882fe809587ed93006acf80">dpapiMasterKeys</a> = true</td></tr>
+<tr class="memdesc:a63f1b824a882fe809587ed93006acf80"><td class="mdescLeft">&#160;</td><td class="mdescRight">DPAPI master keys of each profile and of the system, copied encrypted; their metadata.  <br /></td></tr>
+<tr class="separator:a63f1b824a882fe809587ed93006acf80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af90738b112a0cb722e12b565ff9c99c4" id="r_af90738b112a0cb722e12b565ff9c99c4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af90738b112a0cb722e12b565ff9c99c4">userShellFolders</a> = true</td></tr>
+<tr class="memdesc:af90738b112a0cb722e12b565ff9c99c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">each user's shell folders (<a class="el" href="structUser.html">User</a> Shell Folders): where desktop and documents really are  <br /></td></tr>
+<tr class="separator:af90738b112a0cb722e12b565ff9c99c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69438eb3f87768263a1adb5108bb32c6" id="r_a69438eb3f87768263a1adb5108bb32c6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a69438eb3f87768263a1adb5108bb32c6">webClient</a> = true</td></tr>
+<tr class="memdesc:a69438eb3f87768263a1adb5108bb32c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">the browsers: visits, downloads, searches (Chromium History), their databases raw  <br /></td></tr>
+<tr class="separator:a69438eb3f87768263a1adb5108bb32c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab87e4c8139109b70f04fb5b22f675636" id="r_ab87e4c8139109b70f04fb5b22f675636"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ab87e4c8139109b70f04fb5b22f675636">zoneIdentifiers</a> = true</td></tr>
+<tr class="memdesc:ab87e4c8139109b70f04fb5b22f675636"><td class="mdescLeft">&#160;</td><td class="mdescRight">Zone.Identifier streams, read in the $MFT copy.  <br /></td></tr>
+<tr class="separator:ab87e4c8139109b70f04fb5b22f675636"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c743f0808df50c32c3e0a6004301ff6" id="r_a3c743f0808df50c32c3e0a6004301ff6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a3c743f0808df50c32c3e0a6004301ff6">security</a> = true</td></tr>
+<tr class="memdesc:a3c743f0808df50c32c3e0a6004301ff6"><td class="mdescLeft">&#160;</td><td class="mdescRight">SECURITY hive: LSA secrets' names and dates, cached logons, audit policy.  <br /></td></tr>
+<tr class="separator:a3c743f0808df50c32c3e0a6004301ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41ceace7fe073e3510e818799e663083" id="r_a41ceace7fe073e3510e818799e663083"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a41ceace7fe073e3510e818799e663083">persistence</a> = true</td></tr>
+<tr class="memdesc:a41ceace7fe073e3510e818799e663083"><td class="mdescLeft">&#160;</td><td class="mdescRight">registry persistence beyond <a class="el" href="structRun.html">Run</a>: IFEO, AppInit, Winlogon, LSA, COM…  <br /></td></tr>
+<tr class="separator:a41ceace7fe073e3510e818799e663083"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab9a5dd75ac3bb03eab19b1966f765d9" id="r_aab9a5dd75ac3bb03eab19b1966f765d9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aab9a5dd75ac3bb03eab19b1966f765d9">officeTrustRecords</a> = true</td></tr>
+<tr class="memdesc:aab9a5dd75ac3bb03eab19b1966f765d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Office trusted documents: macros enabled by the user, and when.  <br /></td></tr>
+<tr class="separator:aab9a5dd75ac3bb03eab19b1966f765d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe1fe9ec851a93c7e663438fdb77bd62" id="r_afe1fe9ec851a93c7e663438fdb77bd62"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#afe1fe9ec851a93c7e663438fdb77bd62">typedPaths</a> = true</td></tr>
+<tr class="memdesc:afe1fe9ec851a93c7e663438fdb77bd62"><td class="mdescLeft">&#160;</td><td class="mdescRight">paths typed in Explorer's address bar  <br /></td></tr>
+<tr class="separator:afe1fe9ec851a93c7e663438fdb77bd62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5161dcfd30831100471cd0376ef3b681" id="r_a5161dcfd30831100471cd0376ef3b681"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a5161dcfd30831100471cd0376ef3b681">wordWheelQuery</a> = true</td></tr>
+<tr class="memdesc:a5161dcfd30831100471cd0376ef3b681"><td class="mdescLeft">&#160;</td><td class="mdescRight">terms searched in Explorer  <br /></td></tr>
+<tr class="separator:a5161dcfd30831100471cd0376ef3b681"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa6ac16966efdded651c6fae9a8c0f44" id="r_aaa6ac16966efdded651c6fae9a8c0f44"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aaa6ac16966efdded651c6fae9a8c0f44">rootCertificates</a> = true</td></tr>
+<tr class="memdesc:aaa6ac16966efdded651c6fae9a8c0f44"><td class="mdescLeft">&#160;</td><td class="mdescRight">root certificates of the machine and of each user  <br /></td></tr>
+<tr class="separator:aaa6ac16966efdded651c6fae9a8c0f44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a018c4bbece62b343ebab18df8cba7b64" id="r_a018c4bbece62b343ebab18df8cba7b64"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a018c4bbece62b343ebab18df8cba7b64">internetSettings</a> = true</td></tr>
+<tr class="memdesc:a018c4bbece62b343ebab18df8cba7b64"><td class="mdescLeft">&#160;</td><td class="mdescRight">each user's proxy and automatic configuration script  <br /></td></tr>
+<tr class="separator:a018c4bbece62b343ebab18df8cba7b64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06d49848b263bb6dcf0e7eb1fe16c6da" id="r_a06d49848b263bb6dcf0e7eb1fe16c6da"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a06d49848b263bb6dcf0e7eb1fe16c6da">firewall</a> = true</td></tr>
+<tr class="memdesc:a06d49848b263bb6dcf0e7eb1fe16c6da"><td class="mdescLeft">&#160;</td><td class="mdescRight">firewall rules and profiles  <br /></td></tr>
+<tr class="separator:a06d49848b263bb6dcf0e7eb1fe16c6da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49fdf483775308ef4f5de3bb667062b3" id="r_a49fdf483775308ef4f5de3bb667062b3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a49fdf483775308ef4f5de3bb667062b3">wmi</a> = true</td></tr>
+<tr class="memdesc:a49fdf483775308ef4f5de3bb667062b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">WMI repository: event subscriptions (filters, consumers, bindings), read offline.  <br /></td></tr>
+<tr class="separator:a49fdf483775308ef4f5de3bb667062b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afda60cba0a6ff8f212ed4e21c53c1778" id="r_afda60cba0a6ff8f212ed4e21c53c1778"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#afda60cba0a6ff8f212ed4e21c53c1778">srum</a> = true</td></tr>
+<tr class="memdesc:afda60cba0a6ff8f212ed4e21c53c1778"><td class="mdescLeft">&#160;</td><td class="mdescRight">SRUDB.dat: network and resource usage per application and user, 30 to 60 days.  <br /></td></tr>
+<tr class="separator:afda60cba0a6ff8f212ed4e21c53c1778"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af534a1eb2e769d8bccc7187cd29bb882" id="r_af534a1eb2e769d8bccc7187cd29bb882"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af534a1eb2e769d8bccc7187cd29bb882">bits</a> = true</td></tr>
+<tr class="memdesc:af534a1eb2e769d8bccc7187cd29bb882"><td class="mdescLeft">&#160;</td><td class="mdescRight">qmgr.db: BITS jobs, their files and notification command lines  <br /></td></tr>
+<tr class="separator:af534a1eb2e769d8bccc7187cd29bb882"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af267ce1f9722a2f5f456c79c942b947d" id="r_af267ce1f9722a2f5f456c79c942b947d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af267ce1f9722a2f5f456c79c942b947d">fatVolumes</a> = true</td></tr>
+<tr class="memdesc:af267ce1f9722a2f5f456c79c942b947d"><td class="mdescLeft">&#160;</td><td class="mdescRight">FAT and exFAT volumes (a suspect's keys included): entries, deleted ones too.  <br /></td></tr>
+<tr class="separator:af267ce1f9722a2f5f456c79c942b947d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade4f7ab98d53bb522bdffb82c1b0376e" id="r_ade4f7ab98d53bb522bdffb82c1b0376e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ade4f7ab98d53bb522bdffb82c1b0376e">installedPrograms</a> = true</td></tr>
+<tr class="memdesc:ade4f7ab98d53bb522bdffb82c1b0376e"><td class="mdescLeft">&#160;</td><td class="mdescRight">installed programs: Uninstall keys of the machine and of each user  <br /></td></tr>
+<tr class="separator:ade4f7ab98d53bb522bdffb82c1b0376e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47e1f6330b0941708fe54aaf75ef88b7" id="r_a47e1f6330b0941708fe54aaf75ef88b7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a47e1f6330b0941708fe54aaf75ef88b7">defenderConfiguration</a> = true</td></tr>
+<tr class="memdesc:a47e1f6330b0941708fe54aaf75ef88b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defender configuration: exclusions and protection settings (registry)  <br /></td></tr>
+<tr class="separator:a47e1f6330b0941708fe54aaf75ef88b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56ca34b8cbba20b50524697007a9dbc0" id="r_a56ca34b8cbba20b50524697007a9dbc0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a56ca34b8cbba20b50524697007a9dbc0">explorerRecentDocs</a> = true</td></tr>
+<tr class="memdesc:a56ca34b8cbba20b50524697007a9dbc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">files each user opened, by extension (Explorer's <a class="el" href="structRecentDocs.html">RecentDocs</a>)  <br /></td></tr>
+<tr class="separator:a56ca34b8cbba20b50524697007a9dbc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5060ea0d3fb3f943af8f7318e29b08e6" id="r_a5060ea0d3fb3f943af8f7318e29b08e6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a5060ea0d3fb3f943af8f7318e29b08e6">mountPoints</a> = true</td></tr>
+<tr class="memdesc:a5060ea0d3fb3f943af8f7318e29b08e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">volumes and network shares each user's Explorer saw (MountPoints2)  <br /></td></tr>
+<tr class="separator:a5060ea0d3fb3f943af8f7318e29b08e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac8d16d67671f330f51db8da71d50c586" id="r_ac8d16d67671f330f51db8da71d50c586"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ac8d16d67671f330f51db8da71d50c586">knownNetworks</a> = true</td></tr>
+<tr class="memdesc:ac8d16d67671f330f51db8da71d50c586"><td class="mdescLeft">&#160;</td><td class="mdescRight">networks the machine joined (NetworkList): name, kind, gateway, first and last connection  <br /></td></tr>
+<tr class="separator:ac8d16d67671f330f51db8da71d50c586"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99667f18e01534125c75596e6c65d3cb" id="r_a99667f18e01534125c75596e6c65d3cb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a99667f18e01534125c75596e6c65d3cb">programUsages</a> = true</td></tr>
+<tr class="memdesc:a99667f18e01534125c75596e6c65d3cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">what each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items  <br /></td></tr>
+<tr class="separator:a99667f18e01534125c75596e6c65d3cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a843659ce5bc1ca279b9675e126a3c442" id="r_a843659ce5bc1ca279b9675e126a3c442"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a843659ce5bc1ca279b9675e126a3c442">devices</a> = true</td></tr>
+<tr class="memdesc:a843659ce5bc1ca279b9675e126a3c442"><td class="mdescLeft">&#160;</td><td class="mdescRight">devices the machine knew: Enum USB and SCSI with their dates, portable devices, volume labels, DeviceClasses  <br /></td></tr>
+<tr class="separator:a843659ce5bc1ca279b9675e126a3c442"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade66af29c86f8e65c8243175e3c6c116" id="r_ade66af29c86f8e65c8243175e3c6c116"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ade66af29c86f8e65c8243175e3c6c116">networkShares</a> = true</td></tr>
+<tr class="memdesc:ade66af29c86f8e65c8243175e3c6c116"><td class="mdescLeft">&#160;</td><td class="mdescRight">folders the machine shares (LanmanServer Shares)  <br /></td></tr>
+<tr class="separator:ade66af29c86f8e65c8243175e3c6c116"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7b54744d857166afd5193ca53cfceaa" id="r_ae7b54744d857166afd5193ca53cfceaa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ae7b54744d857166afd5193ca53cfceaa">networkConfiguration</a> = true</td></tr>
+<tr class="memdesc:ae7b54744d857166afd5193ca53cfceaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">network configuration read offline: adapters, last IPv4 and IPv6 settings, DHCP leases  <br /></td></tr>
+<tr class="separator:ae7b54744d857166afd5193ca53cfceaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac49ad25c550e0918ac179c67730d5563" id="r_ac49ad25c550e0918ac179c67730d5563"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ac49ad25c550e0918ac179c67730d5563">eventLogConfiguration</a> = true</td></tr>
+<tr class="memdesc:ac49ad25c550e0918ac179c67730d5563"><td class="mdescLeft">&#160;</td><td class="mdescRight">configuration of each event log channel: enabled, size, retention, access  <br /></td></tr>
+<tr class="separator:ac49ad25c550e0918ac179c67730d5563"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a410dd47fe430bceec533f31c364b6c8d" id="r_a410dd47fe430bceec533f31c364b6c8d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a410dd47fe430bceec533f31c364b6c8d">activitiesCache</a> = true</td></tr>
+<tr class="memdesc:a410dd47fe430bceec533f31c364b6c8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows Timeline: ActivitiesCache.db of every profile.  <br /></td></tr>
+<tr class="separator:a410dd47fe430bceec533f31c364b6c8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42bf0e93e217ceda122f9ff7de81bfea" id="r_a42bf0e93e217ceda122f9ff7de81bfea"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a42bf0e93e217ceda122f9ff7de81bfea">searchIndex</a> = true</td></tr>
+<tr class="memdesc:a42bf0e93e217ceda122f9ff7de81bfea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows Search index: what the indexer recorded of each file.  <br /></td></tr>
+<tr class="separator:a42bf0e93e217ceda122f9ff7de81bfea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a570861f141523b6468c8fa8caff03c93" id="r_a570861f141523b6468c8fa8caff03c93"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a570861f141523b6468c8fa8caff03c93">rdpClient</a> = true</td></tr>
+<tr class="memdesc:a570861f141523b6468c8fa8caff03c93"><td class="mdescLeft">&#160;</td><td class="mdescRight">outgoing RDP connections: servers, connection files, bitmap cache  <br /></td></tr>
+<tr class="separator:a570861f141523b6468c8fa8caff03c93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaca212b79c281d3fecda1a705361ef88" id="r_aaca212b79c281d3fecda1a705361ef88"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aaca212b79c281d3fecda1a705361ef88">rdpServer</a> = true</td></tr>
+<tr class="memdesc:aaca212b79c281d3fecda1a705361ef88"><td class="mdescLeft">&#160;</td><td class="mdescRight">incoming RDP connections, from the collected event logs  <br /></td></tr>
+<tr class="separator:aaca212b79c281d3fecda1a705361ef88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a645269dc9efebf64b1d4d82dd195fc5f" id="r_a645269dc9efebf64b1d4d82dd195fc5f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a645269dc9efebf64b1d4d82dd195fc5f">thumbcache</a> = true</td></tr>
+<tr class="memdesc:a645269dc9efebf64b1d4d82dd195fc5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Explorer's thumbnail and icon caches: what each user had on screen.  <br /></td></tr>
+<tr class="separator:a645269dc9efebf64b1d4d82dd195fc5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac22fa2226996ba1bc1e18318b446062c" id="r_ac22fa2226996ba1bc1e18318b446062c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ac22fa2226996ba1bc1e18318b446062c">emails</a> = true</td></tr>
+<tr class="memdesc:ac22fa2226996ba1bc1e18318b446062c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Outlook's PST and OST: messages, recipients, attachments.  <br /></td></tr>
+<tr class="separator:ac22fa2226996ba1bc1e18318b446062c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The artefacts to collect, one switch each (wac.yml, section <code>artefacts:</code>); the event logs are <code>_events</code>. All on by default but the event logs, as before the configuration file. </p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
+<div class="textblock"><p>The artefacts to collect, one switch each (wac.yml, section <code>artefacts:</code>), all on by default: a key missing from the file is on. No artefact is collected without its key. The hives, the event logs and the $MFT are not artefacts but DEPENDENCIES, copied when an artefact asked for reads them (needsUserHives, rdp_server and the logs…). </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="aeaea80d101e068d8d236f9330a55d7d7" name="aeaea80d101e068d8d236f9330a55d7d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeaea80d101e068d8d236f9330a55d7d7">&#9670;&#160;</a></span>needsEventLogs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::needsEventLogs </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Whether an artefact asked for reads the event logs: they are a dependency of <code>events</code> and of <code>rdp_server</code>, which finds the incoming connections in them. </p><dl class="section return"><dt>Returns</dt><dd>true if one of them is switched on </dd></dl>
+
+</div>
+</div>
+<a id="acb36b8ae3585be71268d31c087698fc0" name="acb36b8ae3585be71268d31c087698fc0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb36b8ae3585be71268d31c087698fc0">&#9670;&#160;</a></span>needsUserHives()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::needsUserHives </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Whether an artefact asked for reads the users' hives (ntuser.dat, usrClass.dat): they are a dependency, copied then. They used to be copied only with the former <code>registry</code> key — typed_paths alone gave an empty typed_paths.json, read as "nothing typed". A new artefact read in a user's hive is added here. </p><dl class="section return"><dt>Returns</dt><dd>true if one of them is switched on </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="a410dd47fe430bceec533f31c364b6c8d" name="a410dd47fe430bceec533f31c364b6c8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a410dd47fe430bceec533f31c364b6c8d">&#9670;&#160;</a></span>activitiesCache</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::activitiesCache = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Windows Timeline: ActivitiesCache.db of every profile. </p>
+
+</div>
+</div>
+<a id="aeddcfea018a2026748880369c795402e" name="aeddcfea018a2026748880369c795402e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeddcfea018a2026748880369c795402e">&#9670;&#160;</a></span>amcache</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::amcache = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Amcache.hve: applications, executables and drivers seen. </p>
+
+</div>
+</div>
+<a id="a10c7fb0c53340699d3fa3818b9bf30ae" name="a10c7fb0c53340699d3fa3818b9bf30ae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10c7fb0c53340699d3fa3818b9bf30ae">&#9670;&#160;</a></span>bam</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::bam = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>last execution of each program per user (Background Activity Moderator) </p>
+
+</div>
+</div>
+<a id="af534a1eb2e769d8bccc7187cd29bb882" name="af534a1eb2e769d8bccc7187cd29bb882"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af534a1eb2e769d8bccc7187cd29bb882">&#9670;&#160;</a></span>bits</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::bits = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>qmgr.db: BITS jobs, their files and notification command lines </p>
+
+</div>
+</div>
+<a id="a0bfe696388652390725f346fcc16490b" name="a0bfe696388652390725f346fcc16490b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0bfe696388652390725f346fcc16490b">&#9670;&#160;</a></span>defender</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::defender = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Microsoft Defender: support logs (MPLog), detection history, quarantine. </p>
+
+</div>
+</div>
+<a id="a47e1f6330b0941708fe54aaf75ef88b7" name="a47e1f6330b0941708fe54aaf75ef88b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a47e1f6330b0941708fe54aaf75ef88b7">&#9670;&#160;</a></span>defenderConfiguration</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::defenderConfiguration = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Defender configuration: exclusions and protection settings (registry) </p>
+
+</div>
+</div>
+<a id="a843659ce5bc1ca279b9675e126a3c442" name="a843659ce5bc1ca279b9675e126a3c442"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a843659ce5bc1ca279b9675e126a3c442">&#9670;&#160;</a></span>devices</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::devices = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>devices the machine knew: Enum USB and SCSI with their dates, portable devices, volume labels, DeviceClasses </p>
+
+</div>
+</div>
+<a id="a63f1b824a882fe809587ed93006acf80" name="a63f1b824a882fe809587ed93006acf80"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a63f1b824a882fe809587ed93006acf80">&#9670;&#160;</a></span>dpapiMasterKeys</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::dpapiMasterKeys = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>DPAPI master keys of each profile and of the system, copied encrypted; their metadata. </p>
+
+</div>
+</div>
+<a id="ac22fa2226996ba1bc1e18318b446062c" name="ac22fa2226996ba1bc1e18318b446062c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac22fa2226996ba1bc1e18318b446062c">&#9670;&#160;</a></span>emails</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::emails = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Outlook's PST and OST: messages, recipients, attachments. </p>
+
+</div>
+</div>
+<a id="a90b13e62a987bcbabae490fbc2bb3941" name="a90b13e62a987bcbabae490fbc2bb3941"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90b13e62a987bcbabae490fbc2bb3941">&#9670;&#160;</a></span>errorReports</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::errorReports = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Windows Error Reporting: Report.wer of the machine and of each profile. </p>
+
+</div>
+</div>
+<a id="ac49ad25c550e0918ac179c67730d5563" name="ac49ad25c550e0918ac179c67730d5563"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac49ad25c550e0918ac179c67730d5563">&#9670;&#160;</a></span>eventLogConfiguration</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::eventLogConfiguration = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>configuration of each event log channel: enabled, size, retention, access </p>
+
+</div>
+</div>
+<a id="a8979abc9fab85381ef5b5a9f02bd8f1f" name="a8979abc9fab85381ef5b5a9f02bd8f1f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8979abc9fab85381ef5b5a9f02bd8f1f">&#9670;&#160;</a></span>events</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::events = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the event logs, with their messages </p>
+
+</div>
+</div>
+<a id="a56ca34b8cbba20b50524697007a9dbc0" name="a56ca34b8cbba20b50524697007a9dbc0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a56ca34b8cbba20b50524697007a9dbc0">&#9670;&#160;</a></span>explorerRecentDocs</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::explorerRecentDocs = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>files each user opened, by extension (Explorer's <a class="el" href="structRecentDocs.html">RecentDocs</a>) </p>
+
+</div>
+</div>
+<a id="af267ce1f9722a2f5f456c79c942b947d" name="af267ce1f9722a2f5f456c79c942b947d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af267ce1f9722a2f5f456c79c942b947d">&#9670;&#160;</a></span>fatVolumes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::fatVolumes = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>FAT and exFAT volumes (a suspect's keys included): entries, deleted ones too. </p>
+
+</div>
+</div>
+<a id="a06d49848b263bb6dcf0e7eb1fe16c6da" name="a06d49848b263bb6dcf0e7eb1fe16c6da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06d49848b263bb6dcf0e7eb1fe16c6da">&#9670;&#160;</a></span>firewall</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::firewall = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>firewall rules and profiles </p>
+
+</div>
+</div>
+<a id="aa2d65c03096c89153018baca7b9bd22d" name="aa2d65c03096c89153018baca7b9bd22d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2d65c03096c89153018baca7b9bd22d">&#9670;&#160;</a></span>hosts</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::hosts = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the hosts file </p>
+
+</div>
+</div>
+<a id="ade4f7ab98d53bb522bdffb82c1b0376e" name="ade4f7ab98d53bb522bdffb82c1b0376e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ade4f7ab98d53bb522bdffb82c1b0376e">&#9670;&#160;</a></span>installedPrograms</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::installedPrograms = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>installed programs: Uninstall keys of the machine and of each user </p>
+
+</div>
+</div>
+<a id="a018c4bbece62b343ebab18df8cba7b64" name="a018c4bbece62b343ebab18df8cba7b64"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a018c4bbece62b343ebab18df8cba7b64">&#9670;&#160;</a></span>internetSettings</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::internetSettings = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>each user's proxy and automatic configuration script </p>
+
+</div>
+</div>
 <a id="ac9909a2a47ba2359430987b6a1f03a19" name="ac9909a2a47ba2359430987b6a1f03a19"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac9909a2a47ba2359430987b6a1f03a19">&#9670;&#160;</a></span>jumpLists</h2>
 
@@ -154,6 +674,38 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac8d16d67671f330f51db8da71d50c586" name="ac8d16d67671f330f51db8da71d50c586"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac8d16d67671f330f51db8da71d50c586">&#9670;&#160;</a></span>knownNetworks</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::knownNetworks = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>networks the machine joined (NetworkList): name, kind, gateway, first and last connection </p>
+
+</div>
+</div>
+<a id="ab64b9534d1566057ca00834e6ee578ca" name="ab64b9534d1566057ca00834e6ee578ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab64b9534d1566057ca00834e6ee578ca">&#9670;&#160;</a></span>localGroups</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::localGroups = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>members of each local group (SAM) </p>
 
 </div>
 </div>
@@ -169,7 +721,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>$LogFile, raw only: the NTFS transaction journal </p>
+<p>$LogFile and $TxfLog, raw only: the NTFS and transactional NTFS journals </p>
 
 </div>
 </div>
@@ -189,6 +741,86 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="abeebefe4b65bb69d6f9c25c33ecc6dfc" name="abeebefe4b65bb69d6f9c25c33ecc6dfc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abeebefe4b65bb69d6f9c25c33ecc6dfc">&#9670;&#160;</a></span>mountedDevices</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::mountedDevices = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>volumes and drive letters the machine knew (<a class="el" href="structMountedDevices.html">MountedDevices</a>) </p>
+
+</div>
+</div>
+<a id="a5060ea0d3fb3f943af8f7318e29b08e6" name="a5060ea0d3fb3f943af8f7318e29b08e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5060ea0d3fb3f943af8f7318e29b08e6">&#9670;&#160;</a></span>mountPoints</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::mountPoints = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>volumes and network shares each user's Explorer saw (MountPoints2) </p>
+
+</div>
+</div>
+<a id="a01ebbcae23110fb39425a523cfadb146" name="a01ebbcae23110fb39425a523cfadb146"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a01ebbcae23110fb39425a523cfadb146">&#9670;&#160;</a></span>mru</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::mru = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>files each user opened or saved through the common dialogs </p>
+
+</div>
+</div>
+<a id="a6f170078d35c00d2bad75e3914dd79d0" name="a6f170078d35c00d2bad75e3914dd79d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f170078d35c00d2bad75e3914dd79d0">&#9670;&#160;</a></span>mruApps</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::mruApps = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>programs used to open or save those files </p>
+
+</div>
+</div>
+<a id="ac9bdfea35a57eb08135ff10c38144c00" name="ac9bdfea35a57eb08135ff10c38144c00"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9bdfea35a57eb08135ff10c38144c00">&#9670;&#160;</a></span>muiCache</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::muiCache = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>names of the programs each user launched (usrClass.dat) </p>
+
+</div>
+</div>
 <a id="aea3491854846a23a81dde218eddf37c1" name="aea3491854846a23a81dde218eddf37c1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aea3491854846a23a81dde218eddf37c1">&#9670;&#160;</a></span>network</h2>
 
@@ -202,6 +834,118 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>live: connections, neighbours, interfaces, routes </p>
+
+</div>
+</div>
+<a id="ae7b54744d857166afd5193ca53cfceaa" name="ae7b54744d857166afd5193ca53cfceaa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7b54744d857166afd5193ca53cfceaa">&#9670;&#160;</a></span>networkConfiguration</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::networkConfiguration = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>network configuration read offline: adapters, last IPv4 and IPv6 settings, DHCP leases </p>
+
+</div>
+</div>
+<a id="ade66af29c86f8e65c8243175e3c6c116" name="ade66af29c86f8e65c8243175e3c6c116"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ade66af29c86f8e65c8243175e3c6c116">&#9670;&#160;</a></span>networkShares</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::networkShares = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>folders the machine shares (LanmanServer Shares) </p>
+
+</div>
+</div>
+<a id="aa8f6a99097d4e03a09b119a530b98e57" name="aa8f6a99097d4e03a09b119a530b98e57"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa8f6a99097d4e03a09b119a530b98e57">&#9670;&#160;</a></span>ntfsVolumes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::ntfsVolumes = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>$Boot and $UsnJrnl:$Max of every NTFS volume: serial, geometry, journal creation </p>
+
+</div>
+</div>
+<a id="aab9a5dd75ac3bb03eab19b1966f765d9" name="aab9a5dd75ac3bb03eab19b1966f765d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab9a5dd75ac3bb03eab19b1966f765d9">&#9670;&#160;</a></span>officeTrustRecords</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::officeTrustRecords = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Office trusted documents: macros enabled by the user, and when. </p>
+
+</div>
+</div>
+<a id="ab77ef0acfc7e5c81557a859a6713e1af" name="ab77ef0acfc7e5c81557a859a6713e1af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab77ef0acfc7e5c81557a859a6713e1af">&#9670;&#160;</a></span>operatingSystem</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::operatingSystem = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>version, installation, computer name, uptime (SYSTEM, SOFTWARE) </p>
+
+</div>
+</div>
+<a id="a41ceace7fe073e3510e818799e663083" name="a41ceace7fe073e3510e818799e663083"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a41ceace7fe073e3510e818799e663083">&#9670;&#160;</a></span>persistence</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::persistence = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>registry persistence beyond <a class="el" href="structRun.html">Run</a>: IFEO, AppInit, Winlogon, LSA, COM… </p>
+
+</div>
+</div>
+<a id="a2a48c5a6504727896bdea146d555499a" name="a2a48c5a6504727896bdea146d555499a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a48c5a6504727896bdea146d555499a">&#9670;&#160;</a></span>powershellHistory</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::powershellHistory = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>PSReadLine histories of every profile. </p>
 
 </div>
 </div>
@@ -235,6 +979,54 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a99667f18e01534125c75596e6c65d3cb" name="a99667f18e01534125c75596e6c65d3cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99667f18e01534125c75596e6c65d3cb">&#9670;&#160;</a></span>programUsages</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::programUsages = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>what each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items </p>
+
+</div>
+</div>
+<a id="a570861f141523b6468c8fa8caff03c93" name="a570861f141523b6468c8fa8caff03c93"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a570861f141523b6468c8fa8caff03c93">&#9670;&#160;</a></span>rdpClient</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::rdpClient = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>outgoing RDP connections: servers, connection files, bitmap cache </p>
+
+</div>
+</div>
+<a id="aaca212b79c281d3fecda1a705361ef88" name="aaca212b79c281d3fecda1a705361ef88"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaca212b79c281d3fecda1a705361ef88">&#9670;&#160;</a></span>rdpServer</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::rdpServer = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>incoming RDP connections, from the collected event logs </p>
+
+</div>
+</div>
 <a id="acc2ba215bafc6cbeec70a01dbc3feb3b" name="acc2ba215bafc6cbeec70a01dbc3feb3b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acc2ba215bafc6cbeec70a01dbc3feb3b">&#9670;&#160;</a></span>recentDocuments</h2>
 
@@ -249,19 +1041,67 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a615aee83e18879e5cb6b7d44cdac73bd" name="a615aee83e18879e5cb6b7d44cdac73bd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a615aee83e18879e5cb6b7d44cdac73bd">&#9670;&#160;</a></span>registry</h2>
+<a id="a533b1fca201739fc3b3798ff444e9fb3" name="a533b1fca201739fc3b3798ff444e9fb3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a533b1fca201739fc3b3798ff444e9fb3">&#9670;&#160;</a></span>recycleBin</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool AppliConf::CollectedArtefacts::registry = true</td>
+          <td class="memname">bool AppliConf::CollectedArtefacts::recycleBin = true</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>the hives, and every artefact read in them </p>
+<p>the $I of every volume's recycle bin </p>
+
+</div>
+</div>
+<a id="af04ab18d6fa0adc3cd5f050e11b631cb" name="af04ab18d6fa0adc3cd5f050e11b631cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af04ab18d6fa0adc3cd5f050e11b631cb">&#9670;&#160;</a></span>registryBackups</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::registryBackups = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>RegBack: the machine's older hives, raw copy only. </p>
+
+</div>
+</div>
+<a id="aaa6ac16966efdded651c6fae9a8c0f44" name="aaa6ac16966efdded651c6fae9a8c0f44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa6ac16966efdded651c6fae9a8c0f44">&#9670;&#160;</a></span>rootCertificates</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::rootCertificates = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>root certificates of the machine and of each user </p>
+
+</div>
+</div>
+<a id="a96f6c812a5c9138ae06d6e5e5cf2e835" name="a96f6c812a5c9138ae06d6e5e5cf2e835"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96f6c812a5c9138ae06d6e5e5cf2e835">&#9670;&#160;</a></span>runKeys</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::runKeys = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="structRun.html">Run</a> and RunOnce keys of the machine and of each user. </p>
 
 </div>
 </div>
@@ -276,6 +1116,54 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a42bf0e93e217ceda122f9ff7de81bfea" name="a42bf0e93e217ceda122f9ff7de81bfea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42bf0e93e217ceda122f9ff7de81bfea">&#9670;&#160;</a></span>searchIndex</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::searchIndex = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Windows Search index: what the indexer recorded of each file. </p>
+
+</div>
+</div>
+<a id="a3c743f0808df50c32c3e0a6004301ff6" name="a3c743f0808df50c32c3e0a6004301ff6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c743f0808df50c32c3e0a6004301ff6">&#9670;&#160;</a></span>security</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::security = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>SECURITY hive: LSA secrets' names and dates, cached logons, audit policy. </p>
+
+</div>
+</div>
+<a id="a410c74d9746ecab9bfc7ca90c18ac2bc" name="a410c74d9746ecab9bfc7ca90c18ac2bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a410c74d9746ecab9bfc7ca90c18ac2bc">&#9670;&#160;</a></span>securityDescriptors</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::securityDescriptors = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>$Secure:$SDS of every NTFS volume: owner and ACLs of every file </p>
 
 </div>
 </div>
@@ -311,6 +1199,198 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="af67bb713cccdd38cbf9fa413254b2ebc" name="af67bb713cccdd38cbf9fa413254b2ebc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af67bb713cccdd38cbf9fa413254b2ebc">&#9670;&#160;</a></span>setupApi</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::setupApi = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>setupapi.dev.log: device installations, first USB connections </p>
+
+</div>
+</div>
+<a id="a442ba35c1a81757aa252614f44b34273" name="a442ba35c1a81757aa252614f44b34273"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a442ba35c1a81757aa252614f44b34273">&#9670;&#160;</a></span>shellbags</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::shellbags = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>folders each user browsed in Explorer </p>
+
+</div>
+</div>
+<a id="ae886881056b4c2dafa32b8c5f9b2edb8" name="ae886881056b4c2dafa32b8c5f9b2edb8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae886881056b4c2dafa32b8c5f9b2edb8">&#9670;&#160;</a></span>shimcache</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::shimcache = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>application compatibility cache (AppCompatCache) </p>
+
+</div>
+</div>
+<a id="a1b7dd0c1a5df36b1d54f08939b92b040" name="a1b7dd0c1a5df36b1d54f08939b92b040"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b7dd0c1a5df36b1d54f08939b92b040">&#9670;&#160;</a></span>shortcuts</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::shortcuts = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar </p>
+
+</div>
+</div>
+<a id="afda60cba0a6ff8f212ed4e21c53c1778" name="afda60cba0a6ff8f212ed4e21c53c1778"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afda60cba0a6ff8f212ed4e21c53c1778">&#9670;&#160;</a></span>srum</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::srum = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>SRUDB.dat: network and resource usage per application and user, 30 to 60 days. </p>
+
+</div>
+</div>
+<a id="a4a07e8564c10c39e373fd5fac9628806" name="a4a07e8564c10c39e373fd5fac9628806"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4a07e8564c10c39e373fd5fac9628806">&#9670;&#160;</a></span>startupFolders</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::startupFolders = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>startup folders of all users and of each profile </p>
+
+</div>
+</div>
+<a id="a645269dc9efebf64b1d4d82dd195fc5f" name="a645269dc9efebf64b1d4d82dd195fc5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a645269dc9efebf64b1d4d82dd195fc5f">&#9670;&#160;</a></span>thumbcache</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::thumbcache = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Explorer's thumbnail and icon caches: what each user had on screen. </p>
+
+</div>
+</div>
+<a id="afe1fe9ec851a93c7e663438fdb77bd62" name="afe1fe9ec851a93c7e663438fdb77bd62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afe1fe9ec851a93c7e663438fdb77bd62">&#9670;&#160;</a></span>typedPaths</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::typedPaths = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>paths typed in Explorer's address bar </p>
+
+</div>
+</div>
+<a id="aea4fd668e7be6b328a1a82dc63466669" name="aea4fd668e7be6b328a1a82dc63466669"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aea4fd668e7be6b328a1a82dc63466669">&#9670;&#160;</a></span>usbstor</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::usbstor = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>USB mass storage devices (Enum\USBSTOR) </p>
+
+</div>
+</div>
+<a id="adba5a81cdf460c4b918c872b59c748ea" name="adba5a81cdf460c4b918c872b59c748ea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adba5a81cdf460c4b918c872b59c748ea">&#9670;&#160;</a></span>userAssist</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::userAssist = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>programs each user launched from Explorer, with count and date </p>
+
+</div>
+</div>
+<a id="aa2eb60cde911be0e03194f4353a86f07" name="aa2eb60cde911be0e03194f4353a86f07"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2eb60cde911be0e03194f4353a86f07">&#9670;&#160;</a></span>users</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::users = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>local accounts (SAM): logons, failures, flags, password hashes </p>
+
+</div>
+</div>
+<a id="af90738b112a0cb722e12b565ff9c99c4" name="af90738b112a0cb722e12b565ff9c99c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af90738b112a0cb722e12b565ff9c99c4">&#9670;&#160;</a></span>userShellFolders</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::userShellFolders = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>each user's shell folders (<a class="el" href="structUser.html">User</a> Shell Folders): where desktop and documents really are </p>
+
+</div>
+</div>
 <a id="aebe99f8ac3ea54f64d3d9dee4ef43afa" name="aebe99f8ac3ea54f64d3d9dee4ef43afa"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aebe99f8ac3ea54f64d3d9dee4ef43afa">&#9670;&#160;</a></span>usnJournal</h2>
 
@@ -324,6 +1404,70 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>$UsnJrnl:$J, raw, and usn_journal.json: the change journal </p>
+
+</div>
+</div>
+<a id="a69438eb3f87768263a1adb5108bb32c6" name="a69438eb3f87768263a1adb5108bb32c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a69438eb3f87768263a1adb5108bb32c6">&#9670;&#160;</a></span>webClient</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::webClient = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the browsers: visits, downloads, searches (Chromium History), their databases raw </p>
+
+</div>
+</div>
+<a id="a49fdf483775308ef4f5de3bb667062b3" name="a49fdf483775308ef4f5de3bb667062b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a49fdf483775308ef4f5de3bb667062b3">&#9670;&#160;</a></span>wmi</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::wmi = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>WMI repository: event subscriptions (filters, consumers, bindings), read offline. </p>
+
+</div>
+</div>
+<a id="a5161dcfd30831100471cd0376ef3b681" name="a5161dcfd30831100471cd0376ef3b681"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5161dcfd30831100471cd0376ef3b681">&#9670;&#160;</a></span>wordWheelQuery</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::wordWheelQuery = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>terms searched in Explorer </p>
+
+</div>
+</div>
+<a id="ab87e4c8139109b70f04fb5b22f675636" name="ab87e4c8139109b70f04fb5b22f675636"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab87e4c8139109b70f04fb5b22f675636">&#9670;&#160;</a></span>zoneIdentifiers</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::zoneIdentifiers = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Zone.Identifier streams, read in the $MFT copy. </p>
 
 </div>
 </div>

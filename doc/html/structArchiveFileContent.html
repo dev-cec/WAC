@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -131,17 +131,31 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:af3e4c284f506e95d236435d098a8aff1"><td class="mdescLeft">&#160;</td><td class="mdescRight">whether the object is present, used to lay out the JSON  <br /></td></tr>
 <tr class="separator:af3e4c284f506e95d236435d098a8aff1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a086c1c0c645060250c20f3ff45624507" id="r_a086c1c0c645060250c20f3ff45624507"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#a086c1c0c645060250c20f3ff45624507">name</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:a086c1c0c645060250c20f3ff45624507"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of the archive  <br /></td></tr>
+<tr class="memdesc:a086c1c0c645060250c20f3ff45624507"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of the entry in the archive  <br /></td></tr>
 <tr class="separator:a086c1c0c645060250c20f3ff45624507"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae49757caacda8dec6dd21fa70ebceb1e" id="r_ae49757caacda8dec6dd21fa70ebceb1e"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#ae49757caacda8dec6dd21fa70ebceb1e">modifiedUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:ae49757caacda8dec6dd21fa70ebceb1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">modification date in UTC  <br /></td></tr>
-<tr class="separator:ae49757caacda8dec6dd21fa70ebceb1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2674cbc81e3ffaea41ad1c299e4f623e" id="r_a2674cbc81e3ffaea41ad1c299e4f623e"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#a2674cbc81e3ffaea41ad1c299e4f623e">modified</a> = { 0 }</td></tr>
-<tr class="memdesc:a2674cbc81e3ffaea41ad1c299e4f623e"><td class="mdescLeft">&#160;</td><td class="mdescRight">modification date as a FAT date stores it, local time; null when the source is UTC  <br /></td></tr>
-<tr class="separator:a2674cbc81e3ffaea41ad1c299e4f623e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa24a318a8ee970943d7feab3db1a52f6" id="r_aa24a318a8ee970943d7feab3db1a52f6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#aa24a318a8ee970943d7feab3db1a52f6">modifiedPrecision</a> = <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a></td></tr>
-<tr class="memdesc:aa24a318a8ee970943d7feab3db1a52f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">precision of the source: a FILETIME, or the second (FAT or text date)  <br /></td></tr>
+<tr class="memitem:a1ef4e6fbfcb10ff82958e7224d94c3a1" id="r_a1ef4e6fbfcb10ff82958e7224d94c3a1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#a1ef4e6fbfcb10ff82958e7224d94c3a1">secondString</a></td></tr>
+<tr class="memdesc:a1ef4e6fbfcb10ff82958e7224d94c3a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">a second string after the name, of unknown meaning (libfwsi's "String2")  <br /></td></tr>
+<tr class="separator:a1ef4e6fbfcb10ff82958e7224d94c3a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11c703e23e7e0a08d693c841144e708d" id="r_a11c703e23e7e0a08d693c841144e708d"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#a11c703e23e7e0a08d693c841144e708d">modifiedAsWritten</a> = { 0 }</td></tr>
+<tr class="separator:a11c703e23e7e0a08d693c841144e708d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa24a318a8ee970943d7feab3db1a52f6" id="r_aa24a318a8ee970943d7feab3db1a52f6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#aa24a318a8ee970943d7feab3db1a52f6">modifiedPrecision</a> = <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2ac22cf8376b1893dcfcef0649fe1a7d87">Precision::Second</a></td></tr>
+<tr class="memdesc:aa24a318a8ee970943d7feab3db1a52f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">the text's: to the second, to the minute under XP  <br /></td></tr>
 <tr class="separator:aa24a318a8ee970943d7feab3db1a52f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae49757caacda8dec6dd21fa70ebceb1e" id="r_ae49757caacda8dec6dd21fa70ebceb1e"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#ae49757caacda8dec6dd21fa70ebceb1e">modifiedUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:ae49757caacda8dec6dd21fa70ebceb1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">the entry's modification, UTC, in the layout of the archives read through libarchive  <br /></td></tr>
+<tr class="separator:ae49757caacda8dec6dd21fa70ebceb1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adeaf21700275f6813c8f21e6dd454bd3" id="r_adeaf21700275f6813c8f21e6dd454bd3"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#adeaf21700275f6813c8f21e6dd454bd3">uncompressedSize</a> = 0</td></tr>
+<tr class="memdesc:adeaf21700275f6813c8f21e6dd454bd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">the entry's size (not in the XP layout)  <br /></td></tr>
+<tr class="separator:adeaf21700275f6813c8f21e6dd454bd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5469f6aa92eb4cdb6efede8be0c5dea" id="r_ae5469f6aa92eb4cdb6efede8be0c5dea"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#ae5469f6aa92eb4cdb6efede8be0c5dea">compressedSize</a> = 0</td></tr>
+<tr class="memdesc:ae5469f6aa92eb4cdb6efede8be0c5dea"><td class="mdescLeft">&#160;</td><td class="mdescRight">its size in the archive  <br /></td></tr>
+<tr class="separator:ae5469f6aa92eb4cdb6efede8be0c5dea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5704b372afd32b35535a0f62fc8e9414" id="r_a5704b372afd32b35535a0f62fc8e9414"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#a5704b372afd32b35535a0f62fc8e9414">compressionMethod</a> = 0</td></tr>
+<tr class="memdesc:a5704b372afd32b35535a0f62fc8e9414"><td class="mdescLeft">&#160;</td><td class="mdescRight">the ZIP method: 0 stored, 8 deflate  <br /></td></tr>
+<tr class="separator:a5704b372afd32b35535a0f62fc8e9414"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade426b1ff7ed9f1be89eb47b656a7c36" id="r_ade426b1ff7ed9f1be89eb47b656a7c36"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structArchiveFileContent.html#ade426b1ff7ed9f1be89eb47b656a7c36">crc32</a> = 0</td></tr>
+<tr class="memdesc:ade426b1ff7ed9f1be89eb47b656a7c36"><td class="mdescLeft">&#160;</td><td class="mdescRight">the entry's CRC-32, 0 when not available  <br /></td></tr>
+<tr class="separator:ade426b1ff7ed9f1be89eb47b656a7c36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_structIShellItem"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_structIShellItem')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="structIShellItem.html">IShellItem</a></td></tr>
 <tr class="memitem:ae8376848b220c8a6df3e43d86671bada inherit pub_attribs_structIShellItem" id="r_ae8376848b220c8a6df3e43d86671bada"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structIShellItem.html#ae8376848b220c8a6df3e43d86671bada">level</a> = 0</td></tr>
 <tr class="memdesc:ae8376848b220c8a6df3e43d86671bada inherit pub_attribs_structIShellItem"><td class="mdescLeft">&#160;</td><td class="mdescRight">depth in the tree of shell items, used to lay out the JSON  <br /></td></tr>
@@ -181,10 +195,11 @@ Public Attributes</h2></td></tr>
 <p>Reads the item. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>the bytes to parse </td></tr>
-    <tr><td class="paramname">_level</td><td>depth in the tree of elements, used to lay out the output JSON </td></tr>
+    <tr><td class="paramname">_level</td><td>depth in the tree of elements, used to lay out the output JSON</td></tr>
   </table>
   </dd>
 </dl>
+<p>A file or folder inside an archive, as Explorer shows it. THE LAYOUTS. A ZIP is read by Explorer's own ZIP folder: the date is a text, at 0x24 since Windows 10 at least, at 0x18 under Windows XP, and the layout is told by finding a date there. Any other archive Windows 11 opens (7z, tar…) is read through libarchive, whose item holds a FILETIME and the name (isReaderArchiveItem). The bytes at 0x08 and 0x10 are the entry's sizes, not dates: they were read as a FAT date and as a FILETIME, which gave, for any file with content, a date taken from its sizes and the date text in place of the name (B-029, a real machine's "\x10\x01 01/01/1980  00:00:00"); a folder, emulated by Explorer, has no sizes, which hid the defect on the test VM. THE DATE HAS NO TIME ZONE. It is the archive entry's own date — a ZIP entry keeps the clock time of the machine that made the archive — which Explorer copies as it is. Measured on the test VM (B-028): an entry dated 13:00 in a ZIP gives 13:00 here, whatever the zone it was made in. It is given as written, without offset. </p>
 
 </div>
 </div>
@@ -218,6 +233,54 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="ae5469f6aa92eb4cdb6efede8be0c5dea" name="ae5469f6aa92eb4cdb6efede8be0c5dea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae5469f6aa92eb4cdb6efede8be0c5dea">&#9670;&#160;</a></span>compressedSize</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t ArchiveFileContent::compressedSize = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>its size in the archive </p>
+
+</div>
+</div>
+<a id="a5704b372afd32b35535a0f62fc8e9414" name="a5704b372afd32b35535a0f62fc8e9414"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5704b372afd32b35535a0f62fc8e9414">&#9670;&#160;</a></span>compressionMethod</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t ArchiveFileContent::compressionMethod = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the ZIP method: 0 stored, 8 deflate </p>
+
+</div>
+</div>
+<a id="ade426b1ff7ed9f1be89eb47b656a7c36" name="ade426b1ff7ed9f1be89eb47b656a7c36"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ade426b1ff7ed9f1be89eb47b656a7c36">&#9670;&#160;</a></span>crc32</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t ArchiveFileContent::crc32 = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the entry's CRC-32, 0 when not available </p>
+
+</div>
+</div>
 <a id="af3e4c284f506e95d236435d098a8aff1" name="af3e4c284f506e95d236435d098a8aff1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af3e4c284f506e95d236435d098a8aff1">&#9670;&#160;</a></span>isPresent</h2>
 
@@ -234,19 +297,18 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a2674cbc81e3ffaea41ad1c299e4f623e" name="a2674cbc81e3ffaea41ad1c299e4f623e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2674cbc81e3ffaea41ad1c299e4f623e">&#9670;&#160;</a></span>modified</h2>
+<a id="a11c703e23e7e0a08d693c841144e708d" name="a11c703e23e7e0a08d693c841144e708d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11c703e23e7e0a08d693c841144e708d">&#9670;&#160;</a></span>modifiedAsWritten</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">FILETIME ArchiveFileContent::modified = { 0 }</td>
+          <td class="memname">FILETIME ArchiveFileContent::modifiedAsWritten = { 0 }</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>modification date as a FAT date stores it, local time; null when the source is UTC </p>
+<p>The entry's modification as the archive holds it: the clock time of the machine that made the archive, in NO known time zone (see the constructor). </p>
 
 </div>
 </div>
@@ -257,12 +319,12 @@ Public Attributes</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> ArchiveFileContent::modifiedPrecision = <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a></td>
+          <td class="memname"><a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> ArchiveFileContent::modifiedPrecision = <a class="el" href="tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2ac22cf8376b1893dcfcef0649fe1a7d87">Precision::Second</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>precision of the source: a FILETIME, or the second (FAT or text date) </p>
+<p>the text's: to the second, to the minute under XP </p>
 
 </div>
 </div>
@@ -278,7 +340,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>modification date in UTC </p>
+<p>the entry's modification, UTC, in the layout of the archives read through libarchive </p>
 
 </div>
 </div>
@@ -294,7 +356,39 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>name of the archive </p>
+<p>name of the entry in the archive </p>
+
+</div>
+</div>
+<a id="a1ef4e6fbfcb10ff82958e7224d94c3a1" name="a1ef4e6fbfcb10ff82958e7224d94c3a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ef4e6fbfcb10ff82958e7224d94c3a1">&#9670;&#160;</a></span>secondString</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring ArchiveFileContent::secondString</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>a second string after the name, of unknown meaning (libfwsi's "String2") </p>
+
+</div>
+</div>
+<a id="adeaf21700275f6813c8f21e6dd454bd3" name="adeaf21700275f6813c8f21e6dd454bd3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adeaf21700275f6813c8f21e6dd454bd3">&#9670;&#160;</a></span>uncompressedSize</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t ArchiveFileContent::uncompressedSize = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the entry's size (not in the XP layout) </p>
 
 </div>
 </div>

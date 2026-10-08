@@ -10,7 +10,7 @@ var raw__hive_8h =
     [ "RawHiveProgressFn", "raw__hive_8h.html#a8077cabec9441f4ac6617ed5bbe50d02", null ],
     [ "applyNtfsFixup", "raw__hive_8h.html#ab0f5ca400aaa1626345f2f1bf4b7f5fa", null ],
     [ "ExtractDirectoryRaw", "raw__hive_8h.html#a8d83fd6d25b9df001deec0679103027a", null ],
-    [ "ExtractDirectoryTreeRaw", "raw__hive_8h.html#a187df02989f72f88af784e873d740b05", null ],
+    [ "ExtractDirectoryTreeRaw", "raw__hive_8h.html#a0c2b3ea90ce0efcd5ff5e220002d2399", null ],
     [ "ExtractFileRaw", "raw__hive_8h.html#aff3f1529d81703425b03fe383f20d88d", null ],
     [ "ExtractFilesRaw", "raw__hive_8h.html#a05a06ee1bac073498c6c086ac1f6c925", null ],
     [ "ExtractStreamRaw", "raw__hive_8h.html#a79a9fccb4a4b062049187aede1ca5636", null ],
@@ -19,5 +19,7 @@ var raw__hive_8h =
     [ "ListDirectoryRaw", "raw__hive_8h.html#a4bc3af8df20ef0f72d1b33dfacc078cd", null ],
     [ "RawHiveSetProgress", "raw__hive_8h.html#a7c6fcb004a257a7b9bfb351d435286b7", null ],
     [ "RawHiveSetVerbose", "raw__hive_8h.html#a4f20293fac920e310bfb3c0342a01348", null ],
-    [ "RawHiveTimes", "raw__hive_8h.html#a76c0a8bbc2520c48d139b83d02f303e0", null ]
+    [ "RawHiveTimes", "raw__hive_8h.html#a76c0a8bbc2520c48d139b83d02f303e0", null ],
+    [ "RawVolumesClose", "raw__hive_8h.html#acc8af4f01e18e78112f44f8c57b3954c", null ],
+    [ "RawVolumesOpen", "raw__hive_8h.html#a4da849a36c8a99b102f3f15b6d131d34", null ]
 ];

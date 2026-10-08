@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['link_0',['Link',['../structMftEntry_1_1Link.html',1,'MftEntry']]],
-  ['linkflags_1',['LinkFlags',['../structLinkFlags.html',1,'']]]
+  ['knownnetwork_0',['KnownNetwork',['../structKnownNetwork.html',1,'']]],
+  ['knownnetworks_1',['KnownNetworks',['../classKnownNetworks.html',1,'']]]
 ];

@@ -1,0 +1,11 @@
+var shortcuts_8h =
+[
+    [ "ShortcutFolder", "structShortcutFolder.html", "structShortcutFolder" ],
+    [ "ShortcutLocation", "structShortcutLocation.html", "structShortcutLocation" ],
+    [ "ShortcutItem", "structShortcutItem.html", "structShortcutItem" ],
+    [ "Shortcuts", "classShortcuts.html", "classShortcuts" ],
+    [ "shortcutLocations", "shortcuts_8h.html#a361a20f8d67f5bf0bff41c51e0b25577", null ],
+    [ "SHORTCUT_FOLDER_COUNT", "shortcuts_8h.html#a017b6349886a745a972a0e68ec08ad1e", null ],
+    [ "SHORTCUT_FOLDERS", "shortcuts_8h.html#a4a192ca5f99bc6a97fca527da73b6a09", null ],
+    [ "SHORTCUT_TREE_DEPTH", "shortcuts_8h.html#a3cef2ace4a427d6f9f72281cfa71639b", null ]
+];

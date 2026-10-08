@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -125,11 +125,31 @@ Functions</h2></td></tr>
 <tr class="separator:a6aca12cc0b8b76d011ecdd2dc65cb3aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae65285bc40f0c829e47e0894a7bc227d" id="r_ae65285bc40f0c829e47e0894a7bc227d"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structRunningMachine.html">RunningMachine</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="running__machine_8h.html#ae65285bc40f0c829e47e0894a7bc227d">runningMachine</a> ()</td></tr>
 <tr class="separator:ae65285bc40f0c829e47e0894a7bc227d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fcb67eb8458577b505d08d504db6530" id="r_a7fcb67eb8458577b505d08d504db6530"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="running__machine_8h.html#a7fcb67eb8458577b505d08d504db6530">fixedNtfsVolumes</a> ()</td></tr>
+<tr class="separator:a7fcb67eb8458577b505d08d504db6530"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>What the conversion needs to know of the RUNNING examined machine, observed live and recorded as a sealed snapshot. </p>
 <p>WHY. A few facts are read from the running system and not from the evidence: the system drive, the volumes by serial number (to restore the drive letter a <a class="el" href="structPrefetch.html">Prefetch</a> file cites), and — when the SYSTEM hive cannot be read — the time zone and the ANSI code page. Read at conversion time, they would be those of the ANALYSIS workstation under &ndash;convert: a <a class="el" href="structPrefetch.html">Prefetch</a> path on the wrong letter, dates shifted by the analyst's offset, all of it valid JSON and false. They are therefore observed once, in the live phase, written to <code>exhibits\live\running-machine.json</code>, and every mode reads them back from there: one code path for the three. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a7fcb67eb8458577b505d08d504db6530" name="a7fcb67eb8458577b505d08d504db6530"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7fcb67eb8458577b505d08d504db6530">&#9670;&#160;</a></span>fixedNtfsVolumes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; std::wstring &gt; fixedNtfsVolumes </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The fixed NTFS volumes of the examined machine, as observed: those WAC reads raw beyond the system volume (binaries, recycle bins). Removable volumes — the collection medium among them — are left out. </p><dl class="section return"><dt>Returns</dt><dd>their mount points, "C:", "D:"…; the system drive alone if none was observed </dd></dl>
+
+</div>
+</div>
 <a id="ae65285bc40f0c829e47e0894a7bc227d" name="ae65285bc40f0c829e47e0894a7bc227d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae65285bc40f0c829e47e0894a7bc227d">&#9670;&#160;</a></span>runningMachine()</h2>
 

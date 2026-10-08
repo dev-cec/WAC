@@ -14,7 +14,7 @@ var structRawHiveFingerprints =
     [ "fnModifiedUtc", "structRawHiveFingerprints.html#ada029b4bf9a4d9ae980e875c9070ea7c", null ],
     [ "leadingSparseBytes", "structRawHiveFingerprints.html#a2ccad4ebeb9d600b51ce6e628a186e78", null ],
     [ "md5", "structRawHiveFingerprints.html#a977602fceac05b016bf89e936e8e57b1", null ],
-    [ "mftEntry", "structRawHiveFingerprints.html#a8b8fecf9df975b08ae679777df1c77ca", null ],
+    [ "mftEntry", "structRawHiveFingerprints.html#a1b9a65e89f759e5f1155c994deddf31e", null ],
     [ "mftModifiedUtc", "structRawHiveFingerprints.html#a2a93cddf8583586e96595c3b6d02724b", null ],
     [ "modifiedUtc", "structRawHiveFingerprints.html#a270ddbbddbe855e9f14e8347d241d805", null ],
     [ "peSizeOfImage", "structRawHiveFingerprints.html#a13542870bfd02b47133a78194c79358d", null ],

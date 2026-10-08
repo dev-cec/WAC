@@ -1,9 +1,22 @@
 var searchData=
 [
-  ['event_0',['Event',['../structEvent.html',1,'']]],
-  ['events_1',['Events',['../structEvents.html',1,'']]],
-  ['evtxrecord_2',['EvtxRecord',['../structEvtxRecord.html',1,'']]],
-  ['evtxsummary_3',['EvtxSummary',['../structEvtxSummary.html',1,'']]],
-  ['exhibitreader_4',['ExhibitReader',['../classExhibitReader.html',1,'']]],
-  ['exhibitstorecheck_5',['ExhibitStoreCheck',['../structExhibitStoreCheck.html',1,'']]]
+  ['emails_0',['Emails',['../classEmails.html',1,'']]],
+  ['errorreport_1',['ErrorReport',['../structErrorReport.html',1,'']]],
+  ['errorreports_2',['ErrorReports',['../classErrorReports.html',1,'']]],
+  ['esecell_3',['EseCell',['../structEseCell.html',1,'']]],
+  ['esecolumn_4',['EseColumn',['../structEseColumn.html',1,'']]],
+  ['esedatabase_5',['EseDatabase',['../classEseDatabase.html',1,'']]],
+  ['esereplay_6',['EseReplay',['../structEseReplay.html',1,'']]],
+  ['esetable_7',['EseTable',['../structEseTable.html',1,'']]],
+  ['event_8',['Event',['../structEvent.html',1,'']]],
+  ['eventlogchannel_9',['EventLogChannel',['../structEventLogChannel.html',1,'']]],
+  ['eventlogconfiguration_10',['EventLogConfiguration',['../classEventLogConfiguration.html',1,'']]],
+  ['events_11',['Events',['../structEvents.html',1,'']]],
+  ['evtxrecord_12',['EvtxRecord',['../structEvtxRecord.html',1,'']]],
+  ['evtxsummary_13',['EvtxSummary',['../structEvtxSummary.html',1,'']]],
+  ['exhibitreader_14',['ExhibitReader',['../classExhibitReader.html',1,'']]],
+  ['exhibitstorecheck_15',['ExhibitStoreCheck',['../structExhibitStoreCheck.html',1,'']]],
+  ['explorerinput_16',['ExplorerInput',['../structExplorerInput.html',1,'']]],
+  ['explorerrecentdoc_17',['ExplorerRecentDoc',['../structExplorerRecentDoc.html',1,'']]],
+  ['explorerrecentdocs_18',['ExplorerRecentDocs',['../classExplorerRecentDocs.html',1,'']]]
 ];

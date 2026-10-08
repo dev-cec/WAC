@@ -1,4 +1,25 @@
 var searchData=
 [
-  ['quickdigest5_0',['QuickDigest5',['../classQuickDigest5.html',1,'']]]
+  ['packagesignature_0',['PackageSignature',['../structPackageSignature.html',1,'']]],
+  ['peanalyser_1',['PeAnalyser',['../classPeAnalyser.html',1,'']]],
+  ['peresource_2',['PeResource',['../classPeResource.html',1,'']]],
+  ['persistence_3',['Persistence',['../classPersistence.html',1,'']]],
+  ['persistenceentry_4',['PersistenceEntry',['../structPersistenceEntry.html',1,'']]],
+  ['powershellcommand_5',['PowerShellCommand',['../structPowerShellCommand.html',1,'']]],
+  ['powershellhistories_6',['PowerShellHistories',['../classPowerShellHistories.html',1,'']]],
+  ['powershellhistory_7',['PowerShellHistory',['../structPowerShellHistory.html',1,'']]],
+  ['prefetch_8',['Prefetch',['../structPrefetch.html',1,'']]],
+  ['prefetchs_9',['Prefetchs',['../structPrefetchs.html',1,'']]],
+  ['process_10',['Process',['../structProcess.html',1,'']]],
+  ['processes_11',['Processes',['../structProcesses.html',1,'']]],
+  ['programusage_12',['ProgramUsage',['../structProgramUsage.html',1,'']]],
+  ['programusages_13',['ProgramUsages',['../classProgramUsages.html',1,'']]],
+  ['property_14',['Property',['../structProperty.html',1,'']]],
+  ['pstattachment_15',['PstAttachment',['../structPstAttachment.html',1,'']]],
+  ['pstfile_16',['PstFile',['../classPstFile.html',1,'']]],
+  ['pstmessage_17',['PstMessage',['../structPstMessage.html',1,'']]],
+  ['pstnode_18',['PstNode',['../structPstNode.html',1,'']]],
+  ['pstrecipient_19',['PstRecipient',['../structPstRecipient.html',1,'']]],
+  ['pstsubnode_20',['PstSubnode',['../structPstSubnode.html',1,'']]],
+  ['pstvalue_21',['PstValue',['../structPstValue.html',1,'']]]
 ];

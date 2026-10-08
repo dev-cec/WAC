@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -127,17 +127,11 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:aee25527734903ddac642d84517941133" id="r_aee25527734903ddac642d84517941133"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBeef0004.html#aee25527734903ddac642d84517941133">creationDate</a> = { 0 }</td></tr>
-<tr class="memdesc:aee25527734903ddac642d84517941133"><td class="mdescLeft">&#160;</td><td class="mdescRight">creation date  <br /></td></tr>
-<tr class="separator:aee25527734903ddac642d84517941133"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aadd2f5be135d9bb4fbb5e2513894aadb" id="r_aadd2f5be135d9bb4fbb5e2513894aadb"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBeef0004.html#aadd2f5be135d9bb4fbb5e2513894aadb">creationDateUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:aadd2f5be135d9bb4fbb5e2513894aadb"><td class="mdescLeft">&#160;</td><td class="mdescRight">creation date in UTC  <br /></td></tr>
+<tr class="memdesc:aadd2f5be135d9bb4fbb5e2513894aadb"><td class="mdescLeft">&#160;</td><td class="mdescRight">creation date, UTC (a FAT-format date Windows writes in UTC)  <br /></td></tr>
 <tr class="separator:aadd2f5be135d9bb4fbb5e2513894aadb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8348fad99be4dcb479f76e9c57e934f3" id="r_a8348fad99be4dcb479f76e9c57e934f3"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBeef0004.html#a8348fad99be4dcb479f76e9c57e934f3">accessedDate</a> = { 0 }</td></tr>
-<tr class="memdesc:a8348fad99be4dcb479f76e9c57e934f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">access date  <br /></td></tr>
-<tr class="separator:a8348fad99be4dcb479f76e9c57e934f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61b9365fd5c5e7ec4194ae2c1150e5f6" id="r_a61b9365fd5c5e7ec4194ae2c1150e5f6"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBeef0004.html#a61b9365fd5c5e7ec4194ae2c1150e5f6">accessedDateUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:a61b9365fd5c5e7ec4194ae2c1150e5f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">access date in UTC  <br /></td></tr>
+<tr class="memdesc:a61b9365fd5c5e7ec4194ae2c1150e5f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">access date, UTC (idem)  <br /></td></tr>
 <tr class="separator:a61b9365fd5c5e7ec4194ae2c1150e5f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb11899bc275cc6593c9eff3741d3cbf" id="r_afb11899bc275cc6593c9eff3741d3cbf"><td class="memItemLeft" align="right" valign="top">unsigned short int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBeef0004.html#afb11899bc275cc6593c9eff3741d3cbf">ExtensionVersion</a> =0</td></tr>
 <tr class="memdesc:afb11899bc275cc6593c9eff3741d3cbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">version of the block: says which Windows wrote it  <br /></td></tr>
@@ -250,22 +244,6 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a8348fad99be4dcb479f76e9c57e934f3" name="a8348fad99be4dcb479f76e9c57e934f3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8348fad99be4dcb479f76e9c57e934f3">&#9670;&#160;</a></span>accessedDate</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME Beef0004::accessedDate = { 0 }</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>access date </p>
-
-</div>
-</div>
 <a id="a61b9365fd5c5e7ec4194ae2c1150e5f6" name="a61b9365fd5c5e7ec4194ae2c1150e5f6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a61b9365fd5c5e7ec4194ae2c1150e5f6">&#9670;&#160;</a></span>accessedDateUtc</h2>
 
@@ -278,23 +256,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>access date in UTC </p>
-
-</div>
-</div>
-<a id="aee25527734903ddac642d84517941133" name="aee25527734903ddac642d84517941133"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee25527734903ddac642d84517941133">&#9670;&#160;</a></span>creationDate</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME Beef0004::creationDate = { 0 }</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>creation date </p>
+<p>access date, UTC (idem) </p>
 
 </div>
 </div>
@@ -310,7 +272,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>creation date in UTC </p>
+<p>creation date, UTC (a FAT-format date Windows writes in UTC) </p>
 
 </div>
 </div>

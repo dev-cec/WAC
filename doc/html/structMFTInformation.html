@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -121,12 +121,12 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a9a2d806c560501a2c0c02086c16f1812" id="r_a9a2d806c560501a2c0c02086c16f1812"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMFTInformation.html#a9a2d806c560501a2c0c02086c16f1812">entryIndex</a> = 0</td></tr>
-<tr class="memdesc:a9a2d806c560501a2c0c02086c16f1812"><td class="mdescLeft">&#160;</td><td class="mdescRight">record number in the $MFT  <br /></td></tr>
-<tr class="separator:a9a2d806c560501a2c0c02086c16f1812"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2197869192111fd0084761d3cb5eb3d" id="r_ad2197869192111fd0084761d3cb5eb3d"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMFTInformation.html#ad2197869192111fd0084761d3cb5eb3d">sequenceNumber</a> = 0</td></tr>
-<tr class="memdesc:ad2197869192111fd0084761d3cb5eb3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">sequence number, which a reuse of the record increments  <br /></td></tr>
-<tr class="separator:ad2197869192111fd0084761d3cb5eb3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefb585212e169548ac7509c34eecd1d0" id="r_aefb585212e169548ac7509c34eecd1d0"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMFTInformation.html#aefb585212e169548ac7509c34eecd1d0">entryIndex</a> = 0</td></tr>
+<tr class="memdesc:aefb585212e169548ac7509c34eecd1d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">record number in the $MFT (48 bits)  <br /></td></tr>
+<tr class="separator:aefb585212e169548ac7509c34eecd1d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96aaf5a8e34fafdf0e8af1744d637a5f" id="r_a96aaf5a8e34fafdf0e8af1744d637a5f"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMFTInformation.html#a96aaf5a8e34fafdf0e8af1744d637a5f">sequenceNumber</a> = 0</td></tr>
+<tr class="memdesc:a96aaf5a8e34fafdf0e8af1744d637a5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">sequence number, which a reuse of the record increments  <br /></td></tr>
+<tr class="separator:a96aaf5a8e34fafdf0e8af1744d637a5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A file reference in the $MFT: what identifies a file on the volume independently of its name. </p>
@@ -175,7 +175,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>Reads a reference from a <a class="el" href="structPrefetch.html">Prefetch</a> file. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">data</td><td>the six bytes of the reference. </td></tr>
+    <tr><td class="paramname">data</td><td>the eight bytes of the reference; the caller checks they are in the buffer. </td></tr>
   </table>
   </dd>
 </dl>
@@ -221,30 +221,30 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a9a2d806c560501a2c0c02086c16f1812" name="a9a2d806c560501a2c0c02086c16f1812"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9a2d806c560501a2c0c02086c16f1812">&#9670;&#160;</a></span>entryIndex</h2>
+<a id="aefb585212e169548ac7509c34eecd1d0" name="aefb585212e169548ac7509c34eecd1d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aefb585212e169548ac7509c34eecd1d0">&#9670;&#160;</a></span>entryIndex</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">unsigned int MFTInformation::entryIndex = 0</td>
+          <td class="memname">uint64_t MFTInformation::entryIndex = 0</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>record number in the $MFT </p>
+<p>record number in the $MFT (48 bits) </p>
 
 </div>
 </div>
-<a id="ad2197869192111fd0084761d3cb5eb3d" name="ad2197869192111fd0084761d3cb5eb3d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad2197869192111fd0084761d3cb5eb3d">&#9670;&#160;</a></span>sequenceNumber</h2>
+<a id="a96aaf5a8e34fafdf0e8af1744d637a5f" name="a96aaf5a8e34fafdf0e8af1744d637a5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96aaf5a8e34fafdf0e8af1744d637a5f">&#9670;&#160;</a></span>sequenceNumber</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">unsigned int MFTInformation::sequenceNumber = 0</td>
+          <td class="memname">uint16_t MFTInformation::sequenceNumber = 0</td>
         </tr>
       </table>
 </div><div class="memdoc">

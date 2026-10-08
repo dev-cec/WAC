@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -110,9 +110,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a6555d0ad6ac850de43056158904421b7" id="r_a6555d0ad6ac850de43056158904421b7"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structStoredExhibit.html#a6555d0ad6ac850de43056158904421b7">sourcePath</a></td></tr>
 <tr class="memdesc:a6555d0ad6ac850de43056158904421b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">the file on the examined machine ("X:\…"), as recorded  <br /></td></tr>
 <tr class="separator:a6555d0ad6ac850de43056158904421b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90d27f95b26b176836c28e7e64abbdeb" id="r_a90d27f95b26b176836c28e7e64abbdeb"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structStoredExhibit.html#a90d27f95b26b176836c28e7e64abbdeb">file</a></td></tr>
-<tr class="memdesc:a90d27f95b26b176836c28e7e64abbdeb"><td class="mdescLeft">&#160;</td><td class="mdescRight">the file holding its content, in the exhibit store; empty if not stored  <br /></td></tr>
-<tr class="separator:a90d27f95b26b176836c28e7e64abbdeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6f0edb9f7591a2b2b84efecc7686985" id="r_ab6f0edb9f7591a2b2b84efecc7686985"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structStoredExhibit.html#ab6f0edb9f7591a2b2b84efecc7686985">workingFile</a></td></tr>
+<tr class="memdesc:ab6f0edb9f7591a2b2b84efecc7686985"><td class="mdescLeft">&#160;</td><td class="mdescRight">its WORKING copy, the only file to read; empty if its content was not stored  <br /></td></tr>
+<tr class="separator:ab6f0edb9f7591a2b2b84efecc7686985"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7ff94f59dce5b5360f124a04fa488a00" id="r_a7ff94f59dce5b5360f124a04fa488a00"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structStoredExhibit.html#a7ff94f59dce5b5360f124a04fa488a00">contentStored</a> = true</td></tr>
 <tr class="memdesc:a7ff94f59dce5b5360f124a04fa488a00"><td class="mdescLeft">&#160;</td><td class="mdescRight">false: fingerprinted and authenticated only  <br /></td></tr>
 <tr class="separator:a7ff94f59dce5b5360f124a04fa488a00"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,22 +165,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>false: fingerprinted and authenticated only </p>
-
-</div>
-</div>
-<a id="a90d27f95b26b176836c28e7e64abbdeb" name="a90d27f95b26b176836c28e7e64abbdeb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a90d27f95b26b176836c28e7e64abbdeb">&#9670;&#160;</a></span>file</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring StoredExhibit::file</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>the file holding its content, in the exhibit store; empty if not stored </p>
 
 </div>
 </div>
@@ -273,6 +257,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>the file on the examined machine ("X:\…"), as recorded </p>
+
+</div>
+</div>
+<a id="ab6f0edb9f7591a2b2b84efecc7686985" name="ab6f0edb9f7591a2b2b84efecc7686985"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6f0edb9f7591a2b2b84efecc7686985">&#9670;&#160;</a></span>workingFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring StoredExhibit::workingFile</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>its WORKING copy, the only file to read; empty if its content was not stored </p>
 
 </div>
 </div>

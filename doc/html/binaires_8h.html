@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -133,7 +133,7 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Fingerprinting and collection of the files cited by artefacts. </p>
-<p>WHY THIS MODULE. With <code>--binary</code>, WAC fingerprints every file an artefact points to: executable of a process, a service or a scheduled task, files loaded by a program (<a class="el" href="structPrefetch.html">Prefetch</a>), <a class="el" href="structShimcache.html">Shimcache</a> and Amcache entries, a shortcut's target. These fingerprints used to be computed by OPENING each file through the API: the only file read WAC still made on the examined machine, and one that updates the last-access date where Windows maintains it. They are now computed by reading the volume raw: no file is opened.</p>
+<p>WHY THIS MODULE. With <code>--binary</code>, WAC fingerprints every file an artefact points to: executable of a process, a service or a scheduled task, files loaded by a program (<a class="el" href="structPrefetch.html">Prefetch</a>), <a class="el" href="structShimcache.html">Shimcache</a> and <a class="el" href="structAmcache.html">Amcache</a> entries, a shortcut's target. These fingerprints used to be computed by OPENING each file through the API: the only file read WAC still made on the examined machine, and one that updates the last-access date where Windows maintains it. They are now computed by reading the volume raw: no file is opened.</p>
 <p>COLLECTION. A fingerprint is enough to query a public database without sending it anything, but it says nothing about a binary nobody knows — the case that matters to the investigation — and a binary left behind may be gone by the time a detection comes in. The executables, libraries, drivers, scripts and Office documents able to carry macros that are cited are therefore COPIED into the exhibit store, with their three fingerprints, like any other exhibit. The other cited files (documents without macros, data) are only hashed: they are not payloads, and copying them would turn the collection into a copy of the user's documents.</p>
 <p>AUTHENTIC MICROSOFT BINARIES. An executable whose Microsoft authenticity is verified — digest listed in a Windows catalog with a valid Microsoft signature, or valid embedded Microsoft signature — is hashed without being collected: identical on every machine of the same build, it does not serve the investigation. The check is done in memory, with no API or service (see <a class="el" href="authenticode_8h.html" title="Microsoft authenticity of a binary, verified without any API.">authenticode.h</a>), and the catalogs that justified it go into the exhibit store.</p>
 <p>DEDUPLICATION. Identical content is stored only once: three identical copies of msedge.dll (Edge, EdgeCore, WebView2: 332 MB each) took 996 MB. The other paths are declared in the manifest as exhibits sharing that content (see ExhibitStoreAddDuplicate).</p>

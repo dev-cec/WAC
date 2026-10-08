@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -108,10 +108,10 @@ $(document).ready(function(){initNavTree('structUsnJournal.html',''); initResiza
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a00830c99cd67f39bdf26241954ec0f88" id="r_a00830c99cd67f39bdf26241954ec0f88"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsnJournal.html#a00830c99cd67f39bdf26241954ec0f88">getData</a> ()</td></tr>
-<tr class="separator:a00830c99cd67f39bdf26241954ec0f88"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a849de8bb1d0ad6e4932ad16ccf81327b" id="r_a849de8bb1d0ad6e4932ad16ccf81327b"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsnJournal.html#a849de8bb1d0ad6e4932ad16ccf81327b">toJson</a> (const <a class="el" href="structMft.html">Mft</a> &amp;mft)</td></tr>
-<tr class="separator:a849de8bb1d0ad6e4932ad16ccf81327b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac51638db3d354ada33a4c4b9de372227" id="r_ac51638db3d354ada33a4c4b9de372227"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsnJournal.html#ac51638db3d354ada33a4c4b9de372227">getData</a> (const std::wstring &amp;volume)</td></tr>
+<tr class="separator:ac51638db3d354ada33a4c4b9de372227"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a141c4be3718847a1f0bbb6869653f9c8" id="r_a141c4be3718847a1f0bbb6869653f9c8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsnJournal.html#a141c4be3718847a1f0bbb6869653f9c8">toJson</a> (<a class="el" href="classJsonArrayWriter.html">JsonArrayWriter</a> &amp;out, const <a class="el" href="structMft.html">Mft</a> &amp;mft) const</td></tr>
+<tr class="separator:a141c4be3718847a1f0bbb6869653f9c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad3175bbeef6205daa3ad83038ea73d1" id="r_aad3175bbeef6205daa3ad83038ea73d1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsnJournal.html#aad3175bbeef6205daa3ad83038ea73d1">clear</a> ()</td></tr>
 <tr class="memdesc:aad3175bbeef6205daa3ad83038ea73d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases the memory held by the records.  <br /></td></tr>
 <tr class="separator:aad3175bbeef6205daa3ad83038ea73d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -126,7 +126,7 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a7044fe8acade5aaa01c90331ccc152e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The change journal of the system volume, read from its exhibit. </p>
+<div class="textblock"><p>The change journal of one NTFS volume, read from its exhibit. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="aad3175bbeef6205daa3ad83038ea73d1" name="aad3175bbeef6205daa3ad83038ea73d1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aad3175bbeef6205daa3ad83038ea73d1">&#9670;&#160;</a></span>clear()</h2>
@@ -147,8 +147,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a00830c99cd67f39bdf26241954ec0f88" name="a00830c99cd67f39bdf26241954ec0f88"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a00830c99cd67f39bdf26241954ec0f88">&#9670;&#160;</a></span>getData()</h2>
+<a id="ac51638db3d354ada33a4c4b9de372227" name="ac51638db3d354ada33a4c4b9de372227"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac51638db3d354ada33a4c4b9de372227">&#9670;&#160;</a></span>getData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -156,17 +156,24 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">HRESULT UsnJournal::getData </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volume</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Reads the journal's exhibit and decodes its records. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND if the collection holds no journal (disabled on the machine, or not asked for) </dd></dl>
+<p>Reads the journal's exhibit of a volume and decodes its records. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volume</td><td>the volume, "C:", "G:"… </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND if the collection holds no journal (disabled on the machine, or not asked for) </dd></dl>
 
 </div>
 </div>
-<a id="a849de8bb1d0ad6e4932ad16ccf81327b" name="a849de8bb1d0ad6e4932ad16ccf81327b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a849de8bb1d0ad6e4932ad16ccf81327b">&#9670;&#160;</a></span>toJson()</h2>
+<a id="a141c4be3718847a1f0bbb6869653f9c8" name="a141c4be3718847a1f0bbb6869653f9c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a141c4be3718847a1f0bbb6869653f9c8">&#9670;&#160;</a></span>toJson()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -174,19 +181,30 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">HRESULT UsnJournal::toJson </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structMft.html">Mft</a> &amp;&#160;</td>
-          <td class="paramname"><em>mft</em></td><td>)</td>
+          <td class="paramtype"><a class="el" href="classJsonArrayWriter.html">JsonArrayWriter</a> &amp;&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const <a class="el" href="structMft.html">Mft</a> &amp;&#160;</td>
+          <td class="paramname"><em>mft</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Writes <code>usn_journal.json</code> as it goes, each file named by its full path. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Writes the volume's records into usn_journal.json as it goes, each file named by its full path. Every volume goes into the same file. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">mft</td><td>the $MFT of the same collection, loaded (<a class="el" href="structMft.html#aac898648c4381080c4a1cbc7d49df67c">Mft::getData</a>) </td></tr>
+    <tr><td class="paramname">out</td><td>the writer of usn_journal.json </td></tr>
+    <tr><td class="paramname">mft</td><td>the $MFT of the same volume, loaded (<a class="el" href="structMft.html#ab3d0b15bb632a628d5c61aa7d8ddd0e5">Mft::getData</a>) </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the result of the write </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS </dd></dl>
 
 </div>
 </div>

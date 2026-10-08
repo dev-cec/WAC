@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -143,7 +143,7 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Time zone of the EXAMINED machine.</p>
-<p>WHY THE HIVE RATHER THAN THE API. The Windows artefacts that store a local time (FAT dates, Amcache, BAM, shimcache, USBSTOR, <a class="el" href="structUserAssist.html">UserAssist</a>) can only be interpreted with the <b>suspect's</b> time zone. <code>GetTimeZoneInformation()</code> returns that of the machine running WAC: the same in a live collection, but wrong as soon as an image is analysed elsewhere. The source of authority is therefore <code>SYSTEM\CurrentControlSet\\Control\TimeZoneInformation</code>.</p>
+<p>WHY THE HIVE RATHER THAN THE API. The Windows artefacts that store a local time (dates of FAT volumes, setupapi.dev.log, OLE dates) — and the local dates WAC derives from every UTC one — can only be interpreted with the <b>suspect's</b> time zone. <code>GetTimeZoneInformation()</code> returns that of the machine running WAC: the same in a live collection, but wrong as soon as an image is analysed elsewhere. The source of authority is therefore <code>SYSTEM\CurrentControlSet\\Control\TimeZoneInformation</code>.</p>
 <p>A divergence between the two is a signal in itself: an image analysed on another machine, or a time zone changed since the collection. Both are therefore recorded in <code>investigation.json</code>. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="ae338973d7dbabcb52a81264280cb8aeb" name="ae338973d7dbabcb52a81264280cb8aeb"></a>

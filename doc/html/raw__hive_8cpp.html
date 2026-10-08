@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,7 +97,6 @@ $(document).ready(function(){initNavTree('raw__hive_8cpp.html',''); initResizabl
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">raw_hive.cpp File Reference</div></div>
@@ -107,6 +106,7 @@ $(document).ready(function(){initNavTree('raw__hive_8cpp.html',''); initResizabl
 <p>Raw NTFS reader: $MFT, attributes, data runs, directory indexes.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="raw__hive_8h_source.html">raw_hive.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;cstdint&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
@@ -119,6 +119,8 @@ $(document).ready(function(){initNavTree('raw__hive_8cpp.html',''); initResizabl
 <code>#include &lt;atomic&gt;</code><br />
 <code>#include &lt;thread&gt;</code><br />
 <code>#include &lt;memory&gt;</code><br />
+<code>#include &lt;mutex&gt;</code><br />
+<code>#include &lt;chrono&gt;</code><br />
 <code>#include &lt;ostream&gt;</code><br />
 <code>#include &lt;unordered_map&gt;</code><br />
 <code>#include &quot;<a class="el" href="quickdigest5_8h_source.html">quickdigest5.h</a>&quot;</code><br />
@@ -127,11 +129,6 @@ $(document).ready(function(){initNavTree('raw__hive_8cpp.html',''); initResizabl
 <code>#include &quot;<a class="el" href="xpress_8h_source.html">xpress.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="lzx_8h_source.html">lzx.h</a>&quot;</code><br />
 </div><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawReader_1_1Impl.html">RawReader::Impl</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ac62ab7e9783b47f29b324ab001678edd" id="r_ac62ab7e9783b47f29b324ab001678edd"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#ac62ab7e9783b47f29b324ab001678edd">RVLOG</a>(...)&#160;&#160;&#160;do{ if(g_verbose) fwprintf(stderr, __VA_ARGS__); }while(0)</td></tr>
@@ -140,6 +137,10 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a4da849a36c8a99b102f3f15b6d131d34" id="r_a4da849a36c8a99b102f3f15b6d131d34"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#a4da849a36c8a99b102f3f15b6d131d34">RawVolumesOpen</a> (const std::vector&lt; std::wstring &gt; &amp;letters)</td></tr>
+<tr class="separator:a4da849a36c8a99b102f3f15b6d131d34"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc8af4f01e18e78112f44f8c57b3954c" id="r_acc8af4f01e18e78112f44f8c57b3954c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#acc8af4f01e18e78112f44f8c57b3954c">RawVolumesClose</a> ()</td></tr>
+<tr class="separator:acc8af4f01e18e78112f44f8c57b3954c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f20293fac920e310bfb3c0342a01348" id="r_a4f20293fac920e310bfb3c0342a01348"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#a4f20293fac920e310bfb3c0342a01348">RawHiveSetVerbose</a> (bool on)</td></tr>
 <tr class="separator:a4f20293fac920e310bfb3c0342a01348"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a76c0a8bbc2520c48d139b83d02f303e0" id="r_a76c0a8bbc2520c48d139b83d02f303e0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structRawReadTimes.html">RawReadTimes</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#a76c0a8bbc2520c48d139b83d02f303e0">RawHiveTimes</a> ()</td></tr>
@@ -162,8 +163,8 @@ Functions</h2></td></tr>
 <tr class="separator:a4bc3af8df20ef0f72d1b33dfacc078cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe22436d45540b8c7265350f47eebf0d" id="r_afe22436d45540b8c7265350f47eebf0d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#afe22436d45540b8c7265350f47eebf0d">ExtractDirectoryRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, const std::wstring &amp;outDir, const std::vector&lt; std::wstring &gt; &amp;extensions, size_t *extracted, std::wstring *diagnostic, std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; *reading)</td></tr>
 <tr class="separator:afe22436d45540b8c7265350f47eebf0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa81aeb88ac0d8b47f7fb5467d92c5236" id="r_aa81aeb88ac0d8b47f7fb5467d92c5236"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#aa81aeb88ac0d8b47f7fb5467d92c5236">ExtractDirectoryTreeRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, const std::wstring &amp;outDir, const std::vector&lt; std::wstring &gt; &amp;extensions, size_t *extracted, unsigned maxDepth, std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; *reading)</td></tr>
-<tr class="separator:aa81aeb88ac0d8b47f7fb5467d92c5236"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a778c8c096d8a34efd268e6afac0c8cad" id="r_a778c8c096d8a34efd268e6afac0c8cad"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8cpp.html#a778c8c096d8a34efd268e6afac0c8cad">ExtractDirectoryTreeRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;dirPathOnVolume, const std::wstring &amp;outDir, const std::vector&lt; std::wstring &gt; &amp;extensions, size_t *extracted, unsigned maxDepth, std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; *reading, const std::vector&lt; std::wstring &gt; &amp;skipped)</td></tr>
+<tr class="separator:a778c8c096d8a34efd268e6afac0c8cad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Raw NTFS reader: $MFT, attributes, data runs, directory indexes. </p>
@@ -302,8 +303,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa81aeb88ac0d8b47f7fb5467d92c5236" name="aa81aeb88ac0d8b47f7fb5467d92c5236"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa81aeb88ac0d8b47f7fb5467d92c5236">&#9670;&#160;</a></span>ExtractDirectoryTreeRaw()</h2>
+<a id="a778c8c096d8a34efd268e6afac0c8cad" name="a778c8c096d8a34efd268e6afac0c8cad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a778c8c096d8a34efd268e6afac0c8cad">&#9670;&#160;</a></span>ExtractDirectoryTreeRaw()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -348,7 +349,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; *&#160;</td>
-          <td class="paramname"><em>reading</em> = <code>nullptr</code>&#160;</td>
+          <td class="paramname"><em>reading</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>skipped</em> = <code>{}</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -368,6 +375,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">extracted</td><td>receives the number of files extracted </td></tr>
     <tr><td class="paramname">maxDepth</td><td>guard against a cyclic or abnormal tree (a corrupt NTFS index could loop); 0 = no descent </td></tr>
     <tr><td class="paramname">reading</td><td>(optional) receives a record per file, fingerprints included: it is the source of the exhibit store manifest </td></tr>
+    <tr><td class="paramname">skipped</td><td>subdirectories not descended into, as paths on the volume (case ignored): those another artefact already extracts — the Start menu's Startup folder, extracted whole by the startup folders. Taken twice, a file would appear twice in the manifest. </td></tr>
   </table>
   </dd>
 </dl>
@@ -724,6 +732,49 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>the time spent so far, per activity </dd></dl>
+
+</div>
+</div>
+<a id="acc8af4f01e18e78112f44f8c57b3954c" name="acc8af4f01e18e78112f44f8c57b3954c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc8af4f01e18e78112f44f8c57b3954c">&#9670;&#160;</a></span>RawVolumesClose()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RawVolumesClose </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Closes the shared volumes and forgets their cache: at the end of the run, or between two phases that must see the volumes afresh. </p>
+
+</div>
+</div>
+<a id="a4da849a36c8a99b102f3f15b6d131d34" name="a4da849a36c8a99b102f3f15b6d131d34"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4da849a36c8a99b102f3f15b6d131d34">&#9670;&#160;</a></span>RawVolumesOpen()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT RawVolumesOpen </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>letters</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Opens the volumes once, as soon as they are detected, each with the cache of its directory indexes: every raw reading of the run then goes through them (see VolumeLease in <a class="el" href="raw__hive_8cpp.html" title="Raw NTFS reader: $MFT, attributes, data runs, directory indexes.">raw_hive.cpp</a>). A volume not named here is opened at its first reading. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">letters</td><td>the volumes' letters ("C:") </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK, or S_FALSE if one could not be opened (it is retried by no one) </dd></dl>
 
 </div>
 </div>

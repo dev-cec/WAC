@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -103,9 +103,11 @@ $(document).ready(function(){initNavTree('structMft.html',''); initResizable(); 
 <p>This is the complete list of members for <a class="el" href="structMft.html">Mft</a>, including all inherited members.</p>
 <table class="directory">
   <tr class="even"><td class="entry"><a class="el" href="structMft.html#aea06d7530832453217b838d41444f614">clear</a>()</td><td class="entry"><a class="el" href="structMft.html">Mft</a></td><td class="entry"></td></tr>
-  <tr class="odd"><td class="entry"><a class="el" href="structMft.html#aac898648c4381080c4a1cbc7d49df67c">getData</a>()</td><td class="entry"><a class="el" href="structMft.html">Mft</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="structMft.html#a36655d090014146eac295d2d852eb410">pathOf</a>(uint64_t entry, uint16_t sequence, bool &amp;complete) const</td><td class="entry"><a class="el" href="structMft.html">Mft</a></td><td class="entry"></td></tr>
-  <tr class="odd"><td class="entry"><a class="el" href="structMft.html#ac5b44bfbb58cfb3b4d1a4947e76470d5">toJson</a>()</td><td class="entry"><a class="el" href="structMft.html">Mft</a></td><td class="entry"></td></tr>
+  <tr class="odd"><td class="entry"><a class="el" href="structMft.html#a553a7e68ee4115c11bdc4886c7397a2c">forEachFile</a>(const std::function&lt; void(const MftEntry &amp;, const std::wstring &amp;, bool)&gt; &amp;visit) const</td><td class="entry"><a class="el" href="structMft.html">Mft</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="structMft.html#ab3d0b15bb632a628d5c61aa7d8ddd0e5">getData</a>(const std::wstring &amp;volume)</td><td class="entry"><a class="el" href="structMft.html">Mft</a></td><td class="entry"></td></tr>
+  <tr class="odd"><td class="entry"><a class="el" href="structMft.html#a36655d090014146eac295d2d852eb410">pathOf</a>(uint64_t entry, uint16_t sequence, bool &amp;complete) const</td><td class="entry"><a class="el" href="structMft.html">Mft</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="structMft.html#a89cec7e2d422d26f8cee8fbde1fed430">toJson</a>(JsonArrayWriter &amp;out) const</td><td class="entry"><a class="el" href="structMft.html">Mft</a></td><td class="entry"></td></tr>
+  <tr class="odd"><td class="entry"><a class="el" href="structMft.html#ae216c0b46af9e2ad4544e5495968db5f">volume</a>() const</td><td class="entry"><a class="el" href="structMft.html">Mft</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
 </table></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

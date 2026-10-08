@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,10 +116,30 @@ Functions</h2></td></tr>
 <tr class="separator:a6aca12cc0b8b76d011ecdd2dc65cb3aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae65285bc40f0c829e47e0894a7bc227d" id="r_ae65285bc40f0c829e47e0894a7bc227d"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structRunningMachine.html">RunningMachine</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="running__machine_8cpp.html#ae65285bc40f0c829e47e0894a7bc227d">runningMachine</a> ()</td></tr>
 <tr class="separator:ae65285bc40f0c829e47e0894a7bc227d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fcb67eb8458577b505d08d504db6530" id="r_a7fcb67eb8458577b505d08d504db6530"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="running__machine_8cpp.html#a7fcb67eb8458577b505d08d504db6530">fixedNtfsVolumes</a> ()</td></tr>
+<tr class="separator:a7fcb67eb8458577b505d08d504db6530"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Snapshot of the running examined machine (see <a class="el" href="running__machine_8h.html" title="What the conversion needs to know of the RUNNING examined machine, observed live and recorded as a se...">running_machine.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a7fcb67eb8458577b505d08d504db6530" name="a7fcb67eb8458577b505d08d504db6530"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7fcb67eb8458577b505d08d504db6530">&#9670;&#160;</a></span>fixedNtfsVolumes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; std::wstring &gt; fixedNtfsVolumes </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The fixed NTFS volumes of the examined machine, as observed: those WAC reads raw beyond the system volume (binaries, recycle bins). Removable volumes — the collection medium among them — are left out. </p><dl class="section return"><dt>Returns</dt><dd>their mount points, "C:", "D:"…; the system drive alone if none was observed </dd></dl>
+
+</div>
+</div>
 <a id="ae65285bc40f0c829e47e0894a7bc227d" name="ae65285bc40f0c829e47e0894a7bc227d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae65285bc40f0c829e47e0894a7bc227d">&#9670;&#160;</a></span>runningMachine()</h2>
 

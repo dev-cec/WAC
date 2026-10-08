@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -134,11 +134,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:aa0a0a66bc9c429529f77eefd97cf34b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">primary name  <br /></td></tr>
 <tr class="separator:aa0a0a66bc9c429529f77eefd97cf34b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf50fc84a8d4a6f43e2c9213de09fa02" id="r_adf50fc84a8d4a6f43e2c9213de09fa02"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsersFilesFolder.html#adf50fc84a8d4a6f43e2c9213de09fa02">modifiedUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:adf50fc84a8d4a6f43e2c9213de09fa02"><td class="mdescLeft">&#160;</td><td class="mdescRight">modification date in UTC  <br /></td></tr>
+<tr class="memdesc:adf50fc84a8d4a6f43e2c9213de09fa02"><td class="mdescLeft">&#160;</td><td class="mdescRight">modification date, UTC (a FAT-format date Windows writes in UTC)  <br /></td></tr>
 <tr class="separator:adf50fc84a8d4a6f43e2c9213de09fa02"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae6ac650d00b245f9f0f0ec74201417d" id="r_aae6ac650d00b245f9f0f0ec74201417d"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsersFilesFolder.html#aae6ac650d00b245f9f0f0ec74201417d">modified</a> = { 0 }</td></tr>
-<tr class="memdesc:aae6ac650d00b245f9f0f0ec74201417d"><td class="mdescLeft">&#160;</td><td class="mdescRight">modification date  <br /></td></tr>
-<tr class="separator:aae6ac650d00b245f9f0f0ec74201417d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad67abdd1375271da38f0adf76493db3d" id="r_ad67abdd1375271da38f0adf76493db3d"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structIExtensionBlock.html">IExtensionBlock</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsersFilesFolder.html#ad67abdd1375271da38f0adf76493db3d">extensionBlock</a></td></tr>
 <tr class="memdesc:ad67abdd1375271da38f0adf76493db3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">block d'extension  <br /></td></tr>
 <tr class="separator:ad67abdd1375271da38f0adf76493db3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -250,22 +247,6 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aae6ac650d00b245f9f0f0ec74201417d" name="aae6ac650d00b245f9f0f0ec74201417d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aae6ac650d00b245f9f0f0ec74201417d">&#9670;&#160;</a></span>modified</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">FILETIME UsersFilesFolder::modified = { 0 }</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>modification date </p>
-
-</div>
-</div>
 <a id="adf50fc84a8d4a6f43e2c9213de09fa02" name="adf50fc84a8d4a6f43e2c9213de09fa02"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adf50fc84a8d4a6f43e2c9213de09fa02">&#9670;&#160;</a></span>modifiedUtc</h2>
 
@@ -278,7 +259,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>modification date in UTC </p>
+<p>modification date, UTC (a FAT-format date Windows writes in UTC) </p>
 
 </div>
 </div>

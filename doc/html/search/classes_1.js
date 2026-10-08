@@ -31,5 +31,8 @@ var searchData=
   ['beef0029_28',['Beef0029',['../structBeef0029.html',1,'']]],
   ['beefunknown_29',['BeefUnknown',['../structBeefUnknown.html',1,'']]],
   ['binaryfingerprint_30',['BinaryFingerprint',['../structBinaryFingerprint.html',1,'']]],
-  ['binarysummary_31',['BinarySummary',['../structBinarySummary.html',1,'']]]
+  ['binarysummary_31',['BinarySummary',['../structBinarySummary.html',1,'']]],
+  ['bitsfile_32',['BitsFile',['../structBitsFile.html',1,'']]],
+  ['bitsjob_33',['BitsJob',['../structBitsJob.html',1,'']]],
+  ['bitsjobs_34',['BitsJobs',['../classBitsJobs.html',1,'']]]
 ];

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,6 +107,8 @@ $(document).ready(function(){initNavTree('event__messages_8h.html',''); initResi
 <div class="textblock"><code>#include &lt;windows.h&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
+<code>#include &lt;set&gt;</code><br />
+<code>#include &lt;utility&gt;</code><br />
 </div>
 <p><a href="event__messages_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -114,14 +116,16 @@ $(document).ready(function(){initNavTree('event__messages_8h.html',''); initResi
 Functions</h2></td></tr>
 <tr class="memitem:a3f3680eee7a2ea96511ecf89666db325" id="r_a3f3680eee7a2ea96511ecf89666db325"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8h.html#a3f3680eee7a2ea96511ecf89666db325">MessagesInit</a> ()</td></tr>
 <tr class="separator:a3f3680eee7a2ea96511ecf89666db325"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8468e52e30bf9107781ce309a8eb1487" id="r_a8468e52e30bf9107781ce309a8eb1487"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8h.html#a8468e52e30bf9107781ce309a8eb1487">EventMessage</a> (const std::wstring &amp;providerGuid, uint16_t eventId, uint8_t version, const std::vector&lt; std::wstring &gt; &amp;values)</td></tr>
-<tr class="separator:a8468e52e30bf9107781ce309a8eb1487"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec038619f875af3c141dff2590e2ac7a" id="r_aec038619f875af3c141dff2590e2ac7a"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8h.html#aec038619f875af3c141dff2590e2ac7a">MessagesCollectAll</a> ()</td></tr>
-<tr class="separator:aec038619f875af3c141dff2590e2ac7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11d76e90ccde8acce4422887ce1c944e" id="r_a11d76e90ccde8acce4422887ce1c944e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8h.html#a11d76e90ccde8acce4422887ce1c944e">EventMessage</a> (const std::wstring &amp;providerGuid, uint16_t eventId, uint8_t version, const std::vector&lt; std::wstring &gt; &amp;values, const std::vector&lt; std::wstring &gt; &amp;names)</td></tr>
+<tr class="separator:a11d76e90ccde8acce4422887ce1c944e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93a5a5291f3b51af457b154f8772d04f" id="r_a93a5a5291f3b51af457b154f8772d04f"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8h.html#a93a5a5291f3b51af457b154f8772d04f">MessagesCollect</a> (const std::set&lt; std::wstring &gt; &amp;guids, const std::set&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;sources)</td></tr>
+<tr class="separator:a93a5a5291f3b51af457b154f8772d04f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aede18008c46311a8c1f48fa7c3c4e6b7" id="r_aede18008c46311a8c1f48fa7c3c4e6b7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8h.html#aede18008c46311a8c1f48fa7c3c4e6b7">MessagesSummary</a> (size_t *providers, size_t *failures, unsigned long long *resolved, unsigned long long *bytes)</td></tr>
 <tr class="separator:aede18008c46311a8c1f48fa7c3c4e6b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a639749714167717db9e16c2bae357636" id="r_a639749714167717db9e16c2bae357636"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8h.html#a639749714167717db9e16c2bae357636">MessagesRelease</a> ()</td></tr>
 <tr class="separator:a639749714167717db9e16c2bae357636"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac77d76595b7aaeeb73b3d80ce6a65b23" id="r_ac77d76595b7aaeeb73b3d80ce6a65b23"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8h.html#ac77d76595b7aaeeb73b3d80ce6a65b23">ClassicEventMessage</a> (const std::wstring &amp;logName, const std::wstring &amp;source, uint32_t messageId, const std::vector&lt; std::wstring &gt; &amp;values)</td></tr>
+<tr class="separator:ac77d76595b7aaeeb73b3d80ce6a65b23"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An event's plain-text message, without the system's API. </p>
@@ -131,8 +135,59 @@ Functions</h2></td></tr>
 <p>EXTRACTION ON DEMAND. Those resource files are not artefacts: they are ordinary system binaries, and nearly a thousand of them are declared. Extracting them all would cost hundreds of megabytes for providers most of which produced no event at all. Each file is therefore extracted at the moment an event calls for it, only once, by raw NTFS reading — like everything else. It joins the exhibit store, is identified there by its fingerprints, then is copied into the working directory before being read.</p>
 <p>A provider whose file cannot be found or read is remembered as such: it is not tried again at every event, and the report records it. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a8468e52e30bf9107781ce309a8eb1487" name="a8468e52e30bf9107781ce309a8eb1487"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8468e52e30bf9107781ce309a8eb1487">&#9670;&#160;</a></span>EventMessage()</h2>
+<a id="ac77d76595b7aaeeb73b3d80ce6a65b23" name="ac77d76595b7aaeeb73b3d80ce6a65b23"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac77d76595b7aaeeb73b3d80ce6a65b23">&#9670;&#160;</a></span>ClassicEventMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring ClassicEventMessage </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>logName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>messageId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>values</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Plain-text message of an event of a CLASSIC source (written by ReportEvent: no provider GUID in the event). Its message files are those <code>SYSTEM\CurrentControlSet\<a class="el" href="structServices.html">Services</a>\EventLog\&lt;log&gt;\&lt;source&gt;</code> declares in EventMessageFile (several, separated by semicolons, tried in order), its parameter labels those of ParameterMessageFile.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">logName</td><td>the log the event is in, as the registry names it ("Application") </td></tr>
+    <tr><td class="paramname">source</td><td>the event's provider name </td></tr>
+    <tr><td class="paramname">messageId</td><td>the full identifier: qualifiers in the high word, event identifier in the low one — the message table's key </td></tr>
+    <tr><td class="paramname">values</td><td>data of the event, in order </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the sentence, or an empty string if it could not be rebuilt </dd></dl>
+
+</div>
+</div>
+<a id="a11d76e90ccde8acce4422887ce1c944e" name="a11d76e90ccde8acce4422887ce1c944e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11d76e90ccde8acce4422887ce1c944e">&#9670;&#160;</a></span>EventMessage()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -159,7 +214,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
-          <td class="paramname"><em>values</em>&#160;</td>
+          <td class="paramname"><em>values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>names</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -175,6 +236,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">eventId</td><td>identifier of the event </td></tr>
     <tr><td class="paramname">version</td><td>version of the event's schema </td></tr>
     <tr><td class="paramname">values</td><td>data of the event, in order: they are what fills the %1 %2 … marks of the template </td></tr>
+    <tr><td class="paramname">names</td><td>the name of each value (its Data's Name), by which it is matched to its template item; may be empty </td></tr>
   </table>
   </dd>
 </dl>
@@ -182,21 +244,39 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aec038619f875af3c141dff2590e2ac7a" name="aec038619f875af3c141dff2590e2ac7a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aec038619f875af3c141dff2590e2ac7a">&#9670;&#160;</a></span>MessagesCollectAll()</h2>
+<a id="a93a5a5291f3b51af457b154f8772d04f" name="a93a5a5291f3b51af457b154f8772d04f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a93a5a5291f3b51af457b154f8772d04f">&#9670;&#160;</a></span>MessagesCollect()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">HRESULT MessagesCollectAll </td>
+          <td class="memname">HRESULT MessagesCollect </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">const std::set&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>guids</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const std::set&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>sources</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>&ndash;collect: extracts the resource files of EVERY provider declared in SOFTWARE...\WINEVT\Publishers — binary, parameter file, localised .mui satellites —, since which of them the event logs cite is only known at conversion. The same search as on demand (the conversion then finds each file where the collection put it). Requires the SOFTWARE hive open. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the error of the hive's reading </dd></dl>
+<p>&ndash;collect: extracts the resource files of the providers the collected logs cite — binary, its SystemResources twin, parameter file, localised .mui satellites —, of the classic sources they cite, and the system's message tables: what their conversion will look for, by the same search as on demand (the conversion then finds each file where the collection put it). Taking every declared provider instead cost 739 MiB and 61 s on the test VM for 1,426 providers (backlog B-033). Requires the SOFTWARE hive open. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">guids</td><td>the providers' GUIDs the logs cite </td></tr>
+    <tr><td class="paramname">sources</td><td>the (log, source) pairs of their events, for the classic sources </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND without the SOFTWARE hive </dd></dl>
 
 </div>
 </div>

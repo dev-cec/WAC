@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -113,16 +113,16 @@ $(document).ready(function(){initNavTree('xml__light_8cpp.html',''); initResizab
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a2a059cf8317ef9e1e9982c32dc6b91bf" id="r_a2a059cf8317ef9e1e9982c32dc6b91bf"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structXmlNode.html">XmlNode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8cpp.html#a2a059cf8317ef9e1e9982c32dc6b91bf">xmlParse</a> (const std::wstring &amp;content)</td></tr>
-<tr class="separator:a2a059cf8317ef9e1e9982c32dc6b91bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f6e645fab01047c254d16bed908e494" id="r_a0f6e645fab01047c254d16bed908e494"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structXmlNode.html">XmlNode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8cpp.html#a0f6e645fab01047c254d16bed908e494">xmlParse</a> (const std::wstring &amp;content, bool keepText)</td></tr>
+<tr class="separator:a0f6e645fab01047c254d16bed908e494"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c8b880642b0a4d5c6ffb0e937f30a81" id="r_a2c8b880642b0a4d5c6ffb0e937f30a81"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structXmlNode.html">XmlNode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8cpp.html#a2c8b880642b0a4d5c6ffb0e937f30a81">xmlReadFile</a> (const std::wstring &amp;path)</td></tr>
 <tr class="separator:a2c8b880642b0a4d5c6ffb0e937f30a81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implementation of the minimal XML reader (see <a class="el" href="xml__light_8h.html" title="Minimal XML reader, with no dependency.">xml_light.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a2a059cf8317ef9e1e9982c32dc6b91bf" name="a2a059cf8317ef9e1e9982c32dc6b91bf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2a059cf8317ef9e1e9982c32dc6b91bf">&#9670;&#160;</a></span>xmlParse()</h2>
+<a id="a0f6e645fab01047c254d16bed908e494" name="a0f6e645fab01047c254d16bed908e494"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f6e645fab01047c254d16bed908e494">&#9670;&#160;</a></span>xmlParse()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -131,14 +131,25 @@ Functions</h2></td></tr>
           <td class="memname">std::unique_ptr&lt; <a class="el" href="structXmlNode.html">XmlNode</a> &gt; xmlParse </td>
           <td>(</td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>content</em></td><td>)</td>
+          <td class="paramname"><em>content</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>keepText</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Parses an XML document in memory. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">content</td><td>the complete document (UTF-16; the caller handles the decoding) </td></tr>
+    <tr><td class="paramname">keepText</td><td>true to keep each node's text as it is; false (the default) strips the spaces and line breaks at its edges, which an indented document adds. An event's XML, rebuilt compact by <a class="el" href="evtx_8cpp.html" title="Offline decoding of Windows event logs.">evtx.cpp</a>, is read with true: its data's own spaces and line breaks are data — stripped, "'Insert '" became "'Insert'" in the message and in EvtEventData (B-023). </td></tr>
   </table>
   </dd>
 </dl>

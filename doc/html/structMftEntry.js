@@ -3,10 +3,11 @@ var structMftEntry =
     [ "Link", "structMftEntry_1_1Link.html", "structMftEntry_1_1Link" ],
     [ "isShownName", "structMftEntry.html#a9b340e57676f7aee947a3ba78cc55bac", null ],
     [ "parse", "structMftEntry.html#a9f758e1cea586d361efd5c75dc13e29e", null ],
-    [ "toJson", "structMftEntry.html#a587837dc9e5ba9d2bfcf5f41fc62bb07", null ],
+    [ "toJson", "structMftEntry.html#a5a123446fe11b5562ff39ee0280f3967", null ],
     [ "accessed", "structMftEntry.html#a97516284ade38a3677149dc7f0de004f", null ],
     [ "attributes", "structMftEntry.html#a9130ed9adf7c3b8403697825c08f7148", null ],
     [ "baseEntry", "structMftEntry.html#a2165b0cbbfc3401fae902c42c5497b19", null ],
+    [ "baseSequence", "structMftEntry.html#a36bd8334c66b582328fd25c92b86f234", null ],
     [ "created", "structMftEntry.html#a30a727882a8369faf2df95f7303c71ae", null ],
     [ "directory", "structMftEntry.html#a9759687f039eecfafeb0726dd84ba945", null ],
     [ "entry", "structMftEntry.html#a98382a3f440d162b085042e9b809e04a", null ],
@@ -22,8 +23,13 @@ var structMftEntry =
     [ "nameRank", "structMftEntry.html#ad148e09b53033934e485de73e83d6179", null ],
     [ "parentEntry", "structMftEntry.html#a11ca4f568b1c83d93c2dc692aa08d702", null ],
     [ "parentSequence", "structMftEntry.html#a0b661a321f9b42a887060eaf146a6e80", null ],
+    [ "securityId", "structMftEntry.html#af18de8736fd3da8bfda843563cffc3ff", null ],
     [ "sequence", "structMftEntry.html#a9a7cbeb7983e36f2fa6601228e67fbef", null ],
     [ "size", "structMftEntry.html#a27a3ee1536fc3a13e0f8b1f2f10424fc", null ],
     [ "sizeKnown", "structMftEntry.html#a752c631f9840a689c5c95813662f96c0", null ],
-    [ "streams", "structMftEntry.html#ab42df8e6ed9d2ab44b7bf191d679081e", null ]
+    [ "streams", "structMftEntry.html#ab42df8e6ed9d2ab44b7bf191d679081e", null ],
+    [ "zoneIdentifier", "structMftEntry.html#ad29b3eb7532896f3dd4c5fc19cca02e1", null ],
+    [ "zoneIdentifierContent", "structMftEntry.html#a5cf42c2c05f664a3686c094010f43f29", null ],
+    [ "zoneIdentifierResident", "structMftEntry.html#aa6aebdcae7f2cf484dbe2ea898b24b91", null ],
+    [ "zoneIdentifierSize", "structMftEntry.html#a91055bc1228f32e7b64767b89b7de166", null ]
 ];

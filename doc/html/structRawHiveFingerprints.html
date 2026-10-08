@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -126,9 +126,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a001ac0c5ef993f39cfdc367e8c2b3115"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ccad4ebeb9d600b51ce6e628a186e78" id="r_a2ccad4ebeb9d600b51ce6e628a186e78"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#a2ccad4ebeb9d600b51ce6e628a186e78">leadingSparseBytes</a> = 0</td></tr>
 <tr class="separator:a2ccad4ebeb9d600b51ce6e628a186e78"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b8fecf9df975b08ae679777df1c77ca" id="r_a8b8fecf9df975b08ae679777df1c77ca"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#a8b8fecf9df975b08ae679777df1c77ca">mftEntry</a> = 0</td></tr>
-<tr class="memdesc:a8b8fecf9df975b08ae679777df1c77ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">record number in the $MFT  <br /></td></tr>
-<tr class="separator:a8b8fecf9df975b08ae679777df1c77ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b9a65e89f759e5f1155c994deddf31e" id="r_a1b9a65e89f759e5f1155c994deddf31e"><td class="memItemLeft" align="right" valign="top">std::optional&lt; uint64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#a1b9a65e89f759e5f1155c994deddf31e">mftEntry</a></td></tr>
+<tr class="separator:a1b9a65e89f759e5f1155c994deddf31e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83ec7c2c7ea6cc3ce899e2a9e65b128e" id="r_a83ec7c2c7ea6cc3ce899e2a9e65b128e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html#a83ec7c2c7ea6cc3ce899e2a9e65b128e">resident</a> = false</td></tr>
 <tr class="memdesc:a83ec7c2c7ea6cc3ce899e2a9e65b128e"><td class="mdescLeft">&#160;</td><td class="mdescRight">data held inside the $MFT record  <br /></td></tr>
 <tr class="separator:a83ec7c2c7ea6cc3ce899e2a9e65b128e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -386,19 +385,18 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a8b8fecf9df975b08ae679777df1c77ca" name="a8b8fecf9df975b08ae679777df1c77ca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8b8fecf9df975b08ae679777df1c77ca">&#9670;&#160;</a></span>mftEntry</h2>
+<a id="a1b9a65e89f759e5f1155c994deddf31e" name="a1b9a65e89f759e5f1155c994deddf31e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b9a65e89f759e5f1155c994deddf31e">&#9670;&#160;</a></span>mftEntry</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">uint64_t RawHiveFingerprints::mftEntry = 0</td>
+          <td class="memname">std::optional&lt;uint64_t&gt; RawHiveFingerprints::mftEntry</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>record number in the $MFT </p>
+<p>Record number in the $MFT; absent for an exhibit not read from the volume (a live observation). 0 is a real number — the $MFT's own. </p>
 
 </div>
 </div>

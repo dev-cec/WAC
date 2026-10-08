@@ -2,12 +2,14 @@ var namespaces_dup =
 [
     [ "Footprint", "namespaceFootprint.html", [
       [ "CLOCK", "namespaceFootprint.html#a2851d886859c5bd0d3cd4136f8b2cffe", null ],
+      [ "ESE_REPLAY", "namespaceFootprint.html#a4a5463b2e6bdbfe3b2b198051b62b981", null ],
       [ "EXHIBIT_READ", "namespaceFootprint.html#a104acfde7d6813bf67974791c7f9da2f", null ],
       [ "FILE_COPY", "namespaceFootprint.html#ab664b541daab7ddf3cfab280e1523e2c", null ],
       [ "HIVE_COPY", "namespaceFootprint.html#a493d4c8b62fcc39c42210d5939c616a1", null ],
       [ "HIVE_PATCH", "namespaceFootprint.html#aefb355d58dd0b46e131498a8aac1967d", null ],
       [ "HIVE_REPLAY", "namespaceFootprint.html#a092968a8d58bd9077dcbdab010c501a7", null ],
       [ "NETWORK", "namespaceFootprint.html#a463c7f177799a7c6e21b4f6a728721e9", null ],
+      [ "NONE", "namespaceFootprint.html#a3950c610cd88774bc39601f4cb4bf0e3", null ],
       [ "PROCESSES", "namespaceFootprint.html#a3adb76cf477efc64afb8af9a50734d95", null ],
       [ "SCM", "namespaceFootprint.html#a1264a98237119230449e6c77d4ddfe1e", null ],
       [ "SESSIONS", "namespaceFootprint.html#a3426ef6ecf6b4c42672b434a97238fed", null ],

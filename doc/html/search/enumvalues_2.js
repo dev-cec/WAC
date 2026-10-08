@@ -1,5 +1,24 @@
 var searchData=
 [
   ['collect_0',['Collect',['../tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947eae7ca851922b13f555127b04b70435ca9',1,'tools.h']]],
-  ['convert_1',['Convert',['../tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947ea920f4a0c5c8b9a0747380cf7c7f0b3c5',1,'tools.h']]]
+  ['configurationartefactssection_1',['ConfigurationArtefactsSection',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a4233f363541a9412197b545f8b16ab45',1,'translations.h']]],
+  ['configurationbinaryvalue_2',['ConfigurationBinaryValue',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ae6317565d10ac646e219ee0dc22a6819',1,'translations.h']]],
+  ['configurationbooleanexpected_3',['ConfigurationBooleanExpected',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a8f3e905527d861bf1945ccf0902de85f',1,'translations.h']]],
+  ['configurationexists_4',['ConfigurationExists',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ac98d7fa9f5ca9449567492f0d94c0238',1,'translations.h']]],
+  ['configurationlanguagevalue_5',['ConfigurationLanguageValue',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a56c27f36d65759970c450375b2d9e126',1,'translations.h']]],
+  ['configurationline_6',['ConfigurationLine',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a9a05ce76498af346d0f28db01a6d71c8',1,'translations.h']]],
+  ['configurationnumberexpected_7',['ConfigurationNumberExpected',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a67c1f238e8a12e898f815a5f3fbfa8e3',1,'translations.h']]],
+  ['configurationoutofrange_8',['ConfigurationOutOfRange',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ad71210a9b80442cdc6e225940621dd38',1,'translations.h']]],
+  ['configurationoutputvalue_9',['ConfigurationOutputValue',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a228966f3dde54fd1b757caf3e3a949eb',1,'translations.h']]],
+  ['configurationsectionnotvalue_10',['ConfigurationSectionNotValue',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a6b3f30cb000290120069aa2ddd6a9eea',1,'translations.h']]],
+  ['configurationtoolarge_11',['ConfigurationTooLarge',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a7fbc5e36f3b048305e1bec2094b61f70',1,'translations.h']]],
+  ['configurationunknownartefact_12',['ConfigurationUnknownArtefact',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a49918b2408c8b72984cffa3bb2de4663',1,'translations.h']]],
+  ['configurationunknownsetting_13',['ConfigurationUnknownSetting',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4afcd3b2cfc7d706a349e62efd98067271',1,'translations.h']]],
+  ['configurationunreadable_14',['ConfigurationUnreadable',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a7b32fab603e8e81d9ed4ed186f36edc8',1,'translations.h']]],
+  ['configurationversionmismatch_15',['ConfigurationVersionMismatch',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a0fc7016dd51bc83c22519446618769fd',1,'translations.h']]],
+  ['configurationversionmissing_16',['ConfigurationVersionMissing',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a812b666dd4f33ec32bd5d83a7532094a',1,'translations.h']]],
+  ['conversionlognotwritten_17',['ConversionLogNotWritten',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a3f96d77475af734ebdc98d6ace45b5cc',1,'translations.h']]],
+  ['convert_18',['Convert',['../tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947ea920f4a0c5c8b9a0747380cf7c7f0b3c5',1,'tools.h']]],
+  ['convertexcludescollect_19',['ConvertExcludesCollect',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4aa225b6d0494797a1342424cfcfd1bdf5',1,'translations.h']]],
+  ['count_20',['Count',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ae93f994f01c537c4e2f7d8528c3eb5e9',1,'translations.h']]]
 ];

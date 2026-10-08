@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('prefetchs_8cpp.html',''); initResizabl
 
 <div class="header">
   <div class="summary">
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">prefetchs.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -107,11 +108,18 @@ $(document).ready(function(){initNavTree('prefetchs_8cpp.html',''); initResizabl
 <div class="textblock"><code>#include &quot;<a class="el" href="prefetchs_8h_source.html">prefetchs.h</a>&quot;</code><br />
 <code>#include &lt;map&gt;</code><br />
 <code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a4c90d811e8a791c6184dea9e28ad4d8e" id="r_a4c90d811e8a791c6184dea9e28ad4d8e"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="prefetchs_8cpp.html#a4c90d811e8a791c6184dea9e28ad4d8e">decompressPrefetch</a> (const BYTE *buffer, size_t size, std::vector&lt; BYTE &gt; &amp;out)</td></tr>
 <tr class="separator:a4c90d811e8a791c6184dea9e28ad4d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a2718816e6196ab9f2d382f2989fe0ee2" id="r_a2718816e6196ab9f2d382f2989fe0ee2"><td class="memItemLeft" align="right" valign="top">const uintmax_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="prefetchs_8cpp.html#a2718816e6196ab9f2d382f2989fe0ee2">PREFETCH_MAX</a> = 64ull * 1024 * 1024</td></tr>
+<tr class="memdesc:a2718816e6196ab9f2d382f2989fe0ee2"><td class="mdescLeft">&#160;</td><td class="mdescRight">The largest <a class="el" href="structPrefetch.html">Prefetch</a> file read: tens of KiB compressed, a few hundred once decompressed.  <br /></td></tr>
+<tr class="separator:a2718816e6196ab9f2d382f2989fe0ee2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Decoding of the <a class="el" href="structPrefetch.html">Prefetch</a> files, compressed or not (see <a class="el" href="prefetchs_8h.html" title="Prefetch: which executables ran, how many times, and what they loaded.">prefetchs.h</a>). </p>
@@ -157,6 +165,23 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why nothing was decompressed </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="a2718816e6196ab9f2d382f2989fe0ee2" name="a2718816e6196ab9f2d382f2989fe0ee2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2718816e6196ab9f2d382f2989fe0ee2">&#9670;&#160;</a></span>PREFETCH_MAX</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uintmax_t PREFETCH_MAX = 64ull * 1024 * 1024</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The largest <a class="el" href="structPrefetch.html">Prefetch</a> file read: tens of KiB compressed, a few hundred once decompressed. </p>
 
 </div>
 </div>

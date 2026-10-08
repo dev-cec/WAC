@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;1.4.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,24 +116,36 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr class="memitem:ab61d2ddb6064a2def410e657edbc1911" id="r_ab61d2ddb6064a2def410e657edbc1911"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#ab61d2ddb6064a2def410e657edbc1911">Hive</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:ab61d2ddb6064a2def410e657edbc1911"><td class="mdescLeft">&#160;</td><td class="mdescRight">the hive it comes from: SOFTWARE, DEFAULT or NTUSER.DAT  <br /></td></tr>
+<tr class="separator:ab61d2ddb6064a2def410e657edbc1911"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a588499d88dd78a0b19a70de14ad6e784" id="r_a588499d88dd78a0b19a70de14ad6e784"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a588499d88dd78a0b19a70de14ad6e784">Sid</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a588499d88dd78a0b19a70de14ad6e784"><td class="mdescLeft">&#160;</td><td class="mdescRight">SID of the user the entry belongs to, empty if machine-wide.  <br /></td></tr>
 <tr class="separator:a588499d88dd78a0b19a70de14ad6e784"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1b22973a4bce424fdfc77d92ea1377fc" id="r_a1b22973a4bce424fdfc77d92ea1377fc"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a1b22973a4bce424fdfc77d92ea1377fc">SidName</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:a1b22973a4bce424fdfc77d92ea1377fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of that user  <br /></td></tr>
-<tr class="separator:a1b22973a4bce424fdfc77d92ea1377fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a199906bea1d643678ed961eacf53c6c5" id="r_a199906bea1d643678ed961eacf53c6c5"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a199906bea1d643678ed961eacf53c6c5">Key</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a199906bea1d643678ed961eacf53c6c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">the key it comes from: <code><a class="el" href="structRun.html">Run</a></code> or <code>RunOnce</code>  <br /></td></tr>
 <tr class="separator:a199906bea1d643678ed961eacf53c6c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8aac1b40b1c849c309b727cb2c7dc10e" id="r_a8aac1b40b1c849c309b727cb2c7dc10e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a8aac1b40b1c849c309b727cb2c7dc10e">Name</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a8aac1b40b1c849c309b727cb2c7dc10e"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of the value, which the entry chooses freely  <br /></td></tr>
 <tr class="separator:a8aac1b40b1c849c309b727cb2c7dc10e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0626a32ec791d7a42aa9ad68c6612ba4" id="r_a0626a32ec791d7a42aa9ad68c6612ba4"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a0626a32ec791d7a42aa9ad68c6612ba4">Type</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a0626a32ec791d7a42aa9ad68c6612ba4"><td class="mdescLeft">&#160;</td><td class="mdescRight">REG_SZ, or REG_EXPAND_SZ: the command holds variables% Windows expands.  <br /></td></tr>
+<tr class="separator:a0626a32ec791d7a42aa9ad68c6612ba4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb6a6b9a227dce24fcafb241b8208b93" id="r_adb6a6b9a227dce24fcafb241b8208b93"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#adb6a6b9a227dce24fcafb241b8208b93">Value</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:adb6a6b9a227dce24fcafb241b8208b93"><td class="mdescLeft">&#160;</td><td class="mdescRight">the command line started  <br /></td></tr>
+<tr class="memdesc:adb6a6b9a227dce24fcafb241b8208b93"><td class="mdescLeft">&#160;</td><td class="mdescRight">the command line started, as written  <br /></td></tr>
 <tr class="separator:adb6a6b9a227dce24fcafb241b8208b93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a53d3760c102a5741c3719ce20b392672" id="r_a53d3760c102a5741c3719ce20b392672"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a53d3760c102a5741c3719ce20b392672">lastWriteTimeUtc</a> = { 0 }</td></tr>
 <tr class="memdesc:a53d3760c102a5741c3719ce20b392672"><td class="mdescLeft">&#160;</td><td class="mdescRight">last write to the KEY, UTC (the local time is derived at output)  <br /></td></tr>
 <tr class="separator:a53d3760c102a5741c3719ce20b392672"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f9992248cc34fa0f5aa67650e417600" id="r_a2f9992248cc34fa0f5aa67650e417600"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a2f9992248cc34fa0f5aa67650e417600">status</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a2f9992248cc34fa0f5aa67650e417600"><td class="mdescLeft">&#160;</td><td class="mdescRight">StartupApproved: the status code, first 4 bytes in hexadecimal as stored.  <br /></td></tr>
+<tr class="separator:a2f9992248cc34fa0f5aa67650e417600"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84ee5112f22beb5d32068d0ce9a36a30" id="r_a84ee5112f22beb5d32068d0ce9a36a30"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a84ee5112f22beb5d32068d0ce9a36a30">changedUtc</a> = { 0 }</td></tr>
+<tr class="memdesc:a84ee5112f22beb5d32068d0ce9a36a30"><td class="mdescLeft">&#160;</td><td class="mdescRight">StartupApproved: when the user changed the state (bytes 4 to 12, a FILETIME)  <br /></td></tr>
+<tr class="separator:a84ee5112f22beb5d32068d0ce9a36a30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90ae7cb02ef6278290b3b37a64b61784" id="r_a90ae7cb02ef6278290b3b37a64b61784"><td class="memItemLeft" align="right" valign="top">std::optional&lt; DWORD &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRun.html#a90ae7cb02ef6278290b3b37a64b61784">notification</a></td></tr>
+<tr class="memdesc:a90ae7cb02ef6278290b3b37a64b61784"><td class="mdescLeft">&#160;</td><td class="mdescRight">RunNotification: the value, as stored.  <br /></td></tr>
+<tr class="separator:a90ae7cb02ef6278290b3b37a64b61784"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One autostart entry: a command Windows runs at logon. </p>
@@ -176,6 +188,38 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="a84ee5112f22beb5d32068d0ce9a36a30" name="a84ee5112f22beb5d32068d0ce9a36a30"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a84ee5112f22beb5d32068d0ce9a36a30">&#9670;&#160;</a></span>changedUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME Run::changedUtc = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>StartupApproved: when the user changed the state (bytes 4 to 12, a FILETIME) </p>
+
+</div>
+</div>
+<a id="ab61d2ddb6064a2def410e657edbc1911" name="ab61d2ddb6064a2def410e657edbc1911"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab61d2ddb6064a2def410e657edbc1911">&#9670;&#160;</a></span>Hive</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Run::Hive = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the hive it comes from: SOFTWARE, DEFAULT or NTUSER.DAT </p>
+
+</div>
+</div>
 <a id="a199906bea1d643678ed961eacf53c6c5" name="a199906bea1d643678ed961eacf53c6c5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a199906bea1d643678ed961eacf53c6c5">&#9670;&#160;</a></span>Key</h2>
 
@@ -224,6 +268,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a90ae7cb02ef6278290b3b37a64b61784" name="a90ae7cb02ef6278290b3b37a64b61784"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90ae7cb02ef6278290b3b37a64b61784">&#9670;&#160;</a></span>notification</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt;DWORD&gt; Run::notification</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>RunNotification: the value, as stored. </p>
+
+</div>
+</div>
 <a id="a588499d88dd78a0b19a70de14ad6e784" name="a588499d88dd78a0b19a70de14ad6e784"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a588499d88dd78a0b19a70de14ad6e784">&#9670;&#160;</a></span>Sid</h2>
 
@@ -240,19 +300,35 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a1b22973a4bce424fdfc77d92ea1377fc" name="a1b22973a4bce424fdfc77d92ea1377fc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1b22973a4bce424fdfc77d92ea1377fc">&#9670;&#160;</a></span>SidName</h2>
+<a id="a2f9992248cc34fa0f5aa67650e417600" name="a2f9992248cc34fa0f5aa67650e417600"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f9992248cc34fa0f5aa67650e417600">&#9670;&#160;</a></span>status</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::wstring Run::SidName = L&quot;&quot;</td>
+          <td class="memname">std::wstring Run::status = L&quot;&quot;</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>name of that user </p>
+<p>StartupApproved: the status code, first 4 bytes in hexadecimal as stored. </p>
+
+</div>
+</div>
+<a id="a0626a32ec791d7a42aa9ad68c6612ba4" name="a0626a32ec791d7a42aa9ad68c6612ba4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0626a32ec791d7a42aa9ad68c6612ba4">&#9670;&#160;</a></span>Type</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Run::Type = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>REG_SZ, or REG_EXPAND_SZ: the command holds variables% Windows expands. </p>
 
 </div>
 </div>
@@ -268,7 +344,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>the command line started </p>
+<p>the command line started, as written </p>
 
 </div>
 </div>
