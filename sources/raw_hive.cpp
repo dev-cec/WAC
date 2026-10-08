@@ -397,24 +397,33 @@ public:
      *  Windows 11: directories carrying a $TXF_DATA (SysWOW64\zh-TW, thousands
      *  of WinSxS components) have their $INDEX_ROOT in an extension record.
      *  Looked for in the base record alone, 4,569 directories of the volume
-     *  were reported unreadable, and their files never collected.
+     *  were reported unreadable, and their files never collected. A small
+     *  file with many hard links has its $DATA moved likewise: winrm.cmd and
+     *  144 scripts of WinSxS and WindowsApps failed to be read (B-045).
      *  @param rec the base record
      *  @param type the attribute's type
      *  @param holder keeps the extension record the result points into
+     *  @param name the attribute's name: nullptr for any, L"" for the unnamed one
      *  @return the resident attribute, or nullptr */
     const uint8_t* findResidentAttr(const std::vector<uint8_t>& rec, uint32_t type,
-                                    std::vector<uint8_t>& holder){
-        const uint8_t* a = findAttr(rec, type, false);
+                                    std::vector<uint8_t>& holder, const wchar_t* name = nullptr){
+        auto find = [&](const std::vector<uint8_t>& record){
+            return name ? findNamedAttr(record, type, name) : findAttr(record, type, false);
+        };
+        const uint8_t* a = find(rec);
         if (a) return a[8] == 0 ? a : nullptr;
         std::vector<uint8_t> content;
         if (!readListContent(rec, content)) return nullptr;
+        const size_t nameLength = name ? wcslen(name) : 0;
         for (size_t pos = 0; pos + 0x1A <= content.size();){
             const uint16_t len = readLittleEndian<uint16_t>(content.data() + pos + 4);
             if (len < 0x1A || pos + len > content.size()) break;
-            if (readLittleEndian<uint32_t>(content.data() + pos) == type){
+            // An entry: type, length, name length (+6), name offset (+7), reference (+0x10).
+            if (readLittleEndian<uint32_t>(content.data() + pos) == type
+                && (!name || content[pos + 6] == nameLength)){
                 const uint64_t ref = splitNtfsReference(readLittleEndian<uint64_t>(content.data() + pos + 0x10)).entry;
                 if (readMftRecord(ref, holder)){
-                    a = findAttr(holder, type, false);
+                    a = find(holder);
                     if (a && a[8] == 0) return a;
                 }
             }
@@ -1122,6 +1131,11 @@ public:
 
         const uint8_t* a = streamName.empty() ? findAttr(rec, 0x80 /*$DATA*/)
                                               : findNamedAttr(rec, 0x80, streamName.c_str());
+        /* Not in the base record: a RESIDENT $DATA moved to an extension
+           record (a small file with many hard links, B-045) is read there; a
+           non-resident one is gathered from its fragments below. */
+        std::vector<uint8_t> extension;
+        if (!a) a = findResidentAttr(rec, 0x80, extension, streamName.c_str());
         if (a){
             if (a[8] == 0){                       // resident: the data is inside the record
                 resident = true;

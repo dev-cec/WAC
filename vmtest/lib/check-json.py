@@ -1856,6 +1856,23 @@ def check_small_file_artefacts(folder):
         report(ok, f"shellbags.json: the ZIP entry {name} dated {written} as written, without time zone",
                f"shellbags.json: the ZIP entry {name}: {items[:1]}")
 
+    # A script with many hard links, its resident $DATA in an extension
+    # record (B-045): read raw, with the SHA-256 Windows gives.
+    # Collected by the collection alone, which reads every executable of the
+    # volume and takes the unsigned ones; a run that converts on site reads
+    # only the executables its artefacts cite, which a Run value's script is not.
+    manifest = load(folder, os.path.join("exhibits", "MANIFEST.json"))
+    collection_only = isinstance(manifest, dict) and "--collect" in str((manifest.get("Tool") or {}).get("CommandLine", ""))
+    if isinstance(manifest, dict) and "links" in reference and not collection_only:
+        print("  ⏭️  not a collection alone (--collect): the many-links script is not taken, not checked")
+    if collection_only and "links" in reference:
+        path, sha256, listed = reference["links"].split("|")
+        items = [o for o in manifest.get("Items", []) if str(o.get("SourcePath", "")).lower() == path.lower()]
+        ok = listed == "list" and items and all(o.get("Result") == "OK" and str(o.get("SHA256", "")).upper() == sha256.upper()
+                                               for o in items)
+        report(ok, f"manifest: {path}, $DATA moved by $ATTRIBUTE_LIST, read with the SHA-256 of Get-FileHash",
+               f"manifest: {path} ({listed}): {[(o.get('Result'), o.get('SHA256')) for o in items] or 'not collected'}")
+
     # A folder of a 7z and of a tar.gz (Windows 11 reads them through
     # libarchive): another layout, whose date is a UTC instant (B-029).
     if isinstance(bags, list) and "readerentry" in reference:

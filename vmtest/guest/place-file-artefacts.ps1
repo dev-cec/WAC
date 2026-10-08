@@ -147,6 +147,25 @@ if (Wants 'run_keys') {
     New-Item -Force $runKey | Out-Null
     New-ItemProperty -Force -Path $runKey -Name 'WacTestDefault' -PropertyType ExpandString -Value '%SystemRoot%\wac-default.exe' | Out-Null
     Write-Output "run_default=WacTestDefault|%SystemRoot%\wac-default.exe"
+
+    # A small script with many hard links (B-045): its names overflow the MFT
+    # record, and NTFS moves attributes — its resident $DATA among them, as
+    # for winrm.cmd — to an extension record listed by $ATTRIBUTE_LIST. Cited
+    # by a Run value, it is collected. Made once.
+    $links = 'C:\wactest\b045'
+    $script = "$links\wac-links.cmd"
+    if (-not (Test-Path $script)) {
+        New-Item -ItemType Directory -Force $links | Out-Null
+        [IO.File]::WriteAllText($script, "@echo off`r`nrem WAC B-045 witness`r`n")
+        foreach ($k in 1..8) {
+            $name = "$links\wac-links-" + ('{0:D2}' -f $k) + '-' + ('x' * 110) + '.cmd'
+            New-Item -ItemType HardLink -Path $name -Target $script | Out-Null
+        }
+    }
+    New-ItemProperty -Force -Path $runKey -Name 'WacTestLinks' -Value $script | Out-Null
+    $layout = (& fsutil.exe file layout $script) -join ' '
+    $listed = if ($layout -match 'ATTRIBUTE_LIST') { 'list' } else { 'nolist' }
+    Write-Output ("links=$script|" + (Get-FileHash -Algorithm SHA256 -LiteralPath $script).Hash + "|$listed")
 }
 
 # 7. The SECURITY hive as Windows reads it live (the harness runs as SYSTEM).
