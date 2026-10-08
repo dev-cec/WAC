@@ -31,15 +31,17 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Le dossier d'innocuité (FR + EN) mis à jour avec la comparaison.
 
 ## Tâches
-- [ ] Instantané de référence de la VM, avec Sysmon
+- [x] Instantané de référence : clone win11-footprint sans réseau, Sysmon, outils sur une clé K: (vmtest/footprint/prepare-footprint.sh)
 - [x] Obtenir KAPE : fourni par l'utilisateur, `vmtest/kape.zip` (exclu du dépôt)
-- [ ] Outils EZ (.NET) dans la VM
-- [ ] Script : USN borné (avant/après l'outil), attribution Sysmon, différence ciblée des ruches et journaux désignés
+- [x] Outils EZ et KAPE sur la clé ; C:\Tools retiré du clone, runtime .NET 9 laissé (prérequis)
+- [x] Mesure : USN borné, parents résolus, Sysmon, journaux de la fenêtre, ShimCache après redémarrage (guest/measure-run.ps1, run-footprint.sh)
+- [ ] Analyse : soustraction du témoin, attribution (footprint-diff.py)
 - [ ] Une exécution par outil, chacune depuis l'instantané
-- [ ] Rapport comparatif FR + EN
+- [ ] Rapport : chapitre « traces laissées » du document de comparaison (FR + EN), avec temps d'exécution et différences de prélèvement (nombre, volume, précision) — demande utilisateur 2026-10-08 ; dossier d'innocuité
 
 ## Journal
 - 2026-09-30 : demande utilisateur — dernière tâche, comparaison WAC / KAPE / EZ sous bac à sable ; Sysmon et audit en option.
 - Lien : B-015 compare le contenu prélevé ; B-027 compare les traces laissées.
 - 2026-10-07 : méthode révisée sur proposition de l'utilisateur — USN borné comme source des fichiers, Sysmon pour l'auteur, différence ciblée des ruches et journaux ; plus de montage d'image ni de différence complète de la $MFT.
 - 2026-10-08 : en cours — clone dédié de la VM, Sysmon, outils sur clé USB.
+- 2026-10-08 : clone win11-footprint (disque de win11-test copié, sans interface réseau, clé USB qcow2 WACFOOT0001 en K:). Sysmon (Sysmon.zip SHA-256 00ecf1b4…aa54, signature Microsoft vérifiée), configuration vmtest/footprint/sysmon-config.xml. Images figées en lecture seule ; chaque exécution sur des surcouches neuves. Six exécutions : témoin (ver), WAC collecte, WAC --full, KAPE !SANS_Triage, KAPE + !EZParser, outils EZ en direct ; lancement identique (tâche planifiée de wac, droits élevés). Incident : un premier essai de la préparation a supprimé C:\Tools du clone avant la copie sur la clé (bloc PowerShell sans arrêt sur erreur) — clone seul touché, outils repris des archives de l'hôte ; script corrigé (arrêt à la première erreur). fsutil localisé : USN suivant lu par sa position.
