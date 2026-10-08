@@ -21,10 +21,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Aucune mention d'une conversion sur la machine examinée dans le code, l'aide, wac.yml et les documents.
 
 ## Tâches
-- [ ] Code (options, configuration, déroulé), aide FR/EN
-- [ ] Harnais
-- [ ] Documents FR/EN
+- [x] Code (options, configuration, déroulé), aide FR/EN ; config_test (40, dont le refus de convert:), yaml_light_test
+- [x] Harnais : étape 4 en collecte puis conversion, collecte configurée sans convert:, contrôles check-json (une collecte ne convertit rien), mesure des traces sans wac-full
+- [x] Documents FR/EN : manuels (chapitre de séparation, wac.yml, options, --binary), README, comparaison, tests
 - [ ] Cycle VM
 
 ## Journal
 - 2026-10-08 : décision utilisateur, en cours.
+- 2026-10-08 : code, harnais et documents faits ; cycle VM complet en cours.
