@@ -656,7 +656,16 @@ if (Test-Path $firefox) {
     Start-Process $firefox -ArgumentList "BASE/f/wac-dl-firefox-TOKEN.txt"; Start-Sleep 15
     Close-Browser firefox
 }
-Start-Process mshta.exe -ArgumentList "BASE/wac-TOKEN.hta"; Start-Sleep 8
+# mshta.exe stopped only once WinINet has cached the HTA: killed after a fixed
+# 8 s, it had sometimes not fetched it yet (three cycles in a row after a
+# restart of the VM), and the witness had nothing to find.
+Start-Process mshta.exe -ArgumentList "BASE/wac-TOKEN.hta"
+$cache = "$env:LOCALAPPDATA\Microsoft\Windows\INetCache"
+foreach ($i in 1..30) {
+    if (Get-ChildItem $cache -Recurse -Force -Filter 'wac-TOKEN*.hta' -ErrorAction SilentlyContinue) { break }
+    Start-Sleep 1
+}
+Start-Sleep 2
 Get-Process mshta -ErrorAction SilentlyContinue | Stop-Process -Force
 # Internet Explorer itself (its COM server; iexplore.exe alone opens Edge): its
 # download manager asks "Open / Save", answered by a click on Save — the dialog
