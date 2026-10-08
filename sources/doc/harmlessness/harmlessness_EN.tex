@@ -137,11 +137,15 @@ not try to erase them — erasing would be writing to the machine.
 \endhead
 Prefetch & \fichier{C:\textbackslash Windows\textbackslash Prefetch\textbackslash
   WAC.EXE-<hash>.pf}, written by Windows a few seconds after the start, then
-  at the end. \\
+  at the end --- for a \fichier{WAC.exe} started from the machine's disk:
+  started from a USB key, measured under Sysmon, it got none. \\
 Amcache, ShimCache & One entry for \fichier{WAC.exe} (path, size, date, SHA-1
-  fingerprint for Amcache). \\
+  fingerprint for Amcache). Measured: the Amcache entry is written during the
+  collection, the ShimCache one at the machine's shutdown, as
+  \texttt{SIGN.MEDIA=<signature> WAC\textbackslash WAC.exe} for a key. \\
 BAM & One value for \fichier{WAC.exe} under the user's key, dated from the end
-  of the run. \\
+  of the run --- again when started from the machine's disk: none from the USB
+  key. \\
 SRUM & Resource usage of the process, aggregated by Windows. \\
 Logs & Security 4688 and 4689 if process creation auditing is on; Sysmon~1 if
   Sysmon is installed; telemetry of the antivirus or EDR (scan of
@@ -158,6 +162,32 @@ Memory & \wac{}'s pages take up memory during the collection and may push
 the \champ{Collection.StartUtc} --- \champ{EndUtc} interval of
 \fichier{investigation.json} sets them apart.
 \end{note}
+
+\section{Measured against KAPE and the EZ tools}
+
+On a clone of the test machine, frozen with Sysmon, every tool is started from
+a USB key from the same state; C:'s change journal, bounded before and after
+the tool, and Sysmon tell what it wrote, and who wrote it (comparison document,
+chapter ``Traces left on the examined machine'').
+
+\begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
+\toprule
+\bfseries Tool & \bfseries What its processes write on the machine \\
+\midrule
+\endhead
+\wac{} & Nothing: no file, no registry value, no event. \\
+KAPE (targets) & 4 Internet Settings \texttt{ZoneMap} values in the user's
+  hive. \\
+KAPE and its modules & The same values, rewritten by 14 processes; 28 files on
+  C: (.NET runtime breadcrumbs, sentinel files in the user's Temp). \\
+EZ tools, live & No value and no file, but open-or-create calls on policy and
+  network keys. \\
+\bottomrule
+\end{longtable}
+
+For all of them, Windows adds an Amcache entry during the run and a ShimCache
+entry at shutdown; all of them read the volumes raw. KAPE and the EZ tools also
+need the .NET~9 runtime on the examined machine.
 
 \section{WAC's operations}
 

@@ -9,7 +9,7 @@ From the Linux host, with no click and no network, it can:
 
 Usage:
   qga.py ping [--dom win11-test]
-  qga.py run  -- <cmd> [args...]
+  qga.py run  [--timeout s] -- <cmd> [args...]
   qga.py run  --shell "cmd /c ..."
   qga.py read  <guest_path> <host_output>
   qga.py write <host_file> <guest_path>
@@ -163,6 +163,8 @@ def main():
     sub = ap.add_subparsers(dest="action", required=True)
     sub.add_parser("ping")
     pr = sub.add_parser("run"); pr.add_argument("--shell"); pr.add_argument("cmd", nargs="*")
+    pr.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT,
+                    help="seconds before giving up on the command (a footprint run of KAPE takes longer)")
     rd = sub.add_parser("read"); rd.add_argument("guest"); rd.add_argument("host")
     wr = sub.add_parser("write"); wr.add_argument("host"); wr.add_argument("guest")
     a = ap.parse_args()
@@ -171,7 +173,7 @@ def main():
         ping(a.dom)
     elif a.action == "run":
         argv = ["cmd.exe", "/c", a.shell] if a.shell else a.cmd
-        code, out, err = run(a.dom, argv)
+        code, out, err = run(a.dom, argv, timeout=a.timeout)
         if out: sys.stdout.write(out)
         if err: sys.stderr.write(err)
         sys.exit(code)

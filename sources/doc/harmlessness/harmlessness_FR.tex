@@ -139,11 +139,15 @@ de les effacer — les effacer serait écrire sur la machine.
 \endhead
 Prefetch & \fichier{C:\textbackslash Windows\textbackslash Prefetch\textbackslash
   WAC.EXE-<empreinte>.pf}, écrit par Windows quelques secondes après le
-  lancement, puis à la fin. \\
+  lancement, puis à la fin --- pour un \fichier{WAC.exe} lancé du disque de la
+  machine : lancé depuis une clé USB, mesuré sous Sysmon, il n'en a pas eu. \\
 Amcache, ShimCache & Une entrée pour \fichier{WAC.exe} (chemin, taille, date,
-  empreinte SHA-1 pour Amcache). \\
+  empreinte SHA-1 pour Amcache). Mesurée : l'entrée Amcache est écrite pendant
+  la collecte, celle du ShimCache à l'arrêt de la machine, sous la forme
+  \texttt{SIGN.MEDIA=<signature> WAC\textbackslash WAC.exe} pour une clé. \\
 BAM & Une valeur pour \fichier{WAC.exe} sous la clé de l'utilisateur, datée de
-  la fin de l'exécution. \\
+  la fin de l'exécution --- là encore pour un lancement depuis le disque de la
+  machine : aucune depuis la clé USB. \\
 SRUM & Consommation de ressources du processus, agrégée par Windows. \\
 Journaux & Security 4688 et 4689 si l'audit de création de processus est actif ;
   Sysmon~1 si Sysmon est installé ; télémétrie de l'antivirus ou de l'EDR
@@ -160,6 +164,34 @@ résultats (Prefetch de la collecte suivante, BAM, Amcache). C'est attendu, et
 daté : l'intervalle \champ{Collection.StartUtc} --- \champ{EndUtc} de
 \fichier{investigation.json} permet de les isoler.
 \end{note}
+
+\section{Mesuré face à KAPE et aux outils EZ}
+
+Sur un clone de la machine de test, figé avec Sysmon, chaque outil est lancé
+depuis une clé USB à partir du même état ; le journal des modifications de C:,
+borné avant et après l'outil, et Sysmon disent ce qu'il a écrit, et qui l'a
+écrit (document de comparaison, chapitre « Traces laissées sur la machine
+examinée »).
+
+\begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
+\toprule
+\bfseries Outil & \bfseries Ce que ses processus écrivent sur la machine \\
+\midrule
+\endhead
+\wac{} & Rien : aucun fichier, aucune valeur de registre, aucun événement. \\
+KAPE (cibles) & 4 valeurs \texttt{ZoneMap} d'Internet Settings dans la ruche
+  de l'utilisateur. \\
+KAPE et ses modules & Les mêmes valeurs, réécrites par 14 processus ; 28
+  fichiers sur C: (miettes du runtime .NET, fichiers sentinelles dans le Temp
+  de l'utilisateur). \\
+Outils EZ en direct & Aucune valeur ni aucun fichier, mais des ouvertures en
+  création de clés de stratégie et de réseau. \\
+\bottomrule
+\end{longtable}
+
+Pour tous, Windows ajoute une entrée Amcache pendant l'exécution et une entrée
+ShimCache à l'arrêt ; tous lisent les volumes en brut. KAPE et les outils EZ
+demandent en outre le runtime .NET~9 sur la machine examinée.
 
 \section{Les opérations de WAC}
 

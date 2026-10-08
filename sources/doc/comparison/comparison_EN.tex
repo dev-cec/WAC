@@ -48,8 +48,9 @@ Publisher & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
 {\small\color{gris}This document confronts \wac{} with the community's
 reference tools: KAPE for collection, Eric Zimmerman's command-line tools for
 decoding. On the same exhibits of the same machine, it compares running times,
-the accuracy of the values --- every difference settled by an independent
-reference --- and the output formats. It says what the confrontation taught
+what each one takes, the accuracy of the values --- every difference settled by
+an independent reference ---, the output formats, and the traces each one leaves
+on the examined machine. It says what the confrontation taught
 \wac{}, and what it still holds against it.}
 \vspace*{2cm}
 \clearpage
@@ -68,6 +69,10 @@ Two questions, two comparisons.
   \item[Collection: \wac{} against KAPE] Both tools collect the same machine
         one after the other; what each copies is compared, the time it takes,
         and the SHA-1 of the files both copy.
+  \item[Traces left: \wac{}, KAPE and the EZ tools] Each one is started from the
+        same state of the same machine, under Sysmon; what it writes there is
+        recorded, what Windows writes there because of it, and what a
+        monitoring tool sees of it (chapter~\ref{chap:traces}).
   \item[Decoding: \wac{} against the EZ tools] On the \emph{same exhibits} ---
         the exhibit store of a \wac{} collection ---, \wac{} converts an artefact
         and the matching Eric Zimmerman tool decodes it; both outputs are compared
@@ -101,11 +106,15 @@ Machine & Windows 11 Pro (build 26200), virtual machine \\
 EZ tools & version 2026.5.0 (.NET 9.0.20) \\
 KAPE & version 1.3.0.2, target \texttt{KapeTriage} \\
 \wac{} & version 1.4.0 with the fixes this confrontation brought \\
+Traces measure & clone of the machine, no network, frozen; Sysmon 15.22; \\
+               & tools on a USB key (K:), one run per tool \\
 \end{tabular}
 
 Everything can be replayed: \fichier{vmtest/ez-compare.sh <artefact>} times
 \wac{} and the EZ tool on the same exhibits then compares their outputs;
-\fichier{vmtest/kape-compare.sh} does the same for collection. The EZ tools ran
+\fichier{vmtest/kape-compare.sh} does the same for collection;
+\fichier{vmtest/footprint/run-footprint.sh} replays the measure of the traces
+and \fichier{footprint-diff.py} analyses it. The EZ tools ran
 with their full date precision (\opt{mp}, or \opt{dt} with seven decimals where
 \opt{mp} is not enough), so as not to blame them for a loss of precision a
 setting avoids.
@@ -135,9 +144,15 @@ Collection --- KAPE & 1,173 common files & SHA-1 identical & --- \\
 \begin{note}
 On everything both sides read, \wac{} gives the same values as the reference
 tools, or more accurate ones, each time established by an independent source.
-The confrontation also revealed 23 defects of \wac{}, all fixed
+The confrontation also revealed 24 defects of \wac{}, all fixed
 (chapter~\ref{chap:defects}), and coverage gaps, opened for follow-up
 (section~\ref{sec:coverage}).
+
+Started from a key, \wac{} writes nothing on the examined machine: no file, no
+registry value, no event --- only the traces Windows leaves of any program
+started remain (Amcache, ShimCache). KAPE and the EZ tools, .NET programs,
+write to the user's registry and, for KAPE's modules, files on the system
+volume (chapter~\ref{chap:traces}).
 \end{note}
 
 % ============================================================ 3
@@ -197,7 +212,184 @@ twice as much data. It was five times slower at first (item B-033):
 The full kit also checks the Authenticode signature of every executable on the
 machine and copies those whose signature does not hold, which KAPE does not do.
 
+\section{Collection from one same state}
+
+Measures of the traces comparison (chapter~\ref{chap:traces}): every tool
+starts from the same frozen state of the machine, started from the key; the
+duration is that of the task that starts it, in brackets the one the tool
+reports.
+
+\begin{longtable}{@{}L{5.6cm}L{2.6cm}L{3.4cm}L{3.4cm}@{}}
+\toprule
+\textbf{Tool, setting} & \textbf{Duration} & \textbf{Taken} & \textbf{On the key} \\
+\midrule\endhead
+KAPE, \texttt{!SANS\_Triage} & 127\,s (115\,s) & 2,291 files & 2,286 files, 1.25\,GB \\
+KAPE, \texttt{!SANS\_Triage} and \texttt{!EZParser} modules & 235\,s (223\,s) & 2,288 files, 14 tools & 2,345 files, 1.63\,GB \\
+EZ tools on the live machine (6 tools) & 132\,s & \$MFT, logs, hives, Prefetch, Amcache, ShimCache & 36 CSV, 0.55\,GB \\
+\wac{}, collection only (default setting) & 592\,s (588\,s) & 11,830 exhibits, 67,882 recorded & 8,240 files, 4.9\,GB \\
+\wac{}, collection and conversion (\opt{full}) & 544\,s (536\,s) & 2,604 exhibits & 6,441 files, 5.7\,GB \\
+\bottomrule
+\end{longtable}
+
+The collection alone is the longest because it reads \emph{every} executable of
+the machine: the conversion will happen elsewhere, and it does not know yet
+which ones the artefacts will cite. It computes their fingerprints, checks their
+signature and copies only those whose signature does not hold; hence 67,882
+exhibits recorded for 11,830 copied. With the conversion on site (\opt{full}),
+\wac{} reads only the executables the artefacts cite; the key receives the
+working copy and the JSON as well. KAPE copies the files of its targets without
+examining them.
+
 % ============================================================ 4
+\chapter{What each one takes}\label{chap:taken}
+
+\section{The same exhibits, different files}
+
+Same runs as the previous section: \wac{} collecting only, KAPE with
+\texttt{!SANS\_Triage}, compared by the original path of every exhibit
+(\wac{}'s manifest, KAPE's copy log).
+
+\begin{longtable}{@{}L{6.4cm}L{8.6cm}@{}}
+\toprule
+\textbf{Exhibits} & \textbf{Number} \\
+\midrule\endhead
+Taken by both & 1,151, 1,011 of them with the same SHA-1 \\
+Taken by KAPE alone & 1,140: the user's profile (930, browsers and
+  applications), the NetworkService profile (91), \fichier{SleepStudy} (79),
+  \fichier{LogFiles} (17), \fichier{WDI} (16) \\
+Taken by \wac{} alone & 10,679: executables whose signature does not hold
+  (5,300 of them copies the test bench left in \fichier{C:\textbackslash
+  wactest}), signature catalogs (1,205), event logs and their providers'
+  resource files, Defender (98) \\
+\bottomrule
+\end{longtable}
+
+The 140 common exhibits with a different fingerprint are files Windows keeps
+rewriting --- event logs (71), Prefetch (38), hives (6), SRUM (3): both runs
+start from the same state, but Windows changed them since start-up,
+differently each time. Their creation date is identical in 1,146 cases out of
+1,151. KAPE's own coverage is the one backlog items B-016, B-031 and B-032
+already follow.
+
+\section{What is recorded of each exhibit}
+
+\begin{longtable}{@{}L{3.6cm}L{6.0cm}L{5.4cm}@{}}
+\toprule
+ & \textbf{\wac{} (manifest)} & \textbf{KAPE (copy log)} \\
+\midrule\endhead
+Fingerprints & MD5, SHA-1, SHA-256 & SHA-1 \\
+File dates & the 4 of \texttt{\$STANDARD\_INFORMATION} and the 4 of
+  \texttt{\$FILE\_NAME}, to the 100\,ns, in UTC and in the suspect's local
+  time & 3 of \texttt{\$STANDARD\_INFORMATION} (creation, modification,
+  access), to the 100\,ns, in UTC, without the MFT record change \\
+Location & MFT record number & path alone \\
+Method & stated for every exhibit (raw NTFS reading, live observation) &
+  ordinary copy; ``deferred'' raw reading for locked files (181 out of 2,292) \\
+Failure & code and cause in the manifest, exhibit by exhibit & console and log \\
+Integrity & sealed manifest (SHA-256), checked again at every conversion & --- \\
+\bottomrule
+\end{longtable}
+
+\begin{note}
+The \texttt{\$FILE\_NAME} dates are those an intruder does not rewrite with the
+ordinary functions: a backdated file (``timestomping'') keeps its real creation
+date in \texttt{\$FILE\_NAME}. KAPE's log does not have them; \wac{}'s manifest
+gives them for every exhibit, with the MFT record that finds it again in
+\fichier{mft.json}.
+\end{note}
+
+% ============================================================ 5
+\chapter{Traces left on the examined machine}\label{chap:traces}
+
+\section{The measure}
+
+A clone of the test machine, without network, is frozen with Sysmon installed;
+the tools are on a USB key, drive K:. Every run starts from that same state: the
+system disk and the key are fresh layers over the frozen images. Once started
+up, each tool is launched the same way --- a scheduled task of the user, with its
+elevated rights, as an examiner from an elevated prompt.
+
+\begin{description}[style=nextline,leftmargin=1em]
+  \item[Files] The USN of C:'s change journal is read just before and just after
+        the tool: every file created, changed, renamed or deleted between the two
+        is in it, even one created then deleted during the run. The readings are
+        written to the key, after the end bound.
+  \item[Author] Sysmon gives the tool's process tree and what each process
+        wrote, files and registry. A write of another process that names the
+        tool (Amcache, Prefetch, BAM) is Windows reacting to its start.
+  \item[Control] A run that starts nothing (\texttt{ver}) measures the launcher
+        and Windows' own activity; what it shows too is not laid on the tool.
+  \item[Deferred] The ShimCache is written at shutdown only: every run ends with
+        a clean shutdown, a restart and its reading.
+\end{description}
+
+\section{What each one leaves}
+
+\begin{longtable}{@{}L{2.5cm}L{3.0cm}L{4.0cm}L{5.5cm}@{}}
+\toprule
+\textbf{Tool} & \textbf{Files written on C:} & \textbf{Registry written} &
+  \textbf{Windows' reactions} \\
+\midrule\endhead
+\wac{} (collection, \opt{full}) & none & none & Amcache: one entry during the
+  run; ShimCache: one entry at shutdown \\
+KAPE, targets & none & 4 Internet Settings \texttt{ZoneMap} values in the
+  user's hive; 169 open-or-create calls (certificate stores, policies) &
+  Amcache and ShimCache for \fichier{kape.exe} \\
+KAPE, targets and modules & 28: 14 in
+  \fichier{ProgramData\textbackslash Microsoft\textbackslash NetFramework\textbackslash
+  BreadcrumbStore}, 14 in the user's Temp
+  (\fichier{system-commandline-sentinel-files}) & the same 4 values, rewritten
+  by 14 of the 15 processes (136 writes); about 2,600 open-or-create calls &
+  Amcache and ShimCache for KAPE and 14 tools \\
+EZ tools, live & none & no value; 54 open-or-create calls (policies,
+  \texttt{Tcpip}, \texttt{Internet Settings}) & Amcache and ShimCache for the
+  6 tools \\
+\bottomrule
+\end{longtable}
+
+No process of any tool made Windows write an event in its logs: those of the
+measure window are the services' logons, Defender, group policy, common to the
+control run or unrelated to the tool. All of them read the volumes raw, which
+Sysmon records (\texttt{RawAccessRead}) and an EDR may report.
+
+\begin{description}[style=nextline,leftmargin=1em]
+  \item[Open-or-create] \texttt{RegCreateKeyEx} creates the key if it is missing
+        and opens it otherwise; Sysmon does not tell the two apart. The .NET
+        libraries open the certificate stores and the policy keys that way. A
+        created key changes date; a key merely opened does not.
+  \item[The \texttt{ZoneMap} values] Written by WinINet's start-up in every .NET
+        process that loads it, they change the examined user's
+        \fichier{NTUSER.DAT} hive, hence its log and the key's date.
+  \item[The .NET files] The runtime leaves one ``breadcrumb'' per assembly
+        loaded in \fichier{BreadcrumbStore}, and the System.CommandLine library a
+        file per tool in the user's Temp. Started alone, the EZ tools left none;
+        started by KAPE, they did.
+  \item[Prefetch and BAM] None of the 22 programs started from the USB key got
+        a Prefetch file or a BAM value, while \fichier{cmd.exe}, started from the
+        system disk by the same task, has its BAM value. A tool copied onto the
+        machine and started from there would get them.
+  \item[The .NET prerequisite] KAPE and the EZ tools need the .NET~9 runtime,
+        present on the clone. On a machine without it, installing it writes
+        hundreds of files and keys; \wac{} is a self-contained executable.
+\end{description}
+
+\section{What the measure fixed in \wac{}}
+
+\wac{} cleared the screen at start-up with \texttt{system("cls")}, which starts
+\fichier{cmd.exe}: a process created on the examined machine and the Prefetch of
+\fichier{CMD.EXE} updated, at every collection. The screen is now cleared
+through the console API, \wac{} imports no function able to start a process any
+more, and the build script refuses a version that would import one.
+
+\begin{note}
+Every trace of \wac{} is explained: it starts no process, writes no file on the
+machine, no registry value, no event. What remains is what Windows leaves of any
+program started --- an Amcache entry, a ShimCache entry at shutdown ---,
+unavoidable and described in the harmlessness file, and the raw reading of the
+volumes, visible to an EDR.
+\end{note}
+
+% ============================================================ 6
 \chapter{Accuracy}
 
 \section{In favour of \wac{}}
@@ -276,7 +468,7 @@ What \wac{} does not collect, it cannot weigh: KAPE's coverage remains wider on
 browsers and several registry keys, until B-016, B-031 and B-032 are done.
 \end{attention}
 
-% ============================================================ 5
+% ============================================================ 7
 \chapter{Output formats}
 
 \section{What each tool writes}
@@ -338,7 +530,7 @@ an EZ output is handled like a spreadsheet, whose numbers must be converted back
 lists split again and event data decoded again.
 \end{note}
 
-% ============================================================ 6
+% ============================================================ 8
 \chapter{What the confrontation taught \wac{}}\label{chap:defects}
 
 Each defect below produced a valid JSON that was wrong, or incomplete. All are
@@ -357,11 +549,12 @@ Amcache & 2 tables out of 14 and 4 to 6 values read: no SHA-1, size, driver or d
 ShimCache & tabs of packaged applications replaced by spaces \\
 SRUM & FILETIME dates left as numbers; UTF-16 text read as ANSI \\
 Registry & BAM limited to accounts with a profile (a deleted account lost its executions); UserAssist foreground time not read \\
+Start-up & \texttt{system("cls")} started \fichier{cmd.exe} on the examined machine (traces measure) \\
 Test harness & a crashing check silently stopped every following one \\
 \bottomrule
 \end{longtable}
 
-% ============================================================ 7
+% ============================================================ 9
 \chapter{Limits of the comparison}
 
 \begin{itemize}
@@ -372,6 +565,13 @@ Test harness & a crashing check silently stopped every following one \\
         files written between them (\$MFT, logs, Prefetch) rightly differ.
   \item The EZ tools ran with their maximum precision options; by default, they
         lose more.
+  \item The traces are measured on a clone without network, one run per tool: a
+        write of Windows the control run did not show is not laid on the tool
+        unless Sysmon gives it to one of its processes; it stays listed as not
+        attributed in \fichier{footprint-diff.py}'s results.
+  \item Process creation auditing (Security 4688) is not active on the test
+        machine: where it is, every tool leaves an event per process --- one for
+        \wac{}, fifteen for KAPE and its modules.
   \item The comparison covers the common artefacts. What only one tool reads has
         no reference here: its accuracy rests on the checks of the validation
         report.

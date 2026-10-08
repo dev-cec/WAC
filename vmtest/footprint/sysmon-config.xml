@@ -1,0 +1,40 @@
+<!--
+  sysmon-config.xml — Sysmon's configuration for the footprint comparison
+  (backlog B-027): which process created, changed or deleted what, while WAC,
+  KAPE or the EZ tools run on the footprint clone of the test VM.
+
+  Everything is logged ("exclude" with no rule), save:
+  - image loads and process accesses, kept for the programs started from the
+    tools key (K:\) only: every process of Windows does both all the time;
+  - FileDelete (23), which ARCHIVES each deleted file in C:\Sysmon — Sysmon
+    would itself write to the examined volume; FileDeleteDetected (26) logs
+    the deletion without the copy;
+  - the network and DNS: the clone has no network interface.
+-->
+<Sysmon schemaversion="4.90">
+  <HashAlgorithms>SHA256</HashAlgorithms>
+  <EventFiltering>
+    <RuleGroup name="" groupRelation="or"><ProcessCreate onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><FileCreateTime onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><NetworkConnect onmatch="include"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><ProcessTerminate onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><DriverLoad onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or">
+      <ImageLoad onmatch="include"><Image condition="begin with">K:\</Image></ImageLoad>
+    </RuleGroup>
+    <RuleGroup name="" groupRelation="or"><CreateRemoteThread onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><RawAccessRead onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or">
+      <ProcessAccess onmatch="include"><SourceImage condition="begin with">K:\</SourceImage></ProcessAccess>
+    </RuleGroup>
+    <RuleGroup name="" groupRelation="or"><FileCreate onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><RegistryEvent onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><FileCreateStreamHash onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><PipeEvent onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><WmiEvent onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><DnsQuery onmatch="include"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><FileDelete onmatch="include"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><FileDeleteDetected onmatch="exclude"/></RuleGroup>
+    <RuleGroup name="" groupRelation="or"><ProcessTampering onmatch="exclude"/></RuleGroup>
+  </EventFiltering>
+</Sysmon>
