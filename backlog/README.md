@@ -47,7 +47,6 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
 | [B-027](B-027-empreinte-comparee.md) | Empreinte comparée WAC / KAPE / EZ sous bac à sable (Sysmon, audit en option) | à faire | P2 | fort |
-| [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à décider (étude) | P2 | fort |
 | [B-025](B-025-version-2-0.md) | Version 2.0.0 (montée majeure), juste avant l'article DFIR | à faire | P2 | faible |
 | [B-018](B-018-article-dfir.md) | Article de présentation (2 pages, magazine DFIR), après la 2.0.0 et avant la 3.0 | à faire | P3 | moyen |
 
@@ -64,6 +63,7 @@ versions serveur, artefacts propres aux serveurs (web, Active Directory).
 | [B-041](B-041-active-directory.md) | Artefacts de compromission d'Active Directory (contrôleurs de domaine) | à faire | P2 | fort |
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider (reportée en 3.0) | P3 | fort |
 | [B-037](B-037-compatibilite-windows-xp.md) | Collecte compatible avec toutes les versions de Windows depuis XP SP1 (après B-039) | à faire | P3 | fort |
+| [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à décider (étude, reportée en 3.0) | P2 | fort |
 
 ## Réalisé
 
