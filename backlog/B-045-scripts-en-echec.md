@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P2 | faible |
+| en cours | P2 | faible |
 
 ## Pourquoi
 Mesure de l'empreinte (B-027), collecte seule avec `binary: unverified` (réglage par défaut) : sur 67 882 pièces du manifeste, 144 sont en échec `0x80004005 Erreur non spécifiée` — 110 scripts d'un paquet de `C:\Program Files\WindowsApps` (MicrosoftWindows.Client.WebExperience), des `winrm.cmd` et `.js` de `C:\Windows\WinSxS`, de `SystemApps`, d'`EdgeCore`. Le cycle de la VM ne les voit pas : il ne lit pas chaque exécutable de cette façon. Un fichier non lu est une pièce manquante, et l'erreur ne dit pas pourquoi.
@@ -26,3 +26,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-10-08 : créée pendant B-027.
+- 2026-10-08 : en cours — recherche de la cause.
