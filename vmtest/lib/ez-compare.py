@@ -347,7 +347,15 @@ def compare_prefetch(ez_csv, wac_json):
             v = volumes[i] if i < len(volumes) else {}
             note("volume", key, (v.get("DeviceName"), v.get("SerialNumber"), wac_date(v.get("CreationTimeUtc"))),
                  (r[f"Volume{i}Name"], r[f"Volume{i}Serial"], ez_date(r[f"Volume{i}Created"])))
-        note("directories", key, sorted(d.get("Directory") for v in volumes for d in v.get("Directories") or []), split(r["Directories"]))
+        mine = sorted(d.get("Directory") for v in volumes for d in v.get("Directories") or [])
+        theirs = split(r["Directories"])
+        # PECmd joins the directory lists of two volumes without a separator
+        # ("…\\FR-FR\\VOLUME{…}\\SYSTEM VOLUME INFORMATION"): cut at the second volume.
+        rejoined = sorted(part for x in theirs for part in re.split(r"(?<=.)(?=\\VOLUME\{)", x))
+        if rejoined != theirs and mine == rejoined:
+            explained["two volumes' directory lists joined without a separator (PECmd; WAC lists them per volume)"] += 1
+            theirs = rejoined
+        note("directories", key, mine, theirs)
         note("files loaded", key, sorted(f.get("Filename") for f in p.get("FileNames") or []), split(r["FilesLoaded"]))
     only_ez, only_wac = set(ez) - set(wac), set(wac) - set(ez)
     failed = [k for k in only_ez if ez[k]["ParsingError"] == "True" or not ez[k]["ExecutableName"]]
@@ -532,8 +540,8 @@ def compare_jumplist(auto_csv, custom_csv, wac_auto, wac_custom):
 # AmcacheParser's CSV -> (WAC's file, WAC's table, the column that pairs the entries, WAC's key for it).
 AMCACHE_TABLES = {
     "ProgramEntries": ("amcache_applications.json", None, "ProgramId", "KeyName"),
-    "AssociatedFileEntries": ("amcache_application_files.json", None, ("ProgramId", "SHA1", "FullPath"), ("ProgramId", "Sha1", "LongPath")),
-    "UnassociatedFileEntries": ("amcache_application_files.json", None, ("ProgramId", "SHA1", "FullPath"), ("ProgramId", "Sha1", "LongPath")),
+    "AssociatedFileEntries": ("amcache_application_files.json", None, ("ProgramId", "SHA1", "FullPath"), ("ProgramId", "AmcacheSha1", "LongPath")),
+    "UnassociatedFileEntries": ("amcache_application_files.json", None, ("ProgramId", "SHA1", "FullPath"), ("ProgramId", "AmcacheSha1", "LongPath")),
     "DriveBinaries": ("amcache_inventory.json", "InventoryDriverBinary", "KeyName", "KeyName"),
     "DevicePnps": ("amcache_inventory.json", "InventoryDevicePnp", "KeyName", "KeyName"),
     "DeviceContainers": ("amcache_inventory.json", "InventoryDeviceContainer", "KeyName", "KeyName"),
@@ -543,9 +551,9 @@ AMCACHE_TABLES = {
 # AmcacheParser's column -> WAC's key, where the names differ.
 AMCACHE_COLUMNS = {
     "KeyLastWriteTimestamp": "KeyLastWriteTimeUtc", "FileKeyLastWriteTimestamp": "KeyLastWriteTimeUtc",
-    "SHA1": "Sha1", "FullPath": "LongPath", "LinkDate": "LinkDateUtc", "DriverTimeStamp": "DriverTimeStampUtc",
+    "SHA1": "AmcacheSha1", "FullPath": "LongPath", "LinkDate": "LinkDateUtc", "DriverTimeStamp": "DriverTimeStampUtc",
     "LnkName": "ShortcutPath", "InstallDate": "InstallDateUtc", "DriverLastWriteTime": "DriverLastWriteTimeUtc",
-    ("DriveBinaries", "DriverId"): "Sha1",   # a driver's DriverId is its SHA-1: WAC names it so
+    ("DriveBinaries", "DriverId"): "AmcacheSha1",   # a driver's DriverId is its SHA-1: WAC names it so
 }
 
 
@@ -651,15 +659,17 @@ def compare_shellbags(ez_csv, wac_json):
     entry. SBECmd's FirstInteracted and LastInteracted are readings of key
     times: checked against the times WAC publishes, not as values of their own."""
     with open(ez_csv, encoding="utf-8-sig", newline="") as f:
-        ez = {(r["BagPath"], int(r["Slot"])): r for r in csv.DictReader(f)}
+        # Paired by hive too: UsrClass.dat and NTUSER.DAT each have a BagMRU tree.
+        ez = {(r["SourceFile"].rsplit("\\", 1)[-1].lower(), r["BagPath"], int(r["Slot"])): r for r in csv.DictReader(f)}
     with open(wac_json, encoding="utf-8-sig") as f:
         roots = [b for b in json.load(f) if isinstance(b, dict)]
     wac = {}
     def walk(bag, path):
-        wac[(path, bag["ID"])] = bag
+        wac[(hive, path, bag["ID"])] = bag
         for child in bag.get("Children") or []:
             walk(child, f"{path}\\{bag['ID']}")
     for b in roots:
+        hive = str(b.get("Hive", "UsrClass.dat")).lower()
         walk(b, b.get("Source", "BagMRU"))
     c = Comparison("SBECmd")
     for key in sorted(set(ez) & set(wac)):
@@ -682,7 +692,13 @@ def compare_shellbags(ez_csv, wac_json):
         item = (w.get("ShellItems") or [{}])[-1]
         blocks = [b for b in item.get("ExtensionBlocks") or [] if isinstance(b, dict)]
         delegated = item.get("DelegatedItem") or {}
+        # The name as each kind of item holds it: a users' property view in its
+        # property store (System.ItemNameDisplay), a share as its UNC path
+        # (Location), the users' files folder as its PrimaryName.
+        displayed = [v.get("Value") for ps in item.get("PropertyStores") or [] for v in ps.get("Values") or []
+                     if v.get("Name") == "System.ItemNameDisplay"]
         names = {str(x).lower().rstrip("\\") for x in (item.get("Name"), item.get("Identifier"), item.get("Uri"),
+                 item.get("Location"), item.get("PrimaryName"), *displayed,
                  delegated.get("Identifier"), *(b.get("LongName") for b in blocks)) if x}
         names |= {n.split(" (")[0] for n in names}
         if item.get("Type") == "ROOT_FOLDER" and r["Value"].lower().rstrip("\\") not in names:
@@ -690,7 +706,9 @@ def compare_shellbags(ez_csv, wac_json):
         else:
             c.note("name", key, r["Value"].lower().rstrip("\\") in names, True)
         if r["ModifiedOn"]:
-            c.date("modified", key, item.get("ModificationDateUtc"), r["ModifiedOn"])
+            # An archive item read through libarchive (7z, tar) dates it ModifiedUtc.
+            c.date("modified", key, item.get("ModificationDateUtc") or item.get("ModifiedUtc") or item.get("ModifiedDateUtc"),
+                   r["ModifiedOn"])
         for b in blocks:
             if r["CreatedOn"] and b.get("CreatedDateUtc"):
                 c.date("created", key, b["CreatedDateUtc"], r["CreatedOn"])
