@@ -446,9 +446,11 @@ void printProgressEnd();
 void printStep(const std::wstring& label);
 
 /*! Prints the label of a step, in the console's language, as " - label : ".
+* The log keeps its English label (time per step, investigation.json).
 * @param step the step
+* @param qualifier what the step bears on, after the label (" (C:)"); none by default
 */
-void printStep(Text step);
+void printStep(Text step, const std::wstring& qualifier = L"");
 
 /*! Prints the heading of a phase, in yellow, in the console's language.
 * @param heading the heading, e.g. Text::HeadingRawExtraction

@@ -612,9 +612,9 @@ void convertNtfsMetadata() {
 	unsigned mftVolumes = 0, usnVolumes = 0, zoneVolumes = 0;
 	HRESULT mftFailure = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), usnFailure = mftFailure;
 	for (const std::wstring& volume : fixedNtfsVolumes()) {
-		const std::wstring suffix = L" (" + volume + L") : ";
+		const std::wstring qualifier = L" (" + volume + L")";
 		Mft mft;
-		printStep(L" - " + text(Text::StepReadMft) + suffix);
+		printStep(Text::StepReadMft, qualifier);
 		HRESULT hresult = mft.getData(volume);
 		if (hresult != ERROR_SUCCESS) {
 			printError(hresult);
@@ -623,13 +623,13 @@ void convertNtfsMetadata() {
 		}
 		printSuccess();
 		if (mftOut) {
-			printStep(L" - " + text(Text::StepWriteMft) + suffix);
+			printStep(Text::StepWriteMft, qualifier);
 			hresult = mft.toJson(*mftOut);
 			if (hresult != ERROR_SUCCESS) { printError(hresult); mftFailure = hresult; }
 			else { printSuccess(); ++mftVolumes; }
 		}
 		if (usnOut) {
-			printStep(L" - " + text(Text::StepUsnJournal) + suffix);
+			printStep(Text::StepUsnJournal, qualifier);
 			UsnJournal journal;
 			hresult = journal.getData(volume);
 			if (hresult == ERROR_SUCCESS) hresult = journal.toJson(*usnOut, mft);

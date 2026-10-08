@@ -144,9 +144,9 @@ void printStep(const std::wstring& label) {
 	writeConsole(label);
 }
 
-void printStep(Text step) {
-	printStep(L" - " + text(step) + L" : ");
-	g_stepEnglish = text(step, Language::English);
+void printStep(Text step, const std::wstring& qualifier) {
+	printStep(L" - " + text(step) + qualifier + L" : ");
+	g_stepEnglish = text(step, Language::English) + qualifier;
 }
 
 void printHeading(Text heading) {
