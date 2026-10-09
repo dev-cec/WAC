@@ -576,26 +576,31 @@ Three details in this output are deliberate, and illustrate the rules above:
 
 ## 🚀 PERFORMANCE
 
-Measured on the Windows 11 test VM (NVMe-backed, 28 September 2026), each run
-checked by the harness; the `--binary-all` row and the phase breakdown below
-are from 25 September (version 1.3.1), before the NTFS metadata:
+Measured on the Windows 11 test VM (NVMe-backed, 9 October 2026, version
+2.0.0), each run checked by the harness; the `--binary-all` row is from
+25 September (version 1.3.1):
 
 | Run | Duration | Exhibit store | What it holds |
 |---|---|---|---|
-| full, `--events --binary` | **3 min 28 s** | 1.2 GB, 1 667 exhibits | the cited binaries not authenticated (62, 250 MB); NTFS metadata: `$MFT` (380 MB, 361 936 records, 122 806 deleted), change journal (35 MB kept of 3.6 GB, 342 473 records), `$LogFile` (64 MB) |
-| `--collect --events --binary` | **8 min 24 s** | 2.7 GB, 6 087 files | 44 446 executables of every volume read and verified, 41 593 authenticated or cleared (not copied), 2 853 collected (1.2 GB); the same NTFS metadata |
-| `--convert` of that collection | **56 s** | read only | seal and every fingerprint checked first; identical JSON on a second run |
-| `--collect --events --binary-all` | **21 min 45 s** | 20.0 GB | 58 509 executables copied, each with its signature verdict (previous cycle) |
+| `--collect --events --binary` | **7 min 30 s** | 2.1 GB, 6 032 files | 49 226 executables of every volume read and verified, 28 508 authenticated or cleared (not copied), 2 597 collected (771 MB); NTFS metadata: `$MFT` (361 920 records), change journal, `$LogFile`; 405 event logs and their providers' resources |
+| `--convert` of that collection | **1 min 43 s** | read only | seal and every fingerprint checked first; identical JSON on a second run |
+| the kit without executables (`binary: none`) | **41 s** | 2.6 GB, 2 178 files | the same artefacts; KAPE (`KapeTriage`) takes 44 s for 1 427 files, 0.96 GB |
+| `--collect --events --binary-all` | **21 min 45 s** | 20.0 GB | 58 509 executables copied, each with its signature verdict |
 
-**Where the time goes** in a `--collect --binary` (25 September, single-threaded,
-before the analysis pipeline), as WAC's log records it per phase: reading and verifying the 43 513 executables takes **10 min 46 s** — of which
-loading the 13 817 signature catalogs 32 s, Store packages 8 s — and copying the
-unauthenticated ones **29 s**; hives, event logs, provider resources and sealing
-take the rest. The cost is reading and hashing the whole volume, not writing:
-the raw reader fetches contiguous clusters by batches of 1 MiB, and an
-authenticated binary gets its Authenticode digest only, its MD5, SHA-1 and
-SHA-256 being computed solely for what is collected. The duration depends
-heavily on the hardware: USB 2 or USB 3, processor, disk.
+**Where the time goes**, as WAC records it step by step (`investigation.json`,
+`conversion.json`), for the shipped kit's collection (488 s): reading and
+verifying every executable **389 s**, fingerprinting the modules of the running
+processes 43 s, the providers' resource files 11 s, the raw reading of hives,
+artefact files and NTFS metadata 26 s, loading the trust set 5 s, sealing 3 s.
+The cost is reading and hashing the whole volume, not writing: the raw reader
+fetches contiguous clusters by batches of 1 MiB, and an authenticated binary
+gets its Authenticode digest only, its MD5, SHA-1 and SHA-256 being computed
+solely for what is collected. A conversion (80 s without `--binary`) spends
+56 s checking the exhibit store and rebuilding its working copy, once for every
+artefact; each artefact then decodes in a fraction of a second to 11 s (event
+logs). The comparison file (`doc/comparison`) sets every step against KAPE and
+Eric Zimmerman's tools. The duration depends heavily on the hardware: USB 2 or
+USB 3, processor, disk.
 
 **Authentic Microsoft binaries are hashed, not collected.** Most referenced
 binaries are Windows components, identical on every machine of the same build.
@@ -687,11 +692,10 @@ point is not the ratio but the shape: the streamed figure does not grow with the
 size of the logs, so it cannot reach the level where Windows starts paging — and
 paging writes to `pagefile.sys`, on the disk one is trying not to modify.
 
-End to end, the offline path took **4 min 33 s** to collect and convert in one
-run (a mode since removed: WAC collects or converts, B-047) with `--events` and
-`--binary` on the test VM (170 344 events from 404 logs), against about
-20 minutes for the old API path; it has not yet been timed on physical
-hardware.
+End to end, the offline path collects in **7 min 30 s** and converts in
+**1 min 43 s** with `--events` and `--binary` on the test VM (211 972 events
+from 405 logs), against about 20 minutes for the old API path, which did both
+at once; it has not yet been timed on physical hardware.
 
 What replaces them is the extraction itself: the `.evtx` files must be copied to
 the collection medium first (~117 MB on an ordinary installation), and on a USB
