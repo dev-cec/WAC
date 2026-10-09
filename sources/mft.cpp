@@ -2,6 +2,7 @@
  *  \brief The $MFT of the system volume, read from its exhibit (see mft.h).
  */
 #include "mft.h"
+#include "long_path.h"
 #include "conversions.h"
 #include "consigne.h"
 #include "idList.h"
@@ -167,7 +168,7 @@ Json MftEntry::toJson(const std::wstring& path, bool pathComplete,
 
 template <typename Visit>
 HRESULT Mft::forEachRecord(Visit visit) const {
-	std::ifstream in(std::filesystem::path(file_), std::ios::binary);
+	std::ifstream in(std::filesystem::path(extendedPath(file_)), std::ios::binary);
 	if (!in) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	const size_t perBlock = std::max<size_t>(1, (4u << 20) / recordSize_);   // 4 MiB at a time
 	std::vector<uint8_t> block(perBlock * recordSize_);
@@ -195,7 +196,7 @@ HRESULT Mft::getData(const std::wstring& volume) {
 	volume_ = volume.substr(0, 2);
 	// Bytes per record, from record 0 ($MFT itself): 1024 or 4096 on the volumes Windows formats.
 	{
-		std::ifstream in(std::filesystem::path(file_), std::ios::binary);
+		std::ifstream in(std::filesystem::path(extendedPath(file_)), std::ios::binary);
 		uint8_t header[0x20] = {};
 		in.read(reinterpret_cast<char*>(header), sizeof header);
 		recordSize_ = in.gcount() == (std::streamsize)sizeof header && std::memcmp(header, "FILE", 4) == 0

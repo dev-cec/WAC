@@ -858,6 +858,15 @@ Un fichier d'un autre volume que le volume système est rangé sous
 \path|_volume_D\...| ; le JSON indique toujours le chemin d'origine, avec sa
 vraie lettre de lecteur.
 
+Sous \fichier{exhibits/} et \fichier{working/}, un chemin dépasse souvent
+260 caractères : celui d'origine, plus le dossier de sortie. \wac{} l'écrit en
+chemin étendu (\path|\\?\|). L'Explorateur et plusieurs commandes de Windows
+(\texttt{Copy-Item}, \texttt{Remove-Item} de PowerShell~5.1, une copie par
+glisser-déposer) s'arrêtent sur ces fichiers, parfois sans le dire. Pour copier
+ou effacer une collecte, utiliser \texttt{robocopy} ou \texttt{rd /s /q
+\textbackslash\textbackslash?\textbackslash<chemin>} ; pour la vérifier,
+\fichier{verifier-consigne.ps1}, qui lit chaque pièce en chemin étendu.
+
 \section{Le manifeste de consigne}
 
 \fichier{exhibits/MANIFEST.json} identifie la collecte et chaque pièce.
@@ -1814,7 +1823,7 @@ shellbags et des raccourcis est ajoutée systématiquement.
 \section{Chemins}
 
 Les chemins et valeurs sont restitués \textbf{tels qu'ils figurent sur le
-disque}, sans transformation : l'échappement n'intervient qu'à l'écriture du
+disque}. Rien n'est transformé : l'échappement n'intervient qu'à l'écriture du
 JSON.
 
 % ============================================================ 7

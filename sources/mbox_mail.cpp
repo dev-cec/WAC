@@ -326,7 +326,7 @@ bool parseMimeMessage(const std::string& raw, MimeMessage& m) {
 
 bool forEachMboxMessage(const std::wstring& path, const std::function<void(MimeMessage&)>& onMessage, size_t& skipped) {
 	skipped = 0;
-	std::ifstream in(std::filesystem::path(path), std::ios::binary);
+	std::ifstream in(std::filesystem::path(extendedPath(path)), std::ios::binary);
 	if (!in) return false;
 	std::string line, current;
 	size_t position = 0, start = 0;

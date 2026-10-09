@@ -2,6 +2,7 @@
  *  \brief The FAT and exFAT volumes of the machine, read raw (see fat_volumes.h).
  */
 #include "fat_volumes.h"
+#include "long_path.h"
 #include "audit.h"
 #include "consigne.h"
 #include "idList.h"
@@ -139,7 +140,7 @@ HRESULT FatAwareReader::read(const std::wstring& absolutePath, const std::wstrin
 	if (found == v->byPath.end() || found->second.directory) return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	const FatEntry& e = found->second;
 	std::ofstream file;
-	if (!output.empty()) file.open(std::filesystem::path(output), std::ios::binary);
+	if (!output.empty()) file.open(std::filesystem::path(extendedPath(output)), std::ios::binary);
 	Md5Stream md5;
 	Sha1Stream sha1;
 	Sha256Stream sha256;

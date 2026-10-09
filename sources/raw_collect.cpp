@@ -192,10 +192,8 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 
 	// Create the destination tree under the exhibit store
 	for (const auto& group : parVolume)
-		for (const std::pair<std::wstring, std::wstring>& it : group.second) {
-			std::error_code ec;
-			std::filesystem::create_directories(std::filesystem::path(it.second).parent_path(), ec);
-		}
+		for (const std::pair<std::wstring, std::wstring>& it : group.second)
+			createFolders(parentFolder(it.second));
 
 	/* One pass per volume. An inaccessible volume must not take the others
 	   down: its failure is recorded and we go on, as for a missing hive. The
@@ -351,8 +349,7 @@ HRESULT extractBrowserFiles() {
 			const auto found = entries.find(toLower(name + suffix));
 			if (found == entries.end() || found->second.isDirectory) continue;
 			const std::wstring absolute = folder + L"\\" + found->second.name;
-			std::error_code ec;
-			std::filesystem::create_directories(std::filesystem::path(exhibitTarget(absolute)).parent_path(), ec);
+			createFolders(parentFolder(exhibitTarget(absolute)));
 			RawHiveExtraction line;
 			if (FAILED(reader.read(absolute, exhibitTarget(absolute), line))) result = S_FALSE;
 			reading.push_back(std::move(line));
@@ -660,9 +657,7 @@ HRESULT ExtractFileArtefactsRaw() {
 					}
 			}
 			// ExtractFilesRaw writes into existing folders only, as for the hives.
-			std::error_code ec;
-			for (const auto& item : items)
-				std::filesystem::create_directories(std::filesystem::path(item.second).parent_path(), ec);
+			for (const auto& item : items) createFolders(parentFolder(item.second));
 			std::vector<RawHiveExtraction> reading;
 			const HRESULT hrBin = items.empty() ? S_OK : ExtractFilesRaw(volume, items, nullptr, &reading);
 			ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volume
@@ -718,8 +713,7 @@ HRESULT ExtractNtfsMetadataRaw() {
 		if (mft) items.push_back({ L"\\$MFT", exhibitTarget(drive + L"\\$MFT") });
 		if (conf.artefacts.logFile) items.push_back({ L"\\$LogFile", exhibitTarget(drive + L"\\$LogFile") });
 		if (conf.artefacts.ntfsVolumes) items.push_back({ L"\\$Boot", exhibitTarget(drive + L"\\$Boot") });
-		std::error_code ec;
-		std::filesystem::create_directories(exhibitTarget(drive + L"\\$Extend"), ec);   // the store's folder of the volume included
+		createFolders(exhibitTarget(drive + L"\\$Extend"));   // the store's folder of the volume included
 		std::vector<RawHiveExtraction> reading;
 		HRESULT result = ExtractFilesRaw(volume, items, nullptr, &reading);
 		if (conf.artefacts.usnJournal) {
@@ -782,15 +776,15 @@ HRESULT RepairWorkingHives() {
 	static const std::set<std::wstring> NAMES = { L"system", L"software", L"sam", L"amcache.hve",
 	                                              L"security", L"default", L"ntuser.dat", L"usrclass.dat" };
 	std::vector<std::wstring> hives;
-	std::error_code ec;
-	for (const std::filesystem::directory_entry& e :
-	     std::filesystem::recursive_directory_iterator(workingFolder(), ec)) {
-		if (ec) break;
+	const std::wstring working = workingFolder();
+	forEachFileBelow(working, [&](const std::wstring& relative) {
+		const size_t cut = relative.find_last_of(L'\\');
+		const std::wstring name = toLower(relative.substr(cut == std::wstring::npos ? 0 : cut + 1));
+		const std::wstring folder = toLower(parentFolder(relative));
 		// The RegBack copies are exhibits, not hives to replay: they have no logs of their own.
-		if (e.is_regular_file(ec) && NAMES.count(toLower(e.path().filename().wstring()))
-		    && toLower(e.path().parent_path().filename().wstring()) != L"regback")
-			hives.push_back(e.path().wstring());
-	}
+		const bool regBack = folder == L"regback" || (folder.size() > 8 && folder.compare(folder.size() - 8, 8, L"\\regback") == 0);
+		if (NAMES.count(name) && !regBack) hives.push_back(working + L"\\" + relative);
+	});
 	log(2, L"❇️Hives of the working copy to repair: " + std::to_wstring(hives.size()));
 	return repairHives(hives, {});
 }

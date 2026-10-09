@@ -7,6 +7,7 @@
 #include "json.h"
 #include "sha.h"
 #include "quickdigest5.h"
+#include "long_path.h"
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -65,11 +66,8 @@ std::wstring letterOf(const std::wstring& volumePath) {
  *  that is, the first time someone else reads it.
  */
 std::wstring outputRelative(const std::wstring& absolute) {
-	std::error_code ec;
-	const std::filesystem::path rel = std::filesystem::relative(
-		std::filesystem::path(absolute), std::filesystem::path(conf._outputDir), ec);
-	if (ec || rel.empty()) return absolute;      // outside the output folder: as is
-	return rel.wstring();
+	const std::wstring relative = pathBelow(absolute, conf._outputDir);
+	return relative.empty() ? absolute : relative;   // outside the output folder: as is
 }
 
 } // namespace
@@ -92,20 +90,14 @@ unsigned long long ExhibitStoreFreeSpace() {
 }
 
 HRESULT ExhibitStoreCheckLocation(unsigned long long estimatedNeed) {
-	std::error_code ec;
-
 	// 1. A working directory already populated would analyse an earlier collection.
-	const std::filesystem::path working = workingFolder();
-	if (std::filesystem::exists(working, ec)) {
+	const std::wstring working = workingFolder();
+	if (pathExists(working)) {
 		bool populated = false;
-		for (const std::filesystem::directory_entry& e :
-		     std::filesystem::recursive_directory_iterator(working, ec)) {
-			if (ec) break;
-			if (e.is_regular_file(ec)) { populated = true; break; }
-		}
+		forEachFileBelow(working, [&](const std::wstring&) { populated = true; });
 		if (populated) {
 			log(2, L"🔥The working directory already holds files: "
-			       + working.wstring()
+			       + working
 			       + L" — a previous collection would be analysed instead of "
 			       L"this one. Use --output towards a fresh folder.",
 			    ERROR_DIR_NOT_EMPTY);
@@ -196,10 +188,8 @@ bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILE
  *  @param stored the file in the exhibit store
  *  @return its working copy; empty for an empty path */
 std::wstring workingCopyOf(const std::wstring& stored) {
-	if (stored.empty()) return std::wstring();
-	std::error_code ec;
-	const std::filesystem::path relative = std::filesystem::relative(stored, exhibitStoreFolder(), ec);
-	return ec ? std::wstring() : (std::filesystem::path(workingFolder()) / relative).wstring();
+	const std::wstring relative = pathBelow(stored, exhibitStoreFolder());
+	return relative.empty() ? std::wstring() : workingFolder() + L"\\" + relative;
 }
 
 const std::map<std::wstring, StoredExhibit>& ExhibitStoreIndex() {
@@ -235,14 +225,13 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 	if (copies) *copies = 0;
 	if (bytes) *bytes = 0;
 
-	const std::filesystem::path exhibitStore = exhibitStoreFolder();
-	const std::filesystem::path working  = workingFolder();
-	std::error_code ec;
-	if (!std::filesystem::exists(exhibitStore, ec)) {
-		log(2, L"🔥Exhibit store absent: " + exhibitStore.wstring(), ERROR_PATH_NOT_FOUND);
+	const std::wstring exhibitStore = exhibitStoreFolder();
+	const std::wstring working = workingFolder();
+	if (!pathExists(exhibitStore)) {
+		log(2, L"🔥Exhibit store absent: " + exhibitStore, ERROR_PATH_NOT_FOUND);
 		return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
 	}
-	std::filesystem::create_directories(working, ec);
+	createFolders(working);
 
 	/*  The manifest's fingerprints, indexed by exhibit store path: the working
 	 *  copy is compared with what was READ FROM THE VOLUME, not with a re-read of
@@ -257,54 +246,48 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 	unsigned long long volume = 0;
 	HRESULT global = ERROR_SUCCESS;
 
-	for (const std::filesystem::directory_entry& e :
-	     std::filesystem::recursive_directory_iterator(exhibitStore, ec)) {
-		if (ec) break;
-		if (!e.is_regular_file(ec)) continue;
-
-		const std::filesystem::path relative =
-			std::filesystem::relative(e.path(), exhibitStore, ec);
-		if (ec) continue;
+	// The walk, the copy and the check go through Win32: an exhibit's path can
+	// pass MAX_PATH, where std::filesystem fails (long_path.h, B-049).
+	forEachFileBelow(exhibitStore, [&](const std::wstring& relative) {
 		// The manifest and its seal belong to the exhibit store alone: copying
 		// them to the working directory would invite changing them.
-		const std::wstring name = relative.filename().wstring();
-		if (name == L"MANIFEST.json" || name == L"MANIFEST.sha256") continue;
+		const std::wstring name = relative.substr(relative.find_last_of(L'\\') + 1);
+		if (name == L"MANIFEST.json" || name == L"MANIFEST.sha256") return;
 
-		const std::filesystem::path target = working / relative;
+		const std::wstring source = exhibitStore + L"\\" + relative;
+		const std::wstring target = working + L"\\" + relative;
 		/*  AN EXISTING WORKING COPY IS NOT OVERWRITTEN. The function is called
 		 *  after each extraction phase; overwriting would undo the work already
 		 *  done on the previous phase's files — in particular the replay of the
 		 *  hives' transaction logs, which happens right after they are copied. */
-		if (std::filesystem::exists(target, ec)) { ++existing; continue; }
-		std::filesystem::create_directories(target.parent_path(), ec);
-		std::filesystem::copy_file(e.path(), target,
-		                           std::filesystem::copy_options::overwrite_existing, ec);
-		if (ec) {
-			log(2, L"🔥Cannot copy into the working directory: " + relative.wstring());
+		if (pathExists(target)) { ++existing; return; }
+		if (!copyFileLong(source, target, true)) {
+			log(2, L"🔥Cannot copy into the working directory: " + relative, GetLastError());
 			++failed;
 			global = S_FALSE;
-			continue;
+			return;
 		}
 		++count;
-		volume += (unsigned long long)std::filesystem::file_size(target, ec);
+		uint64_t size = 0;
+		if (fileSizeOf(target, size)) volume += size;
 
 		/*  VERIFYING THE COPY. Without it, a silently truncated copy — full
 		 *  medium, write error — would give a working directory that does not
 		 *  match the exhibit, and the whole analysis would bear on something
 		 *  else. */
-		const auto att = expected.find(e.path().wstring());
+		const auto att = expected.find(source);
 		if (att != expected.end()) {
-			const std::wstring obtained = sha256OfFile(target.wstring());
+			const std::wstring obtained = sha256OfFile(target);
 			if (obtained != att->second) {
 				log(2, L"🔥Working copy does not match the exhibit store: "
-				       + relative.wstring() + L" (expected " + att->second
+				       + relative + L" (expected " + att->second
 				       + L", got " + obtained + L")");
 				++failed;
 				global = S_FALSE;
 			}
 			else ++verified;
 		}
-	}
+	});
 
 	log(2, L"❇️Working directory: " + std::to_wstring(count) + L" file(s) copied, "
 	     + std::to_wstring(verified) + L" verified by fingerprint, "
@@ -644,11 +627,10 @@ HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check) {
 
 HRESULT ExhibitStoreProduce(const std::wstring& path, const std::string& bytes, const std::wstring& source,
                             const std::wstring& method) {
-	std::error_code ec;
-	std::filesystem::create_directories(std::filesystem::path(path).parent_path(), ec);
+	createFolders(parentFolder(path));
 	{
 		// Binary mode: the fingerprints are those of the bytes on the medium.
-		std::ofstream f(std::filesystem::path(path), std::ios::binary);
+		std::ofstream f(std::filesystem::path(extendedPath(path)), std::ios::binary);
 		f.write(bytes.data(), (std::streamsize)bytes.size());
 		if (!f) {
 			log(2, L"🔥Exhibit not written: " + path);
@@ -660,8 +642,8 @@ HRESULT ExhibitStoreProduce(const std::wstring& path, const std::string& bytes, 
 	   the volumes), and the exhibit store is not read again (backlog B-040). */
 	{
 		const std::wstring working = workingCopyOf(path);
-		std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
-		std::ofstream w(std::filesystem::path(working), std::ios::binary);
+		createFolders(parentFolder(working));
+		std::ofstream w(std::filesystem::path(extendedPath(working)), std::ios::binary);
 		w.write(bytes.data(), (std::streamsize)bytes.size());
 		if (!w) {
 			log(2, L"🔥Working copy not written: " + working);

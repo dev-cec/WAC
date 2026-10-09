@@ -7,6 +7,7 @@
  *  Built for hives/EVTX/Tasks: non-resident, medium-sized files.
  */
 #include "raw_hive.h"
+#include "long_path.h"
 #include "conversions.h"
 #include <vector>
 #include <cstdint>
@@ -604,7 +605,7 @@ public:
         if (!resolveWof(rec, wof) || !wof.present) return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
         std::vector<uint8_t> data;
         if (!readWofStream(wof, data)) return E_FAIL;
-        std::ofstream out(std::filesystem::path(outFile), std::ios::binary | std::ios::trunc);
+        std::ofstream out(std::filesystem::path(extendedPath(outFile)), std::ios::binary | std::ios::trunc);
         out.write((const char*)data.data(), (std::streamsize)data.size());
         if (!out) return HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
         algorithm = wof.algorithm;
@@ -1169,7 +1170,7 @@ public:
         std::ostream nullOutput(&null_);
         std::ofstream file;
         if (!outFile.empty()){
-            file.open(std::filesystem::path(outFile), std::ios::binary | std::ios::trunc);
+            file.open(std::filesystem::path(extendedPath(outFile)), std::ios::binary | std::ios::trunc);
             if (!file){ RVLOG(L"[raw] cannot open the output\n"); return E_FAIL; }
         }
         // An observer receives the content, whether a file is written or not.
@@ -1964,8 +1965,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
         return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
     }
 
-    std::error_code ec;
-    std::filesystem::create_directories(std::filesystem::path(outDir), ec);
+    createFolders(outDir);
 
     size_t files = 0, kept = 0, failures = 0;
     HRESULT overall = ERROR_SUCCESS;
@@ -2035,8 +2035,7 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
         return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
     }
 
-    std::error_code ec;
-    std::filesystem::create_directories(std::filesystem::path(outDir), ec);
+    createFolders(outDir);
 
     HRESULT global = ERROR_SUCCESS;
     for (const RawDirEntry& e : entries){

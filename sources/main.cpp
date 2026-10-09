@@ -175,9 +175,8 @@ HRESULT prepareConversion() {
 	printSuccess();
 
 	printStep(Text::StepRebuildWorkingCopy);
-	std::error_code ec;
-	std::filesystem::remove_all(workingFolder(), ec);
-	if (ec) {
+	// Win32, whatever the depth: std::filesystem fails past MAX_PATH (long_path.h).
+	if (!removeFolderTree(workingFolder())) {
 		hr = HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
 		auditRecord(L"Deletion of the previous working copy", workingFolder(), hr, Footprint::USB_WRITE);
 		printError(hr);

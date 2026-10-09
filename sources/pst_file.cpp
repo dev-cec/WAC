@@ -78,7 +78,7 @@ bool PstFile::open(const std::wstring& path, std::wstring& why) {
 	std::error_code ec;
 	fileSize_ = std::filesystem::file_size(std::filesystem::path(path), ec);
 	if (ec) { why = L"unreadable"; return false; }
-	file_.open(std::filesystem::path(path), std::ios::binary);
+	file_.open(std::filesystem::path(extendedPath(path)), std::ios::binary);
 	std::vector<uint8_t> h;
 	if (!file_ || !readAt(0, HEADER_SIZE, h)) { why = L"too short for a header"; return false; }
 	if (memcmp(h.data(), "!BDN", 4) != 0) { why = L"no !BDN signature"; return false; }

@@ -414,9 +414,8 @@ void recordJustifications(const std::vector<std::wstring>& sources, const std::w
 	std::vector<RawHiveExtraction> reading;
 	for (const std::wstring& source : sources) {
 		const std::wstring target = pathUnder(exhibitStoreFolder(), source);
-		std::error_code ec;
 		if (ExhibitStoreHolds(target)) continue;
-		std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
+		createFolders(parentFolder(target));
 		RawHiveExtraction line;
 		g_reader->read(source, target, line);    // a failure is recorded as such
 		reading.push_back(std::move(line));
@@ -474,11 +473,10 @@ HRESULT recordStaged(const std::wstring& path, const std::wstring& staged, HRESU
 			++g_duplicates;
 		}
 		else {
-			std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
-			std::filesystem::rename(staged, target, ec);
+			const bool moved = moveFileLong(staged, target);
 			line.outputPath = target;
-			if (ec) {
-				log(2, L"🔥Cannot record as an exhibit: " + target);
+			if (!moved) {
+				log(2, L"🔥Cannot record as an exhibit: " + target, GetLastError());
 				line.result = result = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
 			}
 			else {
@@ -1043,7 +1041,7 @@ struct Recorded { RawHiveExtraction line; SignatureVerdict verdict; bool stored 
  *  @return the file, or an empty string if it could not be written */
 std::wstring stageFromMemory(const std::vector<uint8_t>& content) {
 	const std::wstring staged = newStagingFile();
-	std::ofstream out(std::filesystem::path(staged), std::ios::binary | std::ios::trunc);
+	std::ofstream out(std::filesystem::path(extendedPath(staged)), std::ios::binary | std::ios::trunc);
 	out.write(reinterpret_cast<const char*>(content.data()), (std::streamsize)content.size());
 	if (out) return staged;
 	std::error_code ec;

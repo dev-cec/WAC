@@ -1,4 +1,5 @@
 #include "sha.h"
+#include "long_path.h"
 #include <fstream>
 #include <cstring>
 #include <algorithm>
@@ -170,7 +171,7 @@ void sha256Bytes(const uint8_t* data, size_t length, uint8_t output[32]){
 }
 
 std::wstring sha256OfFile(const std::wstring& path){
-	std::ifstream f(std::filesystem::path(path), std::ios::binary);
+	std::ifstream f(std::filesystem::path(extendedPath(path)), std::ios::binary);
 	if (!f) return L"";
 	Sha256Stream stream;
 	std::vector<char> buffer(1 << 16);

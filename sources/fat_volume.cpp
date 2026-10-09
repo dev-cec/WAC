@@ -2,6 +2,7 @@
  *  \brief Raw reader of FAT12, FAT16, FAT32 and exFAT volumes (see fat_volume.h).
  */
 #include "conversions.h"
+#include "long_path.h"
 #include "fat_volume.h"
 #include <winioctl.h>
 #include <algorithm>
@@ -169,7 +170,7 @@ bool FileVolumeSource::read(uint64_t offset, size_t size, std::vector<uint8_t>& 
 }
 
 bool CopiedVolumeSource::load(const std::wstring& path) {
-	std::ifstream in(std::filesystem::path(path), std::ios::binary);
+	std::ifstream in(std::filesystem::path(extendedPath(path)), std::ios::binary);
 	char magic[8];
 	uint64_t size = 0;
 	uint32_t count = 0;

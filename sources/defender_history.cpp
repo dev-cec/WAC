@@ -211,7 +211,7 @@ bool fingerprintContent(const std::wstring& file, QuarantineResource& r) {
 	std::error_code ec;
 	const uintmax_t total = std::filesystem::file_size(file, ec);
 	if (ec) return false;
-	std::ifstream in(std::filesystem::path(file), std::ios::binary);
+	std::ifstream in(std::filesystem::path(extendedPath(file)), std::ios::binary);
 	Rc4 rc4;
 	std::vector<uint8_t> head;                   // the decrypted start, until the content's offset is known
 	size_t offset = 0;

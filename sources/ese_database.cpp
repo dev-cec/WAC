@@ -2,6 +2,7 @@
  *  \brief Reader of ESE databases (see ese_database.h).
  */
 #include "conversions.h"
+#include "long_path.h"
 #include "ese_database.h"
 #include <algorithm>
 #include <cstring>
@@ -217,7 +218,7 @@ HRESULT EseDatabase::open(const std::wstring& path) {
 	std::error_code ec;
 	fileSize_ = std::filesystem::file_size(path, ec);
 	if (ec) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	file_.open(std::filesystem::path(path), std::ios::binary);
+	file_.open(std::filesystem::path(extendedPath(path)), std::ios::binary);
 	uint8_t header[240] = {};
 	file_.read(reinterpret_cast<char*>(header), sizeof header);
 	if (file_.gcount() != (std::streamsize)sizeof header || readLittleEndian<uint32_t>(header + 4) != 0x89ABCDEF)

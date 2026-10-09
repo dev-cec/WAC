@@ -50,7 +50,7 @@ unsigned long long g_resolved = 0, g_bytes = 0;
 
 //! True if the file starts with the signature of a PE binary.
 bool isValidPe(const std::wstring& path) {
-	std::ifstream f(std::filesystem::path(path), std::ios::binary);
+	std::ifstream f(std::filesystem::path(extendedPath(path)), std::ios::binary);
 	if (!f) return false;
 	char head[2] = { 0, 0 };
 	f.read(head, 2);
@@ -80,8 +80,7 @@ bool isValidPe(const std::wstring& path) {
  */
 std::wstring extractResource(const std::wstring& absolutePath) {
 	const std::wstring working = extractedPath(absolutePath);
-	std::error_code ec;
-	if (std::filesystem::exists(working, ec)) return working;   // already extracted
+	if (pathExists(working)) return working;   // already extracted
 
 	const std::wstring volume  = volumeOfPath(absolutePath);
 	const std::wstring target   = pathUnder(exhibitStoreFolder(), absolutePath);
@@ -92,9 +91,8 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	   store — and checked there (backlog B-040). A conversion has copied the
 	   whole store already and never comes here. */
 	if (conf.mode != RunMode::Convert && ExhibitStoreHolds(target)) {
-		std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
-		std::filesystem::copy_file(target, working, std::filesystem::copy_options::skip_existing, ec);
-		return ec || !isValidPe(working) ? std::wstring() : working;
+		if (!pathExists(working) && !copyFileLong(target, working, false)) return std::wstring();
+		return isValidPe(working) ? working : std::wstring();
 	}
 	/* A conversion reads the collection, never a volume: the file is found
 	   through the manifest (it may share an exhibit stored under another
@@ -105,11 +103,10 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 		const std::map<std::wstring, StoredExhibit>& index = ExhibitStoreIndex();
 		const auto stored = index.find(toLower(absolutePath));
 		if (stored == index.end() || !isValidPe(stored->second.workingFile)) return std::wstring();
-		std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
-		std::filesystem::copy_file(stored->second.workingFile, working, std::filesystem::copy_options::skip_existing, ec);
-		return ec ? std::wstring() : working;
+		if (!pathExists(working) && !copyFileLong(stored->second.workingFile, working, false)) return std::wstring();
+		return working;
 	}
-	std::filesystem::create_directories(std::filesystem::path(target).parent_path(), ec);
+	createFolders(parentFolder(target));
 
 	/* ONE READER FOR THE WHOLE PHASE (backlog B-033): each volume opened once,
 	   each directory's index read once. Extracted one by one, each of the
@@ -124,6 +121,7 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	if (absent) {
 		// A candidate that does not exist: neither an exhibit, nor an empty directory
 // in the exhibit store.
+		std::error_code ec;
 		std::filesystem::remove(std::filesystem::path(target).parent_path(), ec);
 		return std::wstring();
 	}
@@ -149,10 +147,7 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 
 	/* Copy into the working directory — the exhibit's first and only reading
 	   in the store —, where it is checked and read (backlog B-040). */
-	std::filesystem::create_directories(std::filesystem::path(working).parent_path(), ec);
-	std::filesystem::copy_file(target, working,
-	                           std::filesystem::copy_options::overwrite_existing, ec);
-	if (ec) {
+	if (!copyFileLong(target, working, true)) {
 		log(2, L"🔥Cannot make the working copy: " + working);
 		return std::wstring();
 	}

@@ -12,12 +12,17 @@ $ErrorActionPreference = 'Stop'
 
 $root = 'C:\kape'
 $kape = 'C:\Tools\KAPE-archive\KAPE\kape.exe'
-if (Test-Path $root) { Remove-Item -Recurse -Force $root }
+# Removed through \\?\ (cmd's rd): both outputs hold paths past 260 characters,
+# which Remove-Item leaves behind (B-049).
+function Remove-Tree([string]$folder) {
+    if (Test-Path -LiteralPath $folder) { cmd /c "rd /s /q \\?\$folder" }
+}
+Remove-Tree $root
 New-Item -ItemType Directory $root | Out-Null
 
 Set-Location C:\wactest
 if (-not (Test-Path wac.yml)) { throw "wac.yml of the kit absent beside WAC.exe" }
-if (Test-Path kapecmp) { Remove-Item -Recurse -Force kapecmp }
+Remove-Tree C:\wactest\kapecmp
 $wac = Measure-Command { & .\WAC.exe --collect --output=kapecmp > "$root\wac-console.txt" 2>&1 }
 $wacExit = $LASTEXITCODE
 

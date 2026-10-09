@@ -39,19 +39,16 @@ std::vector<std::filesystem::path> listShortcuts(const std::filesystem::path& ro
                                                  const std::wstring& skipped) {
 	if (!recursive) return listFilesByExtension(root, { L".lnk", L".url" });
 	std::vector<std::filesystem::path> files;
-	std::error_code ec;
-	std::filesystem::recursive_directory_iterator it(root, ec), end;
-	for (; !ec && it != end; it.increment(ec)) {
-		if (it->is_directory(ec)) {
-			if ((unsigned)it.depth() >= SHORTCUT_TREE_DEPTH
-			    || (!skipped.empty() && toLower(it->path().wstring()) == toLower(skipped)))
-				it.disable_recursion_pending();
-			continue;
-		}
-		const std::wstring extension = toLower(it->path().extension().wstring());
-		if (it->is_regular_file(ec) && (extension == L".lnk" || extension == L".url"))
-			files.push_back(it->path());
-	}
+	const std::wstring folder = root.wstring();
+	// Win32, whatever the depth of a path (long_path.h): a subfolder below
+	// SHORTCUT_TREE_DEPTH levels, or the skipped one, is not walked.
+	forEachFileBelow(folder, [&](const std::wstring& relative) {
+		const std::wstring extension = toLower(std::filesystem::path(relative).extension().wstring());
+		if (extension == L".lnk" || extension == L".url") files.push_back(folder + L"\\" + relative);
+	}, [&](const std::wstring& relative) {
+		const size_t depth = (size_t)std::count(relative.begin(), relative.end(), L'\\');
+		return depth < SHORTCUT_TREE_DEPTH && (skipped.empty() || toLower(folder + L"\\" + relative) != toLower(skipped));
+	});
 	return files;
 }
 

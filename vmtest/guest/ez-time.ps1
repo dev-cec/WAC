@@ -43,23 +43,29 @@ $tools = @{
 $tool = $tools[$Comparison]
 if (-not $tool) { throw "no EZ tool known for '$Comparison' (known: $($tools.Keys -join ', '))" }
 Set-Location C:\wactest
-if (Test-Path $out) { Remove-Item -Recurse -Force $out }
+# Removed through \\?\ (cmd's rd) and copied by robocopy: the store holds paths
+# past 260 characters (B-049), which Remove-Item and Copy-Item fail on.
+function Remove-Tree([string]$folder) {
+    if (Test-Path -LiteralPath $folder) { cmd /c "rd /s /q \\?\$folder" }
+}
+function Copy-Part([string]$source, [string]$target, [string]$file) {
+    $options = @('/R:0', '/W:0', '/NJH', '/NJS', '/NFL', '/NDL', '/NP')
+    if ($file) { robocopy $source $target $file @options | Out-Null } else { robocopy $source $target /E @options | Out-Null }
+    if ($LASTEXITCODE -ge 8) { throw "robocopy $source -> $target failed ($LASTEXITCODE)" }
+}
+Remove-Tree $out
 New-Item -ItemType Directory $out | Out-Null
-if (Test-Path $exhibits) { Remove-Item -Recurse -Force $exhibits }
+Remove-Tree $exhibits
 foreach ($part in $tool.Inputs) {
-    if ($part -eq '.') {
-        # RECmd looks for the hives in the whole store.
-        Copy-Item -Recurse -Force "$store\*" (New-Item -ItemType Directory -Force $exhibits)
-        continue
-    }
-    $target = Join-Path $exhibits $part
-    New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
-    Copy-Item -Recurse -LiteralPath (Join-Path $store $part) $target
+    $source = Join-Path $store $part
+    if ($part -eq '.') { Copy-Part $store $exhibits '' }        # RECmd looks for the hives in the whole store
+    elseif (Test-Path -LiteralPath $source -PathType Leaf) { Copy-Part (Split-Path $source) (Split-Path (Join-Path $exhibits $part)) (Split-Path -Leaf $source) }
+    else { Copy-Part $source (Join-Path $exhibits $part) '' }
 }
 $ezArgs = @($tool.Args) + @('--csv', $out)
 $zim = Measure-Command { & $tool.Exe @ezArgs > "$out\console.txt" 2>&1 }
 $zimExit = $LASTEXITCODE
-Remove-Item -Recurse -Force $exhibits
+Remove-Tree $exhibits
 
 foreach ($j in $tool.Json) { Copy-Item "C:\wactest\split\$j" $out }
 Compress-Archive -Force "$out\*" "C:\wactest\ez\$Comparison.zip"

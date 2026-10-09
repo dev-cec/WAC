@@ -314,7 +314,12 @@ CODE=0
 # the next (636 MiB seen after a series of runs), which makes fetching it
 # useless and hides the traces of the current run.
 $QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
-$QGA run --shell "cd /d $VMDIR && rmdir /s /q out 2>nul & WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
+# Removed through \\?\: the store holds paths past 260 characters (B-049), which
+# rmdir leaves behind otherwise — WAC then refused the next collection
+# (working folder not empty). split goes too, rebuilt at step 7: collected here
+# (its unsigned scripts), it nested the previous cycle's stores one level deeper
+# each cycle — the long-path witness is b049, made on purpose.
+$QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\out 2>nul & rmdir /s /q \\\\?\\$VMDIR\\split 2>nul & WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
 [[ "$CODE" == "0" ]] && { $QGA run --shell "cd /d $VMDIR && WAC.exe --convert=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 >> run.log 2>&1" || CODE=$?; }
 $QGA read "$VMDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
 
@@ -367,7 +372,9 @@ fetch_results() {
   # Written by PowerShell in UTF-8 without BOM: cmd's dir, even after chcp
   # 65001, wrote accented names in another code page ("Navigation priv?e de
   # Firefox.lnk"), and they no longer matched the manifest.
-  $QGA run -- powershell.exe -NoProfile -Command "[IO.File]::WriteAllLines('$VMDIR\\exhibit-list.txt', [string[]](Get-ChildItem -LiteralPath '$vm\\exhibits' -Recurse -File -Force | ForEach-Object FullName))" >/dev/null 2>&1 \
+  # Listed through \\?\ and given back without it: an exhibit's path can pass
+  # MAX_PATH (B-049), where Get-ChildItem stops without one.
+  $QGA run -- powershell.exe -NoProfile -Command "[IO.File]::WriteAllLines('$VMDIR\\exhibit-list.txt', [string[]](Get-ChildItem -LiteralPath '\\\\?\\$vm\\exhibits' -Recurse -File -Force | ForEach-Object { \$_.FullName.Substring(4) }))" >/dev/null 2>&1 \
     && $QGA read "$VMDIR\\exhibit-list.txt" "$host/exhibits/LIST.txt" >/dev/null 2>&1 \
     && [[ -s "$host/exhibits/LIST.txt" ]] \
     && echo "   + exhibits/LIST.txt" || echo "   ⚠️ list of the exhibit store not read"
@@ -523,7 +530,7 @@ if [[ $SPLIT -eq 1 ]]; then
   }
   json_count() { $QGA run --shell "dir /b $VMDIR\\split\\*.json 2>nul" 2>/dev/null | grep -c '\.json' || true; }
 
-  $QGA run --shell "cd /d $VMDIR && rmdir /s /q split 2>nul & echo." >/dev/null
+  $QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\split 2>nul & echo." >/dev/null
   if full_cycle; then
   # A copy of a signed Store package with one untouched, one modified and one
   # intruding script: the package verification must tell them apart.
@@ -743,7 +750,7 @@ artefacts:
   jump_lists: false
 YML
 $QGA write "$OUTPUT/wac.yml" "$VMDIR\\wac.yml" >/dev/null
-$QGA run --shell "cd /d $VMDIR && rmdir /s /q configured 2>nul & WAC.exe > configured.log 2>&1" \
+$QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\configured 2>nul & WAC.exe > configured.log 2>&1" \
   && echo "   ✅ collection driven by wac.yml went to the end" || echo "   ❌ collection driven by wac.yml ended abnormally"
 $QGA read "$VMDIR\\configured.log" "$OUTPUT/configured.log" >/dev/null 2>&1 || true
 $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true

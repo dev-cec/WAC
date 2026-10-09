@@ -20,11 +20,11 @@ HRESULT ExhibitReader::read(const std::wstring& absolutePath, const std::wstring
 	const std::map<std::wstring, StoredExhibit>& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(absolutePath));
 	if (found == index.end()) return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	std::ifstream in(std::filesystem::path(found->second.workingFile), std::ios::binary);
+	std::ifstream in(std::filesystem::path(extendedPath(found->second.workingFile)), std::ios::binary);
 	if (!in) return line.result = HRESULT_FROM_WIN32(ERROR_READ_FAULT);   // listed, yet missing: altered store
 	std::ofstream out;
 	if (!output.empty()) {
-		out.open(std::filesystem::path(output), std::ios::binary);
+		out.open(std::filesystem::path(extendedPath(output)), std::ios::binary);
 		if (!out) return line.result = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
 	}
 	Md5Stream md5;

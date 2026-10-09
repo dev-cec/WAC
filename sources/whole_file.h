@@ -12,6 +12,8 @@
 #include <fstream>
 #include <system_error>
 
+#include "long_path.h"
+
 /*! A file's bytes, whole, in one read at its size — THE reading of a whole
 *  file (B-044): each decoder used to have its own, a byte-wise stream
 *  iterator for most, several without any bound on the size.
@@ -27,10 +29,10 @@
 template <class Bytes>
 bool readWholeFile(const std::filesystem::path& file, uintmax_t maximum, Bytes& bytes) {
 	bytes.clear();
-	std::error_code ec;
-	const uintmax_t size = std::filesystem::file_size(file, ec);
-	if (ec || size > maximum) return false;
-	std::ifstream in(file, std::ios::binary);
+	// Whatever the length of its path: an exhibit's working copy can pass MAX_PATH (B-049).
+	uint64_t size = 0;
+	if (!fileSizeOf(file.wstring(), size) || size > maximum) return false;
+	std::ifstream in(std::filesystem::path(extendedPath(file.wstring())), std::ios::binary);
 	if (!in) return false;
 	bytes.resize((size_t)size);
 	if (size != 0 && !in.read(reinterpret_cast<char*>(bytes.data()), (std::streamsize)size)) {

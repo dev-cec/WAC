@@ -1858,6 +1858,22 @@ def check_small_file_artefacts(folder):
         report(ok, f"manifest: {path}, $DATA moved by $ATTRIBUTE_LIST, read with the SHA-256 of Get-FileHash",
                f"manifest: {path} ({listed}): {[(o.get('Result'), o.get('SHA256')) for o in items] or 'not collected'}")
 
+    # A script whose path passes MAX_PATH (B-049): stored, with the SHA-256
+    # Windows gives, and present in the store's listing — its exhibit path,
+    # longer still, is where WAC used to fail (0x8007001d).
+    if isinstance(manifest, dict) and "longpath" in reference:
+        path, sha256 = reference["longpath"].split("|")
+        items = [o for o in manifest.get("Items", []) if str(o.get("SourcePath", "")).lower() == path.lower()]
+        listing = os.path.join(folder, "exhibits", "LIST.txt")
+        listed = set()
+        if os.path.exists(listing):
+            with open(listing, encoding="utf-8-sig") as f:
+                listed = {line.strip().lower() for line in f if line.strip()}
+        stored = [o for o in items if o.get("ExhibitPath") and any(l.endswith("\\" + str(o["ExhibitPath"]).lower()) for l in listed)]
+        ok = items and stored and all(o.get("Result") == "OK" and str(o.get("SHA256", "")).upper() == sha256.upper() for o in items)
+        report(ok, f"manifest: {path} ({len(path)} characters) stored with the SHA-256 of Get-FileHash",
+               f"manifest: {path}: {[(o.get('Result'), o.get('SHA256'), o.get('ExhibitPath')) for o in items] or 'not collected'}")
+
     # A folder of a 7z and of a tar.gz (Windows 11 reads them through
     # libarchive): another layout, whose date is a UTC instant (B-029).
     if isinstance(bags, list) and "readerentry" in reference:

@@ -20,6 +20,7 @@
  */
 
 #include "quickdigest5.h"
+#include "long_path.h"
 #include <algorithm>
 
 uint8_t QuickDigest5::padding[64] = {0x80};
@@ -187,7 +188,7 @@ std::vector<uint8_t> QuickDigest5::digestString(const std::string& input) {
 
 std::vector<uint8_t> QuickDigest5::digestFile(const std::filesystem::path& filepath) {
     QuickDigest5 QuickDigest5;
-    std::ifstream file(std::filesystem::path(filepath), std::ios::binary);
+    std::ifstream file(std::filesystem::path(extendedPath(filepath)), std::ios::binary);
     if (file) {
 
         std::vector<uint8_t> buffer(4096);

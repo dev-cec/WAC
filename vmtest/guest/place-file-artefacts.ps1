@@ -168,6 +168,21 @@ if (Wants 'run_keys') {
     Write-Output ("links=$script|" + (Get-FileHash -Algorithm SHA256 -LiteralPath $script).Hash + "|$listed")
 }
 
+# 6b. A script whose path passes MAX_PATH (B-049): 261 characters on the
+#     volume, near 290 once under the exhibit store. The collection reads every
+#     executable and takes the unsigned ones; WAC wrote none of those paths
+#     (0x8007001d) before it used the extended form. Created through \\?\ —
+#     .NET refuses the path otherwise. Made once.
+if (Wants 'binaries') {
+    $deep = 'C:\wactest\b049\' + ((1..9 | ForEach-Object { 'wac-long-path-segment-' + ('{0:D2}' -f $_) }) -join '\')
+    $long = "$deep\wac-long-witness.cmd"
+    if (-not (Test-Path -LiteralPath "\\?\$long")) {
+        [IO.Directory]::CreateDirectory("\\?\$deep") | Out-Null
+        [IO.File]::WriteAllText("\\?\$long", "@echo off`r`nrem WAC B-049 witness`r`n")
+    }
+    Write-Output ("longpath=$long|" + (Get-FileHash -Algorithm SHA256 -LiteralPath "\\?\$long").Hash)
+}
+
 # 7. The SECURITY hive as Windows reads it live (the harness runs as SYSTEM).
 if (Wants 'security') {
     $secrets = (Get-ChildItem 'HKLM:\SECURITY\Policy\Secrets' | ForEach-Object PSChildName | Sort-Object) -join ','

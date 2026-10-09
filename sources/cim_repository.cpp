@@ -295,8 +295,8 @@ HRESULT CimRepository::open(const std::wstring& index, const std::wstring& objec
 	if (ec) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	objectsSize_ = std::filesystem::file_size(objects, ec);
 	if (ec) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	indexFile_.open(std::filesystem::path(index), std::ios::binary);
-	objectsFile_.open(std::filesystem::path(objects), std::ios::binary);
+	indexFile_.open(std::filesystem::path(extendedPath(index)), std::ios::binary);
+	objectsFile_.open(std::filesystem::path(extendedPath(objects)), std::ios::binary);
 	if (!indexFile_ || !objectsFile_) return HRESULT_FROM_WIN32(ERROR_OPEN_FAILED);
 	std::vector<bool> visited(index_.physical.size(), false);
 	collectKeys(index_.indexRoot, 0, visited);

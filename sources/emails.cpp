@@ -231,16 +231,15 @@ void Emails::readThunderbird(const std::wstring& sid, const std::wstring& profil
 	if (!std::filesystem::is_directory(root, ec)) return;
 	// A folder is an mbox file without extension, under Mail or ImapMail (subfolders in <name>.sbd).
 	size_t rank = 0;
-	for (auto it = std::filesystem::recursive_directory_iterator(root, ec); !ec && it != std::filesystem::recursive_directory_iterator();
-	     it.increment(ec)) {
-		if (it.depth() > 12) { it.disable_recursion_pending(); continue; }
-		if (!it->is_regular_file(ec) || it->path().has_extension()) continue;
-		const std::wstring relative = it->path().lexically_relative(root).wstring();
-		if (relative.find(L"\\Mail\\") == std::wstring::npos && relative.find(L"\\ImapMail\\") == std::wstring::npos) continue;
-		const std::wstring source = originalPath(it->path().wstring());
+	// Win32, whatever the depth of a path (long_path.h); twelve levels at most.
+	forEachFileBelow(root.wstring(), [&](const std::wstring& relative) {
+		if (std::filesystem::path(relative).has_extension()) return;
+		if (relative.find(L"\\Mail\\") == std::wstring::npos && relative.find(L"\\ImapMail\\") == std::wstring::npos) return;
+		const std::wstring file = root.wstring() + L"\\" + relative;
+		const std::wstring source = originalPath(file);
 		const std::wstring base = L"emails\\" + sid + L"\\mbox_" + std::to_wstring(++rank);
 		size_t count = 0, skipped = 0;
-		const bool mbox = forEachMboxMessage(it->path().wstring(), [&](MimeMessage& m) {
+		const bool mbox = forEachMboxMessage(file, [&](MimeMessage& m) {
 			Json record = Json::obj();
 			record.add(L"Type", Json::str(L"Message"));
 			addUser(record, sid);
@@ -250,7 +249,7 @@ void Emails::readThunderbird(const std::wstring& sid, const std::wstring& profil
 			records_.push(std::move(record));
 			++count;
 		}, skipped);
-		if (!mbox) continue;   // an empty folder, or a file that is not an mbox
+		if (!mbox) return;   // an empty folder, or a file that is not an mbox
 		Json store = Json::obj();
 		store.add(L"Type", Json::str(L"Mailbox"));
 		addUser(store, sid);
@@ -260,7 +259,7 @@ void Emails::readThunderbird(const std::wstring& sid, const std::wstring& profil
 		if (skipped) store.add(L"SkippedMessages", Json::num((unsigned long long)skipped));
 		records_.push(std::move(store));
 		log(2, L"❇️" + source + L" : " + std::to_wstring(count) + L" message(s)");
-	}
+	}, [](const std::wstring& relative) { return std::count(relative.begin(), relative.end(), L'\\') <= 12; });
 }
 
 HRESULT Emails::toJson() {

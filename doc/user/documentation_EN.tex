@@ -848,6 +848,15 @@ A file from a volume other than the system one is stored under
 \path|_volume_D\...|; the JSON always gives the original path, with its real
 drive letter.
 
+Under \fichier{exhibits/} and \fichier{working/}, a path often passes 260
+characters: the original one, plus the output folder. \wac{} writes it in the
+extended form (\path|\\?\|). Explorer and several Windows commands
+(\texttt{Copy-Item}, \texttt{Remove-Item} of PowerShell~5.1, a drag-and-drop
+copy) stop on these files, sometimes silently. To copy or delete a collection,
+use \texttt{robocopy} or \texttt{rd /s /q
+\textbackslash\textbackslash?\textbackslash<path>}; to check it,
+\fichier{verify-exhibits.ps1}, which reads every exhibit in the extended form.
+
 \section{The exhibit store manifest}
 
 \fichier{exhibits/MANIFEST.json} identifies the collection and each exhibit.

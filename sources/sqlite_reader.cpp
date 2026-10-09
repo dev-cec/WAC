@@ -95,15 +95,15 @@ HRESULT SqliteDatabase::open(const std::wstring& file) {
 	std::filesystem::create_directories(copyFolder_, ec);
 	if (ec) return HRESULT_FROM_WIN32(ERROR_CANNOT_MAKE);
 	const std::filesystem::path copy = std::filesystem::path(copyFolder_) / source.filename();
-	std::filesystem::copy_file(source, copy, ec);
-	if (ec) {
+	// The source is a working copy, whose path can pass MAX_PATH (B-049).
+	if (!copyFileLong(file, copy.wstring(), false)) {
 		log(2, L"🔥SQLite: copy of " + file + L" failed");
 		return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	}
 	// The logs go along, under the names SQLite looks for beside the copy.
 	for (const wchar_t* suffix : { L"-wal", L"-journal" }) {
 		const std::filesystem::path journal = source.wstring() + suffix;
-		if (std::filesystem::exists(journal, ec)) std::filesystem::copy_file(journal, copy.wstring() + suffix, ec);
+		if (pathExists(journal.wstring())) copyFileLong(journal.wstring(), copy.wstring() + suffix, false);
 	}
 	const int opened = sqlite3_open_v2(encodeText(copy.wstring()).c_str(), &db_, SQLITE_OPEN_READWRITE, nullptr);
 	if (opened != SQLITE_OK) {
