@@ -507,7 +507,9 @@ def compare_jumplist(auto_csv, custom_csv, wac_auto, wac_custom):
     the DestList fields; custom ones by (file, rank)."""
     c = Comparison("JLECmd")
     with open(auto_csv, encoding="utf-8-sig", newline="") as f:
-        ez = {(r["SourceFile"].rsplit("\\", 1)[-1].lower(), int(r["EntryNumber"])): r for r in csv.DictReader(f)}
+        # JLECmd writes the entry number in hexadecimal, as the name of its
+        # stream ("2F"): read as decimal, it crashed past entry 9.
+        ez = {(r["SourceFile"].rsplit("\\", 1)[-1].lower(), int(r["EntryNumber"], 16)): r for r in csv.DictReader(f)}
     wac = {}
     with open(wac_auto, encoding="utf-8-sig") as f:
         for j in json.load(f):

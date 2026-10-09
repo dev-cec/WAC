@@ -28,7 +28,8 @@ CONVERSION = [
     ("mft", "MFTECmd", ["Reading the $MFT (C:)", "Writing the $MFT (C:)"]),
     ("events", "EvtxECmd", ["Extraction of EVENTS"]),
     ("prefetch", "PECmd", ["Extracting PREFETCHS"]),
-    ("recent_documents", "LECmd", ["Extracting RECENT DOCS"]),
+    # LECmd reads every shortcut of the profiles: Recent and the others.
+    ("recent_documents", "LECmd", ["Extracting RECENT DOCS", "Extracting SHORTCUTS"]),
     ("jump_lists", "JLECmd", ["Extracting JUMPLIST AUTOMATIC", "Extracting JUMPLIST CUSTOM"]),
     ("shellbags", "SBECmd", ["Extracting SHELLBAGS Registry Keys"]),
     ("shimcache", "AppCompatCacheParser", ["Extracting SHIMCACHE Registry Keys"]),
