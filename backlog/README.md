@@ -46,7 +46,6 @@ Les fiches restantes, puis la montée de version (B-025), puis l'article (B-018)
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-048](B-048-navigateurs-fichiers-annexes.md) | Navigateurs : sessions, onglets, favicons, prédicteur et fichiers annexes que KAPE prend encore | à faire | P2 | moyen |
 | [B-018](B-018-article-dfir.md) | Article de présentation (2 pages, magazine DFIR), après la 2.0.0 et avant la 3.0 | à faire | P3 | moyen |
 
 ### Version 3.0 — rétrocompatibilité et serveurs
