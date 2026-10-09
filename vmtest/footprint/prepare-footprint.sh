@@ -17,6 +17,15 @@
 #     its two disks and its UEFI variables as the base images
 #     (…-base.qcow2, …_VARS-base.fd) that run-footprint.sh layers each run on.
 #
+# The clone itself is made by hand beforehand (deleted on 2026-10-09 with its
+# base images, to free 104 GB; the measures stay in doc/comparison): win11-test
+# shut down, then
+#   virt-clone --connect qemu:///session --original win11-test \
+#     --name win11-footprint --file ~/vms/win11-footprint.qcow2 --skip-copy=sde
+# then its network interface removed (virsh edit) and the key
+# ~/vms/wac-footprint-key.qcow2 (qemu-img create -f qcow2 … 4G) attached as a
+# USB disk, serial WACFOOT0001.
+#
 # Usage: ./prepare-footprint.sh <Sysmon.zip> — the archive of
 # https://download.sysinternals.com/files/Sysmon.zip, its SHA-256 printed
 # for the report.
