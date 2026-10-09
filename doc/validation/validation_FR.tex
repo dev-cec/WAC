@@ -747,6 +747,16 @@ navigation réelle de « wac » (Chrome et Firefox installés par
   Firefox (journal WAL rejoué) relues par le SQLite de Python /
   \fichier{web\_client.json} &
   contrôle ajouté avec les navigateurs de la VM \\
+fichiers de session de Chrome et d'Edge (\path|Session_*|, \path|Tabs_*|)
+  confrontés à leur \fichier{History} relu par le SQLite de Python ;
+  sessions de Firefox décompressées par le module \texttt{lz4} de Python ;
+  \fichier{Favicons} et \fichier{favicons.sqlite} relus par le SQLite de
+  Python / \fichier{web\_client.json} (108 pages de session Chromium : les
+  57 que l'historique connaît portent l'instant d'une visite, 55 à la
+  microseconde, 2 une navigation interne 2,5~s plus tard ; 54 pages Firefox ;
+  28 couples page et icône) &
+  contrôle ajouté avec l'artefact ; le format, vérifié sur les fichiers
+  réels avant d'écrire le test \\
 HTA servie par le serveur témoin et lancée par \texttt{mshta.exe} : son
   entrée du WebCache nomme sa copie en cache, collectée, même SHA-256 que le
   contenu servi / \fichier{web\_client.json}, manifeste &

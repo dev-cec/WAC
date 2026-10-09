@@ -2357,7 +2357,143 @@ def check_web_client(folder):
             print(f"  {'✅' if ok else '❌'} web_client.json: {parts[-4]}/{parts[-2]} — {len(theirs)} {table} row(s) as Python's SQLite reads them, "
                   f"same sites in WAC ({len(ours)})" + ("" if ok else f": {sorted(set(theirs) ^ set(ours))[:3]}"))
             found += 0 if ok else 1
-    return found + found_firefox + check_webcache(folder, records)
+    return found + found_firefox + check_webcache(folder, records) + check_browser_sessions(folder, store, records)
+
+
+def check_browser_sessions(folder, store, records):
+    """What was open in the browsers (B-048) against independent readings.
+
+    Favicons and the address bar's predictor: every row as Python's SQLite
+    reads the fetched database. Chromium's session files: no other decoder
+    is at hand, so each page they hold is confronted with History — a page
+    History knows carries the very instant of one of its visits (both come
+    from the same navigation, to the microsecond), or an instant at most 60 s
+    later: a navigation within the same document (Edge's welcome page, 2.5 s
+    after its visit) updates the session's entry and adds no visit. A field
+    read one place off would give no such instant. And the witness page the
+    harness opened must be among them. Firefox's session files: each
+    decompressed by Python's lz4 module and walked here, every page with its
+    state and closing instant identical.
+    """
+    import shutil, sqlite3, tempfile, json as jsonlib
+    found = 0
+    def sqlite_rows(path, query):
+        with tempfile.TemporaryDirectory() as aside:
+            for suffix in ("", "-journal", "-wal"):
+                if os.path.exists(path + suffix):
+                    shutil.copy(path + suffix, os.path.join(aside, "db" + suffix))
+            db = sqlite3.connect(os.path.join(aside, "db"))
+            rows = db.execute(query).fetchall()
+            db.close()
+        return rows
+    def source_of(path):
+        return "C:\\" + os.path.relpath(path, store).replace(os.sep, "\\")
+    def mine(path, kind):
+        source = source_of(path).lower()
+        return [r for r in records if r.get("Type") == kind and (r.get("Source") or "").lower() == source]
+    def chromium(us):
+        if not us or us <= 0:
+            return None
+        return (datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=us)).strftime("%Y-%m-%dT%H:%M:%S.%f") + "0Z"
+    reference = {}
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                key, _, value = line.strip().partition("=")
+                if value:
+                    reference.setdefault(key, []).append(value)
+    checked = 0
+    for db_path in glob.glob(os.path.join(store, "**", "Favicons"), recursive=True):
+        theirs = sorted(sqlite_rows(db_path, "SELECT m.page_url, f.url FROM icon_mapping m JOIN favicons f ON f.id = m.icon_id"))
+        ours = sorted((r.get("PageUrl"), r.get("IconUrl")) for r in mine(db_path, "Favicon"))
+        ok = theirs == ours
+        checked += 1
+        print(f"  {'✅' if ok else '❌'} web_client.json: {source_of(db_path)} — {len(theirs)} page/icon pair(s) as Python's SQLite reads them, "
+              f"WAC {len(ours)}" + ("" if ok else f": {sorted(set(theirs) ^ set(ours))[:3]}"))
+        found += 0 if ok else 1
+    for db_path in glob.glob(os.path.join(store, "**", "Network Action Predictor"), recursive=True):
+        theirs = sorted(sqlite_rows(db_path, "SELECT user_text, url, number_of_hits, number_of_misses FROM network_action_predictor"))
+        ours = sorted((r.get("TypedText", ""), r.get("Url", ""), r.get("Hits"), r.get("Misses")) for r in mine(db_path, "AddressBarPrediction"))
+        ok = theirs == ours
+        checked += 1
+        print(f"  {'✅' if ok else '❌'} web_client.json: {source_of(db_path)} — {len(theirs)} prediction(s) as Python's SQLite reads them, WAC {len(ours)}")
+        found += 0 if ok else 1
+    for db_path in glob.glob(os.path.join(store, "**", "Profiles", "*", "favicons.sqlite"), recursive=True):
+        theirs = sorted(sqlite_rows(db_path, "SELECT p.page_url, i.icon_url FROM moz_icons_to_pages t JOIN moz_pages_w_icons p ON p.id = t.page_id "
+                                             "JOIN moz_icons i ON i.id = t.icon_id"))
+        ours = sorted((r.get("PageUrl"), r.get("IconUrl")) for r in mine(db_path, "Favicon"))
+        ok = theirs == ours
+        checked += 1
+        print(f"  {'✅' if ok else '❌'} web_client.json: {source_of(db_path)} — {len(theirs)} page/icon pair(s) as Python's SQLite reads them, WAC {len(ours)}")
+        found += 0 if ok else 1
+    # Chromium's sessions against History.
+    for history in [p for p in glob.glob(os.path.join(store, "**", "History"), recursive=True) if os.sep + "User Data" + os.sep in p]:
+        sessions = glob.glob(os.path.join(os.path.dirname(history), "Sessions", "*"))
+        if not sessions:
+            continue
+        visits = collections.defaultdict(set)
+        for url, when in sqlite_rows(history, "SELECT u.url, v.visit_time FROM visits v JOIN urls u ON u.id = v.url"):
+            visits[url].add(when)
+        def micro(text):   # "…T…Z" -> microseconds since 1601
+            t = datetime.datetime.strptime(text[:26], "%Y-%m-%dT%H:%M:%S.%f")
+            return (t - datetime.datetime(1601, 1, 1)) // datetime.timedelta(microseconds=1)
+        entries = [r for s in sessions for r in mine(s, "SessionEntry")]
+        known = [r for r in entries if r.get("Url") in visits and r.get("NavigatedUtc")]
+        exact = [r for r in known if micro(r["NavigatedUtc"]) in visits[r["Url"]]]
+        wrong = [f"{r.get('Url')} {r.get('NavigatedUtc')}" for r in known
+                 if not any(0 <= micro(r["NavigatedUtc"]) - v <= 60_000_000 for v in visits[r["Url"]])]
+        witness = [v.split("|")[1] for v in reference.get("webvisit", []) if v.startswith("Chrome|")] if "Chrome" in history else []
+        missing = [w for w in witness if not any(r.get("Url") == w for r in entries)]
+        ok = known and not wrong and not missing
+        checked += 1
+        print(f"  {'✅' if ok else '❌'} web_client.json: {source_of(os.path.dirname(history))}\\Sessions — {len(entries)} page(s) of "
+              f"{len(sessions)} file(s); of the {len(known)} History knows, {len(exact)} carry the instant of one of its visits, "
+              f"{len(known) - len(exact) - len(wrong)} one at most 60 s later (same document)"
+              + (f", the witness {witness[0]} among them" if witness and not missing else "")
+              + ("" if ok else f": {wrong[:3]} {('witness missing ' + str(missing)) if missing else ''}"))
+        found += 0 if ok else 1
+    # Firefox's sessions, decompressed by Python's lz4.
+    try:
+        import lz4.block
+    except ImportError:
+        lz4 = None
+    files = [p for p in glob.glob(os.path.join(store, "**", "Profiles", "*", "sessionstore.jsonlz4"), recursive=True)
+             + glob.glob(os.path.join(store, "**", "Profiles", "*", "sessionstore-backups", "*"), recursive=True)]
+    for session in files:
+        if lz4 is None:
+            print("  ⏭️  Python's lz4 module absent: Firefox's sessions not confronted")
+            break
+        with open(session, "rb") as f:
+            raw = f.read()
+        if raw[:8] != b"mozLz40\0":
+            continue
+        data = jsonlib.loads(lz4.block.decompress(raw[12:], uncompressed_size=int.from_bytes(raw[8:12], "little")))
+        def ms(value):
+            if not value:
+                return None
+            return (datetime.datetime(1970, 1, 1) + datetime.timedelta(milliseconds=value)).strftime("%Y-%m-%dT%H:%M:%S.%f") + "0Z"
+        theirs = []
+        def tabs_of(window, closed_window):
+            out = [(t, "ClosedWindow" if closed_window else "Open", window.get("closedAt") if closed_window else None)
+                   for t in window.get("tabs", [])]
+            out += [(c.get("state", {}), "ClosedTab", c.get("closedAt")) for c in window.get("_closedTabs", [])]
+            return out
+        for windows, closed in ((data.get("windows", []), False), (data.get("_closedWindows", []), True)):
+            for w in windows:
+                for tab, state, closed_at in tabs_of(w, closed):
+                    for e in tab.get("entries", []):
+                        theirs.append((e.get("url"), state, ms(closed_at)))
+        ours = [(r.get("Url"), r.get("State"), r.get("ClosedUtc")) for r in mine(session, "SessionEntry")]
+        ok = sorted(theirs, key=str) == sorted(ours, key=str) and theirs
+        checked += 1
+        print(f"  {'✅' if ok else '❌'} web_client.json: {source_of(session)} — {len(theirs)} page(s) as Python's lz4 and json read them, "
+              f"same URL, state and closing instant in WAC ({len(ours)})"
+              + ("" if ok else f": {sorted(set(map(str, theirs)) ^ set(map(str, ours)))[:3]}"))
+        found += 0 if ok else 1
+    if not checked:
+        print("  ⏭️  no session, favicon or predictor file fetched: what was open not confronted")
+    return found
 
 
 def check_activities_cache(folder):

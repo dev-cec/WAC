@@ -1352,7 +1352,23 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         d'enregistrer (\champ{NeverSave}) ; \texttt{Cookie} : site, nom,
         chemin, dates, drapeaux. Les mots de passe et les valeurs des cookies,
         chiffrés, ne sont jamais décodés : les bases sont dans la consigne pour
-        une analyse qui détiendrait la clé DPAPI de l'utilisateur. Et
+        une analyse qui détiendrait la clé DPAPI de l'utilisateur. Ce qui
+        était \emph{ouvert} : \texttt{SessionEntry}, chaque page de chaque onglet
+        des fichiers de session --- \path|Sessions\Session_*| et
+        \path|Tabs_*| de Chromium, \fichier{sessionstore.jsonlz4} et ses
+        sauvegardes chez Firefox ---, avec \champ{State} (\texttt{Open},
+        \texttt{Closed}, \texttt{ClosedTab}, \texttt{ClosedWindow}), l'instant
+        où la page a été affichée (\champ{NavigatedUtc}, Chromium, celui de sa
+        visite dans \fichier{History}) ou le dernier accès à l'onglet
+        (\champ{TabLastAccessedUtc}, Firefox), l'instant de la fermeture
+        (\champ{ClosedUtc}) et la page affichée (\champ{Shown}) : un onglet
+        d'une fenêtre privée, ou d'un historique effacé, peut n'être plus que
+        là ; \texttt{Favicon}, l'icône de chaque page visitée, conservée après
+        l'effacement de l'historique ; \texttt{AddressBarPrediction}
+        (Chromium), ce qui a été tapé dans la barre d'adresse et l'adresse
+        alors choisie. Les sauvegardes de favoris de Firefox, le dossier
+        local d'Internet Explorer et les conteneurs de WinINet
+        (\path|INetCookies|, \path|IEDownloadHistory|) sont copiés bruts. Et
         \texttt{CacheEntry} (\champ{Browser}
         \texttt{WebCache}) : chaque entrée de la base
         \fichier{WebCacheV01.dat} d'Internet Explorer, d'Edge Legacy et des

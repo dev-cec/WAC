@@ -961,7 +961,7 @@ def kape_category(path):
              ("\\start menu\\", "shortcuts outside Recent (Start menu, Desktop, Quick Launch)"),
              ("\\quick launch\\", "shortcuts outside Recent (Start menu, Desktop, Quick Launch)"),
              ("\\desktop\\", "shortcuts outside Recent (Start menu, Desktop, Quick Launch)"),
-             ("\\edge\\", "web browsers (B-016)"), ("\\webcache\\", "web browsers (B-016)"), ("\\inetcookies\\", "web browsers (B-016)"),
+             ("\\edge\\", "web browsers (B-016)"), ("\\webcache\\", "web browsers (B-016)"), ("\\inetcookies\\", "web browsers (B-016)"), ("\\iedownloadhistory\\", "web browsers (B-016)"),
              ("\\internet explorer\\", "web browsers (B-016)"), ("\\history\\", "web browsers (B-016)"),
              ("activitiescache", "Windows timeline (ActivitiesCache, B-010)"), ("\\protect\\", "DPAPI master keys"),
              ("\\wer\\", "error reports (WER)"),

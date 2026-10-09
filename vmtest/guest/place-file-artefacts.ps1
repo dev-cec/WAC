@@ -630,11 +630,18 @@ if (Wants 'web_client') {
             if ($path -like '*.txt') {
                 $context.Response.AddHeader('Content-Disposition', 'attachment; filename="' + [IO.Path]::GetFileName($path) + '"')
                 $body = 'WAC download witness'; $context.Response.ContentType = 'text/plain'
+            } elseif ($path -like '*.png') {
+                # The page's icon (B-048): a 1x1 PNG, for the browsers' favicon databases.
+                $png = [Convert]::FromBase64String('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==')
+                $context.Response.ContentType = 'image/png'
+                $context.Response.OutputStream.Write($png, 0, $png.Length)
+                $context.Response.Close()
+                continue
             } elseif ($path -like '*.hta') {
                 $body = '<html><head><title>WAC HTA</title><HTA:APPLICATION/></head><body><script>window.close();</script></body></html>'
                 $context.Response.ContentType = 'application/hta'
             } else {
-                $body = '<html><head><title>WAC witness page</title></head><body>WAC</body></html>'; $context.Response.ContentType = 'text/html'
+                $body = '<html><head><title>WAC witness page</title><link rel="icon" href="/wac-icon.png"></head><body>WAC</body></html>'; $context.Response.ContentType = 'text/html'
             }
             $bytes = [Text.Encoding]::ASCII.GetBytes($body)
             $context.Response.OutputStream.Write($bytes, 0, $bytes.Length)
@@ -662,7 +669,9 @@ function Close-Browser([string]$name) {
 if (Test-Path $chrome) {
     & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "BASE/page?wac=chrome-TOKEN" | Out-Null
     & $chrome --headless=new --disable-gpu --no-first-run --user-data-dir="$data" --dump-dom "https://www.google.com/search?q=wacsearchTOKEN" | Out-Null
-    Start-Process $chrome -ArgumentList '--no-first-run', "BASE/c/wac-dl-chrome-TOKEN.txt"; Start-Sleep 12
+    # In a window, the page first — its tab and its icon go to the session file
+    # and to Favicons (B-048) —, then the download.
+    Start-Process $chrome -ArgumentList '--no-first-run', "BASE/page?wac=chrome-window-TOKEN", "BASE/c/wac-dl-chrome-TOKEN.txt"; Start-Sleep 12
     Close-Browser chrome
 }
 if (Test-Path $firefox) {
@@ -733,6 +742,7 @@ Get-Process iexplore -ErrorAction SilentlyContinue | Stop-Process -Force
     Remove-Item $script, C:\wactest\browse-witness.done -ErrorAction SilentlyContinue
     if (Test-Path 'C:\Program Files\Google\Chrome\Application\chrome.exe') {
         Write-Output "webvisit=Chrome|$base/page?wac=chrome-$token"
+        Write-Output "webvisit=Chrome|$base/page?wac=chrome-window-$token"
         Write-Output "websearch=Chrome|wacsearch$token"
         Write-Output "webdownload=Chrome|$base/c/wac-dl-chrome-$token.txt|C:\Users\wac\Downloads\wac-dl-chrome-$token.txt"
     }

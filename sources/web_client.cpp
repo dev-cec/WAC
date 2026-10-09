@@ -7,8 +7,10 @@
 #include "registry_common.h"
 #include "ese_database.h"
 #include "ie_index_dat.h"
+#include "browser_sessions.h"
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
 #include <cstring>
 #include <cwchar>
 #include <map>
@@ -24,7 +26,8 @@ const ChromiumRoot CHROMIUM_ROOTS[] = {
 const size_t CHROMIUM_ROOT_COUNT = sizeof(CHROMIUM_ROOTS) / sizeof(CHROMIUM_ROOTS[0]);
 const std::vector<std::wstring> CHROMIUM_PROFILE_FILES = {
 	L"History", L"Login Data", L"Web Data", L"Shortcuts", L"Top Sites", L"Bookmarks",
-	L"Preferences", L"Secure Preferences", L"Cookies", L"Network\\Cookies" };
+	L"Preferences", L"Secure Preferences", L"Cookies", L"Network\\Cookies",
+	L"Favicons", L"Network Action Predictor", L"Sessions\\*" };
 const std::vector<std::wstring> CHROMIUM_ROOT_FILES = { L"Local State" };
 const wchar_t WEBCACHE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Windows\\WebCache";
 const wchar_t INETCACHE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Windows\\INetCache\\IE";
@@ -42,9 +45,14 @@ const std::vector<IeIndexFolder> IE_INDEX_FOLDERS = {
 const wchar_t FIREFOX_PROFILES[] = L"\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles";
 const uintmax_t IE_INDEX_MAX = 1024ull * 1024 * 1024;   //!< an index.dat grows to hundreds of MiB at most
 const uintmax_t LOGINS_MAX = 64ull * 1024 * 1024;       //!< logins.json: a few KiB per saved password
+const uintmax_t SESSION_FILE_MAX = 256ull * 1024 * 1024; //!< a session file: a few MiB with many tabs and their page states
 const std::vector<std::wstring> FIREFOX_PROFILE_FILES = {
 	L"places.sqlite", L"formhistory.sqlite", L"cookies.sqlite", L"permissions.sqlite", L"logins.json",
-	L"key4.db", L"extensions.json", L"prefs.js", L"sessionstore.jsonlz4" };
+	L"key4.db", L"extensions.json", L"prefs.js", L"sessionstore.jsonlz4", L"favicons.sqlite",
+	L"protections.sqlite", L"sessionstore-backups\\*", L"bookmarkbackups\\*" };
+const wchar_t IE_LOCAL_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Internet Explorer";
+const std::vector<std::wstring> WININET_LOCAL_FOLDERS = {
+	L"\\AppData\\Local\\Microsoft\\Windows\\INetCookies", L"\\AppData\\Local\\Microsoft\\Windows\\IEDownloadHistory" };
 
 namespace {
 
@@ -732,6 +740,180 @@ HRESULT readChromiumHistory(const std::wstring& file, const WebClientRecord& bas
 	return ERROR_SUCCESS;
 }
 
+HRESULT readChromiumSessions(const std::wstring& folder, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	std::error_code ec;
+	if (!std::filesystem::is_directory(folder, ec)) return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+	std::vector<std::filesystem::path> files;
+	for (const std::filesystem::directory_entry& e : std::filesystem::directory_iterator(folder, ec))
+		if (e.is_regular_file(ec)) files.push_back(e.path());
+	std::sort(files.begin(), files.end());   // Session_<time> and Tabs_<time>: in the order they were written
+	for (const std::filesystem::path& file : files) {
+		const std::wstring name = file.filename().wstring();
+		const bool tabs = name.compare(0, 5, L"Tabs_") == 0;
+		if (!tabs && name.compare(0, 8, L"Session_") != 0) continue;
+		std::vector<uint8_t> bytes;
+		SnssContents contents;
+		WebClientRecord fileBase = base;
+		fileBase.source = originalPath(file.wstring());
+		if (!readWholeFile(file, SESSION_FILE_MAX, bytes)
+		    || !decodeSnss(bytes.data(), bytes.size(), tabs ? SnssKind::TabRestore : SnssKind::Session, contents)) {
+			log(2, L"🔥Session file not read: " + fileBase.source);
+			continue;
+		}
+		for (const SnssNavigation& n : contents.navigations) {
+			WebClientRecord r = startRecord(fileBase, L"SessionEntry");
+			r.fields.add(L"State", Json::str(tabs ? L"Closed" : L"Open"));
+			r.fields.add(L"Tab", Json::num((long long)n.tab));
+			r.fields.add(L"NavigationIndex", Json::num((long long)n.index));
+			r.fields.add(L"Url", Json::str(decodeText(n.url, CP_UTF8)));
+			r.fields.add(L"Title", Json::str(n.title));
+			addDate(r.fields, L"Navigated", chromiumTime(n.time));
+			if (n.time) {
+				r.fields.add(L"Transition", Json::str(transitionCore(n.transition)));
+				r.fields.add(L"TransitionQualifiers", Json::str(transitionQualifiers(n.transition)));
+			}
+			if (n.httpStatus) r.fields.add(L"HttpStatus", Json::num((long long)n.httpStatus));
+			r.fields.add(L"Referrer", Json::str(decodeText(n.referrer, CP_UTF8)));
+			if (n.originalUrl != n.url) r.fields.add(L"OriginalUrl", Json::str(decodeText(n.originalUrl, CP_UTF8)));
+			const auto closed = contents.closedTimes.find(n.tab);
+			if (closed != contents.closedTimes.end()) {
+				addDate(r.fields, L"Closed", chromiumTime(closed->second));
+				r.fields.add(L"Shown", Json::boolean(contents.selectedIndex[n.tab] == n.index));
+			}
+			records.push_back(std::move(r));
+		}
+	}
+	return ERROR_SUCCESS;
+}
+
+HRESULT readChromiumFavicons(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	SqliteDatabase db;
+	const HRESULT opened = db.open(file);
+	if (opened != ERROR_SUCCESS) return opened;
+	// One row per page and icon; the bitmaps' times, the latest of the icon's sizes. The image is not read.
+	db.query("SELECT icon_mapping.page_url, favicons.url, MAX(favicon_bitmaps.last_updated), MAX(favicon_bitmaps.last_requested) "
+	         "FROM icon_mapping JOIN favicons ON favicons.id = icon_mapping.icon_id "
+	         "LEFT JOIN favicon_bitmaps ON favicon_bitmaps.icon_id = favicons.id "
+	         "GROUP BY icon_mapping.id ORDER BY icon_mapping.id",
+	         [&](const SqliteRow& row) {
+		WebClientRecord r = startRecord(base, L"Favicon");
+		r.fields.add(L"PageUrl", Json::str(row.text(0)));
+		r.fields.add(L"IconUrl", Json::str(row.text(1)));
+		addDate(r.fields, L"IconUpdated", chromiumTime(row.integer(2)));
+		addDate(r.fields, L"IconRequested", chromiumTime(row.integer(3)));
+		records.push_back(std::move(r));
+	});
+	return ERROR_SUCCESS;
+}
+
+HRESULT readChromiumPredictor(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	SqliteDatabase db;
+	const HRESULT opened = db.open(file);
+	if (opened != ERROR_SUCCESS) return opened;
+	db.query("SELECT user_text, url, number_of_hits, number_of_misses FROM network_action_predictor ORDER BY user_text, url",
+	         [&](const SqliteRow& row) {
+		WebClientRecord r = startRecord(base, L"AddressBarPrediction");
+		r.fields.add(L"TypedText", Json::str(row.text(0)));
+		r.fields.add(L"Url", Json::str(row.text(1)));
+		r.fields.add(L"Hits", Json::num((long long)row.integer(2)));
+		r.fields.add(L"Misses", Json::num((long long)row.integer(3)));
+		records.push_back(std::move(r));
+	});
+	return ERROR_SUCCESS;
+}
+
+namespace {
+
+//! A whole number of a Firefox session's JSON; 0 if absent.
+long long jsonInteger(const Json& o, const wchar_t* key) {
+	const Json* v = o.find(key);
+	return v ? std::wcstoll(v->text().c_str(), nullptr, 10) : 0;
+}
+
+/*! The entries of one tab of a Firefox session, as SessionEntry records.
+ *  @param tab the tab's object (entries, index from 1, lastAccessed in milliseconds)
+ *  @param state Open, ClosedTab or ClosedWindow
+ *  @param closedMs when the tab or its window was closed, milliseconds since 1970; 0 if open */
+void firefoxTab(const Json& tab, const WebClientRecord& base, const std::wstring& state, size_t window, size_t number,
+                long long closedMs, std::vector<WebClientRecord>& records) {
+	const Json* entries = tab.find(L"entries");
+	if (!entries) return;
+	const long long shown = jsonInteger(tab, L"index") - 1;
+	long long index = 0;
+	for (const auto& member : entries->members()) {
+		const Json& entry = member.second;
+		WebClientRecord r = startRecord(base, L"SessionEntry");
+		r.fields.add(L"State", Json::str(state));
+		r.fields.add(L"Window", Json::num((unsigned long long)window));
+		r.fields.add(L"Tab", Json::num((unsigned long long)number));
+		r.fields.add(L"NavigationIndex", Json::num(index));
+		const Json* url = entry.find(L"url");
+		const Json* title = entry.find(L"title");
+		if (url) r.fields.add(L"Url", Json::str(url->text()));
+		if (title) r.fields.add(L"Title", Json::str(title->text()));
+		r.fields.add(L"Shown", Json::boolean(index == shown));
+		addDate(r.fields, L"TabLastAccessed", firefoxTime(jsonInteger(tab, L"lastAccessed") * 1000));
+		addDate(r.fields, L"Closed", firefoxTime(closedMs * 1000));
+		records.push_back(std::move(r));
+		++index;
+	}
+}
+
+/*! The tabs of one Firefox window, open and closed. */
+void firefoxWindow(const Json& w, const WebClientRecord& base, bool closedWindow, size_t number,
+                   std::vector<WebClientRecord>& records) {
+	const long long windowClosed = closedWindow ? jsonInteger(w, L"closedAt") : 0;
+	if (const Json* tabs = w.find(L"tabs")) {
+		size_t tab = 0;
+		for (const auto& member : tabs->members())
+			firefoxTab(member.second, base, closedWindow ? L"ClosedWindow" : L"Open", number, tab++, windowClosed, records);
+	}
+	if (const Json* closedTabs = w.find(L"_closedTabs")) {
+		size_t tab = 0;
+		for (const auto& member : closedTabs->members())
+			if (const Json* state = member.second.find(L"state"))
+				firefoxTab(*state, base, L"ClosedTab", number, tab++, jsonInteger(member.second, L"closedAt"), records);
+	}
+}
+
+} // namespace
+
+HRESULT readFirefoxSession(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	std::vector<uint8_t> bytes, json;
+	if (!readWholeFile(std::filesystem::path(file), SESSION_FILE_MAX, bytes)) return HRESULT_FROM_WIN32(ERROR_READ_FAULT);
+	if (!decompressMozLz4(bytes.data(), bytes.size(), (size_t)SESSION_FILE_MAX, json)) return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	Json root = Json::obj();
+	std::wstring error;
+	if (!Json::parse(decodeText(std::string(json.begin(), json.end()), CP_UTF8), root, error)) {
+		log(2, L"🔥Firefox session not read: " + error);
+		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+	}
+	size_t window = 0;
+	if (const Json* windows = root.find(L"windows"))
+		for (const auto& member : windows->members()) firefoxWindow(member.second, base, false, window++, records);
+	if (const Json* closed = root.find(L"_closedWindows"))
+		for (const auto& member : closed->members()) firefoxWindow(member.second, base, true, window++, records);
+	return ERROR_SUCCESS;
+}
+
+HRESULT readFirefoxFavicons(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	SqliteDatabase db;
+	const HRESULT opened = db.open(file);
+	if (opened != ERROR_SUCCESS) return opened;
+	// One row per page and icon; when the link expires (milliseconds since 1970). The image is not read.
+	db.query("SELECT moz_pages_w_icons.page_url, moz_icons.icon_url, moz_icons_to_pages.expire_ms "
+	         "FROM moz_icons_to_pages JOIN moz_pages_w_icons ON moz_pages_w_icons.id = moz_icons_to_pages.page_id "
+	         "JOIN moz_icons ON moz_icons.id = moz_icons_to_pages.icon_id ORDER BY moz_pages_w_icons.id, moz_icons.id",
+	         [&](const SqliteRow& row) {
+		WebClientRecord r = startRecord(base, L"Favicon");
+		r.fields.add(L"PageUrl", Json::str(row.text(0)));
+		r.fields.add(L"IconUrl", Json::str(row.text(1)));
+		addDate(r.fields, L"Expires", firefoxTime(row.integer(2) * 1000));
+		records.push_back(std::move(r));
+	});
+	return ERROR_SUCCESS;
+}
+
 HRESULT WebClient::getData() {
 	log(0, L"ℹ️Web client (browsers) :");
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
@@ -764,6 +946,19 @@ HRESULT WebClient::getData() {
 					if (readChromiumCookies(cookies.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥Cookies not read: " + base.source);
 					break;
 				}
+				const std::filesystem::path favicons = folder / L"Favicons", predictor = folder / L"Network Action Predictor";
+				if (std::filesystem::is_regular_file(favicons, ec)) {
+					base.source = originalPath(favicons.wstring());
+					if (readChromiumFavicons(favicons.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥Favicons not read: " + base.source);
+				}
+				if (std::filesystem::is_regular_file(predictor, ec)) {
+					base.source = originalPath(predictor.wstring());
+					if (readChromiumPredictor(predictor.wstring(), base, records_) != ERROR_SUCCESS)
+						log(2, L"🔥Network Action Predictor not read: " + base.source);
+				}
+				const HRESULT sessions = readChromiumSessions((folder / L"Sessions").wstring(), base, records_);
+				if (FAILED(sessions) && sessions != HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND))   // no Sessions folder: no session kept
+					log(2, L"🔥Sessions not read: " + base.source);
 			}
 		}
 	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) { readTypedUrls(root, sid, records_); });
@@ -825,6 +1020,20 @@ HRESULT WebClient::getData() {
 				std::string bytes;
 				if (readWholeFile(logins, LOGINS_MAX, bytes)) readFirefoxLogins(decodeText(bytes, CP_UTF8), base, records_);
 				else log(2, L"🔥logins.json unreadable or larger than 64 MiB: " + base.source);
+			}
+			const std::filesystem::path favicons = e.path() / L"favicons.sqlite";
+			if (std::filesystem::is_regular_file(favicons, ec)) {
+				base.source = originalPath(favicons.wstring());
+				if (readFirefoxFavicons(favicons.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥favicons.sqlite not read: " + base.source);
+			}
+			// The session, and its backups: the previous session, the one before an upgrade.
+			std::vector<std::filesystem::path> sessions = { e.path() / L"sessionstore.jsonlz4" };
+			for (const std::filesystem::directory_entry& b : std::filesystem::directory_iterator(e.path() / L"sessionstore-backups", ec))
+				if (b.is_regular_file(ec)) sessions.push_back(b.path());
+			for (const std::filesystem::path& session : sessions) {
+				if (!std::filesystem::is_regular_file(session, ec)) continue;
+				base.source = originalPath(session.wstring());
+				if (readFirefoxSession(session.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥Firefox session not read: " + base.source);
 			}
 		}
 	}

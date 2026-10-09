@@ -344,16 +344,35 @@ HRESULT extractBrowserFiles() {
 		for (const RawDirEntry& e : entries) out.emplace(toLower(e.name), e);
 		return true;
 	};
+	// One file of the folder, as listed.
+	auto takeOne = [&](const std::wstring& folder, const RawDirEntry& entry) {
+		const std::wstring absolute = folder + L"\\" + entry.name;
+		createFolders(parentFolder(exhibitTarget(absolute)));
+		RawHiveExtraction line;
+		if (FAILED(reader.read(absolute, exhibitTarget(absolute), line))) result = S_FALSE;
+		reading.push_back(std::move(line));
+	};
+	// A database, with its journals beside it.
 	auto take = [&](const std::wstring& folder, const std::map<std::wstring, RawDirEntry>& entries, const std::wstring& name) {
-		for (const wchar_t* suffix : { L"", L"-journal", L"-wal" }) {
+		for (const wchar_t* suffix : { L"", L"-journal", L"-wal", L"-shm" }) {
 			const auto found = entries.find(toLower(name + suffix));
-			if (found == entries.end() || found->second.isDirectory) continue;
-			const std::wstring absolute = folder + L"\\" + found->second.name;
-			createFolders(parentFolder(exhibitTarget(absolute)));
-			RawHiveExtraction line;
-			if (FAILED(reader.read(absolute, exhibitTarget(absolute), line))) result = S_FALSE;
-			reading.push_back(std::move(line));
+			if (found != entries.end() && !found->second.isDirectory) takeOne(folder, found->second);
 		}
+	};
+	/* A file of a profile's list: a name, "<subfolder>\\<name>", or
+	   "<subfolder>\\*" for every file of the subfolder. */
+	auto takeListed = [&](const std::wstring& folder, const std::map<std::wstring, RawDirEntry>& entries,
+	                      const std::wstring& file) {
+		const size_t slash = file.find(L'\\');
+		if (slash == std::wstring::npos) { take(folder, entries, file); return; }
+		const std::wstring subfolder = file.substr(0, slash), name = file.substr(slash + 1);
+		const auto found = entries.find(toLower(subfolder));
+		std::map<std::wstring, RawDirEntry> inside;
+		if (found == entries.end() || !found->second.isDirectory) return;
+		const std::wstring path = folder + L"\\" + found->second.name;
+		if (!listing(path, inside)) return;
+		if (name != L"*") { take(path, inside, name); return; }
+		for (const auto& e : inside) if (!e.second.isDirectory) takeOne(path, e.second);
 	};
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 		for (size_t i = 0; i < CHROMIUM_ROOT_COUNT; ++i) {
@@ -370,13 +389,7 @@ HRESULT extractBrowserFiles() {
 				std::vector<std::wstring> names;
 				for (const auto& e : entries) names.push_back(e.second.name);
 				if (!isChromiumProfile(names)) continue;
-				std::map<std::wstring, RawDirEntry> network;
-				const bool hasNetwork = entries.count(L"network") && listing(folder + L"\\Network", network);
-				for (const std::wstring& file : CHROMIUM_PROFILE_FILES) {
-					const size_t slash = file.find(L'\\');
-					if (slash == std::wstring::npos) take(folder, entries, file);
-					else if (hasNetwork) take(folder + L"\\Network", network, file.substr(slash + 1));
-				}
+				for (const std::wstring& file : CHROMIUM_PROFILE_FILES) takeListed(folder, entries, file);
 			}
 		}
 	// Firefox: every subfolder of Profiles is a profile.
@@ -389,7 +402,7 @@ HRESULT extractBrowserFiles() {
 			const std::wstring folder = profiles + L"\\" + f.second.name;
 			std::map<std::wstring, RawDirEntry> entries;
 			if (!listing(folder, entries)) continue;
-			for (const std::wstring& file : FIREFOX_PROFILE_FILES) take(folder, entries, file);
+			for (const std::wstring& file : FIREFOX_PROFILE_FILES) takeListed(folder, entries, file);
 		}
 	}
 	ExhibitStoreAdd(reading, L"Raw NTFS reading (RawReader — $MFT, directory indexes, $DATA attribute); "
@@ -530,6 +543,14 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.webClient)
 		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 			trees.push_back({ std::get<1>(profileEntry) + INETCACHE_FOLDER, INETCACHE_EXTENSIONS, 2, L"WinINet cache" });
+	/* Internet Explorer's local folder and WinINet's containers, whole and
+	   small: what KAPE took and WAC did not (B-048). */
+	if (conf.artefacts.webClient)
+		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+			trees.push_back({ std::get<1>(profileEntry) + IE_LOCAL_FOLDER, {}, 3, L"Internet Explorer's local folder" });
+			for (const std::wstring& folder : WININET_LOCAL_FOLDERS)
+				trees.push_back({ std::get<1>(profileEntry) + folder, {}, 3, L"WinINet containers" });
+		}
 	/* Internet Explorer 5 to 9's index.dat files (Windows 7 and earlier): the
 	   cache with its active content, the history and its MSHist01 folders,
 	   the cookies' and the downloads' index. */

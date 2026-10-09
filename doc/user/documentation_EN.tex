@@ -1316,7 +1316,22 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         refusal to save (\champ{NeverSave}); \texttt{Cookie}: site, name,
         path, dates, flags. The passwords and the cookies' values, encrypted,
         are never decoded: the databases are in the exhibit store for an
-        analysis that would hold the user's DPAPI key. And
+        analysis that would hold the user's DPAPI key. What was \emph{open}:
+        \texttt{SessionEntry}, each page of each tab of the session files ---
+        Chromium's \path|Sessions\Session_*| and \path|Tabs_*|, Firefox's
+        \fichier{sessionstore.jsonlz4} and its backups ---, with \champ{State}
+        (\texttt{Open}, \texttt{Closed}, \texttt{ClosedTab},
+        \texttt{ClosedWindow}), the instant the page was shown
+        (\champ{NavigatedUtc}, Chromium, that of its visit in
+        \fichier{History}) or the tab's last access
+        (\champ{TabLastAccessedUtc}, Firefox), the closing instant
+        (\champ{ClosedUtc}) and the page shown (\champ{Shown}): a tab of a
+        private window, or of a cleared history, may be found only there;
+        \texttt{Favicon}, each visited page's icon, kept after the history is
+        cleared; \texttt{AddressBarPrediction} (Chromium), what was typed in
+        the address bar and the address then chosen. Firefox's bookmark
+        backups, Internet Explorer's local folder and WinINet's containers
+        (\path|INetCookies|, \path|IEDownloadHistory|) are copied raw. And
         \texttt{CacheEntry} (\champ{Browser} \texttt{WebCache}): each entry
         of the \fichier{WebCacheV01.dat} database of Internet Explorer, Edge
         Legacy and the WinINet applications, by container (\champ{Container}:

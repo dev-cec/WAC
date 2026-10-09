@@ -15,8 +15,15 @@
  *  analysis may — Login Data (saved logins, their passwords encrypted by the
  *  key of `Local State`, itself protected by DPAPI: see
  *  dpapi_master_keys.h), Web Data (autofill), Cookies, Shortcuts, Top Sites,
- *  Bookmarks, Preferences —, each with its -journal or -wal. Never the
+ *  Bookmarks, Preferences —, each with its -journal, -wal or -shm. Never the
  *  caches. The databases are read on a private copy (sqlite_reader.h).
+ *
+ *  WHAT WAS OPEN (B-048). The session files — the tabs open and closed,
+ *  each page with when it was shown —, the favicons — each site's icon,
+ *  kept after its history is cleared — and, for Chromium, what was typed in
+ *  the address bar and the URL then chosen (Network Action Predictor).
+ *  Firefox's bookmark backups and Internet Explorer's local folder are
+ *  collected raw, not converted.
  *
  *  TIMES. Chromium counts microseconds since 1601-01-01 UTC — FILETIME's
  *  origin, a tenth of its resolution: converted exactly, without a time zone.
@@ -84,7 +91,9 @@ extern const ChromiumRoot CHROMIUM_ROOTS[];
 //! Number of entries of CHROMIUM_ROOTS.
 extern const size_t CHROMIUM_ROOT_COUNT;
 /*! The files collected in a browser profile folder, relative to it; each with
- *  its -journal and -wal when present. */
+ *  its -journal, -wal and -shm when present. "Sessions\\*" takes every file of
+ *  the subfolder: Session_<time> (the windows and tabs open, current and last
+ *  session) and Tabs_<time> (the tabs and windows closed). */
 extern const std::vector<std::wstring> CHROMIUM_PROFILE_FILES;
 /*! The files collected at the root of a browser's user data (Local State:
  *  the key that encrypts the saved passwords and cookies, under DPAPI). */
@@ -108,8 +117,18 @@ std::wstring webCacheFile(const std::wstring& directory, const std::wstring& sec
 
 //! Firefox's profiles folder, relative to a Windows profile; each subfolder is a Firefox profile.
 extern const wchar_t FIREFOX_PROFILES[];
-//! The files collected in a Firefox profile, each with its -wal and -journal when present.
+/*! The files collected in a Firefox profile, each with its -wal, -journal and
+ *  -shm when present; "<folder>\\*" takes every file of the subfolder (the
+ *  session's backups, the bookmarks' daily backups). */
 extern const std::vector<std::wstring> FIREFOX_PROFILE_FILES;
+/*! Internet Explorer's local folder of a Windows profile, taken whole: the
+ *  per-user setup logs (ie4uinit, brndlog — when the profile first ran it),
+ *  the tab recovery files, the suggestion and compatibility lists. */
+extern const wchar_t IE_LOCAL_FOLDER[];
+/*! WinINet's local folders of a Windows profile, taken whole: the cookies'
+ *  and the downloads' containers of Windows 10 and later (the deprecated
+ *  cookie, container.dat). */
+extern const std::vector<std::wstring> WININET_LOCAL_FOLDERS;
 
 /*! A Firefox time — microseconds since 1970-01-01 UTC — as a FILETIME.
  *  @param microseconds the value; 0 or negative for none
@@ -155,7 +174,7 @@ std::wstring transitionQualifiers(int64_t transition);
 
 /*! One record of web_client.json: a URL, a visit, a download or a search term. */
 struct WebClientRecord {
-	std::wstring type;              //!< Url, Visit, Download, SearchTerm, TypedInput, FormEntry, SavedLogin, Cookie, TypedUrl (NTUSER.DAT), CacheEntry (WebCache)
+	std::wstring type;              //!< Url, Visit, Download, SearchTerm, TypedInput, FormEntry, SavedLogin, Cookie, TypedUrl (NTUSER.DAT), CacheEntry (WebCache), SessionEntry, Favicon, AddressBarPrediction
 	std::wstring browser;           //!< Edge, Chrome…
 	std::wstring browserProfile;    //!< the profile folder: Default, Profile 1…
 	std::wstring sid;               //!< the Windows profile it belongs to
@@ -235,6 +254,52 @@ HRESULT readFirefoxLogins(const std::wstring& text, const WebClientRecord& base,
  *  @param records receives one Cookie per cookie
  *  @return ERROR_SUCCESS, or the failure to open the database */
 HRESULT readFirefoxCookies(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads a Chromium profile's `Sessions` folder (browser_sessions.h): each
+ *  page of each tab of the Session_<time> files (State Open: the windows of
+ *  the current and the last session) and of the Tabs_<time> files (State
+ *  Closed: the tabs and windows the user closed, with the instant and the
+ *  page shown). Navigated is when the page was shown, the instant History
+ *  gives its visit.
+ *  @param folder the Sessions folder, in the working copy
+ *  @param base browser, profile and SID copied into each record
+ *  @param records receives one SessionEntry per page
+ *  @return ERROR_SUCCESS, or ERROR_PATH_NOT_FOUND without a Sessions folder */
+HRESULT readChromiumSessions(const std::wstring& folder, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads Chromium's `Favicons`: each page and the icon it showed, with when
+ *  the icon was last fetched and last asked for — a site visited leaves its
+ *  icon after its history is cleared. The image itself is not read.
+ *  @param file the database, in the working copy
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives one Favicon per page and icon
+ *  @return ERROR_SUCCESS, or the failure to open the database */
+HRESULT readChromiumFavicons(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads Chromium's `Network Action Predictor`: what the user typed in the
+ *  address bar and the URL then chosen, with how often the prediction held.
+ *  @param file the database, in the working copy
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives one AddressBarPrediction per row
+ *  @return ERROR_SUCCESS, or the failure to open the database */
+HRESULT readChromiumPredictor(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads one Firefox session file (sessionstore.jsonlz4 or a backup of
+ *  sessionstore-backups, mozLz4): each page of each tab of the open windows
+ *  (State Open), of the tabs closed (ClosedTab) and of the windows closed
+ *  (ClosedWindow), with the tab's last access and the closing instant.
+ *  @param file the file, in the working copy
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives one SessionEntry per page
+ *  @return ERROR_SUCCESS, or ERROR_INVALID_DATA if it is not a mozLz4 JSON */
+HRESULT readFirefoxSession(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
+
+/*! Reads Firefox's `favicons.sqlite`: each page and its icon, with when the link expires.
+ *  @param file the database, in the working copy
+ *  @param base browser, profile, SID and source copied into each record
+ *  @param records receives one Favicon per page and icon
+ *  @return ERROR_SUCCESS, or the failure to open the database */
+HRESULT readFirefoxFavicons(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records);
 
 /*! Decodes the record of a download of Internet Explorer 10 and 11 — the
  *  `ResponseHeaders` of an entry of the WebCache's `iedownload` container,

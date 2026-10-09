@@ -718,6 +718,15 @@ real browsing of ``wac'' (Chrome and Firefox installed by
   \fichier{places.sqlite} (WAL replayed) read again by Python's SQLite /
   \fichier{web\_client.json} &
   check added with the VM's browsers \\
+session files of Chrome and Edge (\path|Session_*|, \path|Tabs_*|)
+  confronted with their \fichier{History} read by Python's SQLite; Firefox's
+  sessions decompressed by Python's \texttt{lz4} module; \fichier{Favicons}
+  and \fichier{favicons.sqlite} read by Python's SQLite /
+  \fichier{web\_client.json} (108 Chromium session pages: the 57 the history
+  knows carry the instant of a visit, 55 to the microsecond, 2 a navigation
+  within the page 2.5~s later; 54 Firefox pages; 28 page and icon pairs) &
+  check added with the artefact; the format checked on the real files before
+  writing the test \\
 HTA served by the witness server and run by \texttt{mshta.exe}: its
   WebCache entry names its cached copy, collected, same SHA-256 as the content
   served / \fichier{web\_client.json}, manifest &

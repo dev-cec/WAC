@@ -378,15 +378,16 @@ fetch_results() {
     && $QGA read "$VMDIR\\exhibit-list.txt" "$host/exhibits/LIST.txt" >/dev/null 2>&1 \
     && [[ -s "$host/exhibits/LIST.txt" ]] \
     && echo "   + exhibits/LIST.txt" || echo "   ⚠️ list of the exhibit store not read"
-  # The browsers' History databases and the Timeline's ActivitiesCache.db,
-  # with their journals: a few hundred KiB to a few MiB, fetched so that
+  # The browsers' History databases (with Favicons, the address bar's
+  # predictor and the session files, B-048) and the Timeline's
+  # ActivitiesCache.db, with their journals: a few hundred KiB to a few MiB, fetched so that
   # check-json.py reads them with Python's own SQLite and confronts
   # web_client.json and activities_cache.json with that independent reading.
   # grep finds nothing when no such database was collected (an --only cycle
   # without browsers nor Timeline): under pipefail that status ended the
   # whole harness before its checks — hence `|| true`.
   if [[ -s "$host/exhibits/LIST.txt" ]]; then
-    tr -d '\r' < "$host/exhibits/LIST.txt" | { grep -E '\\User Data\\[^\\]+\\(History|Login Data|Network\\Cookies)(-journal|-wal)?$|\\WebCache\\WebCacheV01\.dat$|\\Profiles\\[^\\]+\\places\.sqlite(-wal|-journal)?$|\\ConnectedDevicesPlatform\\[^\\]+\\ActivitiesCache\.db(-wal|-journal)?$' || true; } | while read -r f; do
+    tr -d '\r' < "$host/exhibits/LIST.txt" | { grep -E '\\User Data\\[^\\]+\\(History|Login Data|Network\\Cookies|Favicons|Network Action Predictor)(-journal|-wal)?$|\\User Data\\[^\\]+\\Sessions\\[^\\]+$|\\WebCache\\WebCacheV01\.dat$|\\Profiles\\[^\\]+\\(places|favicons)\.sqlite(-wal|-journal)?$|\\Profiles\\[^\\]+\\(sessionstore\.jsonlz4|sessionstore-backups\\[^\\]+)$|\\ConnectedDevicesPlatform\\[^\\]+\\ActivitiesCache\.db(-wal|-journal)?$' || true; } | while read -r f; do
       local relative="${f#*\\exhibits\\}"
       mkdir -p "$host/exhibits/$(dirname "${relative//\\//}")"
       $QGA read "$f" "$host/exhibits/${relative//\\//}" >/dev/null 2>&1 && echo "   + exhibits/${relative//\\//}" \

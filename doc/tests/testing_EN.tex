@@ -345,6 +345,30 @@ g++ -std=c++17 -I. xpress.cpp xpress_test.cpp -o /tmp/xpress_test
 size>} per unit; a null compressed size marks a unit Windows gave up
 compressing.
 
+\section{Browser sessions: \texttt{browser\_sessions\_test}}
+
+Checks the decoding of Chromium's session files (SNSS: \path|Session_*|,
+\path|Tabs_*|) and of Firefox's mozLz4 files (\fichier{.jsonlz4}). The LZ4
+blocks are made by Python's \texttt{lz4} module, an independent
+implementation: each must decompress byte for byte. The SNSS files are written
+by the test field by field, as Chromium lays them out (Pickle, fields aligned
+to 32 bits): a navigation replaced by a later one, an older navigation without
+the fields after its title, a closed tab and its instant, a truncated command,
+a lying length. Then every input, damaged at random (fixed seed), must never
+make the decoders read out of bounds (AddressSanitizer, UBSan). Seen failing:
+without the fields' alignment, and with an LZ4 copy that does not overlap.
+
+\begin{lstlisting}
+cd sources && g++ -std=c++17 -g -fsanitize=address,undefined -I. browser_sessions.cpp browser_sessions_test.cpp -o /tmp/bst
+python3 -c "import lz4.block,sys; open(sys.argv[2],'wb').write(lz4.block.compress(open(sys.argv[1],'rb').read(), store_size=False))" a.bin a.lz4
+/tmp/bst a.bin a.lz4 [<original> <block> ...]
+\end{lstlisting}
+
+In the cycle, Chromium's sessions are confronted with \fichier{History}: each
+page the history knows carries the instant of one of its visits, to the
+microsecond; Firefox's, decompressed by Python's \texttt{lz4} module, must give
+the same pages, states and closing instants.
+
 \section{LZX decompression: \texttt{lzx\_test}}
 
 WOF's fourth algorithm, LZX on 32~KiB chunks, is only produced on request. The
