@@ -26,6 +26,8 @@ $k = Measure-Command { & $kape --tsource C: --target $Target --tdest $tdest --tf
 $kapeExit = $LASTEXITCODE
 
 Copy-Item C:\wactest\kapecmp\exhibits\MANIFEST.json "$root\wac-manifest.json"
+# WAC's time per step: the shared steps and each artefact's, for the comparison.
+Copy-Item C:\wactest\kapecmp\investigation.json "$root\wac-investigation.json"
 Get-ChildItem $tdest -Recurse -Filter *CopyLog*.csv | Copy-Item -Destination $root
 Get-ChildItem $tdest -Recurse -Filter *SkipLog*.csv -ErrorAction SilentlyContinue | Copy-Item -Destination $root
 $wacBytes = (Get-ChildItem C:\wactest\kapecmp -Recurse -File | Measure-Object Length -Sum).Sum

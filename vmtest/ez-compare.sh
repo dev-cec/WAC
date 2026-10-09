@@ -42,4 +42,16 @@ with zipfile.ZipFile(os.path.join(out, "outputs.zip")) as z:
 os.remove(os.path.join(out, "outputs.zip"))
 PY
 
+# Events: what no convention explains is settled by Windows' own rendering of
+# the record (guest/evtx-reference.ps1), then compared again with it.
+if [[ "$MODE" == evtx ]]; then
+  python3 "$HERE/lib/ez-compare.py" "$MODE" "$OUT" > /dev/null || true
+  if [[ -s "$OUT/evtx-differences.txt" ]]; then
+    $QGA write "$OUT/evtx-differences.txt" 'C:\wactest\ez\evtx-differences.txt' >/dev/null
+    $QGA write "$HERE/guest/evtx-reference.ps1" 'C:\wactest\evtx-reference.ps1' >/dev/null
+    $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'C:\wactest\evtx-reference.ps1' | tr -d '\r'
+    $QGA read 'C:\wactest\ez\windows-eventdata.json' "$OUT/windows-eventdata.json" >/dev/null
+    $QGA run -- powershell.exe -NoProfile -Command 'Remove-Item C:\wactest\evtx-reference.ps1, C:\wactest\ez\evtx-differences.txt, C:\wactest\ez\windows-eventdata.json' >/dev/null
+  fi
+fi
 python3 "$HERE/lib/ez-compare.py" "$MODE" "$OUT" | tee "$OUT/compare.txt"

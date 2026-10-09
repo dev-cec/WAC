@@ -292,13 +292,33 @@ def compare_evtx(ez_csv, wac_json):
                 diffs["EventData values"].append((key, mine, theirs))
             elif verdict:
                 conventions.update(verdict)
+    # THE ARBITER. A difference no convention explains is settled by Windows
+    # itself: the values it renders for that record, read from the same .evtx
+    # (windows-eventdata.json, written by ez-compare.sh). Where WAC gives
+    # Windows' values, the difference is EvtxECmd's; else it stays a defect.
+    folder = os.path.dirname(wac_json)
+    reference_path = os.path.join(folder, "windows-eventdata.json")
+    if os.path.exists(reference_path):
+        with open(reference_path, encoding="utf-8-sig") as f:
+            windows = {k.lower(): v for k, v in json.load(f).items()}
+        kept = []
+        for key, mine, theirs in diffs["EventData values"]:
+            rendered = windows.get(f"{key[0]}|{key[1]}".lower())
+            if rendered is not None and [str(v) for v in rendered] == mine:
+                conventions["EvtxECmd value differs from the one Windows renders; WAC gives Windows' (checked by Get-WinEvent)"] += 1
+            else:
+                kept.append((key, mine, theirs))
+        diffs["EventData values"] = kept
+    with open(os.path.join(folder, "evtx-differences.txt"), "w", encoding="utf-8") as f:
+        for key, _, _ in diffs["EventData values"]:
+            f.write(f"{key[0]}|{key[1]}\n")
     only_ez = set(ez) - set(wac)
     only_wac = set(wac) - set(ez)
     print(f"records: WAC {len(wac)}, EvtxECmd {len(ez)}, common {len(set(ez) & set(wac))}")
     print(f"  only in EvtxECmd: {len(only_ez)}, by log: {collections.Counter(k[0] for k in only_ez).most_common(5)}")
     print(f"  only in WAC: {len(only_wac)}, by log: {collections.Counter(k[0] for k in only_wac).most_common(5)}")
     for rule, count in conventions.most_common():
-        print(f"  ℹ️  {count} event(s): {rule if rule.startswith('WAC') else 'EvtxECmd convention — ' + rule}")
+        print(f"  ℹ️  {count} event(s): {rule if rule.startswith(('WAC', 'EvtxECmd value')) else 'EvtxECmd convention — ' + rule}")
     print(f"  ℹ️  recovered by WAC only (cleared logs, flagged EvtRecovered): {sum(recovered.values())} {dict(recovered)}")
     failures = 0
     for field in compared:
