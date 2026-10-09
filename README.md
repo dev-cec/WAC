@@ -1075,7 +1075,7 @@ cmp /tmp/out/events.json /tmp/out2/events.json   # must be silent
 
 - **User manual**, in English and French, maintained together:
   `doc/user/documentation_EN.pdf` and `doc/user/documentation_FR.pdf`,
-  built from the `.tex` files beside them with `latexmk -xelatex` (fonts: Noto
+  built from the `.tex` files beside them by `doc/build-docs.sh` (LuaLaTeX, as the editor's recipe; fonts: Noto
   Sans, DejaVu Sans Mono). They cover preparing a collection, the options,
   reading the output, verifying the exhibit store and the traces left on the
   examined machine. `verify-exhibits.ps1|.sh` (English) and

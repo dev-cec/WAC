@@ -2,6 +2,8 @@
 % guides), French and English editions alike: one copy, so that they cannot
 % drift apart.
 %
+% Built with LuaLaTeX:  latexmk -lualatex <document>.tex  (then latexmk -c).
+%
 % A document sets, BEFORE \input{../wac-style.tex}:
 %   \usepackage[<language>]{babel}
 %   \newcommand{\wacdoctitle}{...}      running header: "WAC — <title>"
@@ -102,27 +104,54 @@
 % the EventsManager theme's tables, a line may break inside it, without a
 % hyphen that would read as part of the name: after \ / . _ - : and between a
 % lowercase letter or digit and a capital (AmcacheSha1|Covers|Bytes). Only
-% inside \texttt — the classes are set once, the breaks switched on there.
-\newXeTeXintercharclass\wacBreakAfter
-\newXeTeXintercharclass\wacUpper
-\newXeTeXintercharclass\wacLower
-\XeTeXcharclass`\\=\wacBreakAfter
-\XeTeXcharclass`\/=\wacBreakAfter
-\XeTeXcharclass`\.=\wacBreakAfter
-\XeTeXcharclass`\_=\wacBreakAfter
-\XeTeXcharclass`\-=\wacBreakAfter
-\XeTeXcharclass`\:=\wacBreakAfter
-\count255=`A \loop\XeTeXcharclass\count255=\wacUpper\ifnum\count255<`Z\advance\count255 by 1\repeat
-\count255=`a \loop\XeTeXcharclass\count255=\wacLower\ifnum\count255<`z\advance\count255 by 1\repeat
-\count255=`0 \loop\XeTeXcharclass\count255=\wacLower\ifnum\count255<`9\advance\count255 by 1\repeat
-\XeTeXinterchartoks\wacBreakAfter\wacUpper={\allowbreak}
-\XeTeXinterchartoks\wacBreakAfter\wacLower={\allowbreak}
-\XeTeXinterchartoks\wacBreakAfter 0={\allowbreak}
-\XeTeXinterchartoks\wacLower\wacUpper={\allowbreak}
-% \textbackslash is no character token: it carries its own break.
-\newcommand{\wacbackslash}{\char92\allowbreak}
-\let\wacplaintexttt\texttt
-\renewcommand{\texttt}[1]{\wacplaintexttt{\XeTeXinterchartokenstate=1\let\textbackslash\wacbackslash#1}}
+% inside \texttt. The documents are built with LuaLaTeX (latexmk -lualatex,
+% the editor's recipe): a Lua filter marks the breaks before the paragraph is
+% broken into lines; under XeLaTeX, XeTeX's inter-character tokens do it.
+\NewCommandCopy\wacplaintexttt\texttt   % the robust original, copied whole: a \let would make the new one call itself
+\ifdefined\directlua
+  \newattribute\wacbreakable
+  \directlua{
+    local attribute = luatexbase.attributes.wacbreakable
+    local glyph, penalty = node.id("glyph"), node.id("penalty")
+    local after = { [92] = true, [47] = true, [46] = true, [95] = true, [45] = true, [58] = true }
+    local function lower(c) return (c >= 97 and c <= 122) or (c >= 48 and c <= 57) end
+    local function upper(c) return c >= 65 and c <= 90 end
+    local function mark(head)
+      for n in node.traverse_id(glyph, head) do
+        local nxt = n.next
+        if node.has_attribute(n, attribute) and nxt and nxt.id == glyph and node.has_attribute(nxt, attribute)
+           and (after[n.char] or (lower(n.char) and upper(nxt.char))) then
+          local p = node.new(penalty)
+          p.penalty = 0
+          head = node.insert_after(head, n, p)
+        end
+      end
+      return head
+    end
+    luatexbase.add_to_callback("pre_linebreak_filter", mark, "wac breakable monospace")
+  }
+  \DeclareRobustCommand{\texttt}[1]{\wacplaintexttt{\wacbreakable=1 #1}}
+\else
+  \newXeTeXintercharclass\wacBreakAfter
+  \newXeTeXintercharclass\wacUpper
+  \newXeTeXintercharclass\wacLower
+  \XeTeXcharclass`\\=\wacBreakAfter
+  \XeTeXcharclass`\/=\wacBreakAfter
+  \XeTeXcharclass`\.=\wacBreakAfter
+  \XeTeXcharclass`\_=\wacBreakAfter
+  \XeTeXcharclass`\-=\wacBreakAfter
+  \XeTeXcharclass`\:=\wacBreakAfter
+  \count255=`A \loop\XeTeXcharclass\count255=\wacUpper\ifnum\count255<`Z\advance\count255 by 1\repeat
+  \count255=`a \loop\XeTeXcharclass\count255=\wacLower\ifnum\count255<`z\advance\count255 by 1\repeat
+  \count255=`0 \loop\XeTeXcharclass\count255=\wacLower\ifnum\count255<`9\advance\count255 by 1\repeat
+  \XeTeXinterchartoks\wacBreakAfter\wacUpper={\allowbreak}
+  \XeTeXinterchartoks\wacBreakAfter\wacLower={\allowbreak}
+  \XeTeXinterchartoks\wacBreakAfter 0={\allowbreak}
+  \XeTeXinterchartoks\wacLower\wacUpper={\allowbreak}
+  % \textbackslash is no character token: it carries its own break.
+  \newcommand{\wacbackslash}{\char92\allowbreak}
+  \DeclareRobustCommand{\texttt}[1]{\wacplaintexttt{\XeTeXinterchartokenstate=1\let\textbackslash\wacbackslash#1}}
+\fi
 
 % Shortcuts
 \newcommand{\wac}{\textsc{wac}}

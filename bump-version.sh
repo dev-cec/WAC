@@ -40,7 +40,7 @@ PY
 git -C "$HERE" add "$RC"
 VERSION=$("$HERE/wac-version.sh")
 # The documents that state the version: the README badge, and the information
-# page of each manual (PDFs rebuilt when XeLaTeX is there).
+# page of each manual (PDFs rebuilt when LuaLaTeX is there).
 sed -i -E "s#badge/version-[0-9]+\.[0-9]+\.[0-9]+-green#badge/version-$VERSION-green#" "$HERE/README.md"
 DOCS=("$HERE"/doc/user/documentation_{FR,EN}.tex "$HERE"/doc/tests/testing_{FR,EN}.tex "$HERE"/doc/validation/validation_{FR,EN}.tex
       "$HERE"/doc/harmlessness/harmlessness_{FR,EN}.tex "$HERE"/doc/comparison/comparison_{FR,EN}.tex)
@@ -52,11 +52,9 @@ sed -i -E "s#^(Pour la version|For version) [0-9]+\.[0-9]+\.[0-9]+,#\1 $VERSION,
 sed -i -E "s#^(\\\\wac\{\} & version) [0-9]+\.[0-9]+\.[0-9]+ #\1 $VERSION #" "$HERE"/doc/comparison/comparison_{FR,EN}.tex
 # The wac.yml shown in the user manuals carries the version, as --write-config writes it.
 sed -i -E "s#^wac_version: [0-9]+\.[0-9]+\.[0-9]+ #wac_version: $VERSION #" "$HERE"/doc/user/documentation_{FR,EN}.tex "$HERE/README.md"
-if command -v xelatex >/dev/null; then
-  for tex in "${DOCS[@]}"; do
-    ( cd "$(dirname "$tex")" && for pass in 1 2; do xelatex -interaction=nonstopmode -halt-on-error "$(basename "$tex")" >/dev/null 2>&1; done
-      rm -f "${tex%.tex}".aux "${tex%.tex}".out "${tex%.tex}".toc "${tex%.tex}".log )
-  done
+# Rebuilt as the editor builds them (LuaLaTeX), their artefacts removed after.
+if command -v lualatex >/dev/null && command -v latexmk >/dev/null; then
+  "$HERE/doc/build-docs.sh" "${DOCS[@]}" || echo "some document did not build cleanly (see above)"
 fi
 git -C "$HERE" add "$HERE/README.md" "${DOCS[@]}" "${DOCS[@]/%.tex/.pdf}"
 # The code documentation (doc/html), its version read from WAC.rc too (Doxyfile: $(WAC_VERSION)).

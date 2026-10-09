@@ -2,8 +2,8 @@
 % The French edition is testing_FR.tex, in this folder: both are maintained together,
 % section for section.
 %
-% Build (XeLaTeX, two passes for the cover page and the table of contents):
-%     latexmk -xelatex testing_EN.tex
+% Build (LuaLaTeX, as the editor's recipe; build artefacts removed after):
+%     ../build-docs.sh testing_EN.tex
 % The cover page is ../cover_tests_EN.png, derived from ../cover_EN.png by
 % ../retitle-cover.py. The layout is ../wac-style.tex, shared with the user manual.
 
@@ -341,8 +341,8 @@ g++ -std=c++17 -I. xpress.cpp xpress_test.cpp -o /tmp/xpress_test
 /tmp/xpress_test <original> <compressed.bin> <index.idx>
 \end{lstlisting}
 
-\fichier{index.idx} holds one line \texttt{<n> <original size> <compressed
-size>} per unit; a null compressed size marks a unit Windows gave up
+Each unit has one line in \fichier{index.idx}: \texttt{<n> <original size>
+<compressed size>}; a null compressed size marks a unit Windows gave up
 compressing.
 
 \section{Browser sessions: \texttt{browser\_sessions\_test}}
