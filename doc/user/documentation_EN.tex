@@ -1833,10 +1833,14 @@ These traces are listed so that the analyst recognises \wac{}'s footprint
 instead of taking it for the activity under study:
 
 \begin{itemize}
-  \item \textbf{running \fichier{WAC.exe} is an execution}: it produces a
-        Prefetch file for \fichier{WAC.exe}, an Amcache entry and, if
-        process-creation auditing is on, a Security 4688 event. Expect to find
-        \wac{} in the very artefacts it collects;
+  \item \textbf{running \fichier{WAC.exe} is an execution}: it produces an
+        Amcache entry, a ShimCache entry at shutdown and, if \wac{} is run
+        from the machine's disk rather than from a key, a Prefetch file and a
+        BAM value. \wac{} writes no event itself, but a monitoring in place
+        records its execution: Security 4688 and 4689 if process-creation
+        auditing is on, Sysmon (the process, its raw reads of the volume, the
+        files it creates on the key), an EDR. Expect to find \wac{} in the very
+        artefacts it collects;
   \item \textbf{plugging in the USB stick} registers it in \fichier{USBSTOR},
         \fichier{MountedDevices} and the related logs;
   \item \textbf{logging on} to run the tool creates a session and its log

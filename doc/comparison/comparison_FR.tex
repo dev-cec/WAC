@@ -159,8 +159,10 @@ corrigés (chapitre~\ref{chap:defauts}), et des lacunes de couverture,
 toutes comblées depuis (section~\ref{sec:couverture}).
 
 Lancé depuis une clé, \wac{} n'écrit rien sur la machine examinée : ni fichier,
-ni valeur de registre, ni événement --- seules restent les traces que Windows
-laisse de tout programme lancé (Amcache, ShimCache). KAPE et les outils EZ, des
+ni valeur de registre, ni événement dans les journaux de Windows. Restent les
+traces que Windows laisse de tout programme lancé (Amcache, ShimCache), et ce
+qu'une surveillance en place enregistre de son exécution : Sysmon, l'audit de
+création de processus, un EDR. KAPE et les outils EZ, des
 programmes .NET, écrivent dans le registre de l'utilisateur et, pour les
 modules de KAPE, des fichiers sur le volume système
 (chapitre~\ref{chap:traces}).
@@ -440,11 +442,30 @@ Outils EZ, en direct & aucun & aucune valeur ; 54 ouvertures en création
 \bottomrule
 \end{longtable}
 
-Aucun processus d'aucun outil n'a fait écrire d'événement dans les journaux de
-Windows : ceux de la fenêtre de mesure sont les ouvertures de session des
-services, Defender, la stratégie de groupe, communs au témoin ou sans lien avec
-l'outil. Tous lisent les volumes en brut, ce que Sysmon relève
-(\texttt{RawAccessRead}) et qu'un EDR peut signaler.
+Les processus des outils n'ont fait écrire aucun événement dans les journaux
+de Windows eux-mêmes (System, Security, Application, journaux d'exploitation) :
+ceux de la fenêtre de mesure sont les ouvertures de session des services,
+Defender, la stratégie de groupe, communs au témoin ou sans lien avec l'outil.
+L'audit de création de processus n'est pas actif sur le clone ; actif, il
+aurait inscrit un 4688 et un 4689 par processus (chapitre~\ref{chap:limites}).
+
+La surveillance installée, elle, enregistre l'exécution de chaque outil : le
+journal de Sysmon a reçu, pour les processus de l'outil seulement,
+
+\begin{longtable}{@{}L{3.6cm}L{2.0cm}L{2.0cm}L{4.0cm}L{3.0cm}@{}}
+\toprule
+\textbf{Outil} & \textbf{Processus} & \textbf{Lectures brutes} & \textbf{Fichiers créés} & \textbf{Registre} \\
+\midrule\endhead
+\wac{} & 1 & 2 & 16\,382, tous sur la clé ; 5\,588 supprimés sur la clé & aucun \\
+KAPE, cibles & 1 & 2 & 2\,553, tous sur la clé & 169 clés ouvertes en création, 8 valeurs \\
+KAPE, cibles et modules & 17 & 19 & 2\,622 sur la clé, 27 sur C: & 2\,611 clés, 179 valeurs \\
+Outils EZ, en direct & 6 & 78 & 45, tous sur la clé & 54 clés \\
+\bottomrule
+\end{longtable}
+
+\noindent auxquels s'ajoutent les bibliothèques chargées par chaque processus
+(24 pour \wac{}). Un EDR en tire la même télémétrie, et peut signaler la lecture
+brute des volumes (\texttt{RawAccessRead}).
 
 \begin{description}[style=nextline,leftmargin=1em]
   \item[Ouverture en création] \texttt{RegCreateKeyEx} crée la clé si elle manque
@@ -480,10 +501,11 @@ une.
 
 \begin{note}
 Chaque trace de \wac{} est expliquée : il ne lance aucun processus, n'écrit
-aucun fichier sur la machine, aucune valeur de registre, aucun événement. Restent
-celles que Windows laisse de tout programme lancé --- une entrée Amcache, une
-entrée ShimCache à l'arrêt ---, inévitables et décrites dans le dossier
-d'innocuité, et la lecture brute des volumes, visible d'un EDR.
+aucun fichier sur la machine, aucune valeur de registre, aucun événement dans
+les journaux de Windows. Restent celles que Windows laisse de tout programme
+lancé --- une entrée Amcache, une entrée ShimCache à l'arrêt ---, et ce que la
+surveillance en place enregistre de son exécution (Sysmon, audit de création
+de processus, EDR) : inévitables, et décrites dans le dossier d'innocuité.
 \end{note}
 
 % ============================================================ 6
@@ -674,7 +696,7 @@ Harnais & un contrôle qui plantait interrompait tous les suivants sans échec v
 \end{longtable}
 
 % ============================================================ 9
-\chapter{Limites de la comparaison}
+\chapter{Limites de la comparaison}\label{chap:limites}
 
 \begin{itemize}
   \item Une seule machine, virtuelle, sous Windows 11 : certains artefacts y

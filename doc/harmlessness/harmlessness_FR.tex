@@ -70,7 +70,9 @@ au sens suivant :
 
 \begin{enumerate}
   \item il \textbf{n'écrit rien} sur les volumes de la machine examinée — ni
-        fichier, ni registre, ni journal ;
+        fichier, ni registre, ni événement dans un journal ; ce qu'une
+        surveillance en place (Sysmon, audit, EDR) enregistre de son exécution
+        est décrit au chapitre~\ref{ch:traces} ;
   \item il \textbf{ne modifie aucune métadonnée} des fichiers qu'il lit : ni
         date d'accès, ni numéro de changement du journal NTFS ;
   \item il \textbf{n'émet rien sur le réseau} et ne résout aucun nom ;
@@ -178,7 +180,7 @@ examinée »).
 \bfseries Outil & \bfseries Ce que ses processus écrivent sur la machine \\
 \midrule
 \endhead
-\wac{} & Rien : aucun fichier, aucune valeur de registre, aucun événement. \\
+\wac{} & Rien : aucun fichier, aucune valeur de registre. \\
 KAPE (cibles) & 4 valeurs \texttt{ZoneMap} d'Internet Settings dans la ruche
   de l'utilisateur. \\
 KAPE et ses modules & Les mêmes valeurs, réécrites par 14 processus ; 28
@@ -189,8 +191,13 @@ Outils EZ en direct & Aucune valeur ni aucun fichier, mais des ouvertures en
 \bottomrule
 \end{longtable}
 
-Pour tous, Windows ajoute une entrée Amcache pendant l'exécution et une entrée
-ShimCache à l'arrêt ; tous lisent les volumes en brut. KAPE et les outils EZ
+Aucun n'a fait écrire d'événement dans les journaux de Windows eux-mêmes. Mais
+tous sont enregistrés par la surveillance installée, comme le prévoit la
+section précédente : Sysmon a noté, pour \wac{}, son processus, ses 2 lectures
+brutes de volume et les 16\,382 fichiers qu'il a créés, tous sur la clé ;
+l'audit de création de processus, inactif sur le clone, aurait inscrit un 4688
+et un 4689. Pour tous, Windows ajoute une entrée Amcache pendant l'exécution et
+une entrée ShimCache à l'arrêt ; tous lisent les volumes en brut. KAPE et les outils EZ
 demandent en outre le runtime .NET~9 sur la machine examinée.
 
 \section{Les opérations de WAC}
@@ -222,7 +229,7 @@ Ruches du registre & Copiées par la lecture directe, puis lues sur la copie.
   les mots de passe faibles. Tout se fait sur la copie, en lecture seule ; la
   machine examinée n'est pas touchée, et un condensat est à sens unique. \\
 Journaux d'événements (\opt{events}) & Lus par la lecture directe : le service
-  de journalisation n'est pas sollicité, aucun événement n'est produit. \\
+  de journalisation n'est pas sollicité, et cette lecture ne produit aucun événement. \\
 Volumes FAT et exFAT & Lus en brut par le périphérique du volume
   (\path|\\.\X:|), en lecture seule, volumes fixes comme amovibles : secteur
   de démarrage, FAT et répertoires, jamais un fichier ouvert, aucune date

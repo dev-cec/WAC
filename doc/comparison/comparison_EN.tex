@@ -158,8 +158,9 @@ The confrontation also revealed 28 defects of \wac{}, all fixed
 (section~\ref{sec:coverage}).
 
 Started from a key, \wac{} writes nothing on the examined machine: no file, no
-registry value, no event --- only the traces Windows leaves of any program
-started remain (Amcache, ShimCache). KAPE and the EZ tools, .NET programs,
+registry value, no event in Windows' logs. What remains are the traces Windows
+leaves of any program started (Amcache, ShimCache), and what a monitoring in
+place records of its execution: Sysmon, process creation auditing, an EDR. KAPE and the EZ tools, .NET programs,
 write to the user's registry and, for KAPE's modules, files on the system
 volume (chapter~\ref{chap:traces}).
 \end{note}
@@ -429,10 +430,30 @@ EZ tools, live & none & no value; 54 open-or-create calls (policies,
 \bottomrule
 \end{longtable}
 
-No process of any tool made Windows write an event in its logs: those of the
-measure window are the services' logons, Defender, group policy, common to the
-control run or unrelated to the tool. All of them read the volumes raw, which
-Sysmon records (\texttt{RawAccessRead}) and an EDR may report.
+The tools' processes made Windows write no event in its own logs (System,
+Security, Application, operational logs): those of the measure window are the
+services' logons, Defender, group policy, common to the control run or
+unrelated to the tool. Process creation auditing is not active on the clone;
+active, it would have logged a 4688 and a 4689 per process
+(chapter~\ref{chap:limites}).
+
+The installed monitoring, though, records each tool's execution: Sysmon's log
+received, for the tool's processes only,
+
+\begin{longtable}{@{}L{3.6cm}L{2.0cm}L{2.0cm}L{4.0cm}L{3.0cm}@{}}
+\toprule
+\textbf{Tool} & \textbf{Processes} & \textbf{Raw reads} & \textbf{Files created} & \textbf{Registry} \\
+\midrule\endhead
+\wac{} & 1 & 2 & 16,382, all on the key; 5,588 deleted on the key & none \\
+KAPE, targets & 1 & 2 & 2,553, all on the key & 169 keys opened for creation, 8 values \\
+KAPE, targets and modules & 17 & 19 & 2,622 on the key, 27 on C: & 2,611 keys, 179 values \\
+EZ tools, live & 6 & 78 & 45, all on the key & 54 keys \\
+\bottomrule
+\end{longtable}
+
+\noindent plus the libraries each process loaded (24 for \wac{}). An EDR draws
+the same telemetry, and may report the raw reading of the volumes
+(\texttt{RawAccessRead}).
 
 \begin{description}[style=nextline,leftmargin=1em]
   \item[Open-or-create] \texttt{RegCreateKeyEx} creates the key if it is missing
@@ -465,10 +486,11 @@ more, and the build script refuses a version that would import one.
 
 \begin{note}
 Every trace of \wac{} is explained: it starts no process, writes no file on the
-machine, no registry value, no event. What remains is what Windows leaves of any
-program started --- an Amcache entry, a ShimCache entry at shutdown ---,
-unavoidable and described in the harmlessness file, and the raw reading of the
-volumes, visible to an EDR.
+machine, no registry value, no event in Windows' logs. What remains is what
+Windows leaves of any program started --- an Amcache entry, a ShimCache entry at
+shutdown ---, and what the monitoring in place records of its execution
+(Sysmon, process creation auditing, EDR): unavoidable, and described in the
+harmlessness file.
 \end{note}
 
 % ============================================================ 6
@@ -651,7 +673,7 @@ Test harness & a crashing check silently stopped every following one; the EZ too
 \end{longtable}
 
 % ============================================================ 9
-\chapter{Limits of the comparison}
+\chapter{Limits of the comparison}\label{chap:limites}
 
 \begin{itemize}
   \item One machine, virtual, running Windows 11: some artefacts are few there

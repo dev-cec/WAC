@@ -1899,10 +1899,15 @@ Ces traces sont listées pour que l'analyste reconnaisse l'empreinte de \wac{} a
 lieu de la prendre pour l'activité étudiée :
 
 \begin{itemize}
-  \item \textbf{lancer \fichier{WAC.exe} est une exécution} : elle produit un
-        fichier Prefetch pour \fichier{WAC.exe}, une entrée Amcache et, si
-        l'audit de création de processus est actif, un événement Security 4688.
-        Attendez-vous à retrouver \wac{} dans les artefacts qu'il collecte ;
+  \item \textbf{lancer \fichier{WAC.exe} est une exécution} : elle produit une
+        entrée Amcache, une entrée ShimCache à l'arrêt et, si \wac{} est lancé
+        du disque de la machine plutôt que d'une clé, un fichier Prefetch et une
+        valeur BAM. \wac{} n'écrit lui-même aucun événement, mais une
+        surveillance en place enregistre son exécution : Security 4688 et 4689
+        si l'audit de création de processus est actif, Sysmon (le processus,
+        ses lectures brutes du volume, les fichiers qu'il crée sur la clé), un
+        EDR. Attendez-vous à retrouver \wac{} dans les artefacts qu'il
+        collecte ;
   \item \textbf{brancher la clé USB} l'inscrit dans \fichier{USBSTOR},
         \fichier{MountedDevices} et les journaux associés ;
   \item \textbf{ouvrir une session} pour lancer l'outil crée une session et ses

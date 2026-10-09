@@ -70,7 +70,9 @@ following sense:
 
 \begin{enumerate}
   \item it \textbf{writes nothing} to the volumes of the examined machine —
-        no file, no registry, no log;
+        no file, no registry, no event in a log; what a monitoring in place
+        (Sysmon, auditing, EDR) records of its execution is described in
+        chapter~\ref{ch:traces};
   \item it \textbf{changes no metadata} of the files it reads: no access
         date, no change number in the NTFS journal;
   \item it \textbf{sends nothing over the network} and resolves no name;
@@ -175,7 +177,7 @@ chapter ``Traces left on the examined machine'').
 \bfseries Tool & \bfseries What its processes write on the machine \\
 \midrule
 \endhead
-\wac{} & Nothing: no file, no registry value, no event. \\
+\wac{} & Nothing: no file, no registry value. \\
 KAPE (targets) & 4 Internet Settings \texttt{ZoneMap} values in the user's
   hive. \\
 KAPE and its modules & The same values, rewritten by 14 processes; 28 files on
@@ -185,8 +187,13 @@ EZ tools, live & No value and no file, but open-or-create calls on policy and
 \bottomrule
 \end{longtable}
 
-For all of them, Windows adds an Amcache entry during the run and a ShimCache
-entry at shutdown; all of them read the volumes raw. KAPE and the EZ tools also
+None made Windows write an event in its own logs. But all of them are recorded
+by the installed monitoring, as the previous section says: Sysmon noted, for
+\wac{}, its process, its 2 raw reads of a volume and the 16,382 files it
+created, all on the key; process creation auditing, inactive on the clone,
+would have logged a 4688 and a 4689. For all of them, Windows adds an Amcache
+entry during the run and a ShimCache entry at shutdown; all of them read the
+volumes raw. KAPE and the EZ tools also
 need the .NET~9 runtime on the examined machine.
 
 \section{WAC's operations}
@@ -216,7 +223,7 @@ Registry hives & Copied by the raw reading, then read on the copy. No key of
   flag weak passwords. All of it on the copy, read-only; the examined machine is
   not touched, and a hash is one-way. \\
 Event logs (\opt{events}) & Read by the raw reading: the event log service is
-  not called upon, no event is produced. \\
+  not called upon, and this reading produces no event. \\
 FAT and exFAT volumes & Read raw through the volume device
   (\path|\\.\X:|), read only, fixed and removable volumes alike: boot sector,
   FAT and directories, never a file opened, no access date updated. The
