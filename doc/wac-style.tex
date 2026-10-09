@@ -96,6 +96,34 @@
   literate={é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ê}{{\^e}}1 {ô}{{\^o}}1 {ç}{{\c c}}1
            {É}{{\'E}}1 {—}{{---}}1 {’}{{'}}1 {…}{{...}}1 {«}{{\guillemotleft}}1 {»}{{\guillemotright}}1}
 
+% Breakable monospace. A path or a field name in \texttt is one word that no
+% hyphenation pattern cuts: in a table cell it ran 190 pt past the column
+% (ProgramData\Microsoft\NetFramework\BreadcrumbStore). As the \seqsplit of
+% the EventsManager theme's tables, a line may break inside it, without a
+% hyphen that would read as part of the name: after \ / . _ - : and between a
+% lowercase letter or digit and a capital (AmcacheSha1|Covers|Bytes). Only
+% inside \texttt — the classes are set once, the breaks switched on there.
+\newXeTeXintercharclass\wacBreakAfter
+\newXeTeXintercharclass\wacUpper
+\newXeTeXintercharclass\wacLower
+\XeTeXcharclass`\\=\wacBreakAfter
+\XeTeXcharclass`\/=\wacBreakAfter
+\XeTeXcharclass`\.=\wacBreakAfter
+\XeTeXcharclass`\_=\wacBreakAfter
+\XeTeXcharclass`\-=\wacBreakAfter
+\XeTeXcharclass`\:=\wacBreakAfter
+\count255=`A \loop\XeTeXcharclass\count255=\wacUpper\ifnum\count255<`Z\advance\count255 by 1\repeat
+\count255=`a \loop\XeTeXcharclass\count255=\wacLower\ifnum\count255<`z\advance\count255 by 1\repeat
+\count255=`0 \loop\XeTeXcharclass\count255=\wacLower\ifnum\count255<`9\advance\count255 by 1\repeat
+\XeTeXinterchartoks\wacBreakAfter\wacUpper={\allowbreak}
+\XeTeXinterchartoks\wacBreakAfter\wacLower={\allowbreak}
+\XeTeXinterchartoks\wacBreakAfter 0={\allowbreak}
+\XeTeXinterchartoks\wacLower\wacUpper={\allowbreak}
+% \textbackslash is no character token: it carries its own break.
+\newcommand{\wacbackslash}{\char92\allowbreak}
+\let\wacplaintexttt\texttt
+\renewcommand{\texttt}[1]{\wacplaintexttt{\XeTeXinterchartokenstate=1\let\textbackslash\wacbackslash#1}}
+
 % Shortcuts
 \newcommand{\wac}{\textsc{wac}}
 \newcommand{\opt}[1]{\texttt{-{}-#1}}
