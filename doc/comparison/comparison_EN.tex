@@ -125,22 +125,28 @@ setting avoids.
 % ============================================================ 2
 \chapter{Summary}
 
-\begin{longtable}{@{}L{3.2cm}L{2.4cm}L{4.5cm}L{5.0cm}@{}}
+For each artefact, the outputs of \wac{} and of the EZ tool are paired record by
+record, then compared field by field. The last column gives each difference
+found and who is right, established by an independent source
+(chapter~\ref{chap:precision}); a field not listed there has the same value on
+both sides.
+
+\begin{longtable}{@{}L{3.0cm}L{2.3cm}L{4.6cm}L{5.0cm}@{}}
 \toprule
-\textbf{Artefact} & \textbf{Volume} & \textbf{Result} & \textbf{Errors of the EZ tool, checked} \\
+\textbf{Artefact --- tool} & \textbf{Compared} & \textbf{Fields compared} & \textbf{Differences, and who is right} \\
 \midrule\endhead
-\$MFT --- MFTECmd & 361,920 records & paths, states, 8 dates identical & sizes of 1,491 WOF files and 8 open files: Windows gives \wac{}'s; 0 bytes for a deleted file whose size is lost \\
-EVTX --- EvtxECmd & 211,525 events & system fields identical; values explained & 10 wrong values (Windows); 435 Perflib events unreadable; cleared logs ignored \\
-Prefetch --- PECmd & 478 files & all identical & hash without its leading zero (23); two volumes' directories joined without a separator \\
-Shortcuts --- LECmd & 26 files & identical to 100\,ns & --- \\
-Jump lists --- JLECmd & 60 entries & identical to 100\,ns & --- \\
-Shellbags --- SBECmd & 46 folders & identical & wrong NodeSlot at first level (9); HasExplored always false \\
-Amcache --- AmcacheParser & 1,479 entries & 124 columns identical & 3,450 invented values; partial SHA-1 not flagged \\
-ShimCache --- AppCompat\-Cache\-Parser & 367 entries & identical & misleading execution flag \\
-Recycle bin --- RBCmd & 66 files & identical & --- \\
-SRUM --- SrumECmd & 91,008 rows & identical & 16 wrong energy rows (dissect); unclean database refused \\
-Registry --- RECmd & 9 artefacts & identical & 4 hives rolled back to an older state; a deleted account still listed \\
-Collection --- KAPE & 1,389 common files & SHA-1 identical & --- \\
+\$MFT --- MFTECmd & 361,920 records & path, state (deleted, directory), 8 dates, size, MFT entry & sizes of 1,491 compressed files (WOF), 8 open files, 1 deleted file: \wac{}, as Windows \\
+EVTX --- EvtxECmd & 211,525 events & identifier, date, provider, machine, event data & 10 values: \wac{}, as Windows; 435 Perflib events EvtxECmd does not read; cleared logs it ignores \\
+Prefetch --- PECmd & 478 files & executable, hash, runs and their dates, volumes, loaded files & hash without its leading zero in PECmd (23); two volumes' directories run together (1) \\
+Shortcuts --- LECmd & 26 files & target, dates to 100\,ns, size, volume, machine, arguments & none \\
+Jump lists --- JLECmd & 60 entries & path, counter, pinning, dates, each entry's shortcut & none \\
+Shellbags --- SBECmd & 46 folders & name, rank, key and folder dates, MFT entry & wrong NodeSlot at first level in SBECmd (9); ``explored'' always false \\
+Amcache --- AmcacheParser & 1,479 entries & the 124 shared columns of the 7 tables & 3,450 values absent from the hive, invented by AmcacheParser; partial SHA-1 not flagged \\
+ShimCache --- AppCompat\-Cache\-Parser & 367 entries & path, date, rank & none; AppCompatCacheParser's misleading ``executed'' flag is not reported \\
+Recycle bin --- RBCmd & 66 files & original path, size, deletion date & none \\
+SRUM --- SrumECmd & 91,008 rows & the 5 tables, all their columns & 16 wrong energy rows in SrumECmd (dissect.esedb); an unclean database it refuses \\
+Registry --- RECmd & 9 artefacts & UserAssist, BAM, USBSTOR, accounts, Run, MuiCache, typed paths, searches, trusted documents & 4 hives rolled back by RECmd; a deleted account still listed \\
+Collection --- KAPE & 1,416 files taken by both & SHA-1 fingerprint & 23 different: files Windows rewrote between the two collections \\
 \bottomrule
 \end{longtable}
 
@@ -220,9 +226,18 @@ every event's text as Windows displays it.
 With the executables (the shipped kit's setting), the collection takes 488\,s,
 389\,s of them to read every executable, library, driver and script of the
 volume. \wac{} checks their Authenticode signature, in memory, against its
-trust set, and copies only those whose signature does not hold: of 54,467
-read, 28,508 are authenticated (Microsoft or a third-party chain) and not
-copied, 2,599 are (771\,MB). The 43\,s of the process observation come, in
+trust set, and copies only those whose signature does not hold. The 54,467
+files read divide as follows:
+\begin{itemize}[nosep]
+  \item 28,180 authenticated as Microsoft and 328 cleared by a third-party
+        chain: fingerprints recorded, files not copied;
+  \item 12,691 Windows differential files (MSDELTA), which are no
+        executables: fingerprints recorded, not copied;
+  \item 2,599 whose signature does not hold, copied (771\,MB);
+  \item 10,669 whose content is identical to an exhibit already copied:
+        recorded, pointing to that exhibit, not copied again.
+\end{itemize}
+The 43\,s of the process observation come, in
 this setting, from the fingerprints of every loaded module, and the 5\,s of
 the trust set from its loading. KAPE makes none of these checks: it
 copies its targets' files without examining them.
@@ -321,32 +336,22 @@ examining them.
 
 \section{The same exhibits, different files}
 
-Same runs as the previous section: \wac{}'s collection, KAPE with
-\texttt{!SANS\_Triage}, compared by the original path of every exhibit
-(\wac{}'s manifest, KAPE's copy log).
+Latest comparison: KAPE with its \texttt{KapeTriage} target, and \wac{} without
+the executables (\texttt{binary: none}), one right after the other; the files
+are paired by their original path (\wac{}'s manifest, KAPE's copy log). KAPE
+takes 1,421 files, \wac{} 2,206; 1,416 are taken by both.
 
-\begin{longtable}{@{}L{6.4cm}L{8.6cm}@{}}
-\toprule
-\textbf{Exhibits} & \textbf{Number} \\
-\midrule\endhead
-Taken by both & 1,151, 1,011 of them with the same SHA-1 \\
-Taken by KAPE alone & 1,140: the user's profile (930, browsers and
-  applications), the NetworkService profile (91), \fichier{SleepStudy} (79),
-  \fichier{LogFiles} (17), \fichier{WDI} (16) \\
-Taken by \wac{} alone & 10,679: executables whose signature does not hold
-  (5,300 of them copies the test bench left in \fichier{C:\textbackslash
-  wactest}), signature catalogs (1,205), event logs and their providers'
-  resource files, Defender (98) \\
-\bottomrule
-\end{longtable}
+KAPE takes only 5 files \wac{} does not: \fichier{desktop.ini} files, which only
+set a folder's icon and display name. \wac{} takes 790 more: the resource files
+of the event providers (286), which give the events' text; Defender (123); the
+shortcuts outside Recent (76); Thunderbird's mail, Explorer's thumbnail
+caches and the Windows search index (183 in all); the error reports (32); other
+hives and NTFS metadata; BITS, WMI, DPAPI, hosts, setupapi, the FAT volumes, the running
+machine's state.
 
-The 140 common exhibits with a different fingerprint are files Windows keeps
-rewriting --- event logs (71), Prefetch (38), hives (6), SRUM (3): both runs
-start from the same state, but Windows changed them since start-up,
-differently each time. Their creation date is identical in 1,146 cases out of
-1,151. What KAPE alone takes is application files of the profiles and Windows
-logging files, which no \wac{} artefact decodes; the exhibits of the shared
-artefacts are taken on both sides.
+Of the 1,416 shared files, 1,393 have the same SHA-1 fingerprint. The other 23
+are files Windows keeps rewriting --- \$MFT, change journal, Prefetch,
+Defender's logs, SRUM --- and changed between the two collections.
 
 \section{What is recorded of each exhibit}
 
@@ -467,7 +472,7 @@ volumes, visible to an EDR.
 \end{note}
 
 % ============================================================ 6
-\chapter{Accuracy}
+\chapter{Accuracy}\label{chap:precision}
 
 \section{In favour of \wac{}}
 

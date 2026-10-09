@@ -126,22 +126,28 @@ perte de précision qu'un réglage évite.
 % ============================================================ 2
 \chapter{Synthèse}
 
-\begin{longtable}{@{}L{3.2cm}L{2.4cm}L{4.5cm}L{5.0cm}@{}}
+Pour chaque artefact, les sorties de \wac{} et de l'outil EZ sont appariées
+enregistrement par enregistrement, puis comparées champ par champ. La dernière
+colonne donne chaque écart trouvé et qui a raison, établi par une source
+indépendante (chapitre~\ref{chap:precision}) ; un champ qui n'y figure pas a
+la même valeur des deux côtés.
+
+\begin{longtable}{@{}L{3.0cm}L{2.3cm}L{4.6cm}L{5.0cm}@{}}
 \toprule
-\textbf{Artefact} & \textbf{Volume} & \textbf{Résultat} & \textbf{Erreurs de l'outil EZ, vérifiées} \\
+\textbf{Artefact --- outil} & \textbf{Comparés} & \textbf{Champs comparés} & \textbf{Écarts, et qui a raison} \\
 \midrule\endhead
-\$MFT --- MFTECmd & 361\,920 enreg. & chemins, états, 8 dates identiques & tailles de 1\,491 fichiers WOF et 8 fichiers ouverts : Windows donne celles de \wac{} ; 0 octet pour un fichier supprimé dont la taille est perdue \\
-EVTX --- EvtxECmd & 211\,525 évén. & champs système identiques ; valeurs expliquées & 10 valeurs fausses (Windows) ; 435 événements Perflib illisibles ; journaux vidés ignorés \\
-Prefetch --- PECmd & 478 fichiers & tout identique & empreinte privée de son zéro de tête (23) ; répertoires de deux volumes joints sans séparateur \\
-Raccourcis --- LECmd & 26 fichiers & identiques au 100\,ns & --- \\
-Jump lists --- JLECmd & 60 entrées & identiques au 100\,ns & --- \\
-Shellbags --- SBECmd & 46 dossiers & identiques & NodeSlot faux au premier niveau (9) ; HasExplored toujours faux \\
-Amcache --- AmcacheParser & 1\,479 entrées & 124 colonnes identiques & 3\,450 valeurs inventées ; SHA-1 partiel non signalé \\
-ShimCache --- AppCompat\-Cache\-Parser & 367 entrées & identiques & indicateur d'exécution trompeur \\
-Corbeille --- RBCmd & 66 fichiers & identiques & --- \\
-SRUM --- SrumECmd & 91\,008 lignes & identiques & 16 lignes d'énergie fausses (dissect) ; base non fermée refusée \\
-Registre --- RECmd & 9 artefacts & identiques & 4 ruches ramenées à un état ancien ; un compte supprimé encore listé \\
-Collecte --- KAPE & 1\,389 fichiers communs & SHA-1 identiques & --- \\
+\$MFT --- MFTECmd & 361\,920 entrées & chemin, état (supprimé, dossier), 8 dates, taille, entrée MFT & tailles de 1\,491 fichiers compressés (WOF), 8 fichiers ouverts, 1 fichier supprimé : \wac{}, comme Windows \\
+EVTX --- EvtxECmd & 211\,525 événements & identifiant, date, fournisseur, machine, données de l'événement & 10 valeurs : \wac{}, comme Windows ; 435 événements Perflib qu'EvtxECmd ne lit pas ; journaux vidés qu'il ignore \\
+Prefetch --- PECmd & 478 fichiers & exécutable, empreinte, exécutions et leurs dates, volumes, fichiers chargés & empreinte sans son zéro de tête chez PECmd (23) ; répertoires de deux volumes collés (1) \\
+Raccourcis --- LECmd & 26 fichiers & cible, dates au 100\,ns, taille, volume, machine, arguments & aucun \\
+Jump lists --- JLECmd & 60 entrées & chemin, compteur, épinglage, dates, raccourci de chaque entrée & aucun \\
+Shellbags --- SBECmd & 46 dossiers & nom, rang, dates de la clé et du dossier, entrée MFT & NodeSlot faux au premier niveau chez SBECmd (9) ; « exploré » toujours faux \\
+Amcache --- AmcacheParser & 1\,479 entrées & les 124 colonnes communes des 7 tables & 3\,450 valeurs absentes de la ruche, inventées par AmcacheParser ; SHA-1 partiel non signalé \\
+ShimCache --- AppCompat\-Cache\-Parser & 367 entrées & chemin, date, rang & aucun ; l'indicateur « exécuté » d'AppCompatCacheParser, trompeur, n'est pas relevé \\
+Corbeille --- RBCmd & 66 fichiers & chemin d'origine, taille, date de suppression & aucun \\
+SRUM --- SrumECmd & 91\,008 lignes & les 5 tables, toutes leurs colonnes & 16 lignes d'énergie fausses chez SrumECmd (dissect.esedb) ; base non fermée qu'il refuse \\
+Registre --- RECmd & 9 artefacts & UserAssist, BAM, USBSTOR, comptes, Run, MuiCache, chemins tapés, recherches, documents de confiance & 4 ruches ramenées à un état ancien par RECmd ; un compte supprimé encore listé \\
+Collecte --- KAPE & 1\,416 fichiers pris des deux côtés & empreinte SHA-1 & 23 différents : fichiers que Windows a réécrits entre les deux collectes \\
 \bottomrule
 \end{longtable}
 
@@ -224,9 +230,18 @@ l'affiche.
 Avec les exécutables (réglage du kit livré), la collecte prend 488\,s, dont
 389\,s pour lire chaque exécutable, bibliothèque, pilote et script du volume.
 \wac{} en vérifie la signature Authenticode, en mémoire, contre son jeu de
-confiance, et ne copie que ceux dont la signature ne tient pas : sur 54\,467
-lus, 28\,508 sont authentifiés (Microsoft ou chaîne tierce) et ne sont pas
-copiés, 2\,599 le sont (771\,Mo). Les 43\,s de l'observation des processus
+confiance, et ne copie que ceux dont la signature ne tient pas. Les 54\,467
+fichiers lus se répartissent ainsi :
+\begin{itemize}[nosep]
+  \item 28\,180 authentifiés comme Microsoft et 328 validés par une chaîne
+        tierce : empreintes consignées, fichiers non copiés ;
+  \item 12\,691 fichiers différentiels de Windows (MSDELTA), qui ne sont pas
+        des exécutables : empreintes consignées, non copiés ;
+  \item 2\,599 dont la signature ne tient pas, copiés (771\,Mo) ;
+  \item 10\,669 au contenu identique à une pièce déjà copiée : consignés,
+        renvoyés à cette pièce, non copiés une seconde fois.
+\end{itemize}
+Les 43\,s de l'observation des processus
 viennent, dans ce réglage, des empreintes de chaque module chargé, et les
 5\,s du jeu de confiance de son chargement. KAPE ne fait aucun de ces
 contrôles : il copie les fichiers de ses cibles sans les examiner.
@@ -325,33 +340,25 @@ ses cibles sans les examiner.
 
 \section{Les mêmes pièces, des fichiers différents}
 
-Mêmes exécutions que la section précédente : la collecte de \wac{}, KAPE
-avec \texttt{!SANS\_Triage}, comparés par le chemin d'origine de chaque pièce
-(manifeste de \wac{}, journal de copie de KAPE).
+Dernière comparaison : KAPE avec sa cible \texttt{KapeTriage}, et \wac{} sans
+les exécutables (\texttt{binary: none}), l'un juste après l'autre ; les
+fichiers sont appariés par leur chemin d'origine (manifeste de \wac{}, journal
+de copie de KAPE). KAPE prend 1\,421 fichiers, \wac{} 2\,206 ; 1\,416 sont pris
+par les deux.
 
-\begin{longtable}{@{}L{6.4cm}L{8.6cm}@{}}
-\toprule
-\textbf{Pièces} & \textbf{Nombre} \\
-\midrule\endhead
-Prises par les deux & 1\,151, dont 1\,011 au même SHA-1 \\
-Prises par KAPE seul & 1\,140 : profil de l'utilisateur (930, navigateurs et
-  applications), profil NetworkService (91), \fichier{SleepStudy} (79),
-  \fichier{LogFiles} (17), \fichier{WDI} (16) \\
-Prises par \wac{} seul & 10\,679 : exécutables à signature non valide (dont
-  5\,300 copies laissées par le banc de test dans \fichier{C:\textbackslash
-  wactest}), catalogues de signature (1\,205), journaux d'événements et
-  fichiers de ressources de leurs fournisseurs, Defender (98) \\
-\bottomrule
-\end{longtable}
+KAPE ne prend que 5 fichiers que \wac{} ne prend pas : des \fichier{desktop.ini},
+qui ne fixent que l'icône et le nom affiché d'un dossier. \wac{} prend en plus
+790 fichiers : les fichiers de ressources des fournisseurs d'événements (286),
+qui donnent le texte des événements ; Defender (123) ; les raccourcis hors de
+Recent (76) ; le courrier de Thunderbird, les caches de miniatures de
+l'Explorateur et l'index de recherche de Windows (183 en tout) ; les rapports
+d'erreur (32) ; d'autres ruches et des métadonnées NTFS ; BITS, WMI, DPAPI, hosts, setupapi, les volumes FAT, l'état de la machine
+en marche.
 
-Les 140 pièces communes d'empreinte différente sont des fichiers que Windows
-réécrit en permanence --- journaux d'événements (71), Prefetch (38), ruches (6),
-SRUM (3) : les deux exécutions partent du même état, mais Windows les a modifiés
-depuis le démarrage, différemment d'une fois à l'autre. Leur date de création
-est identique dans 1\,146 cas sur 1\,151. Ce que KAPE est seul à prendre, ce sont
-des fichiers d'applications des profils et de journalisation de Windows,
-qu'aucun artefact de \wac{} ne décode ; les pièces des artefacts communs sont
-prises des deux côtés.
+Sur les 1\,416 fichiers communs, 1\,393 ont la même empreinte SHA-1. Les 23
+autres sont des fichiers que Windows réécrit sans cesse --- \$MFT, journal des
+modifications, Prefetch, journaux de Defender, SRUM --- et qu'il a modifiés entre
+les deux collectes.
 
 \section{Ce qui est consigné de chaque pièce}
 
@@ -480,7 +487,7 @@ d'innocuité, et la lecture brute des volumes, visible d'un EDR.
 \end{note}
 
 % ============================================================ 6
-\chapter{Précision}
+\chapter{Précision}\label{chap:precision}
 
 \section{En faveur de \wac{}}
 
