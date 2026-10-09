@@ -3148,8 +3148,11 @@ def check_prefetch_mft_references(folder):
     be the record's. A reference to another record, or to a path gone, is a
     file replaced or deleted since the prefetcher wrote it: not a defect. Nor is
     the same record under a later sequence when the $MFT dates the file's
-    creation after the program's last run: the file was deleted and created
-    again at the same path, reusing the record. It is
+    creation — or, NTFS tunnelling having given the new file the old one's
+    creation date, the change of its $FILE_NAME — after the program's last
+    run: the file was deleted, or replaced by a rename, and created again at
+    the same path, reusing the record (GoogleUpdater's prefs.json, replaced
+    11 s into the run its Prefetch records). It is
     this check that caught the split by hand — the sequence read on four bytes
     (770 703 362 for a sequence of 2): 14 940 references out of 14 975.
     """
@@ -3161,7 +3164,8 @@ def check_prefetch_mft_references(folder):
     for e in mft:
         for path in [e.get("Path")] + (e.get("HardLinkPaths") or []):
             if path:
-                records[path.lower()] = (e.get("Entry"), e.get("Sequence"), e.get("CreatedUtc") or "")
+                records[path.lower()] = (e.get("Entry"), e.get("Sequence"),
+                                         max(e.get("CreatedUtc") or "", e.get("FileNameMftModifiedUtc") or ""))
     same, moved, recreated, wrong = 0, 0, 0, []
     for p in prefetchs:
         for f in p.get("FileNames") or []:
