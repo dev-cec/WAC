@@ -89,6 +89,12 @@ def compare_mft(ez_csv, wac_json, volume):
                 explained["WOF file: logical size (WAC, as Windows) / compressed stream (MFTECmd)"] += 1
             elif w.get("Size") is None and str(w.get("Path", "")).startswith(volume + "\\$"):
                 explained["metadata file without unnamed $DATA: no size (WAC)"] += 1
+            # A deleted record whose $DATA lay in an extension record that
+            # $ATTRIBUTE_LIST names, reused since by another file: the size is
+            # lost. Checked on the raw record (292767: its list names 153099
+            # sequence 76, now sequence 79, the base record of SYSTEM.LOG1).
+            elif w.get("Size") is None and w.get("Deleted") and int(first["FileSize"] or 0) == 0:
+                explained["deleted record, its $DATA in an extension record reused since: no size (WAC), 0 (MFTECmd)"] += 1
             elif first["FileSize"] in ("", "0") and w.get("Size"):
                 explained["file open for writing: real size (WAC, as Windows) / 0 (MFTECmd)"] += 1
             else:
