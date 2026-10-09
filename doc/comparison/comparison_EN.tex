@@ -74,9 +74,10 @@ Two questions, two comparisons.
         recorded, what Windows writes there because of it, and what a
         monitoring tool sees of it (chapter~\ref{chap:traces}).
   \item[Decoding: \wac{} against the EZ tools] On the \emph{same exhibits} ---
-        the exhibit store of a \wac{} collection ---, \wac{} converts an artefact
-        and the matching Eric Zimmerman tool decodes it; both outputs are compared
-        record by record and field by field.
+        the exhibit store of a \wac{} collection ---, \wac{} converts the whole
+        collection and the matching Eric Zimmerman tool decodes, on a copy, the
+        exhibits of its artefact; both outputs are compared record by record and
+        field by field.
 \end{description}
 
 \section{Who is right when they differ}
@@ -111,7 +112,9 @@ Traces measure & clone of the machine, no network, frozen; Sysmon 15.22; \\
 \end{tabular}
 
 Everything can be replayed: \fichier{vmtest/ez-compare.sh <artefact>} times
-\wac{} and the EZ tool on the same exhibits then compares their outputs;
+the EZ tool on a copy of the exhibits and compares its output with \wac{}'s
+conversion; \fichier{vmtest/lib/timing-table.py} sets the time of each step side
+by side;
 \fichier{vmtest/kape-compare.sh} does the same for collection;
 \fichier{vmtest/footprint/run-footprint.sh} replays the measure of the traces
 and \fichier{footprint-diff.py} analyses it. The EZ tools ran
@@ -126,26 +129,26 @@ setting avoids.
 \toprule
 \textbf{Artefact} & \textbf{Volume} & \textbf{Result} & \textbf{Errors of the EZ tool, checked} \\
 \midrule\endhead
-\$MFT --- MFTECmd & 362,081 records & paths, states, 8 dates identical & sizes of 1,490 WOF files and 3 open logs: Windows gives \wac{}'s \\
-EVTX --- EvtxECmd & 190,613 events & system fields identical; values explained & 6 wrong values (Windows); 335 Perflib events unreadable; cleared logs ignored \\
-Prefetch --- PECmd & 379 files & all identical & hash without its leading zero (19) \\
-Shortcuts --- LECmd & 3 files & identical to 100\,ns & --- \\
-Jump lists --- JLECmd & 13 shortcuts & identical to 100\,ns & --- \\
-Shellbags --- SBECmd & 27 folders & identical & wrong NodeSlot at first level (7); HasExplored always false \\
-Amcache --- AmcacheParser & 1,258 entries & 124 columns identical & 2,340 invented values; partial SHA-1 not flagged \\
-ShimCache --- AppCompat\-Cache\-Parser & 232 entries & identical & misleading execution flag \\
-Recycle bin --- RBCmd & 19 files & identical & --- \\
-SRUM --- SrumECmd & 60,804 rows & identical & 17 wrong energy rows (dissect) \\
-Registry --- RECmd & 9 artefacts & identical & 4 hives rolled back to an older state \\
-Collection --- KAPE & 1,173 common files & SHA-1 identical & --- \\
+\$MFT --- MFTECmd & 361,920 records & paths, states, 8 dates identical & sizes of 1,491 WOF files and 8 open files: Windows gives \wac{}'s; 0 bytes for a deleted file whose size is lost \\
+EVTX --- EvtxECmd & 211,525 events & system fields identical; values explained & 10 wrong values (Windows); 435 Perflib events unreadable; cleared logs ignored \\
+Prefetch --- PECmd & 478 files & all identical & hash without its leading zero (23); two volumes' directories joined without a separator \\
+Shortcuts --- LECmd & 26 files & identical to 100\,ns & --- \\
+Jump lists --- JLECmd & 60 entries & identical to 100\,ns & --- \\
+Shellbags --- SBECmd & 46 folders & identical & wrong NodeSlot at first level (9); HasExplored always false \\
+Amcache --- AmcacheParser & 1,479 entries & 124 columns identical & 3,450 invented values; partial SHA-1 not flagged \\
+ShimCache --- AppCompat\-Cache\-Parser & 367 entries & identical & misleading execution flag \\
+Recycle bin --- RBCmd & 66 files & identical & --- \\
+SRUM --- SrumECmd & 91,008 rows & identical & 16 wrong energy rows (dissect); unclean database refused \\
+Registry --- RECmd & 9 artefacts & identical & 4 hives rolled back to an older state; a deleted account still listed \\
+Collection --- KAPE & 1,389 common files & SHA-1 identical & --- \\
 \bottomrule
 \end{longtable}
 
 \begin{note}
 On everything both sides read, \wac{} gives the same values as the reference
 tools, or more accurate ones, each time established by an independent source.
-The confrontation also revealed 24 defects of \wac{}, all fixed
-(chapter~\ref{chap:defects}), and coverage gaps, opened for follow-up
+The confrontation also revealed 28 defects of \wac{}, all fixed
+(chapter~\ref{chap:defects}), and coverage gaps, all filled since
 (section~\ref{sec:coverage}).
 
 Started from a key, \wac{} writes nothing on the examined machine: no file, no
@@ -156,61 +159,136 @@ volume (chapter~\ref{chap:traces}).
 \end{note}
 
 % ============================================================ 3
-\chapter{Running times}
+\chapter{Running times}\label{chap:time}
 
-\section{Decoding}
+\section{The method}
 
-Same machine, same exhibits; each tool handles its artefact only.
-
-\begin{longtable}{@{}L{3.6cm}L{2.2cm}L{2.2cm}L{7.0cm}@{}}
-\toprule
-\textbf{Artefact} & \textbf{\wac{}} & \textbf{EZ tool} & \textbf{What \wac{} does besides} \\
-\midrule\endhead
-\$MFT (380\,MB) & 7.3\,s & 8.1\,s & two volumes (C: and G:) against one \\
-EVTX (305 logs) & 16.8\,s & 22.0\,s & plain-text message rebuilt for every event \\
-Registry (Kroll batch) & 2.0\,s & 7.6 to 13.6\,s & every hive replayed, every registry artefact \\
-SRUM (21\,MB) & 3.2\,s & 2.5\,s & 2 more tables, identities resolved \\
-Prefetch (380) & 3.6\,s & 0.7\,s & dated local time, paths with drive letter \\
-Shortcuts, jump lists & 1.8\,s & 0.3\,s & \\
-Recycle bin & 1.9\,s & 0.5\,s & \\
-Amcache, ShimCache, shellbags & 2.0\,s & 0.5 to 1.4\,s & one pass for all three (registry key) \\
-\bottomrule
-\end{longtable}
-
-On the large artefacts, \wac{} is faster. On the small ones, the EZ tools are:
-every \wac{} conversion pays a fixed cost of 1.5 to 3.4\,s, measured with a
-trivial artefact. That cost is the verified working copy of the hives, the
-replay of their logs, and the reading of the suspect's time zone and profiles.
-It is what lets \wac{} date every local time with the offset in force at that
-date, and give the drive letter; the EZ tools give neither.
+\wac{} is not measured artefact by artefact. A conversion run for a single
+artefact makes it pay, each time, what it really pays once: checking the seal
+and the fingerprints of the exhibit store, rebuilding the working copy,
+repairing the hives. A collection run for a single artefact makes it open and
+walk the volume again each time. The times below therefore come from \emph{one}
+full collection and \emph{one} full conversion. \wac{} records the time of each
+of its steps in \fichier{investigation.json} and \fichier{conversion.json}.
+Each artefact is set against the EZ tool that decodes it. The steps the other
+tools do not have are given apart. \fichier{vmtest/lib/timing-table.py} puts
+them side by side.
 
 \section{Collection}
 
-\begin{longtable}{@{}L{5.4cm}L{2.2cm}L{2.4cm}L{5.0cm}@{}}
+KAPE (target \texttt{KapeTriage}) and \wac{} collect the same machine, one
+right after the other.
+
+\begin{longtable}{@{}L{6.2cm}L{2.2cm}L{2.6cm}L{4.0cm}@{}}
 \toprule
-\textbf{Tool, setting} & \textbf{Time} & \textbf{Exhibits} & \textbf{Volume} \\
+\textbf{Tool, setting} & \textbf{Time} & \textbf{Files} & \textbf{Volume} \\
 \midrule\endhead
-KAPE, \texttt{KapeTriage} & 58\,s & 1,047 & 0.97\,GB \\
-\wac{}, kit, no binaries & 47\,s & 1,898 & 2.54\,GB \\
-\wac{}, kit, no binaries, before B-033 & 212\,s & 2,622 & 1.69\,GB \\
-\wac{}, full kit (\texttt{binary: unverified}), before B-033 & 454\,s & 61,294 & 3.6\,GB \\
+KAPE, \texttt{KapeTriage} & 44\,s & 1,427 & 0.96\,GB \\
+\wac{}, without the executables (\texttt{binary: none}) & 41\,s & 2,178 & 2.62\,GB \\
+\wac{}, kit as shipped (\texttt{binary: unverified}) & 488\,s & 72,887 recorded & 3.66\,GB \\
 \bottomrule
 \end{longtable}
 
-The first two rows are measured in the same run, one after the other. On a
-comparable scope, \wac{} now collects faster than KAPE, bringing back more than
-twice as much data. It was five times slower at first (item B-033):
+Without the executables, \wac{} is a little faster than KAPE and brings back
+2.7 times as much data. Its steps, measured in this run:
+
+\begin{longtable}{@{}L{8.4cm}L{2.0cm}L{4.6cm}@{}}
+\toprule
+\textbf{\wac{} step} & \textbf{Time} & \textbf{In KAPE} \\
+\midrule\endhead
+Checks: Windows version, rights, free space on the medium & 0.00\,s & no space check \\
+Observation of the running machine: sessions, processes, network, services, clock & 0.16\,s & --- \\
+System hives, raw NTFS reading; the volume is opened once, and its
+  directories cached for the whole collection & 2.09\,s & copy, raw reading for locked files \\
+User hives & 0.23\,s & same \\
+Artefact files (logs, Prefetch, shortcuts, browsers…) & 18.10\,s & same \\
+\$MFT, \$UsnJrnl, \$LogFile, \$Boot, \$Secure:\$SDS & 6.03\,s & same \\
+Search for FAT and exFAT volumes (USB keys) and reading of their metadata & 0.02\,s & --- \\
+Resource files of the providers the logs cite, for the events' text & 11.15\,s & --- \\
+Sealing: manifest, SHA-256 fingerprint of the manifest & 0.09\,s & copy log \\
+Outside the steps: start-up, writing of the investigation log & 3.1\,s & \\
+\bottomrule
+\end{longtable}
+
+The three fingerprints of each exhibit (MD5, SHA-1, SHA-256) and its NTFS dates
+are taken during the reading itself: sealing only has to write the manifest.
+The steps of \wac{}'s own --- checks, observation of the machine, FAT volumes,
+providers' resources, sealing --- cost 11.4\,s, 11.2\,s of them for the
+providers' resources. They are what lets the analysis workstation render
+every event's text as Windows displays it.
+
+With the executables (the shipped kit's setting), the collection takes 488\,s,
+389\,s of them to read every executable, library, driver and script of the
+volume. \wac{} checks their Authenticode signature, in memory, against its
+trust set, and copies only those whose signature does not hold: of 54,467
+read, 28,508 are authenticated (Microsoft or a third-party chain) and not
+copied, 2,599 are (771\,MB). The 43\,s of the process observation come, in
+this setting, from the fingerprints of every loaded module, and the 5\,s of
+the trust set from its loading. KAPE makes none of these checks: it
+copies its targets' files without examining them.
+
+\section{Conversion and decoding}
+
+\wac{}'s conversion reads the exhibit store of a collection, on the analysis
+workstation. Each EZ tool reads a copy of the same exhibits: the tool is timed
+alone, the copy is not. That copy is no formality. Run on the exhibit store
+itself, SrumECmd wrote into it (its \texttt{JetInit} lays a checkpoint and logs
+beside the database), and \wac{} then refused to convert a store that no longer
+matched its manifest.
+
+\begin{longtable}{@{}L{4.0cm}L{2.1cm}L{2.5cm}L{2.1cm}L{3.8cm}@{}}
+\toprule
+\textbf{Artefact} & \textbf{\wac{}} & \textbf{\wac{} \opt{binary}} & \textbf{EZ tool} & \textbf{Tool} \\
+\midrule\endhead
+\$MFT (C: and G:) & 4.14\,s & 4.02\,s & 9.2\,s & MFTECmd (C: only) \\
+Event logs & 10.65\,s & 9.97\,s & 24.6\,s & EvtxECmd \\
+Prefetch (478) & 0.33\,s & 11.66\,s & 2.4\,s & PECmd \\
+Shortcuts & 0.03\,s & 0.04\,s & 1.6\,s & LECmd \\
+Jump lists & 0.03\,s & 0.04\,s & 0.6\,s & JLECmd \\
+Shellbags & 0.01\,s & 0.01\,s & 0.9\,s & SBECmd \\
+ShimCache & 0.01\,s & 0.39\,s & 1.2\,s & AppCompat\-Cache\-Parser \\
+Amcache & 0.07\,s & 8.96\,s & 0.7\,s & AmcacheParser \\
+Recycle bin & 0.07\,s & 0.01\,s & 0.5\,s & RBCmd \\
+SRUM & 1.77\,s & 1.72\,s & 2.5\,s & SrumECmd \\
+Registry (Kroll batch) & 0.26\,s & 1.43\,s & 10.2\,s & RECmd \\
+\midrule
+\textbf{Sum} & 17.4\,s & 38.3\,s & 54.4\,s & the 11 tools \\
+\bottomrule
+\end{longtable}
+
+To these steps add those \wac{} pays once for all the artefacts, and which the
+EZ tools do not have:
+
+\begin{longtable}{@{}L{11.0cm}L{4.0cm}@{}}
+\toprule
+\textbf{Shared \wac{} step} & \textbf{Time} \\
+\midrule\endhead
+Check of the seal and of each exhibit's fingerprints & 10.9\,s \\
+Rebuilding of the working copy from the exhibit store (2.1\,GB), each copy
+  checked by its fingerprint & 45.1\,s \\
+Repair of the working copy's hives (replay of their logs) & 0.5\,s \\
+The suspect's time zone, code page, profiles and account names & 0.0\,s \\
+\midrule
+\textbf{Total} & 56.5\,s \\
+\bottomrule
+\end{longtable}
+
+The whole conversion takes 80\,s: the 56\,s shared, the 17.4\,s of the eleven
+compared artefacts, and 6.4\,s for the 38 others, which the EZ tools do not
+read (change journal, scheduled tasks, thumbnail caches, RDP connections, mail,
+browsers…). The eleven EZ tools take 54\,s together, without a working copy or
+a check of the exhibit store.
+
 \begin{itemize}
-  \item each raw reading opened its volume again and walked its paths from the
-        root; the volumes are now opened once, with the cache of their
-        directories;
-  \item the collection took the files of the 1,426 declared event providers
-        (739\,MB, 61\,s); it now takes only those of the providers the
-        collected logs cite (324 on the VM, 178\,MB, 15\,s), which is enough to
-        rebuild every event's text.
+  \item Once the working copy is made, each \wac{} decoding is faster than the
+        matching EZ tool: the hives are read once, for every registry artefact.
+  \item The heaviest step is the working copy. It is the condition of an
+        analysis that never touches the exhibit store, and the EZ tools need
+        the same copy, as SrumECmd showed.
+  \item With \opt{binary}, \wac{} fingerprints every file the artefacts cite:
+        +11.3\,s for the Prefetch (the loaded libraries), +8.9\,s for the
+        Amcache. The EZ tools do not.
 \end{itemize}
-The full kit also checks the Authenticode signature of every executable on the
-machine and copies those whose signature does not hold, which KAPE does not do.
 
 \section{Collection from one same state}
 
@@ -266,8 +344,9 @@ The 140 common exhibits with a different fingerprint are files Windows keeps
 rewriting --- event logs (71), Prefetch (38), hives (6), SRUM (3): both runs
 start from the same state, but Windows changed them since start-up,
 differently each time. Their creation date is identical in 1,146 cases out of
-1,151. KAPE's own coverage is the one backlog items B-016, B-031 and B-032
-already follow.
+1,151. What KAPE alone takes is application files of the profiles and Windows
+logging files, which no \wac{} artefact decodes; the exhibits of the shared
+artefacts are taken on both sides.
 
 \section{What is recorded of each exhibit}
 
@@ -407,11 +486,13 @@ volumes, visible to an EDR.
   \item[Event values as Windows renders them] Hexadecimal \texttt{0x3e7}, GUIDs
         in braces, booleans \texttt{true}, binary \texttt{69060000}, dates with
         their \texttt{Z}, U+200E marks kept: the forms Event Viewer shows and one
-        searches for. EvtxECmd changes eight of them, and is wrong on six values,
-        such as a boolean \texttt{False} that Windows renders \texttt{true}.
+        searches for. EvtxECmd changes eight of them, and is wrong on ten values,
+        such as a boolean \texttt{False} that Windows renders \texttt{true};
+        each one is settled by the XML Windows renders (\texttt{Get-WinEvent})
+        from the same log.
   \item[Nothing invented] A value absent from the source is not emitted.
-        AmcacheParser writes 2,340 default values absent from the hive
-        (\texttt{IsPeFile: False} for a PE executable), SrumECmd 7,086 (0 or
+        AmcacheParser writes 3,450 default values absent from the hive
+        (\texttt{IsPeFile: False} for a PE executable), SrumECmd 10,936 (0 or
         $-1$).
   \item[Partial Amcache SHA-1 flagged] For a file larger than 30\,MiB, Amcache
         hashes only the first 31,457,280 bytes (measured on \fichier{mrt.exe}).
@@ -432,9 +513,15 @@ volumes, visible to an EDR.
         key write times. \wac{} publishes those times themselves: anyone can draw
         their own reading from them, without inheriting a ready-made one.
         SBECmd also gives a wrong \texttt{NodeSlot} (0) to first-level folders.
-  \item[SrumECmd's ESE reading errors] 17 energy rows out of 887 carry the
+  \item[SrumECmd's ESE reading errors] 16 energy rows out of 1,370 carry the
         content of another row or an identifier absent from the table;
         dissect.esedb sides with \wac{}.
+  \item[ESE database not closed cleanly] A SRUM database taken from a running
+        machine is not closed cleanly. SrumECmd stops on it; \wac{} replays its
+        logs on the working copy (\texttt{esent.dll}), then reads it.
+  \item[Deleted accounts] The bench deletes an account (\texttt{wacrdp}) after
+        using it. RECmd still lists it, from a SAM rolled back to an earlier
+        state; \wac{} does not give it, and neither does \texttt{Get-LocalUser}.
   \item[Collection] Each \wac{} exhibit carries MD5, SHA-1 and SHA-256, the
         eight NTFS dates of its original and its MFT entry, in a sealed manifest.
         KAPE gives one SHA-1 and three dates.
@@ -443,18 +530,20 @@ volumes, visible to an EDR.
 \section{In favour of the EZ tools}\label{sec:coverage}
 
 \begin{description}[style=nextline,leftmargin=1em]
-  \item[Registry coverage] RECmd's Kroll batch reads keys \wac{} ignores:
-        installed programs, Defender exclusions, RecentDocs, MountPoints2, known
-        networks, the NTFS last-access update setting, shutdown time, among
-        others. Item B-031.
-  \item[File coverage] Against \wac{}, KapeTriage now only copies the browsers
-        and the Windows timeline, planned (B-016, B-010), and the
-        \fichier{desktop.ini} files, left out. The shortcuts outside Recent, the
-        Default profile's hive, \fichier{\$Secure:\$SDS}, \fichier{\$Boot},
-        \fichier{\$UsnJrnl:\$Max}, \fichier{\$TxfLog}, Defender's WPP traces
-        and the DPAPI master keys, which it alone took, are collected and
-        converted since item B-032.
-  \item[Speed on small artefacts and in collection] See the previous chapter.
+  \item[Coverage] No gap is left open. The keys of the Kroll batch \wac{}
+        ignored are now read: installed programs, Defender exclusions,
+        RecentDocs, MountPoints2, known networks, the event log configuration,
+        among others. Those that trace no activity are left out, with their
+        reason.
+        The files KapeTriage alone took are collected and converted: Chromium
+        browsers, WebCache and INetCache, the Windows timeline, shortcuts
+        outside Recent, the Default profile's hive,
+        \fichier{\$Secure:\$SDS}, \fichier{\$Boot}, Defender's WPP traces and
+        the DPAPI master keys. Only the \fichier{desktop.ini} files are left
+        out, of no investigative value.
+  \item[Speed on small artefacts] Taken one by one, Prefetch, Amcache and
+        shortcuts decode faster with the EZ tool: see
+        chapter~\ref{chap:time}.
   \item[Ready-to-read interpretations] The EZ tools split and name some fields:
         executable, date and description of a SRUM application, known folder
         names, a file's extension. \wac{} gives the raw value, as Windows stores
@@ -462,8 +551,9 @@ volumes, visible to an EDR.
 \end{description}
 
 \begin{attention}
-What \wac{} does not collect, it cannot weigh: KAPE's coverage remains wider on
-browsers and several registry keys, until B-016, B-031 and B-032 are done.
+What KAPE takes and \wac{} does not is mostly application files in the
+profiles (chapter~\ref{chap:taken}). They match no artefact \wac{}
+decodes: their worth depends on the investigation.
 \end{attention}
 
 % ============================================================ 7
@@ -542,13 +632,15 @@ fixed, with a check that would have caught them.
 EVTX & floats cut to 6 digits; binary as ``69 06 00 00''; hexadecimal integers and GUIDs in the wrong form; ProcessingErrorData ignored (21 events without data); events of cleared logs not read \\
 Shortcuts & URI glued to the block after it; reading 2 bytes off without an ID list; ExtraData blocks not read (machine, tracking); target size not read; null DROIDs emitted \\
 Jump lists & open count and MRU rank not read; DestList format version 1 not supported; application name corrupted \\
-Shellbags & folder lost with everything below it; the folder's key time, rank and NodeSlot missing; ``Home'' folder without a name \\
-Amcache & 2 tables out of 14 and 4 to 6 values read: no SHA-1, size, driver or device \\
+Shellbags & folder lost with everything below it; the folder's key time, rank and NodeSlot missing; ``Home'' folder without a name; the \fichier{NTUSER.DAT} tree not read (only \fichier{UsrClass.dat}'s was) \\
+Amcache & 2 tables out of 14 and 4 to 6 values read: no SHA-1, size, driver or device; a SHA-1 named \champ{Sha1}, read as the whole file's, renamed \champ{AmcacheSha1} \\
 ShimCache & tabs of packaged applications replaced by spaces \\
 SRUM & FILETIME dates left as numbers; UTF-16 text read as ANSI \\
+Known identifiers & 105 DLL paths of the GUID table (253 occurrences) whose generation had taken \texttt{\textbackslash n} or \texttt{\textbackslash r} for a line break: \fichier{system32\textbackslash netcorehc.dll} became \fichier{system32 etcorehc.dll} \\
 Registry & BAM limited to accounts with a profile (a deleted account lost its executions); UserAssist foreground time not read \\
+Collection & exhibits whose path passes 260 characters once in the store not written (482 on the full kit): now written in the extended form \\
 Start-up & \texttt{system("cls")} started \fichier{cmd.exe} on the examined machine (traces measure) \\
-Test harness & a crashing check silently stopped every following one \\
+Test harness & a crashing check silently stopped every following one; the EZ tools ran on the sealed exhibit store itself --- SrumECmd wrote into it and \wac{} refused the next conversion; they now read a copy \\
 \bottomrule
 \end{longtable}
 
@@ -557,12 +649,15 @@ Test harness & a crashing check silently stopped every following one \\
 
 \begin{itemize}
   \item One machine, virtual, running Windows 11: some artefacts are few there
-        (3 shortcuts in Recent, 2 USB keys). The formats are the same on a real
+        (2 USB keys, one Explorer search). The formats are the same on a real
         machine, but not every rare case is represented.
   \item The two collections follow each other instead of being simultaneous: the
         files written between them (\$MFT, logs, Prefetch) rightly differ.
   \item The EZ tools ran with their maximum precision options; by default, they
         lose more.
+  \item The times come from a virtual machine and its disk: they compare the
+        tools with each other, they do not predict the time on a real machine,
+        where the number of executables and the disk's speed weigh most.
   \item The traces are measured on a clone without network, one run per tool: a
         write of Windows the control run did not show is not laid on the tool
         unless Sysmon gives it to one of its processes; it stays listed as not
