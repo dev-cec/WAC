@@ -2905,7 +2905,16 @@ def check_mft_timeline(folder):
         volumes = {volume_of(r) for r in mft if isinstance(r, dict)}
         manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
         items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
-        compared, wrong, renamed = 0, [], 0
+        # The latest creation each volume's $MFT holds: the $MFT is read before
+        # the files, and a file created after that (a Store package updated
+        # mid-collection) cannot be in it — its record there is the one it
+        # reused. Proven by the exhibit's own creation date, not assumed.
+        latest = {}
+        for r in mft:
+            if isinstance(r, dict) and r.get("CreatedUtc"):
+                v = volume_of(r)
+                latest[v] = max(latest.get(v, ""), r["CreatedUtc"])
+        compared, wrong, renamed, newer = 0, [], 0, 0
         for it in items:
             source = str(it.get("SourcePath") or "")
             entry = it.get("MftEntry")
@@ -2914,6 +2923,9 @@ def check_mft_timeline(folder):
             if source[:2].upper() not in volumes or ":" in source[2:] or not entry or not created:
                 continue
             r = by_entry.get((source[:2].upper(), entry))
+            if created > latest.get(source[:2].upper(), created):
+                newer += 1
+                continue
             compared += 1
             # The same file renamed since the exhibit was taken — same record,
             # same creation date, another name: ESE rotates its logs by renaming
@@ -2942,7 +2954,8 @@ def check_mft_timeline(folder):
         else:
             print(f"  ✅ mft.json: {compared - renamed} exhibit(s) with the manifest's path and creation date "
                   f"({len(mft)} record(s), {deleted} deleted, {linked} with hard links"
-                  f"{f'; {renamed} renamed since their exhibit was taken' if renamed else ''})")
+                  f"{f'; {renamed} renamed since their exhibit was taken' if renamed else ''}"
+                  f"{f'; {newer} created after the $MFT was read' if newer else ''})")
 
     usn = load(folder, "usn_journal.json")
     if not isinstance(usn, list) or not usn:
@@ -2981,7 +2994,10 @@ def check_prefetch_mft_references(folder):
     the volume's own records (mft.json, hard links included). Where the loaded
     file's path still names the record the reference gives, the sequence must
     be the record's. A reference to another record, or to a path gone, is a
-    file replaced or deleted since the prefetcher wrote it: not a defect. It is
+    file replaced or deleted since the prefetcher wrote it: not a defect. Nor is
+    the same record under a later sequence when the $MFT dates the file's
+    creation after the program's last run: the file was deleted and created
+    again at the same path, reusing the record. It is
     this check that caught the split by hand — the sequence read on four bytes
     (770 703 362 for a sequence of 2): 14 940 references out of 14 975.
     """
@@ -2993,8 +3009,8 @@ def check_prefetch_mft_references(folder):
     for e in mft:
         for path in [e.get("Path")] + (e.get("HardLinkPaths") or []):
             if path:
-                records[path.lower()] = (e.get("Entry"), e.get("Sequence"))
-    same, moved, wrong = 0, 0, []
+                records[path.lower()] = (e.get("Entry"), e.get("Sequence"), e.get("CreatedUtc") or "")
+    same, moved, recreated, wrong = 0, 0, 0, []
     for p in prefetchs:
         for f in p.get("FileNames") or []:
             ref, path = f.get("MftReference"), f.get("FullPath")
@@ -3004,8 +3020,10 @@ def check_prefetch_mft_references(folder):
                 continue
             if record[1] == ref.get("SequenceNumber"):
                 same += 1
+            elif record[2] > max(p.get("RunsUtc") or [""]):
+                recreated += 1
             else:
-                wrong.append((path, ref, record))
+                wrong.append((path, ref, record[:2]))
     if wrong or not same:
         print(f"  ❌ prefetchs.json: {len(wrong)} $MFT reference(s) whose sequence is not the record's, "
               f"{same} identical")
@@ -3013,7 +3031,8 @@ def check_prefetch_mft_references(folder):
             print(f"        {path}: {ref} in the Prefetch, {record} in the $MFT")
         return 1
     print(f"  ✅ prefetchs.json: {same} $MFT reference(s) identical to the $MFT's record "
-          f"(entry and sequence); {moved} to a path gone since")
+          f"(entry and sequence); {moved} to a path gone since"
+          f"{f'; {recreated} to a file created again since the last run' if recreated else ''}")
     return 0
 
 
