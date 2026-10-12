@@ -15,6 +15,8 @@ Its guiding principle is **minimal footprint on the machine under examination**:
 what WAC leaves behind should be as close to nothing as the task allows, and
 whatever it cannot avoid must be written down.
 
+![WAC collecting: the banner, then the first operations, each with its result](doc/images/wac-running_EN.png)
+
 ## 🧭 HOW IT WORKS
 
 **NTFS compression is handled.** Windows 11 turns compression on for

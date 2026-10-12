@@ -19,6 +19,9 @@
 \usepackage{titlesec}
 \usepackage{enumitem}
 \usepackage{array}
+\usepackage{graphicx}
+\usepackage{caption}
+\captionsetup{font={small,color=gris},skip=2pt}
 \usepackage[hidelinks]{hyperref}
 \definecolor{marine}{HTML}{0A1A33}
 \definecolor{bleu}{HTML}{2F6DB5}
@@ -111,9 +114,7 @@ valeur connue (fichiers, registre, navigateurs, courrier, un chemin de
 octet pour octet. Face aux onze outils d'Eric Zimmerman, sur les mêmes pièces,
 chaque écart a été tranché par une telle source : les valeurs de \wac{} sont
 les mêmes, ou plus justes (RECmd ramène des ruches à un état ancien,
-AmcacheParser invente 3\,450 valeurs, EvtxECmd se trompe sur dix). La
-confrontation a aussi révélé 28 défauts de \wac{}, tous corrigés avec le
-contrôle qui les aurait pris.
+AmcacheParser invente 3\,450 valeurs, EvtxECmd se trompe sur dix).
 
 \section{En chiffres}
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.8\columnwidth}@{\hspace{0.5em}}r@{}}
@@ -123,12 +124,18 @@ Conversion complète, consigne vérifiée & 80~s \\
 Fichiers écrits sur C: par \wac{} & 0 \\
 Contrôles du cycle de test & 494 \\
 Outils de référence confrontés & 12 \\
-Défauts de \wac{} trouvés et corrigés & 28 \\
 \end{tabular}
 
 \section{Disponibilité}
 Version 2.0.0, Windows~10 et 11 (x64), licence GPL~3.0 :
 \url{https://github.com/dev-cec/WAC}. Manuels, dossiers de validation,
 d'innocuité et de comparaison en français et en anglais.
+
+
+\vfill
+\begin{center}
+\includegraphics[width=\columnwidth,height=46mm,keepaspectratio]{../images/wac-running_FR.png}
+\captionof*{figure}{\wac{} en cours de collecte.}
+\end{center}
 
 \end{document}

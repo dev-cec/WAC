@@ -19,6 +19,9 @@
 \usepackage{titlesec}
 \usepackage{enumitem}
 \usepackage{array}
+\usepackage{graphicx}
+\usepackage{caption}
+\captionsetup{font={small,color=gris},skip=2pt}
 \usepackage[hidelinks]{hyperref}
 \definecolor{marine}{HTML}{0A1A33}
 \definecolor{bleu}{HTML}{2F6DB5}
@@ -108,8 +111,7 @@ conversion must give the same JSON files, byte for byte. Against Eric
 Zimmerman's eleven tools, on the same exhibits, each difference was settled by
 such a source: \wac{}'s values are the same, or more accurate (RECmd rolls hives
 back to an older state, AmcacheParser invents 3,450 values, EvtxECmd is wrong on
-ten). The confrontation also revealed 28 defects of \wac{}, all fixed with the
-check that would have caught them.
+ten).
 
 \section{In figures}
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.8\columnwidth}@{\hspace{0.5em}}r@{}}
@@ -119,12 +121,18 @@ Whole conversion, store checked & 80~s \\
 Files written on C: by \wac{} & 0 \\
 Checks of the test cycle & 494 \\
 Reference tools confronted & 12 \\
-\wac{} defects found and fixed & 28 \\
 \end{tabular}
 
 \section{Availability}
 Version 2.0.0, Windows~10 and 11 (x64), GPL~3.0 licence:
 \url{https://github.com/dev-cec/WAC}. Manuals, validation, harmlessness and
 comparison files in English and French.
+
+
+\vfill
+\begin{center}
+\includegraphics[width=\columnwidth,height=46mm,keepaspectratio]{../images/wac-running_EN.png}
+\captionof*{figure}{\wac{} collecting.}
+\end{center}
 
 \end{document}
