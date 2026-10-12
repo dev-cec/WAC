@@ -155,6 +155,18 @@ void printHeading(Text heading) {
 	SetConsoleTextAttribute(conf.hConsole, 7);
 }
 
+/*! The width of the console window, in characters: a line written to its
+ *  last column wraps, and a rewritten progress line or its erasure then
+ *  leaves a blank line behind (a console of 96 columns, measured; 80 by
+ *  default in the older console).
+ *  @return the width, or 80 when it cannot be read */
+size_t consoleWidth() {
+	CONSOLE_SCREEN_BUFFER_INFO info = {};
+	if (!GetConsoleScreenBufferInfo(conf.hConsole, &info)) return 80;
+	const int width = info.srWindow.Right - info.srWindow.Left + 1;
+	return width > 1 ? (size_t)width : 80;
+}
+
 void printProgress(const std::wstring& label, unsigned long long done,
                    unsigned long long total, const std::wstring& unit) {
 	if (!outputIsConsole()) return;
@@ -185,6 +197,8 @@ void printProgress(const std::wstring& label, unsigned long long done,
 		      + std::to_wstring(done * 100ULL / total) + L"%)   ";
 	else
 		line += L" " + unit + L"   ";
+	// Within the window, its last column left free: "\r" plus the text.
+	if (line.size() > consoleWidth()) line.resize(consoleWidth());
 	writeConsole(line);
 	g_progressRunning = true;
 }
@@ -193,7 +207,7 @@ void printProgressEnd() {
 	if (!outputIsConsole() || !g_progressRunning) return;
 	// Erases the progress line, then puts the step label back: without it the "OK"
 	// that follows would appear alone, without saying what it refers to.
-	writeConsole(L"\r" + std::wstring(100, L' ') + L"\r" + g_currentStep);
+	writeConsole(L"\r" + std::wstring(consoleWidth() - 1, L' ') + L"\r" + g_currentStep);
 	g_progressRunning = false;
 }
 

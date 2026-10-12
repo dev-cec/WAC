@@ -51,7 +51,7 @@ CONVERSION = [
 # The conversion's steps paid once, for every artefact.
 SHARED_CONVERSION = [
     "Checking the seal and the fingerprints of the exhibits", "Rebuilding the working copy from the exhibit store",
-    "Repairing the hives of the working copy", "loading the HKLM\\SYSTEM key", "loading the HKLM\\SOFTWARE key",
+    "Repairing the hives of the working copy", "Opening the SYSTEM hive", "Opening the SOFTWARE hive",
     "Listing USER PROFILES (SOFTWARE hive)", "Opening the CurrentControlSet subkey",
     "Reading suspect time zone (SYSTEM hive)", "Reading suspect ANSI code page (SYSTEM hive)",
     "Naming the accounts (SAM, services, profiles)",
@@ -62,7 +62,7 @@ COLLECTION = [
     ("live observations", ["Extraction of RUNNING MACHINE SETTINGS", "Extraction of SESSIONS", "Extraction of PROCESS",
                            "Extraction of NETWORK STATE", "Extraction of SERVICE STATES", "Extraction of SYSTEM CLOCK"]),
     ("hives, file artefacts, NTFS and FAT metadata (raw reading)", [
-        "Extracting system hives (raw NTFS)", "loading the HKLM\\SYSTEM key", "loading the HKLM\\SOFTWARE key",
+        "Extracting system hives (raw NTFS)", "Opening the SYSTEM hive", "Opening the SOFTWARE hive",
         "Listing USER PROFILES (SOFTWARE hive)", "Extracting user hives (raw NTFS)", "Extracting file artefacts (raw NTFS)",
         "Extracting NTFS metadata ($MFT, $UsnJrnl, $LogFile) (raw NTFS)", "FAT and exFAT volumes (raw reading of the metadata)"]),
     ("event providers' resource files", ["Extracting the resource files of the providers the logs cite"]),

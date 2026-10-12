@@ -18,12 +18,12 @@ struct Wording {
 constexpr Wording WORDINGS[] = {
 	{ Text::HeadingPrerequisites,      L"[VÉRIFICATION DES PRÉREQUIS]",                  L"[PREREQUISITE VERIFICATION]" },
 	{ Text::HeadingCheckingCollection, L"[CONTRÔLE DE LA COLLECTE]",                     L"[CHECKING THE COLLECTION]" },
-	{ Text::HeadingLiveState,          L"[OBSERVATION DE LA MACHINE EN MARCHE]",         L"[SEARCHING FOR ARTIFACTS IN WINDOWS API]" },
+	{ Text::HeadingLiveState,          L"[OBSERVATION DE LA MACHINE EN MARCHE]",         L"[OBSERVING THE RUNNING MACHINE]" },
 	{ Text::HeadingRawExtraction,      L"[EXTRACTION BRUTE]",                            L"[RAW EXTRACTION]" },
 	{ Text::HeadingForConversion,      L"[PRÉLÈVEMENTS POUR LA CONVERSION]",             L"[COLLECTION FOR THE CONVERSION]" },
-	{ Text::HeadingRegistry,           L"[ARTEFACTS DU REGISTRE]",                       L"[SEARCHING FOR ARTIFACTS IN THE REGISTRY]" },
-	{ Text::HeadingFiles,              L"[ARTEFACTS DES FICHIERS]",                      L"[SEARCHING FOR ARTIFACTS IN FILES]" },
-	{ Text::HeadingEventLogs,          L"[JOURNAUX D'ÉVÉNEMENTS]",                       L"[SEARCHING FOR ARTIFACTS IN EVENT LOGS]" },
+	{ Text::HeadingRegistry,           L"[ARTEFACTS DU REGISTRE]",                       L"[REGISTRY ARTEFACTS]" },
+	{ Text::HeadingFiles,              L"[ARTEFACTS DES FICHIERS]",                      L"[FILE ARTEFACTS]" },
+	{ Text::HeadingEventLogs,          L"[JOURNAUX D'ÉVÉNEMENTS]",                       L"[EVENT LOGS]" },
 	{ Text::HeadingExhibitStore,       L"[CONSIGNE]",                                    L"[EXHIBIT STORE]" },
 	{ Text::HeadingInvestigationLog,   L"[JOURNAL D'INVESTIGATION]",                     L"[INVESTIGATION LOG]" },
 
@@ -54,8 +54,8 @@ constexpr Wording WORDINGS[] = {
 	                                   L"Extracting the resource files of the providers the logs cite" },
 	{ Text::StepAllExecutables,        L"Lecture de chaque exécutable, prélèvement des non authentifiés (lecture brute NTFS)",
 	                                   L"Reading every executable, collecting the unauthenticated (raw NTFS)" },
-	{ Text::StepOpenSystemHive,        L"Ouverture de la ruche SYSTEM",                  L"loading the HKLM\\SYSTEM key" },
-	{ Text::StepOpenSoftwareHive,      L"Ouverture de la ruche SOFTWARE",                L"loading the HKLM\\SOFTWARE key" },
+	{ Text::StepOpenSystemHive,        L"Ouverture de la ruche SYSTEM",                  L"Opening the SYSTEM hive" },
+	{ Text::StepOpenSoftwareHive,      L"Ouverture de la ruche SOFTWARE",                L"Opening the SOFTWARE hive" },
 	{ Text::StepUserProfiles,          L"Profils des utilisateurs (ruche SOFTWARE)",     L"Listing USER PROFILES (SOFTWARE hive)" },
 
 	{ Text::StepWriteLiveState,        L"Écriture des processus, sessions et réseau",    L"Writing PROCESS, SESSIONS and NETWORK" },
