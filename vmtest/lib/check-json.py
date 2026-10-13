@@ -179,6 +179,12 @@ def main():
             ok += 1
             continue
 
+        # Absent from the examined version of Windows (B-039): nothing to check.
+        if isinstance(data, dict) and data.get("CollectionStatus") == "AbsentFromThisVersion":
+            print(f"  ⏭️  {name:<34} absent from this version of Windows ({data.get('WindowsRelease', '?')})")
+            ok += 1
+            continue
+
         faults = [(p, v, m) for p, v in walk(data)
                             for m in [inconsistencies(v)] if m]
 
@@ -211,7 +217,7 @@ def load(folder, name):
             data = json.load(f)
     except Exception:
         return None
-    if isinstance(data, dict) and data.get("CollectionStatus") == "NotRequested":
+    if isinstance(data, dict) and data.get("CollectionStatus") in ("NotRequested", "AbsentFromThisVersion"):
         return None
     return data
 
@@ -226,7 +232,7 @@ def switched_off(folder, *names):
                 data = json.load(f)
         except Exception:
             return False
-        if not (isinstance(data, dict) and data.get("CollectionStatus") == "NotRequested"):
+        if not (isinstance(data, dict) and data.get("CollectionStatus") in ("NotRequested", "AbsentFromThisVersion")):
             return False
     return True
 
@@ -296,6 +302,7 @@ def cross_checks(folder):
     found += guarded(check_jumplist_entries, folder)
     found += guarded(check_events, folder)
     found += guarded(check_hive_replay, folder)
+    found += guarded(check_examined_version, folder)
     found += guarded(check_exhibit_store, folder)
     found += guarded(check_mft_references, folder)
     found += guarded(check_mft_timeline, folder)
@@ -2270,6 +2277,58 @@ def check_small_file_artefacts(folder):
     return found
 
 
+def check_examined_version(folder):
+    """The version of Windows WAC read in the copied SOFTWARE hive (B-039)
+    against the one Windows gives of itself.
+
+    That version decides which artefacts are not collected at all (table of
+    the artefacts by version): a build read wrong would silently drop some.
+    The journal must state the build Windows reports and a release that fits
+    it; on this machine, a Windows 11, no artefact may be declared absent
+    from the version — neither in the journal nor in any JSON file.
+    """
+    path = os.path.join(folder, "reference", "windows-version.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  reference/windows-version.txt absent: examined version not confronted")
+        return 0
+    with open(path, encoding="utf-8", errors="replace") as f:
+        match = re.search(r"windows=(\d+)\|(\d+)", f.read())
+    if not match:
+        print("  ⏭️  Windows version reference unreadable: examined version not confronted")
+        return 0
+    build, workstation = int(match.group(1)), match.group(2) == "1"
+    stated = []
+    for name in ("investigation.json", "conversion.json"):
+        log = load(folder, name)
+        for o in (log or {}).get("Operations", []) if isinstance(log, dict) else []:
+            operation = str(o.get("Operation", ""))
+            if operation.startswith("Version of the examined Windows"):
+                stated.append(operation)
+    if not stated:
+        print("  ❌ examined version: no record in the journals")
+        return 1
+    expected_release = ("Windows 11" if build >= 22000 else "Windows 10") if workstation else "Windows Server"
+    wrong = [s for s in stated if f", build {build}" not in s or expected_release not in s]
+    absent = [n for n in sorted(os.listdir(folder)) if n.endswith(".json")
+              and isinstance(raw_json(os.path.join(folder, n)), dict)
+              and raw_json(os.path.join(folder, n)).get("CollectionStatus") == "AbsentFromThisVersion"]
+    held_back = [s for s in stated if "absent from this version" in s]
+    ok = not wrong and not absent and not held_back
+    print(f"  {'✅' if ok else '❌'} examined version: {expected_release}, build {build} as Windows reports it, "
+          f"in {len(stated)} journal record(s); no artefact declared absent from this version"
+          + ("" if ok else f": {wrong[:1]} {absent[:3]} {held_back[:1]}"))
+    return 0 if ok else 1
+
+
+def raw_json(path):
+    """A JSON file as it is, statuses included (load hides the artefacts not collected); None if unreadable."""
+    try:
+        with open(path, encoding="utf-8-sig") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
 def check_web_client(folder):
     """web_client.json against Python's own SQLite reading the same History.
 
@@ -3152,7 +3211,12 @@ def check_prefetch_mft_references(folder):
     creation date, the change of its $FILE_NAME — after the program's last
     run: the file was deleted, or replaced by a rename, and created again at
     the same path, reusing the record (GoogleUpdater's prefs.json, replaced
-    11 s into the run its Prefetch records). It is
+    11 s into the run its Prefetch records). And a record the $MFT marks
+    deleted still carries its name, but NTFS raised its sequence by one when
+    it freed it: the reference must then be the record's sequence less one
+    (a Chrome version removed by its update, the $UsnJrnl showing the deletion
+    under the very sequence the Prefetch holds). A file in use at a path wins
+    over a deleted record that still names it. It is
     this check that caught the split by hand — the sequence read on four bytes
     (770 703 362 for a sequence of 2): 14 940 references out of 14 975.
     """
@@ -3161,12 +3225,14 @@ def check_prefetch_mft_references(folder):
         print("  ⏭️  prefetchs.json or mft.json absent: $MFT references not cross-checked")
         return 0
     records = {}
-    for e in mft:
+    for e in sorted(mft, key=lambda e: not e.get("Deleted")):   # deleted first: a file in use overwrites it
+        in_use_sequence = e.get("Sequence") - 1 if e.get("Deleted") and e.get("Sequence") else e.get("Sequence")
         for path in [e.get("Path")] + (e.get("HardLinkPaths") or []):
             if path:
-                records[path.lower()] = (e.get("Entry"), e.get("Sequence"),
-                                         max(e.get("CreatedUtc") or "", e.get("FileNameMftModifiedUtc") or ""))
-    same, moved, recreated, wrong = 0, 0, 0, []
+                records[path.lower()] = (e.get("Entry"), in_use_sequence,
+                                         max(e.get("CreatedUtc") or "", e.get("FileNameMftModifiedUtc") or ""),
+                                         bool(e.get("Deleted")))
+    same, deleted, moved, recreated, wrong = 0, 0, 0, 0, []
     for p in prefetchs:
         for f in p.get("FileNames") or []:
             ref, path = f.get("MftReference"), f.get("FullPath")
@@ -3175,7 +3241,8 @@ def check_prefetch_mft_references(folder):
                 moved += record is None and ref is not None and path is not None
                 continue
             if record[1] == ref.get("SequenceNumber"):
-                same += 1
+                same += not record[3]
+                deleted += record[3]
             elif record[2] > max(p.get("RunsUtc") or [""]):
                 recreated += 1
             else:
@@ -3188,6 +3255,7 @@ def check_prefetch_mft_references(folder):
         return 1
     print(f"  ✅ prefetchs.json: {same} $MFT reference(s) identical to the $MFT's record "
           f"(entry and sequence); {moved} to a path gone since"
+          f"{f'; {deleted} to a file deleted since, its record freed under the next sequence' if deleted else ''}"
           f"{f'; {recreated} to a file created again since the last run' if recreated else ''}")
     return 0
 
