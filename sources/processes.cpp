@@ -6,33 +6,12 @@
 
 #include <wtsapi32.h>
 
-/* A DECLARATION MISSING FROM THE MINGW-W64 HEADER.
- *
- * `WTSEnumerateProcessesExW` has been exported by wtsapi32.dll since Windows
- * Vista and the symbol is present in libwtsapi32.a, but mingw-w64's
- * `wtsapi32.h` does not declare it (unlike `WTSEnumerateSessionsExW`, right
- * next to it). The prototype is therefore taken as it is documented.
- *
- * Preferred to a dynamic load through `GetProcAddress`: that would require a
- * `LoadLibrary` on wtsapi32.dll, while the DLL is already linked to the program
- * for `sessions`.
- */
-#ifndef WTS_ANY_SESSION
-//! Every session, for WTSEnumerateProcessesExW (absent from mingw-w64).
-#define WTS_ANY_SESSION ((DWORD)-2)
-#endif
-//! Enumerates the processes of a server, with their owner and session (wtsapi32).
-extern "C" WINBOOL WINAPI WTSEnumerateProcessesExW(HANDLE hServer, DWORD* pLevel,
-                                                   DWORD SessionId,
-                                                   LPWSTR* ppProcessInfo,
-                                                   DWORD* pCount);
-
 namespace {
 
 /*! Reads the owner's SID and the session of ALL the processes, in one call,
 * without opening any process handle.
 *
-* `WTSEnumerateProcessesExW` queries the Terminal Services service, already
+* `WTSEnumerateProcessesW` queries the Terminal Services service, already
 * solicited by `sessions`. It returns the SID even for the protected processes
 * that `OpenProcess` refuses — including lsass, services.exe and Defender's
 * processes, whose impersonation is precisely what an investigation looks for.
@@ -41,14 +20,17 @@ namespace {
 * @return ERROR_SUCCESS if the enumeration succeeded
 */
 HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& byPid) {
-	DWORD level = 0;                 // level 0: SessionId, ProcessId, name, SID
+	/* WTSEnumerateProcessesW, not its "Ex" successor: the same rows —
+	   session, PID, name, SID, for every session — and it exists since
+	   Windows XP, where the Ex one came with Windows 7: imported, that one
+	   kept a 32-bit WAC from linking, and would keep it from loading under XP
+	   and Vista. */
 	PWTS_PROCESS_INFOW infos = NULL;
 	DWORD count = 0;
-	log(3, L"🔈WTSEnumerateProcessesExW");
-	if (!WTSEnumerateProcessesExW(WTS_CURRENT_SERVER_HANDLE, &level, WTS_ANY_SESSION,
-	                              (LPWSTR*)&infos, &count)) {
+	log(3, L"🔈WTSEnumerateProcessesW");
+	if (!WTSEnumerateProcessesW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &infos, &count)) {
 		const HRESULT error = GetLastError();
-		log(2, L"🔥WTSEnumerateProcessesExW: owners not read", error);
+		log(2, L"🔥WTSEnumerateProcessesW: owners not read", error);
 		return error;
 	}
 
@@ -67,8 +49,8 @@ HRESULT readOwners(std::map<DWORD, std::pair<std::wstring, DWORD>>& byPid) {
 		byPid[infos[i].ProcessId] = { sid, infos[i].SessionId };
 	}
 	log(2, L"❇️Owners read for " + std::to_wstring(byPid.size()) + L" processes");
-	log(3, L"🔈WTSFreeMemoryExW");
-	WTSFreeMemoryExW(WTSTypeProcessInfoLevel0, infos, count);
+	log(3, L"🔈WTSFreeMemory");
+	WTSFreeMemory(infos);
 	return ERROR_SUCCESS;
 }
 

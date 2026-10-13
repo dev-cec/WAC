@@ -439,7 +439,7 @@ does to the machine**, operation by operation — including what it cannot avoid
 | **Hive repair** | 8 bytes of the base block, **on the copy** — now only a fallback, since a replayed hive is clean by construction. The original is never opened for writing; its fingerprint is recorded first |
 | **Service state** (1 × `EnumServicesStatusExW`) | one read-only query to the SCM over `\\.\pipe\ntsvcs`. No handle per service, no state change, so no `System` 7036 event |
 | **Processes** (`CreateToolhelp32Snapshot`) | a kernel snapshot; no process handle is opened |
-| **Process owners** (1 × `WTSEnumerateProcessesEx`) | solicits the Terminal Services service, once |
+| **Process owners** (1 × `WTSEnumerateProcesses`) | solicits the Terminal Services service, once |
 | **Sessions** (`LsaEnumerateLogonSessions`) | solicits LSASS; reads only |
 | **Network state** (`GetExtendedTcpTable`, `GetExtendedUdpTable`, `GetIpNetTable2`, `GetAdaptersAddresses`, `GetIpForwardTable2`) | reads the TCP/IP stack's tables in memory: **no packet sent**, no name resolved. `iphlpapi.dll` is loaded from System32 only when `artefacts.network` is on — `WAC.exe` imports no network library, which the build checks |
 | **Event logs** (`--events`) | reads `\Windows\System32\winevt\Logs\*.evtx` through the same raw volume handle as every other artefact — **no service is solicited**, and the parsing happens on the copy. The only cost left is the size: ~117 MB written to the collection medium |

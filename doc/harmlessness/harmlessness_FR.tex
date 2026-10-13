@@ -238,7 +238,7 @@ Binaires (\opt{binary}) & Lus par la lecture directe ; signatures et
   catalogues vérifiés en mémoire. Aucun magasin de certificats ouvert, aucune
   vérification de révocation en ligne. \\
 Processus & Un instantané du noyau (\texttt{CreateToolhelp32Snapshot}) et une
-  requête au service Terminal Services (\texttt{WTSEnumerateProcessesExW})
+  requête au service Terminal Services (\texttt{WTSEnumerateProcessesW})
   pour les propriétaires. Aucun processus n'est ouvert : \fichier{WAC.exe}
   n'importe pas \texttt{OpenProcess}. \\
 Modules des processus & Un instantané par processus ; ceux que le noyau
@@ -310,7 +310,7 @@ sans exécuter le programme, sous Linux :
 $ x86_64-w64-mingw32-objdump -p WAC.exe | grep -E 'DLL Name|^\s+[0-9a-f]+\s+[0-9]+ '
 \end{lstlisting}
 
-Pour la version 2.0.0, hors \fichier{msvcrt.dll} (la bibliothèque C) :
+Hors \fichier{msvcrt.dll} (la bibliothèque C) :
 
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[ADVAPI32.dll] \texttt{OpenSCManagerW}, \texttt{EnumServicesStatusExW},
@@ -320,8 +320,14 @@ Pour la version 2.0.0, hors \fichier{msvcrt.dll} (la bibliothèque C) :
     \texttt{Reg*}, aucune fonction de modification de service.
   \item[Secur32.dll] \texttt{LsaEnumerateLogonSessions},
     \texttt{LsaGetLogonSessionData}, \texttt{LsaFreeReturnBuffer}.
-  \item[WTSAPI32.dll] \texttt{WTSEnumerateProcessesExW},
-    \texttt{WTSFreeMemoryExW}.
+  \item[WTSAPI32.dll] \texttt{WTSEnumerateProcessesW},
+    \texttt{WTSFreeMemory}.
+  \item[bcrypt.dll] \texttt{BCryptOpenAlgorithmProvider},
+    \texttt{BCryptSetProperty}, \texttt{BCryptGenerateSymmetricKey},
+    \texttt{BCryptDecrypt}, \texttt{BCryptDestroyKey},
+    \texttt{BCryptCloseAlgorithmProvider} : le déchiffrement AES des condensats
+    de la SAM, à la conversion seule. Du calcul en mémoire, sans fichier ni
+    registre.
   \item[KERNEL32.dll] Fichiers, mémoire, fils d'exécution, heure, console,
     volumes, instantané des processus. Les fonctions qui écrivent ou
     suppriment (\texttt{DeleteFileW}, \texttt{MoveFileExW},
@@ -333,7 +339,9 @@ Pour la version 2.0.0, hors \fichier{msvcrt.dll} (la bibliothèque C) :
 \end{description}
 
 \textbf{Chargements dynamiques.} Trois bibliothèques seulement, depuis
-\path|System32| (\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32}) :
+\path|System32| (\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32} ou,
+sous un Windows~7 qui ne connaît pas ce drapeau, leur chemin absolu dans ce
+dossier) :
 \fichier{iphlpapi.dll}, pour l'état réseau, quand \texttt{artefacts.network}
 est demandé ; \fichier{winhttp.dll}, pour \opt{update-trust} seul, et
 \fichier{esent.dll}, qui rejoue les journaux d'une base ESE copiée (WebCache,

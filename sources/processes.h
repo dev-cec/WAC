@@ -20,7 +20,7 @@
  *      heaviest footprint there is, and the very pattern the protections in
  *      place watch for.
  *
- *  The SID and the session now come from a SINGLE `WTSEnumerateProcessesExW`
+ *  The SID and the session now come from a SINGLE `WTSEnumerateProcessesW`
  *  call, which returns them for ALL processes without opening any handle. Less
  *  footprint, and more data.
  *
@@ -87,7 +87,7 @@ struct Processes {
 
 
 	/*! Takes a Toolhelp snapshot, then reads the owners and sessions in a single
-	 *  `WTSEnumerateProcessesExW` call.
+	 *  `WTSEnumerateProcessesW` call.
 	 *  @return S_OK, or the failure of the snapshot.
 	*/
 	HRESULT getData();

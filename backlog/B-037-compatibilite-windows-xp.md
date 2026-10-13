@@ -75,3 +75,6 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   Tout le reste — fichiers, volumes, jetons, sessions LSA, services, instantané des processus — existe sous XP SP1.
 
 - 2026-10-13 : cycle complet Windows 11 après les deux correctifs Windows 7 : 499 contrôles réussis, aucun échec ; commité.
+- 2026-10-13 : `WTSEnumerateProcessesW` vérifiée sous Windows 7 et 8.1 : 36 et 35 processus, tous avec leur SID sauf le processus inactif, `lsass.exe` compris (S-1-5-18).
+
+- 2026-10-13 : cycle complet Windows 11 avec `WTSEnumerateProcessesW` et sans le faux prérequis : 499 contrôles réussis, 135 propriétaires lus sur 136 processus comme auparavant ; commité.

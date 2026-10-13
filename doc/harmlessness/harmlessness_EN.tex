@@ -232,7 +232,7 @@ Binaries (\opt{binary}) & Read by the raw reading; signatures and catalogues
   verified in memory. No certificate store opened, no online revocation
   check. \\
 Processes & One kernel snapshot (\texttt{CreateToolhelp32Snapshot}) and one
-  query to the Terminal Services service (\texttt{WTSEnumerateProcessesExW})
+  query to the Terminal Services service (\texttt{WTSEnumerateProcessesW})
   for the owners. No process is opened: \fichier{WAC.exe} does not import
   \texttt{OpenProcess}. \\
 Process modules & One snapshot per process; those the kernel protects (LSASS,
@@ -303,7 +303,7 @@ Linux:
 $ x86_64-w64-mingw32-objdump -p WAC.exe | grep -E 'DLL Name|^\s+[0-9a-f]+\s+[0-9]+ '
 \end{lstlisting}
 
-For version 2.0.0, apart from \fichier{msvcrt.dll} (the C library):
+Apart from \fichier{msvcrt.dll} (the C library):
 
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[ADVAPI32.dll] \texttt{OpenSCManagerW}, \texttt{EnumServicesStatusExW},
@@ -314,8 +314,14 @@ For version 2.0.0, apart from \fichier{msvcrt.dll} (the C library):
     a service.
   \item[Secur32.dll] \texttt{LsaEnumerateLogonSessions},
     \texttt{LsaGetLogonSessionData}, \texttt{LsaFreeReturnBuffer}.
-  \item[WTSAPI32.dll] \texttt{WTSEnumerateProcessesExW},
-    \texttt{WTSFreeMemoryExW}.
+  \item[WTSAPI32.dll] \texttt{WTSEnumerateProcessesW},
+    \texttt{WTSFreeMemory}.
+  \item[bcrypt.dll] \texttt{BCryptOpenAlgorithmProvider},
+    \texttt{BCryptSetProperty}, \texttt{BCryptGenerateSymmetricKey},
+    \texttt{BCryptDecrypt}, \texttt{BCryptDestroyKey},
+    \texttt{BCryptCloseAlgorithmProvider}: the AES decryption of the SAM's
+    hashes, at the conversion only. Computation in memory, no file, no
+    registry.
   \item[KERNEL32.dll] Files, memory, threads, time, console, volumes, process
     snapshot. The functions that write or delete (\texttt{DeleteFileW},
     \texttt{MoveFileExW}, \texttt{RemoveDirectoryW}, \texttt{CreateHardLinkW},
@@ -326,7 +332,9 @@ For version 2.0.0, apart from \fichier{msvcrt.dll} (the C library):
 \end{description}
 
 \textbf{Dynamic loads.} Three libraries only, from \path|System32|
-(\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32}): \fichier{iphlpapi.dll}, for the
+(\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32} or, under a
+Windows~7 that does not know that flag, their full path in that folder):
+\fichier{iphlpapi.dll}, for the
 network state, when \texttt{artefacts.network} is asked for;
 \fichier{winhttp.dll}, for \opt{update-trust} alone, and \fichier{esent.dll},
 which replays a copied ESE database's logs (WebCache, SRUM, BITS) into the
