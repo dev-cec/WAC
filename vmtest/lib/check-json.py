@@ -187,6 +187,13 @@ def main():
             ok += 1
             continue
 
+        # A source in a format WAC has no decoder for (B-039): this Windows 11
+        # has none such — the witnesses of that status are pieces, not artefacts.
+        if isinstance(data, dict) and data.get("CollectionStatus") == "UnsupportedFormat":
+            print(f"  ❌ {name:<34} UNSUPPORTED FORMAT — signature {data.get('FormatSignature', '?')}")
+            invalid += 1
+            continue
+
         # A source every Windows has, not found (B-039): the test machine lacks
         # none, so this is a fault here — the dedicated step checks the status.
         if isinstance(data, dict) and data.get("CollectionStatus") == "ExpectedButMissing":
@@ -1411,6 +1418,41 @@ def check_small_file_artefacts(folder):
         report(any(e.get("Address") == address and name in (e.get("Names") or []) for e in hosts.get("Entries", [])),
                f"hosts.json: {address} {name} found",
                f"hosts.json: {address} {name} missing")
+
+    # A format WAC has no decoder for (B-039): declared, with the version met,
+    # and nothing decoded — the two witnesses written by hand, and no other
+    # piece of this Windows 11, whose every format is decoded.
+    prefetchs = load(folder, "prefetchs.json")
+    if isinstance(prefetchs, list) and "pfold" in reference and "pfnew" in reference:
+        undecoded = {(p.get("Path") or "").lower(): p for p in prefetchs if p.get("DecodingStatus")}
+        faults = []
+        for key, named in (("pfold", True), ("pfnew", False)):
+            where, version, name, digest = reference[key].split("|")
+            p = undecoded.pop(where.lower(), None)
+            if p is None:
+                faults.append(f"{where} not declared")
+                continue
+            if (p.get("DecodingStatus"), p.get("FormatVersion"), p.get("Filename"), p.get("Hash")) \
+                    != ("UnsupportedFormat", int(version), name, digest):
+                faults.append(f"{name}: {p.get('DecodingStatus')}, version {p.get('FormatVersion')}, {p.get('Filename')}, {p.get('Hash')}")
+            if p.get("FormatSignature") != f"0x{int(version):08X}" or not p.get("Note") or not p.get("CreatedUtc"):
+                faults.append(f"{name}: signature {p.get('FormatSignature')}, note or dates absent")
+            if (p.get("FormatName") != f"SCCA version {version}") if named else ("FormatName" in p):
+                faults.append(f"{name}: FormatName {p.get('FormatName')!r} — a known form is named, an unknown one is not")
+            decoded = [k for k in ("RunCount", "RunsUtc", "FileNames", "Volumes", "FullPath") if k in p]
+            if decoded:
+                faults.append(f"{name}: decoded all the same: {decoded}")
+        if undecoded:
+            faults.append(f"{len(undecoded)} real Prefetch declared unsupported: {list(undecoded)[:2]}")
+        report(not faults,
+               "prefetchs.json: Prefetch versions 23 and 32 declared unsupported (the known form named, the unknown "
+               "one not), name and hash read, nothing else decoded; every real Prefetch decoded",
+               "prefetchs.json: unsupported formats not as placed: " + " ; ".join(faults))
+    for name in ("recycle_bin.json", "thumbcache.json", "jumplistAutomaticDestinations.json"):
+        pieces = load(folder, name)
+        undecoded = [p for p in pieces if p.get("DecodingStatus")] if isinstance(pieces, list) else []
+        if undecoded:
+            report(False, "", f"{name}: {len(undecoded)} piece(s) declared in an unsupported format on this Windows: {str(undecoded[0])[:160]}")
 
     startup = load(folder, "startup_folders.json")
     if isinstance(startup, list) and "startup" in reference:

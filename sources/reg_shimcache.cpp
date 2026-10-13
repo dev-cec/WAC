@@ -3,6 +3,11 @@
  */
 #include "reg_shimcache.h"
 
+namespace {
+//! Header size of the Windows 8 and 8.1 value — the first DWORD of both, which thus cannot tell them apart.
+const size_t WINDOWS_8_HEADER_SIZE = 0x80;
+} // namespace
+
 Json Shimcache::toJson() {
 	log(3, L"🔈Shimcache toJson");
 	Json o = Json::obj();
@@ -57,6 +62,20 @@ HRESULT Shimcaches::getData() {
 		return ERROR_INVALID_DATA;
 	}
 	size_t offset = *reinterpret_cast<const DWORD*>(data);
+	/* THE FORMAT, AS THE VALUE STATES IT. Its first DWORD is a magic number
+	   up to Windows 7 (0xDEADBEEF, 0xBADC0FFE, 0xBADC0FEE), then the size of
+	   the header: 0x80 under Windows 8 and 8.1 — told apart by the tag of the
+	   first entry, "00ts" or "10ts" —, 0x30 or 0x34 since Windows 10. The
+	   artefact table says which ones are decoded (pieceFormat). An older
+	   value used to give an empty list — "no program was ever shimmed" —:
+	   it is now declared "unsupported format". */
+	formatSignature = (unsigned)offset;
+	if (offset == WINDOWS_8_HEADER_SIZE && fits(size, offset, 4)) formatSignature = *reinterpret_cast<const DWORD*>(data + offset);
+	if (!pieceFormat("shimcache", formatSignature).decoded) {
+		log(2, L"❇️AppCompatCache in an unsupported format, signature 0x" + to_hex(formatSignature));
+		unsupportedFormat = true;
+		return ERROR_SUCCESS;
+	}
 	while (fits(size, offset, 14)) {
 		printProgressStep(L"Shimcache", (unsigned)offset, size);
 		if (std::memcmp(data + offset, "10ts", 4) != 0) {
@@ -118,6 +137,7 @@ HRESULT Shimcaches::getData() {
 
 HRESULT Shimcaches::toJson() {
 	log(3, L"🔈Shimcaches toJson");
+	if (unsupportedFormat) return writeUnsupportedFormat("shimcache.json", L"Shimcache", "shimcache", formatSignature);
 	Json arr = Json::arr();
 	for (Shimcache& e : shimcaches) arr.push(e.toJson());
 	return writeJsonFile("shimcache.json", arr);
@@ -126,4 +146,6 @@ HRESULT Shimcaches::toJson() {
 void Shimcaches::clear() {
 	log(3, L"🔈Shimcaches clear");
 	shimcaches.clear();   // destroys the elements -> really releases them
+	unsupportedFormat = false;
+	formatSignature = 0;
 }

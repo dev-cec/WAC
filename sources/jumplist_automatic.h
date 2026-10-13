@@ -44,9 +44,12 @@ struct AutomaticDestination {
 
 	/*! One DestList entry and the shortcut its number points to. */
 	struct JumplistEntry {
-		DestFile destList;               //!< the DestList entry: last access, host, droid GUIDs, pin
+		std::optional<DestFile> destList; //!< the DestList entry: last access, host, droid GUIDs, pin; empty when the DestList is in an unsupported format
 		std::optional<RecentDoc> lnk;    //!< its shortcut; empty if the stream is missing or unreadable
 	};
+
+	int destListVersion = 0;            //!< version of the DestList, as its header states it; 0 if there is none
+	bool destListUnsupported = false;   //!< that version has no decoder (pieceFormat): the shortcuts are read, without their DestList entry
 
 	oleParser ole; //!< reader of the OLE compound document the file is
 	std::vector<JumplistEntry> entries; //!< one per opened file, in DestList order

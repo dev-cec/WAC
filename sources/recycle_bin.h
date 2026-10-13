@@ -31,7 +31,8 @@
 struct RecycledFile {
 	std::wstring indexFile;          //!< the `$I` file on the examined machine
 	std::wstring sid;                //!< SID of the folder: the user who deleted
-	uint64_t version = 0;            //!< 1 or 2, the format of the `$I`
+	uint64_t version = 0;            //!< the format of the `$I`, as the file states it
+	bool unsupportedFormat = false;  //!< a version WAC has no decoder for (pieceFormat): nothing but the version was read
 	uint64_t size = 0;               //!< size of the deleted file, bytes
 	FILETIME deletedUtc = { 0 };     //!< instant of the deletion, UTC
 	std::wstring originalPath;       //!< where the file was before being deleted
@@ -41,9 +42,11 @@ struct RecycledFile {
 
 /*! Reads a `$I` file.
  *  @param bytes its content
- *  @param recycled receives version, size, deletion and original path
- *  @return false if the content is not a `$I` of version 1 or 2, or is
- *          truncated: every read is bounded by the size given */
+ *  @param recycled receives version, size, deletion and original path; for a
+ *         version the artefact table holds no decoder for, the version alone
+ *         and `unsupportedFormat`
+ *  @return false if the content is truncated: every read is bounded by the
+ *          size given */
 bool parseRecycleBinIndex(const std::vector<uint8_t>& bytes, RecycledFile& recycled);
 
 /*! The recycle bins of every volume (recycle_bin.json). */

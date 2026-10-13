@@ -39,6 +39,7 @@
 #include "rdp_client.h"
 #include "rdp_server.h"
 #include "thumbcache.h"
+#include "oleparser.h"
 #include "emails.h"
 #include "mbox_mail.h"
 #include "wevt.h"
@@ -142,7 +143,13 @@ void recycleBin() {
 	check(!parseRecycleBinIndex(std::vector<uint8_t>(v1.begin(), v1.begin() + 100), t), "recycle bin: truncated version 1 refused");
 	check(!parseRecycleBinIndex(std::vector<uint8_t>(v2.begin(), v2.begin() + 20), t), "recycle bin: truncated header refused");
 	std::vector<uint8_t> v3 = v2; v3[0] = 3;
-	check(!parseRecycleBinIndex(v3, t), "recycle bin: unknown version refused");
+	RecycledFile unknown;
+	check(parseRecycleBinIndex(v3, unknown) && unknown.unsupportedFormat && unknown.version == 3 && unknown.originalPath.empty()
+	      && unknown.size == 0, "recycle bin: a version without decoder is declared unsupported, and nothing of it is read");
+	std::vector<uint8_t> wide = v2; wide[4] = 1;   // version 0x1'00000002: not version 2
+	RecycledFile aliased;
+	check(parseRecycleBinIndex(wide, aliased) && aliased.unsupportedFormat, "recycle bin: a 64-bit version taken for its low half");
+	check(!o.unsupportedFormat && !r.unsupportedFormat, "recycle bin: version 1 or 2 declared unsupported");
 }
 
 void hosts() {
@@ -968,7 +975,11 @@ void thumbcache() {
 	std::vector<uint8_t> seven = file;
 	writeLittleEndian<uint32_t>(seven.data() + 4, 0x15);   // Windows 7: another entry layout
 	ThumbcacheFile g;
-	check(!decodeThumbcache(seven, g), "thumbcache: a Windows 7 layout not decoded as Windows 8 to 11's");
+	check(decodeThumbcache(seven, g) && g.unsupportedFormat && g.version == 0x15 && g.entries.empty(),
+	      "thumbcache: a Windows 7 layout decoded as Windows 8 to 11's, or not declared unsupported");
+	writeLittleEndian<uint32_t>(seven.data() + 4, 0x21);   // a version nobody has seen yet
+	check(decodeThumbcache(seven, g) && g.unsupportedFormat && g.entries.empty(), "thumbcache: an unknown version decoded");
+	check(!cache.unsupportedFormat, "thumbcache: the Windows 10 layout declared unsupported");
 }
 
 /*! Thunderbird's mail: an mbox of two messages written here, decoded. What a
@@ -1033,7 +1044,25 @@ void mboxMail() {
 
 } // namespace
 
+/*! A DestList of a version without decoder, presented to the decoder: 5 and
+ *  7, which nobody has seen, with one entry announced — declared unsupported,
+ *  no entry read; 6, the version of Windows 11, is read. */
+void destListVersion() {
+	std::vector<uint8_t> stream(32 + 130 + 8, 0);
+	writeLittleEndian<uint32_t>(stream.data() + 4, 1);     // one entry announced
+	for (uint32_t version : { 5u, 7u, 2u }) {
+		writeLittleEndian<uint32_t>(stream.data(), version);
+		const DestFileDirectory list(stream.data(), stream.size());
+		check(list.unsupportedFormat && list.destfiles.empty() && list.formatVersion == (int)version,
+		      "jump list: a DestList version without decoder read, or not declared unsupported");
+	}
+	writeLittleEndian<uint32_t>(stream.data(), 6);
+	const DestFileDirectory eleven(stream.data(), stream.size());
+	check(!eleven.unsupportedFormat && eleven.destfiles.size() == 1, "jump list: the DestList version of Windows 11 not read");
+}
+
 int wmain() {
+	destListVersion();
 	powershell();
 	setupapi();
 	recycleBin();

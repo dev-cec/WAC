@@ -119,6 +119,10 @@ NOTES = {
     "Earlier with PSReadLine installed by hand (PowerShell 5, Windows 7 and later).":
         "Plus tôt si PSReadLine a été installé à la main (PowerShell 5, Windows 7 et suivants).",
     "Switched off by default on the server editions.": "Désactivé par défaut sur les éditions serveur.",
+    "DestList version 6 measured on build 26200; the custom lists (CustomDestinations) carry no version.":
+        "DestList version 6 mesurée sur le build 26200 ; les listes personnalisées (CustomDestinations) ne portent pas de version.",
+    "Windows 8 and 8.1 share the header 0x80: they are told apart by the tag of their first entry, which is their signature here.":
+        "Windows 8 et 8.1 partagent l'en-tête 0x80 : ils se distinguent par la marque de leur première entrée, qui tient ici lieu de signature.",
     "Registry values and .rdp files read on every version; only the tiles of the .bmc cache are not exported.":
         "Valeurs de registre et fichiers .rdp lus sur toutes les versions ; seules les tuiles du cache .bmc ne sont pas exportées.",
     "Windows XP and Server 2003: events 528 and 682 of Security.evt, not converted.":

@@ -68,6 +68,8 @@ public:
 struct Shimcaches {
 public:
 	std::vector<Shimcache> shimcaches;  //!< the entries, in cache order
+	bool unsupportedFormat = false;     //!< the value is in a format WAC has no decoder for (pieceFormat): no entry was read
+	unsigned formatSignature = 0;       //!< what the value states of its format: its header, or the tag of its first entry under Windows 8 and 8.1
 
 	/*! Reads the AppCompatCache value and parses it according to its format.
 	 *  @return S_OK, or the failure of the read. */

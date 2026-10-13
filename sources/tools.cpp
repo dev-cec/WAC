@@ -1693,6 +1693,31 @@ HRESULT writeExpectedButMissing(const std::string& name, const std::wstring& art
 	return writeJsonFile(name, o);
 }
 
+//! What an unsupported format says of itself, for a piece or a whole artefact: signature, form if known, note.
+static void addFormatMet(Json& o, const std::string& key, unsigned signature) {
+	o.add(L"FormatSignature", Json::str(L"0x" + to_hex(signature, 8, HexLetters::Upper)));
+	const PieceFormat format = pieceFormat(key, signature);
+	// "FormatName", not "Format": that key is already an image's format in thumbcache.json.
+	if (format.form) o.add(L"FormatName", Json::str(format.form->format));
+	o.add(L"Note", Json::str(format.form
+		? L"Collected raw, not converted: this version of WAC has no decoder for this format. The exhibit store holds the source."
+		: L"Collected raw, not converted: a format this version of WAC does not know. The exhibit store holds the source."));
+}
+
+void addUnsupportedFormat(Json& o, const std::string& key, unsigned signature) {
+	o.add(L"DecodingStatus", Json::str(L"UnsupportedFormat"));
+	addFormatMet(o, key, signature);
+}
+
+HRESULT writeUnsupportedFormat(const std::string& name, const std::wstring& artefact, const std::string& key,
+                               unsigned signature) {
+	Json o = Json::obj();
+	o.add(L"Artifact",         Json::str(artefact));
+	o.add(L"CollectionStatus", Json::str(L"UnsupportedFormat"));
+	addFormatMet(o, key, signature);
+	return writeJsonFile(name, o);
+}
+
 //! ASCII lower case: enough for file extensions.
 static std::wstring toLowerAscii(std::wstring s) {
 	for (wchar_t& c : s) if (c >= L'A' && c <= L'Z') c = (wchar_t)(c - L'A' + L'a');

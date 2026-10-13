@@ -1842,6 +1842,43 @@ An item \wac{} cannot decode (unknown shell item, unrecognised extension block)
 comes with its raw bytes in hexadecimal, so that an analyst can decode it later.
 With \opt{dump}, the raw value of shellbags and shortcuts is always added.
 
+\section{Unsupported format}\label{sec:format}
+
+The format of a piece is read on the piece itself --- its signature or its
+internal version ---, never on the version of Windows: a Vista Prefetch found
+on a Windows~10 remains a Vista Prefetch. When \wac{} has no decoder for the
+format met, be it an old one or one never seen yet, it converts nothing and
+says so; the piece itself is in the exhibit store, ready for another tool.
+
+\begin{lstlisting}
+{
+  "Path": "C:\\Windows\\Prefetch\\CMD.EXE-4A81B364.pf",
+  "Hash": "4A81B364",
+  "Filename": "CMD.EXE",
+  "CreatedUtc": "2026-10-13T06:12:44.1835527Z",
+  "FormatVersion": 23,
+  "DecodingStatus": "UnsupportedFormat",
+  "FormatSignature": "0x00000017",
+  "FormatName": "SCCA version 23",
+  "Note": "Collected raw, not converted: this version of WAC has no
+           decoder for this format. The exhibit store holds the source."
+}
+\end{lstlisting}
+
+\champ{FormatName} names the format when the table of
+section~\ref{sec:versions} knows it (column ``Converted'' at ``no''); it is
+absent for an unknown format. The status is on a piece
+(\champ{DecodingStatus}) when the artefact has several --- Prefetch files,
+\fichier{\$I} indexes of the recycle bin, thumbnail caches, jump lists (whose
+shortcuts are still decoded, without their DestList entry) --- and on the
+whole artefact (\champ{CollectionStatus}) when its source is single, like the
+ShimCache value.
+
+\begin{attention}
+An ``UnsupportedFormat'' piece is neither an empty list nor a failed reading:
+the trace exists, it is collected, and its content remains to be read.
+\end{attention}
+
 \section{Paths}
 
 Paths and values are delivered \textbf{as they are on the disk}, untransformed:

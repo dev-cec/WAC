@@ -31,6 +31,10 @@
  *  volume's own metadata ($MFT, $LogFile, $Secure): those cannot be missing
  *  from a running Windows, so one not read is a failed reading, never a trace.
  *
+ *  A FORMAT IS RECOGNISED ON THE PIECE, by its signature or internal version
+ *  (pieceFormat): the version of Windows says where to look, the piece says
+ *  what it is. No collector keeps a version number of its own.
+ *
  *  A VERSION NEWER THAN THE TABLE is treated as the last one known, and said
  *  so (WindowsRelease::known): the collection goes on.
  *
@@ -63,6 +67,17 @@ struct ArtefactForm {
 	const wchar_t* location;  //!< the file, folder or registry key
 	const wchar_t* format;    //!< the format, with its internal version when it has one
 	bool decoded;             //!< whether WAC converts this form (false: collected raw at most)
+	/*! What a piece of this form states OF ITSELF — its internal version or
+	 *  its magic number (Prefetch 30 and 31, `$I` 2, ShimCache 0xBADC0FEE):
+	 *  what pieceFormat recognises it by. Empty when the format carries none,
+	 *  or while no collector asks. */
+	std::vector<unsigned> signatures = {};
+};
+
+/*! What WAC does of a piece, judged on what the piece states of itself. */
+struct PieceFormat {
+	bool decoded;              //!< WAC has a decoder for it: anything else is collected raw and declared "unsupported format"
+	const ArtefactForm* form;  //!< the form it is; nullptr when no form of the artefact carries this signature — a format the table does not know yet
 };
 
 /*! One artefact — one key of wac.yml — through the versions of Windows. */
@@ -124,6 +139,19 @@ std::vector<std::string> absentAmong(const std::vector<std::string>& asked, cons
  *  @param key the key of wac.yml
  *  @param version the examined machine's */
 bool expectedOn(const std::string& key, const WindowsVersion& version);
+
+/*! THE FORMAT A PIECE STATES OF ITSELF. A collector asks it of every piece
+ *  before decoding: the answer comes from the piece's own signature or
+ *  internal version, never from the version of Windows — a Vista Prefetch
+ *  found on a Windows 10 is a Vista Prefetch, and a `$I` of a version nobody
+ *  has seen yet is not a `$I` version 2. A signature no form carries, or one
+ *  of a form WAC does not convert, is NOT decoded: the piece stays collected
+ *  raw and its JSON says "unsupported format" with the signature met — never
+ *  a wrong conversion, never a silence. Adding a format is adding its form,
+ *  with its signature, to the table.
+ *  @param key the key of wac.yml
+ *  @param signature the internal version or magic number read on the piece */
+PieceFormat pieceFormat(const std::string& key, unsigned signature);
 
 /*! The form an artefact takes on a version.
  *  @param entry the artefact

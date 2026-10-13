@@ -49,7 +49,8 @@ struct ThumbcacheEntry {
 
 /*! A decoded cache file. */
 struct ThumbcacheFile {
-	uint32_t version = 0;                  //!< 0x1E Windows 8, 0x1F 8.1, 0x20 10 and 11
+	uint32_t version = 0;                  //!< 0x14 Vista, 0x15 Windows 7, 0x1E Windows 8, 0x1F 8.1, 0x20 10 and 11
+	bool unsupportedFormat = false;        //!< a version WAC has no decoder for (pieceFormat): no entry was read
 	uint32_t type = 0;                     //!< index of the cache's size (see thumbcacheSize)
 	std::vector<ThumbcacheEntry> entries;  //!< in the file's order
 };

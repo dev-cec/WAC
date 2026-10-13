@@ -75,6 +75,29 @@ void AutomaticDestination::parse(LPBYTE buffer, size_t size) {
 	// 3. Process DestList entries
 	log(3, L"🔈DestFileDirectory destlistArray");
 	DestFileDirectory destlistArray = DestFileDirectory(destlistDirectoryBytes.data(), destlistDirectoryBytes.size());
+	destListVersion = destlistArray.formatVersion;
+	if (destlistArray.unsupportedFormat) {
+		/* A DestList of a version without decoder: declared so, and not read.
+		   The shortcuts do not depend on it — each is a stream named by a
+		   hexadecimal number — and are still decoded, without the last
+		   access, the host and the pin status only the DestList holds. */
+		destListUnsupported = true;
+		log(2, L"❇️DestList of an unsupported version (" + std::to_wstring(destListVersion) + L"): " + pathOriginal);
+		for (const Directory& d : ole.directories) {
+			if (d.name.empty() || d.name.find_first_not_of(L"0123456789abcdefABCDEF") != std::wstring::npos) continue;
+			try {
+				std::vector<BYTE> streamBytes = ole.Getdata(d);
+				if (streamBytes.empty()) continue;
+				JumplistEntry entry{ std::nullopt, std::nullopt };
+				entry.lnk.emplace(streamBytes.data(), streamBytes.size(), path, Sid);
+				entries.push_back(std::move(entry));
+			}
+			catch (const std::exception&) {
+				log(2, L"🔥ole.Getdata " + d.name, ERROR_INVALID_DATA);
+			}
+		}
+		return;
+	}
 
 	/* 4. Each DestList entry names, by its number, the stream holding its
 	   shortcut. An entry whose stream is missing or unreadable is kept, with
@@ -127,13 +150,16 @@ Json AutomaticDestination::toJson() {
 	/* Each item: the shortcut's fields, and under "DestList" the entry that
 	   points to it — last access, host, droid GUIDs, pin status. Those were
 	   read and never published. An item holding only "DestList" is an entry
-	   whose shortcut stream was missing. */
+	   whose shortcut stream was missing; one without "DestList", a shortcut
+	   of a jump list whose DestList is in an unsupported format. */
 	Json lnks = Json::arr();
 	for (JumplistEntry& e : entries) {
 		Json item = e.lnk ? e.lnk->toJson() : Json::obj();
-		item.add(L"DestList", e.destList.toJson());
+		if (e.destList) item.add(L"DestList", e.destList->toJson());
 		lnks.push(std::move(item));
 	}
+	if (destListVersion) o.add(L"DestListVersion", Json::num((long long)destListVersion));
+	if (destListUnsupported) addUnsupportedFormat(o, "jump_lists", (unsigned)destListVersion);
 	o.add(L"LNKs", std::move(lnks));
 	return o;
 };

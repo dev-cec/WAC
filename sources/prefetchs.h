@@ -139,6 +139,7 @@ public:
 	BinaryFingerprint fingerprint; //!< fingerprints of that executable, if `--binary` was given
 	int signature = 0; //!< signature of the .pf file, which identifies its format
 	int version = 0;   //!< format version, which follows the Windows version
+	bool unsupportedFormat = false; //!< a version WAC has no decoder for (pieceFormat): only the header was read
 	int size = 0;      //!< size the .pf file declares
 	// FILE INFORMATION
 	FILETIME createdUtc = { 0 };  //!< creation of the .pf FILE, UTC

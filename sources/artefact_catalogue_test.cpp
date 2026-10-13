@@ -8,7 +8,9 @@
  *  forms are in order and start with its first build; known cases answer
  *  right (no SRUM before Windows 8, no jump list before 7, Prefetch 23 on
  *  Vista and 30 on 10); a source is "expected" only where the version always
- *  has it, on client editions; a key or a version that is not known never holds a
+ *  has it, on client editions; a piece is decoded only when the table holds
+ *  its signature with a decoder (a Prefetch 23, a Prefetch 32: unsupported);
+ *  a key or a version that is not known never holds a
  *  collection back; and a version NEWER than the table — the next Windows —
  *  is collected as the last one known, and flagged.
  *
@@ -143,6 +145,33 @@ int main(int argc, char** argv) {
 	      "volume metadata or a live state is expected: not read, it is a failed reading, not a trace");
 	check(!expectedOn("an_artefact_of_tomorrow", eleven) && !expectedOn("hosts", WindowsVersion{}), "what is not known is expected");
 	check(expectedOn("hosts", WindowsVersion{ 31000, false, false }), "the next Windows no longer expects what the last one known does");
+
+	/* THE FORMAT A PIECE STATES OF ITSELF (pieceFormat): decoded only when
+	   the table holds a form with that signature AND WAC converts it. A form
+	   known and not converted, and a signature nobody has seen yet, are both
+	   "unsupported" — the first with its name, the second without. */
+	check(pieceFormat("prefetch", 30).decoded && pieceFormat("prefetch", 31).decoded, "Prefetch 30 or 31 not decoded");
+	const PieceFormat vistaPrefetch = pieceFormat("prefetch", 23);
+	check(!vistaPrefetch.decoded && vistaPrefetch.form && std::wstring(vistaPrefetch.form->format) == L"SCCA version 23",
+	      "a Vista Prefetch is decoded, or not named");
+	const PieceFormat tomorrow = pieceFormat("prefetch", 32);
+	check(!tomorrow.decoded && !tomorrow.form, "a Prefetch version nobody has seen is decoded, or given a form");
+	check(pieceFormat("recycle_bin", 1).decoded && pieceFormat("recycle_bin", 2).decoded && !pieceFormat("recycle_bin", 3).decoded,
+	      "$I: versions 1 and 2 decoded, no other");
+	check(pieceFormat("thumbcache", 0x20).decoded && !pieceFormat("thumbcache", 0x15).decoded && pieceFormat("thumbcache", 0x15).form,
+	      "thumbcache: Windows 10 layout decoded, Windows 7 layout known and not decoded");
+	check(pieceFormat("shimcache", 0x34).decoded && !pieceFormat("shimcache", 0xBADC0FEE).decoded && !pieceFormat("shimcache", 0x80).form,
+	      "ShimCache: Windows 10 header decoded, Windows 7 header not, 0x80 alone is no signature");
+	check(pieceFormat("jump_lists", 1).decoded && pieceFormat("jump_lists", 4).decoded && pieceFormat("jump_lists", 6).decoded
+	      && !pieceFormat("jump_lists", 5).decoded && !pieceFormat("jump_lists", 7).decoded,
+	      "DestList: versions 1, 3, 4 and 6 decoded, no other");
+	check(!pieceFormat("an_artefact_of_tomorrow", 1).decoded && !pieceFormat("hosts", 0).decoded, "a piece of an artefact without signature is decoded");
+	for (const ArtefactEntry& e : artefactCatalogue()) {
+		std::set<unsigned> seen;
+		for (const ArtefactForm& f : e.forms)
+			for (unsigned signature : f.signatures)
+				check(seen.insert(signature).second, std::string(e.key) + ": one signature for two forms");
+	}
 
 	/* THE GUARD (absentAmong): everything asked for on a Windows 7, on an XP,
 	   on a Windows 11 — only what the version lacks is held back, and an

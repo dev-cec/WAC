@@ -344,7 +344,9 @@ def compare_prefetch(ez_csv, wac_json):
     with open(ez_csv, encoding="utf-8-sig", newline="") as f:
         ez = {row["SourceFilename"].rsplit("\\", 1)[-1].lower(): row for row in csv.DictReader(f)}
     with open(wac_json, encoding="utf-8-sig") as f:
-        wac = {str(p["Path"]).rsplit("\\", 1)[-1].lower(): p for p in json.load(f) if isinstance(p, dict) and "Path" in p}
+        # A Prefetch WAC declares in an unsupported format (the harness's two witnesses) is not a decoding to compare.
+        wac = {str(p["Path"]).rsplit("\\", 1)[-1].lower(): p for p in json.load(f)
+               if isinstance(p, dict) and "Path" in p and "DecodingStatus" not in p}
     diffs = collections.defaultdict(list)
     compared = collections.Counter()
     explained = collections.Counter()

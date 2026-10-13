@@ -1189,6 +1189,29 @@ bool sourceNotFound(HRESULT result);
 HRESULT writeExpectedButMissing(const std::string& name, const std::wstring& artefact, const std::wstring& key,
                                 HRESULT result);
 
+/*! Marks the JSON of ONE PIECE that WAC collected and has no decoder for
+ *  (pieceFormat, artefact_catalogue.h): `DecodingStatus` "UnsupportedFormat",
+ *  the signature met (`FormatSignature`) and, when the table knows the form,
+ *  its name (`FormatName`). The piece
+ *  is in the exhibit store, to be decoded by another tool: nothing was
+ *  converted, and the entry says so instead of being left out.
+ * @param o the piece's JSON, already carrying its path
+ * @param key the key of the artefact table, e.g. "prefetch"
+ * @param signature the internal version or magic number read on the piece */
+void addUnsupportedFormat(Json& o, const std::string& key, unsigned signature);
+
+/*! Writes an artefact whose single source is in a format WAC has no decoder
+ *  for — a ShimCache value of Windows 7 —: `CollectionStatus`
+ *  "UnsupportedFormat", with the signature met. Neither an empty list nor a
+ *  failed reading.
+ * @param name name of the file
+ * @param artefact label of the artefact
+ * @param key the key of the artefact table, e.g. "shimcache"
+ * @param signature the internal version or magic number read on the source
+ * @return ERROR_SUCCESS if the file could be written */
+HRESULT writeUnsupportedFormat(const std::string& name, const std::wstring& artefact, const std::string& key,
+                               unsigned signature);
+
 /*! The key of the artefact table for a configuration key: L"artefacts.srum"
  *  gives "srum".
  * @param key the configuration key */

@@ -304,10 +304,16 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 	const unsigned int hash = *reinterpret_cast<unsigned int*>(data + 76);
 	hash_string = to_hex(hash, 8, HexLetters::Upper);
 
-	// check the version
-	if (version < 30) {
-		log(2, L"🔥Prefetch version before 30 not supported", ERROR_INVALID_DATA);
-		return ERROR_INVALID_DATA; // version not supported (< Windows 10)
+	/* THE VERSION DECIDES, and the table holds which ones are decoded
+	   (pieceFormat): an older layout — 17, 23, 26 — or one nobody has seen yet
+	   is not parsed with the offsets of version 30. The file used to be left
+	   out of the JSON, with a line in the log: it is now listed, with its
+	   name, its hash and its version, as "unsupported format" — the name and
+	   the hash lie at the same place in every version. */
+	if (!pieceFormat("prefetch", (unsigned)version).decoded) {
+		log(2, L"❇️Prefetch of an unsupported version (" + std::to_wstring(version) + L"): " + pathOriginal);
+		unsupportedFormat = true;
+		return ERROR_SUCCESS;
 	}
 	// READING THE DATA
 	// FILE INFORMATION
@@ -489,14 +495,22 @@ Json Prefetch::toJson() {
 	o.add(L"Path",        Json::str(pathOriginal));
 	o.add(L"Hash",        Json::str(hash_string));
 	o.add(L"Filename",    Json::str(filename));
-	o.add(L"FullPath",    Json::str(fullPath));
-	addFingerprints(o, fingerprint);
+	if (!unsupportedFormat) {
+		o.add(L"FullPath",    Json::str(fullPath));
+		addFingerprints(o, fingerprint);
+	}
 	o.add(L"Created",     Json::str(utcTimeToIso8601Local(createdUtc)));
 	o.add(L"CreatedUtc",  Json::str(timeToIso8601Utc(createdUtc)));
 	o.add(L"Modified",    Json::str(utcTimeToIso8601Local(modifiedUtc)));
 	o.add(L"ModifiedUtc", Json::str(timeToIso8601Utc(modifiedUtc)));
 	o.add(L"Accessed",    Json::str(utcTimeToIso8601Local(accessedUtc)));
 	o.add(L"AccessedUtc", Json::str(timeToIso8601Utc(accessedUtc)));
+	if (unsupportedFormat) {
+		// Nothing below was read: only what the header and the file system state.
+		o.add(L"FormatVersion", Json::num((long long)version));
+		addUnsupportedFormat(o, "prefetch", (unsigned)version);
+		return o;
+	}
 	o.add(L"RunCount",    Json::num((unsigned long long)run_count));   // count
 	Json runs = Json::arr(), runsUtc = Json::arr();
 	/* RunsUtc used to be formatted as LOCAL time: the UTC wall-clock time
@@ -514,8 +528,8 @@ Json Prefetch::toJson() {
 	o.add(L"Volumes",   std::move(vols));
 	Json fns = Json::arr();
 	for (Filename& fn : filenames) fns.push(fn.toJson());
-	/*  VERSION OF THE FORMAT. Read from the start to rule out the Prefetch files
-	    older than Windows 10, never emitted — while it is what explains the
+	/*  VERSION OF THE FORMAT. Read from the start to tell the versions WAC
+	    decodes from the others — while it is what explains the
 	    differences of content from one Prefetch to another, and an analyst needs
 	    it to know what to expect from the file. */
 	o.add(L"FormatVersion",  Json::num((long long)version));

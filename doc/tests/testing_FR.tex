@@ -371,7 +371,10 @@ table est traité comme le dernier connu, et signalé. Une clé ou une version
 inconnue ne retient jamais une collecte. Il contrôle aussi qu'une source n'est
 dite « toujours présente » que là où elle l'est : ni sur un serveur, ni pour
 une clé qui n'existe qu'après le branchement d'un périphérique, ni pour un
-métafichier du volume ou un état du système en marche. Vu échouer : SRUM
+métafichier du volume ou un état du système en marche. Enfin, qu'une pièce
+n'est décodée que si la table porte sa signature avec un décodeur : un Prefetch
+de version~23 est nommé et non décodé, un Prefetch de version~32, que personne
+n'a encore vu, n'a ni forme ni décodeur. Vu échouer : SRUM
 déclaré présent depuis XP ; \fichier{USBSTOR} déclaré toujours présent.
 
 \begin{lstlisting}
@@ -393,6 +396,17 @@ consigne : il porte les autres fichiers du dossier — le dossier a donc bien é
 lu — et aucun \fichier{hosts}. Aucun autre artefact ne doit porter ce statut ;
 dans le reste du cycle, où rien ne manque à la machine de test, il est une
 faute. Vu échouer sur une collecte ordinaire.
+
+Un format sans décodeur est présenté aux décodeurs eux-mêmes.
+\texttt{parsers\_test} réécrit la version d'un vrai Prefetch en 17, 23, 26 puis
+en la version suivante : chacune doit être déclarée non prise en charge, le nom
+et l'empreinte lus, rien d'autre décodé. \texttt{file\_artefacts\_test} fait
+de même pour un index \fichier{\$I} de version~3, un cache de miniatures de
+Windows~7 et un DestList de jump list de version 5 ou 7 (la version~6 de
+Windows~11, mesurée avec \texttt{olefile}, est lue). Dans le cycle, deux fichiers Prefetch écrits à la main (versions 23
+et 32) sont posés dans \path|C:\Windows\Prefetch| : \fichier{prefetchs.json}
+doit les déclarer tous deux, nommer le format du premier et pas celui du second,
+et ne déclarer aucun vrai Prefetch.
 
 \section{Sessions des navigateurs : \texttt{browser\_sessions\_test}}
 

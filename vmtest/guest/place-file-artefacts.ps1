@@ -7,6 +7,9 @@
 #   recycled     a file of the user "wac" sent to the recycle bin from that
 #                user's interactive session -> recycle_bin.json, its original path
 #   hosts        an entry of the hosts file -> hosts.json
+#   pfold, pfnew two Prefetch files written by hand, of a version WAC has no
+#                decoder for: 23 (Vista) and 32 (not seen yet) -> prefetchs.json,
+#                each declared "unsupported format", nothing decoded
 #   startup      a script dropped in the startup folder of all users, with its
 #                SHA-256 -> startup_folders.json
 #   shortcut, shortcutfile  a shortcut on the public desktop and one pinned to
@@ -120,6 +123,25 @@ if (Wants 'hosts') {
     $entry = '10.11.12.13 wac-test.invalid'
     if (-not (Select-String -Path $hostsFile -SimpleMatch $entry -Quiet)) { Add-Content $hostsFile "`r`n$entry" }
     Write-Output "hosts=10.11.12.13|wac-test.invalid"
+}
+
+# 3b. Two Prefetch files of a version WAC has no decoder for, written by hand
+# and always the same: an uncompressed SCCA header (version, "SCCA", the
+# executable's name at 16, the path hash at 76), zeros after it. Windows does
+# not read them: no program of that name is ever run.
+if (Wants 'prefetch') {
+    foreach ($witness in @(@('pfold', 23, 'WACV23.EXE', 0x0BADF023), @('pfnew', 32, 'WACV32.EXE', 0x0BADF032))) {
+        $bytes = New-Object byte[] 512
+        [BitConverter]::GetBytes([int]$witness[1]).CopyTo($bytes, 0)
+        [Text.Encoding]::ASCII.GetBytes('SCCA').CopyTo($bytes, 4)
+        [BitConverter]::GetBytes([int]$bytes.Length).CopyTo($bytes, 12)
+        [Text.Encoding]::Unicode.GetBytes($witness[2]).CopyTo($bytes, 16)
+        [BitConverter]::GetBytes([int]$witness[3]).CopyTo($bytes, 76)
+        $hash = '{0:X8}' -f $witness[3]
+        $file = "C:\Windows\Prefetch\$($witness[2])-$hash.pf"
+        [IO.File]::WriteAllBytes($file, $bytes)
+        Write-Output "$($witness[0])=$file|$($witness[1])|$($witness[2])|$hash"
+    }
 }
 
 # 4. A script in the startup folder of all users.

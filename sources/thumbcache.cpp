@@ -81,7 +81,14 @@ bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file) {
 	if (bytes.size() < FILE_HEADER || memcmp(bytes.data(), "CMMM", 4) != 0) return false;
 	file.version = readLittleEndian<uint32_t>(bytes.data() + 4);
 	file.type = readLittleEndian<uint32_t>(bytes.data() + 8);
-	if (file.version < 0x1E || file.version > 0x20) return false;   // Vista and 7: another entry layout
+	/* The version decides, and the table holds which ones are decoded
+	   (pieceFormat): Vista and 7 have another entry layout, and a version
+	   nobody has seen yet may have another one still. Such a cache used to be
+	   skipped without a word; it is now declared "unsupported format". */
+	if (!pieceFormat("thumbcache", file.version).decoded) {
+		file.unsupportedFormat = true;
+		return true;
+	}
 	size_t offset = readLittleEndian<uint32_t>(bytes.data() + 16);
 	// The first free place ends the entries; never beyond the file itself.
 	const size_t end = std::min<size_t>(readLittleEndian<uint32_t>(bytes.data() + 20), bytes.size());
@@ -122,8 +129,18 @@ HRESULT Thumbcaches::getData() {
 		for (const std::filesystem::path& path : listFilesByExtension(extractedPath(profile + THUMBCACHE_FOLDER), { L".db" })) {
 			std::vector<uint8_t> bytes;
 			ThumbcacheFile cache;
-			if (!readWholeFile(path, FILE_MAX, bytes) || !decodeThumbcache(bytes, cache)) continue;   // the index (IMMM), or a Vista/7 layout
+			if (!readWholeFile(path, FILE_MAX, bytes) || !decodeThumbcache(bytes, cache)) continue;   // the index (IMMM)
 			const std::wstring source = originalPath(path.wstring());
+			if (cache.unsupportedFormat) {
+				Json o = Json::obj();
+				addUser(o, sid);
+				o.add(L"Cache", Json::str(source));
+				o.add(L"FormatVersion", Json::num((unsigned long long)cache.version));
+				addUnsupportedFormat(o, "thumbcache", cache.version);
+				entries_.push(std::move(o));
+				log(2, L"❇️" + source + L" : unsupported version " + std::to_wstring(cache.version));
+				continue;
+			}
 			const std::wstring folder = L"thumbcache\\" + sid + L"\\" + path.filename().wstring();
 			std::error_code ec;
 			std::filesystem::create_directories(std::filesystem::path(conf._outputDir) / folder, ec);

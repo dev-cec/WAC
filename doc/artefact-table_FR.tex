@@ -64,6 +64,8 @@
 \addlinespace
 \texttt{jump\_lists} & Windows 7 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Recent\textbackslash{}AutomaticDestinations, CustomDestinations} & fichier composé OLE, DestList version 1 & oui \\
  & Windows 10 & \texttt{les mêmes dossiers} & fichier composé OLE, DestList version 3 et 4 & oui \\
+ & Windows 11 & \texttt{les mêmes dossiers} & fichier composé OLE, DestList version 6 & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape DestList version 6 mesurée sur le build 26200 ; les listes personnalisées (CustomDestinations) ne portent pas de version.} \\
 \addlinespace
 \texttt{known\_networks} & Windows Vista & \texttt{SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows NT\textbackslash{}CurrentVersion\textbackslash{}NetworkList} & clés de registre, dates SYSTEMTIME & oui \\
 \addlinespace
@@ -175,10 +177,10 @@
 \texttt{shimcache} & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatibility\textbackslash{}AppCompatCache} & en-tête 0xDEADBEEF, 96 entrées & non \\
  & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatCache\textbackslash{}AppCompatCache} & en-tête 0xBADC0FFE & non \\
  & Windows 7 & \texttt{la même valeur} & en-tête 0xBADC0FEE & non \\
- & Windows 8 & \texttt{la même valeur} & entrées ''00ts'' & non \\
- & Windows 8.1 & \texttt{la même valeur} & entrées ''10ts'' & oui \\
+ & Windows 8 & \texttt{la même valeur} & en-tête 0x80, entrées ''00ts'' & non \\
+ & Windows 8.1 & \texttt{la même valeur} & en-tête 0x80, entrées ''10ts'' & non \\
  & Windows 10 & \texttt{la même valeur} & en-tête 0x30 ou 0x34, entrées ''10ts'' & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP ; Windows 8 et 8.1 partagent l'en-tête 0x80 : ils se distinguent par la marque de leur première entrée, qui tient ici lieu de signature.} \\
 \addlinespace
 \texttt{shortcuts} & Windows XP & \texttt{menu Démarrer, bureaux, Lancement rapide de chaque profil et de All Users} & raccourci & oui \\
 \addlinespace

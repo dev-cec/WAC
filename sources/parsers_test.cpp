@@ -22,6 +22,10 @@
  *  SCCA parser, not at ntdll's decompressor. Its compressed form is still
  *  given whole and in its truncations, for WAC's checks around the call.
  *
+ *  A Prefetch is also given with its version rewritten to one WAC has no
+ *  decoder for (17, 23, 26, and the next one): it must be declared
+ *  "unsupported format" and nothing of it decoded.
+ *
  *  Registry hives ("hive") go through WAC's own reader (offline_registry.cpp):
  *  the whole tree is walked — subkeys, values, ORQueryInfoKey.
  *
@@ -33,6 +37,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <mutex>
 #include <random>
@@ -205,6 +210,37 @@ unsigned long long exercise(const std::string& kind, const std::vector<BYTE>& da
 /*! Runs the test.
  * @param argc,argv `<kind> <file> [file ...]`
  * @return 0 if no input made a parser read outside its buffer or loop */
+/*! A FORMAT WITHOUT DECODER, presented to the decoder: the decompressed
+ *  Prefetch with its version rewritten to those of XP, Vista and 8 — known,
+ *  not decoded — and to one nobody has seen yet. Each must be declared
+ *  "unsupported format", with its name and hash read and NOTHING decoded with
+ *  the offsets of another layout; the file's own version must still decode.
+ *  @param data a decompressed Prefetch of a decoded version
+ *  @param name its name, for the messages
+ *  @return false, with a message, if a version is treated otherwise */
+bool unsupportedVersionsDeclared(const std::vector<BYTE>& data, const char* name) {
+	std::vector<BYTE> copy = data;
+	Prefetch own(L"test.pf");
+	if (own.parse(copy.data(), copy.size()) != ERROR_SUCCESS || own.unsupportedFormat || own.filenames.empty()) {
+		std::printf("  FAILED  %s: its own version %d is not decoded\n", name, own.version);
+		return false;
+	}
+	for (int version : { 17, 23, 26, own.version + 1 }) {
+		copy = data;
+		std::memcpy(copy.data(), &version, sizeof(version));
+		Prefetch other(L"test.pf");
+		const HRESULT parsed = other.parse(copy.data(), copy.size());
+		if (parsed != ERROR_SUCCESS || !other.unsupportedFormat || other.version != version || !other.filenames.empty()
+		    || !other.volumes.empty() || other.run_count != 0 || other.filename != own.filename || other.hash_string != own.hash_string) {
+			std::printf("  FAILED  %s: version %d is not declared unsupported, or something of it was decoded\n", name, version);
+			return false;
+		}
+	}
+	std::printf("  ok     %s: versions 17, 23, 26 and %d declared unsupported, nothing decoded but name and hash\n",
+	            name, own.version + 1);
+	return true;
+}
+
 int main(int argc, char** argv) {
 	if (argc < 3) {
 		std::printf("usage: parsers_test jumplist-auto|jumplist-custom|prefetch|hive <file> [file ...]\n");
@@ -238,6 +274,7 @@ int main(int argc, char** argv) {
 		}
 		size_t whole = 0;
 		runs += exercise(kind, data, argv[a], rng, whole);
+		if (kind == "prefetch" && !unsupportedVersionsDeclared(data, argv[a])) return 1;
 		std::printf("  ok     %s: %zu bytes, %zu %s\n", argv[a], data.size(), whole,
 		            kind == "prefetch" ? "file(s) loaded" : kind == "jumplist-auto" ? "DestList entries"
 		            : kind == "hive" ? "key(s)" : "shortcut(s)");

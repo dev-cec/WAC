@@ -66,6 +66,14 @@ Json DestFile::toJson() {
 DestFileDirectory::DestFileDirectory(LPBYTE buffer, size_t size) {
 	if (size < 32) return;                 // no room for the header
 	formatVersion = *reinterpret_cast<int*>(buffer);
+	/* The version decides, and the table holds which ones are decoded
+	   (pieceFormat). Any version above 2 used to be read with the layout of
+	   version 3: right for 4 and for the 6 of Windows 11 (measured), a guess
+	   for one nobody has seen yet. */
+	if (!pieceFormat("jump_lists", (unsigned)formatVersion).decoded) {
+		unsupportedFormat = true;
+		return;
+	}
 	numberOfEntries = *reinterpret_cast<int*>(buffer + 4);
 	numberPinnedEntries = *reinterpret_cast<int*>(buffer + 8);
 	size_t offset = 32;

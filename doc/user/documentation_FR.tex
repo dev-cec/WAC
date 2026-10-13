@@ -1904,6 +1904,44 @@ d'extension non reconnu) est accompagné de ses octets bruts en hexadécimal, po
 qu'un analyste puisse le décoder plus tard. Avec \opt{dump}, la valeur brute des
 shellbags et des raccourcis est ajoutée systématiquement.
 
+\section{Format non pris en charge}\label{sec:format}
+
+Le format d'une pièce se lit sur la pièce elle-même --- sa signature ou sa
+version interne ---, jamais sur la version de Windows : un Prefetch de Vista
+retrouvé sur un Windows~10 reste un Prefetch de Vista. Quand \wac{} n'a pas de
+décodeur pour le format rencontré, qu'il soit ancien ou qu'il n'ait encore
+jamais été vu, il ne convertit rien et le dit ; la pièce, elle, est dans la
+consigne, prête pour un autre outil.
+
+\begin{lstlisting}
+{
+  "Path": "C:\\Windows\\Prefetch\\CMD.EXE-4A81B364.pf",
+  "Hash": "4A81B364",
+  "Filename": "CMD.EXE",
+  "CreatedUtc": "2026-10-13T06:12:44.1835527Z",
+  "FormatVersion": 23,
+  "DecodingStatus": "UnsupportedFormat",
+  "FormatSignature": "0x00000017",
+  "FormatName": "SCCA version 23",
+  "Note": "Collected raw, not converted: this version of WAC has no
+           decoder for this format. The exhibit store holds the source."
+}
+\end{lstlisting}
+
+\champ{FormatName} nomme le format quand le tableau de la
+section~\ref{sec:versions} le connaît (colonne « Converti » à « non ») ; il
+est absent pour un format inconnu. Le statut porte sur une pièce
+(\champ{DecodingStatus}) quand l'artefact en compte plusieurs --- fichiers
+Prefetch, index \fichier{\$I} de la corbeille, caches de miniatures, jump
+lists (dont les raccourcis restent décodés, sans leur entrée DestList) --- et
+sur l'artefact entier (\champ{CollectionStatus}) quand sa source est unique,
+comme la valeur du ShimCache.
+
+\begin{attention}
+Une pièce « UnsupportedFormat » n'est ni une liste vide ni une lecture ratée :
+la trace existe, elle est prélevée, et son contenu reste à lire.
+\end{attention}
+
 \section{Chemins}
 
 Les chemins et valeurs sont restitués \textbf{tels qu'ils figurent sur le

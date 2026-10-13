@@ -11,6 +11,10 @@ const unsigned XP = 2600, SERVER_2003 = 3790, VISTA = 6000, SEVEN = 7600, EIGHT 
                TEN = 10240, TEN_1607 = 14393, TEN_1709 = 16299, TEN_1803 = 17134, TEN_1903 = 18362,
                ELEVEN = 22000;
 
+/* ShimCache of Windows 8 and 8.1: both headers are 0x80 long, so the piece is
+   told by the tag of its first entry, read as a little-endian number. */
+const unsigned SHIMCACHE_00TS = 0x73743030, SHIMCACHE_10TS = 0x73743031;
+
 } // namespace
 
 const std::vector<WindowsRelease>& windowsReleases() {
@@ -92,8 +96,10 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		{ "internet_settings", XP, 0, 0,
 		  { { XP, L"NTUSER.DAT\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", L"registry values", true } }, L"" },
 		{ "jump_lists", SEVEN, 0, 0,
-		  { { SEVEN, L"Users\\<user>\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations, CustomDestinations", L"OLE compound file, DestList version 1", true },
-		    { TEN, L"the same folders", L"OLE compound file, DestList version 3 and 4", true } }, L"" },
+		  { { SEVEN, L"Users\\<user>\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\AutomaticDestinations, CustomDestinations", L"OLE compound file, DestList version 1", true, { 1 } },
+		    { TEN, L"the same folders", L"OLE compound file, DestList version 3 and 4", true, { 3, 4 } },
+		    { ELEVEN, L"the same folders", L"OLE compound file, DestList version 6", true, { 6 } } },
+		  L"DestList version 6 measured on build 26200; the custom lists (CustomDestinations) carry no version." },
 		{ "known_networks", VISTA, 0, 0,
 		  { { VISTA, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkList", L"registry keys, SYSTEMTIME dates", true } }, L"" },
 		{ "local_groups", XP, 0, XP,
@@ -135,10 +141,10 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		  { { TEN, L"Users\\<user>\\AppData\\Roaming\\Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt", L"UTF-8 text", true } },
 		  L"Earlier with PSReadLine installed by hand (PowerShell 5, Windows 7 and later)." },
 		{ "prefetch", XP, 0, 0,
-		  { { XP, L"Windows\\Prefetch\\*.pf", L"SCCA version 17", false },
-		    { VISTA, L"Windows\\Prefetch\\*.pf", L"SCCA version 23", false },
-		    { EIGHT, L"Windows\\Prefetch\\*.pf", L"SCCA version 26", false },
-		    { TEN, L"Windows\\Prefetch\\*.pf", L"SCCA version 30 and 31, compressed (MAM)", true } },
+		  { { XP, L"Windows\\Prefetch\\*.pf", L"SCCA version 17", false, { 17 } },
+		    { VISTA, L"Windows\\Prefetch\\*.pf", L"SCCA version 23", false, { 23 } },
+		    { EIGHT, L"Windows\\Prefetch\\*.pf", L"SCCA version 26", false, { 26 } },
+		    { TEN, L"Windows\\Prefetch\\*.pf", L"SCCA version 30 and 31, compressed (MAM)", true, { 30, 31 } } },
 		  L"Switched off by default on the server editions." },
 		{ "processes", XP, 0, 0,
 		  { { XP, L"live: processes of the running system", L"observation", true } }, L"" },
@@ -158,8 +164,8 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		    { VISTA, L"Users\\<user>\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\*.lnk", L"shell link", true } }, L"" },
 		{ "recycle_bin", XP, 0, 0,
 		  { { XP, L"RECYCLER\\<SID>\\INFO2", L"INFO2 records", false },
-		    { VISTA, L"$Recycle.Bin\\<SID>\\$I*", L"$I version 1", true },
-		    { TEN, L"$Recycle.Bin\\<SID>\\$I*", L"$I version 2", true } }, L"" },
+		    { VISTA, L"$Recycle.Bin\\<SID>\\$I*", L"$I version 1", true, { 1 } },
+		    { TEN, L"$Recycle.Bin\\<SID>\\$I*", L"$I version 2", true, { 2 } } }, L"" },
 		{ "registry_backups", XP, 0, 0,
 		  { { XP, L"Windows\\repair", L"registry hives", false },
 		    { VISTA, L"Windows\\System32\\config\\RegBack", L"registry hives, raw copy", false } },
@@ -190,12 +196,13 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		  { { XP, L"NTUSER.DAT\\Software\\Microsoft\\Windows\\Shell and ShellNoRoam", L"BagMRU shell items", false },
 		    { VISTA, L"UsrClass.dat\\Local Settings\\Software\\Microsoft\\Windows\\Shell, and NTUSER.DAT", L"BagMRU shell items", true } }, L"" },
 		{ "shimcache", XP, 0, XP,
-		  { { XP, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatibility\\AppCompatCache", L"header 0xDEADBEEF, 96 entries", false },
-		    { SERVER_2003, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", L"header 0xBADC0FFE", false },
-		    { SEVEN, L"the same value", L"header 0xBADC0FEE", false },
-		    { EIGHT, L"the same value", L"entries \"00ts\"", false },
-		    { EIGHT_1, L"the same value", L"entries \"10ts\"", true },
-		    { TEN, L"the same value", L"header 0x30 or 0x34, entries \"10ts\"", true } }, L"" },
+		  { { XP, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatibility\\AppCompatCache", L"header 0xDEADBEEF, 96 entries", false, { 0xDEADBEEF } },
+		    { SERVER_2003, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", L"header 0xBADC0FFE", false, { 0xBADC0FFE } },
+		    { SEVEN, L"the same value", L"header 0xBADC0FEE", false, { 0xBADC0FEE } },
+		    { EIGHT, L"the same value", L"header 0x80, entries \"00ts\"", false, { SHIMCACHE_00TS } },
+		    { EIGHT_1, L"the same value", L"header 0x80, entries \"10ts\"", false, { SHIMCACHE_10TS } },
+		    { TEN, L"the same value", L"header 0x30 or 0x34, entries \"10ts\"", true, { 0x30, 0x34 } } },
+		  L"Windows 8 and 8.1 share the header 0x80: they are told apart by the tag of their first entry, which is their signature here." },
 		{ "shortcuts", XP, 0, 0,
 		  { { XP, L"Start menu, desktops, Quick Launch of each profile and of All Users", L"shell link", true } }, L"" },
 		{ "srum", EIGHT, 0, EIGHT,
@@ -204,8 +211,8 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		  { { XP, L"Start Menu\\Programs\\Startup of each profile and of All Users", L"files", true } }, L"" },
 		{ "thumbcache", XP, 0, 0,
 		  { { XP, L"Thumbs.db in each folder", L"OLE compound file", false },
-		    { VISTA, L"Users\\<user>\\AppData\\Local\\Microsoft\\Windows\\Explorer\\thumbcache_*.db", L"CMMM, Vista and 7 layout", false },
-		    { EIGHT, L"the same folder, with iconcache_*.db", L"CMMM, Windows 8 and later layout", true } }, L"" },
+		    { VISTA, L"Users\\<user>\\AppData\\Local\\Microsoft\\Windows\\Explorer\\thumbcache_*.db", L"CMMM, Vista and 7 layout", false, { 0x14, 0x15 } },
+		    { EIGHT, L"the same folder, with iconcache_*.db", L"CMMM, Windows 8 and later layout", true, { 0x1E, 0x1F, 0x20 } } }, L"" },
 		{ "typed_paths", VISTA, 0, 0,
 		  { { VISTA, L"NTUSER.DAT\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths", L"registry values", true } }, L"" },
 		{ "usbstor", XP, 0, 0,
@@ -282,6 +289,15 @@ bool expectedOn(const std::string& key, const WindowsVersion& version) {
 	const ArtefactEntry* entry = artefactEntry(key);
 	return entry && entry->expectedSinceBuild != 0 && !version.server && version.build >= entry->expectedSinceBuild
 	    && availabilityOf(key, version) == Availability::Present;
+}
+
+PieceFormat pieceFormat(const std::string& key, unsigned signature) {
+	const ArtefactEntry* entry = artefactEntry(key);
+	if (entry)
+		for (const ArtefactForm& form : entry->forms)
+			for (unsigned known : form.signatures)
+				if (known == signature) return PieceFormat{ form.decoded, &form };
+	return PieceFormat{ false, nullptr };
 }
 
 const ArtefactForm& formOf(const ArtefactEntry& entry, const WindowsVersion& version) {

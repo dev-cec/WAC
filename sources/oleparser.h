@@ -88,7 +88,8 @@ struct DestFile {
 
 /*! Represents a destfile directory, holding a set of DestFiles. */
 struct DestFileDirectory {
-	int formatVersion = 0;//!< format of the entry
+	int formatVersion = 0;//!< version of the DestList, as its header states it: 1 (Windows 7, 8), 3 and 4 (Windows 10), 6 (Windows 11)
+	bool unsupportedFormat = false; //!< a version WAC has no decoder for (pieceFormat): no entry was read
 	int numberOfEntries = 0;//!< number of entries
 	int numberPinnedEntries = 0;//!< number of pinned entries
 	std::vector<DestFile> destfiles;//!< the destfile objects
