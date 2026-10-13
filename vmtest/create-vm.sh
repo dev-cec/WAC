@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # create-vm.sh — creates a Windows test VM from scratch, entirely without interaction.
 #
-# Usage: ./create-vm.sh [win11|win81|win7]
+# Usage: ./create-vm.sh [win11|win81|win8|win7]
 #   win11  (default) the VM of the test cycle, Windows 11 — domain win11-test
 #   win81  Windows 8.1 x64, for the compatibility with the older versions —
 #          domain win81-test; run-wac-test.sh is given it with DOM=win81-test
+#   win8   Windows 8 Pro x86 (32 bits: the machine of WAC32.exe) — domain win8-test
 #   win7   Windows 7 SP1 Ultimate x64 — domain win7-test
 # What differs from one version to the next (ISO, edition, key, language of the
 # medium, firmware, drivers of the guest agent) is in the profile below; the
@@ -36,16 +37,20 @@ C="virsh -c qemu:///session"
 # carries a w8.1 folder, but Windows 8.1 refuses its catalogue ("the hash for the
 # file is not present in the specified catalog file"); 0.1.189 is accepted.
 # OOBE_ENTER: the version shows a page of settings the answer file cannot hide.
-# LEGACY: Windows 7 — started by the BIOS on an MBR disk (its Setup has no
-# video under this UEFI), and an answer file without the settings Windows 8
-# introduced, which its Setup refuses.
+# BIOS: started by the BIOS on an MBR disk — Windows 7, whose Setup has no video
+# under this UEFI, and every 32-bit Windows, which this UEFI does not start.
+# OOBE7: an answer file without the settings Windows 8 introduced, which the
+# Setup of Windows 7 refuses. ARCH: amd64 or x86, for the answer file's
+# components and the agent's package. CPU: the processor shown to the machine —
+# the host's own. MACHINE: q35, or pc (i440FX) for Windows 8 x86, whose Setup
+# shows its first page under q35 and then takes neither key nor click.
 PROFILE="${1:-win11}"
 case "$PROFILE" in
   win11)
     DOM="${DOM:-win11-test}"; OSINFO=win11; MEMORY=6144
     ISO_WIN="${ISO_WIN:-$HOME/Téléchargements/Win11_25H2_French_x64_v2.iso}"
     IMAGE='<Key>/IMAGE/NAME</Key><Value>Windows 11 Pro</Value>'; KEY=VK7JG-NPHTM-C97JM-9MPGT-3V66T
-    MEDIA_LANGUAGE=fr-FR; GA_DRIVERS=""; OOBE_ENTER=0; LEGACY=0
+    MEDIA_LANGUAGE=fr-FR; GA_DRIVERS=""; OOBE_ENTER=0; BIOS=0; OOBE7=0; ARCH=amd64; CPU=host-passthrough; MACHINE=q35
     ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}"
     FIRMWARE=(--boot firmware=efi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=yes,firmware.feature1.name=enrolled-keys,firmware.feature1.enabled=yes
               --features smm.state=on --tpm backend.type=emulator,backend.version=2.0,model=tpm-crb) ;;
@@ -53,19 +58,26 @@ case "$PROFILE" in
     DOM="${DOM:-win81-test}"; OSINFO=win8.1; MEMORY=4096
     ISO_WIN="${ISO_WIN:-$HERE/tools/isos/Windows 8.1.iso}"
     IMAGE='<Key>/IMAGE/INDEX</Key><Value>1</Value>'; KEY=XHQ8N-C3MCJ-RQXB6-WCHYG-C9WKB   # Professional
-    MEDIA_LANGUAGE=nl-NL; GA_DRIVERS='w8.1\amd64'; OOBE_ENTER=1; LEGACY=0
+    MEDIA_LANGUAGE=nl-NL; GA_DRIVERS='w8.1\amd64'; OOBE_ENTER=1; BIOS=0; OOBE7=0; ARCH=amd64; CPU=host-passthrough; MACHINE=q35
     ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.189.iso}"
     FIRMWARE=(--boot firmware=efi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no) ;;
+  win8)
+    DOM="${DOM:-win8-test}"; OSINFO=win8; MEMORY=3072
+    ISO_WIN="${ISO_WIN:-$HERE/tools/isos/Windows 8.iso}"
+    IMAGE='<Key>/IMAGE/INDEX</Key><Value>1</Value>'; KEY=NG4HW-VH26C-733KW-K6F98-J8CK4   # Pro
+    MEDIA_LANGUAGE=en-US; GA_DRIVERS='w8\x86'; OOBE_ENTER=1; BIOS=1; OOBE7=0; ARCH=x86; CPU=host-passthrough; MACHINE=pc
+    ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.189.iso}"
+    FIRMWARE=(--boot hd,cdrom) ;;
   win7)
     DOM="${DOM:-win7-test}"; OSINFO=win7; MEMORY=4096
     ISO_WIN="${ISO_WIN:-$HERE/tools/isos/en_windows_7_ultimate_x64_dvd.iso}"
     IMAGE='<Key>/IMAGE/NAME</Key><Value>Windows 7 ULTIMATE</Value>'; KEY=D4F6K-QK3RD-TMVMJ-BBMRX-3MBMV
-    MEDIA_LANGUAGE=en-US; GA_DRIVERS='w7\amd64'; OOBE_ENTER=1; LEGACY=1
+    MEDIA_LANGUAGE=en-US; GA_DRIVERS='w7\amd64'; OOBE_ENTER=1; BIOS=1; OOBE7=1; ARCH=amd64; CPU=host-passthrough; MACHINE=q35
     # 0.1.173: the last release whose drivers a Windows 7 SP1 without the
     # SHA-2 update (KB3033929) accepts.
     ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.173.iso}"
     FIRMWARE=(--boot hd,cdrom) ;;
-  *) echo "Unknown profile $PROFILE (win11, win81, win7)" >&2; exit 2 ;;
+  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7)" >&2; exit 2 ;;
 esac
 
 ISO_ANS="$VMS/autounattend-$PROFILE.iso"
@@ -89,8 +101,11 @@ TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 sed -e "s#<Key>/IMAGE/NAME</Key><Value>Windows 11 Pro</Value>#$IMAGE#" \
     -e "s#VK7JG-NPHTM-C97JM-9MPGT-3V66T#$KEY#" \
     -e "s#<UILanguage>fr-FR</UILanguage>#<UILanguage>$MEDIA_LANGUAGE</UILanguage>#g" \
+    -e "s#processorArchitecture=\"amd64\"#processorArchitecture=\"$ARCH\"#g" \
+    -e "s#qemu-ga-x86_64.msi#qemu-ga-$([[ $ARCH == x86 ]] && echo i386 || echo x86_64).msi#g" \
     "$HERE/guest/autounattend.xml" > "$TMP/autounattend.xml"
 if [[ -n "$GA_DRIVERS" ]]; then
+  cp "$HERE/guest/install-agent-driver.ps1" "$TMP/"
   # First of the first-logon commands, the others moving down by one: the
   # agent's service starts only once its channel has a driver.
   python3 - "$TMP/autounattend.xml" "$GA_DRIVERS" <<'PY'
@@ -99,26 +114,19 @@ path, drivers = sys.argv[1], sys.argv[2]
 text = open(path, encoding="utf-8").read()
 start, end = text.index("<FirstLogonCommands>"), text.index("</FirstLogonCommands>")
 block = re.sub(r"<Order>(\d+)</Order>", lambda m: f"<Order>{int(m.group(1)) + 1}</Order>", text[start:end])
-inf = rf"%d:\vioserial\{drivers}\vioser.inf"
-# The driver's publisher is trusted first: without it, pnputil stops on a "Would you like to install this
-# device software?" that nobody answers.
-# Read from the catalogue, which is what is signed (the .sys of an older release
-# carries no signature of its own), and with what PowerShell 2 of Windows 7 has.
-catalogue = rf"%d:\vioserial\{drivers}\vioser.cat"
-trust = ("powershell -NoProfile -Command \"$c=New-Object Security.Cryptography.X509Certificates.X509Certificate2("
-         "[Security.Cryptography.X509Certificates.X509Certificate]::CreateFromSignedFile('" + catalogue + "')); "
-         "$s=New-Object Security.Cryptography.X509Certificates.X509Store('TrustedPublisher','LocalMachine'); "
-         "$s.Open('ReadWrite'); $s.Add($c); $s.Close()\"")
-command = f"cmd /c for %d in (D E F G H I J) do if exist {inf} ({trust} &amp; pnputil -i -a {inf})"
+# The script travels on the answer file's own medium (see its header for why
+# the publisher is trusted before pnputil is run).
+command = (r"cmd /c for %d in (D E F G H I J) do if exist %d:\install-agent-driver.ps1 "
+           rf"powershell -NoProfile -ExecutionPolicy Bypass -File %d:\install-agent-driver.ps1 {drivers}")
 first = ('<FirstLogonCommands>\n        <SynchronousCommand wcm:action="add">\n          <Order>1</Order>\n'
          "          <Description>Pilote du canal de l'agent (vioserial)</Description>\n"
          f"          <CommandLine>{command}</CommandLine>\n        </SynchronousCommand>")
 open(path, "w", encoding="utf-8").write(text[:start] + block.replace("<FirstLogonCommands>", first, 1) + text[end:])
 PY
 fi
-if [[ "$LEGACY" == "1" ]]; then
+if [[ "$BIOS" == "1" ]]; then
   python3 - "$TMP/autounattend.xml" <<'PY'
-import re, sys
+import sys
 path = sys.argv[1]
 text = open(path, encoding="utf-8").read()
 # One active NTFS partition on an MBR disk, instead of EFI + MSR + Windows.
@@ -128,6 +136,14 @@ text = text[:start] + ('<CreatePartitions>\n            <CreatePartition wcm:act
         '<Format>NTFS</Format><Label>Windows</Label><Letter>C</Letter><Active>true</Active></ModifyPartition>\n          </ModifyPartitions>') + text[end:]
 text = text.replace("<InstallTo><DiskID>0</DiskID><PartitionID>3</PartitionID></InstallTo>",
                     "<InstallTo><DiskID>0</DiskID><PartitionID>1</PartitionID></InstallTo>")
+open(path, "w", encoding="utf-8").write(text)
+PY
+fi
+if [[ "$OOBE7" == "1" ]]; then
+  python3 - "$TMP/autounattend.xml" <<'PY'
+import re, sys
+path = sys.argv[1]
+text = open(path, encoding="utf-8").read()
 # Settings Windows 8 introduced; and the network location, which Windows 7 asks at the first logon.
 for setting in ("HideOEMRegistrationScreen", "HideOnlineAccountScreens", "HideLocalAccountScreen"):
     text = re.sub(rf"\s*<{setting}>[^<]*</{setting}>", "", text)
@@ -160,7 +176,7 @@ rm -f "$DISK"
 echo "== 4. virt-install =="
 ARGS=(
   --connect qemu:///session --name "$DOM" --osinfo "$OSINFO"
-  --vcpus 4 --memory "$MEMORY" --cpu host-passthrough --machine q35
+  --vcpus 4 --memory "$MEMORY" --cpu "$CPU" --machine "$MACHINE"
   "${FIRMWARE[@]}"
   --channel unix,target.type=virtio,target.name=org.qemu.guest_agent.0
   --disk "path=$DISK,size=64,format=qcow2,bus=sata"
@@ -180,7 +196,7 @@ echo "== 5. Unblocking the boot (key injection) =="
 for _ in $(seq 1 12); do $C send-key "$DOM" --codeset linux KEY_SPACE >/dev/null 2>&1 || true; sleep 0.5; done
 sleep 8
 # (Not under the BIOS: it has no such menu, and Setup's text screen is as small a capture.)
-if [[ "$LEGACY" != "1" ]] && $C screenshot "$DOM" --file "$TMP/s.png" >/dev/null 2>&1 && [[ $(stat -c%s "$TMP/s.png") -lt 20000 ]]; then
+if [[ "$BIOS" != "1" ]] && $C screenshot "$DOM" --file "$TMP/s.png" >/dev/null 2>&1 && [[ $(stat -c%s "$TMP/s.png") -lt 20000 ]]; then
   echo "   -> firmware menu detected, going through Boot Manager"
   $C send-key "$DOM" --codeset linux KEY_DOWN  >/dev/null 2>&1
   $C send-key "$DOM" --codeset linux KEY_DOWN  >/dev/null 2>&1
@@ -200,7 +216,8 @@ for i in $(seq 1 120); do
     $C start "$DOM" >/dev/null 2>&1 || true
   fi
   # The settings page of the first start: its default button, by the Enter key
-  # (harmless anywhere else in Setup, and on the desktop).
+  # (harmless anywhere else in Setup; on the Start screen of Windows 8 it opens
+  # the first tile, which the harness does not mind).
   [[ "$OOBE_ENTER" == "1" ]] && { $C send-key "$DOM" --codeset linux KEY_ENTER >/dev/null 2>&1 || true; }
   if python3 "$HERE/lib/qga.py" --dom "$DOM" ping >/dev/null 2>&1; then
     echo "   ✅ agent operational after ~$((i / 4)) min — the VM can be driven"
