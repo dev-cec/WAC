@@ -15,7 +15,9 @@ commits sans que rien ne le signale.
 **Linux** (compilation croisée, aucun poste Windows nécessaire) :
 ```bash
 sudo apt-get install -y g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools
+sudo apt-get install -y g++-mingw-w64-i686 binutils-mingw-w64-i686    # pour WAC32.exe
 ```
+Sans la chaîne i686, le script construit `WAC.exe` seul et le dit.
 
 **Windows** — facultatif : le `WAC.exe` publié dans `bin/` est celui de la
 compilation Linux, et c'est lui qu'on télécharge. Pour compiler quand même
@@ -93,11 +95,36 @@ produit par la compilation livrée, qui fait foi.
 3. Compile libyaml (lecture de `wac.yml`) et SQLite (bases des navigateurs), voir ci-dessous, en C.
 4. Lie en statique (`-static -static-libgcc -static-libstdc++`) avec les
    bibliothèques d'import système, **sans horodatage** (`--no-insert-timestamp`).
-5. Vérifie les gardes : runtime statique, aucune bibliothèque réseau ni
-   fonction de résolution de noms par le domaine importée (refus sinon).
-6. Copie `WAC.exe`, `raw_hive_test.exe`, `wac.yml`, les scripts de vérification
+5. Refait les étapes 1 à 4 en 32 bits pour **`WAC32.exe`**, des mêmes sources,
+   et confronte chacune de ses importations aux exports de Windows XP SP1
+   (`third_party/windows-xp-sp1/exports.txt`) : une fonction que XP n'a pas
+   fait échouer la compilation.
+6. Vérifie les gardes sur les deux exécutables : runtime statique, aucune
+   bibliothèque réseau, aucune fonction de résolution de noms par le domaine ni
+   de lancement de processus importée (refus sinon).
+7. Copie `WAC.exe`, `WAC32.exe`, `raw_hive_test.exe`, `wac.yml`, les scripts de vérification
    d'une collecte et `SHA256SUMS` dans `bin`, et les ajoute à l'index git (sans
    commit).
+
+## WAC32.exe et Windows XP
+`WAC.exe` est le programme de tout Windows 64 bits. `WAC32.exe`, construit des
+mêmes sources, sert les Windows qui n'existent ou ne tournent qu'en 32 bits, de
+XP SP1 à Windows 8.
+
+Un programme ne se charge pas sur un Windows auquel manque **une** fonction
+qu'il importe. Les quatorze que XP n'a pas — variables de condition et
+`GetThreadId` (appelées par la bibliothèque C++ elle-même), `GetTickCount64`,
+`CompareStringOrdinal`, `wcsncpy_s`, et `bcrypt.dll` tout entière — sont
+**définies** par `sources/xp_imports.cpp`, sous le nom même que cherche
+l'éditeur de liens : chacune appelle la fonction du système là où elle existe,
+un équivalent fait de ce que XP offre sinon. Ce fichier est vide en 64 bits :
+`WAC.exe` ne change pas d'un octet.
+
+Si une modification fait importer à WAC32 une fonction absente de XP, la
+compilation s'arrête en la nommant. Deux issues : s'en passer, ou la définir
+dans `xp_imports.cpp` avec son équivalent — et l'ajouter à
+`xp_imports_test.cpp`, qui confronte chaque équivalent à la vraie fonction sur
+un Windows qui a les deux (`build-windows/tests/xp_imports_test.exe`, 32 bits).
 
 ## Version et publication
 Format `<majeur>.<mineure>.<correctif>`, écrit dans `sources/WAC.rc` seulement

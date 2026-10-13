@@ -46,7 +46,8 @@ bool checkFiles(const std::filesystem::path& folder, const Json& manifest, std::
 		if (!readWholeFile(folder / path, SET_FILE_MAX, bytes)) { reason = "file missing: " + encodeText(path); return false; }
 		uint8_t digest[32];
 		sha256Bytes(bytes.data(), bytes.size(), digest);
-		if (toHexadecimal(digest, sizeof(digest)) != textOf(file, L"SHA256")) {
+		const std::wstring recorded = textOf(file, L"SHA256");
+		if (toHexadecimal(digest, sizeof(digest)) != recorded) {
 			reason = "file altered since --update-trust: " + encodeText(path);
 			return false;
 		}

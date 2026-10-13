@@ -15,7 +15,9 @@ unnoticed.
 **Linux** (cross-compilation, no Windows machine needed):
 ```bash
 sudo apt-get install -y g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools
+sudo apt-get install -y g++-mingw-w64-i686 binutils-mingw-w64-i686    # for WAC32.exe
 ```
+Without the i686 toolchain, the script builds `WAC.exe` alone and says so.
 
 **Windows** — optional: the `WAC.exe` published in `bin/` is the Linux
 build's, and that is the one to download. To build on Windows anyway, two
@@ -90,10 +92,34 @@ executables, both correct:
 3. Compiles libyaml (reading of `wac.yml`) and SQLite (the browsers' databases), see below, as C.
 4. Links statically (`-static -static-libgcc -static-libstdc++`) against the
    system import libraries, **without a timestamp** (`--no-insert-timestamp`).
-5. Checks the guards: static runtime, no network library nor domain name
-   resolution function imported (refused otherwise).
-6. Copies `WAC.exe`, `raw_hive_test.exe`, `wac.yml`, the scripts that verify a
+5. Does steps 1 to 4 again in 32 bits for **`WAC32.exe`**, from the same
+   sources, and confronts each of its imports with the exports of Windows XP
+   SP1 (`third_party/windows-xp-sp1/exports.txt`): a function XP lacks fails
+   the build.
+6. Checks the guards on both executables: static runtime, no network library,
+   no domain name resolution nor process-starting function imported (refused
+   otherwise).
+7. Copies `WAC.exe`, `WAC32.exe`, `raw_hive_test.exe`, `wac.yml`, the scripts that verify a
    collection and `SHA256SUMS` to `bin`, and stages them (no commit).
+
+## WAC32.exe and Windows XP
+`WAC.exe` is the program of every 64-bit Windows. `WAC32.exe`, built from the
+same sources, serves the Windows that only exist or still run in 32 bits, from
+XP SP1 to Windows 8.
+
+A program does not load on a Windows that lacks **one** function it imports.
+The fourteen XP does not have — the condition variables and `GetThreadId`
+(called by the C++ library itself), `GetTickCount64`, `CompareStringOrdinal`,
+`wcsncpy_s`, and the whole of `bcrypt.dll` — are **defined** by
+`sources/xp_imports.cpp`, under the very name the linker looks for: each calls
+the system's function where it exists, an equivalent made of what XP offers
+otherwise. That file is empty in 64 bits: `WAC.exe` does not change by a byte.
+
+If a change makes WAC32 import a function XP lacks, the build stops and names
+it. Two ways out: do without it, or define it in `xp_imports.cpp` with its
+equivalent — and add it to `xp_imports_test.cpp`, which confronts each
+equivalent with the real function on a Windows that has both
+(`build-windows/tests/xp_imports_test.exe`, 32 bits).
 
 ## Version and release
 Format `<major>.<minor>.<bugfix>`, written in `sources/WAC.rc` only

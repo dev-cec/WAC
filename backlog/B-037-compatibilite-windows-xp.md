@@ -39,10 +39,12 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Les formats anciens rencontrés (au moins `.evt`) sont convertis ou déclarés non pris en charge, avec leur raison.
 
 ## Tâches
-- [ ] Chaîne 32 bits (`g++-mingw-w64-i686`) et build-windows.sh produisant aussi WAC32.exe (SQLite, libyaml, tests)
+- [x] Chaîne 32 bits (`g++-mingw-w64-i686`) et build-windows.sh produisant aussi WAC32.exe (SQLite, libyaml, test des équivalents XP), copié dans `bin/`
 - [x] Importations de WAC.exe (64 bits) confrontées aux exports de Windows 7 SP1 : 285 fonctions, une seule absente, corrigée
 - [x] Inventaire du 32 bits sous XP SP1 : 14 fonctions absentes sur 271 (voir le journal)
-- [ ] Lever ces 14 importations : `bcrypt.dll` chargée à l'exécution, fils d'exécution sans variables de condition, `GetTickCount64`, `CompareStringOrdinal`, `wcsncpy_s`
+- [x] Les 14 importations levées (`xp_imports.cpp`) ; la compilation refuse toute importation absente de XP SP1
+- [x] VM Windows 8 Pro x86 (`create-vm.sh win8`) ; WAC32 y collecte et convertit sans échec
+- [ ] WAC32 lancé sous XP SP1 réel : VM XP, canal de pilotage sans agent
 - [ ] Même inventaire sous Windows 8 x86 et Vista
 - [x] VM Windows 8.1 et Windows 7 SP1 (x64) créées sans interaction (`create-vm.sh win81`, `win7`), agent invité compris
 - [x] WAC 64 bits collecte et convertit sous Windows 8.1 et Windows 7 SP1, sans échec
@@ -78,3 +80,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-13 : `WTSEnumerateProcessesW` vérifiée sous Windows 7 et 8.1 : 36 et 35 processus, tous avec leur SID sauf le processus inactif, `lsass.exe` compris (S-1-5-18).
 
 - 2026-10-13 : cycle complet Windows 11 avec `WTSEnumerateProcessesW` et sans le faux prérequis : 499 contrôles réussis, 135 propriétaires lus sur 136 processus comme auparavant ; commité.
+- 2026-10-13 : **WAC32.exe**. `build-windows.sh` refait la compilation en 32 bits (unités en parallèle), lie `WAC32.exe` et le copie dans `bin/` ; les gardes d'importation (réseau, résolution de noms, lancement de processus) portent sur les deux exécutables. Les 14 fonctions que XP n'a pas sont définies par `sources/xp_imports.cpp` sous le nom que cherche l'éditeur de liens (fonction et pointeur d'importation) : chacune appelle la fonction du système quand elle existe, un équivalent sinon — variables de condition faites d'un compteur et d'un sémaphore, `GetThreadId` par `NtQueryInformationThread`, `CompareStringOrdinal` par `RtlUpcaseUnicodeChar`, `GetTickCount` 32 bits, `wcsncpy_s` écrite, `bcrypt.dll` chargée à l'exécution (absente : `STATUS_NOT_SUPPORTED`). Piège rencontré : ces définitions ne peuvent pas employer de variable statique locale, que la bibliothèque C++ garde… par les variables de condition qu'elles définissent. Le fichier est vide en 64 bits.
+  - Garde de compilation : chaque importation de WAC32 est confrontée à la liste des exports de XP SP1 (`third_party/windows-xp-sp1/exports.txt`, 2 555 noms tirés de l'ISO) ; 259 importations, aucune absente, plus de `bcrypt.dll`.
+  - Test `xp_imports_test.exe` (32 bits, lancé dans la VM Windows 11) : 22 contrôles — 6 936 comparaisons de chaînes identiques à `CompareStringOrdinal`, identifiants de fil identiques, `wcsncpy_s` identique à celle de `msvcrt.dll`, file d'attente à un producteur et quatre consommateurs (20 000 éléments reçus une fois chacun), délai d'attente respecté, `WakeAll`. Vu échouer sur une copie mutée (majuscules par `towupper` : 8 comparaisons fausses ; `WakeAll` ne libérant qu'un fil : consommateurs restés en attente).
+  - Deux avertissements propres au 32 bits (faux positifs de gcc dans la bibliothèque standard) supprimés par deux réécritures locales (`ese_database.cpp`, `trust_set.cpp`).
+- 2026-10-13 : VM **Windows 8 Pro x86** (build 9200), `create-vm.sh win8`. Sous la machine q35, son Setup affiche sa première page puis ne prend ni touche ni clic ; sous i440FX (`pc`) l'installation se fait seule. Le pilote du canal de l'agent est désormais posé par `guest/install-agent-driver.ps1`, porté par le support du fichier de réponses (l'éditeur approuvé d'après le catalogue signé, puis `pnputil`) : vérifié sur cette VM, sans question posée. La création de bout en bout avec ce script reste à rejouer.
+- 2026-10-13 : **WAC32 sous Windows 8 x86** : collecte en 60 s, conversion en 13 s, 74 JSON valides, aucun échec. Version lue (build 9200), trois artefacts absents de la version ; ShimCache déclaré avec la signature « 00ts » (0x73743030, mesurée), 45 Prefetch (version 26), Amcache, BITS et index de recherche déclarés non pris en charge. Condensats NT de la SAM déchiffrés (donc `bcrypt.dll` bien chargée à l'exécution). 62 435 enregistrements `$MFT`, 2 478 événements, 37 processus.
+
+- 2026-10-13 : cycle complet Windows 11 avec ce build : 497 contrôles réussis, aucun échec ; commité. Deux contrôles de moins qu'au cycle précédent, pour une raison étrangère à WAC : Windows a purgé son dossier Prefetch arrivé à 512 fichiers (257 suppressions en une minute au journal USN), et le recoupement UserAssist/Prefetch n'avait plus de programme commun.

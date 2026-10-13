@@ -144,6 +144,57 @@ LIBS=(-ladvapi32 -lwtsapi32 -lsecur32 -lbcrypt)
 "$CXX" -municode -static -static-libgcc -static-libstdc++ -Wl,--no-insert-timestamp \
   "${OBJS[@]}" "$BUILD/WAC_res.o" -o "$BUILD/WAC.exe" "${LIBS[@]}"
 
+# --- WAC32.exe, the 32-bit WAC -------------------------------------------------
+# The same sources, for the Windows that only exist or still run in 32 bits:
+# Windows XP SP1 to Windows 8 x86 (backlog B-037). WAC.exe stays the program of
+# every 64-bit Windows. Built on Linux only, with the i686 MinGW-w64 of the same
+# gcc (packages g++-mingw-w64-i686 binutils-mingw-w64-i686); without it, WAC32 is
+# skipped and said so. The functions XP lacks are defined by xp_imports.cpp —
+# an empty unit in the 64-bit build.
+CXX32=i686-w64-mingw32-g++
+BUILD32="$BUILD/x86"
+WAC32=""
+if command -v "$CXX32" >/dev/null && [[ "$("$CXX32" -v 2>&1 | sed -n 's/^Thread model: //p')" == win32 ]]; then
+  echo "== WAC32.exe (32 bits) =="
+  mkdir -p "$BUILD32"
+  OBJS32=()
+  for c in api reader scanner parser; do
+    i686-w64-mingw32-gcc "${YAML_FLAGS[@]}" -c "$YAML/src/$c.c" -o "$BUILD32/yaml_$c.o"
+    OBJS32+=("$BUILD32/yaml_$c.o")
+  done
+  i686-w64-mingw32-gcc -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-but-set-variable "${SQLITE_OPTIONS[@]}" \
+    -c "$SQLITE/sqlite3.c" -o "$BUILD32/sqlite3.o"
+  OBJS32+=("$BUILD32/sqlite3.o")
+  i686-w64-mingw32-windres -I"$SRC" -I"$TP/compat-include" -c 65001 "$BUILD/WAC.utf8.rc" -O coff -o "$BUILD32/WAC_res.o"
+  # The units in parallel: this second pass must not double the time of a build.
+  export CXX32 BUILD32 SRC
+  printf '%s\n' "${FLAGS[@]}" > "$BUILD32/flags.txt"
+  printf '%s\n' "${TUS[@]}" | xargs -P "$(nproc)" -I{} bash -c \
+    'mapfile -t F < "$BUILD32/flags.txt"; tu="{}"; "$CXX32" "${F[@]}" -c "$SRC/$tu" -o "$BUILD32/${tu%.cpp}.o"'
+  for tu in "${TUS[@]}"; do OBJS32+=("$BUILD32/${tu%.cpp}.o"); done
+  # No -lbcrypt: bcrypt.dll does not exist under XP, xp_imports.cpp loads it where it does.
+  LIBS32=(-ladvapi32 -lwtsapi32 -lsecur32)
+  "$CXX32" -municode -static -static-libgcc -static-libstdc++ -Wl,--no-insert-timestamp \
+    "${OBJS32[@]}" "$BUILD32/WAC_res.o" -o "$BUILD/WAC32.exe" "${LIBS32[@]}"
+  WAC32="$BUILD/WAC32.exe"
+  # EVERY IMPORT MUST EXIST UNDER WINDOWS XP SP1: one that does not keeps the
+  # program from loading at all, and is otherwise found on the examined
+  # machine. The reference is the export list of XP SP1's own DLLs.
+  XP_EXPORTS="$TP/windows-xp-sp1/exports.txt"
+  ABSENT="$(LC_ALL=C i686-w64-mingw32-objdump -p "$WAC32" \
+            | awk '/DLL Name/{d=tolower($3)} /^\t[0-9a-f]+\t +[0-9]+  /{print d, $3}' | sort -u \
+            | grep -vxFf "$XP_EXPORTS" || true)"
+  if [[ -n "$ABSENT" ]]; then
+    echo "ERROR: WAC32.exe imports what Windows XP SP1 does not export (define it in xp_imports.cpp):"
+    echo "$ABSENT" | sed 's/^/   /'
+    exit 1
+  fi
+  echo "   -> $WAC32: every import exists under Windows XP SP1"
+else
+  echo "== WAC32.exe skipped: $CXX32 (thread model win32) not installed =="
+  rm -f "$BUILD/WAC32.exe"
+fi
+
 # --- raw_hive test exe (optional) -------------------------------------------
 if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   echo "== Build raw_hive_test.exe =="
@@ -209,51 +260,63 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
     "$SRC/offline_registry_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/offline_registry_test.exe" "${LIBS[@]}"
   echo "   -> $TESTS/offline_registry_test.exe"
+
+  if [[ -n "$WAC32" ]]; then
+    echo "== Build xp_imports_test.exe (32 bits) =="
+    # The equivalents of the functions XP lacks, against the system's own: a
+    # 32-bit program, run on any Windows that has both (the test VM).
+    "$CXX32" "${FLAGS[@]}" -static -static-libgcc -static-libstdc++ \
+      "$SRC/xp_imports_test.cpp" "$BUILD32/xp_imports.o" -o "$TESTS/xp_imports_test.exe"
+    echo "   -> $TESTS/xp_imports_test.exe"
+  fi
 fi
 
-echo
-echo "Executable: $BUILD/WAC.exe"
-"$OBJDUMP" -p "$BUILD/WAC.exe" | grep -qiE 'libstdc|libgcc|winpthread' \
-  && echo "WARNING: MinGW runtime dependency detected!" \
-  || echo "Static C++ runtime: self-contained exe (Windows system DLLs only)."
+# Each executable built answers the same checks: WAC.exe, and WAC32.exe when it was built.
+for EXE in "$BUILD/WAC.exe" ${WAC32:+"$WAC32"}; do
+  echo
+  echo "Executable: $EXE"
+  "$OBJDUMP" -p "$EXE" | grep -qiE 'libstdc|libgcc|winpthread' \
+    && echo "WARNING: MinGW runtime dependency detected!" \
+    || echo "Static C++ runtime: self-contained exe (Windows system DLLs only)."
 
-# Functions WAC must never import: resolving a name through them may QUERY THE
-# DOMAIN CONTROLLER — a trace of the collection on another machine — and makes
-# the output depend on the machine running WAC. The SIDs are named offline
-# from the hives (sources/account_names.cpp). A build that imports them fails.
-FORBIDDEN='LookupAccountSid|LookupAccountName|LsaLookupSids|LsaLookupNames'
-if "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -qE "\\b($FORBIDDEN)"; then
-  echo "ERROR: WAC.exe imports a name-resolution function that queries the domain:"
-  "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -E "\\b($FORBIDDEN)"
-  exit 1
-fi
-echo "No network name resolution imported ($FORBIDDEN)."
+  # Functions WAC must never import: resolving a name through them may QUERY THE
+  # DOMAIN CONTROLLER — a trace of the collection on another machine — and makes
+  # the output depend on the machine running WAC. The SIDs are named offline
+  # from the hives (sources/account_names.cpp). A build that imports them fails.
+  FORBIDDEN='LookupAccountSid|LookupAccountName|LsaLookupSids|LsaLookupNames'
+  if "$OBJDUMP" -p "$EXE" | grep -qE "\\b($FORBIDDEN)"; then
+    echo "ERROR: $(basename "$EXE") imports a name-resolution function that queries the domain:"
+    "$OBJDUMP" -p "$EXE" | grep -E "\\b($FORBIDDEN)"
+    exit 1
+  fi
+  echo "No network name resolution imported ($FORBIDDEN)."
 
-# No network library either: WAC.exe runs on the examined machine, where it
-# must never be able to reach the network. --update-trust, run on the analysis
-# workstation only, loads WinHTTP DYNAMICALLY, in that mode alone (see
-# http_client.cpp); a static import would load it at every start. The
-# network state (artefacts.network) reads the TCP/IP stack's tables through
-# iphlpapi, loaded dynamically too, and only when that artefact is asked for.
-NETWORK='winhttp\.dll|wininet\.dll|ws2_32\.dll|wsock32\.dll|iphlpapi\.dll'
-if "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWORK)" >/dev/null; then
-  echo "ERROR: WAC.exe imports a network library statically:"
-  "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -iE "DLL Name: ($NETWORK)"
-  exit 1
-fi
-echo "No network library imported."
+  # No network library either: WAC.exe runs on the examined machine, where it
+  # must never be able to reach the network. --update-trust, run on the analysis
+  # workstation only, loads WinHTTP DYNAMICALLY, in that mode alone (see
+  # http_client.cpp); a static import would load it at every start. The
+  # network state (artefacts.network) reads the TCP/IP stack's tables through
+  # iphlpapi, loaded dynamically too, and only when that artefact is asked for.
+  NETWORK='winhttp\.dll|wininet\.dll|ws2_32\.dll|wsock32\.dll|iphlpapi\.dll'
+  if "$OBJDUMP" -p "$EXE" | grep -iE "DLL Name: ($NETWORK)" >/dev/null; then
+    echo "ERROR: $(basename "$EXE") imports a network library statically:"
+    "$OBJDUMP" -p "$EXE" | grep -iE "DLL Name: ($NETWORK)"
+    exit 1
+  fi
+  echo "No network library imported."
 
-# Nor any function that starts a process: a program started by WAC would leave
-# its own execution traces on the examined machine (Prefetch, BAM, ShimCache).
-# The screen used to be cleared by system("cls"), a cmd.exe each run, which
-# the compared footprint measure showed (backlog B-027).
-SPAWN='system|_wsystem|_w?spawn[lv]p?e?|_w?exec[lv]p?e?|_w?popen|CreateProcess[AW]?|CreateProcessAsUser[AW]|CreateProcessWithLogonW|CreateProcessWithTokenW|ShellExecute[AW]|ShellExecuteEx[AW]|WinExec'
-if "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -qE "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$"; then
-  echo "ERROR: WAC.exe imports a function that starts a process:"
-  "$OBJDUMP" -p "$BUILD/WAC.exe" | grep -E "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$"
-  exit 1
-fi
-echo "No process-starting function imported."
+  # Nor any function that starts a process: a program started by WAC would leave
+  # its own execution traces on the examined machine (Prefetch, BAM, ShimCache).
+  # The screen used to be cleared by system("cls"), a cmd.exe each run, which
+  # the compared footprint measure showed (backlog B-027).
+  SPAWN='system|_wsystem|_w?spawn[lv]p?e?|_w?exec[lv]p?e?|_w?popen|CreateProcess[AW]?|CreateProcessAsUser[AW]|CreateProcessWithLogonW|CreateProcessWithTokenW|ShellExecute[AW]|ShellExecuteEx[AW]|WinExec'
+  if "$OBJDUMP" -p "$EXE" | grep -qE "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$"; then
+    echo "ERROR: $(basename "$EXE") imports a function that starts a process:"
+    "$OBJDUMP" -p "$EXE" | grep -E "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$"
+    exit 1
+  fi
+  echo "No process-starting function imported."
+done
 
 # --- bin: the last build, ready to download ------------------------------
 # The executables, the reference configuration (sources/wac.yml, also built into
@@ -267,7 +330,7 @@ echo "No process-starting function imported."
 BIN="$ROOT/bin"
 VERIFICATION_SCRIPTS=(verify-exhibits.ps1 verifier-consigne.ps1 verify-exhibits.sh verifier-consigne.sh)
 mkdir -p "$BIN"
-for f in WAC.exe raw_hive_test.exe; do
+for f in WAC.exe WAC32.exe raw_hive_test.exe; do
   [[ -f "$BUILD/$f" ]] && cp "$BUILD/$f" "$BIN/"
 done
 # The reference configuration with the executable's version in place of its
@@ -278,7 +341,9 @@ grep -q "^wac_version: $VERSION\$" "$BIN/wac.yml" || { echo "bin/wac.yml: wac_ve
 for f in "${VERIFICATION_SCRIPTS[@]}"; do
   cp "$SRC/scripts/$f" "$BIN/$f"
 done
-( cd "$BIN" && sha256sum WAC.exe $( [[ -f raw_hive_test.exe ]] && echo raw_hive_test.exe ) wac.yml \
+# A WAC32.exe of an earlier build does not stay beside a WAC.exe it no longer matches.
+[[ -n "$WAC32" ]] || rm -f "$BIN/WAC32.exe"
+( cd "$BIN" && sha256sum WAC.exe $( [[ -f WAC32.exe ]] && echo WAC32.exe ) $( [[ -f raw_hive_test.exe ]] && echo raw_hive_test.exe ) wac.yml \
     "${VERIFICATION_SCRIPTS[@]}" > SHA256SUMS )
 if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git -C "$ROOT" add -f "$BIN"

@@ -779,6 +779,7 @@ same `WAC.exe`, byte for byte (no link date in the PE header).
 ```bash
 ./build-windows.sh          # produces build-windows/WAC.exe, self-contained
 ./build-windows.sh --test   # also builds raw_hive_test.exe, and the harnesses in tests/
+# both also build WAC32.exe, the 32-bit WAC (Windows XP SP1 to Windows 8 x86), when the i686 toolchain is installed
 ```
 The same script on both systems: on Linux it cross-compiles
 (`apt install g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-tools`);

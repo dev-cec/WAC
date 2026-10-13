@@ -71,7 +71,7 @@ bool splitValues(const uint8_t* p, size_t size, uint8_t flags, EseCell& cell) {
 		if (size < 1 || p[0] > size - 1) return false;
 		cell.values.emplace_back(p + 1, p + 1 + p[0]);
 		cell.values.emplace_back(p + 1 + p[0], p + size);
-		cell.separated = { false, false };
+		cell.separated.assign(2, false);
 		return true;
 	}
 	if (size < 2) return false;
