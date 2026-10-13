@@ -753,7 +753,13 @@ Get-Process iexplore -ErrorAction SilentlyContinue | Stop-Process -Force
     # The HTA's SHA-256, the body the server sent: its cached copy must be the same bytes.
     $hta = [Text.Encoding]::ASCII.GetBytes('<html><head><title>WAC HTA</title><HTA:APPLICATION/></head><body><script>window.close();</script></body></html>')
     $digest = -join ([Security.Cryptography.SHA256]::Create().ComputeHash($hta) | ForEach-Object { $_.ToString('X2') })
-    Write-Output "webhta=$base/wac-$token.hta|$digest"
+    # Given only if Windows itself cached it: mshta.exe sometimes fetches nothing
+    # (see above), and a witness Windows never wrote is not one WAC can miss.
+    if (Get-ChildItem 'C:\Users\wac\AppData\Local\Microsoft\Windows\INetCache' -Recurse -Force -Filter "wac-$token*.hta" -ErrorAction SilentlyContinue) {
+        Write-Output "webhta=$base/wac-$token.hta|$digest"
+    } else {
+        Write-Output "webhta_unplaced=$base/wac-$token.hta"
+    }
     $ieTarget = "C:\Users\wac\Downloads\wac-dl-ie-$token.txt"
     if (Test-Path $ieTarget) { Write-Output "webiedownload=$base/ie/wac-dl-ie-$token.txt|$ieTarget" }
 }

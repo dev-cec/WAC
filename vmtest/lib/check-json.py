@@ -1576,6 +1576,9 @@ def check_small_file_artefacts(folder):
                    f"web_client.json: Internet Explorer's download {url} -> {target} missing or different: {match[:1]}")
         manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
         exhibits = {(i.get("SourcePath") or "").lower(): i for i in (manifest or {}).get("Items", [])} if isinstance(manifest, dict) else {}
+        for l in (l for l in lines if l.startswith("webhta_unplaced=")):
+            print(f"  ⚠️  web_client.json: HTA witness not placed — mshta.exe cached nothing for {l.split('=', 1)[1]}: "
+                  "the WebCache entry of an HTA is not confronted in this cycle")
         for l in (l for l in lines if l.startswith("webhta=")):
             url, digest = (l[len("webhta="):].split("|", 1) + [""])[:2]
             entry = next((r for r in web if r.get("Type") == "CacheEntry" and r.get("Url") == url), {})
