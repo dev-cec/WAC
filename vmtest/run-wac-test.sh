@@ -6,6 +6,7 @@
 # and of the JSON files onto the host for inspection.
 #
 # Prerequisite: qemu-guest-agent installed and answering in the VM (`qga.py ping`).
+# The VM is win11-test, or the one the WAC_VM variable names.
 # Usage: ./run-wac-test.sh [--build] [--raw-only] [--no-split] [--binary-all]
 #                          [--only=key,key…]
 #
@@ -20,7 +21,10 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
-QGA="python3 $HERE/lib/qga.py"
+# The VM of the cycle: the Windows 11 one, or the one WAC_VM names (an older
+# Windows created by `create-vm.sh win81`, `win7`…).
+DOM="${WAC_VM:-win11-test}"
+QGA="python3 $HERE/lib/qga.py --dom $DOM"
 VMDIR='C:\wactest'
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUTPUT="$HERE/results/$STAMP"
@@ -82,11 +86,10 @@ echo "== 0b. USB keys == ($(date +%H:%M:%S))"
 # WACUSB0002 exFAT by the witnesses (a suspect's keys, read raw). Attached
 # live only: the VM definition is left unchanged, and a VM restart simply gets
 # them attached again here.
-DOM="${WAC_VM:-win11-test}"
 CONN="qemu:///session"
 # $1 image file, $2 serial number, $3 target device of the definition.
 attach_usb_key() {
-  local image="$1" serial="$2" target="$3" xml
+  local image="$1" serial="$2" target="$3" xml attempt
   mkdir -p "$(dirname "$image")"
   [[ -f "$image" ]] || truncate -s 64M "$image"
   if ! virsh -c "$CONN" domblklist "$DOM" 2>/dev/null | grep -qF "$image"; then
@@ -103,12 +106,11 @@ EOF
     rm -f "$xml"
   fi
   # Windows installs the device asynchronously: wait until it is enumerated.
-  local attempt count
   for attempt in $(seq 1 30); do
-    count=$($QGA run -- powershell.exe -NoProfile -Command \
-      "(Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object InstanceId -like 'USBSTOR*$serial*' | Measure-Object).Count" \
-      2>/dev/null | tr -d '\r\n ' || true)
-    [[ "${count:-0}" =~ ^[1-9] ]] && { echo "   USB key $serial known to Windows"; return 0; }
+    # Asked of the registry, which every Windows answers: Get-PnpDevice came
+    # with Windows 10, and an older VM waited the whole delay for nothing.
+    $QGA run --shell "reg query HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR /s /k /f $serial >nul 2>&1" >/dev/null 2>&1 \
+      && { echo "   USB key $serial known to Windows"; return 0; }
     sleep 2
   done
 }
@@ -372,9 +374,11 @@ fetch_results() {
   # Written by PowerShell in UTF-8 without BOM: cmd's dir, even after chcp
   # 65001, wrote accented names in another code page ("Navigation priv?e de
   # Firefox.lnk"), and they no longer matched the manifest.
-  # Listed through \\?\ and given back without it: an exhibit's path can pass
-  # MAX_PATH (B-049), where Get-ChildItem stops without one.
-  $QGA run -- powershell.exe -NoProfile -Command "[IO.File]::WriteAllLines('$VMDIR\\exhibit-list.txt', [string[]](Get-ChildItem -LiteralPath '\\\\?\\$vm\\exhibits' -Recurse -File -Force | ForEach-Object { \$_.FullName.Substring(4) }))" >/dev/null 2>&1 \
+  # Listed by robocopy (/L: nothing copied), which goes past MAX_PATH on every
+  # Windows — an exhibit's path can (B-049), where Get-ChildItem stops, and
+  # its \\?\ form is refused before .NET 4.6.2 (Windows 8.1 and earlier). Its
+  # log is UTF-16, one full path per line.
+  $QGA run -- powershell.exe -NoProfile -Command "robocopy.exe '$vm\\exhibits' '$VMDIR\\exhibit-list-nowhere' /L /S /FP /NC /NS /NDL /NJH /NJS /R:0 /UNILOG:'$VMDIR\\exhibit-list.log' | Out-Null; [IO.File]::WriteAllLines('$VMDIR\\exhibit-list.txt', [string[]](Get-Content -LiteralPath '$VMDIR\\exhibit-list.log' -Encoding Unicode | ForEach-Object { \$_.Trim() } | Where-Object { \$_ })); Remove-Item -LiteralPath '$VMDIR\\exhibit-list.log'" >/dev/null 2>&1 \
     && $QGA read "$VMDIR\\exhibit-list.txt" "$host/exhibits/LIST.txt" >/dev/null 2>&1 \
     && [[ -s "$host/exhibits/LIST.txt" ]] \
     && echo "   + exhibits/LIST.txt" || echo "   ⚠️ list of the exhibit store not read"
@@ -510,10 +514,11 @@ $QGA run -- powershell.exe -NoProfile -Command \
 fi
 
 # Local accounts and groups as Windows names them, for the offline naming of
-# the SIDs (WAC reads them in the SAM; Windows through its account API).
+# the SIDs (WAC reads them in the SAM; Windows through its account API —
+# through WMI before Windows 10, which has no Get-LocalUser).
 if wants users local_groups; then
 $QGA run -- powershell.exe -NoProfile -Command \
-  '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-LocalUser | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }; Get-LocalGroup | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }' \
+  '[Console]::OutputEncoding = [Text.Encoding]::UTF8; if (Get-Command Get-LocalUser -ErrorAction SilentlyContinue) { Get-LocalUser | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }; Get-LocalGroup | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name } } else { Get-CimInstance Win32_UserAccount -Filter "LocalAccount=True" | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name }; Get-CimInstance Win32_Group -Filter "LocalAccount=True" | ForEach-Object { "{0}|{1}" -f $_.SID, $_.Name } }' \
   > "$OUTPUT/reference/accounts.txt" 2>/dev/null \
   && echo "   + reference/accounts.txt" || echo "   ⚠️ accounts reference not read"
 fi

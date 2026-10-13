@@ -198,5 +198,20 @@ layout, clicks); a command's output is read on the serial port
 on the installation medium, or given as `XP_KEY`; it is never written to the
 repository.
 
-The test cycle (`run-wac-test.sh`) only runs on `win11-test` so far: on the
-others, collection and conversion are run by hand.
+The test cycle runs on `win11-test`, or on the machine `WAC_VM` names
+(`WAC_VM=win81-test ./run-wac-test.sh`). On a Windows older than 10:
+
+- an artefact that version does not have, or whose form there WAC does not
+  decode, is expected — `check-json.py` holds the list measured on each older
+  VM, and an artefact that joins or leaves it is a fault;
+- the witness script (`place-file-artefacts.ps1`) is written for PowerShell 4;
+  a section that needs a tool of Windows 10 (`Get-PnpDevice`, `Get-LocalUser`,
+  `tar.exe`…) fails alone, says so in the reference (`witness_failed=`), and
+  the checks print it before their own result;
+- `Get-AuthenticodeSignature` does not read catalog signatures before
+  PowerShell 5.1: the files it calls unsigned are not confronted.
+
+The cycle goes to its end on Windows 8.1; the checks that still fail there are
+listed in the backlog. Windows 7 (PowerShell 2), Windows 8 (32 bits, `WAC32.exe`
+to upload instead of `WAC.exe`) and Windows XP (no agent) are still run by hand:
+collection and conversion only.

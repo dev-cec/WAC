@@ -204,5 +204,21 @@ se lit sur le port série (`<commande> > COM1`, gardé dans
 `~/vms/winxp-test.serial`). Sa clé de produit est lue sur le support
 d'installation, ou donnée par `XP_KEY` ; elle n'est jamais écrite dans le dépôt.
 
-Le cycle de test (`run-wac-test.sh`) ne tourne pour l'instant que sur
-`win11-test` : sur les autres, collecte et conversion se lancent à la main.
+Le cycle de test tourne sur `win11-test`, ou sur la machine que nomme `WAC_VM`
+(`WAC_VM=win81-test ./run-wac-test.sh`). Sur un Windows antérieur à 10 :
+
+- un artefact que cette version n'a pas, ou dont WAC ne décode pas la forme
+  qu'il y prend, est attendu — `check-json.py` porte la liste mesurée sur
+  chaque VM ancienne, et un artefact qui y entre ou en sort est un défaut ;
+- le script des témoins (`place-file-artefacts.ps1`) est écrit pour
+  PowerShell 4 ; une section qui demande un outil de Windows 10
+  (`Get-PnpDevice`, `Get-LocalUser`, `tar.exe`…) échoue seule, le dit dans la
+  référence (`witness_failed=`), et les contrôles l'affichent avant leur propre
+  résultat ;
+- `Get-AuthenticodeSignature` ne lit pas les signatures par catalogue avant
+  PowerShell 5.1 : les fichiers qu'il dit non signés ne sont pas confrontés.
+
+Le cycle va au bout sous Windows 8.1 ; les contrôles qui y échouent encore sont
+suivis dans le backlog. Windows 7 (PowerShell 2), Windows 8 (32 bits,
+`WAC32.exe` à envoyer à la place de `WAC.exe`) et Windows XP (pas d'agent) se
+lancent encore à la main : collecte et conversion seulement.

@@ -149,6 +149,46 @@ def check_configuration(folder):
     return 0
 
 
+# First build of Windows 10: from it on, the whole cycle validates WAC and
+# every artefact of the test machine is decoded.
+VALIDATED_SINCE_BUILD = 10240
+
+# WHAT WAC DECLARES ON THE OLDER TEST VMs (WAC_VM=win81-test, win7-test), as
+# measured on each: the artefacts their Windows does not have, and those whose
+# form there WAC has no decoder for. A regression guard — an artefact that
+# joins or leaves a list shows —, not an independent proof of the lists: that
+# one is the table's own test (artefact_catalogue_test.cpp).
+OLDER_VERSION_STATUSES = {
+    9600: ("Windows 8.1",
+           {"activities_cache.json", "bams.json", "powershell_history.json"},
+           {"amcache_application_files.json", "amcache_applications.json", "amcache_inventory.json",
+            "bits_jobs.json", "search_index.json", "shimcache.json"}),
+    7601: ("Windows 7",
+           {"activities_cache.json", "bams.json", "defender_detections.json", "defender_log.json",
+            "defender_quarantine.json", "powershell_history.json", "srum.json"},
+           {"amcache_application_files.json", "amcache_applications.json", "amcache_inventory.json",
+            "bits_jobs.json", "search_index.json", "shimcache.json"}),
+}
+
+
+def examined_build(folder):
+    """The build Windows gives of itself (reference/windows-version.txt), or
+    None when the cycle did not record it."""
+    try:
+        with open(os.path.join(folder, "reference", "windows-version.txt"), encoding="utf-8", errors="replace") as f:
+            match = re.search(r"windows=(\d+)\|", f.read())
+    except OSError:
+        return None
+    return int(match.group(1)) if match else None
+
+
+def older_version(folder):
+    """Whether the cycle ran on a Windows older than those it validates WAC on:
+    statuses that are faults on Windows 10 and 11 are expected there."""
+    build = examined_build(folder)
+    return build is not None and build < VALIDATED_SINCE_BUILD
+
+
 def main():
     if len(sys.argv) > 2 and sys.argv[1] == "--configuration":
         sys.exit(check_configuration(sys.argv[2]))
@@ -187,11 +227,19 @@ def main():
             ok += 1
             continue
 
-        # A source in a format WAC has no decoder for (B-039): this Windows 11
-        # has none such — the witnesses of that status are pieces, not artefacts.
+        # A source in a format WAC has no decoder for (B-039): Windows 10 and
+        # 11 have none such — the witnesses of that status are pieces, not
+        # artefacts. On an older test VM, the artefacts measured as such are
+        # expected; any other is a fault.
         if isinstance(data, dict) and data.get("CollectionStatus") == "UnsupportedFormat":
-            print(f"  ❌ {name:<34} UNSUPPORTED FORMAT — signature {data.get('FormatSignature', '?')}")
-            invalid += 1
+            expected = OLDER_VERSION_STATUSES.get(examined_build(folder), ("", set(), set()))[2]
+            form = data.get("FormatName") or data.get("FormatSignature") or "?"
+            if name in expected:
+                print(f"  ⏭️  {name:<34} format of this version of Windows not decoded ({form})")
+                ok += 1
+            else:
+                print(f"  ❌ {name:<34} UNSUPPORTED FORMAT — {form}")
+                invalid += 1
             continue
 
         # A source every Windows has, not found (B-039): the test machine lacks
@@ -802,10 +850,17 @@ def check_authenticated_executables(folder, items):
             if len(parts) >= 3:
                 windows[parts[0].lower()] = (parts[1], parts[2])
     verdict = {str(i.get("SourcePath", "")).lower(): i for i in items if i.get("Result") == "OK"}
-    wrong, stored_valid, compared = [], 0, 0
+    # Before PowerShell 5.1 (Windows 8.1 and earlier), Get-AuthenticodeSignature
+    # reads the embedded signature only: a file signed by a catalog — most of
+    # System32 — comes out "NotSigned", and says nothing against WAC's verdict.
+    catalogs_unseen = older_version(folder)
+    wrong, stored_valid, compared, unseen = [], 0, 0, 0
     for path, (status, subject) in windows.items():
         item = verdict.get(path)
         if not item:
+            continue
+        if catalogs_unseen and status == "NotSigned":
+            unseen += 1
             continue
         compared += 1
         microsoft_for_windows = status == "Valid" and "microsoft" in subject.lower()
@@ -820,7 +875,8 @@ def check_authenticated_executables(folder, items):
             print(f"        {w}")
         return 1
     print(f"  ✅ {compared} System32 executables compared with Get-AuthenticodeSignature: every one WAC "
-          f"authenticated is Microsoft-valid for Windows ({stored_valid} valid for Windows yet collected)")
+          f"authenticated is Microsoft-valid for Windows ({stored_valid} valid for Windows yet collected)"
+          + (f"; {unseen} signed by a catalog, which this older PowerShell does not read: not confronted" if unseen else ""))
     return 0
 
 
@@ -1382,6 +1438,7 @@ def check_small_file_artefacts(folder):
         print("  ⏭️  no reference/file-artefacts.txt: small file artefacts not confronted")
         return 0
     fwcounts = []   # the firewall's rule count, read more than once (record_firewall_count)
+    failed = []     # the sections of place-file-artefacts.ps1 that failed (WitnessFailure)
     with open(path, encoding="utf-8", errors="replace") as f:
         for line in f:
             key, _, value = line.strip().partition("=")
@@ -1389,7 +1446,14 @@ def check_small_file_artefacts(folder):
                 reference[key] = value
                 if key == "fwcount":
                     fwcounts.append(value)
+                if key == "witness_failed":
+                    failed.append(value)
     found = 0
+    # A witness not placed empties the checks that look for it: said first, with
+    # its reason, so that their failures below are read for what they are.
+    for failure in failed:
+        section, _, reason = failure.partition("|")
+        print(f"  ⚠️  witnesses of {section} not placed ({reason[:150]})")
 
     def report(ok, success, failure):
         nonlocal found
@@ -1443,11 +1507,19 @@ def check_small_file_artefacts(folder):
             decoded = [k for k in ("RunCount", "RunsUtc", "FileNames", "Volumes", "FullPath") if k in p]
             if decoded:
                 faults.append(f"{name}: decoded all the same: {decoded}")
-        if undecoded:
+        # Before Windows 10 the machine's own Prefetch are of a version WAC
+        # does not decode (23, 26): all declared, all of one version.
+        older = older_version(folder)
+        versions = {p.get("FormatVersion") for p in undecoded.values()}
+        if undecoded and not older:
             faults.append(f"{len(undecoded)} real Prefetch declared unsupported: {list(undecoded)[:2]}")
+        if older and (len(versions) != 1 or len(undecoded) + 2 != len(prefetchs)):
+            faults.append(f"real Prefetch of versions {sorted(versions, key=str)}, {len(prefetchs) - 2 - len(undecoded)} decoded")
         report(not faults,
                "prefetchs.json: Prefetch versions 23 and 32 declared unsupported (the known form named, the unknown "
-               "one not), name and hash read, nothing else decoded; every real Prefetch decoded",
+               "one not), name and hash read, nothing else decoded; "
+               + (f"the {len(undecoded)} real Prefetch of this older Windows all declared version {next(iter(versions), '?')}"
+                  if older else "every real Prefetch decoded"),
                "prefetchs.json: unsupported formats not as placed: " + " ; ".join(faults))
     for name in ("recycle_bin.json", "thumbcache.json", "jumplistAutomaticDestinations.json"):
         pieces = load(folder, name)
@@ -2376,8 +2448,9 @@ def check_examined_version(folder):
     That version decides which artefacts are not collected at all (table of
     the artefacts by version): a build read wrong would silently drop some.
     The journal must state the build Windows reports and a release that fits
-    it; on this machine, a Windows 11, no artefact may be declared absent
-    from the version — neither in the journal nor in any JSON file.
+    it; on Windows 10 and 11 no artefact may be declared absent from the
+    version — neither in the journal nor in any JSON file —, and on an older
+    test VM exactly those measured on it (OLDER_VERSION_STATUSES).
     """
     path = os.path.join(folder, "reference", "windows-version.txt")
     if not os.path.exists(path):
@@ -2399,16 +2472,31 @@ def check_examined_version(folder):
     if not stated:
         print("  ❌ examined version: no record in the journals")
         return 1
-    expected_release = ("Windows 11" if build >= 22000 else "Windows 10") if workstation else "Windows Server"
+    older = OLDER_VERSION_STATUSES.get(build)
+    if older:
+        expected_release, expected_absent, expected_undecoded = older
+    elif build < VALIDATED_SINCE_BUILD:
+        print(f"  ⏭️  examined version: build {build}, a Windows this check has no measured list for")
+        return 0
+    else:
+        expected_release = ("Windows 11" if build >= 22000 else "Windows 10") if workstation else "Windows Server"
+        expected_absent, expected_undecoded = set(), set()
     wrong = [s for s in stated if f", build {build}" not in s or expected_release not in s]
-    absent = [n for n in sorted(os.listdir(folder)) if n.endswith(".json")
-              and isinstance(raw_json(os.path.join(folder, n)), dict)
-              and raw_json(os.path.join(folder, n)).get("CollectionStatus") == "AbsentFromThisVersion"]
+    statuses = {n: raw_json(os.path.join(folder, n)) for n in sorted(os.listdir(folder)) if n.endswith(".json")}
+    statuses = {n: d.get("CollectionStatus") for n, d in statuses.items() if isinstance(d, dict)}
+    absent = {n for n, status in statuses.items() if status == "AbsentFromThisVersion"}
+    undecoded = {n for n, status in statuses.items() if status == "UnsupportedFormat"}
+    # The journal names the artefacts held back; on Windows 10 and 11 it names none.
     held_back = [s for s in stated if "absent from this version" in s]
-    ok = not wrong and not absent and not held_back
+    ok = (not wrong and absent == expected_absent and undecoded == expected_undecoded
+          and bool(held_back) == bool(expected_absent))
+    expectation = (f"{len(expected_absent)} artefact(s) declared absent from this version and "
+                   f"{len(expected_undecoded)} in a format not decoded, as measured on it"
+                   if older else "no artefact declared absent from this version")
     print(f"  {'✅' if ok else '❌'} examined version: {expected_release}, build {build} as Windows reports it, "
-          f"in {len(stated)} journal record(s); no artefact declared absent from this version"
-          + ("" if ok else f": {wrong[:1]} {absent[:3]} {held_back[:1]}"))
+          f"in {len(stated)} journal record(s); {expectation}"
+          + ("" if ok else f": {wrong[:1]} absent {sorted(absent ^ expected_absent)[:4]} "
+                           f"undecoded {sorted(undecoded ^ expected_undecoded)[:4]} {held_back[:1]}"))
     return 0 if ok else 1
 
 
@@ -3385,6 +3473,9 @@ def check_prefetch_mft_references(folder):
                 records[path.lower()] = (e.get("Entry"), in_use_sequence,
                                          max(e.get("CreatedUtc") or "", e.get("FileNameMftModifiedUtc") or ""),
                                          bool(e.get("Deleted")))
+    if older_version(folder) and not any(p.get("FileNames") for p in prefetchs):
+        print("  ⏭️  prefetchs.json: no Prefetch decoded on this older Windows: $MFT references not cross-checked")
+        return 0
     same, deleted, moved, recreated, wrong = 0, 0, 0, 0, []
     for p in prefetchs:
         for f in p.get("FileNames") or []:

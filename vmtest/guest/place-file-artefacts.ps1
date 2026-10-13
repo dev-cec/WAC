@@ -67,6 +67,29 @@ function Wants([string[]]$keys) {
 }
 
 $ErrorActionPreference = 'Stop'
+# Written for Windows PowerShell 4 and later (Windows 8.1): New-Object rather
+# than [type]::new(), no -Depth. A section that needs a cmdlet of Windows 10
+# fails alone on an older Windows (see WitnessFailure).
+
+# The files of a folder and of its subfolders, down to a depth: what
+# Get-ChildItem -Recurse -Depth does from PowerShell 5 on.
+function FilesToDepth([string]$folder, [int]$depth) {
+    Get-ChildItem -LiteralPath $folder -Force -File -ErrorAction SilentlyContinue
+    if ($depth -gt 0) {
+        Get-ChildItem -LiteralPath $folder -Force -Directory -ErrorAction SilentlyContinue |
+            ForEach-Object { FilesToDepth $_.FullName ($depth - 1) }
+    }
+}
+
+# EACH SECTION BELOW STANDS ALONE: one that fails — a cmdlet an older Windows
+# lacks, a program not installed — says so in the reference, with its line and
+# reason, and the others are still placed. The whole script used to stop at
+# the first failure, silently: every later witness was missing, and its check
+# failed for a reason nothing showed.
+function WitnessFailure([string]$section, $failure) {
+    $reason = ($failure.Exception.Message -replace '\s+', ' ').Trim()
+    Write-Output "witness_failed=$section|line $($failure.InvocationInfo.ScriptLineNumber)|$reason"
+}
 # The SID of the test user "wac", whose loaded hive several sections write to.
 # Defined here: set inside one section, it was empty when --only skipped it.
 $wacSid = (New-Object Security.Principal.NTAccount 'wac').Translate([Security.Principal.SecurityIdentifier]).Value
@@ -79,28 +102,28 @@ $wacSid = (New-Object Security.Principal.NTAccount 'wac').Translate([Security.Pr
 # allows after the harness's taskkill. One witness at a time: those of earlier
 # cycles are removed, or each cycle would leave one more document in the
 # profile and the index.
-if (Wants 'search_index') {
+try { if (Wants 'search_index') {
     Get-ChildItem -LiteralPath C:\Users\wac\Documents -Filter 'wac-search-*.txt' -Force | Remove-Item -Force
     $searchStamp = (Get-Date).ToString('yyyyMMddHHmmss')
     $searchName = "wac-search-$searchStamp.txt"
     [IO.File]::WriteAllText("C:\Users\wac\Documents\$searchName", "wacsearchwitness$searchStamp contenu du document temoin")
-}
+} } catch { WitnessFailure 'search_index' $_ }
 
 # 1. PowerShell history of the user "wac", under a host name of its own.
-if (Wants 'powershell_history') {
+try { if (Wants 'powershell_history') {
     $history = 'C:\Users\wac\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine'
     New-Item -ItemType Directory -Force $history | Out-Null
     $lines = @('whoami /all', 'Get-Process |`', '  Where-Object CPU -gt 10', 'Invoke-WebRequest http://wac-test.invalid/a.ps1')
     [IO.File]::WriteAllText("$history\WacTest_history.txt", ($lines -join "`r`n") + "`r`n", (New-Object Text.UTF8Encoding $false))
     Write-Output "powershell=WacTest|3|whoami /all"
-}
+} } catch { WitnessFailure 'powershell_history' $_ }
 
 # 2. A file sent to the recycle bin BY THE USER "wac". Outside an interactive
 #    session — SYSTEM, as the harness runs, or a task in batch logon — the
 #    "send to the bin" deletes for good, without a word. A scheduled task runs
 #    the deletion in the session "wac" has open on the VM's console
 #    (autologon), then is removed.
-if (Wants 'recycle_bin') {
+try { if (Wants 'recycle_bin') {
     $recycled = "C:\Users\wac\Documents\wac-recycled-$(Get-Date -Format yyyyMMddHHmmss).txt"
     Set-Content $recycled 'deleted by the WAC harness'
     $script = 'C:\wactest\recycle-witness.ps1'
@@ -115,21 +138,21 @@ if (Wants 'recycle_bin') {
     Remove-Item $script -ErrorAction SilentlyContinue
     $sid = (New-Object Security.Principal.NTAccount 'wac').Translate([Security.Principal.SecurityIdentifier]).Value
     if (Get-ChildItem -Force "C:\`$Recycle.Bin\$sid\`$I*" -ErrorAction SilentlyContinue) { Write-Output "recycled=$recycled" }
-}
+} } catch { WitnessFailure 'recycle_bin' $_ }
 
 # 3. An entry of the hosts file, added once.
-if (Wants 'hosts') {
+try { if (Wants 'hosts') {
     $hostsFile = 'C:\Windows\System32\drivers\etc\hosts'
     $entry = '10.11.12.13 wac-test.invalid'
     if (-not (Select-String -Path $hostsFile -SimpleMatch $entry -Quiet)) { Add-Content $hostsFile "`r`n$entry" }
     Write-Output "hosts=10.11.12.13|wac-test.invalid"
-}
+} } catch { WitnessFailure 'hosts' $_ }
 
 # 3b. Two Prefetch files of a version WAC has no decoder for, written by hand
 # and always the same: an uncompressed SCCA header (version, "SCCA", the
 # executable's name at 16, the path hash at 76), zeros after it. Windows does
 # not read them: no program of that name is ever run.
-if (Wants 'prefetch') {
+try { if (Wants 'prefetch') {
     foreach ($witness in @(@('pfold', 23, 'WACV23.EXE', 0x0BADF023), @('pfnew', 32, 'WACV32.EXE', 0x0BADF032))) {
         $bytes = New-Object byte[] 512
         [BitConverter]::GetBytes([int]$witness[1]).CopyTo($bytes, 0)
@@ -142,29 +165,29 @@ if (Wants 'prefetch') {
         [IO.File]::WriteAllBytes($file, $bytes)
         Write-Output "$($witness[0])=$file|$($witness[1])|$($witness[2])|$hash"
     }
-}
+} } catch { WitnessFailure 'prefetch' $_ }
 
 # 4. A script in the startup folder of all users.
-if (Wants 'startup_folders') {
+try { if (Wants 'startup_folders') {
     $startup = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\wac-startup-test.cmd'
     Set-Content $startup '@echo WAC harness startup witness'
     Write-Output ("startup=$startup|" + (Get-FileHash -Algorithm SHA256 $startup).Hash)
-}
+} } catch { WitnessFailure 'startup_folders' $_ }
 
 # 5. A file marked as downloaded from the Internet: its Zone.Identifier
 #    stream, written and read back by Windows.
-if (Wants 'zone_identifiers', 'mft') {
+try { if (Wants 'zone_identifiers', 'mft') {
     $downloaded = 'C:\Users\wac\Downloads\wac-downloaded.exe'
     New-Item -ItemType Directory -Force 'C:\Users\wac\Downloads' | Out-Null
     Set-Content $downloaded 'MZ WAC harness download witness'
     Set-Content -Path $downloaded -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3`r`nHostUrl=https://wac-test.invalid/wac-downloaded.exe"
     $hostUrl = (Get-Content -Path $downloaded -Stream Zone.Identifier | Where-Object { $_ -like 'HostUrl=*' }) -replace '^HostUrl=', ''
     Write-Output "zone=$downloaded|3|$hostUrl"
-}
+} } catch { WitnessFailure 'zone_identifiers,mft' $_ }
 
 # 6. A Run value in the DEFAULT hive, REG_EXPAND_SZ: Windows writes the
 #    registry to the disk a minute or so later, before the first collection.
-if (Wants 'run_keys') {
+try { if (Wants 'run_keys') {
     $runKey = 'Registry::HKEY_USERS\.DEFAULT\Software\Microsoft\Windows\CurrentVersion\Run'
     New-Item -Force $runKey | Out-Null
     New-ItemProperty -Force -Path $runKey -Name 'WacTestDefault' -PropertyType ExpandString -Value '%SystemRoot%\wac-default.exe' | Out-Null
@@ -188,37 +211,42 @@ if (Wants 'run_keys') {
     $layout = (& fsutil.exe file layout $script) -join ' '
     $listed = if ($layout -match 'ATTRIBUTE_LIST') { 'list' } else { 'nolist' }
     Write-Output ("links=$script|" + (Get-FileHash -Algorithm SHA256 -LiteralPath $script).Hash + "|$listed")
-}
+} } catch { WitnessFailure 'run_keys' $_ }
 
 # 6b. A script whose path passes MAX_PATH (B-049): 261 characters on the
 #     volume, near 290 once under the exhibit store. The collection reads every
 #     executable and takes the unsigned ones; WAC wrote none of those paths
-#     (0x8007001d) before it used the extended form. Created through \\?\ —
-#     .NET refuses the path otherwise. Made once.
-if (Wants 'binaries') {
+#     (0x8007001d) before it used the extended form. Placed by robocopy, which
+#     writes long paths on every Windows: .NET refuses the path, and before
+#     4.6.2 (Windows 8.1 and earlier) refuses its \\?\ form too; cmd's mkdir
+#     as well. An identical file already there is left as it is: made once.
+try { if (Wants 'binaries') {
     $deep = 'C:\wactest\b049\' + ((1..9 | ForEach-Object { 'wac-long-path-segment-' + ('{0:D2}' -f $_) }) -join '\')
-    $long = "$deep\wac-long-witness.cmd"
-    if (-not (Test-Path -LiteralPath "\\?\$long")) {
-        [IO.Directory]::CreateDirectory("\\?\$deep") | Out-Null
-        [IO.File]::WriteAllText("\\?\$long", "@echo off`r`nrem WAC B-049 witness`r`n")
-    }
-    Write-Output ("longpath=$long|" + (Get-FileHash -Algorithm SHA256 -LiteralPath "\\?\$long").Hash)
-}
+    $source = 'C:\wactest\b049-source'
+    New-Item -ItemType Directory -Force $source | Out-Null
+    [IO.File]::WriteAllText("$source\wac-long-witness.cmd", "@echo off`r`nrem WAC B-049 witness`r`n")
+    & robocopy.exe $source $deep wac-long-witness.cmd /R:0 /W:0 /NJH /NJS /NFL /NDL | Out-Null
+    $copied = $LASTEXITCODE
+    $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath "$source\wac-long-witness.cmd").Hash
+    Remove-Item -LiteralPath $source -Recurse -Force
+    if ($copied -ge 8) { throw "long-path witness not placed (robocopy $copied)" }
+    Write-Output "longpath=$deep\wac-long-witness.cmd|$hash"
+} } catch { WitnessFailure 'binaries' $_ }
 
 # 7. The SECURITY hive as Windows reads it live (the harness runs as SYSTEM).
-if (Wants 'security') {
+try { if (Wants 'security') {
     $secrets = (Get-ChildItem 'HKLM:\SECURITY\Policy\Secrets' | ForEach-Object PSChildName | Sort-Object) -join ','
     Write-Output "secrets=$secrets"
     $audit = (Get-Item 'HKLM:\SECURITY\Policy\PolAdtEv').GetValue('')
     Write-Output ("audit=" + (($audit | ForEach-Object { $_.ToString('X2') }) -join ''))
     $slots = @((Get-Item 'HKLM:\SECURITY\Cache' -ErrorAction SilentlyContinue).Property | Where-Object { $_ -match '^NL\$\d+$' }).Count
     Write-Output "nl_slots=$slots"
-}
+} } catch { WitnessFailure 'security' $_ }
 
 # 8. Persistence witnesses. Harmless: they name programs and DLLs that do not
 #    exist, for an executable name nothing runs. Written before the first
 #    collection, as the Run value above.
-if (Wants 'persistence') {
+try { if (Wants 'persistence') {
     $ifeo = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\wac-ifeo-test.exe'
     New-Item -Force $ifeo | Out-Null
     New-ItemProperty -Force -Path $ifeo -Name 'Debugger' -Value 'C:\wactest\wac-debugger.exe' | Out-Null
@@ -242,11 +270,11 @@ if (Wants 'persistence') {
     Write-Output ("lsa_security=" + ((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa').'Security Packages' -join '|'))
     $monitors = Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Control\Print\Monitors' | ForEach-Object { $_.PSChildName + '=' + $_.GetValue('Driver') } | Sort-Object
     Write-Output ("monitors=" + ($monitors -join '|'))
-}
+} } catch { WitnessFailure 'persistence' $_ }
 
 # 9. Second-lot registry witnesses, in the hive of the user "wac" (loaded: the
 #    user is logged on) and in the firewall policy. Harmless.
-if (Wants 'office_trust_records', 'typed_paths', 'word_wheel_query', 'internet_settings', 'firewall', 'root_certificates') {
+try { if (Wants 'office_trust_records', 'typed_paths', 'word_wheel_query', 'internet_settings', 'firewall', 'root_certificates') {
     $user = "Registry::HKEY_USERS\$wacSid"
     $trust = "$user\Software\Microsoft\Office\16.0\Word\Security\Trusted Documents\TrustRecords"
     New-Item -Force $trust | Out-Null
@@ -280,11 +308,11 @@ if (Wants 'office_trust_records', 'typed_paths', 'word_wheel_query', 'internet_s
     Write-Output ("roots=" + ($roots -join ','))
     $first = Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $roots -contains $_.Thumbprint } | Select-Object -First 1
     if ($first) { Write-Output ("rootsubject=" + $first.Thumbprint + '|' + $first.GetNameInfo('SimpleName', $false)) }
-}
+} } catch { WitnessFailure 'office_trust_records,typed_paths,word_wheel_query,internet_settings,firewall,root_certificates' $_ }
 
 # 10. The data volume (a second fixed NTFS disk, label WACDATA): a file kept,
 #     a file created then deleted — the second $MFT and change journal.
-if (Wants 'mft', 'usn_journal') {
+try { if (Wants 'mft', 'usn_journal') {
     $data = Get-Volume -FileSystemLabel WACDATA -ErrorAction SilentlyContinue | Where-Object DriveLetter | Select-Object -First 1
     if ($data) {
         $letter = "$($data.DriveLetter):"
@@ -301,14 +329,14 @@ if (Wants 'mft', 'usn_journal') {
         Write-VolumeCache -DriveLetter $data.DriveLetter
         Write-Output "datavolume=$letter|$letter\wac-volume-test.txt|$gone"
     }
-}
+} } catch { WitnessFailure 'mft,usn_journal' $_ }
 
 # 11. A Defender detection and quarantine of known dates: the EICAR test
 #     string — harmless by design, made for this — written in a folder
 #     excluded for a moment, dated, then scanned once the exclusion is gone.
 #     MSFT_MpThreatDetection is the reference; the file's dates and its SHA-1
 #     are what the quarantine must give back.
-if (Wants 'defender') {
+try { if (Wants 'defender') {
     $held = 'C:\wactest\eicar-held'
     New-Item -ItemType Directory -Force $held | Out-Null
     $eicar = "$held\wac-eicar-$(Get-Date -Format HHmmss).txt"
@@ -316,8 +344,8 @@ if (Wants 'defender') {
     Start-Sleep 3
     [IO.File]::WriteAllText($eicar, 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR' + '-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
     $item = Get-Item $eicar
-    $item.CreationTimeUtc = [datetime]::new(2021, 1, 2, 3, 4, 5, [DateTimeKind]::Utc)
-    $item.LastWriteTimeUtc = [datetime]::new(2022, 3, 4, 5, 6, 7, [DateTimeKind]::Utc)
+    $item.CreationTimeUtc = (New-Object datetime 2021, 1, 2, 3, 4, 5, ([DateTimeKind]::Utc))
+    $item.LastWriteTimeUtc = (New-Object datetime 2022, 3, 4, 5, 6, 7, ([DateTimeKind]::Utc))
     Remove-MpPreference -ExclusionPath $held
     Start-Sleep 3
     Start-MpScan -ScanType CustomScan -ScanPath $eicar
@@ -329,13 +357,13 @@ if (Wants 'defender') {
         Write-Output ("defender=" + (@($detection.DetectionID, $eicar, (& $iso $detection.InitialDetectionTime),
             $detection.DomainUser, $detection.ProcessName, $detection.ThreatID, $detection.CurrentThreatExecutionStatusID) -join '|'))
     }
-}
+} } catch { WitnessFailure 'defender' $_ }
 
 # 12. WMI subscriptions, harmless: the filter waits for hour 99, which never
 #     comes, so neither consumer ever runs. Created once and kept — WMI
 #     writes its repository to disk minutes later, not at once. One filter
 #     more in root\default: subscriptions are not only in root\subscription.
-if (Wants 'wmi') {
+try { if (Wants 'wmi') {
     $sub = 'root\subscription'
     $filter = Get-CimInstance -Namespace $sub -ClassName __EventFilter -Filter "Name='WacTestFilter'"
     if (-not $filter) {
@@ -364,7 +392,7 @@ if (Wants 'wmi') {
     Write-Output "wmi=$($filter.Query)"
     # Every namespace, from root: the reference counts of the four kinds.
     $counts = @{ Filter = 0; Consumer = 0; Binding = 0; Timer = 0; Namespaces = 0 }
-    $pending = [System.Collections.Generic.Stack[string]]::new(); $pending.Push('root')
+    $pending = (New-Object 'System.Collections.Generic.Stack[string]'); $pending.Push('root')
     while ($pending.Count) {
         $ns = $pending.Pop(); $counts.Namespaces++
         foreach ($child in @(Get-CimInstance -Namespace $ns -ClassName __NAMESPACE -ErrorAction SilentlyContinue)) { $pending.Push("$ns\$($child.Name)") }
@@ -374,14 +402,14 @@ if (Wants 'wmi') {
         $counts.Timer += @(Get-CimInstance -Namespace $ns -ClassName __TimerInstruction -ErrorAction SilentlyContinue).Count
     }
     Write-Output "wmicount=$($counts.Filter)|$($counts.Consumer)|$($counts.Binding)|$($counts.Timer)|$($counts.Namespaces)"
-}
+} } catch { WitnessFailure 'wmi' $_ }
 
 # 13. A BITS job, harmless: never resumed, it never transfers, so its
 #     notification command never runs. Its properties are set BEFORE its
 #     file: BITS writes a job to qmgr.db when created and when a file is
 #     added, not when a property changes. BITS is restarted once, so that the
 #     database holds it (a live copy misses what is still in edb.log).
-if (Wants 'bits') {
+try { if (Wants 'bits') {
     $job = Get-BitsTransfer -AllUsers -ErrorAction SilentlyContinue | Where-Object DisplayName -eq 'WacTestJob' | Select-Object -First 1
     if (-not $job) {
         & bitsadmin /create WacTestJob | Out-Null
@@ -393,14 +421,14 @@ if (Wants 'bits') {
     }
     Write-Output ("bits=" + (@($job.JobId.ToString('B').ToUpper(), $job.Description, $job.JobState,
         $job.CreationTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
-}
+} } catch { WitnessFailure 'bits' $_ }
 
 # 14. FAT32 and exFAT volumes, on the two virtual USB keys (a suspect's keys):
 #     formatted by Windows itself on first use, then filled on every cycle
 #     with known content — a long name with accents, a subfolder, a file and a
 #     folder deleted —, and listed back by Windows: what fat_volumes.json must
 #     give, deleted entries included.
-if (Wants 'fat_volumes') {
+try { if (Wants 'fat_volumes') {
     foreach ($key in @(@{ Serial = 'WACUSB0001'; Label = 'WACFAT'; FileSystem = 'FAT32' },
                        @{ Serial = 'WACUSB0002'; Label = 'WACEXFAT'; FileSystem = 'exFAT' })) {
         $disk = Get-Disk | Where-Object { $_.SerialNumber -like "*$($key.Serial)*" } | Select-Object -First 1
@@ -425,7 +453,7 @@ if (Wants 'fat_volumes') {
         [IO.File]::WriteAllText($long, 'wac fat witness')
         # A summer date: Windows writes a FAT local time with the offset of the
         # moment, WAC reads it with the offset of its date — the same in summer.
-        (Get-Item -LiteralPath $long).LastWriteTimeUtc = [datetime]::new(2022, 7, 4, 5, 6, 8, [DateTimeKind]::Utc)
+        (Get-Item -LiteralPath $long).LastWriteTimeUtc = (New-Object datetime 2022, 7, 4, 5, 6, 8, ([DateTimeKind]::Utc))
         New-Item -ItemType Directory -Path (Join-Path $root 'DIR1') | Out-Null
         [IO.File]::WriteAllBytes((Join-Path $root 'DIR1\sub file.bin'), [byte[]](1..5000 | ForEach-Object { $_ % 256 }))
         # A program run from the key, as a suspect would: a copy of whoami.exe,
@@ -435,7 +463,7 @@ if (Wants 'fat_volumes') {
             $tool = Join-Path $root 'wac-tool.exe'
             Copy-Item C:\Windows\System32\whoami.exe $tool
             # whoami.exe's date is kept by the copy: a summer one instead (see above).
-            (Get-Item -LiteralPath $tool).LastWriteTimeUtc = [datetime]::new(2022, 7, 4, 5, 6, 10, [DateTimeKind]::Utc)
+            (Get-Item -LiteralPath $tool).LastWriteTimeUtc = (New-Object datetime 2022, 7, 4, 5, 6, 10, ([DateTimeKind]::Utc))
             & $tool | Out-Null
             Write-Output "fattool=$tool|$((Get-FileHash $tool -Algorithm SHA256).Hash)"
         }
@@ -444,7 +472,7 @@ if (Wants 'fat_volumes') {
         # offset of the moment of the copy. Its UTC date must come back exact.
         $winter = 'C:\wactest\wac-winter-source.txt'
         [IO.File]::WriteAllText($winter, 'modified in winter, copied later')
-        (Get-Item -LiteralPath $winter).LastWriteTimeUtc = [datetime]::new(2022, 1, 10, 12, 0, 0, [DateTimeKind]::Utc)
+        (Get-Item -LiteralPath $winter).LastWriteTimeUtc = (New-Object datetime 2022, 1, 10, 12, 0, 0, ([DateTimeKind]::Utc))
         Copy-Item -LiteralPath $winter -Destination (Join-Path $root 'copied-winter.txt')
         # The deletions last: no entry created after them takes their places.
         [IO.File]::WriteAllText((Join-Path $root 'deleted-file.txt'), 'deleted by the harness')
@@ -457,18 +485,18 @@ if (Wants 'fat_volumes') {
             Write-Output ("fatfile=" + (@($f.FullName, $f.Length, $f.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
         }
     }
-}
+} } catch { WitnessFailure 'fat_volumes' $_ }
 
 # 15. A shortcut made now (summer) to a file dated in winter: its target's
 #     item keeps the target's dates in local time, computed by Windows with the
 #     offset of NOW; the shortcut's header keeps them in UTC. Both must give
 #     the same instant.
-if (Wants 'recent_documents') {
+try { if (Wants 'recent_documents') {
     $target = 'C:\wactest\wac-winter-target.txt'
     [IO.File]::WriteAllText($target, 'a file of winter')
     $item = Get-Item -LiteralPath $target
-    $item.CreationTimeUtc = [datetime]::new(2022, 1, 5, 8, 0, 0, [DateTimeKind]::Utc)
-    $item.LastWriteTimeUtc = [datetime]::new(2022, 1, 10, 12, 0, 0, [DateTimeKind]::Utc)
+    $item.CreationTimeUtc = (New-Object datetime 2022, 1, 5, 8, 0, 0, ([DateTimeKind]::Utc))
+    $item.LastWriteTimeUtc = (New-Object datetime 2022, 1, 10, 12, 0, 0, ([DateTimeKind]::Utc))
     $link = 'C:\Users\wac\AppData\Roaming\Microsoft\Windows\Recent\wac-winter-target.lnk'
     $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($link)
     $shortcut.TargetPath = $target
@@ -479,21 +507,21 @@ if (Wants 'recent_documents') {
     # raw bytes, in the order object, birth volume, birth object.
     $ids = @(fsutil objectid query $target | ForEach-Object { if ($_ -match '([0-9a-f]{32})\s*$') { $Matches[1] } })
     if ($ids.Count -ge 3) { Write-Output ("lnkobjid=" + (@($link) + $ids[0..2] -join '|')) }
-}
+} } catch { WitnessFailure 'recent_documents' $_ }
 
 # 16. A folder inside a ZIP, opened by the user's Explorer: the shellbag's
 #     archive item copies the ZIP entry's date, a clock time without time
 #     zone (13:00 here), which must be given as written. Then a folder of a
 #     7z and of a tar.gz. Made once: the shellbags stay.
-if (Wants 'shellbags') {
+try { if (Wants 'shellbags') {
     $zipPath = 'C:\Users\wac\Documents\wac-archive.zip'
     if (-not (Test-Path $zipPath)) {
         Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
         $zip = [IO.Compression.ZipFile]::Open($zipPath, 'Create')
         $dir = $zip.CreateEntry('winterdir/')
-        $dir.LastWriteTime = [DateTimeOffset]::new(2022, 1, 10, 13, 0, 0, [TimeSpan]::FromHours(1))
+        $dir.LastWriteTime = (New-Object DateTimeOffset 2022, 1, 10, 13, 0, 0, ([TimeSpan]::FromHours(1)))
         $file = $zip.CreateEntry('winterdir/inner.txt')
-        $file.LastWriteTime = [DateTimeOffset]::new(2022, 1, 10, 14, 30, 0, [TimeSpan]::FromHours(1))
+        $file.LastWriteTime = (New-Object DateTimeOffset 2022, 1, 10, 14, 30, 0, ([TimeSpan]::FromHours(1)))
         $w = New-Object IO.StreamWriter($file.Open()); $w.Write('inside a zip'); $w.Close()
         $zip.Dispose()
         $script = 'C:\wactest\zipnav-user.ps1'
@@ -543,14 +571,14 @@ foreach ($p in 'C:\Users\wac\Documents\wac-seven.7z\sevendir', 'C:\Users\wac\Doc
         Remove-Item $script
     }
     Write-Output "readerentry=sevendir|2023-03-05T08:15:30"
-}
+} } catch { WitnessFailure 'shellbags' $_ }
 
 # 17. Event values as Windows renders them in the event's XML (what the Event
 #     Viewer shows): hexadecimal integers, GUIDs, booleans, dates, floats,
 #     binary data, and the ProcessingErrorData the service writes when it could
 #     not lay out a provider's data — the forms events.json must give. One event
 #     of each kind, by its record number.
-if (Wants 'events') {
+try { if (Wants 'events') {
     $picked = @()
     foreach ($q in @(@('Security', '*[System[EventID=4624]]'), @('Security', '*[System[EventID=4672]]'),
                      @('Microsoft-Windows-Ntfs/Operational', '*[System[EventID=170]]'),
@@ -572,31 +600,31 @@ if (Wants 'events') {
             Write-Output ("evtval=" + (@($e.LogName, $e.RecordId, $item[0], $value) -join '|'))
         }
     }
-}
+} } catch { WitnessFailure 'events' $_ }
 
 # 17b. A cleared log: a classic log of its own, three events, then cleared.
 #      Windows then sees none, but the chunk keeps them past its free-space
 #      offset — events.json must give them flagged as recovered, never as live.
-if (Wants 'events') {
+try { if (Wants 'events') {
     if (-not [System.Diagnostics.EventLog]::SourceExists('WACWitness')) { New-EventLog -LogName WACWitness -Source WACWitness }
     1..3 | ForEach-Object { Write-EventLog -LogName WACWitness -Source WACWitness -EventId (4200 + $_) -Message "WAC witness cleared $_" }
     Clear-EventLog -LogName WACWitness
     $live = @(Get-WinEvent -LogName WACWitness -ErrorAction SilentlyContinue).Count
     Write-Output "evtcleared=WACWitness.evtx|$live|4201,4202,4203"
-}
+} } catch { WitnessFailure 'events' $_ }
 
 # 18. Reference counts of the logs Windows writes itself.
-if (Wants 'setupapi', 'defender') {
+try { if (Wants 'setupapi', 'defender') {
     $sections = (Select-String -Path 'C:\Windows\INF\setupapi.dev*.log' -Pattern '^>>>  \[' -ErrorAction SilentlyContinue | Measure-Object).Count
     Write-Output "setupapi=$sections"
     $mplog = @(Get-ChildItem -Force 'C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log' -ErrorAction SilentlyContinue).Count
     Write-Output "mplog=$mplog"
-}
+} } catch { WitnessFailure 'setupapi,defender' $_ }
 
 # 19. B-031 — installed programs: a witness program in the machine's Uninstall
 #     key (harmless: values only, nothing installed), and the number of
 #     programs Windows lists in each Uninstall key — machine, 32-bit, user.
-if (Wants 'installed_programs') {
+try { if (Wants 'installed_programs') {
     $witness = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\WacTestProgram'
     New-Item -Force $witness | Out-Null
     Set-ItemProperty $witness -Name DisplayName -Value 'WAC test program'
@@ -613,18 +641,18 @@ if (Wants 'installed_programs') {
         $k.PSChildName + ':' + @(Get-ChildItem "$($k.PSPath)\Products" -ErrorAction SilentlyContinue | Where-Object { Test-Path "$($_.PSPath)\InstallProperties" }).Count
     }
     Write-Output ("msiproducts=" + ($msi -join '|'))
-}
+} } catch { WitnessFailure 'installed_programs' $_ }
 
 # 20. B-031 — Defender exclusions: a path, an extension and a process
 #     excluded from scanning (harmless: test names, nothing placed there),
 #     then every exclusion Defender lists, kind by kind.
-if (Wants 'defender_configuration') {
+try { if (Wants 'defender_configuration') {
     Add-MpPreference -ExclusionPath 'C:\wactest\wac-excluded' -ExclusionExtension 'wactestext' -ExclusionProcess 'wac-excluded.exe'
     $p = Get-MpPreference
     foreach ($kind in @(@('Paths', $p.ExclusionPath), @('Extensions', $p.ExclusionExtension), @('Processes', $p.ExclusionProcess), @('IpAddresses', $p.ExclusionIpAddress))) {
         Write-Output ("exclusions=" + $kind[0] + '|' + (@($kind[1] | Where-Object { $_ }) -join '|'))
     }
-}
+} } catch { WitnessFailure 'defender_configuration' $_ }
 
 # 39. B-016 — real browsing by "wac", in the session open on the console: a
 #     local HTTP server (HttpListener, 127.0.0.1:8765, this script's job)
@@ -636,7 +664,7 @@ if (Wants 'defender_configuration') {
 #     journals, as on a machine seized running. Placed BEFORE section 21:
 #     the downloads enter Explorer's RecentDocs, whose witness must stay the
 #     most recent entry.
-if (Wants 'web_client') {
+try { if (Wants 'web_client') {
     $token = Get-Date -Format 'yyyyMMddHHmmss'
     $server = Start-Job -ScriptBlock {
         $listener = New-Object Net.HttpListener
@@ -784,13 +812,13 @@ Get-Process iexplore -ErrorAction SilentlyContinue | Stop-Process -Force
     }
     $ieTarget = "C:\Users\wac\Downloads\wac-dl-ie-$token.txt"
     if (Test-Path $ieTarget) { Write-Output "webiedownload=$base/ie/wac-dl-ie-$token.txt|$ieTarget" }
-}
+} } catch { WitnessFailure 'web_client' $_ }
 
 # 21. B-031 — Explorer's RecentDocs: a file of a unique extension (.wacrd)
 #     added to the user's recent documents by the shell itself
 #     (SHAddToRecentDocs), in their interactive session. Harmless: a text file
 #     of the test folder, and the shortcut Explorer makes in Recent.
-if (Wants 'explorer_recent_docs') {
+try { if (Wants 'explorer_recent_docs') {
     $doc = 'C:\Users\wac\Documents\wac-recent-witness.wacrd'
     Set-Content -Path $doc -Value 'a recent document'
     $script = 'C:\wactest\recentdocs-user.ps1'
@@ -806,14 +834,14 @@ Start-Sleep 3
     Start-Sleep 15
     Unregister-ScheduledTask -TaskName WacRecentDocs -Confirm:$false
     Write-Output "recentdoc=$wacSid|.wacrd|wac-recent-witness.wacrd"
-}
+} } catch { WitnessFailure 'explorer_recent_docs' $_ }
 
 # 22. B-031 — MountPoints2: a share of the VM (WacShare, read-only for "wac", the test
 #     folder) mounted by the user in their session, which Explorer records as
 #     ##127.0.0.1#WacShare; then every entry of the user's MountPoints2 as the
 #     live registry lists it. Not the entries of CPC\Volume: they are
 #     volatile (reg save keeps the key, empty), never in the hive's file.
-if (Wants 'mount_points') {
+try { if (Wants 'mount_points') {
     if (-not (Get-SmbShare -Name WacShare -ErrorAction SilentlyContinue)) {
         New-SmbShare -Name WacShare -Path 'C:\wactest' -ReadAccess 'wac' | Out-Null
     }
@@ -834,14 +862,14 @@ net use W: /delete /y | Out-Null
     $base = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2"
     $names = @(Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object PSChildName -ne 'CPC' | ForEach-Object PSChildName)
     Write-Output ("mountpoints=$wacSid|" + ($names -join '|'))
-}
+} } catch { WitnessFailure 'mount_points' $_ }
 
 # 23. B-031 — known networks: every NetworkList profile as the live registry
 #     lists it (GUID, name, gateway hardware addresses of its signatures),
 #     and the last connection to each name in the NetworkProfile log
 #     (event 10000, UTC): the reference for DateLastConnected, stored in
 #     local time. Nothing is changed.
-if (Wants 'known_networks') {
+try { if (Wants 'known_networks') {
     $list = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList'
     foreach ($k in Get-ChildItem "$list\Profiles") {
         $guid = $k.PSChildName
@@ -856,13 +884,13 @@ if (Wants 'known_networks') {
             $last = $_.Group | Sort-Object TimeCreated -Descending | Select-Object -First 1
             Write-Output ("netconnected=" + $_.Name + '|' + $last.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss'))
         }
-}
+} } catch { WitnessFailure 'known_networks' $_ }
 
 # 24. B-031 — settings that decide how the other artefacts read, from the live
 #     registry (OperatingSystem.json, Settings), and the last shutdown as the
 #     System log records it (Kernel-General 13, "the operating system is
 #     shutting down", UTC): the reference for ShutdownTime. Nothing is changed.
-if (Wants 'operating_system') {
+try { if (Wants 'operating_system') {
     $cs = 'HKLM:\SYSTEM\CurrentControlSet\Control'
     foreach ($w in @(@("$cs\FileSystem", 'NtfsDisableLastAccessUpdate'), @("$cs\Session Manager\Memory Management\PrefetchParameters", 'EnablePrefetcher'),
                      @("$cs\Terminal Server", 'fDenyTSConnections'), @('HKLM:\SYSTEM\Select', 'Current'),
@@ -874,13 +902,13 @@ if (Wants 'operating_system') {
     $down = Get-WinEvent -LogName System -FilterXPath "*[System[Provider[@Name='Microsoft-Windows-Kernel-General'] and EventID=13]]" -MaxEvents 20 -ErrorAction SilentlyContinue |
         Where-Object { $_.TimeCreated -lt $boot } | Select-Object -First 1
     if ($down) { Write-Output ("shutdown=" + $down.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) }
-}
+} } catch { WitnessFailure 'operating_system' $_ }
 
 # 25. B-031 — startup state: every StartupApproved and RunNotification value of
 #     the machine and of the user "wac", as the live registry holds it (the
 #     status code's first 4 bytes, or the notification's value). Nothing is
 #     changed.
-if (Wants 'run_keys') {
+try { if (Wants 'run_keys') {
     $roots = @(@('HKLM', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'),
                @($wacSid, "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion"))
     foreach ($r in $roots) {
@@ -894,13 +922,13 @@ if (Wants 'run_keys') {
             }
         }
     }
-}
+} } catch { WitnessFailure 'run_keys' $_ }
 
 # 26. B-031 — program usage: a compatibility layer set by the user "wac" on a
 #     test program (harmless: a value, no program there), then the names each
 #     source of program_usage.json holds in the live registry, and the number
 #     of the taskbar's pinned items (FavoritesResolve: one size, one shortcut).
-if (Wants 'program_usage') {
+try { if (Wants 'program_usage') {
     $u = "Registry::HKEY_USERS\$wacSid\Software\Microsoft"
     $layers = "$u\Windows NT\CurrentVersion\AppCompatFlags\Layers"
     if (-not (Test-Path $layers)) { New-Item -Force $layers | Out-Null }
@@ -936,12 +964,12 @@ if (Wants 'program_usage') {
             if ($program) { Write-Output ("openwith=" + $e.PSChildName + '|' + $program + '|' + $p) }
         }
     }
-}
+} } catch { WitnessFailure 'program_usage' $_ }
 
 # 27. B-031 — devices: every USB and SCSI device Windows knows, present or not,
 #     with its first install, last arrival and last removal dates as
 #     Get-PnpDeviceProperty gives them (UTC). Nothing is changed.
-if (Wants 'devices') {
+try { if (Wants 'devices') {
     Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like 'USB\*' -or $_.InstanceId -like 'SCSI\*' } | ForEach-Object {
         $id = $_.InstanceId
         $dates = foreach ($key in 'DEVPKEY_Device_FirstInstallDate', 'DEVPKEY_Device_LastArrivalDate', 'DEVPKEY_Device_LastRemovalDate') {
@@ -950,11 +978,11 @@ if (Wants 'devices') {
         }
         Write-Output ("device=" + $id + '|' + ($dates -join '|'))
     }
-}
+} } catch { WitnessFailure 'devices' $_ }
 
 # 28. B-031 — network shares: the WacShare of section 22 (read-only for "wac",
 #     the test folder), then every non-administrative share Windows lists.
-if (Wants 'network_shares') {
+try { if (Wants 'network_shares') {
     if (-not (Get-SmbShare -Name WacShare -ErrorAction SilentlyContinue)) {
         New-SmbShare -Name WacShare -Path 'C:\wactest' -ReadAccess 'wac' | Out-Null
     }
@@ -964,35 +992,35 @@ if (Wants 'network_shares') {
         $sid = (New-Object Security.Principal.NTAccount $_.AccountName).Translate([Security.Principal.SecurityIdentifier]).Value
         Write-Output ("shareaccess=WacShare|$sid|" + $_.AccessControlType)
     }
-}
+} } catch { WitnessFailure 'network_shares' $_ }
 
 # 29. B-031 — network configuration: each present adapter as Windows lists it
 #     live (GUID, description, MAC, IPv4 address and how it was obtained).
 #     Nothing is changed.
-if (Wants 'network_configuration') {
+try { if (Wants 'network_configuration') {
     Get-NetAdapter -ErrorAction SilentlyContinue | ForEach-Object {
         $ip = Get-NetIPAddress -InterfaceIndex $_.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue | Select-Object -First 1
         Write-Output ("adapter=" + $_.InterfaceGuid + '|' + $_.InterfaceDescription + '|' + $_.MacAddress + '|' + $ip.IPAddress + '|' + $ip.PrefixOrigin)
     }
-}
+} } catch { WitnessFailure 'network_configuration' $_ }
 
 # 30. B-031 — event log configuration: each log as Windows lists it live, with
 #     its state (enabled or not), and each boot ETW session with its Start.
 #     Nothing is changed.
-if (Wants 'event_log_configuration') {
+try { if (Wants 'event_log_configuration') {
     Get-WinEvent -ListLog * -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Output ("eventlog=" + $_.LogName + '|' + $_.IsEnabled)
     }
     Get-AutologgerConfig -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Output ("autologger=" + $_.Name + '|' + $_.Start)
     }
-}
+} } catch { WitnessFailure 'event_log_configuration' $_ }
 
 # 31. B-034 — SAM hashes: two witness accounts, one with a known password, one
 #     with an empty one. WAC must decrypt their NT hashes; the check confronts
 #     each with MD4 of the password (the empty one gives the known constant).
 #     The password is synthetic, for a throwaway VM account — not a real secret.
-if (Wants 'users') {
+try { if (Wants 'users') {
     # A witness account with a known password: WAC must decrypt its NT hash to
     # MD4 of that password (checked in check-json.py), which exercises the whole
     # boot key / AES / DES chain against an independent computation. The password
@@ -1056,13 +1084,13 @@ if (Wants 'users') {
             }
         }
     } catch { Write-Output ("userrighterror=" + $_.Exception.Message) }
-}
+} } catch { WitnessFailure 'users' $_ }
 
 # 31b. B-032 — a desktop redirected, as OneDrive does: the Desktop of "wac"
 #     moved to C:\Users\wac\OneDrive\Desktop (once; it stays), a shortcut
 #     dropped there. Then every User Shell Folders value of the loaded hive of
 #     "wac", unexpanded, for user_shell_folders.json.
-if (Wants 'shortcuts', 'user_shell_folders') {
+try { if (Wants 'shortcuts', 'user_shell_folders') {
     $shellFolders = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
     New-Item -ItemType Directory -Force 'C:\Users\wac\OneDrive\Desktop' | Out-Null
     Set-ItemProperty -Path $shellFolders -Name Desktop -Value '%USERPROFILE%\OneDrive\Desktop' -Type ExpandString
@@ -1080,7 +1108,7 @@ if (Wants 'shortcuts', 'user_shell_folders') {
         Write-Output ("usf=" + $wacSid + '|' + $name + '|' + $key.GetValue($name, $null, 'DoNotExpandEnvironmentNames'))
     }
     $key.Close()
-}
+} } catch { WitnessFailure 'shortcuts,user_shell_folders' $_ }
 
 # 32. B-032 — shortcuts outside Recent: one on the public desktop with a known
 #     target and arguments, one pinned to the task bar of "wac". Then every
@@ -1088,7 +1116,7 @@ if (Wants 'shortcuts', 'user_shell_folders') {
 #     menu (Startup aside, it belongs to startup_folders.json), desktops, Quick
 #     Launch — for the machine and each profile of ProfileList: shortcuts.json
 #     must hold the same files, no more, no less.
-if (Wants 'shortcuts') {
+try { if (Wants 'shortcuts') {
     $wsh = New-Object -ComObject WScript.Shell
     $witnesses = @(
         @('C:\Users\Public\Desktop\wac-shortcut-test.lnk', 'C:\Windows\System32\cmd.exe', '/c echo wac-shortcut-witness', 'Desktop'),
@@ -1123,18 +1151,18 @@ if (Wants 'shortcuts') {
     }
     foreach ($f in $folders) {
         if (-not (Test-Path -LiteralPath $f[0])) { continue }
-        $found = if ($f[1]) { Get-ChildItem -LiteralPath $f[0] -Force -File -Recurse -Depth 6 -ErrorAction SilentlyContinue }
+        $found = if ($f[1]) { FilesToDepth $f[0] 6 }
                  else { Get-ChildItem -LiteralPath $f[0] -Force -File -ErrorAction SilentlyContinue }
         $found | Where-Object { $_.Extension -in '.lnk', '.url' -and $_.FullName -notmatch '\\Start Menu\\Programs\\Startup\\' } |
             ForEach-Object { Write-Output ("shortcutfile=" + $_.FullName) }
     }
-}
+} } catch { WitnessFailure 'shortcuts' $_ }
 
 # 33. B-032 — the Default profile, template of every new profile: a Run value
 #     planted in its NTUSER.DAT (loaded, written, unloaded), which run.json must
 #     give under the SID S-0-0-0 with Profile "Default". Harmless: it names an
 #     executable that does not exist.
-if (Wants 'run_keys') {
+try { if (Wants 'run_keys') {
     $hive = 'C:\Users\Default\NTUSER.DAT'
     reg load 'HKU\WacDefault' $hive 2>$null | Out-Null
     if ($LASTEXITCODE -eq 0) {
@@ -1143,13 +1171,13 @@ if (Wants 'run_keys') {
         reg unload 'HKU\WacDefault' 2>$null | Out-Null
         Write-Output 'rundefault=WacDefaultWitness|C:\wactest\wac-default-witness.exe'
     } else { Write-Output 'rundefaulterror=reg load failed' }
-}
+} } catch { WitnessFailure 'run_keys' $_ }
 
 # 34. B-032 — NTFS security descriptors: a witness file whose owner is set to
 #     "wac" and whose DACL grants Everyone read, then the owner Windows gives
 #     for a few dozen files (Get-Acl). mft.json's SecurityId must lead, through
 #     security_descriptors.json, to the same owner.
-if (Wants 'security_descriptors') {
+try { if (Wants 'security_descriptors') {
     $witness = 'C:\wactest\wac-sds-witness.txt'
     Set-Content $witness 'WAC security descriptor witness'
     icacls $witness /setowner wac | Out-Null
@@ -1159,14 +1187,14 @@ if (Wants 'security_descriptors') {
     foreach ($f in $files) {
         try { Write-Output ("sdsowner=" + $f.FullName + '|' + (Get-Acl -LiteralPath $f.FullName).GetOwner([Security.Principal.SecurityIdentifier]).Value) } catch {}
     }
-}
+} } catch { WitnessFailure 'security_descriptors' $_ }
 
 # 35. B-032 — NTFS volumes: what Windows itself says of each fixed NTFS volume
 #     (FSCTL_GET_NTFS_VOLUME_DATA, FSCTL_QUERY_USN_JOURNAL — what fsutil shows,
 #     without its localised text): serial, sector, cluster and record sizes,
 #     $MFT and $MFTMirr clusters, and the journal's identifier, size, delta and
 #     lowest valid USN. ntfs_volumes.json reads them raw in $Boot and $Max.
-if (Wants 'ntfs_volumes') {
+try { if (Wants 'ntfs_volumes') {
     Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
@@ -1202,20 +1230,20 @@ public static class WacNtfs {
                 [BitConverter]::ToUInt64($j, 40) + '|' + [BitConverter]::ToUInt64($j, 48) + '|' + [BitConverter]::ToUInt64($j, 24))
         }
     }
-}
+} } catch { WitnessFailure 'ntfs_volumes' $_ }
 
 # 36. B-032 — Defender's WPP traces (Support\*.bin), copied raw only: the
 #     names Windows lists, each to be found in the exhibit manifest. Their
 #     content changes as Defender writes, so only their presence is compared.
-if (Wants 'defender') {
+try { if (Wants 'defender') {
     Get-ChildItem 'C:\ProgramData\Microsoft\Windows Defender\Support' -Filter *.bin -Force -ErrorAction SilentlyContinue |
         ForEach-Object { Write-Output ("defenderwpp=" + $_.FullName) }
-}
+} } catch { WitnessFailure 'defender' $_ }
 
 # 37. B-032 — DPAPI master keys: every key file Windows lists in the Protect
 #     folder of the system and of each profile, and what each Preferred file
 #     names (read here by Windows, raw by WAC). Nothing is decrypted.
-if (Wants 'dpapi_master_keys') {
+try { if (Wants 'dpapi_master_keys') {
     $profileList = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
     $folders = @('C:\Windows\System32\Microsoft\Protect') + @(Get-ChildItem $profileList | ForEach-Object {
         [Environment]::ExpandEnvironmentVariables((Get-ItemProperty $_.PSPath).ProfileImagePath) + '\AppData\Roaming\Microsoft\Protect' })
@@ -1238,17 +1266,17 @@ if (Wants 'dpapi_master_keys') {
             }
         }
     }
-}
+} } catch { WitnessFailure 'dpapi_master_keys' $_ }
 
 # 38. B-016 — TypedURLs: two addresses typed by "wac", with their instants in
 #     TypedURLsTime (FILETIME, known values), written to the hive at once.
-if (Wants 'web_client') {
+try { if (Wants 'web_client') {
     $typed = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Internet Explorer\TypedURLs"
     $times = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Internet Explorer\TypedURLsTime"
     New-Item -Force $typed | Out-Null
     New-Item -Force $times | Out-Null
-    $witnesses = @(@('url1', 'http://wac-typed.invalid/recent', [datetime]::new(2026, 3, 4, 5, 6, 7, [DateTimeKind]::Utc)),
-                   @('url2', 'http://wac-typed.invalid/older', [datetime]::new(2025, 11, 12, 13, 14, 15, [DateTimeKind]::Utc)))
+    $witnesses = @(@('url1', 'http://wac-typed.invalid/recent', (New-Object datetime 2026, 3, 4, 5, 6, 7, ([DateTimeKind]::Utc))),
+                   @('url2', 'http://wac-typed.invalid/older', (New-Object datetime 2025, 11, 12, 13, 14, 15, ([DateTimeKind]::Utc))))
     foreach ($w in $witnesses) {
         Set-ItemProperty -Path $typed -Name $w[0] -Value $w[1]
         Set-ItemProperty -Path $times -Name $w[0] -Value ([BitConverter]::GetBytes($w[2].ToFileTimeUtc())) -Type Binary
@@ -1259,7 +1287,7 @@ if (Wants 'web_client') {
         $writable.Flush()
         $writable.Close()
     }
-}
+} } catch { WitnessFailure 'web_client' $_ }
 
 # 39. B-010 — Windows Search index: the document written at the start (unique
 #     name and text, in the Documents of "wac", an indexed place), waited for
@@ -1267,7 +1295,7 @@ if (Wants 'web_client') {
 #     (OLE DB, Search.CollatorDSO) returns of every item — URL, modification
 #     (UTC, to the second), size — and the instant of that query: an item
 #     indexed again after it is no longer comparable.
-if (Wants 'search_index') {
+try { if (Wants 'search_index') {
     $name = $searchName
     $query = { param($sql)
         $connection = New-Object -ComObject ADODB.Connection
@@ -1293,7 +1321,7 @@ if (Wants 'search_index') {
         $modified = if ($row[1] -is [datetime]) { $row[1].ToString('yyyy-MM-ddTHH:mm:ss') } else { '' }
         Write-Output ("searchitem=" + $row[0] + '|' + $modified + '|' + $row[2])
     }
-}
+} } catch { WitnessFailure 'search_index' $_ }
 
 # 40. B-011 — Remote Desktop, outgoing and incoming at once: "wac" opens a real
 #     session to this very machine (127.0.0.2) with a test account, then
@@ -1304,7 +1332,7 @@ if (Wants 'search_index') {
 #     writes its own only once the session is open). Everything the witness
 #     needs is undone afterwards: credential, RDP, firewall rule, account.
 #     `mstsc /v:` and not a .rdp file: Windows now asks before opening one.
-if (Wants 'rdp_client', 'rdp_server') {
+try { if (Wants 'rdp_client', 'rdp_server') {
     # One cache at a time: those of earlier cycles are removed, or each cycle
     # would add a Cache<NNNN>.bin to the profile.
     Remove-Item 'C:\Users\wac\AppData\Local\Microsoft\Terminal Server Client\Cache\*' -Force -ErrorAction SilentlyContinue
@@ -1375,13 +1403,13 @@ Remove-ItemProperty $client -Name AuthenticationLevelOverride -ErrorAction Silen
         $d = @{}; foreach ($x in ([xml]$e.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
         if ($d['LogonType'] -eq '10' -and $d['TargetUserName'] -eq 'wacrdp') { Write-Output ("rdpin=Security|" + $e.RecordId + "|wacrdp|" + $d['IpAddress']) }
     }
-}
+} } catch { WitnessFailure 'rdp_client,rdp_server' $_ }
 
 # 41. B-026 — a picture seen in Explorer: "wac" opens its Pictures, where a PNG
 #     witness lies (made once, never piled up), and Windows gives the
 #     picture's System.ThumbnailCacheId — the hash of its entry in
 #     thumbcache_<size>.db. The task, its script and its answer are removed.
-if (Wants 'thumbcache') {
+try { if (Wants 'thumbcache') {
     $picture = 'C:\Users\wac\Pictures\wac-thumbcache-witness.png'
     if (-not (Test-Path $picture)) {
         Add-Type -AssemblyName System.Drawing
@@ -1414,7 +1442,7 @@ if ($id) { Set-Content 'C:\wactest\thumbcache-id.txt' ('{0:x16}' -f [uint64]$id)
     Unregister-ScheduledTask -TaskName WacThumbcache -Confirm:$false
     if (Test-Path $answer) { Write-Output ("thumbcache=" + (Get-Content $answer).Trim() + "|" + $picture) }
     Remove-Item $answer, $script -ErrorAction SilentlyContinue
-}
+} } catch { WitnessFailure 'thumbcache' $_ }
 
 # 42. B-017 — a message written by Thunderbird itself: a witness profile of
 #     "wac" with a POP3 account on 127.0.0.1:1110 (no first-run dialog), a POP3
@@ -1423,7 +1451,7 @@ if ($id) { Set-Content 'C:\wactest\thumbcache-id.txt' ('{0:x16}' -f [uint64]$id)
 #     in base64 whose name is RFC 2231 —, Thunderbird run by "wac" on that
 #     profile, fetching it into its Inbox, then closed as a user would. The
 #     Inbox is emptied first: the witness is never piled up.
-if (Wants 'emails') {
+try { if (Wants 'emails') {
     $thunderbird = 'C:\Program Files\Mozilla Thunderbird\thunderbird.exe'
     if (Test-Path $thunderbird) {
         $token = Get-Date -Format 'yyyyMMddHHmmss'
@@ -1495,7 +1523,7 @@ $([Convert]::ToBase64String($attachment))
         Set-Content -Encoding UTF8 $server @'
 param([string]$MessageFile)
 $message = [IO.File]::ReadAllText($MessageFile)
-$listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 1110)
+$listener = New-Object Net.Sockets.TcpListener ([Net.IPAddress]::Loopback), 1110
 $listener.Start()
 $deadline = (Get-Date).AddSeconds(90)
 while ((Get-Date) -lt $deadline) {
@@ -1561,4 +1589,4 @@ if (-not `$tb.HasExited) { `$tb | Stop-Process -Force }
             Write-Output "thunderbird=$token|$name|$sha|$inbox"
         }
     }
-}
+} } catch { WitnessFailure 'emails' $_ }
