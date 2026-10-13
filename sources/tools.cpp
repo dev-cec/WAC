@@ -1661,6 +1661,31 @@ HRESULT writeAbsentFromVersion(const std::string& name, const std::wstring& arte
 	return writeJsonFile(name, o);
 }
 
+HRESULT processElevated(bool& elevated) {
+	elevated = false;
+	HANDLE token = nullptr;
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) return GetLastError();
+	TOKEN_ELEVATION elevation = { 0 };
+	DWORD length = 0;
+	const BOOL read = GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &length);
+	const DWORD error = read ? ERROR_SUCCESS : GetLastError();
+	CloseHandle(token);
+	if (read) { elevated = elevation.TokenIsElevated != 0; return ERROR_SUCCESS; }
+	if (error != ERROR_INVALID_PARAMETER) return error;
+	// Before Vista: member of the Administrators group (S-1-5-32-544), or not.
+	SID_IDENTIFIER_AUTHORITY authority = SECURITY_NT_AUTHORITY;
+	PSID administrators = nullptr;
+	if (!AllocateAndInitializeSid(&authority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &administrators))
+		return GetLastError();
+	BOOL member = FALSE;
+	const BOOL checked = CheckTokenMembership(nullptr, administrators, &member);
+	const DWORD membershipError = checked ? ERROR_SUCCESS : GetLastError();
+	FreeSid(administrators);
+	if (!checked) return membershipError;
+	elevated = member != FALSE;
+	return ERROR_SUCCESS;
+}
+
 bool sourceNotFound(HRESULT result) {
 	return result == ERROR_FILE_NOT_FOUND || result == ERROR_PATH_NOT_FOUND
 	    || result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) || result == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);

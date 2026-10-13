@@ -122,6 +122,21 @@ inline bool moveFileLong(const std::wstring& source, const std::wstring& target)
  *  @param enter decides, from its relative path, whether a subfolder is
  *         walked; empty: all of them
  *  @return false if the folder itself cannot be listed */
+/*! Starts the listing of a folder, as each walk here wants it: names only,
+ *  fetched in large batches. Both options came with Windows 7; XP and Vista
+ *  refuse the call ("the parameter is incorrect") — the walk then listed
+ *  nothing, and under XP the working copy of a collection stayed empty
+ *  without a word. Refused, the listing is asked for the way XP knows.
+ *  @param pattern the folder, extended, followed by `\*`
+ *  @param found receives the first entry
+ *  @return the search handle, INVALID_HANDLE_VALUE if the folder cannot be listed */
+inline HANDLE firstFolderEntry(const std::wstring& pattern, WIN32_FIND_DATAW& found) {
+	const HANDLE h = FindFirstFileExW(pattern.c_str(), FindExInfoBasic, &found, FindExSearchNameMatch, nullptr,
+	                                  FIND_FIRST_EX_LARGE_FETCH);
+	if (h != INVALID_HANDLE_VALUE || GetLastError() != ERROR_INVALID_PARAMETER) return h;
+	return FindFirstFileExW(pattern.c_str(), FindExInfoStandard, &found, FindExSearchNameMatch, nullptr, 0);
+}
+
 inline bool forEachFileBelow(const std::wstring& folder, const std::function<void(const std::wstring&)>& visit,
                              const std::function<bool(const std::wstring&)>& enter = nullptr) {
 	const std::wstring root = extendedPath(folder);
@@ -134,8 +149,7 @@ inline bool forEachFileBelow(const std::wstring& folder, const std::function<voi
 		// sum may pass the limit where neither did.
 		const std::wstring here = extendedPath(relative.empty() ? root : root + L"\\" + relative);
 		WIN32_FIND_DATAW found = {};
-		const HANDLE h = FindFirstFileExW((here + L"\\*").c_str(), FindExInfoBasic, &found,
-		                                  FindExSearchNameMatch, nullptr, FIND_FIRST_EX_LARGE_FETCH);
+		const HANDLE h = firstFolderEntry(here + L"\\*", found);
 		if (h == INVALID_HANDLE_VALUE) {
 			if (first) return false;
 			continue;
@@ -176,8 +190,7 @@ inline bool removeFolderTree(const std::wstring& folder) {
 	for (size_t i = 0; i < folders.size(); ++i) {
 		const std::wstring here = extendedPath(folders[i].empty() ? root : root + L"\\" + folders[i]);
 		WIN32_FIND_DATAW found = {};
-		const HANDLE h = FindFirstFileExW((here + L"\\*").c_str(), FindExInfoBasic, &found,
-		                                  FindExSearchNameMatch, nullptr, 0);
+		const HANDLE h = firstFolderEntry(here + L"\\*", found);
 		if (h == INVALID_HANDLE_VALUE) continue;
 		do {
 			const std::wstring name = found.cFileName;

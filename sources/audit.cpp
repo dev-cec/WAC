@@ -122,12 +122,11 @@ void readContext() {
 					g_sid = sidToText(sid, (size_t)(sidBuffer.data() + sidBuffer.size() - sid));
 			}
 		}
-		TOKEN_ELEVATION elevation = { 0 };
-		DWORD length = 0;
-		if (GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &length))
-			g_elevated = elevation.TokenIsElevated != 0;
 		CloseHandle(token);
 	}
+	// Left false when the token could not be read: the log then says "not elevated", never more than is known.
+	bool elevated = false;
+	if (processElevated(elevated) == ERROR_SUCCESS) g_elevated = elevated;
 
 	// Time zone of the EXAMINED MACHINE: indispensable to reinterpret the local
 	// dates of the artefacts (the suspect's time zone, not the analyst's).

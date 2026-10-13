@@ -57,6 +57,7 @@ PHRASES = [
     ("BagMRU shell items", "éléments de shell de BagMRU"),
     ("BIN bitmap cache", "cache d'images BIN"), ("BMC bitmap cache", "cache d'images BMC"),
     ("BITS state file", "fichier d'état de BITS"), ("certificate blobs", "certificats (blobs)"),
+    ("CIM repository of Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, in FS)", "dépôt CIM de Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, dans FS)"),
     ("CIM repository", "dépôt CIM"),
     ("CMMM, Vista and 7 layout", "CMMM, disposition de Vista et 7"),
     ("CMMM, Windows 8 and later layout", "CMMM, disposition de Windows 8 et suivants"),
@@ -120,6 +121,8 @@ NOTES = {
     "Earlier with PSReadLine installed by hand (PowerShell 5, Windows 7 and later).":
         "Plus tôt si PSReadLine a été installé à la main (PowerShell 5, Windows 7 et suivants).",
     "Switched off by default on the server editions.": "Désactivé par défaut sur les éditions serveur.",
+    "Windows XP keeps the repository in a FS subfolder (measured, SP1): collected, not converted until its layout is checked.":
+        "Windows XP range le dépôt dans un sous-dossier FS (mesuré, SP1) : prélevé, non converti tant que sa disposition n'est pas vérifiée.",
     "DestList version 6 measured on build 26200; the custom lists (CustomDestinations) carry no version.":
         "DestList version 6 mesurée sur le build 26200 ; les listes personnalisées (CustomDestinations) ne portent pas de version.",
     "Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600.":

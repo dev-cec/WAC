@@ -35,10 +35,16 @@ HRESULT Shimcaches::getData() {
 	HRESULT hresult=0;
 	ORHKEY hKey=NULL;
 
-	log(3, L"🔈OROpenKey CurrentControlSet\\Control\\Session Manager\\AppCompatCache");
-	hresult = OROpenKey(conf.CurrentControlSet, L"Control\\Session Manager\\AppCompatCache", &hKey);
+	/* The key holding the value: AppCompatCache since Server 2003,
+	   AppCompatibility under Windows XP — where the collector, looking at the
+	   first only, found nothing and the cache passed for missing. */
+	for (const wchar_t* key : { L"Control\\Session Manager\\AppCompatCache", L"Control\\Session Manager\\AppCompatibility" }) {
+		log(3, std::wstring(L"🔈OROpenKey CurrentControlSet\\") + key);
+		hresult = OROpenKey(conf.CurrentControlSet, key, &hKey);
+		if (hresult == ERROR_SUCCESS || hresult == ERROR_MORE_DATA) break;
+	}
 	if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-		log(2, L"🔥OROpenKey CurrentControlSet\\Control\\Session Manager\\AppCompatCache", hresult );
+		log(2, L"🔥OROpenKey CurrentControlSet\\Control\\Session Manager\\AppCompatCache or AppCompatibility", hresult );
 		return hresult;
 	}
 

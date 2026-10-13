@@ -180,6 +180,7 @@ int main(int argc, char** argv) {
 	      "Windows 8.1: Amcache, BITS or the search index not declared in an unconverted form");
 	check(undecodedOn("search_index", ten) && !undecodedOn("search_index", eleven) && !undecodedOn("amcache", ten) && !undecodedOn("bits", ten),
 	      "Windows 10 and 11: the search index is ESE before 11; Amcache and BITS are converted on a current 10");
+	check(undecodedOn("wmi", xp) && !undecodedOn("wmi", vista), "the WMI repository of XP (in FS) converted, or Vista's not");
 	check(!undecodedOn("prefetch", eightOne) && !undecodedOn("shimcache", eightOne), "an artefact with signatures decided by the version");
 	check(!undecodedOn("log_file", eightOne) && !undecodedOn("registry_backups", eightOne), "an artefact only ever copied raw declared unconverted");
 	check(!undecodedOn("srum", seven) && !undecodedOn("hosts", eightOne) && !undecodedOn("amcache", WindowsVersion{})

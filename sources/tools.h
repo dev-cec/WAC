@@ -1175,6 +1175,15 @@ HRESULT writeNotRequested(const std::string& name, const std::wstring& artefact,
  * @return ERROR_SUCCESS if the file could be written */
 HRESULT writeAbsentFromVersion(const std::string& name, const std::wstring& artefact, const std::wstring& key);
 
+/*! Whether WAC runs with administrator rights. From Windows Vista on, the
+ *  token says whether it is elevated; Windows XP and Server 2003 have no
+ *  elevation — the question is refused there ("the parameter is incorrect",
+ *  which stopped WAC at its first check) —, and the answer is whether the
+ *  token belongs to the Administrators group.
+ * @param elevated receives the answer
+ * @return ERROR_SUCCESS, or why the token could not be read */
+HRESULT processElevated(bool& elevated);
+
 /*! Whether a result says the source itself was not there — file or folder —,
  *  whichever way the collector returned it (a Win32 code or its HRESULT).
  * @param result the collector's result */

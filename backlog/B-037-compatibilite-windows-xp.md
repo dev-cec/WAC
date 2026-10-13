@@ -44,7 +44,12 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Inventaire du 32 bits sous XP SP1 : 14 fonctions absentes sur 271 (voir le journal)
 - [x] Les 14 importations levées (`xp_imports.cpp`) ; la compilation refuse toute importation absente de XP SP1
 - [x] VM Windows 8 Pro x86 (`create-vm.sh win8`) ; WAC32 y collecte et convertit sans échec
-- [ ] WAC32 lancé sous XP SP1 réel : VM XP, canal de pilotage sans agent
+- [x] VM Windows XP SP1 (`create-vm.sh winxp`, installation sans interaction, pilotage par `lib/vmkeys.py` et port série)
+- [x] WAC32 se charge, collecte et convertit sous XP SP1 réel
+- [ ] État du réseau de XP : connexions, voisins et routes par les fonctions d'avant Vista (aujourd'hui déclarés non lus)
+- [ ] Étape « fichiers de ressources des fournisseurs » à ne pas tenter quand les journaux sont au format `.evt`
+- [x] ShimCache de XP vérifié après un redémarrage : clé `AppCompatibility`, signature 0xDEADBEEF, déclaré non pris en charge
+- [ ] Décodeurs des formats de XP déclarés non pris en charge (12 artefacts, dont `.evt`, Prefetch 17, UserAssist, ShellBags, tâches `.job`)
 - [ ] Même inventaire sous Windows 8 x86 et Vista
 - [x] VM Windows 8.1 et Windows 7 SP1 (x64) créées sans interaction (`create-vm.sh win81`, `win7`), agent invité compris
 - [x] WAC 64 bits collecte et convertit sous Windows 8.1 et Windows 7 SP1, sans échec
@@ -88,3 +93,14 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-13 : **WAC32 sous Windows 8 x86** : collecte en 60 s, conversion en 13 s, 74 JSON valides, aucun échec. Version lue (build 9200), trois artefacts absents de la version ; ShimCache déclaré avec la signature « 00ts » (0x73743030, mesurée), 45 Prefetch (version 26), Amcache, BITS et index de recherche déclarés non pris en charge. Condensats NT de la SAM déchiffrés (donc `bcrypt.dll` bien chargée à l'exécution). 62 435 enregistrements `$MFT`, 2 478 événements, 37 processus.
 
 - 2026-10-13 : cycle complet Windows 11 avec ce build : 497 contrôles réussis, aucun échec ; commité. Deux contrôles de moins qu'au cycle précédent, pour une raison étrangère à WAC : Windows a purgé son dossier Prefetch arrivé à 512 fichiers (257 suppressions en une minute au journal USN), et le recoupement UserAssist/Prefetch n'avait plus de programme commun.
+- 2026-10-13 : VM **Windows XP Professionnel SP1** (`create-vm.sh winxp`) : machine i440FX, disque IDE, processeur Pentium III, disquette de réponses `WINNT.SIF` — installée sans une intervention. Pas d'agent pour XP : la machine écrit sur son port série quand elle est prête, les commandes sont tapées par `lib/vmkeys.py` (nouveau : touches, texte selon la disposition du clavier, clics par QMP) et leurs sorties lues sur `COM1`. La clé de produit est lue sur l'ISO à la création (fichier « CD Key.txt ») et n'est écrite que sur la disquette.
+- 2026-10-13 : **WAC32 se charge sous Windows XP SP1** dès le premier essai (aucune importation manquante, comme la garde de compilation l'annonçait). Cinq défauts d'exécution trouvés et corrigés, tous invisibles ailleurs :
+  - contrôle des droits : `TokenElevation` n'existe pas avant Vista (« paramètre incorrect », arrêt au premier contrôle) → `processElevated`, appartenance au groupe Administrateurs avant Vista ;
+  - **copie de travail vide sans un mot** : le parcours de dossiers demandait `FindExInfoBasic` et `FIND_FIRST_EX_LARGE_FETCH`, apparus avec Windows 7 ; refusé sous XP, il ne listait rien, et `ExhibitStoreToWorking` ne lisait pas son résultat — « 0 fichier copié », puis ruches « introuvables ». Repli sur la forme que XP connaît, et l'échec du parcours est désormais une erreur ;
+  - état du réseau abandonné en bloc pour trois fonctions de Vista → chaque table a ses fonctions, celles qui manquent sont inscrites dans `TablesNotRead` ;
+  - **plantage** à la lecture des interfaces : la structure `IP_ADAPTER_ADDRESSES` de XP est plus courte que celle de Vista, et les champs ajoutés étaient lus au-delà → chaque champ n'est lu que si la longueur annoncée par l'adaptateur le contient ;
+  - ShimCache cherché sous la seule clé `AppCompatCache` (XP : `AppCompatibility`) ; dépôt WMI de XP dans `Repository\FS`, déclaré « non converti » au lieu d'« introuvable ».
+- 2026-10-13 : résultat sous XP SP1 (build 2600) : collecte en 54 s, conversion en 9 s, 74 JSON. 14 artefacts déclarés absents de la version (les 14 que le test de la table prévoyait), 12 déclarés « format non pris en charge » d'après la version, 33 Prefetch (version 17) déclarés un à un ; interfaces réseau lues, trois tables déclarées non lues. Restent : `$UsnJrnl` non collecté (journal inactif par défaut sous XP), USBSTOR absent (aucun support branché), ShimCache « attendu mais introuvable » — la clé n'existe réellement pas dans le registre de cette machine jamais arrêtée depuis son installation —, et l'étape des fichiers de fournisseurs d'événements, sans objet avec des journaux `.evt`.
+- 2026-10-13 : après un redémarrage de la VM XP, la clé `AppCompatibility` existe (XP n'écrit son cache qu'à l'arrêt) : `shimcache.json` porte `UnsupportedFormat`, signature 0xDEADBEEF — mesurée, conforme à la table. Le « attendu mais introuvable » d'avant le redémarrage était donc exact : la source manquait réellement.
+
+- 2026-10-13 : cycle complet Windows 11 avec ces correctifs : 497 contrôles réussis, aucun échec ; commité.

@@ -217,8 +217,9 @@
  & Windows 10 & \texttt{…et navigateurs Chromium, Firefox : History, places.sqlite, fichiers de session} & SQLite, SNSS, mozLz4 & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chromium et Firefox dépendent du navigateur installé, non de Windows.} \\
 \addlinespace
-\texttt{wmi} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository} & dépôt CIM (INDEX.BTR, OBJECTS.DATA, MAPPING) & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
+\texttt{wmi} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository\textbackslash{}FS} & dépôt CIM de Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, dans FS) & non \\
+ & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository} & dépôt CIM (INDEX.BTR, OBJECTS.DATA, MAPPING) & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP ; Windows XP range le dépôt dans un sous-dossier FS (mesuré, SP1) : prélevé, non converti tant que sa disposition n'est pas vérifiée.} \\
 \addlinespace
 \texttt{word\_wheel\_query} & Windows 7 & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}WordWheelQuery} & MRUListEx et chaînes UTF-16 & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP : Search Assistant\textbackslash{}ACMru, non collecté.} \\

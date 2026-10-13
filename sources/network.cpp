@@ -34,13 +34,20 @@ struct IpHelper {
 HRESULT load(IpHelper& api) {
 	api.module = loadSystemLibrary(L"iphlpapi.dll");
 	if (!api.module) return HRESULT_FROM_WIN32(GetLastError());
-	const bool complete = resolveExport(api.module, "GetExtendedTcpTable", api.tcpTable)
-	    && resolveExport(api.module, "GetExtendedUdpTable", api.udpTable)
-	    && resolveExport(api.module, "GetIpNetTable2", api.neighbourTable)
-	    && resolveExport(api.module, "GetIpForwardTable2", api.routeTable)
-	    && resolveExport(api.module, "FreeMibTable", api.freeTable)
-	    && resolveExport(api.module, "GetAdaptersAddresses", api.adapters);
-	return complete ? ERROR_SUCCESS : HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
+	/* EACH TABLE HAS ITS OWN FUNCTIONS, and an older Windows lacks some: the
+	   tables with owners came with XP SP2, the neighbour and route tables of
+	   both families with Vista. One missing function used to give up the
+	   whole network state ("the specified procedure could not be found",
+	   under XP SP1); now the table it serves is listed in TablesNotRead, and
+	   the others are read. Only a Windows offering none of them fails. */
+	const bool tcp = resolveExport(api.module, "GetExtendedTcpTable", api.tcpTable);
+	const bool udp = resolveExport(api.module, "GetExtendedUdpTable", api.udpTable);
+	const bool neighbours = resolveExport(api.module, "GetIpNetTable2", api.neighbourTable);
+	const bool routes = resolveExport(api.module, "GetIpForwardTable2", api.routeTable);
+	const bool release = resolveExport(api.module, "FreeMibTable", api.freeTable);
+	const bool adapters = resolveExport(api.module, "GetAdaptersAddresses", api.adapters);
+	const bool any = (tcp && udp) || (neighbours && release) || (routes && release) || adapters;
+	return any ? ERROR_SUCCESS : HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
 }
 
 /*! A table whose size is asked first, then read — retried, since it may grow
@@ -122,6 +129,7 @@ Json textArray(const std::vector<std::wstring>& texts) {
 /*! Reads the TCP and UDP tables, IPv4 and IPv6, with their owners and
  *  creation times. @return false if one of the four could not be read */
 bool readConnections(const IpHelper& api, std::vector<Connection>& connections) {
+	if (!api.tcpTable || !api.udpTable) return false;   // before XP SP2
 	auto tcp = [&](ULONG family) { return readTable([&](void* t, ULONG* s) { return api.tcpTable(t, s, FALSE, family, TCP_TABLE_OWNER_MODULE_ALL, 0); }); };
 	auto udp = [&](ULONG family) { return readTable([&](void* t, ULONG* s) { return api.udpTable(t, s, FALSE, family, UDP_TABLE_OWNER_MODULE, 0); }); };
 	const std::vector<uint8_t> tcp4 = tcp(AF_INET), tcp6 = tcp(AF_INET6), udp4 = udp(AF_INET), udp6 = udp(AF_INET6);
@@ -162,6 +170,7 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 
 //! Reads the ARP and NDP caches. @return false if they could not be read
 bool readNeighbours(const IpHelper& api, std::vector<Neighbour>& neighbours) {
+	if (!api.neighbourTable || !api.freeTable) return false;   // before Vista
 	PMIB_IPNET_TABLE2 table = nullptr;
 	if (api.neighbourTable(AF_UNSPEC, &table) != NO_ERROR || !table) return false;
 	for (ULONG k = 0; k < table->NumEntries; ++k) {
@@ -176,6 +185,7 @@ bool readNeighbours(const IpHelper& api, std::vector<Neighbour>& neighbours) {
 
 //! Reads the routing table. @return false if it could not be read
 bool readRoutes(const IpHelper& api, std::vector<Route>& routes) {
+	if (!api.routeTable || !api.freeTable) return false;   // before Vista
 	PMIB_IPFORWARD_TABLE2 table = nullptr;
 	if (api.routeTable(AF_UNSPEC, &table) != NO_ERROR || !table) return false;
 	for (ULONG k = 0; k < table->NumEntries; ++k) {
@@ -189,10 +199,23 @@ bool readRoutes(const IpHelper& api, std::vector<Route>& routes) {
 
 //! Reads the interfaces and their configuration. @return false if they could not be read
 bool readInterfaces(const IpHelper& api, std::vector<NetworkInterface>& interfaces) {
-	const ULONG flags = GAA_FLAG_INCLUDE_GATEWAYS | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST;
-	const std::vector<uint8_t> buffer = readTable([&](void* t, ULONG* s) {
-		return api.adapters(AF_UNSPEC, flags, nullptr, reinterpret_cast<PIP_ADAPTER_ADDRESSES>(t), s); });
+	if (!api.adapters) return false;
+	/* The gateways are a flag of Windows Vista: asked for first, and the
+	   table read without them if this Windows does not know the flag. */
+	std::vector<uint8_t> buffer;
+	for (const ULONG gateways : { (ULONG)GAA_FLAG_INCLUDE_GATEWAYS, 0UL }) {
+		const ULONG flags = gateways | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST;
+		buffer = readTable([&](void* t, ULONG* s) {
+			return api.adapters(AF_UNSPEC, flags, nullptr, reinterpret_cast<PIP_ADAPTER_ADDRESSES>(t), s); });
+		if (!buffer.empty()) break;
+	}
 	if (buffer.empty()) return false;
+	/* EACH ADAPTER STATES ITS OWN LENGTH, and the structure grew with the
+	   versions: Windows XP's ends before the gateways and the DHCP server
+	   that Vista added. A field is read only if this adapter's structure
+	   holds it — read past its end, it was whatever followed in the buffer,
+	   taken for a pointer: WAC32 crashed under Windows XP SP1. */
+	const auto holds = [](const IP_ADAPTER_ADDRESSES* a, size_t offset, size_t size) { return offset + size <= a->Length; };
 	for (auto* a = reinterpret_cast<const IP_ADAPTER_ADDRESSES*>(buffer.data()); a; a = a->Next) {
 		NetworkInterface i;
 		i.name = a->FriendlyName ? a->FriendlyName : L"";
@@ -201,11 +224,13 @@ bool readInterfaces(const IpHelper& api, std::vector<NetworkInterface>& interfac
 		i.hardwareAddress = HardwareAddressText(a->PhysicalAddress, std::min<ULONG>(a->PhysicalAddressLength, sizeof(a->PhysicalAddress)));
 		i.up = a->OperStatus == IfOperStatusUp;
 		i.addresses = addresses(a->FirstUnicastAddress);
-		i.gateways = addresses(a->FirstGatewayAddress);
+		if (holds(a, offsetof(IP_ADAPTER_ADDRESSES, FirstGatewayAddress), sizeof(a->FirstGatewayAddress)))
+			i.gateways = addresses(a->FirstGatewayAddress);
 		i.dnsServers = addresses(a->FirstDnsServerAddress);
 		i.dnsSuffix = a->DnsSuffix ? a->DnsSuffix : L"";
 		i.dhcp = a->Dhcpv4Enabled != 0;
-		if (i.dhcp) i.dhcpServer = address(a->Dhcpv4Server);
+		if (i.dhcp && holds(a, offsetof(IP_ADAPTER_ADDRESSES, Dhcpv4Server), sizeof(a->Dhcpv4Server)))
+			i.dhcpServer = address(a->Dhcpv4Server);
 		interfaces.push_back(std::move(i));
 	}
 	return true;

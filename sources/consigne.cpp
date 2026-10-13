@@ -248,7 +248,7 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 
 	// The walk, the copy and the check go through Win32: an exhibit's path can
 	// pass MAX_PATH, where std::filesystem fails (long_path.h, B-049).
-	forEachFileBelow(exhibitStore, [&](const std::wstring& relative) {
+	const bool listed = forEachFileBelow(exhibitStore, [&](const std::wstring& relative) {
 		// The manifest and its seal belong to the exhibit store alone: copying
 		// them to the working directory would invite changing them.
 		const std::wstring name = relative.substr(relative.find_last_of(L'\\') + 1);
@@ -288,6 +288,13 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 			else ++verified;
 		}
 	});
+	/* The store exists (checked above) and yet could not be listed: nothing
+	   was copied, and everything that follows would read an empty working
+	   copy. Said, and returned — it used to pass for "0 file copied". */
+	if (!listed) {
+		log(2, L"🔥Exhibit store not listed: no working copy made of " + exhibitStore, ERROR_ACCESS_DENIED);
+		return HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
+	}
 
 	log(2, L"❇️Working directory: " + std::to_wstring(count) + L" file(s) copied, "
 	     + std::to_wstring(verified) + L" verified by fingerprint, "

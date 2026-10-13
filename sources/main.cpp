@@ -94,37 +94,19 @@ void showHelp() {
 int checkElevation() {
 	log(1, L"➕Check administrator rights");
 	printStep(Text::StepAdministratorRights);
-	/* A program using VSS must run in elevated mode */
-	HANDLE hToken;
-	log(3, L"🔈GetCurrentProcess()");
-	log(3, L"🔈OpenProcessToken");
-	if (OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &hToken)) {
-		DWORD infoLen;
-
-		TOKEN_ELEVATION elevation = { 0 };
-		log(3, L"🔈GetTokenInformation");
-		if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &infoLen)) {
-			if (!elevation.TokenIsElevated)
-			{
-				printError(ERROR_ELEVATION_REQUIRED);
-				CloseHandle(hToken);
-				return 3;
-			}
-			CloseHandle(hToken);
-			printSuccess();
-		}
-		else {
-			log(2, L"🔈GetTokenInformation", GetLastError());
-			printError(GetLastError());
-			CloseHandle(hToken);
-			return GetLastError();
-		}
+	// Reading the volumes raw requires administrator rights (processElevated: elevation, or the group before Vista).
+	bool elevated = false;
+	const HRESULT read = processElevated(elevated);
+	if (read != ERROR_SUCCESS) {
+		log(2, L"🔥processElevated", read);
+		printError(read);
+		return read;
 	}
-	else {
-		log(2, L"🔈OpenProcessToken", GetLastError());
-		printError(GetLastError());
-		return GetLastError();
+	if (!elevated) {
+		printError(ERROR_ELEVATION_REQUIRED);
+		return 3;
 	}
+	printSuccess();
 	return 0;
 }
 
