@@ -250,6 +250,10 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 	return catalogue;
 }
 
+bool classicEventLogs(const WindowsVersion& version) {
+	return version.build != 0 && version.build < VISTA;
+}
+
 const WindowsRelease& releaseOf(const WindowsVersion& version, bool& known) {
 	const std::vector<WindowsRelease>& releases = windowsReleases();
 	const WindowsRelease* found = nullptr;

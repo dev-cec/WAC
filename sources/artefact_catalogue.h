@@ -102,6 +102,12 @@ const std::vector<WindowsRelease>& windowsReleases();
 //! Every artefact, in the order of wac.yml (alphabetical).
 const std::vector<ArtefactEntry>& artefactCatalogue();
 
+/*! Whether a version keeps its event logs in the format of before Vista:
+ *  `.evt` files next to the hives (System32\config), instead of `.evtx` files
+ *  under System32\winevt\Logs. An unread version (build 0) is taken for a
+ *  current one. */
+bool classicEventLogs(const WindowsVersion& version);
+
 /*! The release of a version.
  *  @param version the examined machine's
  *  @param known receives false when the build is newer than every release of

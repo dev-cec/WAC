@@ -448,7 +448,12 @@ HRESULT ExtractFileArtefactsRaw() {
 	   collection and fill the medium with data the operator did not ask for.
 	   Reading them offline replaces the EventLog API (see events.h). */
 	// The event logs: for events.json, and for the incoming RDP connections read in them.
-	if (conf.artefacts.needsEventLogs()) addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
+	/* Before Vista they are the .evt files kept next to the hives: taken raw,
+	   WAC has no decoder for them yet (artefact_catalogue.h). */
+	if (conf.artefacts.needsEventLogs()) {
+		if (classicEventLogs(conf.examinedVersion)) addTarget(L"\\Windows\\System32\\config", { L".evt" });
+		else addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
+	}
 	// setupapi.dev.log and its rotations, with the other setup logs of the folder (a few, small).
 	if (conf.artefacts.setupApi) addTarget(L"\\Windows\\INF", { L".log" });
 	// hosts has no extension: the whole folder, a handful of small files.

@@ -634,7 +634,15 @@ HRESULT openCurrentControlSet() {
  *  the artefacts cite is only known once they are converted. */
 void collectForConversion() {
 	printHeading(Text::HeadingForConversion);
-	if (conf.artefacts.events) {
+	/* Logs in the .evt format (before Vista) name their sources only once
+	   decoded, and WAC does not decode them: no provider is known to take the
+	   resources of. Recorded, not attempted — it used to end in "file not
+	   found" on every Windows XP. */
+	if (conf.artefacts.events && classicEventLogs(conf.examinedVersion))
+		auditRecord(L"Resource files of the event providers not taken: the logs of this version are in the .evt format, "
+		            L"which WAC does not decode, so the providers they cite are not known",
+		            L"\\Windows\\System32\\config\\*.evt (collected raw)", ERROR_SUCCESS, Footprint::NONE);
+	else if (conf.artefacts.events) {
 		/* The machine's language and its classic event sources are read in
 		   SYSTEM's CurrentControlSet, which the conversion opens otherwise. */
 		const HRESULT hrControlSet = openCurrentControlSet();

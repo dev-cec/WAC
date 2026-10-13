@@ -17,6 +17,18 @@
 
 namespace {
 
+/*! AllocateAndGetTcpExTableFromStack and its UDP twin: the tables WITH THEIR
+ *  OWNERS on Windows XP and Server 2003 before the service packs that brought
+ *  GetExtendedTcpTable — and removed by Vista. They allocate the table on the
+ *  heap given; the caller frees it. Declared here: the SDK headers no longer
+ *  carry them. */
+using StackTable = DWORD (WINAPI*)(void** table, BOOL sorted, HANDLE heap, DWORD heapFlags, DWORD family);
+
+//! One row of the TCP table of AllocateAndGetTcpExTableFromStack (MIB_TCPROW_EX).
+struct StackTcpRow { DWORD state, localAddress, localPort, remoteAddress, remotePort, processId; };
+//! One row of the UDP table of AllocateAndGetUdpExTableFromStack (MIB_UDPROW_EX).
+struct StackUdpRow { DWORD localAddress, localPort, processId; };
+
 //! The iphlpapi functions used, resolved at run time (see network.h).
 struct IpHelper {
 	HMODULE module = nullptr;
@@ -26,6 +38,11 @@ struct IpHelper {
 	decltype(&GetIpForwardTable2) routeTable = nullptr;
 	decltype(&FreeMibTable) freeTable = nullptr;
 	decltype(&GetAdaptersAddresses) adapters = nullptr;
+	// Before Vista (see readConnectionsFromStack, readArpTable, readIpv4Routes).
+	StackTable tcpStackTable = nullptr;
+	StackTable udpStackTable = nullptr;
+	decltype(&GetIpNetTable) arpTable = nullptr;
+	decltype(&GetIpForwardTable) ipv4RouteTable = nullptr;
 	~IpHelper() { if (module) FreeLibrary(module); }
 };
 
@@ -38,15 +55,22 @@ HRESULT load(IpHelper& api) {
 	   tables with owners came with XP SP2, the neighbour and route tables of
 	   both families with Vista. One missing function used to give up the
 	   whole network state ("the specified procedure could not be found",
-	   under XP SP1); now the table it serves is listed in TablesNotRead, and
-	   the others are read. Only a Windows offering none of them fails. */
+	   under XP SP1); now each table is read by the function this Windows has,
+	   and listed in TablesNotRead when it has none. Only a Windows offering
+	   none of them fails. */
 	const bool tcp = resolveExport(api.module, "GetExtendedTcpTable", api.tcpTable);
 	const bool udp = resolveExport(api.module, "GetExtendedUdpTable", api.udpTable);
 	const bool neighbours = resolveExport(api.module, "GetIpNetTable2", api.neighbourTable);
 	const bool routes = resolveExport(api.module, "GetIpForwardTable2", api.routeTable);
 	const bool release = resolveExport(api.module, "FreeMibTable", api.freeTable);
 	const bool adapters = resolveExport(api.module, "GetAdaptersAddresses", api.adapters);
-	const bool any = (tcp && udp) || (neighbours && release) || (routes && release) || adapters;
+	/* What Windows XP and Server 2003 offer instead, IPv4 only: asked for only
+	   where the function above is missing. */
+	const bool stack = !(tcp && udp) && resolveExport(api.module, "AllocateAndGetTcpExTableFromStack", api.tcpStackTable)
+	                   && resolveExport(api.module, "AllocateAndGetUdpExTableFromStack", api.udpStackTable);
+	const bool arp = !(neighbours && release) && resolveExport(api.module, "GetIpNetTable", api.arpTable);
+	const bool ipv4Routes = !(routes && release) && resolveExport(api.module, "GetIpForwardTable", api.ipv4RouteTable);
+	const bool any = (tcp && udp) || (neighbours && release) || (routes && release) || adapters || stack || arp || ipv4Routes;
 	return any ? ERROR_SUCCESS : HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
 }
 
@@ -126,10 +150,103 @@ Json textArray(const std::vector<std::wstring>& texts) {
 	return list;
 }
 
+//! A table AllocateAndGet…FromStack allocated on the process heap, freed with it.
+struct StackTableMemory {
+	void* table = nullptr;
+	~StackTableMemory() { if (table) HeapFree(GetProcessHeap(), 0, table); }
+	/*! The rows the allocation really holds: the count the table announces,
+	 *  bounded by the size of its block. */
+	template <typename Row>
+	std::vector<Row> rows() const {
+		std::vector<Row> list;
+		const SIZE_T size = table ? HeapSize(GetProcessHeap(), 0, table) : (SIZE_T)-1;
+		if (size == (SIZE_T)-1 || size < sizeof(DWORD)) return list;
+		DWORD announced = 0;
+		std::memcpy(&announced, table, sizeof(announced));
+		const size_t held = std::min<size_t>(announced, (size - sizeof(DWORD)) / sizeof(Row));
+		list.resize(held);
+		if (held) std::memcpy(list.data(), static_cast<const uint8_t*>(table) + sizeof(DWORD), held * sizeof(Row));
+		return list;
+	}
+};
+
+/*! The TCP and UDP tables of Windows XP and Server 2003, IPv4, with their
+ *  owners; these versions keep no creation time. @return false if one of the
+ *  two could not be read */
+bool readConnectionsFromStack(const IpHelper& api, std::vector<Connection>& connections) {
+	StackTableMemory tcp, udp;
+	if (api.tcpStackTable(&tcp.table, FALSE, GetProcessHeap(), 0, AF_INET) != NO_ERROR || !tcp.table) return false;
+	if (api.udpStackTable(&udp.table, FALSE, GetProcessHeap(), 0, AF_INET) != NO_ERROR || !udp.table) return false;
+	/* A LISTENING socket has no remote port, and these tables leave whatever
+	   was in memory there (seen under XP SP1: 20675, 63591… where netstat
+	   prints 0): Windows documents the field as meaningless in that state. */
+	for (const StackTcpRow& r : tcp.rows<StackTcpRow>())
+		connections.push_back({ L"TCP", ipv4(r.localAddress), port(r.localPort), ipv4(r.remoteAddress),
+		                        r.state == MIB_TCP_STATE_LISTEN ? 0 : port(r.remotePort), tcpState(r.state), r.processId, FILETIME{ 0, 0 } });
+	for (const StackUdpRow& r : udp.rows<StackUdpRow>())
+		connections.push_back({ L"UDP", ipv4(r.localAddress), port(r.localPort), L"", 0, L"", r.processId, FILETIME{ 0, 0 } });
+	return true;
+}
+
+//! MIB_IPNET_TYPE of the ARP table of before Vista: an ENUMERATION (1 to 4).
+std::wstring arpEntryType(DWORD type) {
+	static const wchar_t* const NAMES[] = { L"", L"Other", L"Invalid", L"Dynamic", L"Static" };
+	return type >= 1 && type <= 4 ? NAMES[type] : L"";
+}
+
+/*! The ARP cache through GetIpNetTable, IPv4 — what Windows XP and Server
+ *  2003 offer. An empty cache (ERROR_NO_DATA) is a table read.
+ *  @return false if it could not be read */
+bool readArpTable(const IpHelper& api, std::vector<Neighbour>& neighbours) {
+	ULONG size = 0;
+	DWORD result = api.arpTable(nullptr, &size, FALSE);
+	if (result == ERROR_NO_DATA) return true;
+	if (result != ERROR_INSUFFICIENT_BUFFER) return false;
+	std::vector<uint8_t> buffer(size + 4096);          // some room for rows added meanwhile
+	size = (ULONG)buffer.size();
+	result = api.arpTable(reinterpret_cast<PMIB_IPNETTABLE>(buffer.data()), &size, FALSE);
+	if (result == ERROR_NO_DATA) return true;
+	if (result != NO_ERROR) return false;
+	const auto* table = reinterpret_cast<const MIB_IPNETTABLE*>(buffer.data());
+	const size_t held = std::min<size_t>(table->dwNumEntries, (buffer.size() - offsetof(MIB_IPNETTABLE, table)) / sizeof(MIB_IPNETROW));
+	for (size_t k = 0; k < held; ++k) {
+		const MIB_IPNETROW& r = table->table[k];
+		Neighbour n;
+		n.address = ipv4(r.dwAddr);
+		n.hardwareAddress = HardwareAddressText(r.bPhysAddr, std::min<ULONG>(r.dwPhysAddrLen, sizeof(r.bPhysAddr)));
+		n.type = arpEntryType(r.dwType);
+		n.interfaceIndex = r.dwIndex;
+		neighbours.push_back(std::move(n));
+	}
+	return true;
+}
+
+//! The length of an IPv4 mask as the tables hold it: its bits set.
+unsigned prefixLength(DWORD mask) {
+	unsigned length = 0;
+	for (; mask; mask &= mask - 1) ++length;
+	return length;
+}
+
+/*! The IPv4 routing table through GetIpForwardTable — what Windows XP and
+ *  Server 2003 offer. @return false if it could not be read */
+bool readIpv4Routes(const IpHelper& api, std::vector<Route>& routes) {
+	const std::vector<uint8_t> buffer = readTable([&](void* t, ULONG* s) {
+		return api.ipv4RouteTable(reinterpret_cast<PMIB_IPFORWARDTABLE>(t), s, FALSE); });
+	if (buffer.empty()) return false;
+	const auto* table = reinterpret_cast<const MIB_IPFORWARDTABLE*>(buffer.data());
+	const size_t held = std::min<size_t>(table->dwNumEntries, (buffer.size() - offsetof(MIB_IPFORWARDTABLE, table)) / sizeof(MIB_IPFORWARDROW));
+	for (size_t k = 0; k < held; ++k) {
+		const MIB_IPFORWARDROW& r = table->table[k];
+		routes.push_back({ ipv4(r.dwForwardDest) + L"/" + std::to_wstring(prefixLength(r.dwForwardMask)),
+		                   ipv4(r.dwForwardNextHop), r.dwForwardIfIndex, r.dwForwardMetric1 });
+	}
+	return true;
+}
+
 /*! Reads the TCP and UDP tables, IPv4 and IPv6, with their owners and
  *  creation times. @return false if one of the four could not be read */
 bool readConnections(const IpHelper& api, std::vector<Connection>& connections) {
-	if (!api.tcpTable || !api.udpTable) return false;   // before XP SP2
 	auto tcp = [&](ULONG family) { return readTable([&](void* t, ULONG* s) { return api.tcpTable(t, s, FALSE, family, TCP_TABLE_OWNER_MODULE_ALL, 0); }); };
 	auto udp = [&](ULONG family) { return readTable([&](void* t, ULONG* s) { return api.udpTable(t, s, FALSE, family, UDP_TABLE_OWNER_MODULE, 0); }); };
 	const std::vector<uint8_t> tcp4 = tcp(AF_INET), tcp6 = tcp(AF_INET6), udp4 = udp(AF_INET), udp6 = udp(AF_INET6);
@@ -170,14 +287,13 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 
 //! Reads the ARP and NDP caches. @return false if they could not be read
 bool readNeighbours(const IpHelper& api, std::vector<Neighbour>& neighbours) {
-	if (!api.neighbourTable || !api.freeTable) return false;   // before Vista
 	PMIB_IPNET_TABLE2 table = nullptr;
 	if (api.neighbourTable(AF_UNSPEC, &table) != NO_ERROR || !table) return false;
 	for (ULONG k = 0; k < table->NumEntries; ++k) {
 		const MIB_IPNET_ROW2& r = table->Table[k];
 		const ULONG length = std::min<ULONG>(r.PhysicalAddressLength, sizeof(r.PhysicalAddress));
 		neighbours.push_back({ address(r.Address), HardwareAddressText(r.PhysicalAddress, length),
-		                       neighbourState((int)r.State), r.InterfaceIndex, r.IsRouter != FALSE });
+		                       neighbourState((int)r.State), L"", r.InterfaceIndex, r.IsRouter != FALSE });
 	}
 	api.freeTable(table);
 	return true;
@@ -185,7 +301,6 @@ bool readNeighbours(const IpHelper& api, std::vector<Neighbour>& neighbours) {
 
 //! Reads the routing table. @return false if it could not be read
 bool readRoutes(const IpHelper& api, std::vector<Route>& routes) {
-	if (!api.routeTable || !api.freeTable) return false;   // before Vista
 	PMIB_IPFORWARD_TABLE2 table = nullptr;
 	if (api.routeTable(AF_UNSPEC, &table) != NO_ERROR || !table) return false;
 	for (ULONG k = 0; k < table->NumEntries; ++k) {
@@ -259,6 +374,7 @@ Json Neighbour::toJson() const {
 	o.add(L"Address", Json::str(address));
 	o.add(L"HardwareAddress", Json::str(hardwareAddress));
 	o.add(L"State", Json::str(state));
+	o.add(L"Type", Json::str(type));
 	o.add(L"InterfaceIndex", Json::num(interfaceIndex));
 	if (router) o.add(L"Router", Json::boolean(true));
 	return o;
@@ -297,10 +413,22 @@ HRESULT NetworkState::getData() {
 		log(2, L"🔥LoadLibraryExW iphlpapi.dll", hresult);
 		return hresult;
 	}
-	if (!readConnections(api, connections)) tablesNotRead.push_back(L"Connections");
-	if (!readNeighbours(api, neighbours)) tablesNotRead.push_back(L"Neighbours");
+	/* EACH TABLE BY THE FUNCTION THIS WINDOWS HAS: the one of Vista and later,
+	   both address families; else the one of Windows XP and Server 2003, which
+	   knows IPv4 only — said in TablesIpv4Only, so that the absence of an IPv6
+	   row is not read as "no IPv6 connection". */
+	const auto read = [&](const wchar_t* table, bool current, bool older, auto&& readCurrent, auto&& readOlder) {
+		if (current) { if (!readCurrent()) tablesNotRead.push_back(table); }
+		else if (!older || !readOlder()) tablesNotRead.push_back(table);
+		else tablesIpv4Only.push_back(table);
+	};
+	read(L"Connections", api.tcpTable && api.udpTable, api.tcpStackTable && api.udpStackTable,
+	     [&] { return readConnections(api, connections); }, [&] { return readConnectionsFromStack(api, connections); });
+	read(L"Neighbours", api.neighbourTable && api.freeTable, api.arpTable != nullptr,
+	     [&] { return readNeighbours(api, neighbours); }, [&] { return readArpTable(api, neighbours); });
 	if (!readInterfaces(api, interfaces)) tablesNotRead.push_back(L"Interfaces");
-	if (!readRoutes(api, routes)) tablesNotRead.push_back(L"Routes");
+	read(L"Routes", api.routeTable && api.freeTable, api.ipv4RouteTable != nullptr,
+	     [&] { return readRoutes(api, routes); }, [&] { return readIpv4Routes(api, routes); });
 	return ERROR_SUCCESS;
 }
 
@@ -320,6 +448,7 @@ HRESULT NetworkState::snapshot() {
 	for (const Route& r : routes) list.push(r.toJson());
 	state.add(L"Routes", std::move(list));
 	state.add(L"TablesNotRead", textArray(tablesNotRead));
+	state.add(L"TablesIpv4Only", textArray(tablesIpv4Only));
 	return writeLiveSnapshot("network.json", state, L"network state (TCP/UDP tables, neighbours, interfaces, routes)");
 }
 
@@ -330,6 +459,7 @@ void NetworkState::clear() {
 	interfaces.clear();
 	routes.clear();
 	tablesNotRead.clear();
+	tablesIpv4Only.clear();
 }
 
 HRESULT writeNetworkFromSnapshot() {

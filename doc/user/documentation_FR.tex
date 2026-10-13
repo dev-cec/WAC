@@ -1085,6 +1085,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         contactées récemment), \champ{Interfaces} (adresses, passerelles,
         serveurs DNS, DHCP) et \champ{Routes}. \champ{TablesNotRead} nomme une
         table que Windows a refusé de donner, ce qui n'est pas une table vide.
+        \champ{TablesIpv4Only} nomme les tables lues par les fonctions de
+        Windows XP et Server 2003, qui ne connaissent qu'IPv4 : l'absence de
+        ligne IPv6 n'y signifie pas l'absence de connexion IPv6. Sur ces
+        versions, une connexion n'a pas d'heure de création, et un voisin
+        porte un \champ{Type} (entrée ARP dynamique ou statique) à la place
+        d'un \champ{State}.
   \item[\fichier{services.json}] services et pilotes, configuration lue dans la
         ruche : type, démarrage, compte, binaire et DLL hébergée, commande en cas
         d'échec, dépendances, dernière écriture de la clé ; état courant ; avec

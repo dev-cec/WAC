@@ -123,6 +123,9 @@ int main(int argc, char** argv) {
 	check(availabilityOf("bam", ten) == Availability::Present && availabilityOf("bam", eight) == Availability::AbsentFromThisVersion, "BAM");
 	check(availabilityOf("activities_cache", eleven) == Availability::Present, "ActivitiesCache.db withdrawn from Windows 11 (it is still written)");
 	check(availabilityOf("mft", xp) == Availability::Present && availabilityOf("events", xp) == Availability::Present, "$MFT or events absent from XP");
+	check(classicEventLogs(xp) && classicEventLogs(WindowsVersion{ 3790, true, false }) && !classicEventLogs(vista)
+	      && !classicEventLogs(eleven) && !classicEventLogs(WindowsVersion{}),
+	      "the .evt logs are those of XP and Server 2003 only; an unread version is not taken for one of them");
 	bool known = false;
 	check(std::wstring(releaseOf(seven, known).name) == L"Windows 7" && known, "7601 is not Windows 7");
 	check(std::wstring(releaseOf(eleven, known).name) == L"Windows 11" && known, "26200 is not Windows 11");

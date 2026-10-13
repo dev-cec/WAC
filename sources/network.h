@@ -58,7 +58,8 @@ struct Connection {
 struct Neighbour {
 	std::wstring address;           //!< IP address of the neighbour
 	std::wstring hardwareAddress;   //!< its hardware (MAC) address
-	std::wstring state;             //!< NL_NEIGHBOR_STATE spelled out
+	std::wstring state;             //!< NL_NEIGHBOR_STATE spelled out; empty when read by the ARP table of before Vista
+	std::wstring type;              //!< kind of ARP entry (Dynamic, Static…): what Windows XP and Server 2003 give instead of a state
 	ULONG interfaceIndex = 0;       //!< interface it was seen on
 	bool router = false;            //!< true if it announced itself as a router
 
@@ -104,6 +105,9 @@ struct NetworkState {
 	/*! The tables Windows refused to give: recorded, since a table not read is
 	 *  not an empty table. */
 	std::vector<std::wstring> tablesNotRead;
+	/*! The tables read by the functions of Windows XP and Server 2003, which
+	 *  know IPv4 only: no IPv6 row in them, whatever the machine holds. */
+	std::vector<std::wstring> tablesIpv4Only;
 
 	/*! Loads iphlpapi.dll from System32 and reads the four tables.
 	 *  @return S_OK (a table not read is in tablesNotRead), or why iphlpapi

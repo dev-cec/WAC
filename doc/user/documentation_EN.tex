@@ -1063,6 +1063,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         spoken with lately), \champ{Interfaces} (addresses, gateways, DNS
         servers, DHCP) and \champ{Routes}. \champ{TablesNotRead} names a table
         Windows refused to give, which is not an empty table.
+        \champ{TablesIpv4Only} names the tables read through the functions of
+        Windows XP and Server 2003, which know IPv4 only: no IPv6 row there
+        does not mean no IPv6 connection. On these versions a connection has
+        no creation time, and a neighbour carries a \champ{Type} (dynamic or
+        static ARP entry) in place of a \champ{State}.
   \item[\fichier{services.json}] services and drivers, configuration read from
         the hive: type, start mode, account, binary and hosted DLL, failure
         command, dependencies, last write of the key; current state; with

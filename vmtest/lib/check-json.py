@@ -4157,6 +4157,11 @@ def check_network(folder, boot):
     if d.get("TablesNotRead"):
         print(f"  ❌ network.json: tables not read {d['TablesNotRead']}")
         found += 1
+    # The functions of Windows XP and Server 2003, IPv4 only, serve where those
+    # of Vista are missing: never on the machines of this cycle.
+    if d.get("TablesIpv4Only"):
+        print(f"  ❌ network.json: tables read by the pre-Vista functions, IPv4 only: {d['TablesIpv4Only']}")
+        found += 1
     if not connections or not d.get("Interfaces") or not d.get("Routes"):
         print("  ❌ network.json: no connection, interface or route")
         return found + 1
