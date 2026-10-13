@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # create-vm.sh — creates a Windows test VM from scratch, entirely without interaction.
 #
-# Usage: ./create-vm.sh [win11|win81|win8|win7]
+# Usage: ./create-vm.sh [win11|win81|win8|win7|winxp]
 #   win11  (default) the VM of the test cycle, Windows 11 — domain win11-test
 #   win81  Windows 8.1 x64, for the compatibility with the older versions —
 #          domain win81-test; run-wac-test.sh is given it with DOM=win81-test
 #   win8   Windows 8 Pro x86 (32 bits: the machine of WAC32.exe) — domain win8-test
 #   win7   Windows 7 SP1 Ultimate x64 — domain win7-test
+#   winxp  Windows XP Professional SP1 x86 — domain winxp-test. No guest agent
+#          exists for it: installed from an answer floppy (WINNT.SIF), driven
+#          by the keyboard (lib/vmkeys.py, US layout), its output read on its
+#          serial port (see the end of this file)
 # What differs from one version to the next (ISO, edition, key, language of the
 # medium, firmware, drivers of the guest agent) is in the profile below; the
 # answer file is guest/autounattend.xml, adapted by the profile.
@@ -77,7 +81,11 @@ case "$PROFILE" in
     # SHA-2 update (KB3033929) accepts.
     ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.173.iso}"
     FIRMWARE=(--boot hd,cdrom) ;;
-  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7)" >&2; exit 2 ;;
+  winxp)
+    DOM="${DOM:-winxp-test}"
+    ISO_WIN="${ISO_WIN:-$HERE/tools/isos/Windows XP Professional (SP1) (x86).iso}"
+    ISO_VIRTIO="$ISO_WIN" ;;   # no virtio driver: nothing but what XP itself has
+  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, winxp)" >&2; exit 2 ;;
 esac
 
 ISO_ANS="$VMS/autounattend-$PROFILE.iso"
@@ -91,6 +99,123 @@ DATA_DISK="$VMS/$DOM-data.qcow2"
 [[ -f "$ISO_WIN"    ]] || { echo "Windows ISO missing: $ISO_WIN" >&2; exit 1; }
 [[ -f "$ISO_VIRTIO" ]] || { echo "virtio-win.iso missing: $ISO_VIRTIO" >&2; exit 1; }
 mkdir -p "$VMS"
+
+# --- Windows XP: another Setup, another way -----------------------------------
+# Its Setup reads WINNT.SIF on a floppy, its hardware is the i440FX with an IDE
+# disk and a processor of its time, and nothing in it answers a guest agent.
+# The machine says it is ready by writing to its serial port (COM1), which
+# libvirt keeps in a file: that is also where a command's output is read from
+# (`<command> > COM1`), the commands being typed by lib/vmkeys.py.
+# The product key is the one the installation medium carries beside its files
+# ("CD Key.txt"), or XP_KEY: read here, written to the floppy only — never
+# shown, never in the repository.
+if [[ "$PROFILE" == winxp ]]; then
+  [[ -f "$ISO_WIN" ]] || { echo "Windows ISO missing: $ISO_WIN" >&2; exit 1; }
+  mkdir -p "$VMS"
+  FLOPPY="$VMS/$DOM-answers.img"; SERIAL="$VMS/$DOM.serial"; DISK="$VMS/$DOM.qcow2"; ISO_WAC="$VMS/wac-transfer.iso"
+  TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+  mounted() { udisksctl mount -b "$1" ${2:+-o "$2"} | sed -n 's/.* at \(.*\)$/\1/p' | sed 's/\.$//'; }
+  # The desktop may still be looking at a medium just mounted: the unmount is retried.
+  released() {
+    local try
+    for try in $(seq 1 30); do udisksctl unmount -b "$1" >/dev/null 2>&1 && break; sleep 1; done
+    # The unmount usually detaches the loop device itself; asked to delete one already gone, udisksctl waits for ever.
+    ! losetup "$1" >/dev/null 2>&1 || timeout 10 udisksctl loop-delete -b "$1" >/dev/null 2>&1 || true
+  }
+  if [[ -z "${XP_KEY:-}" ]]; then
+    LOOP="$(udisksctl loop-setup -r -f "$ISO_WIN" | grep -o '/dev/loop[0-9]*')"
+    MEDIUM="$(mounted "$LOOP" ro)"
+    XP_KEY="$(python3 - "$MEDIUM/CD Key.txt" <<'PY'
+import re, sys
+try:
+    raw = open(sys.argv[1], "rb").read()
+except OSError:
+    raise SystemExit(0)
+for encoding in ("utf-16", "utf-8", "latin-1"):
+    try:
+        found = re.search(r"(?:[A-Z0-9]{5}\s*-\s*){4}[A-Z0-9]{5}", raw.decode(encoding).upper())
+    except UnicodeError:
+        continue
+    if found:
+        print(re.sub(r"\s", "", found.group(0)))
+        break
+PY
+)"
+    released "$LOOP"
+  fi
+  [[ -n "$XP_KEY" ]] || { echo "No product key: the medium carries no \"CD Key.txt\"; give XP_KEY=XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" >&2; exit 1; }
+  echo "== 1. Answer floppy (WINNT.SIF) =="
+  # No AutoPlay: a medium changed under the machine would open a window that takes the keyboard from the prompt.
+  # "wac"/"wac": the same throw-away account as the other test machines (see guest/autounattend.xml).
+  cat > "$TMP/WINNT.SIF" <<SIF
+[Data]
+AutoPartition=1
+MsDosInitiated=0
+UnattendedInstall=Yes
+[Unattended]
+UnattendMode=FullUnattended
+OemSkipEula=Yes
+OemPreinstall=No
+TargetPath=\\WINDOWS
+Repartition=Yes
+FileSystem=ConvertNTFS
+UnattendSwitch=Yes
+WaitForReboot=No
+[GuiUnattended]
+AdminPassword="wac"
+EncryptedAdminPassword=No
+OEMSkipRegional=1
+TimeZone=105
+OemSkipWelcome=1
+AutoLogon=Yes
+AutoLogonCount=999
+[UserData]
+ProductKey=$XP_KEY
+FullName="wac"
+OrgName="wac"
+ComputerName=WAC-XP
+[Display]
+BitsPerPel=32
+XResolution=1024
+YResolution=768
+[Identification]
+JoinWorkgroup=WORKGROUP
+[Networking]
+InstallDefaultComponents=Yes
+[GuiRunOnce]
+Command0="reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer /v NoDriveTypeAutoRun /t REG_DWORD /d 255 /f"
+Command1="cmd /c echo WAC-XP-READY > COM1"
+SIF
+  sed -i 's/$/\r/' "$TMP/WINNT.SIF"
+  rm -f "$FLOPPY"; mkfs.fat -C "$FLOPPY" 1440 >/dev/null
+  LOOP="$(udisksctl loop-setup -f "$FLOPPY" | grep -o '/dev/loop[0-9]*')"
+  cp "$TMP/WINNT.SIF" "$(mounted "$LOOP")/WINNT.SIF"
+  released "$LOOP"
+  echo "== 2. wac-transfer.iso =="
+  TMP2="$(mktemp -d)"; cp "$ROOT/build-windows/"*.exe "$ROOT/bin/wac.yml" "$TMP2/" 2>/dev/null || true
+  xorriso -as mkisofs -J -R -V WAC_TRANSFER -o "$ISO_WAC" "$TMP2" >/dev/null 2>&1; rm -rf "$TMP2"
+  echo "== 3. Removal of an existing VM =="
+  $C destroy "$DOM" >/dev/null 2>&1 || true
+  $C undefine "$DOM" >/dev/null 2>&1 || true
+  rm -f "$DISK" "$SERIAL"
+  echo "== 4. virt-install =="
+  virt-install --connect qemu:///session --name "$DOM" --osinfo winxp \
+    --vcpus 1 --memory 1024 --cpu pentium3 --machine pc \
+    --disk "path=$DISK,size=20,format=qcow2,bus=ide" --cdrom "$ISO_WIN" \
+    --disk "path=$FLOPPY,device=floppy" --disk "path=$ISO_WAC,device=cdrom,readonly=on" \
+    --serial "file,path=$SERIAL" --network user,model=rtl8139 --graphics spice --video vga --noautoconsole
+  echo "== 5. Waiting for the end of the install (the machine writes to its serial port, ~30-40 min) =="
+  for i in $(seq 1 240); do
+    [[ "$($C domstate "$DOM" 2>/dev/null)" == "running" ]] || $C start "$DOM" >/dev/null 2>&1 || true
+    if grep -q WAC-XP-READY "$SERIAL" 2>/dev/null; then
+      echo "   ✅ Windows XP installed after ~$((i / 4)) min — driven by lib/vmkeys.py --layout us, output on $SERIAL"
+      exit 0
+    fi
+    sleep 15
+  done
+  echo "   ⚠️ nothing on the serial port after 60 min: check with 'virsh screenshot'" >&2
+  exit 1
+fi
 
 # --- 1. Answer file (silent install + guest agent) -------------------------
 echo "== 1. autounattend.iso =="

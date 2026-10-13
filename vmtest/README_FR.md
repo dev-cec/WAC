@@ -182,3 +182,25 @@ plus `~/vms/virtio-win.iso` (guest-agent + drivers) et l'ISO Windows 11.
 `virt-install --noautoconsole` ne relance pas la VM après le premier redémarrage de
 Setup : `create-vm.sh` la redémarre au besoin et considère l'install terminée quand
 le guest-agent répond (pas de capture d'écran à interpréter).
+
+### Les machines des versions antérieures
+
+`create-vm.sh` prend un profil : `win11` (par défaut, la machine du cycle de
+test), `win81`, `win8` (32 bits), `win7`, `winxp`. Chacune a son domaine
+(`win81-test`…), et son profil porte ce qui change d'une version à l'autre :
+l'ISO (dans `tools/isos/`), l'édition et sa clé générique d'installation, la
+langue du support, BIOS ou UEFI, la version de virtio-win dont ce Windows
+accepte les pilotes (0.1.189 pour 8 et 8.1, 0.1.173 pour Windows 7 SP1). Le
+pilote du canal de l'agent est posé par `guest/install-agent-driver.ps1`, qui
+approuve d'abord son éditeur.
+
+Windows XP n'a pas d'agent invité. Il s'installe depuis une disquette de
+réponses (`WINNT.SIF`), annonce qu'il est prêt sur son port série, puis se
+pilote comme le ferait une personne, par `lib/vmkeys.py` (touches, texte tapé
+selon la disposition du clavier de la machine, clics) ; la sortie d'une commande
+se lit sur le port série (`<commande> > COM1`, gardé dans
+`~/vms/winxp-test.serial`). Sa clé de produit est lue sur le support
+d'installation, ou donnée par `XP_KEY` ; elle n'est jamais écrite dans le dépôt.
+
+Le cycle de test (`run-wac-test.sh`) ne tourne pour l'instant que sur
+`win11-test` : sur les autres, collecte et conversion se lancent à la main.
