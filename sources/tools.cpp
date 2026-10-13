@@ -1647,6 +1647,20 @@ HRESULT writeNotRequested(const std::string& name, const std::wstring& artefact,
 	return writeJsonFile(name, o);
 }
 
+HRESULT writeAbsentFromVersion(const std::string& name, const std::wstring& artefact, const std::wstring& key) {
+	bool known = false;
+	const WindowsRelease& release = releaseOf(conf.examinedVersion, known);
+	Json o = Json::obj();
+	o.add(L"Artifact",         Json::str(artefact));
+	o.add(L"CollectionStatus", Json::str(L"AbsentFromThisVersion"));
+	o.add(L"WindowsRelease",   Json::str(release.name));
+	o.add(L"WindowsBuild",     Json::num((unsigned long long)conf.examinedVersion.build));
+	o.add(L"Note",             Json::str(L"This artefact does not exist on this version of Windows (" + key + L"): "
+	                                     L"there was nothing to collect. Its absence is normal and says nothing "
+	                                     L"about what happened on the system."));
+	return writeJsonFile(name, o);
+}
+
 //! ASCII lower case: enough for file extensions.
 static std::wstring toLowerAscii(std::wstring s) {
 	for (wchar_t& c : s) if (c >= L'A' && c <= L'Z') c = (wchar_t)(c - L'A' + L'a');

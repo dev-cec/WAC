@@ -224,10 +224,61 @@ HRESULT prepareConversion() {
 bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
 	if (wanted) return true;
 	printStep(L" - " + text(label) + L" : ");
-	writeConsole(text(Text::NotRequested, { key }) + L"\n");
 	// The artefact's file is in English, like every JSON, whatever the console's language.
-	writeNotRequested(file, text(label, Language::English).c_str(), key);
+	const std::wstring name = text(label, Language::English);
+	/* Switched off by the table of the artefacts, not by the configuration:
+	   this version of Windows does not have it (applyArtefactCatalogue). */
+	const std::wstring bare = std::wstring(key).substr(std::wstring(key).find(L'.') + 1);
+	if (conf.absentFromVersion.count(encodeText(bare))) {
+		bool known = false;
+		writeConsole(text(Text::AbsentFromVersion, { releaseOf(conf.examinedVersion, known).name }) + L"\n");
+		writeAbsentFromVersion(file, name, key);
+		return false;
+	}
+	writeConsole(text(Text::NotRequested, { key }) + L"\n");
+	writeNotRequested(file, name.c_str(), key);
 	return false;
+}
+
+/*! THE GUARD BEFORE ANY COLLECTION (backlog B-039). Reads the version of the
+ *  examined Windows in its SOFTWARE hive, just opened, and applies the table
+ *  of the artefacts (artefact_catalogue.h): an artefact asked for that this
+ *  version does not have is switched off — neither launched nor counted as a
+ *  failure — and remembered, so that its file says "absent from this
+ *  version". A version newer than the table is treated as the last one
+ *  known, and said so; an unreadable one holds nothing back. Announced on
+ *  the console and recorded in the investigation log. */
+void applyArtefactCatalogue() {
+	printStep(Text::StepExaminedVersion);
+	conf.examinedVersion = readExaminedVersion();
+	const wchar_t* source = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion (copied hive, WAC's hive reader)";
+	if (conf.examinedVersion.build == 0) {
+		writeConsole(text(Text::ExaminedVersionUnread) + L"\n");
+		auditRecord(L"Version of the examined Windows not read: every artefact asked for is attempted", source,
+		            HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), Footprint::HIVE_COPY);
+		return;
+	}
+	bool known = false;
+	const WindowsRelease& release = releaseOf(conf.examinedVersion, known);
+	const std::wstring build = std::to_wstring(conf.examinedVersion.build);
+	const std::wstring edition = conf.examinedVersion.serverCore ? L", Server Core" : L"";
+	const std::vector<std::pair<std::string, bool*>> switches = artefactSwitches(conf);
+	std::vector<std::string> asked;
+	for (const auto& [key, wanted] : switches) if (*wanted) asked.push_back(key);
+	for (const std::string& key : absentAmong(asked, conf.examinedVersion)) conf.absentFromVersion.insert(key);
+	for (const auto& [key, wanted] : switches) if (conf.absentFromVersion.count(key)) *wanted = false;
+	std::wstring absent;
+	for (const std::string& key : conf.absentFromVersion) absent += (absent.empty() ? L"" : L", ") + decodeText(key, CP_UTF8);
+	if (known) writeConsole(std::wstring(release.name) + L", build " + build + edition + L"\n");
+	else writeConsole(text(Text::ExaminedVersionUnknown, { release.name, build }) + L"\n");
+	auditRecord(L"Version of the examined Windows: " + std::wstring(release.name) + L", build " + build + edition
+	            + (known ? L"" : L" — not in the artefact table: treated as " + std::wstring(release.name))
+	            + (absent.empty() ? L"; every artefact asked for exists on it"
+	                              : L"; asked for but absent from this version, not collected: " + absent),
+	            source, ERROR_SUCCESS, Footprint::HIVE_COPY);
+	for (const std::string& key : conf.absentFromVersion) {
+		writeConsole(L"   " + decodeText(key, CP_UTF8) + L" : " + text(Text::AbsentFromVersion, { release.name }) + L"\n");
+	}
 }
 
 /*! Converts one artefact read from the working copy — its files or the hives
@@ -1437,6 +1488,9 @@ int wmain(int argc, wchar_t* argv[])
 			writeNotCollected("run.json", L"depends on the SOFTWARE hive, which is unavailable", hresult);
 	}
 	else printSuccess();
+
+	// The table of the artefacts, applied before anything else is collected or converted.
+	applyArtefactCatalogue();
 
 	/* USER PROFILES, OFFLINE. The list is read in the SOFTWARE hive just opened,
 	   and no longer in the live registry: that is what makes the hives be

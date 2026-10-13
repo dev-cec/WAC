@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P3 | moyen |
+| en cours | P3 | moyen |
 
 ## Pourquoi
 Chaque artefact n'existe que sur certaines versions de Windows, à un emplacement et dans un format qui changent d'une version à l'autre : `.evt` puis `.evtx`, Prefetch v17 puis v30, `index.dat` puis WebCache, Chronologie sous Windows 10 seulement, SRUM et Amcache depuis 8, jump lists depuis 7, index de recherche en ESE puis en SQLite. Aujourd'hui, cette connaissance est dispersée dans le code de chaque collecteur. Demande utilisateur du 2026-10-06 : réorganiser les artefacts par version et disponibilité. Prérequis de B-035 (web côté serveur) et de B-037 (compatibilité XP) ; B-038 (versions serveur) s'appuie aussi sur elle.
@@ -34,17 +34,22 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Démontré par l'exemple : une version fictive ajoutée à la table et un format interne inconnu présenté à un décodeur (test unitaire) — la première est collectée comme la dernière connue et signalée, le second est collecté brut et déclaré non pris en charge.
 
 ## Tâches
-- [ ] Inventaire, par artefact, des versions, emplacements et formats (à partir du code et des fiches)
-- [ ] Table dans le code (une seule source) et dans la documentation FR et EN
-- [ ] Détection de la version de la machine examinée (hors ligne : ruche SOFTWARE)
-- [ ] `CollectionStatus` « absent de cette version »
-- [ ] Garde-fou de présence avant prélèvement : table puis machine ; « absent de cette version » / « attendu mais introuvable »
-- [ ] Repli d'une version inconnue sur la dernière connue, signalé
+- [x] Inventaire, par artefact, des versions, emplacements et formats : 69 artefacts, 113 formes, de XP à Windows 11 et Server 2025
+- [x] Table dans le code (`artefact_catalogue.cpp`, portable) et dans les manuels FR et EN, générée par `doc/artefact-table.py` depuis l'export du test (le script refuse un texte sans traduction française)
+- [x] Détection de la version de la machine examinée dans la ruche SOFTWARE copiée (`readExaminedVersion`) : build, serveur, Server Core
+- [x] `CollectionStatus` `AbsentFromThisVersion`, avec la version et le build
+- [x] Garde-fou avant prélèvement, côté table (`applyArtefactCatalogue`, décision `absentAmong` testée nativement) : annoncé en console, consigné au journal, artefact ni lancé ni compté en échec
+- [ ] Garde-fou côté machine : « attendu mais introuvable » (la table porte déjà « toujours présent depuis tel build », éditions client)
+- [x] Repli d'une version inconnue sur la dernière connue, signalé (console, journal ; test : build 31000)
 - [ ] Reconnaissance des formats par signature ou version interne ; « format non pris en charge » avec la pièce brute
-- [ ] Guide « ajouter une version de Windows / un format » dans la documentation développeur
+- [x] Guide « ajouter une version de Windows / un format » (doc/BUILD_FR.md et BUILD_EN.md), test décrit dans le guide des tests
+- [ ] Conditions de version encore portées par des collecteurs, à ramener à la table (Prefetch < 30 refusé dans prefetchs.cpp, ShimCache « 10ts », etc.)
 
 ## Journal
 - 2026-10-06 : créée à la demande de l'utilisateur — prérequis de B-035 (web côté serveur) et de B-037 (compatibilité XP).
 - 2026-10-06 : objectif précisé par l'utilisateur — la fiche doit faciliter l'arrivée des prochaines versions de Windows et des nouveaux formats d'artefacts.
 - 2026-10-06 : demande utilisateur — garde-fou vérifiant la présence d'un artefact avant de le prélever, pour un artefact coché dans `wac.yml` qui n'existe pas sur la version examinée.
 - 2026-10-07 : décision utilisateur — version 3.0 ; prérequis aussi de B-041 (Active Directory).
+- 2026-10-13 : démarrage (version 3.0). Choix : un module portable `artefact_catalogue` (table unique : clé, première et dernière version par numéro de build, formes successives — emplacement, format, décodé ou non par WAC —, source attendue). L'ordre des versions est celui des builds (2600 XP < 3790 Server 2003 < 6000 Vista < 7600 < 9200 < 9600 < 10240… < 22000 Windows 11), client et serveur confondus. Règle de prudence : une absence n'est déclarée que si elle est certaine — une absence à tort perd une pièce, une présence à tort ne coûte qu'un « attendu mais introuvable » ; Server Core et les cas douteux restent « présents », à valider dans les VM de B-037 et B-038. Constat mesuré : ActivitiesCache.db existe toujours sous Windows 11 (build 26200, 3 lignes lues) — la table ne le retire pas.
+- 2026-10-13 : premier incrément écrit. Test natif `artefact_catalogue_test` : 722 contrôles (clés identiques à wac.yml, formes ordonnées, cas connus, garde-fou sous Windows 7 = 5 artefacts écartés — Chronologie, BAM, Defender, PSReadLine, SRUM —, sous XP 14, sous Windows 11 aucun ; version fictive 31000 traitée comme la dernière connue et signalée) ; vu échouer avec SRUM déclaré présent depuis XP. Banc : `reference/windows-version.txt` (build et type que Windows donne de lui-même) confronté à la version que WAC consigne — cycle court vert (Windows 11, build 26200, aucun artefact écarté). La démonstration sur une VM d'une version ancienne attend B-037 : WAC refuse encore de se lancer sous Windows 10. Cycle complet lancé.
+- 2026-10-13 : cycle complet en machine virtuelle (Windows 11, build 26200) : 494 contrôles réussis, version examinée lue et consignée dans les deux collectes, aucun artefact écarté. Un seul échec, étranger à la fiche : 5 références `$MFT` de Prefetch dont la séquence n'était pas celle de l'enregistrement. Cause établie par le journal USN : les fichiers ont été supprimés depuis (version de Chrome retirée par sa mise à jour, EdgeUpdate, image de l'écran de verrouillage), sous la séquence même que porte le Prefetch ; NTFS relève la séquence d'un enregistrement qu'il libère. Règle ajoutée au contrôle (enregistrement supprimé : séquence moins un ; un fichier en service l'emporte sur un enregistrement supprimé du même chemin), rejouée sur les deux collectes du cycle : verte. Premier incrément commité.

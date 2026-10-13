@@ -50,12 +50,11 @@ bool readInt(const YamlNode& node, const std::string& key, int low, int high, in
 	return true;
 }
 
-//! The `artefacts:` section: one switch per artefact.
-bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error) {
-	if (!section.mapping) return refuse(error, section, text(Text::ConfigurationArtefactsSection));
-	struct Switch { const char* key; bool* value; };
+} // namespace
+
+std::vector<std::pair<std::string, bool*>> artefactSwitches(AppliConf& conf) {
 	AppliConf::CollectedArtefacts& a = conf.artefacts;
-	const Switch SWITCHES[] = {
+	return {
 		{ "events", &a.events }, { "operating_system", &a.operatingSystem },
 		{ "usbstor", &a.usbstor }, { "mounted_devices", &a.mountedDevices }, { "bam", &a.bam },
 		{ "muicache", &a.muiCache }, { "amcache", &a.amcache }, { "userassist", &a.userAssist },
@@ -97,11 +96,19 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		{ "thumbcache", &a.thumbcache },
 		{ "emails", &a.emails },
 	};
+}
+
+namespace {
+
+//! The `artefacts:` section: one switch per artefact.
+bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error) {
+	if (!section.mapping) return refuse(error, section, text(Text::ConfigurationArtefactsSection));
+	const std::vector<std::pair<std::string, bool*>> switches = artefactSwitches(conf);
 	for (const auto& [key, node] : section.children) {
-		const Switch* found = nullptr;
-		for (const Switch& s : SWITCHES) if (key == s.key) found = &s;
+		bool* found = nullptr;
+		for (const auto& [name, value] : switches) if (key == name) found = value;
 		if (!found) return refuse(error, *node, text(Text::ConfigurationUnknownArtefact, { wide(key) }));
-		if (!readBool(*node, "artefacts." + key, *found->value, error)) return false;
+		if (!readBool(*node, "artefacts." + key, *found, error)) return false;
 	}
 	return true;
 }

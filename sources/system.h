@@ -44,6 +44,13 @@
  *  @return the result of the snapshot's write */
 HRESULT snapshotSystemClock();
 
+/*! The version of the examined Windows, read in its SOFTWARE hive
+ *  (`conf.Software`, the copied hive: never the collecting machine's own):
+ *  `CurrentBuildNumber`, and `InstallationType` — "Server", "Server Core" —,
+ *  which Vista introduced; before it, a server says so in its `ProductName`.
+ *  @return the version; build 0 if the hive is not open or does not say */
+WindowsVersion readExaminedVersion();
+
 /*! System information of the examined machine: identity, installation, and
  *  the instant of the collection. */
 struct SystemInfo {

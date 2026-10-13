@@ -51,6 +51,13 @@ struct ConfigurationFile {
  *  @return false if the file is present and refused */
 bool LoadConfiguration(const std::wstring& path, AppliConf& conf, ConfigurationFile& file, std::string& error);
 
+/*! The switch of each artefact, by its key of wac.yml: THE list of the keys,
+ *  which the configuration file and the table of the artefacts by version
+ *  of Windows (artefact_catalogue.h) both go through.
+ *  @param conf the configuration
+ *  @return each key with its switch in `conf.artefacts` */
+std::vector<std::pair<std::string, bool*>> artefactSwitches(AppliConf& conf);
+
 /*! @return the reference configuration, commented — what --write-config
  *  writes: sources/wac.yml, built into the executable as a resource (see WAC.rc),
  *  the file build-windows.sh also copies to bin; empty if the resource is

@@ -1769,6 +1769,36 @@ The first means no entry was found; the second, that the source could not be
 read.
 \end{attention}
 
+\section{Artefact absent from the version of Windows}\label{sec:versions}
+
+An artefact does not exist on every version of Windows: no SRUM before
+Windows~8, no jump list before Windows~7. \wac{} reads the examined machine's
+version in its \fichier{SOFTWARE} hive, announces it at the start of the
+collection and records it in \fichier{investigation.json}. An artefact asked
+for that this version does not have is neither launched nor counted as a
+failure, and its file says so:
+
+\begin{lstlisting}
+{
+  "Artifact": "RESOURCE USAGE (SRUM)",
+  "CollectionStatus": "AbsentFromThisVersion",
+  "WindowsRelease": "Windows 7",
+  "WindowsBuild": 7601,
+  "Note": "This artefact does not exist on this version of Windows
+           (artefacts.srum): there was nothing to collect. Its absence is
+           normal and says nothing about what happened on the system."
+}
+\end{lstlisting}
+
+A version newer than those \wac{} knows is treated as the last one known, and
+flagged as such: the collection goes on. The table below gives, for each key
+of \fichier{wac.yml}, the first Windows that has the artefact, where it lies and
+its format according to the version. It is produced from the program's own
+table, the only one \wac{} consults. Version~2 of \wac{} only runs under
+Windows~10 and 11; the older forms are listed for what comes next.
+
+\input{../artefact-table_EN.tex}
+
 \section{Undecoded data}
 
 An item \wac{} cannot decode (unknown shell item, unrecognised extension block)

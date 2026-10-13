@@ -1829,6 +1829,36 @@ chose. Le premier indique qu'aucune entrée n'a été trouvée ; le second, que
 la source n'a pas pu être lue.
 \end{attention}
 
+\section{Artefact absent de la version de Windows}\label{sec:versions}
+
+Un artefact n'existe pas sur toutes les versions de Windows : pas de SRUM avant
+Windows~8, pas de jump lists avant Windows~7. \wac{} lit la version de la machine
+examinée dans sa ruche \fichier{SOFTWARE}, l'annonce au début de la collecte et
+la consigne dans \fichier{investigation.json}. Un artefact demandé que cette
+version ne porte pas n'est ni lancé ni compté en échec, et son fichier le dit :
+
+\begin{lstlisting}
+{
+  "Artifact": "RESOURCE USAGE (SRUM)",
+  "CollectionStatus": "AbsentFromThisVersion",
+  "WindowsRelease": "Windows 7",
+  "WindowsBuild": 7601,
+  "Note": "This artefact does not exist on this version of Windows
+           (artefacts.srum): there was nothing to collect. Its absence is
+           normal and says nothing about what happened on the system."
+}
+\end{lstlisting}
+
+Une version plus récente que celles que \wac{} connaît est traitée comme la
+dernière connue, et signalée comme telle : la collecte se fait. Le tableau
+ci-dessous donne, pour chaque clé de \fichier{wac.yml}, le premier Windows qui
+porte l'artefact, son emplacement et son format selon la version. Il est
+produit depuis la table du programme, la seule que \wac{} consulte. La
+version~2 de \wac{} ne se lance que sous Windows~10 et 11 ; les formes plus
+anciennes y figurent pour la suite.
+
+\input{../artefact-table_FR.tex}
+
 \section{Données non décodées}
 
 Un élément que \wac{} ne sait pas décoder (élément du shell inconnu, bloc

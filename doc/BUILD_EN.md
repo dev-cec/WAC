@@ -102,6 +102,26 @@ the sources, run `./bump-version.sh --bugfix|--minor|--major` (increments,
 rebuilds, stages `WAC.rc` and `bin`, regenerates the code documentation
 `doc/html` with the same version), commit.
 
+## Adding a version of Windows, or an artefact format
+
+What WAC knows of the versions of Windows lies in **one table**, `sources/artefact_catalogue.cpp`: for each key of `wac.yml`, the first build where the artefact exists, the one where it went away, its successive forms (location, format, converted or not) and since when its source is always there. No other file names a version.
+
+- **A new version of Windows**: add its line to `windowsReleases()` (first and last known builds); if it moves or changes an artefact, add a form to that artefact; if it withdraws one, set `untilBuild`. Until then, the version is treated as the last one known and flagged as such in the investigation log.
+- **A new format**: add the form (`decoded` false until the decoder exists: the exhibit is then collected raw), then the decoder, recognised by the file's signature or internal version.
+- **A new artefact**: its key in `wac.yml`, its switch in `artefactSwitches()` (`config.cpp`) and its line in the table — the test refuses a key missing on either side.
+
+Then, from `sources/`:
+
+```
+g++ -std=c++17 -g -fsanitize=address,undefined -I. artefact_catalogue.cpp artefact_catalogue_test.cpp -o /tmp/act
+/tmp/act wac.yml                                # the table is consistent, and wac.yml follows it
+/tmp/act wac.yml --dump > /tmp/artefacts.tsv
+../doc/artefact-table.py /tmp/artefacts.tsv     # the manuals' table, FR and EN
+../doc/build-docs.sh ../doc/user/documentation_FR.tex ../doc/user/documentation_EN.tex
+```
+
+`artefact-table.py` stops if a text of the table has no French translation: add it to its dictionary.
+
 ## Compatibility pieces (`third_party/` folder)
 | Item | Role |
 |---|---|

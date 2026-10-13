@@ -345,6 +345,29 @@ Each unit has one line in \fichier{index.idx}: \texttt{<n> <original size>
 <compressed size>}; a null compressed size marks a unit Windows gave up
 compressing.
 
+\section{Artefacts by version of Windows: \texttt{artefact\_catalogue\_test}}
+
+Checks the table that says, for each version of Windows, which artefacts
+exist, where and in which format (\fichier{artefact\_catalogue.cpp}). That table
+decides what a collection does \emph{not} take: a wrong line would lose an
+exhibit without a word. The test checks that the table and \fichier{wac.yml}
+hold exactly the same keys, that each artefact's forms are in order, that known
+cases answer right (no SRUM before Windows~8, Prefetch~23 on Vista and 30 on
+Windows~10), that on Windows~7 the guard holds back only the five artefacts
+that version lacks, and that a Windows newer than the table is treated as the
+last one known, and flagged. An unknown key or version never holds a collection
+back. Seen failing: SRUM declared present since XP.
+
+\begin{lstlisting}
+cd sources && g++ -std=c++17 -g -fsanitize=address,undefined -I. artefact_catalogue.cpp artefact_catalogue_test.cpp -o /tmp/act
+/tmp/act wac.yml
+/tmp/act wac.yml --dump    # the table, for doc/artefact-table.py
+\end{lstlisting}
+
+In the cycle, the version \wac{} reads in the copied \fichier{SOFTWARE} hive is
+confronted with the one Windows gives of itself (build number, workstation or
+server).
+
 \section{Browser sessions: \texttt{browser\_sessions\_test}}
 
 Checks the decoding of Chromium's session files (SNSS: \path|Session_*|,

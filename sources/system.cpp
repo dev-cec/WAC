@@ -420,3 +420,23 @@ HRESULT SystemInfo::toJson() {
 void SystemInfo::clear() {
 	log(3, L"🔈system clear");
 }
+
+WindowsVersion readExaminedVersion() {
+	WindowsVersion version;
+	if (!conf.Software) return version;
+	PCWSTR key = L"Microsoft\\Windows NT\\CurrentVersion";
+	std::wstring build, installationType, productName;
+	if (getRegSzValue(conf.Software, key, L"CurrentBuildNumber", &build) != ERROR_SUCCESS || build.empty())
+		getRegSzValue(conf.Software, key, L"CurrentBuild", &build);
+	wchar_t* end = nullptr;
+	const unsigned long number = build.empty() ? 0UL : wcstoul(build.c_str(), &end, 10);
+	// A build that is not a plain number (NT 4 wrote "1.511.1 () (Obsolete data…)") is not one.
+	if (end && *end == L'\0' && number <= 0xFFFFFFFFUL) version.build = (unsigned)number;
+	if (getRegSzValue(conf.Software, key, L"InstallationType", &installationType) == ERROR_SUCCESS && !installationType.empty()) {
+		version.server = installationType.compare(0, 6, L"Server") == 0;
+		version.serverCore = installationType == L"Server Core";
+	}
+	else if (getRegSzValue(conf.Software, key, L"ProductName", &productName) == ERROR_SUCCESS)
+		version.server = productName.find(L"Server") != std::wstring::npos;
+	return version;
+}

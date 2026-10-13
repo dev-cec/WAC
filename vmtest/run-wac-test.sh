@@ -421,6 +421,12 @@ fetch_results out "$OUTPUT"
 # the MountedDevices values through the live registry API (WAC reads them in
 # the raw hive, with its own reader), and the partitions of the disks.
 mkdir -p "$OUTPUT/reference"
+# The version Windows gives of itself (B-039): its build, and whether it is a
+# workstation (ProductType 1) — WAC reads both in the copied SOFTWARE hive.
+$QGA run -- powershell.exe -NoProfile -Command \
+  '"windows={0}|{1}" -f [Environment]::OSVersion.Version.Build, (Get-CimInstance Win32_OperatingSystem).ProductType' \
+  2>/dev/null | tr -d '\r' > "$OUTPUT/reference/windows-version.txt" \
+  && echo "   + reference/windows-version.txt" || echo "   ⚠️ Windows version reference not read"
 if wants mounted_devices; then
 $QGA run reg.exe query 'HKLM\SYSTEM\MountedDevices' > "$OUTPUT/reference/mounted-devices.txt" 2>/dev/null \
   && echo "   + reference/mounted-devices.txt" || echo "   ⚠️ MountedDevices reference not read"

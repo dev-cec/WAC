@@ -357,6 +357,30 @@ g++ -std=c++17 -I. xpress.cpp xpress_test.cpp -o /tmp/xpress_test
 compressée>} par unité ; une taille compressée nulle désigne une unité que
 Windows a renoncé à compresser.
 
+\section{Artefacts par version de Windows : \texttt{artefact\_catalogue\_test}}
+
+Vérifie la table qui dit, pour chaque version de Windows, quels artefacts
+existent, où et dans quel format (\fichier{artefact\_catalogue.cpp}). Cette table
+décide de ce qu'une collecte ne prend \emph{pas} : une ligne fausse perdrait une
+pièce sans un mot. Le test contrôle que la table et \fichier{wac.yml} portent
+exactement les mêmes clés, que les formes de chaque artefact sont ordonnées, que
+les cas connus répondent juste (pas de SRUM avant Windows~8, Prefetch~23 sous
+Vista et 30 sous Windows~10), que le garde-fou n'écarte sous Windows~7 que les
+cinq artefacts que cette version n'a pas, et qu'un Windows plus récent que la
+table est traité comme le dernier connu, et signalé. Une clé ou une version
+inconnue ne retient jamais une collecte. Vu échouer : SRUM déclaré présent
+depuis XP.
+
+\begin{lstlisting}
+cd sources && g++ -std=c++17 -g -fsanitize=address,undefined -I. artefact_catalogue.cpp artefact_catalogue_test.cpp -o /tmp/act
+/tmp/act wac.yml
+/tmp/act wac.yml --dump    # la table, pour doc/artefact-table.py
+\end{lstlisting}
+
+Dans le cycle, la version que \wac{} lit dans la ruche \fichier{SOFTWARE} copiée
+est confrontée à celle que Windows donne de lui-même (numéro de build, poste de
+travail ou serveur).
+
 \section{Sessions des navigateurs : \texttt{browser\_sessions\_test}}
 
 Vérifie le décodage des fichiers de session de Chromium (SNSS : \path|Session_*|,

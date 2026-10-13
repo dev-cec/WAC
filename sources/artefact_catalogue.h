@@ -1,0 +1,120 @@
+/*! \file
+ *  \brief THE table of the artefacts by version of Windows: where each one
+ *         exists, where it lies and in which format, version after version.
+ *
+ *  WHY ONE TABLE (backlog B-039). An artefact exists only on some versions of
+ *  Windows, at a place and in a format that change from one to the next:
+ *  `.evt` then `.evtx`, Prefetch 17 then 30, `index.dat` then the WebCache,
+ *  SRUM and Amcache from Windows 8, jump lists from 7, the search index in
+ *  ESE then in SQLite. That knowledge was scattered in each collector. Here
+ *  it is one table: adding a version of Windows is adding its line to
+ *  RELEASES and, where something changed, a form to the artefacts concerned;
+ *  nothing else in the code names a version.
+ *
+ *  THE ORDER OF THE VERSIONS IS THE BUILD NUMBER, client and server alike:
+ *  2600 (XP) < 3790 (Server 2003) < 6000 (Vista) < 7600 (7) < 9200 (8)
+ *  < 9600 (8.1) < 10240 (10) < 22000 (11). An artefact is given its first
+ *  build and, when it was withdrawn, the first build without it.
+ *
+ *  PRUDENCE. An absence is stated only when it is certain: one stated wrongly
+ *  would lose an exhibit, a presence stated wrongly only costs an "expected
+ *  but missing". Doubtful cases (Server Core, a service of the client
+ *  editions on a server) stay present, their note saying what remains to be
+ *  measured in the virtual machines of the compatibility items.
+ *
+ *  A VERSION NEWER THAN THE TABLE is treated as the last one known, and said
+ *  so (WindowsRelease::known): the collection goes on.
+ *
+ *  Portable C++, without windows.h: tested natively (artefact_catalogue_test),
+ *  which also writes the table of the documentation.
+ */
+#pragma once
+
+#include <string>
+#include <vector>
+
+/*! The version of an examined Windows, as its SOFTWARE hive states it. */
+struct WindowsVersion {
+	unsigned build = 0;      //!< CurrentBuildNumber: 2600, 7601, 19045, 26200…
+	bool server = false;     //!< InstallationType "Server" or "Server Core", or a server ProductType
+	bool serverCore = false; //!< InstallationType "Server Core": no graphical shell
+};
+
+/*! A release of Windows the table knows. */
+struct WindowsRelease {
+	unsigned firstBuild;     //!< its first build
+	unsigned lastBuild;      //!< the last build of it the table knows
+	bool server;             //!< a server release
+	const wchar_t* name;     //!< "Windows 10", "Windows Server 2019"…
+};
+
+/*! One form of an artefact: where it lies and in which format, from a build on. */
+struct ArtefactForm {
+	unsigned sinceBuild;      //!< first build with this form
+	const wchar_t* location;  //!< the file, folder or registry key
+	const wchar_t* format;    //!< the format, with its internal version when it has one
+	bool decoded;             //!< whether WAC converts this form (false: collected raw at most)
+};
+
+/*! One artefact — one key of wac.yml — through the versions of Windows. */
+struct ArtefactEntry {
+	const char* key;                   //!< the key under `artefacts:` in wac.yml
+	unsigned sinceBuild;               //!< first build where it exists
+	unsigned untilBuild;               //!< first build where it no longer exists; 0 if it still does
+	unsigned expectedSinceBuild;       //!< from this build on, its source is ALWAYS there on a client edition: missing, it is a trace; 0 if never certain
+	std::vector<ArtefactForm> forms;   //!< its successive forms, oldest first; at least one
+	const wchar_t* note;               //!< what remains to be measured, or a precision; "" for none
+};
+
+/*! Whether an artefact exists on a version. */
+enum class Availability {
+	Present,                 //!< it exists on this version
+	AbsentFromThisVersion    //!< this version never had it, or no longer has it: nothing to collect, nothing to report
+};
+
+//! The releases known, oldest first within clients then within servers.
+const std::vector<WindowsRelease>& windowsReleases();
+
+//! Every artefact, in the order of wac.yml (alphabetical).
+const std::vector<ArtefactEntry>& artefactCatalogue();
+
+/*! The release of a version.
+ *  @param version the examined machine's
+ *  @param known receives false when the build is newer than every release of
+ *         its family (client or server): the last one is then returned
+ *  @return the release; the oldest of the family for a build older than all */
+const WindowsRelease& releaseOf(const WindowsVersion& version, bool& known);
+
+/*! An artefact's entry.
+ *  @param key the key of wac.yml
+ *  @return the entry, or nullptr for a key the table does not hold */
+const ArtefactEntry* artefactEntry(const std::string& key);
+
+/*! Whether an artefact exists on a version of Windows. A key the table does
+ *  not hold, or a version without a build (hive unreadable), is Present:
+ *  the collection is never held back by what is not known.
+ *  @param key the key of wac.yml
+ *  @param version the examined machine's */
+Availability availabilityOf(const std::string& key, const WindowsVersion& version);
+
+/*! THE GUARD'S DECISION: among the artefacts asked for, those the examined
+ *  version does not have — to switch off before anything is collected,
+ *  neither launched nor counted as failures.
+ *  @param asked the keys of wac.yml that are switched on
+ *  @param version the examined machine's
+ *  @return the keys absent from this version, in the order given */
+std::vector<std::string> absentAmong(const std::vector<std::string>& asked, const WindowsVersion& version);
+
+/*! Whether an artefact's source must be there on a version: one that is
+ *  missing then is itself a trace (a file erased, a service switched off).
+ *  Client editions only, until the server editions are measured.
+ *  @param entry the artefact
+ *  @param version the examined machine's */
+bool expectedOn(const ArtefactEntry& entry, const WindowsVersion& version);
+
+/*! The form an artefact takes on a version.
+ *  @param entry the artefact
+ *  @param version the examined machine's
+ *  @return its latest form not newer than the version; the oldest one for an
+ *          older build */
+const ArtefactForm& formOf(const ArtefactEntry& entry, const WindowsVersion& version);

@@ -18,6 +18,8 @@
 #include "json.h"
 #include "conversions.h"
 #include "whole_file.h"
+#include "artefact_catalogue.h"
+#include <set>
 
 // global constants
 #define MAX_KEY_NAME 255 //!< longest key name in the registry
@@ -202,6 +204,14 @@ struct AppliConf {
 		 *  @return true if one of them is switched on */
 		bool needsEventLogs() const { return events || rdpServer; }
 	} artefacts;
+	/*! The version of the examined Windows, read in its SOFTWARE hive once it
+	 *  is open (applyArtefactCatalogue); build 0 until then, or if unreadable. */
+	WindowsVersion examinedVersion;
+	/*! The artefacts asked for that this version of Windows does not have
+	 *  (keys of wac.yml): switched off by applyArtefactCatalogue, never
+	 *  launched, and declared so in their file — not a failure, not a refusal
+	 *  of the configuration. */
+	std::set<std::string> absentFromVersion;
 	RunMode mode = RunMode::Collect; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
 	/*! System drive of the examined machine, with its colon ("C:").
@@ -1151,6 +1161,15 @@ HRESULT writeNotCollected(const std::string& name, const std::wstring& artefact,
  * @param key the configuration key, e.g. L"artefacts.prefetch"
  * @return ERROR_SUCCESS if the file could be written */
 HRESULT writeNotRequested(const std::string& name, const std::wstring& artefact, const std::wstring& key);
+
+/*! Writes an artefact that the examined version of Windows does not have
+ *  (artefact_catalogue.h): nothing to collect there, and nothing to conclude
+ *  from the absence of data — neither a failure nor "no trace".
+ * @param name name of the file
+ * @param artefact label of the artefact
+ * @param key the configuration key, e.g. L"artefacts.srum"
+ * @return ERROR_SUCCESS if the file could be written */
+HRESULT writeAbsentFromVersion(const std::string& name, const std::wstring& artefact, const std::wstring& key);
 
 /*! WAC's version, <major>.<minor>.<bugfix>, read in the program's own
  *  version resource (WAC.rc): the one place it is written, the one Windows
