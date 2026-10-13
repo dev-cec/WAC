@@ -178,9 +178,9 @@
  & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatCache\textbackslash{}AppCompatCache} & en-tête 0xBADC0FFE & non \\
  & Windows 7 & \texttt{la même valeur} & en-tête 0xBADC0FEE & non \\
  & Windows 8 & \texttt{la même valeur} & en-tête 0x80, entrées ''00ts'' & non \\
- & Windows 8.1 & \texttt{la même valeur} & en-tête 0x80, entrées ''10ts'' & non \\
+ & Windows 8.1 & \texttt{la même valeur} & en-tête de 0x80 octets commençant par 0, entrées ''10ts'' & non \\
  & Windows 10 & \texttt{la même valeur} & en-tête 0x30 ou 0x34, entrées ''10ts'' & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP ; Windows 8 et 8.1 partagent l'en-tête 0x80 : ils se distinguent par la marque de leur première entrée, qui tient ici lieu de signature.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP ; Windows 8 et 8.1 ont un en-tête de 0x80 octets : ils se distinguent par la marque de leur première entrée, qui tient ici lieu de signature. Windows 8.1 mesuré sur le build 9600.} \\
 \addlinespace
 \texttt{shortcuts} & Windows XP & \texttt{menu Démarrer, bureaux, Lancement rapide de chaque profil et de All Users} & raccourci & oui \\
 \addlinespace

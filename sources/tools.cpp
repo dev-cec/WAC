@@ -1718,6 +1718,25 @@ HRESULT writeUnsupportedFormat(const std::string& name, const std::wstring& arte
 	return writeJsonFile(name, o);
 }
 
+HRESULT writeUndecodedOnVersion(const std::string& name, const std::wstring& artefact, const std::wstring& key) {
+	bool known = false;
+	const WindowsRelease& release = releaseOf(conf.examinedVersion, known);
+	Json o = Json::obj();
+	o.add(L"Artifact",         Json::str(artefact));
+	o.add(L"CollectionStatus", Json::str(L"UnsupportedFormat"));
+	o.add(L"WindowsRelease",   Json::str(release.name));
+	o.add(L"WindowsBuild",     Json::num((unsigned long long)conf.examinedVersion.build));
+	if (const ArtefactEntry* entry = artefactEntry(catalogueKey(key))) {
+		const ArtefactForm& form = formOf(*entry, conf.examinedVersion);
+		o.add(L"FormatName", Json::str(form.format));
+		o.add(L"Location",   Json::str(form.location));
+	}
+	o.add(L"Note",             Json::str(L"On this version of Windows this artefact (" + key + L") is in a format this "
+	                                     L"version of WAC has no decoder for. Collected raw, not converted: the exhibit "
+	                                     L"store holds the source. The absence of data here says NOTHING about the system."));
+	return writeJsonFile(name, o);
+}
+
 //! ASCII lower case: enough for file extensions.
 static std::wstring toLowerAscii(std::wstring s) {
 	for (wchar_t& c : s) if (c >= L'A' && c <= L'Z') c = (wchar_t)(c - L'A' + L'a');

@@ -48,3 +48,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-02 : images ISO fournies par l'utilisateur (XP RTM, SP1, SP2, SP3, Windows 8 — toutes x86) ; une version 32 bits de WAC est nécessaire (demande utilisateur). La chaîne i686 a été installée par l'utilisateur le même jour (`i686-w64-mingw32-g++` 13, variante win32).
 - 2026-10-06 : prérequis ajouté à la demande de l'utilisateur : B-039 (artefacts organisés par version de Windows et par disponibilité). Server 2003 relève aussi de B-038.
 - 2026-10-07 : décision utilisateur — la rétrocompatibilité (B-037, B-038, avec B-039) constitue la version 3.0, après la 2.0.0 et l'article.
+- 2026-10-13 : mesure faite pendant B-039 — WAC 2.0 (64 bits) se lance et va au bout sous **Windows 8.1 x64** sans modification (collecte et conversion, 74 JSON) ; VM `win81-test` créée par `create-vm.sh win81`. ISO disponibles dans `vmtest/tools/isos` : XP RTM, SP1, SP2, SP3 (x86), Windows 7 Ultimate x64, Windows 8 (x86), Windows 8.1 (x64, néerlandais) ; Vista manque. Windows 8 et XP sont en 32 bits : ils demandent WAC32. virtio-win 0.1.189 (pilotes signés pour 7 et 8.1) est dans le même dossier.
+

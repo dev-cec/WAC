@@ -1874,6 +1874,26 @@ shortcuts are still decoded, without their DestList entry) --- and on the
 whole artefact (\champ{CollectionStatus}) when its source is single, like the
 ShimCache value.
 
+Some formats carry no signature: the examined version of Windows then tells
+the form of the artefact. Before Windows~10~1607, \fichier{Amcache.hve} lacks
+its \texttt{Inventory} keys; before Windows~10~1709, BITS keeps its jobs in
+\fichier{qmgr0.dat}; before Windows~11, the search index is an ESE database.
+The collection takes the piece as usual, and the conversion says so instead of
+giving an empty list:
+
+\begin{lstlisting}
+{
+  "Artifact": "Amcache applications",
+  "CollectionStatus": "UnsupportedFormat",
+  "WindowsRelease": "Windows 8.1",
+  "WindowsBuild": 9600,
+  "FormatName": "registry hive, File and Programs keys",
+  "Location": "Windows\\AppCompat\\Programs\\Amcache.hve",
+  "Note": "On this version of Windows this artefact (artefacts.amcache) is
+           in a format this version of WAC has no decoder for. [...]"
+}
+\end{lstlisting}
+
 \begin{attention}
 An ``UnsupportedFormat'' piece is neither an empty list nor a failed reading:
 the trace exists, it is collected, and its content remains to be read.

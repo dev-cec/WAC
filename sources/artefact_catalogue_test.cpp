@@ -173,6 +173,22 @@ int main(int argc, char** argv) {
 				check(seen.insert(signature).second, std::string(e.key) + ": one signature for two forms");
 	}
 
+	/* THE FORMAT TOLD BY THE VERSION (undecodedOn): a form WAC only collects
+	   raw, of an artefact it converts in another form. */
+	const WindowsVersion eightOne{ 9600, false, false };
+	check(undecodedOn("amcache", eightOne) && undecodedOn("bits", eightOne) && undecodedOn("search_index", eightOne),
+	      "Windows 8.1: Amcache, BITS or the search index not declared in an unconverted form");
+	check(undecodedOn("search_index", ten) && !undecodedOn("search_index", eleven) && !undecodedOn("amcache", ten) && !undecodedOn("bits", ten),
+	      "Windows 10 and 11: the search index is ESE before 11; Amcache and BITS are converted on a current 10");
+	check(!undecodedOn("prefetch", eightOne) && !undecodedOn("shimcache", eightOne), "an artefact with signatures decided by the version");
+	check(!undecodedOn("log_file", eightOne) && !undecodedOn("registry_backups", eightOne), "an artefact only ever copied raw declared unconverted");
+	check(!undecodedOn("srum", seven) && !undecodedOn("hosts", eightOne) && !undecodedOn("amcache", WindowsVersion{})
+	      && !undecodedOn("an_artefact_of_tomorrow", ten), "absent, converted or unknown: declared unconverted");
+	std::set<std::string> rawOnEightOne;
+	for (const std::string& key : keys) if (undecodedOn(key, eightOne)) rawOnEightOne.insert(key);
+	check(rawOnEightOne == std::set<std::string>{ "amcache", "bits", "search_index" },
+	      "Windows 8.1: " + std::to_string(rawOnEightOne.size()) + " artefacts in an unconverted form, 3 measured (Amcache, BITS, search index)");
+
 	/* THE GUARD (absentAmong): everything asked for on a Windows 7, on an XP,
 	   on a Windows 11 — only what the version lacks is held back, and an
 	   artefact switched off in wac.yml (not asked) is never listed. */

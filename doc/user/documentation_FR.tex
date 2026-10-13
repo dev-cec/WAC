@@ -1937,6 +1937,26 @@ lists (dont les raccourcis restent décodés, sans leur entrée DestList) --- et
 sur l'artefact entier (\champ{CollectionStatus}) quand sa source est unique,
 comme la valeur du ShimCache.
 
+Certains formats ne portent pas de signature : c'est alors la version de
+Windows examinée qui dit la forme de l'artefact. Avant Windows~10~1607,
+\fichier{Amcache.hve} n'a pas ses clés \texttt{Inventory} ; avant
+Windows~10~1709, BITS tient ses travaux dans \fichier{qmgr0.dat} ; avant
+Windows~11, l'index de recherche est une base ESE. La collecte prend la pièce
+comme d'habitude, et la conversion l'annonce au lieu de rendre une liste vide :
+
+\begin{lstlisting}
+{
+  "Artifact": "Amcache applications",
+  "CollectionStatus": "UnsupportedFormat",
+  "WindowsRelease": "Windows 8.1",
+  "WindowsBuild": 9600,
+  "FormatName": "registry hive, File and Programs keys",
+  "Location": "Windows\\AppCompat\\Programs\\Amcache.hve",
+  "Note": "On this version of Windows this artefact (artefacts.amcache) is
+           in a format this version of WAC has no decoder for. [...]"
+}
+\end{lstlisting}
+
 \begin{attention}
 Une pièce « UnsupportedFormat » n'est ni une liste vide ni une lecture ratée :
 la trace existe, elle est prélevée, et son contenu reste à lire.

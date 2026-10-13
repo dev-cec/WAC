@@ -212,6 +212,10 @@ struct AppliConf {
 	 *  launched, and declared so in their file — not a failure, not a refusal
 	 *  of the configuration. */
 	std::set<std::string> absentFromVersion;
+	/*! The artefacts asked for whose form on this version of Windows WAC has
+	 *  no decoder for (undecodedOn, keys of wac.yml): collected as usual, their
+	 *  conversion replaced by "unsupported format" (applyArtefactCatalogue). */
+	std::set<std::string> undecodedOnVersion;
 	RunMode mode = RunMode::Collect; //!< what this run does (see RunMode)
 	TimeZoneInfo timeZone; //!< time zone of the examined machine (SYSTEM hive if available)
 	/*! System drive of the examined machine, with its colon ("C:").
@@ -1211,6 +1215,17 @@ void addUnsupportedFormat(Json& o, const std::string& key, unsigned signature);
  * @return ERROR_SUCCESS if the file could be written */
 HRESULT writeUnsupportedFormat(const std::string& name, const std::wstring& artefact, const std::string& key,
                                unsigned signature);
+
+/*! Writes an artefact whose form on the examined version of Windows is one
+ *  WAC has no decoder for (undecodedOn, artefact_catalogue.h): the format is
+ *  told by the version, the piece carrying no signature. `CollectionStatus`
+ *  "UnsupportedFormat", with the version, the format and where the source
+ *  lies; the exhibit store holds it.
+ * @param name name of the file
+ * @param artefact label of the artefact
+ * @param key the configuration key, e.g. L"artefacts.amcache"
+ * @return ERROR_SUCCESS if the file could be written */
+HRESULT writeUndecodedOnVersion(const std::string& name, const std::wstring& artefact, const std::wstring& key);
 
 /*! The key of the artefact table for a configuration key: L"artefacts.srum"
  *  gives "srum".

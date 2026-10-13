@@ -153,6 +153,19 @@ bool expectedOn(const std::string& key, const WindowsVersion& version);
  *  @param signature the internal version or magic number read on the piece */
 PieceFormat pieceFormat(const std::string& key, unsigned signature);
 
+/*! THE FORMAT TOLD BY THE VERSION, when the piece cannot tell it itself:
+ *  whether the form an artefact takes on a version is one WAC has no decoder
+ *  for, while it converts another form of it — Amcache.hve without its
+ *  Inventory keys before Windows 10 1607, BITS in qmgr0.dat before 1709, the
+ *  search index in ESE before Windows 11. The piece is collected all the
+ *  same; its conversion is replaced by "unsupported format" — it used to
+ *  give an empty list, or "file not found". Never true for an artefact whose
+ *  forms carry a signature (the piece decides, pieceFormat), for one that is
+ *  only ever copied raw, nor when the version or the key is not known.
+ *  @param key the key of wac.yml
+ *  @param version the examined machine's */
+bool undecodedOn(const std::string& key, const WindowsVersion& version);
+
 /*! The form an artefact takes on a version.
  *  @param entry the artefact
  *  @param version the examined machine's

@@ -11,8 +11,9 @@ const unsigned XP = 2600, SERVER_2003 = 3790, VISTA = 6000, SEVEN = 7600, EIGHT 
                TEN = 10240, TEN_1607 = 14393, TEN_1709 = 16299, TEN_1803 = 17134, TEN_1903 = 18362,
                ELEVEN = 22000;
 
-/* ShimCache of Windows 8 and 8.1: both headers are 0x80 long, so the piece is
-   told by the tag of its first entry, read as a little-endian number. */
+/* ShimCache of Windows 8 and 8.1: both headers are 0x80 bytes long and
+   their first DWORD is no magic number, so the piece is told by the tag of
+   its first entry, read as a little-endian number. */
 const unsigned SHIMCACHE_00TS = 0x73743030, SHIMCACHE_10TS = 0x73743031;
 
 } // namespace
@@ -200,9 +201,9 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		    { SERVER_2003, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", L"header 0xBADC0FFE", false, { 0xBADC0FFE } },
 		    { SEVEN, L"the same value", L"header 0xBADC0FEE", false, { 0xBADC0FEE } },
 		    { EIGHT, L"the same value", L"header 0x80, entries \"00ts\"", false, { SHIMCACHE_00TS } },
-		    { EIGHT_1, L"the same value", L"header 0x80, entries \"10ts\"", false, { SHIMCACHE_10TS } },
+		    { EIGHT_1, L"the same value", L"header of 0x80 bytes starting with 0, entries \"10ts\"", false, { SHIMCACHE_10TS } },
 		    { TEN, L"the same value", L"header 0x30 or 0x34, entries \"10ts\"", true, { 0x30, 0x34 } } },
-		  L"Windows 8 and 8.1 share the header 0x80: they are told apart by the tag of their first entry, which is their signature here." },
+		  L"Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600." },
 		{ "shortcuts", XP, 0, 0,
 		  { { XP, L"Start menu, desktops, Quick Launch of each profile and of All Users", L"shell link", true } }, L"" },
 		{ "srum", EIGHT, 0, EIGHT,
@@ -298,6 +299,17 @@ PieceFormat pieceFormat(const std::string& key, unsigned signature) {
 			for (unsigned known : form.signatures)
 				if (known == signature) return PieceFormat{ form.decoded, &form };
 	return PieceFormat{ false, nullptr };
+}
+
+bool undecodedOn(const std::string& key, const WindowsVersion& version) {
+	const ArtefactEntry* entry = artefactEntry(key);
+	if (!entry || version.build == 0 || availabilityOf(key, version) != Availability::Present) return false;
+	bool converted = false, signedForms = false;
+	for (const ArtefactForm& form : entry->forms) {
+		converted = converted || form.decoded;
+		signedForms = signedForms || !form.signatures.empty();
+	}
+	return converted && !signedForms && !formOf(*entry, version).decoded;
 }
 
 const ArtefactForm& formOf(const ArtefactEntry& entry, const WindowsVersion& version) {

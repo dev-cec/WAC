@@ -234,6 +234,14 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
 		writeAbsentFromVersion(file, name, key);
 		return false;
 	}
+	/* Switched off by the table too, for the conversion only: on this version
+	   the artefact is in a form WAC has no decoder for (applyArtefactCatalogue). */
+	if (conf.undecodedOnVersion.count(catalogueKey(key))) {
+		bool known = false;
+		writeConsole(text(Text::UndecodedOnVersion, { releaseOf(conf.examinedVersion, known).name }) + L"\n");
+		writeUndecodedOnVersion(file, name, key);
+		return false;
+	}
 	writeConsole(text(Text::NotRequested, { key }) + L"\n");
 	writeNotRequested(file, name.c_str(), key);
 	return false;
@@ -244,7 +252,9 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
  *  of the artefacts (artefact_catalogue.h): an artefact asked for that this
  *  version does not have is switched off — neither launched nor counted as a
  *  failure — and remembered, so that its file says "absent from this
- *  version". A version newer than the table is treated as the last one
+ *  version". One whose form on this version WAC has no decoder for
+ *  (undecodedOn) is collected as usual, and at the conversion declared
+ *  "unsupported format" instead of being read with another version's decoder. A version newer than the table is treated as the last one
  *  known, and said so; an unreadable one holds nothing back. Announced on
  *  the console and recorded in the investigation log. */
 void applyArtefactCatalogue() {
@@ -266,6 +276,16 @@ void applyArtefactCatalogue() {
 	for (const auto& [key, wanted] : switches) if (*wanted) asked.push_back(key);
 	for (const std::string& key : absentAmong(asked, conf.examinedVersion)) conf.absentFromVersion.insert(key);
 	for (const auto& [key, wanted] : switches) if (conf.absentFromVersion.count(key)) *wanted = false;
+	/* A form without decoder on this version: the collection takes the piece
+	   as usual; the conversion alone is replaced by the status. */
+	std::wstring undecoded;
+	for (const auto& [key, wanted] : switches) {
+		if (!*wanted || !undecodedOn(key, conf.examinedVersion)) continue;
+		undecoded += (undecoded.empty() ? L"" : L", ") + decodeText(key, CP_UTF8);
+		if (conf.mode != RunMode::Convert) continue;
+		conf.undecodedOnVersion.insert(key);
+		*wanted = false;
+	}
 	std::wstring absent;
 	for (const std::string& key : conf.absentFromVersion) absent += (absent.empty() ? L"" : L", ") + decodeText(key, CP_UTF8);
 	if (known) writeConsole(std::wstring(release.name) + L", build " + build + edition + L"\n");
@@ -273,11 +293,13 @@ void applyArtefactCatalogue() {
 	auditRecord(L"Version of the examined Windows: " + std::wstring(release.name) + L", build " + build + edition
 	            + (known ? L"" : L" — not in the artefact table: treated as " + std::wstring(release.name))
 	            + (absent.empty() ? L"; every artefact asked for exists on it"
-	                              : L"; asked for but absent from this version, not collected: " + absent),
+	                              : L"; asked for but absent from this version, not collected: " + absent)
+	            + (undecoded.empty() ? L"" : L"; in a format without decoder on this version, collected raw and not converted: " + undecoded),
 	            source, ERROR_SUCCESS, Footprint::HIVE_COPY);
 	for (const std::string& key : conf.absentFromVersion) {
 		writeConsole(L"   " + decodeText(key, CP_UTF8) + L" : " + text(Text::AbsentFromVersion, { release.name }) + L"\n");
 	}
+	if (!undecoded.empty()) writeConsole(L"   " + undecoded + L" : " + text(Text::UndecodedOnVersion, { release.name }) + L"\n");
 }
 
 /*! THE GUARD ON THE MACHINE'S SIDE (backlog B-039). Records an artefact that

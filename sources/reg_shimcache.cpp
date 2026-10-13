@@ -4,7 +4,9 @@
 #include "reg_shimcache.h"
 
 namespace {
-//! Header size of the Windows 8 and 8.1 value — the first DWORD of both, which thus cannot tell them apart.
+/*! Header size of the Windows 8 and 8.1 value. Its first DWORD does not tell
+ *  them apart: 0x80 under Windows 8, 0 under Windows 8.1 (measured, build
+ *  9600) — neither a magic number nor, for 8.1, a size. */
 const size_t WINDOWS_8_HEADER_SIZE = 0x80;
 } // namespace
 
@@ -64,13 +66,15 @@ HRESULT Shimcaches::getData() {
 	size_t offset = *reinterpret_cast<const DWORD*>(data);
 	/* THE FORMAT, AS THE VALUE STATES IT. Its first DWORD is a magic number
 	   up to Windows 7 (0xDEADBEEF, 0xBADC0FFE, 0xBADC0FEE), then the size of
-	   the header: 0x80 under Windows 8 and 8.1 — told apart by the tag of the
-	   first entry, "00ts" or "10ts" —, 0x30 or 0x34 since Windows 10. The
+	   the header: 0x80 under Windows 8 and, measured, 0 under Windows 8.1 —
+	   both with a header of 0x80 bytes, told apart by the tag of the first
+	   entry, "00ts" or "10ts" —, 0x30 or 0x34 since Windows 10. The
 	   artefact table says which ones are decoded (pieceFormat). An older
 	   value used to give an empty list — "no program was ever shimmed" —:
 	   it is now declared "unsupported format". */
 	formatSignature = (unsigned)offset;
-	if (offset == WINDOWS_8_HEADER_SIZE && fits(size, offset, 4)) formatSignature = *reinterpret_cast<const DWORD*>(data + offset);
+	if ((offset == WINDOWS_8_HEADER_SIZE || offset == 0) && fits(size, WINDOWS_8_HEADER_SIZE, 4))
+		formatSignature = *reinterpret_cast<const DWORD*>(data + WINDOWS_8_HEADER_SIZE);
 	if (!pieceFormat("shimcache", formatSignature).decoded) {
 		log(2, L"❇️AppCompatCache in an unsupported format, signature 0x" + to_hex(formatSignature));
 		unsupportedFormat = true;
