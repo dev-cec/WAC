@@ -2,7 +2,8 @@
  *  \brief Base-block repair and transaction-log replay of copied hives.
  *
  *  See hive_recover.h.
- *  Portable C++ (no Windows dependency): testable on Linux too.
+ *  No Windows function is called: built for Windows with the rest of WAC, its
+ *  test (hive_recover_test.cpp) runs under Wine.
  */
 #include "conversions.h"
 #include "hive_recover.h"
@@ -21,6 +22,8 @@ constexpr uintmax_t LOG_MAX = 2ull * 1024 * 1024 * 1024;
 constexpr size_t OFF_PRIMARY   = 0x04;
 constexpr size_t OFF_SECONDARY = 0x08;
 constexpr size_t OFF_FILETYPE  = 0x1C;  // 0 = primary hive, 6 = log
+constexpr size_t OFF_BINS_SIZE = 0x28;  // size of the hive bins data
+constexpr uint32_t PAGE = 4096;         // the bins data grows by whole pages
 constexpr size_t OFF_NAME      = 0x30;  // internal name, UTF-16, 64 bytes
 constexpr size_t OFF_CHECKSUM  = 508;   // XOR of the first 127 uint32
 
@@ -123,9 +126,11 @@ constexpr uint64_t MARVIN_SEED = 0x82EF4D887A4E55C5ULL;
 
 inline uint32_t rotl32(uint32_t v, int n){ return (uint32_t)((v << n) | (v >> (32 - n))); }
 
+} // namespace
+
 /*  Marvin32, as the format uses it. The result is returned on 8 bytes: the
  *  low half then the high half, little-endian. */
-uint64_t marvin32(const uint8_t* data, size_t size){
+uint64_t HiveLogDigest(const uint8_t* data, size_t size){
     uint32_t lo = (uint32_t)MARVIN_SEED;
     uint32_t hi = (uint32_t)(MARVIN_SEED >> 32);
     auto mix = [&](){
@@ -143,6 +148,8 @@ uint64_t marvin32(const uint8_t* data, size_t size){
     lo += rest; mix(); mix();
     return ((uint64_t)hi << 32) | lo;
 }
+
+namespace {
 
 //! An entry read from a log, with its position and its verdict.
 struct ReadEntry {
@@ -191,8 +198,9 @@ std::vector<ReadEntry> readString(const std::filesystem::path& log,
 
         // Bounds BEFORE any other read: nbPages comes from the examined file.
         if (e.nbPages > (size - ENTRY_HEADER) / 8) e.reason = L"inconsistent number of pages";
-        else if (marvin32(d.data() + off, 32) != h2)  e.reason = L"header digest";
-        else if (marvin32(d.data() + off + ENTRY_HEADER, size - ENTRY_HEADER) != h1)
+        else if (e.binsSize == 0 || e.binsSize % PAGE != 0) e.reason = L"inconsistent size of the bins data";
+        else if (HiveLogDigest(d.data() + off, 32) != h2)  e.reason = L"header digest";
+        else if (HiveLogDigest(d.data() + off + ENTRY_HEADER, size - ENTRY_HEADER) != h1)
                                                       e.reason = L"body digest";
         else {
             uint64_t sum = 0;
@@ -273,6 +281,7 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
     struct Page { uint64_t offset; uint32_t size; std::vector<uint8_t> origin; };
     std::vector<Page> undo;
     std::vector<const ReadEntry*> toApply;
+    uint32_t finalBinsSize = 0;
     uint32_t expected = 0;
     bool first = true;
 
@@ -283,7 +292,15 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
         trace.bytes   = e.bytes;
 
         if (!e.reason.empty()){ trace.reason = e.reason; ++r.discardedEntries; r.entries.push_back(trace); continue; }
-        if (e.sequence <= secondarySeq){
+        /*  THE HIVE'S SEQUENCE NUMBER IS THE NEXT ENTRY IT EXPECTS, not the last
+         *  one it holds: a hive closed after entry N carries N + 1, and the
+         *  first entry written afterwards is numbered N + 1 too. The entry
+         *  EQUAL to the hive's number is therefore to apply. It used to be
+         *  skipped ("<="): one entry lost at every replay — seen on a
+         *  collection taken minutes after a boot, where that entry held 113
+         *  pages; the hive, inconsistent, then gave 125 event channels fewer
+         *  than Windows' own recovery of the same files, without any error. */
+        if (e.sequence < secondarySeq){
             trace.reason = L"already in the hive";
             r.entries.push_back(trace);
             continue;
@@ -299,9 +316,11 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
         expected = e.sequence + 1;
         first = false;
 
+        /*  A page lies within the bins data AS THIS ENTRY ANNOUNCES IT: an
+         *  entry can grow the hive, past the end of the copied file. */
         bool boundsOk = true;
         for (const std::pair<uint32_t, uint32_t>& p : e.pages)
-            if (BASE_BLOCK + (uint64_t)p.first + p.second > hiveSize) boundsOk = false;
+            if ((uint64_t)p.first + p.second > e.binsSize) boundsOk = false;
         if (!boundsOk){
             trace.reason = L"page outside the hive";
             ++r.discardedEntries;
@@ -310,11 +329,16 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
         }
 
         for (const std::pair<uint32_t, uint32_t>& p : e.pages){
+            /*  Only what the file held is kept for the undo: what a page adds
+             *  past its end is undone by the size recorded in the undo log. */
             Page pg{ BASE_BLOCK + (uint64_t)p.first, p.second, {} };
-            pg.origin.resize(p.second);
+            if (pg.offset >= hiveSize) continue;
+            pg.size = (uint32_t)std::min<uint64_t>(p.second, hiveSize - pg.offset);
+            pg.origin.resize(pg.size);
+            f.clear();
             f.seekg((std::streamoff)pg.offset, std::ios::beg);
-            f.read(reinterpret_cast<char*>(pg.origin.data()), p.second);
-            if (f.gcount() != (std::streamsize)p.second){ boundsOk = false; break; }
+            f.read(reinterpret_cast<char*>(pg.origin.data()), pg.size);
+            if (f.gcount() != (std::streamsize)pg.size){ boundsOk = false; break; }
             undo.push_back(std::move(pg));
         }
         if (!boundsOk){
@@ -330,7 +354,8 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
         ++r.keptEntries;
         r.pages  += e.nbPages;
         r.bytes += e.bytes;
-        r.finalSequence = e.sequence;
+        r.finalSequence = e.sequence + 1;
+        finalBinsSize = e.binsSize;
     }
 
     if (toApply.empty()){ r.ok = true; return r; }
@@ -367,8 +392,10 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
     }
     r.undoJournal = chemUndo.wstring();
 
-    // Apply the pages, then align the base block on the last applied
-    // sequence: the hive becomes clean by construction.
+    // Apply the pages, then set the base block as Windows' recovery leaves
+    // it — the sequence one past the last applied entry, the size of the
+    // bins data that entry announces: the hive becomes clean by construction.
+    f.clear();
     for (const ReadEntry* e : toApply){
         size_t pos = e->dataStart;
         for (const std::pair<uint32_t, uint32_t>& p : e->pages){
@@ -377,8 +404,17 @@ HiveReplayInfo ReplayHiveLogs(const std::filesystem::path& hive,
             pos += p.second;
         }
     }
+    /*  The file holds all the bins data announced, even where no page of the
+     *  logs wrote the last ones. */
+    if (BASE_BLOCK + (uint64_t)finalBinsSize > hiveSize){
+        f.seekp(0, std::ios::end);
+        const uint64_t end = std::max<uint64_t>(hiveSize, (uint64_t)f.tellp());
+        const std::vector<char> zeros((size_t)(BASE_BLOCK + (uint64_t)finalBinsSize > end ? BASE_BLOCK + (uint64_t)finalBinsSize - end : 0), 0);
+        f.write(zeros.data(), (std::streamsize)zeros.size());
+    }
     writeLittleEndian<uint32_t>(bb.data() + OFF_PRIMARY,   r.finalSequence);
     writeLittleEndian<uint32_t>(bb.data() + OFF_SECONDARY, r.finalSequence);
+    writeLittleEndian<uint32_t>(bb.data() + OFF_BINS_SIZE, finalBinsSize);
     writeLittleEndian<uint32_t>(bb.data() + OFF_CHECKSUM,  baseBlockChecksum(bb.data()));
     f.seekp(0, std::ios::beg);
     f.write(reinterpret_cast<const char*>(bb.data()), BASE_BLOCK);

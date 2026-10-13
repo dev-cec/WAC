@@ -75,7 +75,7 @@ struct HiveReplayInfo {
     bool logs = false;      //!< at least one usable `.LOG1/.LOG2` found
     bool applied = false;      //!< at least one entry written into the hive
     uint32_t hiveSequence   = 0;  //!< hive sequence before replay
-    uint32_t finalSequence  = 0;  //!< sequence after replay
+    uint32_t finalSequence  = 0;  //!< sequence after replay: one past the last entry applied, the next the hive expects
     unsigned keptEntries = 0;  //!< chain entries applied
     unsigned discardedEntries = 0;  //!< invalid entries (checksum, bounds)
     unsigned leftoverEntries   = 0;  //!< entries outside the chain (earlier generation)
@@ -86,10 +86,22 @@ struct HiveReplayInfo {
     std::vector<HiveLogEntry> entries; //!< details, for the report
 };
 
+/*! The digest of the transaction logs' entries (Marvin32 with the format's
+ *  seed), on 8 bytes: the low half then the high half. Public for the test
+ *  that forges logs (hive_recover_test.cpp).
+ *  @param data,size the bytes digested
+ *  @return the digest, as an entry stores it */
+uint64_t HiveLogDigest(const uint8_t* data, size_t size);
+
 /*! Applies the transaction logs to an extracted hive.
 *
-*  TWO TRAPS, both met on real data and both decisive for the report's
+*  THREE TRAPS, all met on real data and all decisive for the report's
 *  accuracy:
+*
+*  - **THE HIVE'S SEQUENCE NUMBER IS THE NEXT ENTRY IT EXPECTS.** An entry is
+*    already in the hive if its number is LOWER than the hive's secondary
+*    sequence; the entry EQUAL to it is the first to apply. Taken for already
+*    applied, it was lost at every replay (see ReplayHiveLogs' body).
 *
 *  - **FILE ORDER, NOT SEQUENCE ORDER.** A log is reused in place: entries from
 *    an earlier generation survive AFTER the end of the current chain. Sorting
@@ -105,6 +117,10 @@ struct HiveReplayInfo {
 *    entry that fails ends the chain: applying doubtful pages to evidence would
 *    be worse than applying nothing.
 *
+*  An entry also states the size of the bins data once applied: the hive can
+*  GROW. The pages are bounded by that size, the file is extended to it, and
+*  the base block carries it afterwards — as Windows' own recovery leaves it.
+*
 *  An undo log `<hive>.undo` is written beside the hive, holding the
 *  ORIGINAL content of every replaced page. Its format is deliberately trivial,
 *  so that a third party can undo the operation:
@@ -112,7 +128,8 @@ struct HiveReplayInfo {
 *      0   8   "WACUNDO1"
 *      8  32   MD5 of the hive BEFORE replay, as ASCII hexadecimal
 *     40   4   number of pages
-*     44   8   size of the hive before replay
+*     44   8   size of the hive before replay (the file is cut back to it:
+*              a replay can extend it)
 *     52   4   reserved (0)
 *     56  12×N page table: offset (8 bytes), size (4 bytes)
 *     ...      original content of the pages, in table order

@@ -550,6 +550,29 @@ cd build-windows/tests
 wine consigne_test.exe "Z:/tmp/out" "Z:/path/SYSTEM" "Z:/path/ntuser.dat"
 \end{lstlisting}
 
+\section{Replay of the hive logs: \texttt{hive\_recover\_test}}
+
+A replay that drops an entry, or applies a stale one, gives a hive that still
+opens and still reads: only the keys of the lost pages are missing, without any
+error. The test forges a hive and its logs where each page holds one letter and
+each entry writes another: the letter left in a page says which entry was
+applied there last. It checks that the entry numbered as the hive's sequence is
+applied — it used to be skipped, one entry lost at every replay —, that the
+earlier entries and the leftovers of a previous generation are not, that an
+entry growing the hive extends the file and the header, that the header ends
+clean with its checksum, that the undo log gives the original hive back, and
+that an altered entry ends the chain.
+
+\begin{lstlisting}
+cd build-windows/tests
+wine hive_recover_test.exe "Z:/tmp/work"
+\end{lstlisting}
+
+Reference: 11 checks, no failure; four fail if the comparison of the sequence
+numbers is put back to its former form. On real hives, the VM cycle confronts
+\wac{}'s replay with Windows' own recovery of the same files (keys, values and
+a digest of them all).
+
 \section{Verification scripts: \texttt{verify\_exhibits\_test.sh}}
 
 Runs \fichier{verify-exhibits.sh} and \fichier{verifier-consigne.sh}, the

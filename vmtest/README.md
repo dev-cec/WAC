@@ -28,6 +28,7 @@ administrator rights, no UAC).
 | `guest/` (VM) | `place-file-artefacts.ps1` | Places the witnesses of the artefacts (files, registry, EICAR, WMI, data volume…) and prints the references Windows gives for them. |
 | `guest/` (VM) | `ez-time.ps1` | Run by `ez-compare.sh`: WAC's conversion (a `wac.yml` of the one key) and the EZ tool, each timed, on the same exhibits. |
 | `guest/` (VM) | `register-test-guids.ps1` | Registers, on every cycle, three GUIDs WAC's table does not know — one per source WAC reads GUID names from — each referenced by a disabled COM-handler task. |
+| `guest/` (VM) | `hive-recovery-reference.ps1` | Loads, with `reg load`, a copy of each collected hive with its logs (Windows replays them itself) and a copy of the hive WAC replayed, and walks both whole: keys, values, digest of them all. |
 | `guest/` (VM) | `harmlessness.ps1`, `make-fake-package.ps1` | Dates and USN of witness files before/after a collection; a Store package altered on purpose. |
 | `guest/` (VM) | `property-schema.cpp` | Dumps the VM's property schema, the source of WAC's table of property names. |
 | `tools/` | KAPE, Eric Zimmerman's tools | Third-party tools for the comparisons (B-015, B-027): **not versioned** (`.gitignore`), each under its own licence. |
@@ -64,6 +65,7 @@ wrong values in valid JSON:
 | no event later than the collection time | shift or misreading of an event `FILETIME` |
 | an unresolved `%%nnnn` reference left in a message | a provider's parameter file not loaded (3,780 Security messages before the fix) — told apart from a `%N` mark, which only means data absent from the event |
 | no hive both replayed AND patched | two independent audit-log operations: a successful replay makes the hive clean, so the patch must no longer apply |
+| each hive replayed by WAC identical to Windows' own recovery of the same hive and logs: same number of keys and values, same digest of every key and value | a replay that drops an entry gives a hive that still loads, with a few keys fewer: WAC skipped the entry numbered as the hive's sequence, and a collection taken minutes after a boot lost 16 keys of SOFTWARE, then 125 event channels, without any error |
 | an undo journal named for every replay | without it the raw copy can no longer be rebuilt, and the report's promise would be false |
 | `mounted_device.json` vs `reg query` of the same key (decoded by a separate implementation) and `Get-Partition` | 6 mounts out of 7 published as `\`: current device paths (`\??\...`) were decoded as ANSI text and stopped at their first zero byte |
 | FAT dates of the shell items without a fraction and with even seconds; Amcache text dates without a fraction | every date written with seven digits of fraction — `…:30.0000000` for a FAT date precise to two seconds (808 dates) |

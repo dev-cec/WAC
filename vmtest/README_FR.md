@@ -28,6 +28,7 @@ en SYSTEM : droits admin, aucun UAC).
 | `guest/` (VM) | `place-file-artefacts.ps1` | Pose les témoins des artefacts (fichiers, registre, EICAR, WMI, volume de données…) et imprime les références que Windows en donne. |
 | `guest/` (VM) | `ez-time.ps1` | Lancé par `ez-compare.sh` : conversion WAC (un `wac.yml` de la seule clé) et outil EZ, chronométrés, sur les mêmes pièces. |
 | `guest/` (VM) | `register-test-guids.ps1` | Enregistre, à chaque cycle, trois GUID que la table de WAC ignore — un par source où WAC lit les noms de GUID —, chacun référencé par une tâche ComHandler désactivée. |
+| `guest/` (VM) | `hive-recovery-reference.ps1` | Charge par `reg load` une copie de chaque ruche collectée avec ses journaux (Windows les rejoue lui-même) et une copie de la ruche rejouée par WAC, et parcourt les deux en entier : clés, valeurs, empreinte de l'ensemble. |
 | `guest/` (VM) | `harmlessness.ps1`, `make-fake-package.ps1` | Dates et USN de fichiers témoins avant/après une collecte ; un paquet Store altéré exprès. |
 | `guest/` (VM) | `property-schema.cpp` | Vide le schéma des propriétés de la VM, source de la table des noms de propriétés de WAC. |
 | `tools/` | KAPE, outils d'Eric Zimmerman | Outils tiers des comparaisons (B-015, B-027) : **non versionnés** (`.gitignore`), chacun sous sa licence. |
@@ -63,6 +64,7 @@ révélé des valeurs fausses dans du JSON valide :
 | aucun événement postérieur à l'horodatage de collecte | décalage ou mauvaise lecture d'un `FILETIME` d'événement |
 | une référence `%%nnnn` restée dans un message | fichier de paramètres d'un fournisseur non chargé (3 780 messages de Security avant correction) — distinguée d'une marque `%N`, qui signale seulement une donnée absente de l'événement |
 | aucune ruche à la fois rejouée ET patchée | deux opérations indépendantes du journal d'audit : un rejeu abouti rend la ruche propre, donc le patch ne doit plus s'appliquer |
+| chaque ruche rejouée par WAC identique à la récupération que Windows fait lui-même de la même ruche et de ses journaux : même nombre de clés et de valeurs, même empreinte de l'ensemble | un rejeu qui écarte une entrée donne une ruche qui se charge encore, avec quelques clés de moins : WAC écartait l'entrée dont le numéro est celui de la ruche, et une collecte prise quelques minutes après un démarrage a perdu 16 clés de SOFTWARE, puis 125 canaux d'événements, sans aucune erreur |
 | un journal d'annulation nommé pour chaque rejeu | sans lui la copie brute n'est plus reconstructible, et la promesse du rapport serait fausse |
 | `mounted_device.json` / `reg query` de la même clé (décodée par une implémentation distincte) et `Get-Partition` | 6 montages sur 7 publiés comme `\` : les chemins de périphérique actuels (`\??\...`) étaient décodés comme du texte ANSI et s'arrêtaient au premier octet nul |
 | dates FAT des shell items sans fraction et à secondes paires ; dates Amcache lues en texte sans fraction | toutes les dates écrites avec sept chiffres de fraction — `…:30.0000000` pour une date FAT précise à deux secondes (808 dates) |
