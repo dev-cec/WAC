@@ -1799,6 +1799,43 @@ Windows~10 and 11; the older forms are listed for what comes next.
 
 \input{../artefact-table_EN.tex}
 
+\section{Source expected but missing}\label{sec:expected}
+
+Conversely, some sources are on every installation of a given version, and
+Windows goes on without them: the \fichier{hosts} file, \fichier{Amcache.hve}
+and \fichier{SRUDB.dat} since they exist, the event logs, the services key. The
+table above marks them ``always there from''. When the collection does not hold
+such a source, it is neither a failed reading nor an absence of activity: it is
+a finding, and the artefact's file states it.
+
+\begin{lstlisting}
+{
+  "Artifact": "Hosts file",
+  "CollectionStatus": "ExpectedButMissing",
+  "WindowsRelease": "Windows 11",
+  "WindowsBuild": 26200,
+  "ExpectedLocation": "Windows\\System32\\drivers\\etc\\hosts",
+  "Error": "0x80070002 The system cannot find the file specified.",
+  "Note": "This version of Windows always has this artefact's source
+           (artefacts.hosts) and the collection does not hold it. [...]"
+}
+\end{lstlisting}
+
+The conversion says so on the console and records it in
+\fichier{conversion.json}. What it knows is that the sealed collection does not
+hold the source; that the machine did not have it reads in
+\fichier{investigation.json}, where the extraction of the folder is recorded
+with its result and the number of files taken. A file erased, a service
+switched off or a damaged system then remains to be explained.
+
+\begin{attention}
+The status is set only where the presence is certain. It is not for what
+exists only after an event (the \fichier{USBSTOR} key before the first USB
+storage), for what depends on an installed program (browsers, mail), nor on
+server editions, still to be measured: an absence there stays an artefact not
+collected, or an empty list.
+\end{attention}
+
 \section{Undecoded data}
 
 An item \wac{} cannot decode (unknown shell item, unrecognised extension block)

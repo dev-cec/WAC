@@ -228,8 +228,7 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
 	const std::wstring name = text(label, Language::English);
 	/* Switched off by the table of the artefacts, not by the configuration:
 	   this version of Windows does not have it (applyArtefactCatalogue). */
-	const std::wstring bare = std::wstring(key).substr(std::wstring(key).find(L'.') + 1);
-	if (conf.absentFromVersion.count(encodeText(bare))) {
+	if (conf.absentFromVersion.count(catalogueKey(key))) {
 		bool known = false;
 		writeConsole(text(Text::AbsentFromVersion, { releaseOf(conf.examinedVersion, known).name }) + L"\n");
 		writeAbsentFromVersion(file, name, key);
@@ -281,10 +280,34 @@ void applyArtefactCatalogue() {
 	}
 }
 
+/*! THE GUARD ON THE MACHINE'S SIDE (backlog B-039). Records an artefact that
+ *  could not be read. When its source was simply not there, and the examined
+ *  version of Windows always has one (expectedOn), it is "expected but
+ *  missing": said on the console, recorded in the investigation log, and its
+ *  file carries that status — the absence is a finding, not a failed reading.
+ *  Any other failure stays a failed reading (writeNotCollected).
+ *  @param file the artefact's JSON file
+ *  @param artefact its label, in English
+ *  @param key its configuration key
+ *  @param hresult the collector's result */
+void reportUnread(const char* file, const std::wstring& artefact, const wchar_t* key, HRESULT hresult) {
+	if (!sourceNotFound(hresult) || !expectedOn(catalogueKey(key), conf.examinedVersion)) {
+		writeNotCollected(file, artefact, hresult);
+		return;
+	}
+	bool known = false;
+	const wchar_t* release = releaseOf(conf.examinedVersion, known).name;
+	writeConsole(text(Text::ExpectedButMissing, { release }) + L"\n");
+	auditRecord(L"Expected but missing: " + artefact + L" (" + key + L"), absent from the collection though " + release
+	            + L" always has its source",
+	            formOf(*artefactEntry(catalogueKey(key)), conf.examinedVersion).location, hresult, Footprint::FILE_COPY);
+	writeExpectedButMissing(file, artefact, key, hresult);
+}
+
 /*! Converts one artefact read from the working copy — its files or the hives
  *  it lives in: getData, then its JSON files — the same sequence for each of
  *  them. An artefact that could not be read says so in each of its files
- *  (writeNotCollected); one not asked for, likewise (requested).
+ *  (reportUnread); one not asked for, likewise (requested).
  *  @tparam Collector the artefact's class: getData(), toJson(), clear()
  *  @param wanted the configuration's switch
  *  @param outputs its JSON files, each with its name for the console and the file
@@ -301,7 +324,7 @@ void convertArtefact(bool wanted, std::initializer_list<std::pair<const char*, T
 	HRESULT hresult = collector.getData();
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
-		for (const auto& [file, label] : outputs) writeNotCollected(file, text(label, Language::English), hresult);
+		for (const auto& [file, label] : outputs) reportUnread(file, text(label, Language::English), key, hresult);
 		return;
 	}
 	hresult = collector.toJson();
@@ -691,6 +714,7 @@ void convertNtfsMetadata() {
 	}
 	if (mftOut) {
 		mftOut->close();
+		// Volume metadata cannot be missing from a running Windows: not read, it is a failed reading.
 		if (!mftVolumes) writeNotCollected("mft.json", L"$MFT", mftFailure);
 	}
 	if (usnOut) {
@@ -1011,8 +1035,7 @@ void convertArtefacts(bool systemAvailable) {
 	            hresult, Footprint::HIVE_COPY);
 	if (hresult != ERROR_SUCCESS) {
 		printError(hresult);
-		writeNotCollected("ScheduledTasks.json",
-		                  L"task definitions not extracted", hresult);
+		reportUnread("ScheduledTasks.json", L"task definitions not extracted", L"artefacts.scheduled_tasks", hresult);
 	}
 	else {
 		hresult = scheduledTasks.toJson();

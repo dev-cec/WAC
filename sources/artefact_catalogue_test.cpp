@@ -7,7 +7,8 @@
  *  here: the table and wac.yml hold exactly the same keys; each artefact's
  *  forms are in order and start with its first build; known cases answer
  *  right (no SRUM before Windows 8, no jump list before 7, Prefetch 23 on
- *  Vista and 30 on 10); a key or a version that is not known never holds a
+ *  Vista and 30 on 10); a source is "expected" only where the version always
+ *  has it, on client editions; a key or a version that is not known never holds a
  *  collection back; and a version NEWER than the table — the next Windows —
  *  is collected as the last one known, and flagged.
  *
@@ -128,8 +129,20 @@ int main(int argc, char** argv) {
 	check(prefetch && std::wstring(formOf(*prefetch, vista).format) == L"SCCA version 23" && !formOf(*prefetch, vista).decoded, "Prefetch on Vista");
 	check(prefetch && formOf(*prefetch, eleven).decoded && formOf(*prefetch, eleven).sinceBuild == 10240, "Prefetch on Windows 11");
 	const ArtefactEntry* amcache = artefactEntry("amcache");
-	check(amcache && expectedOn(*amcache, ten) && !expectedOn(*amcache, seven), "Amcache: expected on 10, not certain on 7");
-	check(amcache && !expectedOn(*amcache, server2019), "expected on a server: not measured yet");
+	check(amcache && formOf(*amcache, ten).decoded && !formOf(*amcache, eight).decoded, "Amcache: Inventory keys decoded, File and Programs keys not");
+
+	/* THE GUARD ON THE MACHINE'S SIDE (expectedOn): a source not found is
+	   "expected but missing" only where this version always has one. */
+	check(expectedOn("amcache", ten) && !expectedOn("amcache", seven), "Amcache: expected on 10, not certain on 7");
+	check(!expectedOn("amcache", server2019), "expected on a server: not measured yet");
+	check(expectedOn("hosts", xp) && expectedOn("hosts", eleven) && expectedOn("srum", eight), "hosts or SRUM not expected where it always is");
+	check(!expectedOn("srum", seven), "SRUM expected on a version that never had it");
+	check(!expectedOn("emails", eleven) && !expectedOn("web_client", eleven), "a source that depends on installed programs is expected");
+	check(!expectedOn("usbstor", eleven) && !expectedOn("devices", eleven), "a key that exists only once a device was plugged is expected");
+	check(!expectedOn("mft", eleven) && !expectedOn("processes", eleven) && !expectedOn("sessions", eleven),
+	      "volume metadata or a live state is expected: not read, it is a failed reading, not a trace");
+	check(!expectedOn("an_artefact_of_tomorrow", eleven) && !expectedOn("hosts", WindowsVersion{}), "what is not known is expected");
+	check(expectedOn("hosts", WindowsVersion{ 31000, false, false }), "the next Windows no longer expects what the last one known does");
 
 	/* THE GUARD (absentAmong): everything asked for on a Windows 7, on an XP,
 	   on a Windows 11 — only what the version lacks is held back, and an

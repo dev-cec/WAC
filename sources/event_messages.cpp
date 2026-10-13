@@ -117,8 +117,7 @@ std::wstring extractResource(const std::wstring& absolutePath) {
 	RawHiveExtraction line;
 	const HRESULT hr = g_reader->read(absolutePath, target, line);
 	std::vector<RawHiveExtraction> reading{ line };
-	const bool absent = hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) || hr == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
-	if (absent) {
+	if (sourceNotFound(hr)) {
 		// A candidate that does not exist: neither an exhibit, nor an empty directory
 // in the exhibit store.
 		std::error_code ec;

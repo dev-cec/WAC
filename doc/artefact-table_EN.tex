@@ -28,7 +28,6 @@
 \addlinespace
 \texttt{devices} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Enum\textbackslash{}USB, SCSI} & registry keys & yes \\
  & Windows Vista & \texttt{…and SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows Portable Devices, device properties with dates (Windows 8)} & registry keys & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{dpapi\_master\_keys} & Windows XP & \texttt{\textless{}profile\textgreater{}\textbackslash{}Application Data\textbackslash{}Microsoft\textbackslash{}Protect\textbackslash{}\textless{}SID\textgreater{}} & master key file, version 2 & yes \\
  & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Protect\textbackslash{}\textless{}SID\textgreater{}} & master key file, version 2 & yes \\
@@ -73,10 +72,9 @@
 \addlinespace
 \texttt{log\_file} & Windows XP & \texttt{\$LogFile} & NTFS log, raw copy & no \\
  & Windows Vista & \texttt{…and \$Extend\textbackslash{}\$RmMetadata\textbackslash{}\$TxfLog} & transactional NTFS log, raw copy & no \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP; Copied raw on every version: not converted.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Copied raw on every version: not converted.} \\
 \addlinespace
 \texttt{mft} & Windows XP & \texttt{\$MFT} & NTFS 3.1 file records & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{mounted\_devices} & Windows XP & \texttt{SYSTEM\textbackslash{}MountedDevices} & registry values & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
@@ -93,16 +91,13 @@
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell\textbackslash{}MuiCache} & registry values & yes \\
 \addlinespace
 \texttt{network} & Windows XP & \texttt{live: TCP/IP tables of the running system} & observation & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{network\_configuration} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}Tcpip\textbackslash{}Parameters\textbackslash{}Interfaces, Control\textbackslash{}Network} & registry values & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{network\_shares} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}LanmanServer\textbackslash{}Shares} & registry values, security descriptors & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{ntfs\_volumes} & Windows XP & \texttt{\$Boot, \$Extend\textbackslash{}\$UsnJrnl:\$Max} & NTFS boot sector, journal header & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{office\_trust\_records} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Office\textbackslash{}\textless{}version\textgreater{}\textbackslash{}\textless{}program\textgreater{}\textbackslash{}Security\textbackslash{}Trusted Documents\textbackslash{}TrustRecords} & registry values & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Depends on Office (2010 and later), not on Windows.} \\
@@ -123,7 +118,6 @@
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Switched off by default on the server editions.} \\
 \addlinespace
 \texttt{processes} & Windows XP & \texttt{live: processes of the running system} & observation & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{program\_usage} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}AppCompatFlags\textbackslash{}Layers} & registry values & yes \\
  & Windows Vista & \texttt{…and AppCompatFlags\textbackslash{}Compatibility Assistant\textbackslash{}Store, Explorer\textbackslash{}Taskband} & registry values & yes \\
@@ -165,13 +159,11 @@
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{security\_descriptors} & Windows XP & \texttt{\$Secure:\$SDS} & NTFS security descriptor stream & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{services} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services} & registry keys & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{sessions} & Windows XP & \texttt{live: logon sessions of the running system} & observation & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{setupapi} & Windows XP & \texttt{Windows\textbackslash{}setupapi.log} & text, XP layout & no \\
  & Windows Vista & \texttt{Windows\textbackslash{}INF\textbackslash{}setupapi.dev.log} & text, sections & yes \\
@@ -203,7 +195,6 @@
 \addlinespace
 \texttt{usbstor} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Enum\textbackslash{}USBSTOR} & registry keys & yes \\
  & Windows 8 & \texttt{…with the device properties' dates (first install, last connection, last removal)} & registry keys, FILETIME & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{userassist} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}UserAssist\textbackslash{}\{5E6AB780-…\}, \{75048700-…\}} & ROT13 names, 16-byte values & no \\
  & Windows 7 & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}UserAssist\textbackslash{}\{CEBFF5CD-…\}, \{F4E57C4B-…\}} & ROT13 names, 72-byte values & yes \\

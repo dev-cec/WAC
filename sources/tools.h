@@ -1171,6 +1171,29 @@ HRESULT writeNotRequested(const std::string& name, const std::wstring& artefact,
  * @return ERROR_SUCCESS if the file could be written */
 HRESULT writeAbsentFromVersion(const std::string& name, const std::wstring& artefact, const std::wstring& key);
 
+/*! Whether a result says the source itself was not there — file or folder —,
+ *  whichever way the collector returned it (a Win32 code or its HRESULT).
+ * @param result the collector's result */
+bool sourceNotFound(HRESULT result);
+
+/*! Writes an artefact whose source was not found where the examined version
+ *  of Windows always has one (expectedOn, artefact_catalogue.h): "expected
+ *  but missing". The absence is itself a finding — a file erased, a service
+ *  switched off —, neither a failed reading nor an absence of activity, and
+ *  the file says where the source should have been.
+ * @param name name of the file
+ * @param artefact label of the artefact
+ * @param key the configuration key, e.g. L"artefacts.srum"
+ * @param result the collector's result, a "not found"
+ * @return ERROR_SUCCESS if the file could be written */
+HRESULT writeExpectedButMissing(const std::string& name, const std::wstring& artefact, const std::wstring& key,
+                                HRESULT result);
+
+/*! The key of the artefact table for a configuration key: L"artefacts.srum"
+ *  gives "srum".
+ * @param key the configuration key */
+std::string catalogueKey(const std::wstring& key);
+
 /*! WAC's version, <major>.<minor>.<bugfix>, read in the program's own
  *  version resource (WAC.rc): the one place it is written, the one Windows
  *  shows in the executable's properties.

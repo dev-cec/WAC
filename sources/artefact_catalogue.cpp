@@ -59,7 +59,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		  L"Server 2012 and 2012 R2 have no built-in Defender; quarantine copied encrypted on every version." },
 		{ "defender_configuration", VISTA, 0, 0,
 		  { { VISTA, L"SOFTWARE\\Microsoft\\Windows Defender, SOFTWARE\\Policies\\Microsoft\\Windows Defender", L"registry values", true } }, L"" },
-		{ "devices", XP, 0, XP,
+		{ "devices", XP, 0, 0,
 		  { { XP, L"SYSTEM\\CurrentControlSet\\Enum\\USB, SCSI", L"registry keys", true },
 		    { VISTA, L"…and SOFTWARE\\Microsoft\\Windows Portable Devices, device properties with dates (Windows 8)", L"registry keys", true } }, L"" },
 		{ "dpapi_master_keys", XP, 0, 0,
@@ -98,10 +98,10 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		  { { VISTA, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkList", L"registry keys, SYSTEMTIME dates", true } }, L"" },
 		{ "local_groups", XP, 0, XP,
 		  { { XP, L"SAM\\SAM\\Domains\\Builtin\\Aliases", L"SAM alias records", true } }, L"" },
-		{ "log_file", XP, 0, XP,
+		{ "log_file", XP, 0, 0,
 		  { { XP, L"$LogFile", L"NTFS log, raw copy", false },
 		    { VISTA, L"…and $Extend\\$RmMetadata\\$TxfLog", L"transactional NTFS log, raw copy", false } }, L"Copied raw on every version: not converted." },
-		{ "mft", XP, 0, XP,
+		{ "mft", XP, 0, 0,
 		  { { XP, L"$MFT", L"NTFS 3.1 file records", true } }, L"" },
 		{ "mounted_devices", XP, 0, XP,
 		  { { XP, L"SYSTEM\\MountedDevices", L"registry values", true } }, L"" },
@@ -116,13 +116,13 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		{ "muicache", XP, 0, 0,
 		  { { XP, L"NTUSER.DAT\\Software\\Microsoft\\Windows\\ShellNoRoam\\MUICache", L"registry values", false },
 		    { VISTA, L"UsrClass.dat\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache", L"registry values", true } }, L"" },
-		{ "network", XP, 0, XP,
+		{ "network", XP, 0, 0,
 		  { { XP, L"live: TCP/IP tables of the running system", L"observation", true } }, L"" },
 		{ "network_configuration", XP, 0, XP,
 		  { { XP, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces, Control\\Network", L"registry values", true } }, L"" },
-		{ "network_shares", XP, 0, XP,
+		{ "network_shares", XP, 0, 0,
 		  { { XP, L"SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Shares", L"registry values, security descriptors", true } }, L"" },
-		{ "ntfs_volumes", XP, 0, XP,
+		{ "ntfs_volumes", XP, 0, 0,
 		  { { XP, L"$Boot, $Extend\\$UsnJrnl:$Max", L"NTFS boot sector, journal header", true } }, L"" },
 		{ "office_trust_records", XP, 0, 0,
 		  { { XP, L"NTUSER.DAT\\Software\\Microsoft\\Office\\<version>\\<program>\\Security\\Trusted Documents\\TrustRecords", L"registry values", true } },
@@ -140,7 +140,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		    { EIGHT, L"Windows\\Prefetch\\*.pf", L"SCCA version 26", false },
 		    { TEN, L"Windows\\Prefetch\\*.pf", L"SCCA version 30 and 31, compressed (MAM)", true } },
 		  L"Switched off by default on the server editions." },
-		{ "processes", XP, 0, XP,
+		{ "processes", XP, 0, 0,
 		  { { XP, L"live: processes of the running system", L"observation", true } }, L"" },
 		{ "program_usage", XP, 0, 0,
 		  { { XP, L"NTUSER.DAT …\\AppCompatFlags\\Layers", L"registry values", true },
@@ -177,11 +177,11 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		  L"Windows.edb is collected with its logs, not converted. Windows XP: Windows Desktop Search, an optional install." },
 		{ "security", XP, 0, XP,
 		  { { XP, L"SECURITY hive: Policy\\Secrets, Cache, PolAdtEv", L"registry values", true } }, L"" },
-		{ "security_descriptors", XP, 0, XP,
+		{ "security_descriptors", XP, 0, 0,
 		  { { XP, L"$Secure:$SDS", L"NTFS security descriptor stream", true } }, L"" },
 		{ "services", XP, 0, XP,
 		  { { XP, L"SYSTEM\\CurrentControlSet\\Services", L"registry keys", true } }, L"" },
-		{ "sessions", XP, 0, XP,
+		{ "sessions", XP, 0, 0,
 		  { { XP, L"live: logon sessions of the running system", L"observation", true } }, L"" },
 		{ "setupapi", XP, 0, XP,
 		  { { XP, L"Windows\\setupapi.log", L"text, XP layout", false },
@@ -208,7 +208,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		    { EIGHT, L"the same folder, with iconcache_*.db", L"CMMM, Windows 8 and later layout", true } }, L"" },
 		{ "typed_paths", VISTA, 0, 0,
 		  { { VISTA, L"NTUSER.DAT\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths", L"registry values", true } }, L"" },
-		{ "usbstor", XP, 0, XP,
+		{ "usbstor", XP, 0, 0,
 		  { { XP, L"SYSTEM\\CurrentControlSet\\Enum\\USBSTOR", L"registry keys", true },
 		    { EIGHT, L"…with the device properties' dates (first install, last connection, last removal)", L"registry keys, FILETIME", true } }, L"" },
 		{ "userassist", XP, 0, 0,
@@ -278,9 +278,10 @@ std::vector<std::string> absentAmong(const std::vector<std::string>& asked, cons
 	return absent;
 }
 
-bool expectedOn(const ArtefactEntry& entry, const WindowsVersion& version) {
-	return entry.expectedSinceBuild != 0 && !version.server && version.build >= entry.expectedSinceBuild
-	    && availabilityOf(entry.key, version) == Availability::Present;
+bool expectedOn(const std::string& key, const WindowsVersion& version) {
+	const ArtefactEntry* entry = artefactEntry(key);
+	return entry && entry->expectedSinceBuild != 0 && !version.server && version.build >= entry->expectedSinceBuild
+	    && availabilityOf(key, version) == Availability::Present;
 }
 
 const ArtefactForm& formOf(const ArtefactEntry& entry, const WindowsVersion& version) {

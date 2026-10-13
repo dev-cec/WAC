@@ -1859,6 +1859,44 @@ anciennes y figurent pour la suite.
 
 \input{../artefact-table_FR.tex}
 
+\section{Source attendue mais introuvable}\label{sec:attendu}
+
+À l'inverse, certaines sources sont sur toute installation d'une version
+donnée, et Windows continue de fonctionner sans elles : le fichier
+\fichier{hosts}, \fichier{Amcache.hve} et \fichier{SRUDB.dat} depuis qu'ils
+existent, les journaux d'événements, la clé des services. Le tableau ci-dessus
+les signale par « toujours présent depuis ». Quand la collecte ne contient pas
+une telle source, ce n'est ni une lecture ratée ni une absence d'activité :
+c'est un constat, que le fichier de l'artefact énonce.
+
+\begin{lstlisting}
+{
+  "Artifact": "Hosts file",
+  "CollectionStatus": "ExpectedButMissing",
+  "WindowsRelease": "Windows 11",
+  "WindowsBuild": 26200,
+  "ExpectedLocation": "Windows\\System32\\drivers\\etc\\hosts",
+  "Error": "0x80070002 Le fichier spécifié est introuvable.",
+  "Note": "This version of Windows always has this artefact's source
+           (artefacts.hosts) and the collection does not hold it. [...]"
+}
+\end{lstlisting}
+
+La conversion l'annonce en console et le consigne dans
+\fichier{conversion.json}. Elle sait que la collecte scellée ne contient pas la
+source ; que la machine ne l'avait pas se lit dans \fichier{investigation.json},
+où l'extraction du dossier est consignée avec son résultat et le nombre de
+fichiers pris. Un fichier effacé, un service arrêté ou un système endommagé
+sont alors à expliquer.
+
+\begin{attention}
+Le statut n'est posé que là où la présence est certaine. Il ne l'est pas pour
+ce qui n'existe qu'après un événement (la clé \fichier{USBSTOR} avant le premier
+support USB), pour ce qui dépend d'un programme installé (navigateurs,
+messagerie), ni sur les éditions serveur, qui restent à mesurer : l'absence y
+reste un artefact non collecté ou une liste vide.
+\end{attention}
+
 \section{Données non décodées}
 
 Un élément que \wac{} ne sait pas décoder (élément du shell inconnu, bloc

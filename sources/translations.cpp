@@ -211,6 +211,8 @@ constexpr Wording WORDINGS[] = {
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },
 	{ Text::NotNeeded,                 L"inutile : aucun artefact demandé ne les lit",   L"not needed: no artefact asked for reads them" },
 	{ Text::AbsentFromVersion,         L"absent de cette version de Windows (%1)",       L"absent from this version of Windows (%1)" },
+	{ Text::ExpectedButMissing,        L"   attendu sous %1 et introuvable : cette absence est elle-même un constat",
+	                                   L"   expected on %1 and not found: this absence is itself a finding" },
 	{ Text::StepExaminedVersion,       L"Version de Windows examinée",                   L"Examined version of Windows" },
 	{ Text::ExaminedVersionUnknown,    L"%1, build %2 — plus récent que la table des artefacts : traité comme %1",
 	                                   L"%1, build %2 — newer than the artefact table: treated as %1" },

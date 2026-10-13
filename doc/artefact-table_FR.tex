@@ -28,7 +28,6 @@
 \addlinespace
 \texttt{devices} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Enum\textbackslash{}USB, SCSI} & clés de registre & oui \\
  & Windows Vista & \texttt{…et SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows Portable Devices, propriétés des périphériques avec leurs dates (Windows 8)} & clés de registre & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{dpapi\_master\_keys} & Windows XP & \texttt{\textless{}profile\textgreater{}\textbackslash{}Application Data\textbackslash{}Microsoft\textbackslash{}Protect\textbackslash{}\textless{}SID\textgreater{}} & fichier de clé maîtresse, version 2 & oui \\
  & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Protect\textbackslash{}\textless{}SID\textgreater{}} & fichier de clé maîtresse, version 2 & oui \\
@@ -73,10 +72,9 @@
 \addlinespace
 \texttt{log\_file} & Windows XP & \texttt{\$LogFile} & journal NTFS, copie brute & non \\
  & Windows Vista & \texttt{…et \$Extend\textbackslash{}\$RmMetadata\textbackslash{}\$TxfLog} & journal NTFS transactionnel, copie brute & non \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP ; Copié brut sur toutes les versions : non converti.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Copié brut sur toutes les versions : non converti.} \\
 \addlinespace
 \texttt{mft} & Windows XP & \texttt{\$MFT} & enregistrements de fichier NTFS 3.1 & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{mounted\_devices} & Windows XP & \texttt{SYSTEM\textbackslash{}MountedDevices} & valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
@@ -93,16 +91,13 @@
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell\textbackslash{}MuiCache} & valeurs de registre & oui \\
 \addlinespace
 \texttt{network} & Windows XP & \texttt{en direct : tables TCP/IP du système en marche} & observation & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{network\_configuration} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}Tcpip\textbackslash{}Parameters\textbackslash{}Interfaces, Control\textbackslash{}Network} & valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{network\_shares} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}LanmanServer\textbackslash{}Shares} & valeurs de registre, descripteurs de sécurité & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{ntfs\_volumes} & Windows XP & \texttt{\$Boot, \$Extend\textbackslash{}\$UsnJrnl:\$Max} & secteur de démarrage NTFS, en-tête du journal & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{office\_trust\_records} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Office\textbackslash{}\textless{}version\textgreater{}\textbackslash{}\textless{}program\textgreater{}\textbackslash{}Security\textbackslash{}Trusted Documents\textbackslash{}TrustRecords} & valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Dépend d'Office (2010 et suivants), non de Windows.} \\
@@ -123,7 +118,6 @@
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Désactivé par défaut sur les éditions serveur.} \\
 \addlinespace
 \texttt{processes} & Windows XP & \texttt{en direct : processus du système en marche} & observation & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{program\_usage} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}AppCompatFlags\textbackslash{}Layers} & valeurs de registre & oui \\
  & Windows Vista & \texttt{…et AppCompatFlags\textbackslash{}Compatibility Assistant\textbackslash{}Store, Explorer\textbackslash{}Taskband} & valeurs de registre & oui \\
@@ -165,13 +159,11 @@
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{security\_descriptors} & Windows XP & \texttt{\$Secure:\$SDS} & flux des descripteurs de sécurité NTFS & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{services} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services} & clés de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{sessions} & Windows XP & \texttt{en direct : sessions ouvertes sur le système en marche} & observation & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{setupapi} & Windows XP & \texttt{Windows\textbackslash{}setupapi.log} & texte, disposition de XP & non \\
  & Windows Vista & \texttt{Windows\textbackslash{}INF\textbackslash{}setupapi.dev.log} & texte, sections & oui \\
@@ -203,7 +195,6 @@
 \addlinespace
 \texttt{usbstor} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Enum\textbackslash{}USBSTOR} & clés de registre & oui \\
  & Windows 8 & \texttt{…avec les dates des propriétés du périphérique (première installation, dernière connexion, dernier retrait)} & clés de registre, FILETIME & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{userassist} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}UserAssist\textbackslash{}\{5E6AB780-…\}, \{75048700-…\}} & noms en ROT13, valeurs de 16 octets & non \\
  & Windows 7 & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}UserAssist\textbackslash{}\{CEBFF5CD-…\}, \{F4E57C4B-…\}} & noms en ROT13, valeurs de 72 octets & oui \\

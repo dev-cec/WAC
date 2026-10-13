@@ -112,6 +112,7 @@ Ce que WAC sait des versions de Windows tient dans **une table**, `sources/artef
 
 - **Une nouvelle version de Windows** : ajouter sa ligne à `windowsReleases()` (premier et dernier build connus) ; si elle déplace ou change un artefact, ajouter une forme à cet artefact ; si elle en retire un, renseigner `untilBuild`. Tant que ce n'est pas fait, la version est traitée comme la dernière connue et signalée comme telle dans le journal d'investigation.
 - **Un nouveau format** : ajouter la forme (avec `decoded` à faux tant que le décodeur n'existe pas : la pièce est alors collectée brute), puis le décodeur, reconnu par la signature ou la version interne du fichier.
+- **Une source toujours présente** (`expectedSinceBuild`) : à ne renseigner que pour un fichier ou une clé que toute installation porte ET que l'on peut retirer sans arrêter Windows. Son absence d'une collecte devient alors le statut « attendu mais introuvable ». Jamais pour ce qui n'existe qu'après un événement, pour un état du système en marche ni pour un métafichier du volume ; les éditions serveur restent à mesurer.
 - **Un nouvel artefact** : sa clé dans `wac.yml`, son interrupteur dans `artefactSwitches()` (`config.cpp`) et sa ligne dans la table — le test refuse une clé qui manque d'un côté.
 
 Puis, depuis `sources/` :

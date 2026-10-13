@@ -152,6 +152,8 @@ def check_configuration(folder):
 def main():
     if len(sys.argv) > 2 and sys.argv[1] == "--configuration":
         sys.exit(check_configuration(sys.argv[2]))
+    if len(sys.argv) > 2 and sys.argv[1] == "--expected-missing":
+        sys.exit(check_expected_missing(sys.argv[2]))
     folder = sys.argv[1] if len(sys.argv) > 1 else "."
     ok = invalid = inconsistent = 0
 
@@ -183,6 +185,13 @@ def main():
         if isinstance(data, dict) and data.get("CollectionStatus") == "AbsentFromThisVersion":
             print(f"  ⏭️  {name:<34} absent from this version of Windows ({data.get('WindowsRelease', '?')})")
             ok += 1
+            continue
+
+        # A source every Windows has, not found (B-039): the test machine lacks
+        # none, so this is a fault here — the dedicated step checks the status.
+        if isinstance(data, dict) and data.get("CollectionStatus") == "ExpectedButMissing":
+            print(f"  ❌ {name:<34} EXPECTED BUT MISSING — {data.get('ExpectedLocation', '?')}")
+            invalid += 1
             continue
 
         faults = [(p, v, m) for p, v in walk(data)
@@ -2318,6 +2327,67 @@ def check_examined_version(folder):
           f"in {len(stated)} journal record(s); no artefact declared absent from this version"
           + ("" if ok else f": {wrong[:1]} {absent[:3]} {held_back[:1]}"))
     return 0 if ok else 1
+
+
+def check_expected_missing(folder):
+    """The hosts file moved aside before a collection of hosts alone: the
+    conversion must say "expected but missing", and nothing else.
+
+    Independent of WAC's decision: the manifest of the exhibit store shows the
+    collection read the folder (its other files — services, networks — are
+    there) and took no hosts; the build is the one Windows itself reported
+    (reference/windows-version.txt). Against that, hosts.json must carry the
+    status, the build, the place where the file should have been and a "not
+    found" error; the conversion's journal must record the finding; and no
+    other artefact may claim the status.
+    """
+    faults = []
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    paths = [str(i.get("SourcePath", "")).lower() for i in (manifest or {}).get("Items") or []] \
+        if isinstance(manifest, dict) else []
+    folder_files = [p for p in paths if "\\windows\\system32\\drivers\\etc\\" in p]
+    if not folder_files:
+        faults.append("the store holds no file of drivers\\etc: the folder was not read, the test proves nothing")
+    if any(p.endswith("\\drivers\\etc\\hosts") for p in folder_files):
+        faults.append("the store holds a hosts file: it was not moved aside")
+    hosts = raw_json(os.path.join(folder, "hosts.json"))
+    if not isinstance(hosts, dict) or hosts.get("CollectionStatus") != "ExpectedButMissing":
+        faults.append(f"hosts.json does not say ExpectedButMissing: {str(hosts)[:90]}")
+    else:
+        build = None
+        try:
+            with open(os.path.join(folder, "reference", "windows-version.txt"), encoding="utf-8", errors="replace") as f:
+                match = re.search(r"windows=(\d+)\|", f.read())
+                build = int(match.group(1)) if match else None
+        except OSError:
+            pass
+        if build is None:
+            faults.append("reference/windows-version.txt unreadable: build not confronted")
+        elif hosts.get("WindowsBuild") != build:
+            faults.append(f"WindowsBuild {hosts.get('WindowsBuild')}, Windows reports {build}")
+        if not str(hosts.get("ExpectedLocation", "")).lower().endswith("drivers\\etc\\hosts"):
+            faults.append(f"ExpectedLocation is not the hosts file: {hosts.get('ExpectedLocation')!r}")
+        if "80070002" not in str(hosts.get("Error", "")) and "80070003" not in str(hosts.get("Error", "")):
+            faults.append(f"Error is not a 'not found': {hosts.get('Error')!r}")
+        if not hosts.get("Note") or not hosts.get("WindowsRelease"):
+            faults.append("Note or WindowsRelease absent")
+    conversion = load(folder, "conversion.json")
+    recorded = [o for o in (conversion or {}).get("Operations", []) if isinstance(conversion, dict)
+                and str(o.get("Operation", "")).startswith("Expected but missing") and "artefacts.hosts" in str(o.get("Operation"))]
+    if len(recorded) != 1:
+        faults.append(f"{len(recorded)} 'Expected but missing' record(s) for hosts in conversion.json, 1 expected")
+    others = [n for n in sorted(os.listdir(folder)) if n.endswith(".json") and n != "hosts.json"
+              and isinstance(raw_json(os.path.join(folder, n)), dict)
+              and raw_json(os.path.join(folder, n)).get("CollectionStatus") == "ExpectedButMissing"]
+    if others:
+        faults.append(f"the status is also claimed by {others[:3]}")
+    if faults:
+        print("  ❌ expected but missing: " + " ; ".join(faults))
+        return 1
+    print(f"  ✅ expected but missing: hosts.json says so (build {hosts.get('WindowsBuild')}, "
+          f"{hosts.get('ExpectedLocation')}), the journal records it, the store holds {len(folder_files)} other "
+          f"file(s) of the folder and no hosts, no other artefact claims it")
+    return 0
 
 
 def raw_json(path):

@@ -22,6 +22,15 @@
  *  editions on a server) stay present, their note saying what remains to be
  *  measured in the virtual machines of the compatibility items.
  *
+ *  "EXPECTED" IS AS PRUDENT (ArtefactEntry::expectedSinceBuild). It is set
+ *  only for a file or a key that every installation has AND that can be
+ *  removed while Windows goes on: the hosts file, Amcache.hve, SRUDB.dat, the
+ *  event logs, the Services key. It is NOT set for what exists only once
+ *  something happened (USBSTOR, before the first USB storage), for the state
+ *  of the running system (processes, sessions, connections) nor for the
+ *  volume's own metadata ($MFT, $LogFile, $Secure): those cannot be missing
+ *  from a running Windows, so one not read is a failed reading, never a trace.
+ *
  *  A VERSION NEWER THAN THE TABLE is treated as the last one known, and said
  *  so (WindowsRelease::known): the collection goes on.
  *
@@ -61,7 +70,7 @@ struct ArtefactEntry {
 	const char* key;                   //!< the key under `artefacts:` in wac.yml
 	unsigned sinceBuild;               //!< first build where it exists
 	unsigned untilBuild;               //!< first build where it no longer exists; 0 if it still does
-	unsigned expectedSinceBuild;       //!< from this build on, its source is ALWAYS there on a client edition: missing, it is a trace; 0 if never certain
+	unsigned expectedSinceBuild;       //!< from this build on, its source is ALWAYS there on a client edition: missing, it is a trace (expectedOn); 0 if never certain
 	std::vector<ArtefactForm> forms;   //!< its successive forms, oldest first; at least one
 	const wchar_t* note;               //!< what remains to be measured, or a precision; "" for none
 };
@@ -105,12 +114,16 @@ Availability availabilityOf(const std::string& key, const WindowsVersion& versio
  *  @return the keys absent from this version, in the order given */
 std::vector<std::string> absentAmong(const std::vector<std::string>& asked, const WindowsVersion& version);
 
-/*! Whether an artefact's source must be there on a version: one that is
- *  missing then is itself a trace (a file erased, a service switched off).
- *  Client editions only, until the server editions are measured.
- *  @param entry the artefact
+/*! THE GUARD ON THE MACHINE'S SIDE: whether an artefact's source must be
+ *  there on a version. One that is not found then is "expected but missing":
+ *  itself a trace (a file erased, a service switched off), not a failed
+ *  reading and not an absence of activity. Client editions only, until the
+ *  server editions are measured; a key the table does not hold, or a version
+ *  without a build, is never expected — nothing is concluded from what is not
+ *  known.
+ *  @param key the key of wac.yml
  *  @param version the examined machine's */
-bool expectedOn(const ArtefactEntry& entry, const WindowsVersion& version);
+bool expectedOn(const std::string& key, const WindowsVersion& version);
 
 /*! The form an artefact takes on a version.
  *  @param entry the artefact

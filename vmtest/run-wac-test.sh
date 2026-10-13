@@ -765,6 +765,39 @@ fetch_results configured "$CONFIG_OUT" >/dev/null
 python3 "$HERE/lib/check-json.py" --configuration "$CONFIG_OUT" || echo "   ⚠️ the configured collection fails its checks (see above)"
 fi
 
+if full_cycle || wants hosts; then
+echo "== 9. A source every Windows has, removed: expected but missing == ($(date +%H:%M:%S))"
+# The hosts file is on every installation, and Windows goes on without it:
+# moved aside the time of one collection, it must come out "ExpectedButMissing"
+# — not "not collected", not an empty array. Only hosts is asked for, so the
+# collection takes a few seconds. The file is put back right after the
+# collection, and first of all if an interrupted cycle left it aside.
+HOSTS='C:\Windows\System32\drivers\etc\hosts'
+restore_hosts() { $QGA run --shell "if exist $VMDIR\\hosts.aside (if not exist $HOSTS move /y $VMDIR\\hosts.aside $HOSTS >nul) & if exist $HOSTS (exit /b 0) else (exit /b 1)" >/dev/null 2>&1; }
+restore_hosts || echo "   ❌ hosts file absent before the test, and no copy to put back"
+MISSING_OUT="$OUTPUT/missing"
+{ echo "# wac.yml of the expected-but-missing test"; echo "wac_version: $WAC_VERSION"; echo "binary: none"
+  echo "output: missing"; echo "artefacts:"
+  for k in $(sed -n '/^artefacts:/,/^[^ #]/s/^  \([a-z_]*\):.*/\1/p' "$ROOT/sources/wac.yml"); do
+    if [[ "$k" == hosts ]]; then echo "  $k: true"; else echo "  $k: false"; fi
+  done; } > "$OUTPUT/wac-missing.yml"
+$QGA write "$OUTPUT/wac-missing.yml" "$VMDIR\\wac.yml" >/dev/null
+CODE=0
+$QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\missing 2>nul & move /y $HOSTS $VMDIR\\hosts.aside >nul && WAC.exe > missing.log 2>&1" || CODE=$?
+restore_hosts && echo "   ✅ hosts file put back" || echo "   ❌ hosts file NOT put back: $VMDIR\\hosts.aside"
+if [[ "$CODE" == "0" ]]; then
+  $QGA run --shell "cd /d $VMDIR && WAC.exe --convert=missing >> missing.log 2>&1" || CODE=$?
+fi
+[[ "$CODE" == "0" ]] && echo "   ✅ collection without hosts, then conversion, went to the end" \
+                     || echo "   ❌ collection without hosts, or its conversion, ended abnormally (code $CODE)"
+$QGA read "$VMDIR\\missing.log" "$OUTPUT/missing.log" >/dev/null 2>&1 || true
+$QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
+fetch_results missing "$MISSING_OUT" >/dev/null
+mkdir -p "$MISSING_OUT/reference" && cp "$OUTPUT/reference/windows-version.txt" "$MISSING_OUT/reference/" 2>/dev/null || true
+python3 "$HERE/lib/check-json.py" --expected-missing "$MISSING_OUT" || echo "   ⚠️ the expected-but-missing test fails its checks (see above)"
+$QGA run --shell "rmdir /s /q \\\\?\\$VMDIR\\missing 2>nul & del $VMDIR\\missing.log 2>nul & exit /b 0" >/dev/null 2>&1 || true
+fi
+
 echo
 if [[ "${ABNORMAL_STOP:-0}" == "1" ]]; then
   echo "== ⚠️ ABNORMAL STOP OF WAC: the JSON files above are PARTIAL == ($(date +%H:%M:%S))"

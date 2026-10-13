@@ -368,8 +368,11 @@ les cas connus répondent juste (pas de SRUM avant Windows~8, Prefetch~23 sous
 Vista et 30 sous Windows~10), que le garde-fou n'écarte sous Windows~7 que les
 cinq artefacts que cette version n'a pas, et qu'un Windows plus récent que la
 table est traité comme le dernier connu, et signalé. Une clé ou une version
-inconnue ne retient jamais une collecte. Vu échouer : SRUM déclaré présent
-depuis XP.
+inconnue ne retient jamais une collecte. Il contrôle aussi qu'une source n'est
+dite « toujours présente » que là où elle l'est : ni sur un serveur, ni pour
+une clé qui n'existe qu'après le branchement d'un périphérique, ni pour un
+métafichier du volume ou un état du système en marche. Vu échouer : SRUM
+déclaré présent depuis XP ; \fichier{USBSTOR} déclaré toujours présent.
 
 \begin{lstlisting}
 cd sources && g++ -std=c++17 -g -fsanitize=address,undefined -I. artefact_catalogue.cpp artefact_catalogue_test.cpp -o /tmp/act
@@ -380,6 +383,16 @@ cd sources && g++ -std=c++17 -g -fsanitize=address,undefined -I. artefact_catalo
 Dans le cycle, la version que \wac{} lit dans la ruche \fichier{SOFTWARE} copiée
 est confrontée à celle que Windows donne de lui-même (numéro de build, poste de
 travail ou serveur).
+
+La dernière étape du cycle écarte le fichier \fichier{hosts} le temps d'une
+collecte de ce seul artefact, puis le remet en place. La conversion doit donner
+à \fichier{hosts.json} le statut \texttt{ExpectedButMissing}, avec le build
+que Windows annonce et l'emplacement où le fichier aurait dû se trouver, et
+consigner le constat. La référence indépendante est le manifeste de la
+consigne : il porte les autres fichiers du dossier — le dossier a donc bien été
+lu — et aucun \fichier{hosts}. Aucun autre artefact ne doit porter ce statut ;
+dans le reste du cycle, où rien ne manque à la machine de test, il est une
+faute. Vu échouer sur une collecte ordinaire.
 
 \section{Sessions des navigateurs : \texttt{browser\_sessions\_test}}
 

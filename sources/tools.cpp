@@ -1661,6 +1661,38 @@ HRESULT writeAbsentFromVersion(const std::string& name, const std::wstring& arte
 	return writeJsonFile(name, o);
 }
 
+bool sourceNotFound(HRESULT result) {
+	return result == ERROR_FILE_NOT_FOUND || result == ERROR_PATH_NOT_FOUND
+	    || result == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) || result == HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+}
+
+std::string catalogueKey(const std::wstring& key) {
+	return encodeText(key.substr(key.find(L'.') + 1));
+}
+
+HRESULT writeExpectedButMissing(const std::string& name, const std::wstring& artefact, const std::wstring& key,
+                                HRESULT result) {
+	bool known = false;
+	const WindowsRelease& release = releaseOf(conf.examinedVersion, known);
+	Json o = Json::obj();
+	o.add(L"Artifact",         Json::str(artefact));
+	o.add(L"CollectionStatus", Json::str(L"ExpectedButMissing"));
+	o.add(L"WindowsRelease",   Json::str(release.name));
+	o.add(L"WindowsBuild",     Json::num((unsigned long long)conf.examinedVersion.build));
+	if (const ArtefactEntry* entry = artefactEntry(catalogueKey(key)))
+		o.add(L"ExpectedLocation", Json::str(formOf(*entry, conf.examinedVersion).location));
+	o.add(L"Error",            Json::str(L"0x" + to_hex(result) + L" " + getErrorMessage(result)));
+	/* What the conversion knows is that the sealed collection does not hold
+	   the source; whether the machine lacked it or its extraction failed is
+	   in the collection's own log, hence the pointer. */
+	o.add(L"Note",             Json::str(L"This version of Windows always has this artefact's source (" + key + L") "
+	                                     L"and the collection does not hold it. Unless the collection's log "
+	                                     L"(investigation.json) records a failed extraction of it, the source was "
+	                                     L"missing on the machine: a finding in itself — erased, switched off or "
+	                                     L"damaged —, to be explained. It is NOT the absence of traces on the system."));
+	return writeJsonFile(name, o);
+}
+
 //! ASCII lower case: enough for file extensions.
 static std::wstring toLowerAscii(std::wstring s) {
 	for (wchar_t& c : s) if (c >= L'A' && c <= L'Z') c = (wchar_t)(c - L'A' + L'a');

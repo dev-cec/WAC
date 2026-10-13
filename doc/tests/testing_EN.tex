@@ -356,7 +356,11 @@ cases answer right (no SRUM before Windows~8, Prefetch~23 on Vista and 30 on
 Windows~10), that on Windows~7 the guard holds back only the five artefacts
 that version lacks, and that a Windows newer than the table is treated as the
 last one known, and flagged. An unknown key or version never holds a collection
-back. Seen failing: SRUM declared present since XP.
+back. It also checks that a source is said ``always there'' only where it is:
+not on a server, not for a key that exists only once a device was plugged, not
+for a metadata file of the volume or a state of the running system. Seen
+failing: SRUM declared present since XP; \fichier{USBSTOR} declared always
+there.
 
 \begin{lstlisting}
 cd sources && g++ -std=c++17 -g -fsanitize=address,undefined -I. artefact_catalogue.cpp artefact_catalogue_test.cpp -o /tmp/act
@@ -367,6 +371,16 @@ cd sources && g++ -std=c++17 -g -fsanitize=address,undefined -I. artefact_catalo
 In the cycle, the version \wac{} reads in the copied \fichier{SOFTWARE} hive is
 confronted with the one Windows gives of itself (build number, workstation or
 server).
+
+The last step of the cycle moves the \fichier{hosts} file aside for the time
+of a collection of that artefact alone, then puts it back. The conversion must
+give \fichier{hosts.json} the status \texttt{ExpectedButMissing}, with the
+build Windows reports and the place where the file should have been, and record
+the finding. The independent reference is the manifest of the exhibit store: it
+holds the other files of the folder --- the folder was read --- and no
+\fichier{hosts}. No other artefact may carry the status; in the rest of the
+cycle, where the test machine lacks nothing, it is a fault. Seen failing on an
+ordinary collection.
 
 \section{Browser sessions: \texttt{browser\_sessions\_test}}
 
