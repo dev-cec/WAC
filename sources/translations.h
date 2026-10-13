@@ -29,7 +29,7 @@ enum class Text : unsigned {
 	HeadingForConversion, HeadingRegistry, HeadingFiles, HeadingEventLogs, HeadingExhibitStore,
 	HeadingInvestigationLog,
 	// Steps: prerequisites, collection medium, conversion
-	StepWindowsVersion, StepAdministratorRights, StepCollectionMedium, StepSealAndFingerprints,
+	StepAdministratorRights, StepCollectionMedium, StepSealAndFingerprints,
 	StepRebuildWorkingCopy, StepRepairWorkingHives,
 	// Steps: live state
 	StepRunningMachine, StepSessions, StepProcesses, StepNetworkState, StepServiceStates, StepSystemClock,
@@ -62,7 +62,7 @@ enum class Text : unsigned {
 	ArtefactDefenderLogs, ArtefactDefenderDetections, ArtefactDefenderQuarantine, ArtefactStartupFolders, ArtefactZoneIdentifiers, ArtefactSecurityHive,
 	ArtefactPersistence, ArtefactOfficeTrustRecords, ArtefactTypedPaths, ArtefactWordWheelQueries, ArtefactRootCertificates, ArtefactInternetSettingsSet, ArtefactFirewall, ArtefactWmiPersistence, ArtefactSrum, ArtefactBitsJobs, ArtefactFatVolumes, ArtefactInstalledPrograms, ArtefactDefenderConfiguration, ArtefactExplorerRecentDocs, ArtefactMountPoints, ArtefactKnownNetworks, ArtefactProgramUsages, ArtefactDevices, ArtefactNetworkShares, ArtefactNetworkConfiguration, ArtefactEventLogConfiguration, ArtefactShortcuts, ArtefactSecurityDescriptors, ArtefactNtfsVolumes, ArtefactDpapiMasterKeys, ArtefactUserShellFolders, ArtefactWebClient, ArtefactActivitiesCache, ArtefactSearchIndex, ArtefactRdpClient, ArtefactRdpServer, ArtefactThumbcache, ArtefactEmails,
 	ArtefactOperatingSystem, ArtefactEvents,
-	NotRequested, NotNeeded, AbsentFromVersion, ExpectedButMissing, UndecodedOnVersion,
+	NotRequested, NotNeeded, AbsentFromVersion, ExpectedButMissing, UndecodedOnVersion, OlderThanValidated,
 	StepExaminedVersion, ExaminedVersionUnknown, ExaminedVersionUnread,
 	// End of the run
 	TimeElapsed, PressAnyKey, ConversionLogNotWritten,

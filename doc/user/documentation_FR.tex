@@ -616,7 +616,6 @@ recueilli, et ce qui manque est consigné.
 
 \begin{lstlisting}
 [VÉRIFICATION DES PRÉREQUIS]
- - Windows 10 ou ultérieur : OK
  - Droits d'administrateur : OK
  - Contrôle du support de collecte : OK
 [OBSERVATION DE LA MACHINE EN MARCHE]
@@ -1854,7 +1853,7 @@ dernière connue, et signalée comme telle : la collecte se fait. Le tableau
 ci-dessous donne, pour chaque clé de \fichier{wac.yml}, le premier Windows qui
 porte l'artefact, son emplacement et son format selon la version. Il est
 produit depuis la table du programme, la seule que \wac{} consulte. La
-version~2 de \wac{} ne se lance que sous Windows~10 et 11 ; les formes plus
+version~2 de \wac{} n'est éprouvée que sous Windows~10 et 11 ; les formes plus
 anciennes y figurent pour la suite.
 
 \input{../artefact-table_FR.tex}
@@ -2080,8 +2079,10 @@ lieu de la prendre pour l'activité étudiée :
 \endhead
 Échec de « Check administrator rights » & L'invite n'a pas été lancée en tant
   qu'administrateur. Relancez-la avec les droits d'administrateur. \\
-Échec de « Check OS >= Windows 10 » & Système antérieur à Windows~10 : non pris
-  en charge. \\
+« antérieur à Windows 10 » sous la version de Windows examinée & La collecte se
+  fait, et chaque format que \wac{} ne décode pas sur cette version est déclaré
+  (section~\ref{sec:format}) ; le cycle de test complet ne couvre encore que
+  Windows~10 et 11. \\
 Échec de « Checking the collection medium », répertoire non vide & Le dossier de
   sortie contient une collecte antérieure. Indiquez un dossier neuf avec
   \opt{output}. \\

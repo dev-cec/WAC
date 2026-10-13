@@ -606,7 +606,6 @@ whatever is missing is recorded.
 
 \begin{lstlisting}
 [PREREQUISITE VERIFICATION]
- - Check OS >= Windows 10 : OK
  - Check administrator rights : OK
  - Checking the collection medium : OK
 [OBSERVING THE RUNNING MACHINE]
@@ -1794,7 +1793,7 @@ A version newer than those \wac{} knows is treated as the last one known, and
 flagged as such: the collection goes on. The table below gives, for each key
 of \fichier{wac.yml}, the first Windows that has the artefact, where it lies and
 its format according to the version. It is produced from the program's own
-table, the only one \wac{} consults. Version~2 of \wac{} only runs under
+table, the only one \wac{} consults. Version~2 of \wac{} is only validated under
 Windows~10 and 11; the older forms are listed for what comes next.
 
 \input{../artefact-table_EN.tex}
@@ -2008,8 +2007,10 @@ instead of taking it for the activity under study:
 \endhead
 ``Check administrator rights'' fails & The prompt was not started as
   administrator. Start it again with administrator rights. \\
-``Check OS >= Windows 10'' fails & System older than Windows~10: not
-  supported. \\
+``older than Windows 10'' under the examined version of Windows & The
+  collection is made, and every format \wac{} does not decode on that version
+  is declared (section~\ref{sec:format}); the whole test cycle only covers
+  Windows~10 and 11 so far. \\
 ``Checking the collection medium'' fails, directory not empty & The output
   folder holds an earlier collection. Give a new folder with \opt{output}. \\
 ``Checking the collection medium'' fails, not enough space & The medium is too

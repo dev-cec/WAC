@@ -27,7 +27,6 @@ constexpr Wording WORDINGS[] = {
 	{ Text::HeadingExhibitStore,       L"[CONSIGNE]",                                    L"[EXHIBIT STORE]" },
 	{ Text::HeadingInvestigationLog,   L"[JOURNAL D'INVESTIGATION]",                     L"[INVESTIGATION LOG]" },
 
-	{ Text::StepWindowsVersion,        L"Windows 10 ou ultérieur",                       L"Check OS >= Windows 10" },
 	{ Text::StepAdministratorRights,   L"Droits d'administrateur",                       L"Check administrator rights" },
 	{ Text::StepCollectionMedium,      L"Contrôle du support de collecte",               L"Checking the collection medium" },
 	{ Text::StepSealAndFingerprints,   L"Contrôle du sceau et des empreintes des pièces", L"Checking the seal and the fingerprints of the exhibits" },
@@ -215,6 +214,8 @@ constexpr Wording WORDINGS[] = {
 	                                   L"   expected on %1 and not found: this absence is itself a finding" },
 	{ Text::UndecodedOnVersion,        L"format de %1 non pris en charge : prélevé brut, non converti",
 	                                   L"format of %1 not supported: collected raw, not converted" },
+	{ Text::OlderThanValidated,        L"antérieur à Windows 10, première version sur laquelle le cycle de test éprouve WAC",
+	                                   L"older than Windows 10, the first version the test cycle validates WAC on" },
 	{ Text::StepExaminedVersion,       L"Version de Windows examinée",                   L"Examined version of Windows" },
 	{ Text::ExaminedVersionUnknown,    L"%1, build %2 — plus récent que la table des artefacts : traité comme %1",
 	                                   L"%1, build %2 — newer than the artefact table: treated as %1" },

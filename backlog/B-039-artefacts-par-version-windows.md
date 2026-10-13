@@ -47,7 +47,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Format dit par la version quand la pièce ne porte pas de signature (`undecodedOn`) : Amcache, BITS et index de recherche déclarés « format non pris en charge » sur les versions où WAC ne les décode pas — démontré sur Windows 8.1
 - [x] Démonstration sur une VM d'une autre version (Windows 8.1, build 9600) : artefacts absents déclarés, aucun en échec
 - [ ] Même démonstration sur les autres versions (7, 8, XP, serveurs) : avec B-037 et B-038
-- [ ] Faux prérequis « Windows 10 ou ultérieur : OK » (contrôle fait à la compilation, affiché OK sous 8.1) : à remplacer par un avertissement tiré de la version réellement lue
+- [x] Faux prérequis « Windows 10 ou ultérieur : OK » (décidé à la compilation, affiché OK sous Windows 7 et 8.1) retiré ; une version antérieure à Windows 10 est annoncée et consignée d'après la version lue
 
 ## Journal
 - 2026-10-06 : créée à la demande de l'utilisateur — prérequis de B-035 (web côté serveur) et de B-037 (compatibilité XP).
@@ -71,3 +71,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - Trouvé au passage, non corrigé ici : le prérequis « Windows 10 ou ultérieur : OK » est décidé à la compilation et s'affiche donc OK sous 8.1 (tâche ouverte).
   - Test natif : 768 contrôles (sous 8.1, exactement Amcache, BITS et index de recherche ; rien pour un artefact à signatures ni pour une copie brute).
 - 2026-10-13 : cycle complet Windows 11 après le statut « format dit par la version » : 499 contrôles réussis, aucun échec ; commité.
+- 2026-10-13 : deuxième VM d'une autre version, **Windows 7 SP1** (build 7601), après deux correctifs de chargement (fiche B-037) : les cinq artefacts que le test de la table prévoyait pour Windows 7 — Chronologie, BAM, Defender, PSReadLine, SRUM — sont déclarés absents, aucun autre ; ShimCache (0xBADC0FEE), Prefetch 23, caches de miniatures de Windows 7, Amcache (`RecentFileCache.bcf`), BITS et index de recherche déclarés « format non pris en charge ». Le critère « garde-fou démontré sur une VM d'une version où un artefact coché n'existe pas » est rempli sur deux versions.
+- 2026-10-13 : faux prérequis retiré. L'étape « Windows 10 ou ultérieur » était décidée par une macro de compilation : elle affichait OK partout. La version vient de la machine examinée ; quand elle est antérieure à Windows 10, la console et le journal disent que le cycle de test n'éprouve WAC qu'à partir de Windows 10. Vérifié sous Windows 7 et 8.1.

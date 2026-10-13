@@ -247,6 +247,9 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
 	return false;
 }
 
+//! First build of Windows 10: the oldest version the whole test cycle validates WAC on; an older one is collected, and said so.
+const unsigned VALIDATED_SINCE_BUILD = 10240;
+
 /*! THE GUARD BEFORE ANY COLLECTION (backlog B-039). Reads the version of the
  *  examined Windows in its SOFTWARE hive, just opened, and applies the table
  *  of the artefacts (artefact_catalogue.h): an artefact asked for that this
@@ -294,12 +297,15 @@ void applyArtefactCatalogue() {
 	            + (known ? L"" : L" — not in the artefact table: treated as " + std::wstring(release.name))
 	            + (absent.empty() ? L"; every artefact asked for exists on it"
 	                              : L"; asked for but absent from this version, not collected: " + absent)
-	            + (undecoded.empty() ? L"" : L"; in a format without decoder on this version, collected raw and not converted: " + undecoded),
+	            + (undecoded.empty() ? L"" : L"; in a format without decoder on this version, collected raw and not converted: " + undecoded)
+	            + (conf.examinedVersion.build < VALIDATED_SINCE_BUILD
+	                   ? L"; older than Windows 10, the first version the whole test cycle validates WAC on" : L""),
 	            source, ERROR_SUCCESS, Footprint::HIVE_COPY);
 	for (const std::string& key : conf.absentFromVersion) {
 		writeConsole(L"   " + decodeText(key, CP_UTF8) + L" : " + text(Text::AbsentFromVersion, { release.name }) + L"\n");
 	}
 	if (!undecoded.empty()) writeConsole(L"   " + undecoded + L" : " + text(Text::UndecodedOnVersion, { release.name }) + L"\n");
+	if (conf.examinedVersion.build < VALIDATED_SINCE_BUILD) writeConsole(L"   " + text(Text::OlderThanValidated) + L"\n");
 }
 
 /*! THE GUARD ON THE MACHINE'S SIDE (backlog B-039). Records an artefact that
@@ -1424,13 +1430,10 @@ int wmain(int argc, wchar_t* argv[])
 
 	log(1, L"➕Check OS");
 	printHeading(Text::HeadingPrerequisites);
-	printStep(Text::StepWindowsVersion);
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
-	printSuccess();
-#else
-	printError(ERROR_APP_WRONG_OS);
-	return 1;
-#endif
+	/* No "Windows 10 or later" step any more: it was decided at compile time,
+	   so it printed OK on any Windows — under Windows 7 too. The version is
+	   read on the examined machine itself, and an older one said so
+	   (applyArtefactCatalogue). */
 	if (conf.mode != RunMode::Convert) {
 		const int refused = checkElevation();
 		if (refused) return refused;
