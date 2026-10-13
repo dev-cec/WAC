@@ -81,8 +81,17 @@ bool         g_elevated         = false;
  *  15.6 ms: reads of the exhibit store made during its copy showed 0.4 ms
  *  after the copy's own record, as if made after it. */
 void now(std::wstring& utc, std::wstring& local, FILETIME* nowFiletime = nullptr) {
+	/* RESOLVED AT RUN TIME. GetSystemTimePreciseAsFileTime exists from
+	   Windows 8 on: imported, it kept WAC.exe from loading at all under
+	   Windows 7 ("entry point not found") — the only one of its 285 imports
+	   Windows 7 lacks. There, the ordinary clock is read: a tick of
+	   precision lost, the collection made. */
+	using SystemTimeReader = void (WINAPI*)(LPFILETIME);
+	static const SystemTimeReader precise = reinterpret_cast<SystemTimeReader>(
+		GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "GetSystemTimePreciseAsFileTime"));
 	FILETIME ft = { 0, 0 };
-	GetSystemTimePreciseAsFileTime(&ft);
+	if (precise) precise(&ft);
+	else GetSystemTimeAsFileTime(&ft);
 	utc = timeToIso8601Utc(ft);
 	local = utcTimeToIso8601Local(ft);
 	if (nowFiletime) *nowFiletime = ft;

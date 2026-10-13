@@ -12,12 +12,23 @@
 #pragma once
 
 #include <windows.h>
+#include <string>
 
 /*! Loads a system library from System32.
  *  @param name its file name ("winhttp.dll")
  *  @return the module, or nullptr (GetLastError says why) */
 inline HMODULE loadSystemLibrary(const wchar_t* name) {
-	return LoadLibraryExW(name, nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+	HMODULE module = LoadLibraryExW(name, nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+	if (module || GetLastError() != ERROR_INVALID_PARAMETER) return module;
+	/* A Windows 7 or Vista without update KB2533623 does not know that flag
+	   and refuses the call ("the parameter is incorrect": the network state
+	   was not collected under Windows 7 SP1). The library is then named by
+	   its full path in System32 — as safe: neither the current folder nor
+	   the program's is searched, for it or for what it loads in turn. */
+	wchar_t folder[MAX_PATH] = L"";
+	const UINT length = GetSystemDirectoryW(folder, MAX_PATH);
+	if (length == 0 || length >= MAX_PATH) return nullptr;
+	return LoadLibraryExW((std::wstring(folder, length) + L"\\" + name).c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
 }
 
 /*! Resolves one export of a loaded library into a function pointer.
