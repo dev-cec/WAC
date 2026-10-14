@@ -169,7 +169,7 @@ OLDER_VERSION_STATUSES = {
     9600: ("Windows 8.1",
            {"activities_cache.json", "bams.json", "powershell_history.json"},
            {"amcache_application_files.json", "amcache_applications.json", "amcache_inventory.json",
-            "bits_jobs.json", "search_index.json", "shimcache.json"}),
+            "bits_jobs.json", "search_index.json"}),
     7601: ("Windows 7",
            {"activities_cache.json", "bams.json", "defender_detections.json", "defender_log.json",
             "defender_quarantine.json", "powershell_history.json", "srum.json"},
@@ -3692,7 +3692,9 @@ def check_shimcache_dates(folder):
               if i.get("SourceModifiedUtc")}
     same = shifted = other = 0
     for e in sh:
-        i = source.get(str(e.get("Path", "")).upper())
+        # Windows 8 and 8.1 name the system volume "SYSVOL\".
+        path = str(e.get("Path", "")).upper()
+        i = source.get("C:\\" + path[len("SYSVOL\\"):] if path.startswith("SYSVOL\\") else path)
         if not i or not e.get("LastModificationUtc"):
             continue
         gap = (instant(e["LastModificationUtc"]) - instant(i["SourceModifiedUtc"])).total_seconds()
