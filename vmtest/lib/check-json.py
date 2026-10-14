@@ -168,8 +168,7 @@ DECODED_PREFETCH_VERSIONS = {26, 30, 31}
 OLDER_VERSION_STATUSES = {
     9600: ("Windows 8.1",
            {"activities_cache.json", "bams.json", "powershell_history.json"},
-           {"amcache_application_files.json", "amcache_applications.json", "amcache_inventory.json",
-            "bits_jobs.json", "search_index.json"}),
+           {"bits_jobs.json", "search_index.json"}),
     7601: ("Windows 7",
            {"activities_cache.json", "bams.json", "defender_detections.json", "defender_log.json",
             "defender_quarantine.json", "powershell_history.json", "srum.json"},
@@ -382,6 +381,7 @@ def cross_checks(folder):
     found += guarded(check_network, folder, boot)
     found += guarded(check_prefetchs, folder)
     found += guarded(check_prefetch_runs, folder)
+    found += guarded(check_amcache_windows8, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_shimcache_dates, folder)
     found += guarded(check_jumplist_entries, folder)
@@ -3666,6 +3666,73 @@ def check_prefetch_runs(folder):
         return 1
     print(f"  ✅ prefetchs.json: TASKKILL.EXE last run {gap:.0f} s before the collection, as the harness ran it; "
           f"{count} run(s), {len(set(runs))} time(s) kept")
+    return 0
+
+
+def check_amcache_windows8(folder):
+    """The Amcache of Windows 8 and 8.1 (Root\\File and Root\\Programs),
+    whose values are numbered, not named: WAC names only those whose meaning
+    was confirmed, and each is confronted here with a source of its own.
+      - the file's $MFT reference, read in its key's name, against the record
+        mft.json gives the same path (a file gone since is not counted);
+      - AmcacheSha1 against the SHA-1 of the exhibit store's manifest, and
+        against the one Windows computes for System32 (sha1-system32.txt);
+      - ProgramId of a file names a key of the Programs table;
+      - the harness's uninstall witness, inventoried by Windows, with its
+        name, publisher and version.
+    """
+    files = load(folder, "amcache_application_files.json")
+    programs = load(folder, "amcache_applications.json")
+    files = [f for f in files if isinstance(f, dict) and "MftReference" in f] if isinstance(files, list) else []
+    if not files:
+        print("  ⏭️  no Amcache entry of Windows 8 or 8.1 (File table): not confronted")
+        return 0
+    mft = load(folder, "mft.json") or []
+    records = {str(r.get("Path", "")).lower(): r for r in mft if isinstance(r, dict) and not r.get("Deleted") and r.get("Path")}
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    stored = {str(i.get("SourcePath", "")).lower(): str(i.get("SHA1", "")).lower()
+              for i in ((manifest or {}).get("Items") or []) if i.get("SHA1")} if isinstance(manifest, dict) else {}
+    system32 = {}
+    path = os.path.join(folder, "reference", "sha1-system32.txt")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            system32 = {l.split("|")[0].lower(): l.split("|")[1].lower() for l in f if l.count("|") >= 2}
+    wrong, references, digests = [], 0, 0
+    for f in files:
+        where = str(f.get("LongPath", "")).lower()
+        r = records.get(where)
+        ref = f["MftReference"]
+        if r is not None and (r.get("Entry"), r.get("Sequence")) == (ref.get("EntryIndex"), ref.get("SequenceNumber")):
+            references += 1
+        elif r is not None and r.get("Sequence") == ref.get("SequenceNumber"):
+            wrong.append(f"{where}: reference {ref}, record {r.get('Entry')}")
+        digest = str(f.get("AmcacheSha1", "")).lower()
+        theirs = stored.get(where) or system32.get(where)
+        # A file changed after Windows last wrote its entry may hold another
+        # content than the one inventoried: not confronted.
+        changed = r is not None and str(r.get("ModifiedUtc") or "") > str(f.get("KeyLastWriteTimeUtc") or "~")
+        if digest and theirs and not changed:
+            digests += 1
+            if digest != theirs:
+                wrong.append(f"{where}: AmcacheSha1 {digest}, file {theirs}")
+    keys = {p.get("KeyName") for p in programs or [] if isinstance(p, dict)}
+    orphans = [f.get("LongPath") for f in files if f.get("ProgramId") and f["ProgramId"] not in keys]
+    if orphans:
+        wrong.append(f"ProgramId naming no program: {orphans[:2]}")
+    witness = None
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            witness = next((l.strip()[len("program="):].split("|") for l in f if l.startswith("program=")), None)
+    if witness:
+        _, name, publisher, version, _ = witness
+        if not any((p.get("Name"), p.get("Publisher"), p.get("Version")) == (name, publisher, version) for p in programs or []):
+            wrong.append(f"the uninstall witness {name!r} not inventoried with its publisher and version")
+    if wrong or not references:
+        print(f"  ❌ amcache (Windows 8): {wrong[:2] or 'no $MFT reference confronted'}")
+        return 1
+    print(f"  ✅ amcache (Windows 8): {references} $MFT reference(s) identical to the record, {digests} SHA-1 identical "
+          f"to the file's, every ProgramId a program" + (", the uninstall witness inventoried" if witness else ""))
     return 0
 
 
