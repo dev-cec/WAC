@@ -1354,7 +1354,8 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         cache, the path it was saved to (\champ{TargetPath}, or only
         \champ{SuggestedName} when it was not), its size and the server's
         address — a format Microsoft does not document, established on a real
-        download by IE~11 in the test machine. On Windows 7 and
+        download by IE~11 in the test machines of Windows~11 and Windows~8.1,
+        whose layouts differ; another layout is not guessed. On Windows 7 and
         earlier, Internet Explorer 5 to 9 kept the same data in
         \fichier{index.dat} files (cache, history and its \texttt{MSHist01}
         folders, cookies, downloads): they are collected and converted into
@@ -1522,7 +1523,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         size, start time). The format is undocumented: only the fields whose
         position was confirmed against \texttt{MSFT\_MpThreatDetection} are
         named; the others are given as read (\champ{UnnamedFields}: offset,
-        type, value), without a meaning made up.
+        type, value), without a meaning made up. Defender of Windows~8.1
+        writes the same fields without the \champ{MagicVersion} marker of
+        Windows~10 and~11: they are named the same way, confirmed the same
+        way.
   \item[\fichier{defender\_quarantine.json}] quarantine entries: threat,
         instant of the quarantine, original path of the removed file, its
         creation and modification dates, attributes, size, and the

@@ -1394,7 +1394,8 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         enregistré (\champ{TargetPath}, ou seulement \champ{SuggestedName}
         s'il ne l'a pas été), sa taille et l'adresse du serveur — format non
         documenté par Microsoft, établi sur un vrai téléchargement d'IE~11
-        dans la machine de test. Sur Windows 7 et antérieurs, Internet Explorer 5 à 9 tenait ces
+        dans les machines de test Windows~11 et Windows~8.1, dont les
+        dispositions diffèrent ; une autre disposition n'est pas devinée. Sur Windows 7 et antérieurs, Internet Explorer 5 à 9 tenait ces
         mêmes données dans des \fichier{index.dat} (cache, historique et ses
         dossiers \texttt{MSHist01}, cookies, téléchargements) : ils sont
         collectés et convertis en \texttt{CacheEntry} (\champ{Browser}
@@ -1573,7 +1574,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         n'est pas documenté : seuls les champs dont la position a été confirmée
         contre \texttt{MSFT\_MpThreatDetection} sont nommés ; les autres sont
         rendus tels que lus (\champ{UnnamedFields} : position, type, valeur),
-        sans signification inventée.
+        sans signification inventée. Defender sous Windows~8.1 écrit les mêmes
+        champs sans le marqueur \champ{MagicVersion} de Windows~10 et~11 : ils
+        sont nommés de la même façon, confirmés de la même façon.
   \item[\fichier{defender\_quarantine.json}] entrées de la quarantaine :
         menace, instant de mise en quarantaine, chemin d'origine du fichier
         retiré, ses dates de création et de modification, ses attributs, sa
