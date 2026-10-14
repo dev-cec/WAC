@@ -537,8 +537,30 @@ HRESULT readIeIndexDat(const std::wstring& file, const WebClientRecord& base, st
 	return ERROR_SUCCESS;
 }
 
+namespace {
+
+//! Where a layout of the iedownload record puts the server's address and the strings.
+struct IeDownloadLayout {
+	uint32_t version;  //!< the record's first DWORD
+	size_t address;    //!< address family, then the IPv4 address
+	size_t strings;    //!< the four UTF-16 strings
+};
+
+/* The layouts measured: Internet Explorer 11 of Windows 8.1 (version 0x89)
+   writes the address and the strings 8 bytes before that of Windows 11
+   (0x8C); the size is at 0x50 in both. Another version is not guessed. */
+const IeDownloadLayout IE_DOWNLOAD_LAYOUTS[] = { { 0x8C, 0xA0, 0x158 }, { 0x89, 0x98, 0x150 } };
+
+} // namespace
+
 bool decodeIeDownload(const std::vector<uint8_t>& blob, Json& fields) {
-	const size_t SIZE = 0x50, ADDRESS = 0xA0, STRINGS = 0x158;
+	const size_t SIZE = 0x50;
+	if (blob.size() < 4) return false;
+	const uint32_t version = readLittleEndian<uint32_t>(blob.data());
+	const IeDownloadLayout* layout = nullptr;
+	for (const IeDownloadLayout& l : IE_DOWNLOAD_LAYOUTS) if (l.version == version) layout = &l;
+	if (!layout) return false;
+	const size_t ADDRESS = layout->address, STRINGS = layout->strings;
 	if (blob.size() <= STRINGS) return false;
 	// The four strings, each ending with its NUL, within the blob.
 	std::vector<std::wstring> strings;

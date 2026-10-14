@@ -1103,12 +1103,15 @@ int wmain() {
 		      "webcache: history URLs split into user and page, others left whole");
 	}
 	{
-		// An iedownload record laid out as Internet Explorer 11 wrote it on the test VM.
-		auto blob = [](const std::wstring& last) {
-			std::vector<uint8_t> b(0x158, 0);
-			b[0] = 0x8C;
+		/* An iedownload record laid out as Internet Explorer 11 wrote it on the
+		   test VMs: version 0x8C on Windows 11, 0x89 on Windows 8.1, where the
+		   address and the strings come 8 bytes earlier. */
+		auto blob = [](const std::wstring& last, uint8_t version = 0x8C) {
+			const size_t shift = version == 0x89 ? 8 : 0;
+			std::vector<uint8_t> b(0x158 - shift, 0);
+			b[0] = version;
 			b[0x50] = 23;                                       // the file's size
-			b[0xA0] = 2; b[0xA4] = 127; b[0xA7] = 1;            // AF_INET, 127.0.0.1
+			b[0xA0 - shift] = 2; b[0xA4 - shift] = 127; b[0xA7 - shift] = 1;   // AF_INET, 127.0.0.1
 			for (const std::wstring& t : { std::wstring(L"text/plain"), std::wstring(L"C:\\Users\\wac\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Low\\IE\\0VDERP2C\\w[1].txt"),
 			                               std::wstring(L"http://127.0.0.1:8765/w.txt"), last }) {
 				for (wchar_t c : t) { b.push_back((uint8_t)c); b.push_back((uint8_t)(c >> 8)); }
@@ -1124,6 +1127,13 @@ int wmain() {
 		      "iedownload: a saved download — URL, path, size, server, MIME type");
 		check(decodeIeDownload(blob(L"w.txt"), unsaved) && text(unsaved, L"SuggestedName") == L"w.txt" && !unsaved.find(L"TargetPath"),
 		      "iedownload: not saved — only the name it would take");
+		Json older = Json::obj(), unknown = Json::obj();
+		check(decodeIeDownload(blob(L"C:\\Users\\wac\\Downloads\\w.txt", 0x89), older) && text(older, L"MimeType") == L"text/plain"
+		      && text(older, L"ServerAddress") == L"127.0.0.1" && text(older, L"Url") == L"http://127.0.0.1:8765/w.txt"
+		      && text(older, L"FileSize") == L"23",
+		      "iedownload: the layout of Windows 8.1 (version 0x89) — MIME type, server, URL, size");
+		check(!decodeIeDownload(blob(L"w.txt", 0x8A), unknown) && !unknown.find(L"Url"),
+		      "iedownload: a version not measured refused, nothing emitted");
 		const std::vector<uint8_t> whole = blob(L"C:\\Users\\wac\\Downloads\\w.txt");
 		bool refused = true;
 		for (size_t cut : { (size_t)0, (size_t)0x100, (size_t)0x158, whole.size() - 3 }) {

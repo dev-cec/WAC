@@ -304,10 +304,12 @@ HRESULT readFirefoxFavicons(const std::wstring& file, const WebClientRecord& bas
 /*! Decodes the record of a download of Internet Explorer 10 and 11 — the
  *  `ResponseHeaders` of an entry of the WebCache's `iedownload` container,
  *  whose format Microsoft does not document. What is read was established
- *  on the test VM against a real download by Internet Explorer 11 (Windows
- *  11), each field confronted with what Windows and the witness server say:
- *  at 0x50 the file's size; at 0xA0 the server's address (family 2, then IPv4);
- *  from 0x158 four UTF-16 strings — MIME type, temporary copy in the cache,
+ *  on the test VMs against a real download by Internet Explorer 11 (Windows
+ *  11, then Windows 8.1), each field confronted with what Windows and the
+ *  witness server say. The first DWORD gives the layout — 0x8C on Windows 11,
+ *  0x89 on Windows 8.1 —, another value is refused: at 0x50 the file's size;
+ *  at 0xA0 (0x98) the server's address (family 2, then IPv4); from 0x158
+ *  (0x150) four UTF-16 strings — MIME type, temporary copy in the cache,
  *  URL, then the saved file's full path, or only its suggested name when the
  *  user did not save it (IE writes the path when its window closes). The
  *  download's instant is the entry's AccessedTime. Measured on 9 real
