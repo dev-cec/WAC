@@ -90,6 +90,47 @@ function WitnessFailure([string]$section, $failure) {
     $reason = ($failure.Exception.Message -replace '\s+', ' ').Trim()
     Write-Output "witness_failed=$section|line $($failure.InvocationInfo.ScriptLineNumber)|$reason"
 }
+# Local accounts through net.exe and the WinNT provider of ADSI, which every
+# Windows has: Get-LocalUser and its kin came with Windows 10. Measured on the
+# Windows 11 VM: the groups and members read here are those Get-LocalGroup and
+# Get-LocalGroupMember give.
+# [ADSI]::Exists throws, rather than answer false, for an account that is not there.
+function LocalUserExists([string]$name) {
+    try { [ADSI]::Exists("WinNT://$env:COMPUTERNAME/$name,user") } catch { $false }
+}
+function NetCommand([string[]]$arguments) {
+    & net.exe @arguments 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "net $($arguments[0..1] -join ' ') failed ($LASTEXITCODE)" }
+}
+# Creates the account or sets its password, through ADSI — net.exe asks
+# whether to go on with a password longer than 14 characters, and fails with
+# no one to answer; its password never expires.
+function SetLocalUser([string]$name, [string]$password) {
+    $user = if (LocalUserExists $name) { [ADSI]"WinNT://$env:COMPUTERNAME/$name,user" }
+            else { ([ADSI]"WinNT://$env:COMPUTERNAME,computer").Create('user', $name) }
+    $user.SetPassword($password)
+    $user.SetInfo()
+    $user.UserFlags.Value = $user.UserFlags.Value -bor 0x10000   # ADS_UF_DONT_EXPIRE_PASSWD
+    $user.SetInfo()
+}
+function RemoveLocalUser([string]$name) { if (LocalUserExists $name) { NetCommand @('user', $name, '/delete') } }
+function AccountSid([string]$name) { (New-Object Security.Principal.NTAccount $name).Translate([Security.Principal.SecurityIdentifier]).Value }
+# Adds a member to the local group of that SID, named in the system's language.
+function AddToLocalGroup([string]$groupSid, [string]$member) {
+    $group = (New-Object Security.Principal.SecurityIdentifier $groupSid).Translate([Security.Principal.NTAccount]).Value.Split('\')[-1]
+    $present = @(([ADSI]"WinNT://$env:COMPUTERNAME/$group,group").Invoke('Members')) |
+        ForEach-Object { $_.GetType().InvokeMember('Name', 'GetProperty', $null, $_, $null) }
+    if ($present -notcontains $member) { NetCommand @('localgroup', $group, $member, '/add') }
+}
+# Each local group by SID, with the SIDs of its direct members.
+function LocalGroupMembers {
+    foreach ($g in @(([ADSI]"WinNT://$env:COMPUTERNAME,computer").Children | Where-Object { $_.SchemaClassName -eq 'group' })) {
+        $members = @($g.Invoke('Members')) | ForEach-Object {
+            (New-Object Security.Principal.SecurityIdentifier ([byte[]]$_.GetType().InvokeMember('objectSid', 'GetProperty', $null, $_, $null)), 0).Value
+        }
+        New-Object PSObject -Property @{ Sid = (New-Object Security.Principal.SecurityIdentifier ([byte[]]$g.objectSid.Value), 0).Value; Members = @($members) }
+    }
+}
 # The SID of the test user "wac", whose loaded hive several sections write to.
 # Defined here: set inside one section, it was empty when --only skipped it.
 $wacSid = (New-Object Security.Principal.NTAccount 'wac').Translate([Security.Principal.SecurityIdentifier]).Value
@@ -208,8 +249,10 @@ try { if (Wants 'run_keys') {
         }
     }
     New-ItemProperty -Force -Path $runKey -Name 'WacTestLinks' -Value $script | Out-Null
+    # "fsutil file layout" exists from Windows 10 on: before, the layout is unknown.
     $layout = (& fsutil.exe file layout $script) -join ' '
-    $listed = if ($layout -match 'ATTRIBUTE_LIST') { 'list' } else { 'nolist' }
+    $listed = if ($LASTEXITCODE -ne 0 -or $layout -notmatch 'STANDARD_INFORMATION') { 'unknown' }
+              elseif ($layout -match 'ATTRIBUTE_LIST') { 'list' } else { 'nolist' }
     Write-Output ("links=$script|" + (Get-FileHash -Algorithm SHA256 -LiteralPath $script).Hash + "|$listed")
 } } catch { WitnessFailure 'run_keys' $_ }
 
@@ -482,7 +525,9 @@ try { if (Wants 'fat_volumes') {
         Remove-Item -LiteralPath (Join-Path $root 'DELDIR') -Recurse
         Write-Output "fat=$($volume.DriveLetter):|$($key.Label)|$($key.FileSystem)"
         foreach ($f in Get-ChildItem -LiteralPath $root -Recurse -Force -File | Where-Object FullName -notlike '*System Volume Information*') {
-            Write-Output ("fatfile=" + (@($f.FullName, $f.Length, $f.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
+            # The path percent-encoded (UTF-8): PowerShell 4 writes its output in
+            # the console's code page, where the long name's accents are lost.
+            Write-Output ("fatfile=" + (@([uri]::EscapeDataString($f.FullName), $f.Length, $f.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
         }
     }
 } } catch { WitnessFailure 'fat_volumes' $_ }
@@ -514,6 +559,18 @@ try { if (Wants 'recent_documents') {
 #     zone (13:00 here), which must be given as written. Then a folder of a
 #     7z and of a tar.gz. Made once: the shellbags stay.
 try { if (Wants 'shellbags') {
+    # Whether a value of the user's BagMRU names $text (UTF-16 or ASCII):
+    # Explorer recorded the folder.
+    $bags = "Registry::HKEY_USERS\$($wacSid)_Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU"
+    function BagNamed([string]$text) {
+        foreach ($k in @(Get-Item $bags -ErrorAction SilentlyContinue) + @(Get-ChildItem $bags -Recurse -ErrorAction SilentlyContinue)) {
+            foreach ($n in $k.GetValueNames()) {
+                $v = $k.GetValue($n)
+                if ($v -is [byte[]] -and ([Text.Encoding]::Unicode.GetString($v) + [Text.Encoding]::ASCII.GetString($v)).Contains($text)) { return $true }
+            }
+        }
+        return $false
+    }
     $zipPath = 'C:\Users\wac\Documents\wac-archive.zip'
     if (-not (Test-Path $zipPath)) {
         Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
@@ -524,6 +581,11 @@ try { if (Wants 'shellbags') {
         $file.LastWriteTime = (New-Object DateTimeOffset 2022, 1, 10, 14, 30, 0, ([TimeSpan]::FromHours(1)))
         $w = New-Object IO.StreamWriter($file.Open()); $w.Write('inside a zip'); $w.Close()
         $zip.Dispose()
+    }
+    # Navigated again as long as Explorer has not recorded the folder: the
+    # witness is announced only once its shellbag exists (on the Windows 8.1
+    # VM, a first navigation left none, and the check blamed WAC).
+    if (-not (BagNamed 'winterdir')) {
         $script = 'C:\wactest\zipnav-user.ps1'
         Set-Content $script @'
 Start-Process explorer.exe 'C:\Users\wac\Documents\wac-archive.zip\winterdir'
@@ -536,8 +598,14 @@ Start-Sleep 12
         Start-ScheduledTask -TaskName WacZipNav
         Start-Sleep 25
         Unregister-ScheduledTask -TaskName WacZipNav -Confirm:$false
+        Remove-Item $script
     }
-    Write-Output "zipentry=winterdir|2022-01-10T13:00:00"
+    if (BagNamed 'winterdir') { Write-Output "zipentry=winterdir|2022-01-10T13:00:00" }
+    else { Write-Output "witness_failed=shellbags|zip|Explorer recorded no shellbag for the ZIP folder" }
+
+    # Windows 11 reads 7z and tar.gz through libarchive, made by its tar.exe:
+    # neither exists before Windows 10, and the rest is not attempted.
+    if (Get-Command tar.exe -ErrorAction SilentlyContinue) {
 
     # The same for the archives Windows 11 reads through libarchive (B-029): a
     # 7z and a tar.gz made by its own tar.exe. Their item is laid out
@@ -571,6 +639,7 @@ foreach ($p in 'C:\Users\wac\Documents\wac-seven.7z\sevendir', 'C:\Users\wac\Doc
         Remove-Item $script
     }
     Write-Output "readerentry=sevendir|2023-03-05T08:15:30"
+    }
 } } catch { WitnessFailure 'shellbags' $_ }
 
 # 17. Event values as Windows renders them in the event's XML (what the Event
@@ -970,6 +1039,7 @@ try { if (Wants 'program_usage') {
 #     with its first install, last arrival and last removal dates as
 #     Get-PnpDeviceProperty gives them (UTC). Nothing is changed.
 try { if (Wants 'devices') {
+    if (-not (Get-Command Get-PnpDevice -ErrorAction SilentlyContinue)) { throw 'Get-PnpDevice absent (Windows 10 and later)' }
     Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like 'USB\*' -or $_.InstanceId -like 'SCSI\*' } | ForEach-Object {
         $id = $_.InstanceId
         $dates = foreach ($key in 'DEVPKEY_Device_FirstInstallDate', 'DEVPKEY_Device_LastArrivalDate', 'DEVPKEY_Device_LastRemovalDate') {
@@ -1011,6 +1081,7 @@ try { if (Wants 'event_log_configuration') {
     Get-WinEvent -ListLog * -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Output ("eventlog=" + $_.LogName + '|' + $_.IsEnabled)
     }
+    if (-not (Get-Command Get-AutologgerConfig -ErrorAction SilentlyContinue)) { throw 'Get-AutologgerConfig absent (Windows 10 and later)' }
     Get-AutologgerConfig -ErrorAction SilentlyContinue | ForEach-Object {
         Write-Output ("autologger=" + $_.Name + '|' + $_.Start)
     }
@@ -1035,9 +1106,9 @@ try { if (Wants 'users') {
     try {
         $pwOld = 'Wac-Old-2026!'; $pwNew = 'Wac-Test-2026!'
         net accounts /uniquepw:5 | Out-Null
-        if (Get-LocalUser -Name 'wacpw' -ErrorAction SilentlyContinue) { Remove-LocalUser -Name 'wacpw' }
-        New-LocalUser -Name 'wacpw' -Password (ConvertTo-SecureString $pwOld -AsPlainText -Force) -PasswordNeverExpires -ErrorAction Stop | Out-Null
-        net user wacpw $pwNew | Out-Null
+        RemoveLocalUser 'wacpw'
+        SetLocalUser 'wacpw' $pwOld
+        NetCommand @('user', 'wacpw', $pwNew)
         Write-Output ("samhash=wacpw|" + $pwNew + '|' + $pwOld)
     } catch { Write-Output ("samhasherror=" + $_.Exception.Message) }
 
@@ -1045,7 +1116,7 @@ try { if (Wants 'users') {
     # straight into wacpw's SAM key (SYSTEM can) as the system stores them, a
     # REG_BINARY of the JSON in UTF-16LE, for WAC to read back.
     try {
-        $rid = [int]((Get-LocalUser wacpw).SID.Value.Split('-')[-1])
+        $rid = [int]((AccountSid 'wacpw').Split('-')[-1])
         $ridHex = '{0:X8}' -f $rid
         $qjson = '{"version":1,"questions":[{"question":"First pet name?","answer":"rex"},{"question":"Birth city?","answer":"paris"}]}'
         $bytes = [System.Text.Encoding]::Unicode.GetBytes($qjson)
@@ -1056,14 +1127,9 @@ try { if (Wants 'users') {
 
     # Local groups: wacpw added to Administrators (S-1-5-32-544), so a group has a
     # non-trivial membership; each group's direct members (by SID) are recorded,
-    # for WAC's local_groups.json to be confronted with Get-LocalGroupMember.
-    try { Add-LocalGroupMember -SID 'S-1-5-32-544' -Member 'wacpw' -ErrorAction SilentlyContinue } catch {}
-    foreach ($g in Get-LocalGroup) {
-        try {
-            $m = Get-LocalGroupMember -SID $g.SID -ErrorAction Stop | ForEach-Object { $_.SID.Value }
-            Write-Output ("localgroup=" + $g.SID.Value + '|' + ($m -join ','))
-        } catch { Write-Output ("localgrouperror=" + $g.Name) }
-    }
+    # for WAC's local_groups.json to be confronted with Windows' own list.
+    try { AddToLocalGroup 'S-1-5-32-544' 'wacpw' } catch {}
+    foreach ($g in LocalGroupMembers) { Write-Output ("localgroup=" + $g.Sid + '|' + ($g.Members -join ',')) }
 
     # Account rights: Windows' own export of the user-rights assignment, to
     # confront with security.json (Policy\Accounts). Each line maps a privilege
@@ -1339,13 +1405,14 @@ try { if (Wants 'rdp_client', 'rdp_server') {
     $rdpSince = (Get-Date).ToUniversalTime()
     $tsKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server'
     $denied = (Get-ItemProperty $tsKey).fDenyTSConnections
+    # Everything opened for the session is closed in the finally block, even
+    # when a step fails: a failure once left RDP allowed on the VM.
+    try {
     Set-ItemProperty $tsKey -Name fDenyTSConnections -Value 0
     Enable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue
     $rdpPassword = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object { [char]$_ }) + '!a1'
-    if (Get-LocalUser wacrdp -ErrorAction SilentlyContinue) { Set-LocalUser wacrdp -Password (ConvertTo-SecureString $rdpPassword -AsPlainText -Force) }
-    else { New-LocalUser -Name wacrdp -Password (ConvertTo-SecureString $rdpPassword -AsPlainText -Force) -PasswordNeverExpires | Out-Null }
-    $rdpUsers = (New-Object Security.Principal.SecurityIdentifier 'S-1-5-32-555').Translate([Security.Principal.NTAccount]).Value.Split('\')[1]
-    Add-LocalGroupMember -Group $rdpUsers -Member wacrdp -ErrorAction SilentlyContinue
+    SetLocalUser 'wacrdp' $rdpPassword
+    AddToLocalGroup 'S-1-5-32-555' 'wacrdp'
     $rdpTask = @'
 cmdkey /generic:TERMSRV/127.0.0.2 /user:wacrdp /pass:PASSWORD | Out-Null
 $client = 'HKCU:\Software\Microsoft\Terminal Server Client'
@@ -1369,11 +1436,13 @@ Remove-ItemProperty $client -Name AuthenticationLevelOverride -ErrorAction Silen
     Register-ScheduledTask -TaskName 'WacRdpWitness' -Action $action -Principal $principal -Force | Out-Null
     Start-ScheduledTask -TaskName 'WacRdpWitness'
     for ($i = 0; $i -lt 120 -and -not (Test-Path C:\wactest\rdp-witness.done); $i++) { Start-Sleep 1 }
-    Unregister-ScheduledTask -TaskName 'WacRdpWitness' -Confirm:$false
-    Remove-Item C:\wactest\rdp-witness.ps1, C:\wactest\rdp-witness.done -ErrorAction SilentlyContinue
-    Set-ItemProperty $tsKey -Name fDenyTSConnections -Value $denied
-    if ($denied) { Disable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue }
-    Remove-LocalUser wacrdp -ErrorAction SilentlyContinue
+    } finally {
+        Unregister-ScheduledTask -TaskName 'WacRdpWitness' -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-Item C:\wactest\rdp-witness.ps1, C:\wactest\rdp-witness.done -ErrorAction SilentlyContinue
+        Set-ItemProperty $tsKey -Name fDenyTSConnections -Value $denied
+        if ($denied) { Disable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue }
+        RemoveLocalUser 'wacrdp'
+    }
 
     # A server of known values in "wac"'s hive, flushed to the disk.
     $servers = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Terminal Server Client\Servers\wac-rdp-witness.invalid"

@@ -14,6 +14,7 @@ checks WAC ran to the end.
 Non-zero exit if at least one file is invalid or inconsistent.
 """
 import ntpath
+import urllib.parse
 import hashlib, json, sys, glob, os, re, collections, uuid, datetime
 
 def md4(data):
@@ -172,6 +173,19 @@ OLDER_VERSION_STATUSES = {
            {"amcache_application_files.json", "amcache_applications.json", "amcache_inventory.json",
             "bits_jobs.json", "search_index.json", "shimcache.json"}),
 }
+
+
+def witness_not_placed(folder, section):
+    """True when place-file-artefacts.ps1 said the witnesses of that section
+    were not placed (witness_failed=): their checks then have nothing to
+    confront, and say so rather than fail — a Windows 10 cmdlet missing from
+    an older VM, for instance."""
+    try:
+        with open(os.path.join(folder, "reference", "file-artefacts.txt"), encoding="utf-8", errors="replace") as f:
+            return any(l.startswith("witness_failed=") and section in l.split("|", 1)[0][len("witness_failed="):].split(",")
+                       for l in f)
+    except OSError:
+        return False
 
 
 def examined_build(folder):
@@ -834,13 +848,17 @@ def check_collected_executables(folder):
 def check_authenticated_executables(folder, items):
     """An executable WAC authenticates as Microsoft is fingerprinted and NOT
     copied: a wrong verdict would leave an intruder's binary out of the
-    exhibit store. Independent source: Windows' own verification
-    (Get-AuthenticodeSignature, catalogs included) of the executables of
-    System32, in reference/authenticode.txt ("path|Status|Subject").
+    exhibit store. Independent source: Windows' own verification of the
+    executables of System32, in reference/authenticode.txt
+    ("path|Status|Subject|Catalog", authenticode-reference.ps1):
+    Get-AuthenticodeSignature, and for a file it does not call Valid the
+    catalog Windows itself finds for it.
 
     Every executable WAC declares authentic must be "Valid" and signed by
-    Microsoft for Windows. The reverse — valid for Windows, collected by WAC —
-    costs room but loses nothing: it is counted, not failed.
+    Microsoft for Windows, or held by a catalog Windows finds — the word of a
+    PowerShell before 5.1, which reads embedded signatures only. The reverse —
+    valid for Windows, collected by WAC — costs room but loses nothing: it is
+    counted, not failed.
     """
     reference_path = os.path.join(folder, "reference", "authenticode.txt")
     if not os.path.exists(reference_path):
@@ -851,22 +869,24 @@ def check_authenticated_executables(folder, items):
         for line in f:
             parts = line.strip().split("|")
             if len(parts) >= 3:
-                windows[parts[0].lower()] = (parts[1], parts[2])
+                windows[parts[0].lower()] = (parts[1], parts[2], parts[3] if len(parts) >= 4 else "")
     verdict = {str(i.get("SourcePath", "")).lower(): i for i in items if i.get("Result") == "OK"}
     # Before PowerShell 5.1 (Windows 8.1 and earlier), Get-AuthenticodeSignature
     # reads the embedded signature only: a file signed by a catalog — most of
     # System32 — comes out "NotSigned", and says nothing against WAC's verdict.
+    # The catalog column, when the reference has it, is Windows' own lookup.
     catalogs_unseen = older_version(folder)
-    wrong, stored_valid, compared, unseen = [], 0, 0, 0
-    for path, (status, subject) in windows.items():
+    wrong, stored_valid, compared, unseen, by_catalog = [], 0, 0, 0, 0
+    for path, (status, subject, catalog) in windows.items():
         item = verdict.get(path)
         if not item:
             continue
-        if catalogs_unseen and status == "NotSigned":
+        if catalogs_unseen and status == "NotSigned" and not catalog:
             unseen += 1
             continue
         compared += 1
-        microsoft_for_windows = status == "Valid" and "microsoft" in subject.lower()
+        microsoft_for_windows = (status == "Valid" and "microsoft" in subject.lower()) or bool(catalog)
+        by_catalog += status != "Valid" and bool(catalog)
         if item.get("ContentStored") is False and str(item.get("Signature", "")).startswith("Microsoft"):
             if not microsoft_for_windows:
                 wrong.append(f"{path} ({status}, {subject[:40]})")
@@ -879,6 +899,7 @@ def check_authenticated_executables(folder, items):
         return 1
     print(f"  ✅ {compared} System32 executables compared with Get-AuthenticodeSignature: every one WAC "
           f"authenticated is Microsoft-valid for Windows ({stored_valid} valid for Windows yet collected)"
+          + (f"; {by_catalog} of them by the catalog Windows finds, its PowerShell reading embedded signatures only" if by_catalog else "")
           + (f"; {unseen} signed by a catalog, which this older PowerShell does not read: not confronted" if unseen else ""))
     return 0
 
@@ -1922,7 +1943,8 @@ def check_small_file_artefacts(folder):
         with open(path, encoding="utf-8", errors="replace") as f:
             lines = [l.strip() for l in f if l.strip()]
         volumes = [l[4:].split("|") for l in lines if l.startswith("fat=")]
-        files = [l[8:].split("|") for l in lines if l.startswith("fatfile=")]
+        # The path percent-encoded by the harness (UTF-8), whatever the code page of its PowerShell.
+        files = [[urllib.parse.unquote(f[0])] + f[1:] for f in (l[8:].split("|") for l in lines if l.startswith("fatfile="))]
         present = {(e.get("Path") or "").lower(): e for e in fats if not e.get("Deleted")}
         wrong = []
         for letter, label, system in volumes:
@@ -1957,7 +1979,10 @@ def check_small_file_artefacts(folder):
         # The program run from the key, fingerprinted there through the FAT reader (--binary).
         tool = next((l[8:].split("|") for l in lines if l.startswith("fattool=")), None)
         prefetch = load(folder, "prefetchs.json")
-        if tool and isinstance(prefetch, list):
+        # Prefetch files of a format WAC declares undecoded (version 26 of
+        # Windows 8.1) cite nothing: the citation is then not confronted.
+        decoded = [p for p in prefetch or [] if isinstance(p, dict) and p.get("DecodingStatus") != "UnsupportedFormat"]
+        if tool and isinstance(prefetch, list) and decoded:
             cited = [o for p in prefetch for o in [p] + (p.get("FileNames") or []) if isinstance(o, dict)
                      and (o.get("FullPath") or "").lower() == tool[0].lower()]
             if not cited:
@@ -2000,9 +2025,12 @@ def check_small_file_artefacts(folder):
     if isinstance(manifest, dict) and "links" in reference:
         path, sha256, listed = reference["links"].split("|")
         items = [o for o in manifest.get("Items", []) if str(o.get("SourcePath", "")).lower() == path.lower()]
-        ok = listed == "list" and items and all(o.get("Result") == "OK" and str(o.get("SHA256", "")).upper() == sha256.upper()
-                                               for o in items)
-        report(ok, f"manifest: {path}, $DATA moved by $ATTRIBUTE_LIST, read with the SHA-256 of Get-FileHash",
+        # "unknown": no fsutil file layout to tell (before Windows 10); the
+        # file is still read raw, its SHA-256 confronted.
+        ok = listed in ("list", "unknown") and items and all(o.get("Result") == "OK" and str(o.get("SHA256", "")).upper() == sha256.upper()
+                                                           for o in items)
+        layout = "$DATA moved by $ATTRIBUTE_LIST" if listed == "list" else "layout not given by this Windows (no fsutil file layout)"
+        report(ok, f"manifest: {path}, {layout}, read with the SHA-256 of Get-FileHash",
                f"manifest: {path} ({listed}): {[(o.get('Result'), o.get('SHA256')) for o in items] or 'not collected'}")
 
     # A script whose path passes MAX_PATH (B-049): stored, with the SHA-256
@@ -2191,8 +2219,14 @@ def check_small_file_artefacts(folder):
             mine[(owner, e.get("Key"), e.get("Name"))] = value
         wrong = [f"{owner} {key} {name}: WAC {mine.get((owner, key, name))!r}, registry {value!r}"
                  for owner, key, name, value in states if mine.get((owner, key, name)) != value]
-        report(states and not wrong, f"run.json: the {len(states)} StartupApproved and RunNotification value(s) of the live registry, codes identical",
-               f"run.json: {wrong[:2] if wrong else 'no startup state listed'}")
+        # A machine where nothing was ever switched off holds no such value
+        # (Windows 8.1 of the test VM): WAC must then list none either.
+        listed = [e for e in runs if "Status" in e or "Notification" in e]
+        if not states and not listed:
+            print("  ⏭️  run.json: no StartupApproved or RunNotification value in the live registry, none listed: codes not confronted")
+        else:
+            report(states and not wrong, f"run.json: the {len(states)} StartupApproved and RunNotification value(s) of the live registry, codes identical",
+                   f"run.json: {wrong[:2] if wrong else f'{len(listed)} startup state(s) listed, none in the live registry'}")
 
     # Program usage: per source, the names the live registry holds for the user
     # "wac", the witness layer among them; as many pinned items as
@@ -2246,9 +2280,12 @@ def check_small_file_artefacts(folder):
             for field, theirs in (("FirstInstallUtc", first), ("LastArrivalUtc", arrival), ("LastRemovalUtc", removal)):
                 if str(d.get(field, ""))[:19] != theirs:
                     wrong.append(f"{instance} {field}: WAC {d.get(field)}, Windows {theirs or 'none'}")
-        report(listed and not wrong,
-               f"devices.json: the {len(listed)} USB and SCSI device(s) Windows lists, their three dates identical (UTC)",
-               f"devices.json: {wrong[:2]}")
+        if not listed and witness_not_placed(folder, "devices"):
+            print("  ⏭️  devices.json: no reference (witnesses of devices not placed): dates not confronted")
+        else:
+            report(listed and not wrong,
+                   f"devices.json: the {len(listed)} USB and SCSI device(s) Windows lists, their three dates identical (UTC)",
+                   f"devices.json: {wrong[:2]}")
 
     # Network shares: the non-administrative shares Get-SmbShare lists, with
     # their path, the witness among them (B-031).
@@ -2323,9 +2360,12 @@ def check_small_file_artefacts(folder):
         wrong = [f"{name}: Start {boot.get(name.lower(), {}).get('Start')}, Windows {start}"
                  for name, start in sessions
                  if name.lower() not in boot or str(boot[name.lower()].get("Start", "")) != start]  # no Start value: both empty
-        report(sessions and not wrong,
-               f"event_log_configuration.json: the {len(sessions)} boot ETW session(s) Get-AutologgerConfig lists, same Start",
-               f"event_log_configuration.json: {len(wrong)} session difference(s), {wrong[:3]}")
+        if not sessions and witness_not_placed(folder, "event_log_configuration"):
+            print("  ⏭️  event_log_configuration.json: no reference of the boot ETW sessions (witnesses not placed): not confronted")
+        else:
+            report(sessions and not wrong,
+                   f"event_log_configuration.json: the {len(sessions)} boot ETW session(s) Get-AutologgerConfig lists, same Start",
+                   f"event_log_configuration.json: {len(wrong)} session difference(s), {wrong[:3]}")
 
     # Cleared log: none live, as Windows sees it; the cleared events recovered.
     if isinstance(events, list) and os.path.exists(path):
@@ -2407,21 +2447,33 @@ def check_small_file_artefacts(folder):
         report(not wrong, f"defender_detections.json: detection {detection_id} as MSFT_MpThreatDetection gives it",
                f"defender_detections.json: {wrong[0] if wrong else ''}")
         if d is not None and isinstance(quarantine, list):
-            entry = next((q for q in quarantine if (q.get("EntryId") or "").upper() == (d.get("QuarantineEntryId") or "").upper()), None)
+            # Defender of Windows 8.1 writes no quarantine GUID in the detection
+            # (zero), and keeps neither the file's dates nor its size nor the
+            # ThreatTracking bag: its entry is found by the resource's path,
+            # and only the content is confronted.
+            linked = bool(d.get("QuarantineEntryId"))
+            entry = next((q for q in quarantine if (q.get("EntryId") or "").upper() == (d.get("QuarantineEntryId") or "").upper()), None) \
+                if linked else next((q for q in quarantine if any((r.get("Path") or "").lower() == path.lower()
+                                                                  for r in q.get("Resources") or [])), None)
             r = next((r for r in (entry or {}).get("Resources") or [] if (r.get("Path") or "").lower() == path.lower()), None)
             eicar_sha1 = hashlib.sha1(b"X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*").hexdigest().upper()
             tracking = {t.get("Name"): t.get("Value") for t in d.get("ThreatTracking") or []}
             wrong = []
             if r is None:
-                wrong.append(f"entry {d.get('QuarantineEntryId')} or its resource absent")
+                wrong.append(f"entry {d.get('QuarantineEntryId') or 'of ' + path} or its resource absent")
             else:
-                if (r.get("CreatedUtc") or "")[:19] != "2021-01-02T03:04:05" or (r.get("ModifiedUtc") or "")[:19] != "2022-03-04T05:06:07":
+                if r.get("ContentSize") != 68 or r.get("ContentSha1") != eicar_sha1:
+                    wrong.append(f"content {r.get('ContentSize')}/{r.get('ContentSha1')}")
+                if linked and ((r.get("CreatedUtc") or "")[:19] != "2021-01-02T03:04:05"
+                               or (r.get("ModifiedUtc") or "")[:19] != "2022-03-04T05:06:07"):
                     wrong.append(f"dates {r.get('CreatedUtc')} / {r.get('ModifiedUtc')}")
-                if r.get("Size") != 68 or r.get("ContentSize") != 68 or r.get("ContentSha1") != eicar_sha1:
-                    wrong.append(f"size/content {r.get('Size')}/{r.get('ContentSize')}/{r.get('ContentSha1')}")
-                if (tracking.get("ThreatTrackingSha1") or "").upper() != r.get("ContentSha1"):
+                if linked and r.get("Size") != 68:
+                    wrong.append(f"size {r.get('Size')}")
+                if linked and (tracking.get("ThreatTrackingSha1") or "").upper() != r.get("ContentSha1"):
                     wrong.append("ThreatTrackingSha1 of the detection differs from the quarantined content")
-            report(not wrong, f"defender_quarantine.json: {path} with its dates, size and SHA-1, decrypted in memory only",
+            report(not wrong, f"defender_quarantine.json: {path} " + ("with its dates, size and SHA-1" if linked else
+                   "found by its path (no quarantine GUID in the detection, no dates kept: Windows 8.1), its content's size and SHA-1")
+                   + ", decrypted in memory only",
                    f"defender_quarantine.json: {wrong[0] if wrong else ''}")
     return found
 
@@ -3388,7 +3440,7 @@ def check_mft_timeline(folder):
             if isinstance(r, dict) and r.get("CreatedUtc"):
                 v = volume_of(r)
                 latest[v] = max(latest.get(v, ""), r["CreatedUtc"])
-        compared, wrong, renamed, newer = 0, [], 0, 0
+        compared, wrong, renamed, newer, reused = 0, [], 0, 0, 0
         for it in items:
             source = str(it.get("SourcePath") or "")
             entry = it.get("MftEntry")
@@ -3410,6 +3462,14 @@ def check_mft_timeline(folder):
                     and source.lower() not in {str(p).lower() for p in [r.get("Path", "")] + (r.get("HardLinkPaths") or [])}):
                 renamed += 1
                 continue
+            # The file taken, then deleted, and its record reused before the
+            # $MFT was read — which is read late in the collection: ESE drops
+            # its old logs as it rotates them, and in the test VM WAC's own
+            # working copy, on the same volume, takes the freed records. The
+            # record's creation after the exhibit's extraction proves it.
+            if r is not None and str(r.get("CreatedUtc") or "") > str(it.get("ExtractedUtc") or "~"):
+                reused += 1
+                continue
             if r is None:
                 wrong.append((source, "entry %s absent from mft.json" % entry))
             elif source.lower() not in {str(p).lower() for p in [r.get("Path", "")] + (r.get("HardLinkPaths") or [])}:
@@ -3426,9 +3486,10 @@ def check_mft_timeline(folder):
                 print(f"        {src}: {why}")
             found += 1
         else:
-            print(f"  ✅ mft.json: {compared - renamed} exhibit(s) with the manifest's path and creation date "
+            print(f"  ✅ mft.json: {compared - renamed - reused} exhibit(s) with the manifest's path and creation date "
                   f"({len(mft)} record(s), {deleted} deleted, {linked} with hard links"
                   f"{f'; {renamed} renamed since their exhibit was taken' if renamed else ''}"
+                  f"{f'; {reused} whose record was reused after their exhibit was taken' if reused else ''}"
                   f"{f'; {newer} created after the $MFT was read' if newer else ''})")
 
     usn = load(folder, "usn_journal.json")

@@ -102,22 +102,33 @@ attach_usb_key() {
   <serial>$serial</serial>
 </disk>
 EOF
-    virsh -c "$CONN" attach-device "$DOM" "$xml" --live >/dev/null && echo "   USB key $serial attached"
+    if virsh -c "$CONN" attach-device "$DOM" "$xml" --live >/dev/null; then
+      echo "   USB key $serial attached"
+    else
+      echo "   ⚠️ USB key $serial not attached"; rm -f "$xml"; return 1
+    fi
     rm -f "$xml"
   fi
-  # Windows installs the device asynchronously: wait until it is enumerated.
+  # Windows installs the device asynchronously: wait until its disk is there.
+  # Asked of WMI, which every Windows answers (Get-PnpDevice came with Windows
+  # 10) — not of the registry, whose USBSTOR key stays once a key was seen
+  # and said "known" of a key that was not attached.
   for attempt in $(seq 1 30); do
-    # Asked of the registry, which every Windows answers: Get-PnpDevice came
-    # with Windows 10, and an older VM waited the whole delay for nothing.
-    $QGA run --shell "reg query HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USBSTOR /s /k /f $serial >nul 2>&1" >/dev/null 2>&1 \
-      && { echo "   USB key $serial known to Windows"; return 0; }
+    $QGA run -- powershell.exe -NoProfile -Command \
+      "Get-WmiObject Win32_DiskDrive | Where-Object { \$_.PNPDeviceID -like '*$serial*' } | ForEach-Object { 'present' }" 2>/dev/null \
+      | grep -q present && { echo "   USB key $serial present in Windows"; return 0; }
     sleep 2
   done
+  echo "   ⚠️ USB key $serial not seen by Windows"; return 1
 }
-USB_IMG="${WAC_USB_IMG:-$HOME/vms/wac-usb-test.img}"
-USB_EXFAT_IMG="${WAC_USB_EXFAT_IMG:-$HOME/vms/wac-usb-exfat.img}"
-attach_usb_key "$USB_IMG" WACUSB0001 sdz
-attach_usb_key "$USB_EXFAT_IMG" WACUSB0002 sdy
+# One pair of images per VM: an image attached to a running VM is locked by
+# it, and a second VM could not attach it (the keys of win11-test keep their
+# first names).
+USB_SUFFIX=""; [[ "$DOM" != "win11-test" ]] && USB_SUFFIX="-$DOM"
+USB_IMG="${WAC_USB_IMG:-$HOME/vms/wac-usb-test$USB_SUFFIX.img}"
+USB_EXFAT_IMG="${WAC_USB_EXFAT_IMG:-$HOME/vms/wac-usb-exfat$USB_SUFFIX.img}"
+attach_usb_key "$USB_IMG" WACUSB0001 sdz || true
+attach_usb_key "$USB_EXFAT_IMG" WACUSB0002 sdy || true
 fi
 
 if [[ $BUILD -eq 1 ]]; then
@@ -669,11 +680,14 @@ if [[ $SPLIT -eq 1 ]]; then
     && echo "   + reference/executables.txt" || echo "   ⚠️ executables reference not read"
 
   # Windows' own verdict on the signatures of System32's executables, for the
-  # executables WAC authenticates in memory and does not copy.
-  $QGA run -- powershell.exe -NoProfile -Command \
-    '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-ChildItem C:\Windows\System32\*.exe | ForEach-Object { $s = Get-AuthenticodeSignature $_.FullName; "{0}|{1}|{2}" -f $_.FullName, $s.Status, $s.SignerCertificate.Subject }' \
+  # executables WAC authenticates in memory and does not copy, with the
+  # catalog Windows finds for those it does not call Valid
+  # (authenticode-reference.ps1, removed after).
+  $QGA write "$HERE/guest/authenticode-reference.ps1" "$VMDIR\\authenticode-reference.ps1" >/dev/null \
+  && $QGA run --timeout 900 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\authenticode-reference.ps1" \
     > "$OUTPUT/reference/authenticode.txt" 2>/dev/null \
     && echo "   + reference/authenticode.txt" || echo "   ⚠️ authenticode reference not read"
+  $QGA run --shell "del /q $VMDIR\\authenticode-reference.ps1 >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
 
   fi
 
