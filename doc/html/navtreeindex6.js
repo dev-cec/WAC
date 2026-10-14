@@ -1,5 +1,10 @@
 var NAVTREEINDEX6 =
 {
+"structAppliConf_1_1CollectedArtefacts.html#a06d49848b263bb6dcf0e7eb1fe16c6da":[1,0,6,0,16],
+"structAppliConf_1_1CollectedArtefacts.html#a0a7e05993ef3334d54eac63f132be3c1":[1,0,6,0,48],
+"structAppliConf_1_1CollectedArtefacts.html#a0bfe696388652390725f346fcc16490b":[1,0,6,0,6],
+"structAppliConf_1_1CollectedArtefacts.html#a10c7fb0c53340699d3fa3818b9bf30ae":[1,0,6,0,4],
+"structAppliConf_1_1CollectedArtefacts.html#a1152bf003bea75184a7f672dcb7fc7b2":[1,0,6,0,38],
 "structAppliConf_1_1CollectedArtefacts.html#a1b7dd0c1a5df36b1d54f08939b92b040":[1,0,6,0,57],
 "structAppliConf_1_1CollectedArtefacts.html#a2a48c5a6504727896bdea146d555499a":[1,0,6,0,37],
 "structAppliConf_1_1CollectedArtefacts.html#a3207f01397c1d03d8311cc638a743f55":[1,0,6,0,24],
@@ -244,10 +249,5 @@ var NAVTREEINDEX6 =
 "structBeef0029.html":[1,0,38],
 "structBeef0029.html#a04fad3eda760970e59d2b9841af44c1c":[1,0,38,2],
 "structBeef0029.html#a4058348d6aa7a47fe35ba467bde4f4b9":[1,0,38,0],
-"structBeef0029.html#a5471951b20d320f2ce4e92007c888ee5":[1,0,38,1],
-"structBeefUnknown.html":[1,0,39],
-"structBeefUnknown.html#a195cd7db6339f214697f4c9a72cecf4a":[1,0,39,2],
-"structBeefUnknown.html#a9a027a71c83a76c358225243e9be7234":[1,0,39,3],
-"structBeefUnknown.html#aab39f60558ee66d9700af233bd628a5c":[1,0,39,0],
-"structBeefUnknown.html#aaf78bcd19487c4dbf5733ab698d11ee7":[1,0,39,1]
+"structBeef0029.html#a5471951b20d320f2ce4e92007c888ee5":[1,0,38,1]
 };

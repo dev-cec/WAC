@@ -1,5 +1,10 @@
 var NAVTREEINDEX8 =
 {
+"structDeviceTrace.html#af0ea69f1bb7f00f12df6c8c6d13979b4":[1,0,77,3],
+"structDeviceTrace.html#afb8d4cddc8d896a64ace91abb9e3d3ad":[1,0,77,1],
+"structDirStrings.html":[1,0,79],
+"structDirStrings.html#a50f13ddbd34b1376fcd09f2fab95214c":[1,0,79,0],
+"structDirStrings.html#a7d72bcd11872251c3867aac55e2f4b84":[1,0,79,1],
 "structDirStrings.html#aa1e6e0d7d2634f7a69d6802fd9564c3b":[1,0,79,2],
 "structDirectory.html":[1,0,78],
 "structDirectory.html#a377bd0008e6b652df6a824d19981b0dd":[1,0,78,3],
@@ -244,10 +249,5 @@ var NAVTREEINDEX8 =
 "structHiveFixInfo.html#a35cea5f7db8ae09bc63aad5b93777883":[1,0,121,5],
 "structHiveFixInfo.html#a4a1e11b834a122a20c74f08167eed134":[1,0,121,8],
 "structHiveFixInfo.html#a61c9aa7c75f891b3ac3ab103d311e2e9":[1,0,121,7],
-"structHiveFixInfo.html#a69dd92b53553b36a36c84c589711ae5e":[1,0,121,6],
-"structHiveFixInfo.html#a6bd14d92ef35249ca9a9f3fa9c4e22dd":[1,0,121,4],
-"structHiveFixInfo.html#a6e5c26bcfce8ad94a17f543bd1192335":[1,0,121,0],
-"structHiveFixInfo.html#ac4fc2a03b317a544f3a6eb769e5e1517":[1,0,121,3],
-"structHiveFixInfo.html#ae2ef604e15c46bb88454ba69a0b877ce":[1,0,121,1],
-"structHiveLogEntry.html":[1,0,122]
+"structHiveFixInfo.html#a69dd92b53553b36a36c84c589711ae5e":[1,0,121,6]
 };

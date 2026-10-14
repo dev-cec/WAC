@@ -1,5 +1,10 @@
 var NAVTREEINDEX9 =
 {
+"structHiveFixInfo.html#a6bd14d92ef35249ca9a9f3fa9c4e22dd":[1,0,121,4],
+"structHiveFixInfo.html#a6e5c26bcfce8ad94a17f543bd1192335":[1,0,121,0],
+"structHiveFixInfo.html#ac4fc2a03b317a544f3a6eb769e5e1517":[1,0,121,3],
+"structHiveFixInfo.html#ae2ef604e15c46bb88454ba69a0b877ce":[1,0,121,1],
+"structHiveLogEntry.html":[1,0,122],
 "structHiveLogEntry.html#a28be2c308250c784e32660f2ea2f4f0d":[1,0,122,3],
 "structHiveLogEntry.html#a8f0fddccca0ac31292ab99eb89b6a577":[1,0,122,4],
 "structHiveLogEntry.html#a96f4e18086df81891fedf5d93ce31858":[1,0,122,0],
@@ -244,10 +249,5 @@ var NAVTREEINDEX9 =
 "structMountPoint.html#a7cc42a1e0a3f437e1f2cb6f6e23abc66":[1,0,158,2],
 "structMountPoint.html#a8e2297c56b8cc0c42719da7de5db3f4a":[1,0,158,3],
 "structMountPoint.html#ab091137ad0bfe14d48d0267a82945daa":[1,0,158,5],
-"structMountPoint.html#ab1fe055754b31cb2621b0239dc9a0b88":[1,0,158,0],
-"structMountPoint.html#ad4cf96ed7a1b2b6b0b1fcfad7a7d6eb3":[1,0,158,6],
-"structMountPoint.html#afa27895482c5815ee36ec263eb6b1964":[1,0,158,7],
-"structMountedDevice.html":[1,0,156],
-"structMountedDevice.html#a021d3e1126d9c40824437794c2de882b":[1,0,156,3],
-"structMountedDevice.html#a310a4f58be99578a750cc01684aa6261":[1,0,156,5]
+"structMountPoint.html#ab1fe055754b31cb2621b0239dc9a0b88":[1,0,158,0]
 };

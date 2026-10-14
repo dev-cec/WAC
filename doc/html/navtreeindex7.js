@@ -1,5 +1,10 @@
 var NAVTREEINDEX7 =
 {
+"structBeefUnknown.html":[1,0,39],
+"structBeefUnknown.html#a195cd7db6339f214697f4c9a72cecf4a":[1,0,39,2],
+"structBeefUnknown.html#a9a027a71c83a76c358225243e9be7234":[1,0,39,3],
+"structBeefUnknown.html#aab39f60558ee66d9700af233bd628a5c":[1,0,39,0],
+"structBeefUnknown.html#aaf78bcd19487c4dbf5733ab698d11ee7":[1,0,39,1],
 "structBinaryFingerprint.html":[1,0,40],
 "structBinaryFingerprint.html#a04e6b16e429ee48c2cd57aadbf2ae9fc":[1,0,40,3],
 "structBinaryFingerprint.html#a8c695575fb1421caa1d5b9b87204a37f":[1,0,40,1],
@@ -244,10 +249,5 @@ var NAVTREEINDEX7 =
 "structDeviceTrace.html#a57da712d0c6ff57b2c4d1a382bc5ac05":[1,0,77,5],
 "structDeviceTrace.html#a704a1b564cd4cae3ab4352a0c7adde12":[1,0,77,8],
 "structDeviceTrace.html#a78519ef2f533a971cdf0a35f3c5b9f0c":[1,0,77,4],
-"structDeviceTrace.html#a8eb83cdfac79cefcb7572372248a779c":[1,0,77,7],
-"structDeviceTrace.html#af0ea69f1bb7f00f12df6c8c6d13979b4":[1,0,77,3],
-"structDeviceTrace.html#afb8d4cddc8d896a64ace91abb9e3d3ad":[1,0,77,1],
-"structDirStrings.html":[1,0,79],
-"structDirStrings.html#a50f13ddbd34b1376fcd09f2fab95214c":[1,0,79,0],
-"structDirStrings.html#a7d72bcd11872251c3867aac55e2f4b84":[1,0,79,1]
+"structDeviceTrace.html#a8eb83cdfac79cefcb7572372248a779c":[1,0,77,7]
 };

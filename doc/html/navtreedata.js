@@ -66,18 +66,18 @@ var NAVTREEINDEX =
 "functions_rela.html",
 "main_8cpp.html#aec315d77f5c38417289a0e311d2a9d31",
 "reg__bams_8cpp.html",
-"structAppliConf_1_1CollectedArtefacts.html#a1b7dd0c1a5df36b1d54f08939b92b040",
-"structBinaryFingerprint.html",
-"structDirStrings.html#aa1e6e0d7d2634f7a69d6802fd9564c3b",
-"structHiveLogEntry.html#a28be2c308250c784e32660f2ea2f4f0d",
-"structMountedDevice.html#a5042a7267fa6a1b2c9c3aaa9ebca2f9e",
-"structPstSubnode.html",
-"structScheduledTask.html#af1769c7ed3551736dcdee2ba1f16d950",
-"structThumbcacheEntry.html#ada7434a063aade9f4419428b15a70d75",
-"structUsnRecord.html#ade14700d402ba732177ab84113ec6ed9",
-"tools_8cpp.html#af19df3a3f511ff3abd405ff4f64942ff",
-"translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a753f68afebaf44a0c88db20c52ada6a6",
-"web__client_8h.html#aaca14a4becedc38115f308fa3885a977"
+"structAppliConf_1_1CollectedArtefacts.html#a06d49848b263bb6dcf0e7eb1fe16c6da",
+"structBeefUnknown.html",
+"structDeviceTrace.html#af0ea69f1bb7f00f12df6c8c6d13979b4",
+"structHiveFixInfo.html#a6bd14d92ef35249ca9a9f3fa9c4e22dd",
+"structMountPoint.html#ad4cf96ed7a1b2b6b0b1fcfad7a7d6eb3",
+"structPstNode.html#ab8edb05ef1ac51b0f9a0380da3157ed7",
+"structScheduledTask.html#aba2ef89d590f909740d4c868428c71c5",
+"structThumbcacheEntry.html#a704d375dde5dff251014c57b60a718c7",
+"structUsnRecord.html#a78a7016c53c59ddd5d997e73130ab367",
+"tools_8cpp.html#ae015dab0338f7763e473365f24e90784",
+"translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a71bf6638d1144da8bcfe8239dedc12cd",
+"web__client_8h.html#a689b89bae502f0fda60639c0cb392587"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

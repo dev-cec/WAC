@@ -191,6 +191,7 @@ var dir_08d237fc27d4ecd563f71c5d52f2fecc =
     [ "running_machine.h", "running__machine_8h.html", "running__machine_8h" ],
     [ "sam_secrets.cpp", "sam__secrets_8cpp.html", "sam__secrets_8cpp" ],
     [ "sam_secrets.h", "sam__secrets_8h.html", "sam__secrets_8h" ],
+    [ "sam_secrets_test.cpp", "sam__secrets__test_8cpp.html", "sam__secrets__test_8cpp" ],
     [ "scheduledTasks.cpp", "scheduledTasks_8cpp.html", null ],
     [ "scheduledTasks.h", "scheduledTasks_8h.html", "scheduledTasks_8h" ],
     [ "search_index.cpp", "search__index_8cpp.html", "search__index_8cpp" ],

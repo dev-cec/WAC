@@ -1,5 +1,10 @@
 var NAVTREEINDEX13 =
 {
+"structThumbcacheEntry.html#a704d375dde5dff251014c57b60a718c7":[1,0,270,3],
+"structThumbcacheEntry.html#a952391eb84c973de587c45f89b4cacf4":[1,0,270,4],
+"structThumbcacheEntry.html#ab764c3a9dabdc463332aef5b9ca4364f":[1,0,270,7],
+"structThumbcacheEntry.html#ab83f1dd9ac3190fbcf3b5cdbb693efc7":[1,0,270,8],
+"structThumbcacheEntry.html#ac5053d125e458f31f1a64dad28f4f695":[1,0,270,2],
 "structThumbcacheEntry.html#ada7434a063aade9f4419428b15a70d75":[1,0,270,1],
 "structThumbcacheEntry.html#af030182f4e2ba7233e70f7c3c350df56":[1,0,270,5],
 "structThumbcacheFile.html":[1,0,271],
@@ -244,10 +249,5 @@ var NAVTREEINDEX13 =
 "structUsnRecord.html#a3c0f201b7b66d83d979bd42a73666aa7":[1,0,303,4],
 "structUsnRecord.html#a580353ae0bfb7e0343e966342383ceb5":[1,0,303,9],
 "structUsnRecord.html#a6c47aabdaa72be5b02221e59f5a66c1b":[1,0,303,2],
-"structUsnRecord.html#a7001a3988000cea57c0f56897618d632":[1,0,303,10],
-"structUsnRecord.html#a78a7016c53c59ddd5d997e73130ab367":[1,0,303,7],
-"structUsnRecord.html#aa145e7f24f182f59da2e78032fb278fd":[1,0,303,11],
-"structUsnRecord.html#aa423cb55cf7f4263648ab80e3838ddab":[1,0,303,1],
-"structUsnRecord.html#aaf5a8af7f6b753cd367bcdd883be04a6":[1,0,303,8],
-"structUsnRecord.html#ac3957e1e0e2706526164a191344db740":[1,0,303,6]
+"structUsnRecord.html#a7001a3988000cea57c0f56897618d632":[1,0,303,10]
 };
