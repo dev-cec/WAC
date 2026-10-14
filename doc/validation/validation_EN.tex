@@ -755,7 +755,9 @@ unresolved \texttt{\%\%nnnn} references in messages & a provider's parameter
 RID found at the end of the rebuilt SID & reading of the SAM database \\
 NT hash of a witness account with a known password, the previous one in the
   history / \fichier{users.json} & MD4 of the password in UTF-16LE, recomputed
-  apart (the boot key / AES / DES chain verified end to end) \\
+  apart (the boot key / AES or RC4 / DES chain verified end to end, on
+  Windows~11 and on Windows~8.1; on 8.1, every hash was wrong: a constant of
+  the RC4 scheme had one ``Q'' too many) \\
 direct members of each local group, witness account in Administrators /
   \fichier{local\_groups.json} & \texttt{Get-LocalGroupMember} over the 21 groups \\
 security questions (\champ{SecurityQuestions}) of a witness account /

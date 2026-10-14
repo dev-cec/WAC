@@ -1061,7 +1061,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         condensats, hors ligne, à ceux des mots de passe faibles connus. Les
         condensats sont déchiffrés sur place (clé de démarrage de \fichier{SYSTEM},
         clé de hachage de la \fichier{SAM}, schéma AES de Windows~10 et suivants
-        ou RC4 plus ancien, puis couche DES par RID). Si le compte porte des
+        ou RC4 plus ancien, dont la somme de contrôle est vérifiée : une clé
+        fausse ne donne aucun condensat plutôt que des condensats faux, puis
+        couche DES par RID). Si le compte porte des
         questions de sécurité de réinitialisation (\champ{SecurityQuestions},
         valeur \texttt{ResetData}), elles sont converties telles quelles,
         questions ET réponses : stockées en clair, une réponse triviale est une

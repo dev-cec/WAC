@@ -589,6 +589,27 @@ numéros de séquence est remise à son ancienne forme. Sur des ruches réelles,
 le cycle VM confronte le rejeu de \wac{} à la récupération que Windows fait
 lui-même des mêmes fichiers (clés, valeurs et empreinte de l'ensemble).
 
+\section{Clé de hachage de la SAM : \texttt{sam\_secrets\_test}}
+
+Une constante fausse dans le schéma RC4 de la SAM (Windows~8.1 et antérieurs,
+et les comptes que rien n'a réécrits depuis) donne une clé de hachage fausse,
+puis des condensats NT faux pour tous les comptes, sans aucune erreur. Le test
+construit une valeur \texttt{F} à partir d'une clé de démarrage et d'une clé de
+hachage synthétiques, chiffrée et dotée de sa somme de contrôle par un calcul
+indépendant ; il vérifie que la clé de hachage revient, et qu'une clé de
+démarrage fausse, une somme de contrôle altérée, une valeur tronquée ou une
+révision inconnue sont refusées : aucune clé plutôt qu'une clé fausse.
+
+\begin{lstlisting}
+cd build-windows/tests
+wine sam_secrets_test.exe
+\end{lstlisting}
+
+Référence : 5 contrôles, aucun échec ; le premier échoue avec l'ancienne
+constante (treize « Q » au lieu de douze). Sur une SAM réelle, le cycle VM
+confronte le condensat d'un compte témoin au MD4 de son mot de passe, sous
+Windows~11 (AES) et sous Windows~8.1 (RC4).
+
 \section{Scripts de vérification : \texttt{verify\_exhibits\_test.sh}}
 
 Lance \fichier{verify-exhibits.sh} et \fichier{verifier-consigne.sh}, les

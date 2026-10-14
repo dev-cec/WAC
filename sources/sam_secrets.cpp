@@ -179,6 +179,11 @@ const size_t V_LM_HASH = 0x9C, V_NT_HASH = 0xA8, V_NT_HISTORY = 0xB4, V_LM_HISTO
 // The per-account RC4 salts (revision 1): "NTPASSWORD\0" and "LMPASSWORD\0".
 const std::vector<uint8_t> NT_SALT = { 'N','T','P','A','S','S','W','O','R','D',0 };
 const std::vector<uint8_t> LM_SALT = { 'L','M','P','A','S','S','W','O','R','D',0 };
+// ... and those of the history, which differ: with the current hash's salts,
+// the history of a Windows 8.1 account did not hold its previous password's
+// hash (measured in the VM against MD4 of that password).
+const std::vector<uint8_t> NT_HISTORY_SALT = { 'N','T','P','A','S','S','W','O','R','D','H','I','S','T','O','R','Y',0 };
+const std::vector<uint8_t> LM_HISTORY_SALT = { 'L','M','P','A','S','S','W','O','R','D','H','I','S','T','O','R','Y',0 };
 
 //! The bytes of a V field, from its (offset, length) entry; empty if out of range.
 std::vector<uint8_t> field(const std::vector<uint8_t>& v, size_t entry) {
@@ -297,14 +302,23 @@ std::vector<uint8_t> readHashedBootKey(ORHKEY hSam, const std::wstring& base,
 		log(2, L"🔥hashed boot key: value F missing or too short");
 		return {};
 	}
+	return hashedBootKeyFromF(f, bootKey);
+}
+
+std::vector<uint8_t> hashedBootKeyFromF(const std::vector<uint8_t>& f, const std::vector<uint8_t>& bootKey) {
+	if (bootKey.size() != 16 || f.size() < 0x70) return {};
 	// The key structure starts at offset 0x68; its revision (a DWORD) says how.
 	const uint8_t* k = f.data() + 0x68;
 	uint32_t revision = 0;
 	memcpy(&revision, k, 4);
-	// QWERTY/DIGITS are the fixed constants that salt the RC4 scheme.
+	/* QWERTY/DIGITS are the fixed constants that salt the RC4 scheme: twelve
+	   'Q', no more — a thirteenth gave a wrong hashed boot key, hence wrong
+	   hashes for every account of Windows 8.1, in valid JSON. The checksum the
+	   structure carries now refuses such a key (measured on the Windows 8.1
+	   VM: only twelve 'Q' satisfy it). */
 	static const std::vector<uint8_t> QWERTY = {
 		'!','@','#','$','%','^','&','*','(',')','q','w','e','r','t','y','U','I','O','P','A','z','x',
-		'c','v','b','n','m','Q','Q','Q','Q','Q','Q','Q','Q','Q','Q','Q','Q','Q',')','(','*','@','&','%',0 };
+		'c','v','b','n','m','Q','Q','Q','Q','Q','Q','Q','Q','Q','Q','Q','Q',')','(','*','@','&','%',0 };
 	static const std::vector<uint8_t> DIGITS = {
 		'0','1','2','3','4','5','6','7','8','9','0','1','2','3','4','5','6','7','8','9',
 		'0','1','2','3','4','5','6','7','8','9','0','1','2','3','4','5','6','7','8','9',0 };
@@ -315,8 +329,13 @@ std::vector<uint8_t> readHashedBootKey(ORHKEY hSam, const std::wstring& base,
 		const std::vector<uint8_t> enc(k + 24, k + 24 + 32);   // Key + CheckSum
 		const std::vector<uint8_t> rc4Key = md5(join({ salt, QWERTY, bootKey, DIGITS }));
 		std::vector<uint8_t> clear = rc4(rc4Key, enc.data(), enc.size());
-		clear.resize(16);   // the hashed boot key is the first 16 bytes
-		return clear;
+		// CheckSum = MD5(Key, DIGITS, Key, QWERTY): a wrong boot key or constant shows here.
+		const std::vector<uint8_t> key(clear.begin(), clear.begin() + 16);
+		if (md5(join({ key, DIGITS, key, QWERTY })) != std::vector<uint8_t>(clear.begin() + 16, clear.end())) {
+			log(2, L"🔥hashed boot key: the checksum of the F value does not match (wrong boot key?)");
+			return {};
+		}
+		return key;
 	}
 	if (revision == 2) {
 		// SAM_KEY_DATA_AES: Revision(4), Length(4), CheckLen(4), DataLen(4), Salt(16), Data.
@@ -342,7 +361,7 @@ AccountSecrets readAccountSecrets(const std::vector<uint8_t>& valueV, uint32_t r
 	if (hashedBootKey.size() != 16 || valueV.size() < V_LM_HISTORY + 8) return s;
 	s.lmHash   = hashHex(field(valueV, V_LM_HASH), rid, hashedBootKey, LM_SALT);
 	s.ntHash   = hashHex(field(valueV, V_NT_HASH), rid, hashedBootKey, NT_SALT);
-	s.ntHistory = historyHex(field(valueV, V_NT_HISTORY), rid, hashedBootKey, NT_SALT);
-	s.lmHistory = historyHex(field(valueV, V_LM_HISTORY), rid, hashedBootKey, LM_SALT);
+	s.ntHistory = historyHex(field(valueV, V_NT_HISTORY), rid, hashedBootKey, NT_HISTORY_SALT);
+	s.lmHistory = historyHex(field(valueV, V_LM_HISTORY), rid, hashedBootKey, LM_HISTORY_SALT);
 	return s;
 }
