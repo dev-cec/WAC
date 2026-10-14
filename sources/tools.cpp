@@ -774,6 +774,9 @@ std::wstring normalizeFilePath(std::wstring path) {
 	// Kernel prefix.
 	if (low.compare(0, 12, L"\\systemroot\\") == 0)
 		return conf.systemDrive + L"\\Windows\\" + path.substr(12);
+	// "SYSVOL\": the system volume, as the ShimCache of Windows 8 and 8.1 names it.
+	if (low.compare(0, 7, L"sysvol\\") == 0)
+		return conf.systemDrive + L"\\" + path.substr(7);
 
 	/* VARIABLES, expanded from the DETECTED system drive and never from the
 	   process's environment: the value belongs to the examined installation, not

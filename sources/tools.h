@@ -314,7 +314,8 @@ std::wstring extractedPath(const std::wstring& absolute);
 /*! Canonical "X:\\…" form of a file path found in an artefact.
 *
 * THE path normalisation rule: NT object prefixes (`\\??\\`, `\\\\?\\`), the
-* kernel prefix `\\SystemRoot\\`, system variables (`%windir%`,
+* kernel prefix `\\SystemRoot\\`, the system volume `SYSVOL\\` (ShimCache of
+* Windows 8 and 8.1), system variables (`%windir%`,
 * `%ProgramFiles%`…) expanded from `conf.systemDrive`, surrounding quotes and
 * spaces, drive letter in upper case. `binaryPath` and the expansion of profile
 * paths both come back to it: one single rule, no variant per artefact.

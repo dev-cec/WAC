@@ -203,7 +203,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		    { SERVER_2003, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", L"header 0xBADC0FFE", false, { 0xBADC0FFE } },
 		    { SEVEN, L"the same value", L"header 0xBADC0FEE", false, { 0xBADC0FEE } },
 		    { EIGHT, L"the same value", L"header 0x80, entries \"00ts\"", false, { SHIMCACHE_00TS } },
-		    { EIGHT_1, L"the same value", L"header of 0x80 bytes starting with 0, entries \"10ts\"", false, { SHIMCACHE_10TS } },
+		    { EIGHT_1, L"the same value", L"header of 0x80 bytes starting with 0, entries \"10ts\"", true, { SHIMCACHE_10TS } },
 		    { TEN, L"the same value", L"header 0x30 or 0x34, entries \"10ts\"", true, { 0x30, 0x34 } } },
 		  L"Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600." },
 		{ "shortcuts", XP, 0, 0,

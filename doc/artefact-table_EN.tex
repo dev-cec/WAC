@@ -179,7 +179,7 @@
  & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatCache\textbackslash{}AppCompatCache} & header 0xBADC0FFE & no \\
  & Windows 7 & \texttt{the same value} & header 0xBADC0FEE & no \\
  & Windows 8 & \texttt{the same value} & header 0x80, entries ''00ts'' & no \\
- & Windows 8.1 & \texttt{the same value} & header of 0x80 bytes starting with 0, entries ''10ts'' & no \\
+ & Windows 8.1 & \texttt{the same value} & header of 0x80 bytes starting with 0, entries ''10ts'' & yes \\
  & Windows 10 & \texttt{the same value} & header 0x30 or 0x34, entries ''10ts'' & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP; Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600.} \\
 \addlinespace

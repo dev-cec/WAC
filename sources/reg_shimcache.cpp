@@ -86,6 +86,15 @@ HRESULT Shimcaches::getData() {
 		unsupportedFormat = true;
 		return ERROR_SUCCESS;
 	}
+	/* WINDOWS 8.1, the "10ts" entries after a header of 0x80 bytes: after the
+	   path, the name of a package (its size on 2 bytes, then UTF-16) and two
+	   DWORDs of flags (insertion, shim), then the date and the data as since
+	   Windows 10. Measured on the Windows 8.1 VM: its 147 entries each end
+	   at the byte their size announces, the last at the end of the value.
+	   The flags are not given: what they say of an execution is not proven
+	   (decision of 2026-09-30, "executed" not reported). */
+	const bool windows81 = offset == 0;
+	if (windows81) offset = WINDOWS_8_HEADER_SIZE;
 	while (fits(size, offset, 14)) {
 		printProgressStep(L"Shimcache", (unsigned)offset, size);
 		if (std::memcmp(data + offset, "10ts", 4) != 0) {
@@ -105,6 +114,15 @@ HRESULT Shimcaches::getData() {
 		Shimcache shimcache;
 		shimcache.path = std::wstring((const wchar_t*)(data + offset), pathSize / sizeof(wchar_t));
 		offset += pathSize;
+		if (windows81) {
+			// Package name and the two flag DWORDs, skipped; the date and data size must still fit.
+			const size_t packageSize = fits(size, offset, 2) ? *reinterpret_cast<const unsigned short*>(data + offset) : 0;
+			if (!fits(size, offset, 2 + packageSize + 8 + 8 + 4)) {
+				log(2, L"🔥AppCompatCache: entry truncated at offset " + std::to_wstring(entryStart));
+				break;
+			}
+			offset += 2 + packageSize + 8;
+		}
 
 		// Fingerprint on the normalised path (quotes, \??\), read raw.
 		shimcache.fingerprint = FingerprintFile(shimcache.path);
