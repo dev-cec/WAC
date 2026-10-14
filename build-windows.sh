@@ -188,10 +188,10 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     "${LIBS[@]}" -lole32 -loleaut32 -lpropsys -luuid
   echo "   -> $TESTS/system_conversions_test.exe"
 
-  echo "== Build evtx_test.exe, consigne_test.exe, trust_set_test.exe, config_test.exe, mft_test.exe, usn_journal_test.exe, file_artefacts_test.exe, cim_test.exe, ese_test.exe, fat_test.exe, link_tracking_test.exe, ie_index_dat_test.exe, activities_cache_test.exe, pst_test.exe, shell_items_test.exe, hive_recover_test.exe =="
+  echo "== Build evtx_test.exe, consigne_test.exe, trust_set_test.exe, config_test.exe, mft_test.exe, usn_journal_test.exe, file_artefacts_test.exe, cim_test.exe, ese_test.exe, fat_test.exe, link_tracking_test.exe, ie_index_dat_test.exe, activities_cache_test.exe, pst_test.exe, shell_items_test.exe, hive_recover_test.exe, sam_secrets_test.exe =="
   # Built here rather than by a hand-written list of sources: that list, in the
   # README, had drifted and no longer linked. Both run under Wine.
-  for t in evtx_test consigne_test trust_set_test config_test mft_test usn_journal_test file_artefacts_test cim_test ese_test fat_test link_tracking_test ie_index_dat_test activities_cache_test pst_test shell_items_test hive_recover_test; do
+  for t in evtx_test consigne_test trust_set_test config_test mft_test usn_journal_test file_artefacts_test cim_test ese_test fat_test link_tracking_test ie_index_dat_test activities_cache_test pst_test shell_items_test hive_recover_test sam_secrets_test; do
     "$CXX" "${FLAGS[@]}" -municode -static -static-libgcc -static-libstdc++ \
       "$SRC/$t.cpp" "${TEST_OBJS[@]}" "$BUILD/WAC_res.o" -o "$TESTS/$t.exe" "${LIBS[@]}"
     echo "   -> $TESTS/$t.exe"

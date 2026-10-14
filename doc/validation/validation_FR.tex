@@ -787,7 +787,9 @@ références \texttt{\%\%nnnn} non résolues dans les messages & fichier de
 RID retrouvé à la fin du SID reconstruit & lecture de la base SAM \\
 condensat NT d'un compte témoin à mot de passe connu, et l'ancien dans
   l'historique / \fichier{users.json} & MD4 du mot de passe en UTF-16LE,
-  recalculé à part (chaîne clé de démarrage / AES / DES vérifiée de bout en bout) \\
+  recalculé à part (chaîne clé de démarrage / AES ou RC4 / DES vérifiée de bout
+  en bout, sous Windows~11 et sous Windows~8.1 ; sous 8.1, tous les condensats
+  étaient faux : une constante du schéma RC4 comptait un « Q » de trop) \\
 membres directs de chaque groupe local, compte témoin dans les Administrateurs /
   \fichier{local\_groups.json} & \texttt{Get-LocalGroupMember} sur les 21 groupes \\
 questions de sécurité (\champ{SecurityQuestions}) d'un compte témoin /

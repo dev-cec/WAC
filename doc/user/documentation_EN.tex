@@ -1041,8 +1041,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         judges nothing}, it converts, and WAE confronts the hashes, offline, with
         those of known weak passwords. The hashes are decrypted on the spot (the
         boot key from \fichier{SYSTEM}, the hashed boot key from the \fichier{SAM},
-        the AES scheme of Windows~10 and later or the older RC4, then a DES layer
-        keyed on the RID). If the account carries password-reset security
+        the AES scheme of Windows~10 and later or the older RC4, whose checksum
+        is verified: a wrong key gives no hash rather than wrong ones, then a
+        DES layer keyed on the RID). If the account carries password-reset security
         questions (\champ{SecurityQuestions}, the \texttt{ResetData} value), they
         are converted as they are, questions AND answers: stored in the clear, a
         trivial answer is a weakness WAE judges like a weak password.

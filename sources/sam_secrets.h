@@ -49,6 +49,14 @@ std::vector<uint8_t> readBootKey(ORHKEY controlSet);
 std::vector<uint8_t> readHashedBootKey(ORHKEY hSam, const std::wstring& base,
                                        const std::vector<uint8_t>& bootKey);
 
+/*! The hashed boot key, from the bytes of the `F` value: revision 1 (RC4,
+ *  its checksum verified) or 2 (AES).
+ *  @param f the value `F` of `SAM\Domains\Account`
+ *  @param bootKey the boot key, as readBootKey gives it
+ *  @return the 16-byte hashed boot key, or an empty vector if the value is
+ *          too short, of another revision, or its checksum does not match */
+std::vector<uint8_t> hashedBootKeyFromF(const std::vector<uint8_t>& f, const std::vector<uint8_t>& bootKey);
+
 /*! Decrypts the NT and LM hashes, and their history, of one account.
  *  @param valueV the account's `V` value
  *  @param rid the account's relative identifier

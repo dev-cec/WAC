@@ -521,6 +521,27 @@ numbers is put back to its former form. On real hives, the VM cycle confronts
 \wac{}'s replay with Windows' own recovery of the same files (keys, values and
 a digest of them all).
 
+\section{Hashed key of the SAM: \texttt{sam\_secrets\_test}}
+
+A wrong constant in the SAM's RC4 scheme (Windows~8.1 and earlier, and the
+accounts nothing has rewritten since) gives a wrong hashed boot key, then
+wrong NT hashes for every account, without any error. The test builds an
+\texttt{F} value from a synthetic boot key and hashed boot key, encrypted and
+given its checksum by an independent computation; it checks that the hashed
+boot key comes back, and that a wrong boot key, an altered checksum, a
+truncated value or an unknown revision are refused: no key rather than a
+wrong one.
+
+\begin{lstlisting}
+cd build-windows/tests
+wine sam_secrets_test.exe
+\end{lstlisting}
+
+Reference: 5 checks, no failure; the first fails with the former constant
+(thirteen ``Q'' instead of twelve). On a real SAM, the VM cycle confronts a
+witness account's hash with MD4 of its password on Windows~11 (AES); the RC4
+scheme was confronted the same way on a Windows~8.1 test machine.
+
 \section{Verification scripts: \texttt{verify\_exhibits\_test.sh}}
 
 Runs \fichier{verify-exhibits.sh} and \fichier{verifier-consigne.sh}, the
