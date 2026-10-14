@@ -296,6 +296,7 @@ def cross_checks(folder):
     found += guarded(check_jumplist_entries, folder)
     found += guarded(check_events, folder)
     found += guarded(check_hive_replay, folder)
+    found += guarded(check_hive_recovery, folder)
     found += guarded(check_exhibit_store, folder)
     found += guarded(check_mft_references, folder)
     found += guarded(check_mft_timeline, folder)
@@ -2267,6 +2268,43 @@ def check_small_file_artefacts(folder):
                     wrong.append("ThreatTrackingSha1 of the detection differs from the quarantined content")
             report(not wrong, f"defender_quarantine.json: {path} with its dates, size and SHA-1, decrypted in memory only",
                    f"defender_quarantine.json: {wrong[0] if wrong else ''}")
+    return found
+
+
+def check_hive_recovery(folder):
+    """WAC's replay of the transaction logs against Windows' own recovery.
+
+    The harness loads, with `reg load`, a copy of each hive as collected with
+    its .LOG1/.LOG2 — Windows replays the logs itself — and a copy of the hive
+    WAC replayed; both are walked whole (hive-recovery-reference.ps1). Same
+    files, so the same keys, the same values, the same digest of them all.
+    This is what shows a replay that drops or adds an entry: the hive still
+    loads and still reads, with a few keys fewer — WAC skipped the entry
+    numbered as the hive's sequence, and a collection taken minutes after a
+    boot lost 16 keys and 46 values of SOFTWARE, then 125 event channels.
+    """
+    path = os.path.join(folder, "reference", "hive-recovery.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  reference/hive-recovery.txt absent: replay not confronted with Windows' recovery")
+        return 0
+    found, compared = 0, 0
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            match = re.match(r"hive=([^|]+)\|windows=([^|]*)\|wac=(.*)$", line.strip())
+            if not match:
+                continue
+            compared += 1
+            hive, windows, wac = match.groups()
+            keys, _, rest = windows.partition(",")
+            same = windows == wac and rest.count(",") == 1
+            print(f"  {'✅' if same else '❌'} hive replay, {hive}: "
+                  + (f"{keys} keys and {rest.split(',')[0]} values, identical to Windows' own recovery of the "
+                     f"collected hive and logs (digest of every key and value)" if same
+                     else f"differs from Windows' own recovery — Windows {windows[:60]}, WAC {wac[:60]}"))
+            found += 0 if same else 1
+    if not compared:
+        print("  ❌ hive replay: the reference names no hive")
+        return 1
     return found
 
 

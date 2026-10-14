@@ -430,6 +430,19 @@ $QGA run -- powershell.exe -NoProfile -Command \
   && echo "   + reference/partitions.txt" || echo "   ⚠️ partitions reference not read"
 fi
 
+# WAC's replay of the hives' transaction logs against Windows' own recovery of
+# the same files (hive-recovery-reference.ps1): on copies of the collection of
+# step 4, loaded by Windows and walked whole — keys, values, and a digest of
+# them all. The script works in a folder it removes, and is removed after.
+if full_cycle; then
+  $QGA write "$HERE/guest/hive-recovery-reference.ps1" "$VMDIR\\hive-recovery-reference.ps1" >/dev/null \
+  && $QGA run --timeout 900 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\hive-recovery-reference.ps1" \
+       -Collection "$VMDIR\\out" 2>/dev/null | tr -d '\r' > "$OUTPUT/reference/hive-recovery.txt" \
+  && [[ -s "$OUTPUT/reference/hive-recovery.txt" ]] \
+  && echo "   + reference/hive-recovery.txt" || echo "   ⚠️ hive recovery reference not read"
+  $QGA run --shell "del /q $VMDIR\\hive-recovery-reference.ps1 >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
+fi
+
 # The number of firewall rules Windows holds, read again right after a
 # collection: the one read when the witnesses were placed may have changed by
 # then — a component adds a rule while the machine runs (509 at the witnesses,

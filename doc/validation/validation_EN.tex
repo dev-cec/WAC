@@ -179,7 +179,12 @@ with a library of the examined machine.
   \item replay of the transaction logs (\texttt{.LOG1}/\texttt{.LOG2}):
     signature and sequence chaining of every entry; an entry out of the chain
     is discarded and counted; an undo journal is written before any change, so
-    that the raw copy can be rebuilt;
+    that the raw copy can be rebuilt. A hive's sequence number is that of the
+    next entry it expects: the entry of the same number is therefore applied,
+    and the header then takes the number after the last entry and the size
+    that entry announces. The result is confronted with Windows: the same hive
+    and its logs, loaded by \texttt{reg load}, give the same keys, the same
+    values and the same digest of them all as the hive \wac{} replayed;
   \item every offset read in the hive is checked against the file's real
     size, and a subkey pointing to one of its ancestors is refused: a walk
     cannot loop on a forged hive.

@@ -514,6 +514,30 @@ cd build-windows/tests
 wine consigne_test.exe "Z:/tmp/sortie" "Z:/chemin/SYSTEM" "Z:/chemin/ntuser.dat"
 \end{lstlisting}
 
+\section{Rejeu des journaux de ruche : \texttt{hive\_recover\_test}}
+
+Un rejeu qui écarte une entrée, ou qui en applique une périmée, donne une ruche
+qui s'ouvre et se lit encore : seules manquent les clés des pages perdues, sans
+erreur. Le test forge une ruche et ses journaux où chaque page porte une lettre
+et chaque entrée en écrit une autre : la lettre restée dans une page dit quelle
+entrée y a été appliquée en dernier. Il vérifie que l'entrée dont le numéro est
+celui de la ruche est appliquée — elle était écartée, une entrée perdue à
+chaque rejeu —, que les entrées antérieures et les restes d'une génération
+précédente ne le sont pas, qu'une entrée qui agrandit la ruche étend le fichier
+et l'en-tête, que l'en-tête finit propre avec sa somme de contrôle, que le
+journal d'annulation rend la ruche d'origine, et qu'une entrée altérée arrête la
+chaîne.
+
+\begin{lstlisting}
+cd build-windows/tests
+wine hive_recover_test.exe "Z:/tmp/travail"
+\end{lstlisting}
+
+Référence : 11 contrôles, aucun échec ; quatre échouent si la comparaison des
+numéros de séquence est remise à son ancienne forme. Sur des ruches réelles,
+le cycle VM confronte le rejeu de \wac{} à la récupération que Windows fait
+lui-même des mêmes fichiers (clés, valeurs et empreinte de l'ensemble).
+
 \section{Scripts de vérification : \texttt{verify\_exhibits\_test.sh}}
 
 Lance \fichier{verify-exhibits.sh} et \fichier{verifier-consigne.sh}, les

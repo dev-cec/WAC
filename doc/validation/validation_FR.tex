@@ -183,7 +183,13 @@ avec une bibliothèque de la machine examinée.
   \item rejeu des journaux de transactions (\texttt{.LOG1}/\texttt{.LOG2}) :
     signature et chaînage des séquences de chaque entrée ; une entrée hors
     chaîne est écartée et comptée ; un journal d'annulation est écrit avant
-    toute modification, pour pouvoir reconstituer la copie brute ;
+    toute modification, pour pouvoir reconstituer la copie brute. Le numéro de
+    séquence d'une ruche est celui de la prochaine entrée qu'elle attend :
+    l'entrée de même numéro est donc appliquée, et l'en-tête prend ensuite le
+    numéro suivant la dernière entrée et la taille que celle-ci annonce. Le
+    résultat est confronté à Windows : la même ruche et ses journaux, chargés
+    par \texttt{reg load}, donnent les mêmes clés, les mêmes valeurs et la
+    même empreinte de l'ensemble que la ruche rejouée par \wac{} ;
   \item chaque décalage lu dans la ruche est vérifié contre la taille réelle du
     fichier, et une sous-clé qui pointerait vers l'une de ses ancêtres est
     refusée : un parcours ne peut pas boucler sur une ruche forgée.
