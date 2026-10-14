@@ -1085,7 +1085,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         volumes, and list of loaded files with their \path|$MFT| reference (and
         their fingerprints with \opt{binary}). A missing reference is not a
         failed read: Windows writes it as zero, for every file of a program run
-        only once and for some of the others.
+        only once and for some of the others. Versions decoded: 26
+        (Windows~8.1), 30 and 31 (Windows~10 and 11, compressed); the others
+        are declared ``unsupported format'' (section~\ref{sec:format}).
   \item[\fichier{amcache\_application\_files.json},
         \fichier{amcache\_applications.json},
         \fichier{amcache\_inventory.json}] Amcache inventory, table by table

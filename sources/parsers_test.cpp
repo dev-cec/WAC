@@ -23,7 +23,7 @@
  *  given whole and in its truncations, for WAC's checks around the call.
  *
  *  A Prefetch is also given with its version rewritten to one WAC has no
- *  decoder for (17, 23, 26, and the next one): it must be declared
+ *  decoder for (17, 23, and the next one): it must be declared
  *  "unsupported format" and nothing of it decoded.
  *
  *  Registry hives ("hive") go through WAC's own reader (offline_registry.cpp):
@@ -225,7 +225,7 @@ bool unsupportedVersionsDeclared(const std::vector<BYTE>& data, const char* name
 		std::printf("  FAILED  %s: its own version %d is not decoded\n", name, own.version);
 		return false;
 	}
-	for (int version : { 17, 23, 26, own.version + 1 }) {
+	for (int version : { 17, 23, own.version + 1 }) {
 		copy = data;
 		std::memcpy(copy.data(), &version, sizeof(version));
 		Prefetch other(L"test.pf");
@@ -236,7 +236,7 @@ bool unsupportedVersionsDeclared(const std::vector<BYTE>& data, const char* name
 			return false;
 		}
 	}
-	std::printf("  ok     %s: versions 17, 23, 26 and %d declared unsupported, nothing decoded but name and hash\n",
+	std::printf("  ok     %s: versions 17, 23 and %d declared unsupported, nothing decoded but name and hash\n",
 	            name, own.version + 1);
 	return true;
 }

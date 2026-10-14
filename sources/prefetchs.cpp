@@ -54,8 +54,8 @@ Json Filename::toJson() {
 	return o;
 }
 
-VolumeInfo::VolumeInfo(LPBYTE data, int index, size_t limit) {
-	LPBYTE indVolume = data + index * 96;    // the caller keeps (index + 1) * 96 <= limit
+VolumeInfo::VolumeInfo(LPBYTE data, int index, size_t entrySize, size_t limit) {
+	LPBYTE indVolume = data + index * entrySize;    // the caller keeps (index + 1) * entrySize <= limit
 	unsigned int offset = *reinterpret_cast<unsigned int*>(indVolume);
 	// DECLARED length of the device name. The reading is bounded by it: without
 	// it, an unterminated string in a damaged file had memory read up to the
@@ -362,7 +362,11 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 			last_runsUtc.push_back(tempUtc);
 		}
 	}
-	if (*reinterpret_cast<int*>(data + 84 + 120) == 0) // old_format
+	/* Version 26 (Windows 8.1) has its run count at 84 + 124, as the first
+	   layout of version 30, whose marker — a zero at 84 + 120 — version 26
+	   does not promise: measured zero on the Windows 8.1 VM, it is not relied
+	   upon. */
+	if (version == 26 || *reinterpret_cast<int*>(data + 84 + 120) == 0) // old_format
 	{
 		run_count = *reinterpret_cast<int*>(data + 84 + 124);
 	}
@@ -370,9 +374,12 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 		run_count = *reinterpret_cast<int*>(data + 84 + 116);
 	}
 	// VOLUMES
-	// A volume entry is 96 bytes (see VolumeInfo): beyond what the block can
-	// hold, the count is wrong and the reading would go out of the buffer.
-	const int maxVolumes = (volume_size > 0) ? volume_size / 96 : 0;
+	// A volume entry is 104 bytes in version 26, 96 from version 30 on
+	// (measured: the first volume's name starts right after its entry, at 104
+	// in the Prefetch of Windows 8.1). Beyond what the block can hold, the
+	// count is wrong and the reading would go out of the buffer.
+	const size_t volumeEntry = (version == 26) ? 104 : 96;
+	const int maxVolumes = (volume_size > 0) ? (int)((size_t)volume_size / volumeEntry) : 0;
 	if (nb_volumes > maxVolumes) {
 		log(2, L"🔥Prefetch : " + std::to_wstring(nb_volumes)
 		     + L" volumes declared for " + std::to_wstring(maxVolumes)
@@ -381,13 +388,14 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 	}
 	for (int i = 0; i < nb_volumes; i++) {
 		log(3, L"🔈VolumeInfo");
-		volumes.push_back(VolumeInfo(data + volume_offset, i, (size_t)volume_size));
+		volumes.push_back(VolumeInfo(data + volume_offset, i, volumeEntry, (size_t)volume_size));
 	}
 	/*  FILE METRICS ARRAY. It was not read at all, while it carries, for EACH
 	    loaded file, its $MFT reference — which identifies the file on the volume
 	    independently of its name, hence even if the executable has been renamed
-	    or deleted since. An entry is 32 bytes in version 30 and above (the only
-	    ones supported):
+	    or deleted since. An entry is 32 bytes in versions 26 and 30
+	    and above (measured in version 26: the array ends exactly where the
+	    trace chains begin):
 	    0  start, 4 duration, 8 average duration,
 	    12 offset of the name in the strings block, 16 number of characters,
 	    20 flags, 24 $MFT reference (48 bits of entry + 16 of sequence). */

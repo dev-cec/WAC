@@ -1111,7 +1111,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \path|$MFT| (et leurs empreintes avec \opt{binary}). Une référence
         absente n'est pas une lecture ratée : Windows l'écrit à zéro, pour tous
         les fichiers d'un programme lancé une seule fois et pour une partie des
-        autres.
+        autres. Versions décodées : 26 (Windows~8.1), 30 et 31 (Windows~10 et
+        11, compressées) ; les autres sont déclarées « format non pris en
+        charge » (section~\ref{sec:format}).
   \item[\fichier{amcache\_application\_files.json},
         \fichier{amcache\_applications.json},
         \fichier{amcache\_inventory.json}] inventaire Amcache, table par

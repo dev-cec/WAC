@@ -146,7 +146,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		{ "prefetch", XP, 0, 0,
 		  { { XP, L"Windows\\Prefetch\\*.pf", L"SCCA version 17", false, { 17 } },
 		    { VISTA, L"Windows\\Prefetch\\*.pf", L"SCCA version 23", false, { 23 } },
-		    { EIGHT, L"Windows\\Prefetch\\*.pf", L"SCCA version 26", false, { 26 } },
+		    { EIGHT, L"Windows\\Prefetch\\*.pf", L"SCCA version 26", true, { 26 } },
 		    { TEN, L"Windows\\Prefetch\\*.pf", L"SCCA version 30 and 31, compressed (MAM)", true, { 30, 31 } } },
 		  L"Switched off by default on the server editions." },
 		{ "processes", XP, 0, 0,
