@@ -1125,7 +1125,16 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{Table}. \textbf{Attention} : pour un fichier de plus de 30~Mio,
         Amcache ne hache que les 31\,457\,280 premiers octets ;
         \champ{AmcacheSha1CoversBytes} le signale, et ce SHA-1 ne se compare pas à celui
-        du fichier entier.
+        du fichier entier. Sous Windows~8, 8.1 et les premiers Windows~10,
+        l'Amcache est faite d'autres tables, \texttt{File} et
+        \texttt{Programs}, dont les valeurs sont numérotées et non nommées :
+        \wac{} ne nomme que celles dont le sens a été confirmé --- pour un
+        fichier, \champ{LongPath}, \champ{AmcacheSha1}, \champ{ProgramId}, sa
+        référence \path|$MFT| (\champ{MftReference}, lue dans le nom de sa clé)
+        et le GUID de son volume ; pour un programme, \champ{Name},
+        \champ{Version}, \champ{Publisher}, \champ{UninstallKeys} et
+        \champ{Files} ---, et rend les autres telles que lues
+        (\champ{UnnamedValues} : nom, type, valeur).
   \item[\fichier{shimcache.json}] cache de compatibilité : chemin et date de
         modification du fichier, position dans le cache (\champ{CachePosition},
         0 pour la plus récente). Une entrée prouve que le binaire était présent,

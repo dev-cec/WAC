@@ -47,13 +47,18 @@ struct AmcacheEntry {
 	std::wstring keyName = L"";     //!< name of the entry's key (identifier of the object)
 	FILETIME keyLastWriteUtc = { 0, 0 }; //!< last write of that key: when Windows last updated the entry
 	std::vector<std::pair<std::wstring, Json>> values; //!< every value, by name, converted (see the file's header)
+	std::vector<Json> unnamed;      //!< values of a Windows 8 table whose meaning is not confirmed: name, type, value
+	std::wstring volume = L"";      //!< File (Windows 8): the volume's GUID, the key above the entry
+	bool mftReferenceKnown = false; //!< File (Windows 8): the key's name gave the file's $MFT reference
+	unsigned long long mftEntry = 0, mftSequence = 0; //!< that reference
 	BinaryFingerprint fingerprint;  //!< fingerprints of the file an InventoryApplicationFile entry names, with `--binary`
 
 	/*! Reads one entry.
 	 *  @param key its key, already open
 	 *  @param table name of its table
-	 *  @param name name of its key */
-	AmcacheEntry(ORHKEY key, const std::wstring& table, const std::wstring& name);
+	 *  @param name name of its key
+	 *  @param volume File of Windows 8: the volume's GUID */
+	AmcacheEntry(ORHKEY key, const std::wstring& table, const std::wstring& name, const std::wstring& volume = L"");
 
 	/*! Converts the entry to JSON.
 	 *  @param withTable whether to name the table (entries of amcache_inventory.json)
@@ -76,4 +81,10 @@ struct Amcache {
 
 	//! Releases the memory held by the entries.
 	void clear();
+
+private:
+	/*! Reads the files of one volume of the Windows 8 File table.
+	 *  @param volumeKey the volume's key, open
+	 *  @param volume its name, the volume's GUID */
+	void readVolumeFiles(ORHKEY volumeKey, const std::wstring& volume);
 };

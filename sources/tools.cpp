@@ -314,6 +314,19 @@ void dump(LPBYTE buffer, int start, int end) {
 	wprintf(L"\n");
 }
 
+std::wstring registryTypeName(DWORD type) {
+	switch (type) {
+	case REG_NONE: return L"REG_NONE";
+	case REG_SZ: return L"REG_SZ";
+	case REG_EXPAND_SZ: return L"REG_EXPAND_SZ";
+	case REG_BINARY: return L"REG_BINARY";
+	case REG_DWORD: return L"REG_DWORD";
+	case REG_MULTI_SZ: return L"REG_MULTI_SZ";
+	case REG_QWORD: return L"REG_QWORD";
+	default: return L"0x" + to_hex(type);
+	}
+}
+
 Json registryValueToJson(DWORD type, const std::vector<BYTE>& data) {
 	switch (type) {
 	case REG_SZ:

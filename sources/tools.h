@@ -636,6 +636,12 @@ FILETIME unixToFiletime(unsigned long long seconds);
 * @return its JSON form */
 Json registryValueToJson(DWORD type, const std::vector<BYTE>& data);
 
+/*! A registry value's type as its name ("REG_SZ", "REG_DWORD"…), or its number
+*  in hexadecimal for a type without one.
+* @param type the value's registry type
+* @return its name */
+std::wstring registryTypeName(DWORD type);
+
 /*! A registry value name as a JSON key, PascalCase like every key WAC writes:
 *  the separators dropped, each word capitalised ("Audio_CaptureDriver" ->
 *  "AudioCaptureDriver"); the key's default value, which has no name, is

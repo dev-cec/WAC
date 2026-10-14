@@ -62,17 +62,6 @@ const Rule RULES[] = {
 	{ L"File type open command (user)", Hive::UsrClass, L"scrfile\\shell\\open\\command", L"(default)", false },
 };
 
-//! A value's type as its name.
-std::wstring typeName(DWORD type) {
-	switch (type) {
-	case REG_SZ: return L"REG_SZ";
-	case REG_EXPAND_SZ: return L"REG_EXPAND_SZ";
-	case REG_MULTI_SZ: return L"REG_MULTI_SZ";
-	case REG_DWORD: return L"REG_DWORD";
-	default: return L"0x" + to_hex(type);
-	}
-}
-
 /*! The strings of a value, read within its bytes: one for a string or a
  *  DWORD (in hexadecimal), each string of a REG_MULTI_SZ; none otherwise. */
 std::vector<std::wstring> valueStrings(DWORD type, const std::vector<BYTE>& data) {
@@ -111,7 +100,7 @@ void readKey(ORHKEY root, const std::wstring& path, const Rule& rule, const std:
 		e.sid = sid;
 		e.key = path;
 		e.name = shown;
-		e.type = typeName(type);
+		e.type = registryTypeName(type);
 		e.values = valueStrings(type, data);
 		e.keyLastWriteUtc = lastWriteUtc;
 		if (rule.binary && conf.binary && e.values.size() == 1 && !e.values[0].empty())

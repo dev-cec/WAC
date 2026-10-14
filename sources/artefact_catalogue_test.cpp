@@ -134,7 +134,8 @@ int main(int argc, char** argv) {
 	check(prefetch && std::wstring(formOf(*prefetch, vista).format) == L"SCCA version 23" && !formOf(*prefetch, vista).decoded, "Prefetch on Vista");
 	check(prefetch && formOf(*prefetch, eleven).decoded && formOf(*prefetch, eleven).sinceBuild == 10240, "Prefetch on Windows 11");
 	const ArtefactEntry* amcache = artefactEntry("amcache");
-	check(amcache && formOf(*amcache, ten).decoded && !formOf(*amcache, eight).decoded, "Amcache: Inventory keys decoded, File and Programs keys not");
+	check(amcache && formOf(*amcache, ten).decoded && formOf(*amcache, eight).decoded && !formOf(*amcache, seven).decoded,
+	      "Amcache: Inventory keys and File and Programs keys decoded, RecentFileCache.bcf not");
 
 	/* THE GUARD ON THE MACHINE'S SIDE (expectedOn): a source not found is
 	   "expected but missing" only where this version always has one. */
@@ -181,8 +182,8 @@ int main(int argc, char** argv) {
 	/* THE FORMAT TOLD BY THE VERSION (undecodedOn): a form WAC only collects
 	   raw, of an artefact it converts in another form. */
 	const WindowsVersion eightOne{ 9600, false, false };
-	check(undecodedOn("amcache", eightOne) && undecodedOn("bits", eightOne) && undecodedOn("search_index", eightOne),
-	      "Windows 8.1: Amcache, BITS or the search index not declared in an unconverted form");
+	check(!undecodedOn("amcache", eightOne) && undecodedOn("bits", eightOne) && undecodedOn("search_index", eightOne),
+	      "Windows 8.1: Amcache (File and Programs) declared unconverted, or BITS or the search index not");
 	check(undecodedOn("search_index", ten) && !undecodedOn("search_index", eleven) && !undecodedOn("amcache", ten) && !undecodedOn("bits", ten),
 	      "Windows 10 and 11: the search index is ESE before 11; Amcache and BITS are converted on a current 10");
 	check(undecodedOn("wmi", xp) && !undecodedOn("wmi", vista), "the WMI repository of XP (in FS) converted, or Vista's not");
@@ -192,8 +193,8 @@ int main(int argc, char** argv) {
 	      && !undecodedOn("an_artefact_of_tomorrow", ten), "absent, converted or unknown: declared unconverted");
 	std::set<std::string> rawOnEightOne;
 	for (const std::string& key : keys) if (undecodedOn(key, eightOne)) rawOnEightOne.insert(key);
-	check(rawOnEightOne == std::set<std::string>{ "amcache", "bits", "search_index" },
-	      "Windows 8.1: " + std::to_string(rawOnEightOne.size()) + " artefacts in an unconverted form, 3 measured (Amcache, BITS, search index)");
+	check(rawOnEightOne == std::set<std::string>{ "bits", "search_index" },
+	      "Windows 8.1: " + std::to_string(rawOnEightOne.size()) + " artefacts in an unconverted form, 2 measured (BITS, search index)");
 
 	/* THE GUARD (absentAmong): everything asked for on a Windows 7, on an XP,
 	   on a Windows 11 — only what the version lacks is held back, and an

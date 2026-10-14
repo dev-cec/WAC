@@ -1098,7 +1098,15 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         shortcuts, each with its \champ{Table}. \textbf{Beware}: for a file
         larger than 30~MiB, Amcache hashes only the first 31,457,280 bytes;
         \champ{AmcacheSha1CoversBytes} says so, and that SHA-1 does not compare with the
-        whole file's.
+        whole file's. On Windows~8, 8.1 and the first Windows~10, the Amcache
+        is made of other tables, \texttt{File} and \texttt{Programs}, whose
+        values are numbered, not named: \wac{} names only those whose meaning
+        was confirmed --- for a file, \champ{LongPath}, \champ{AmcacheSha1},
+        \champ{ProgramId}, its \path|$MFT| reference (\champ{MftReference},
+        read in its key's name) and its volume's GUID; for a program,
+        \champ{Name}, \champ{Version}, \champ{Publisher},
+        \champ{UninstallKeys} and \champ{Files} ---, and gives the others as
+        read (\champ{UnnamedValues}: name, type, value).
   \item[\fichier{shimcache.json}] compatibility cache: path and modification date
         of the file, position in the cache (\champ{CachePosition}, 0 for the most
         recent). An entry proves the binary was present, not that it ran. The

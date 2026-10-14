@@ -47,7 +47,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		  L"Still written by Windows 11 (measured, build 26200), though the Timeline is no longer shown. Server editions to be measured." },
 		{ "amcache", SEVEN, 0, TEN,
 		  { { SEVEN, L"Windows\\AppCompat\\Programs\\RecentFileCache.bcf", L"BCF", false },
-		    { EIGHT, L"Windows\\AppCompat\\Programs\\Amcache.hve", L"registry hive, File and Programs keys", false },
+		    { EIGHT, L"Windows\\AppCompat\\Programs\\Amcache.hve", L"registry hive, File and Programs keys", true },
 		    { TEN_1607, L"Windows\\AppCompat\\Programs\\Amcache.hve", L"registry hive, Inventory* keys", true } },
 		  L"Amcache.hve also on Windows 7 with update KB2952664." },
 		{ "bam", TEN_1709, 0, 0,
