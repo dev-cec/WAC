@@ -157,6 +157,9 @@ WINDOWS_10 = 10240
 # test machine is decoded.
 VALIDATED_SINCE_BUILD = WINDOWS_10
 
+# The Prefetch versions WAC decodes: 26 (Windows 8.1), 30 and 31.
+DECODED_PREFETCH_VERSIONS = {26, 30, 31}
+
 # WHAT WAC DECLARES ON THE OLDER TEST VMs (WAC_VM=win81-test, win7-test), as
 # measured on each: the artefacts their Windows does not have, and those whose
 # form there WAC has no decoder for. A regression guard — an artefact that
@@ -378,6 +381,7 @@ def cross_checks(folder):
     found += guarded(check_processes, folder)
     found += guarded(check_network, folder, boot)
     found += guarded(check_prefetchs, folder)
+    found += guarded(check_prefetch_runs, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_shimcache_dates, folder)
     found += guarded(check_jumplist_entries, folder)
@@ -1531,19 +1535,21 @@ def check_small_file_artefacts(folder):
             decoded = [k for k in ("RunCount", "RunsUtc", "FileNames", "Volumes", "FullPath") if k in p]
             if decoded:
                 faults.append(f"{name}: decoded all the same: {decoded}")
-        # Before Windows 10 the machine's own Prefetch are of a version WAC
-        # does not decode (23, 26): all declared, all of one version.
-        older = older_version(folder)
+        # The machine's own Prefetch: those of a version WAC decodes (26 of
+        # Windows 8.1, 30 and 31) all decoded; the others (23 of Windows 7)
+        # all declared, of one version.
         versions = {p.get("FormatVersion") for p in undecoded.values()}
-        if undecoded and not older:
-            faults.append(f"{len(undecoded)} real Prefetch declared unsupported: {list(undecoded)[:2]}")
-        if older and (len(versions) != 1 or len(undecoded) + 2 != len(prefetchs)):
-            faults.append(f"real Prefetch of versions {sorted(versions, key=str)}, {len(prefetchs) - 2 - len(undecoded)} decoded")
+        wrongly = [where for where, p in undecoded.items() if p.get("FormatVersion") in DECODED_PREFETCH_VERSIONS]
+        if wrongly:
+            faults.append(f"{len(wrongly)} real Prefetch of a decoded version declared unsupported: {wrongly[:2]}")
+        if len(versions) > 1:
+            faults.append(f"real Prefetch declared unsupported in versions {sorted(versions, key=str)}")
+        decoded = len(prefetchs) - 2 - len(undecoded)
         report(not faults,
                "prefetchs.json: Prefetch versions 23 and 32 declared unsupported (the known form named, the unknown "
                "one not), name and hash read, nothing else decoded; "
-               + (f"the {len(undecoded)} real Prefetch of this older Windows all declared version {next(iter(versions), '?')}"
-                  if older else "every real Prefetch decoded"),
+               + (f"the {len(undecoded)} real Prefetch of this Windows all declared version {next(iter(versions))}"
+                  if undecoded else f"the {decoded} real Prefetch decoded"),
                "prefetchs.json: unsupported formats not as placed: " + " ; ".join(faults))
     for name in ("recycle_bin.json", "thumbcache.json", "jumplistAutomaticDestinations.json"):
         pieces = load(folder, name)
@@ -1985,12 +1991,15 @@ def check_small_file_artefacts(folder):
         if tool and isinstance(prefetch, list) and decoded:
             cited = [o for p in prefetch for o in [p] + (p.get("FileNames") or []) if isinstance(o, dict)
                      and (o.get("FullPath") or "").lower() == tool[0].lower()]
-            if not cited:
+            # Windows 8.1 does not cite a program run from a removable FAT
+            # volume in its Prefetch: only its name, in the header (measured —
+            # the strings block names files of C: only, no other volume).
+            if not cited and not older_version(folder):
                 wrong.append(f"{tool[0]} not cited by prefetchs.json")
             # A --collect run records only the Authenticode digest of a binary
             # authenticated as Microsoft (the collection rule): the copy of
             # whoami.exe then carries its signature, not its file hashes.
-            elif not any(o.get("SHA256") == tool[1]
+            elif cited and not any(o.get("SHA256") == tool[1]
                          or (str(o.get("Signature", "")).startswith("Microsoft") and o.get("AuthenticodeSHA256"))
                          for o in cited):
                 wrong.append(f"{tool[0]}: SHA256 {[o.get('SHA256') for o in cited]} for {tool[1]}")
@@ -3627,6 +3636,37 @@ def check_prefetchs(folder):
         return 1 + check_prefetch_paths(d)
     print(f"  ✅ prefetchs.json: {len(d)} hashes match the file name")
     return check_prefetch_paths(d)
+
+
+def check_prefetch_runs(folder):
+    """The run times a Prefetch holds, against an instant known apart: the
+    harness runs taskkill.exe a few minutes before each collection (step 2,
+    to end a WAC left running), so TASKKILL.EXE's Prefetch must give a last
+    run before the collection's start (investigation.json) and less than an
+    hour before it, with a run count of at least the number of times given.
+    It is the direct check of the run times of a newly decoded version (26,
+    Windows 8.1): read at a wrong offset, they come out as another date, or
+    none.
+    """
+    prefetchs = load(folder, "prefetchs.json")
+    inv = load(folder, "investigation.json")
+    inv = inv[0] if isinstance(inv, list) and inv else inv
+    start = ((inv or {}).get("Collection") or {}).get("StartUtc") if isinstance(inv, dict) else None
+    taskkill = [p for p in prefetchs or [] if isinstance(p, dict) and (p.get("Filename") or "").upper() == "TASKKILL.EXE"
+                and not p.get("DecodingStatus")] if isinstance(prefetchs, list) else []
+    if not start or not taskkill:
+        print("  ⏭️  no decoded Prefetch of taskkill.exe, or no collection start: run times not confronted")
+        return 0
+    runs = [instant(r) for p in taskkill for r in p.get("RunsUtc") or []]
+    count = max(p.get("RunCount") or 0 for p in taskkill)
+    gap = (instant(start) - max(runs)).total_seconds() if runs else None
+    if gap is None or not 0 <= gap <= 3600 or count < len(set(runs)):
+        print(f"  ❌ prefetchs.json: TASKKILL.EXE last run {max(runs) if runs else None}, collection started {start}, "
+              f"{count} run(s) for {len(set(runs))} time(s)")
+        return 1
+    print(f"  ✅ prefetchs.json: TASKKILL.EXE last run {gap:.0f} s before the collection, as the harness ran it; "
+          f"{count} run(s), {len(set(runs))} time(s) kept")
+    return 0
 
 
 def check_shimcache_dates(folder):
