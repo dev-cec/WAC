@@ -149,9 +149,12 @@ def check_configuration(folder):
     return 0
 
 
-# First build of Windows 10: from it on, the whole cycle validates WAC and
-# every artefact of the test machine is decoded.
-VALIDATED_SINCE_BUILD = 10240
+# First build of Windows 10.
+WINDOWS_10 = 10240
+
+# From Windows 10 on, the whole cycle validates WAC and every artefact of the
+# test machine is decoded.
+VALIDATED_SINCE_BUILD = WINDOWS_10
 
 # WHAT WAC DECLARES ON THE OLDER TEST VMs (WAC_VM=win81-test, win7-test), as
 # measured on each: the artefacts their Windows does not have, and those whose
@@ -2254,23 +2257,32 @@ def check_small_file_artefacts(folder):
 
     # Network configuration: each adapter Windows lists, with its description,
     # its hardware address and its DHCP address, from the offline hives (B-031).
+    # The hardware address is in Control\NetworkSetup2, a key of Windows 10
+    # and later: before, no documented key of the hives holds it (8.1
+    # measured: only an NSI record and the DHCPv6 identifier carry its bytes),
+    # and WAC must then give no Kernel section rather than a guess.
     netconf = load(folder, "network_configuration.json")
     if isinstance(netconf, dict) and os.path.exists(path):
         with open(path, encoding="utf-8", errors="replace") as f:
             live = [l.strip()[len("adapter="):].split("|") for l in f if l.startswith("adapter=")]
         mine = {str(a.get("InterfaceGuid", "")).upper(): a for a in netconf.get("Adapters") or []}
+        address_in_hives = (examined_build(folder) or WINDOWS_10) >= WINDOWS_10
         wrong = []
         for guid, description, mac, ip, origin in live:
             a = mine.get(guid.upper(), {})
             adapter, ipv4, kernel = a.get("Adapter") or {}, a.get("Ipv4") or {}, a.get("Kernel") or {}
             if adapter.get("DriverDesc") != description:
                 wrong.append(f"{guid}: description {adapter.get('DriverDesc')!r}, Windows {description!r}")
-            if kernel.get("CurrentAddress") != mac:
+            if address_in_hives and kernel.get("CurrentAddress") != mac:
                 wrong.append(f"{guid}: hardware address {kernel.get('CurrentAddress')}, Windows {mac}")
+            if not address_in_hives and kernel:
+                wrong.append(f"{guid}: Kernel section {sorted(kernel)[:3]} on a version without NetworkSetup2")
             if origin == "Dhcp" and ipv4.get("DhcpIPAddress") != ip:
                 wrong.append(f"{guid}: DHCP address {ipv4.get('DhcpIPAddress')}, Windows {ip}")
+        address = ("hardware address" if address_in_hives
+                   else "no hardware address (none in the hives before Windows 10)")
         report(live and not wrong,
-               f"network_configuration.json: the {len(live)} adapter(s) Windows lists, description, hardware address and DHCP address identical",
+               f"network_configuration.json: the {len(live)} adapter(s) Windows lists, description and DHCP address identical, {address}",
                f"network_configuration.json: {wrong[:2]}")
 
     # Event log configuration: each log Windows lists, with the same state

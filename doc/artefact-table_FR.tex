@@ -95,7 +95,8 @@
 \texttt{network} & Windows XP & \texttt{en direct : tables TCP/IP du système en marche} & observation & oui \\
 \addlinespace
 \texttt{network\_configuration} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}Tcpip\textbackslash{}Parameters\textbackslash{}Interfaces, Control\textbackslash{}Network} & valeurs de registre & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
+ & Windows 10 & \texttt{…et Control\textbackslash{}NetworkSetup2\textbackslash{}Interfaces\textbackslash{}\textless{}guid\textgreater{}\textbackslash{}Kernel : adresses matérielles} & valeurs de registre & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP ; Avant Windows 10, les adresses matérielles des cartes ne sont dans aucune clé documentée des ruches : non données.} \\
 \addlinespace
 \texttt{network\_shares} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}LanmanServer\textbackslash{}Shares} & valeurs de registre, descripteurs de sécurité & oui \\
 \addlinespace

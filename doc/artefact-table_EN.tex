@@ -95,7 +95,8 @@
 \texttt{network} & Windows XP & \texttt{live: TCP/IP tables of the running system} & observation & yes \\
 \addlinespace
 \texttt{network\_configuration} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}Tcpip\textbackslash{}Parameters\textbackslash{}Interfaces, Control\textbackslash{}Network} & registry values & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
+ & Windows 10 & \texttt{…and Control\textbackslash{}NetworkSetup2\textbackslash{}Interfaces\textbackslash{}\textless{}guid\textgreater{}\textbackslash{}Kernel: hardware addresses} & registry values & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP; Before Windows 10, the adapters' hardware addresses are in no documented key of the hives: not given.} \\
 \addlinespace
 \texttt{network\_shares} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}LanmanServer\textbackslash{}Shares} & registry values, security descriptors & yes \\
 \addlinespace

@@ -31,6 +31,7 @@ PHRASES = [
     ("Start menu, desktops, Quick Launch of each profile and of All Users",
      "menu Démarrer, bureaux, Lancement rapide de chaque profil et de All Users"),
     ("of each profile and of All Users", "de chaque profil et de All Users"),
+    ("Kernel: hardware addresses", "Kernel : adresses matérielles"),
     ("Internet Explorer 5 to 9: index.dat of History, cache, cookies, downloads",
      "Internet Explorer 5 à 9 : index.dat de l'historique, du cache, des cookies, des téléchargements"),
     ("Internet Explorer 10 and 11, Edge Legacy:", "Internet Explorer 10 et 11, Edge Legacy :"),
@@ -110,6 +111,8 @@ NOTES = {
         "Toujours écrit par Windows 11 (mesuré, build 26200), bien que la Chronologie n'y soit plus affichée. Éditions serveur à mesurer.",
     "Amcache.hve also on Windows 7 with update KB2952664.": "Amcache.hve aussi sous Windows 7 avec la mise à jour KB2952664.",
     "Server editions to be measured.": "Éditions serveur à mesurer.",
+    "Before Windows 10, the adapters' hardware addresses are in no documented key of the hives: not given.":
+        "Avant Windows 10, les adresses matérielles des cartes ne sont dans aucune clé documentée des ruches : non données.",
     "Before Vista: Documents and Settings\\All Users\\Application Data\\Microsoft\\Network\\Downloader.":
         "Avant Vista : Documents and Settings\\All Users\\Application Data\\Microsoft\\Network\\Downloader.",
     "Server 2012 and 2012 R2 have no built-in Defender; quarantine copied encrypted on every version.":
