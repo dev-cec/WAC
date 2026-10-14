@@ -1,5 +1,5 @@
 # WAC (Windows Artefact Collector) 🛠️  
-![version](https://img.shields.io/badge/version-2.0.0-green)  
+![version](https://img.shields.io/badge/version-2.0.1-green)  
 ![architecture](https://img.shields.io/badge/Architecture-64bit-red)  
 ![CPP](https://img.shields.io/badge/C%2B%2B-VS2022_%7C_MinGW--w64-blue)
 
@@ -230,7 +230,7 @@ file, commented — the recommended procedure: unverified binaries collected,
 event logs included.
 
 ```yaml
-wac_version: 2.0.0      # version of WAC the file is written for (--write-config)
+wac_version: 2.0.1      # version of WAC the file is written for (--write-config)
 binary: unverified      # none | unverified | all
 threads: 0              # analysis threads for the binaries, 0: automatic
 output: output

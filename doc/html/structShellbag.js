@@ -2,6 +2,7 @@ var structShellbag =
 [
     [ "toJson", "structShellbag.html#adc27da2d9851eb52bfd4688efb1e277d", null ],
     [ "children", "structShellbag.html#af3c059ea79008c1f13d6d6f1bdf37941", null ],
+    [ "hive", "structShellbag.html#aa6e34b5b37afb9d42b45e4b0d046e72c", null ],
     [ "id", "structShellbag.html#ab11dbf19048320459e11fe43dd69c469", null ],
     [ "keyLastWriteTimeUtc", "structShellbag.html#a68c6cdccbd94611665f4645dacbb7e85", null ],
     [ "lastWriteTimeUtc", "structShellbag.html#ad790ebcca27e10789ed30cca109a4bef", null ],

@@ -14,13 +14,14 @@ var searchData=
   ['operation_11',['operation',['../structSetupApiSection.html#abc480f2dc84cd6158e5d522ea93a7d71',1,'SetupApiSection']]],
   ['organization_12',['organization',['../structRootCertificate.html#a828ddd60a060c293a66deab4ad9e5242',1,'RootCertificate']]],
   ['originalpath_13',['originalPath',['../structRecycledFile.html#ad0fb4b8002471748a3b9d3065ea8b661',1,'RecycledFile']]],
-  ['osarchitecture_14',['osArchitecture',['../structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f',1,'SystemInfo']]],
-  ['osname_15',['osName',['../structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae',1,'SystemInfo']]],
-  ['outlook_5fdata_5ffolder_16',['outlook_data_folder',['../emails_8cpp.html#aade360daae21ee9e7553e74fff698ace',1,'OUTLOOK_DATA_FOLDER:&#160;emails.cpp'],['../emails_8h.html#aade360daae21ee9e7553e74fff698ace',1,'OUTLOOK_DATA_FOLDER:&#160;emails.cpp']]],
-  ['outlook_5ffiles_5ffolder_17',['outlook_files_folder',['../emails_8cpp.html#ae77c696ef4344d2d8392e5682487644b',1,'OUTLOOK_FILES_FOLDER:&#160;emails.cpp'],['../emails_8h.html#ae77c696ef4344d2d8392e5682487644b',1,'OUTLOOK_FILES_FOLDER:&#160;emails.cpp']]],
-  ['outlook_5fnew_5ffolder_18',['outlook_new_folder',['../emails_8cpp.html#ac9cfddab37a4e7413ebbfd073b0c44f3',1,'OUTLOOK_NEW_FOLDER:&#160;emails.cpp'],['../emails_8h.html#ac9cfddab37a4e7413ebbfd073b0c44f3',1,'OUTLOOK_NEW_FOLDER:&#160;emails.cpp']]],
-  ['outlook_5fopened_5ffolder_19',['outlook_opened_folder',['../emails_8cpp.html#a8c01075a0248f16b112b0b41da920cc7',1,'OUTLOOK_OPENED_FOLDER:&#160;emails.cpp'],['../emails_8h.html#a8c01075a0248f16b112b0b41da920cc7',1,'OUTLOOK_OPENED_FOLDER:&#160;emails.cpp']]],
-  ['outputpath_20',['outputPath',['../structRawHiveExtraction.html#a60093f9a582fc55b9a8ff748182afe38',1,'RawHiveExtraction']]],
-  ['outtype_21',['outType',['../structWevtItem.html#abaeb94fec5ec3f13909236378bc9c113',1,'WevtItem']]],
-  ['ownersid_22',['ownerSid',['../structBitsJob.html#a8681d35e234b06e4566bbeae17391c9b',1,'BitsJob']]]
+  ['originalurl_14',['originalUrl',['../structSnssNavigation.html#a23906d98f2939d0820e4cac37e951434',1,'SnssNavigation']]],
+  ['osarchitecture_15',['osArchitecture',['../structSystemInfo.html#affa03a18f5068286ef3f96a0c0253f8f',1,'SystemInfo']]],
+  ['osname_16',['osName',['../structSystemInfo.html#aff3597fd715ac85f438d5e6d8915deae',1,'SystemInfo']]],
+  ['outlook_5fdata_5ffolder_17',['outlook_data_folder',['../emails_8cpp.html#aade360daae21ee9e7553e74fff698ace',1,'OUTLOOK_DATA_FOLDER:&#160;emails.cpp'],['../emails_8h.html#aade360daae21ee9e7553e74fff698ace',1,'OUTLOOK_DATA_FOLDER:&#160;emails.cpp']]],
+  ['outlook_5ffiles_5ffolder_18',['outlook_files_folder',['../emails_8cpp.html#ae77c696ef4344d2d8392e5682487644b',1,'OUTLOOK_FILES_FOLDER:&#160;emails.cpp'],['../emails_8h.html#ae77c696ef4344d2d8392e5682487644b',1,'OUTLOOK_FILES_FOLDER:&#160;emails.cpp']]],
+  ['outlook_5fnew_5ffolder_19',['outlook_new_folder',['../emails_8cpp.html#ac9cfddab37a4e7413ebbfd073b0c44f3',1,'OUTLOOK_NEW_FOLDER:&#160;emails.cpp'],['../emails_8h.html#ac9cfddab37a4e7413ebbfd073b0c44f3',1,'OUTLOOK_NEW_FOLDER:&#160;emails.cpp']]],
+  ['outlook_5fopened_5ffolder_20',['outlook_opened_folder',['../emails_8cpp.html#a8c01075a0248f16b112b0b41da920cc7',1,'OUTLOOK_OPENED_FOLDER:&#160;emails.cpp'],['../emails_8h.html#a8c01075a0248f16b112b0b41da920cc7',1,'OUTLOOK_OPENED_FOLDER:&#160;emails.cpp']]],
+  ['outputpath_21',['outputPath',['../structRawHiveExtraction.html#a60093f9a582fc55b9a8ff748182afe38',1,'RawHiveExtraction']]],
+  ['outtype_22',['outType',['../structWevtItem.html#abaeb94fec5ec3f13909236378bc9c113',1,'WevtItem']]],
+  ['ownersid_23',['ownerSid',['../structBitsJob.html#a8681d35e234b06e4566bbeae17391c9b',1,'BitsJob']]]
 ];

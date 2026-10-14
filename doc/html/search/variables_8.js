@@ -18,7 +18,7 @@ var searchData=
   ['hasrelativepath_15',['HasRelativePath',['../structLinkFlags.html#a6a770b477f7e36053e2b97e427804678',1,'LinkFlags']]],
   ['hasworkingdir_16',['HasWorkingDir',['../structLinkFlags.html#a726e8b724b62a402c10852963f2d0207',1,'LinkFlags']]],
   ['hconsole_17',['hConsole',['../structAppliConf.html#a35d53149047512b1e19581415c79bdcd',1,'AppliConf']]],
-  ['header_18',['header',['../structoleParser.html#a4651e1960f4f70abd94ac9530b33e131',1,'oleParser::header'],['../structDpapiMasterKey.html#ab27019d0b515c9fe44934d13305e5d6a',1,'DpapiMasterKey::header']]],
+  ['header_18',['header',['../structDpapiMasterKey.html#ab27019d0b515c9fe44934d13305e5d6a',1,'DpapiMasterKey::header'],['../structoleParser.html#a4651e1960f4f70abd94ac9530b33e131',1,'oleParser::header']]],
   ['headerchecksumvalid_19',['headerChecksumValid',['../structThumbcacheEntry.html#a952391eb84c973de587c45f89b4cacf4',1,'ThumbcacheEntry']]],
   ['headers_20',['headers',['../structMimeMessage.html#a9da7b84ec0639ca839d247f687e94a8c',1,'MimeMessage']]],
   ['headervalid_21',['headerValid',['../structEvtxSummary.html#afb2f72fe736c44b5af6571b4c0da0044',1,'EvtxSummary']]],
@@ -26,7 +26,7 @@ var searchData=
   ['height_23',['height',['../structRdpCacheTile.html#a1c5329696956734a80c723c6846375eb',1,'RdpCacheTile::height'],['../structThumbcacheEntry.html#af030182f4e2ba7233e70f7c3c350df56',1,'ThumbcacheEntry::height']]],
   ['hidden_24',['Hidden',['../structFileAttributes.html#a29db09f5af7030fdd03b94b8b08e27d0',1,'FileAttributes']]],
   ['hits_25',['hits',['../structIeIndexRecord.html#a51ddff4248732c7112a0b5f14df7ce77',1,'IeIndexRecord']]],
-  ['hive_26',['hive',['../structSystemInfo_1_1Setting.html#a5247df263e363419dff7cd80265a5abc',1,'SystemInfo::Setting::hive'],['../structRun.html#ab61d2ddb6064a2def410e657edbc1911',1,'Run::Hive'],['../structPersistenceEntry.html#aadcbb034081299f7450948b93c74456b',1,'PersistenceEntry::hive']]],
+  ['hive_26',['hive',['../structRun.html#ab61d2ddb6064a2def410e657edbc1911',1,'Run::Hive'],['../structSystemInfo_1_1Setting.html#a5247df263e363419dff7cd80265a5abc',1,'SystemInfo::Setting::hive'],['../structShellbag.html#aa6e34b5b37afb9d42b45e4b0d046e72c',1,'Shellbag::hive'],['../structPersistenceEntry.html#aadcbb034081299f7450948b93c74456b',1,'PersistenceEntry::hive']]],
   ['hive_5fcopy_27',['HIVE_COPY',['../namespaceFootprint.html#a493d4c8b62fcc39c42210d5939c616a1',1,'Footprint']]],
   ['hive_5fpatch_28',['HIVE_PATCH',['../namespaceFootprint.html#aefb355d58dd0b46e131498a8aac1967d',1,'Footprint']]],
   ['hive_5freplay_29',['HIVE_REPLAY',['../namespaceFootprint.html#a092968a8d58bd9077dcbdab010c501a7',1,'Footprint']]],
@@ -35,5 +35,6 @@ var searchData=
   ['host_32',['host',['../structPowerShellHistory.html#a489ae61749da7fd6358c767fcade6667',1,'PowerShellHistory']]],
   ['hostname_33',['hostname',['../structDestFile.html#a37d1db53e5c3ee0b5d945d850cc657a3',1,'DestFile']]],
   ['hosts_34',['hosts',['../structAppliConf_1_1CollectedArtefacts.html#aa2d65c03096c89153018baca7b9bd22d',1,'AppliConf::CollectedArtefacts']]],
-  ['html_35',['html',['../structMimeMessage.html#afd31ef6aa0c8291270fe9ad2725b861f',1,'MimeMessage']]]
+  ['html_35',['html',['../structMimeMessage.html#afd31ef6aa0c8291270fe9ad2725b861f',1,'MimeMessage']]],
+  ['httpstatus_36',['httpStatus',['../structSnssNavigation.html#a10d678b916aaf199b7208465e3493cf7',1,'SnssNavigation']]]
 ];

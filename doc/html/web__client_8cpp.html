@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/sources/web_client.cpp File Reference</title>
+<title>WAC (Windows Artefacts Collector): /home/sebastien/.claude/jobs/366fdfd2/tmp/wac-2.0.x/sources/web_client.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.1</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -111,8 +111,10 @@ $(document).ready(function(){initNavTree('web__client_8cpp.html',''); initResiza
 <code>#include &quot;<a class="el" href="registry__common_8h_source.html">registry_common.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="ese__database_8h_source.html">ese_database.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="ie__index__dat_8h_source.html">ie_index_dat.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="browser__sessions_8h_source.html">browser_sessions.h</a>&quot;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
+<code>#include &lt;algorithm&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
 <code>#include &lt;cwchar&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
@@ -157,6 +159,16 @@ Functions</h2></td></tr>
 <tr class="separator:aeef9fe6a423909f58989901ac5718d47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac852750532c62356e44776b0fc9fa718" id="r_ac852750532c62356e44776b0fc9fa718"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#ac852750532c62356e44776b0fc9fa718">readChromiumHistory</a> (const std::wstring &amp;file, const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;base, std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;records)</td></tr>
 <tr class="separator:ac852750532c62356e44776b0fc9fa718"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58dce25ad6f37a267666f273536802e3" id="r_a58dce25ad6f37a267666f273536802e3"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#a58dce25ad6f37a267666f273536802e3">readChromiumSessions</a> (const std::wstring &amp;folder, const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;base, std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;records)</td></tr>
+<tr class="separator:a58dce25ad6f37a267666f273536802e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e24666bb6e238afe963133e1b909b38" id="r_a9e24666bb6e238afe963133e1b909b38"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#a9e24666bb6e238afe963133e1b909b38">readChromiumFavicons</a> (const std::wstring &amp;file, const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;base, std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;records)</td></tr>
+<tr class="separator:a9e24666bb6e238afe963133e1b909b38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae512b75fd360f19c6e3ae3bc0a721f06" id="r_ae512b75fd360f19c6e3ae3bc0a721f06"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#ae512b75fd360f19c6e3ae3bc0a721f06">readChromiumPredictor</a> (const std::wstring &amp;file, const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;base, std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;records)</td></tr>
+<tr class="separator:ae512b75fd360f19c6e3ae3bc0a721f06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae76d73b52740d128709fd3d4f3c05c6e" id="r_ae76d73b52740d128709fd3d4f3c05c6e"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#ae76d73b52740d128709fd3d4f3c05c6e">readFirefoxSession</a> (const std::wstring &amp;file, const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;base, std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;records)</td></tr>
+<tr class="separator:ae76d73b52740d128709fd3d4f3c05c6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8d67a144a336fa494245a9888cf3b06" id="r_ab8d67a144a336fa494245a9888cf3b06"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#ab8d67a144a336fa494245a9888cf3b06">readFirefoxFavicons</a> (const std::wstring &amp;file, const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;base, std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;records)</td></tr>
+<tr class="separator:ab8d67a144a336fa494245a9888cf3b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -191,9 +203,15 @@ Variables</h2></td></tr>
 <tr class="memitem:a78c9f4dcfa01957c8dc1a664ebdd642a" id="r_a78c9f4dcfa01957c8dc1a664ebdd642a"><td class="memItemLeft" align="right" valign="top">const uintmax_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#a78c9f4dcfa01957c8dc1a664ebdd642a">LOGINS_MAX</a> = 64ull * 1024 * 1024</td></tr>
 <tr class="memdesc:a78c9f4dcfa01957c8dc1a664ebdd642a"><td class="mdescLeft">&#160;</td><td class="mdescRight">logins.json: a few KiB per saved password  <br /></td></tr>
 <tr class="separator:a78c9f4dcfa01957c8dc1a664ebdd642a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae99d4cba33d87088ad43abdaedd575e2" id="r_ae99d4cba33d87088ad43abdaedd575e2"><td class="memItemLeft" align="right" valign="top">const uintmax_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#ae99d4cba33d87088ad43abdaedd575e2">SESSION_FILE_MAX</a> = 256ull * 1024 * 1024</td></tr>
+<tr class="memdesc:ae99d4cba33d87088ad43abdaedd575e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">a session file: a few MiB with many tabs and their page states  <br /></td></tr>
+<tr class="separator:ae99d4cba33d87088ad43abdaedd575e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a983dcb29a3a2e383b42dbaa362c7b9" id="r_a0a983dcb29a3a2e383b42dbaa362c7b9"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#a0a983dcb29a3a2e383b42dbaa362c7b9">FIREFOX_PROFILE_FILES</a></td></tr>
-<tr class="memdesc:a0a983dcb29a3a2e383b42dbaa362c7b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The files collected in a Firefox profile, each with its -wal and -journal when present.  <br /></td></tr>
 <tr class="separator:a0a983dcb29a3a2e383b42dbaa362c7b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33007d6790e43e8c7386e1a9e262ce07" id="r_a33007d6790e43e8c7386e1a9e262ce07"><td class="memItemLeft" align="right" valign="top">const wchar_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#a33007d6790e43e8c7386e1a9e262ce07">IE_LOCAL_FOLDER</a> [] = L&quot;\\AppData\\Local\\Microsoft\\Internet Explorer&quot;</td></tr>
+<tr class="separator:a33007d6790e43e8c7386e1a9e262ce07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae79b550b98388425a9c8db9a11273a28" id="r_ae79b550b98388425a9c8db9a11273a28"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="web__client_8cpp.html#ae79b550b98388425a9c8db9a11273a28">WININET_LOCAL_FOLDERS</a></td></tr>
+<tr class="separator:ae79b550b98388425a9c8db9a11273a28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The web, client side (see <a class="el" href="web__client_8h.html" title="The web, client side: what each user did in the Chromium browsers (Edge, Chrome, Brave,...">web_client.h</a>). </p>
@@ -402,6 +420,49 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a9e24666bb6e238afe963133e1b909b38" name="a9e24666bb6e238afe963133e1b909b38"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9e24666bb6e238afe963133e1b909b38">&#9670;&#160;</a></span>readChromiumFavicons()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT readChromiumFavicons </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;&#160;</td>
+          <td class="paramname"><em>base</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>records</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads Chromium's <code>Favicons</code>: each page and the icon it showed, with when the icon was last fetched and last asked for — a site visited leaves its icon after its history is cleared. The image itself is not read. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file</td><td>the database, in the working copy </td></tr>
+    <tr><td class="paramname">base</td><td>browser, profile, SID and source copied into each record </td></tr>
+    <tr><td class="paramname">records</td><td>receives one Favicon per page and icon </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the failure to open the database </dd></dl>
+
+</div>
+</div>
 <a id="ac852750532c62356e44776b0fc9fa718" name="ac852750532c62356e44776b0fc9fa718"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac852750532c62356e44776b0fc9fa718">&#9670;&#160;</a></span>readChromiumHistory()</h2>
 
@@ -488,6 +549,92 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="ae512b75fd360f19c6e3ae3bc0a721f06" name="ae512b75fd360f19c6e3ae3bc0a721f06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae512b75fd360f19c6e3ae3bc0a721f06">&#9670;&#160;</a></span>readChromiumPredictor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT readChromiumPredictor </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;&#160;</td>
+          <td class="paramname"><em>base</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>records</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads Chromium's <code>Network <a class="el" href="structAction.html">Action</a> Predictor</code>: what the user typed in the address bar and the URL then chosen, with how often the prediction held. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file</td><td>the database, in the working copy </td></tr>
+    <tr><td class="paramname">base</td><td>browser, profile, SID and source copied into each record </td></tr>
+    <tr><td class="paramname">records</td><td>receives one AddressBarPrediction per row </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the failure to open the database </dd></dl>
+
+</div>
+</div>
+<a id="a58dce25ad6f37a267666f273536802e3" name="a58dce25ad6f37a267666f273536802e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58dce25ad6f37a267666f273536802e3">&#9670;&#160;</a></span>readChromiumSessions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT readChromiumSessions </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>folder</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;&#160;</td>
+          <td class="paramname"><em>base</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>records</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads a Chromium profile's <code><a class="el" href="structSessions.html">Sessions</a></code> folder (<a class="el" href="browser__sessions_8h.html" title="The browsers&#39; sessions: Chromium&#39;s SNSS files (Session_*, Tabs_*) and Firefox&#39;s mozLz4 (....">browser_sessions.h</a>): each page of each tab of the Session_&lt;time&gt; files (State Open: the windows of the current and the last session) and of the Tabs_&lt;time&gt; files (State Closed: the tabs and windows the user closed, with the instant and the page shown). Navigated is when the page was shown, the instant History gives its visit. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">folder</td><td>the <a class="el" href="structSessions.html">Sessions</a> folder, in the working copy </td></tr>
+    <tr><td class="paramname">base</td><td>browser, profile and SID copied into each record </td></tr>
+    <tr><td class="paramname">records</td><td>receives one SessionEntry per page </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_PATH_NOT_FOUND without a <a class="el" href="structSessions.html">Sessions</a> folder </dd></dl>
+
+</div>
+</div>
 <a id="a05cba137f4ac2f773299ac7704c470b1" name="a05cba137f4ac2f773299ac7704c470b1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a05cba137f4ac2f773299ac7704c470b1">&#9670;&#160;</a></span>readFirefoxCookies()</h2>
 
@@ -524,6 +671,49 @@ Variables</h2></td></tr>
     <tr><td class="paramname">file</td><td>the database, in the working copy </td></tr>
     <tr><td class="paramname">base</td><td>browser, profile, SID and source copied into each record </td></tr>
     <tr><td class="paramname">records</td><td>receives one Cookie per cookie </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the failure to open the database </dd></dl>
+
+</div>
+</div>
+<a id="ab8d67a144a336fa494245a9888cf3b06" name="ab8d67a144a336fa494245a9888cf3b06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8d67a144a336fa494245a9888cf3b06">&#9670;&#160;</a></span>readFirefoxFavicons()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT readFirefoxFavicons </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;&#160;</td>
+          <td class="paramname"><em>base</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>records</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads Firefox's <code>favicons.sqlite</code>: each page and its icon, with when the link expires. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file</td><td>the database, in the working copy </td></tr>
+    <tr><td class="paramname">base</td><td>browser, profile, SID and source copied into each record </td></tr>
+    <tr><td class="paramname">records</td><td>receives one Favicon per page and icon </td></tr>
   </table>
   </dd>
 </dl>
@@ -657,6 +847,49 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the failure to open the database </dd></dl>
+
+</div>
+</div>
+<a id="ae76d73b52740d128709fd3d4f3c05c6e" name="ae76d73b52740d128709fd3d4f3c05c6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae76d73b52740d128709fd3d4f3c05c6e">&#9670;&#160;</a></span>readFirefoxSession()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT readFirefoxSession </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &amp;&#160;</td>
+          <td class="paramname"><em>base</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structWebClientRecord.html">WebClientRecord</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>records</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads one Firefox session file (sessionstore.jsonlz4 or a backup of sessionstore-backups, mozLz4): each page of each tab of the open windows (State Open), of the tabs closed (ClosedTab) and of the windows closed (ClosedWindow), with the tab's last access and the closing instant. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file</td><td>the file, in the working copy </td></tr>
+    <tr><td class="paramname">base</td><td>browser, profile, SID and source copied into each record </td></tr>
+    <tr><td class="paramname">records</td><td>receives one SessionEntry per page </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_INVALID_DATA if it is not a mozLz4 JSON </dd></dl>
 
 </div>
 </div>
@@ -903,8 +1136,9 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= {</div>
 <div class="line">    L<span class="stringliteral">&quot;History&quot;</span>, L<span class="stringliteral">&quot;Login Data&quot;</span>, L<span class="stringliteral">&quot;Web Data&quot;</span>, L<span class="stringliteral">&quot;Shortcuts&quot;</span>, L<span class="stringliteral">&quot;Top Sites&quot;</span>, L<span class="stringliteral">&quot;Bookmarks&quot;</span>,</div>
-<div class="line">    L<span class="stringliteral">&quot;Preferences&quot;</span>, L<span class="stringliteral">&quot;Secure Preferences&quot;</span>, L<span class="stringliteral">&quot;Cookies&quot;</span>, L<span class="stringliteral">&quot;Network\\Cookies&quot;</span> }</div>
-</div><!-- fragment --><p>The files collected in a browser profile folder, relative to it; each with its -journal and -wal when present. </p>
+<div class="line">    L<span class="stringliteral">&quot;Preferences&quot;</span>, L<span class="stringliteral">&quot;Secure Preferences&quot;</span>, L<span class="stringliteral">&quot;Cookies&quot;</span>, L<span class="stringliteral">&quot;Network\\Cookies&quot;</span>,</div>
+<div class="line">    L<span class="stringliteral">&quot;Favicons&quot;</span>, L<span class="stringliteral">&quot;Network Action Predictor&quot;</span>, L<span class="stringliteral">&quot;Sessions\\*&quot;</span> }</div>
+</div><!-- fragment --><p>The files collected in a browser profile folder, relative to it; each with its -journal, -wal and -shm when present. "Sessions\\*" takes every file of the subfolder: Session_&lt;time&gt; (the windows and tabs open, current and last session) and Tabs_&lt;time&gt; (the tabs and windows closed). </p>
 
 </div>
 </div>
@@ -976,9 +1210,9 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= {</div>
 <div class="line">    L<span class="stringliteral">&quot;places.sqlite&quot;</span>, L<span class="stringliteral">&quot;formhistory.sqlite&quot;</span>, L<span class="stringliteral">&quot;cookies.sqlite&quot;</span>, L<span class="stringliteral">&quot;permissions.sqlite&quot;</span>, L<span class="stringliteral">&quot;logins.json&quot;</span>,</div>
-<div class="line">    L<span class="stringliteral">&quot;key4.db&quot;</span>, L<span class="stringliteral">&quot;extensions.json&quot;</span>, L<span class="stringliteral">&quot;prefs.js&quot;</span>, L<span class="stringliteral">&quot;sessionstore.jsonlz4&quot;</span> }</div>
-</div><!-- fragment -->
-<p>The files collected in a Firefox profile, each with its -wal and -journal when present. </p>
+<div class="line">    L<span class="stringliteral">&quot;key4.db&quot;</span>, L<span class="stringliteral">&quot;extensions.json&quot;</span>, L<span class="stringliteral">&quot;prefs.js&quot;</span>, L<span class="stringliteral">&quot;sessionstore.jsonlz4&quot;</span>, L<span class="stringliteral">&quot;favicons.sqlite&quot;</span>,</div>
+<div class="line">    L<span class="stringliteral">&quot;protections.sqlite&quot;</span>, L<span class="stringliteral">&quot;sessionstore-backups\\*&quot;</span>, L<span class="stringliteral">&quot;bookmarkbackups\\*&quot;</span> }</div>
+</div><!-- fragment --><p>The files collected in a Firefox profile, each with its -wal, -journal and -shm when present; "&lt;folder&gt;\\*" takes every file of the subfolder (the session's backups, the bookmarks' daily backups). </p>
 
 </div>
 </div>
@@ -1037,6 +1271,21 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a33007d6790e43e8c7386e1a9e262ce07" name="a33007d6790e43e8c7386e1a9e262ce07"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a33007d6790e43e8c7386e1a9e262ce07">&#9670;&#160;</a></span>IE_LOCAL_FOLDER</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const wchar_t IE_LOCAL_FOLDER[] = L&quot;\\AppData\\Local\\Microsoft\\Internet Explorer&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Internet Explorer's local folder of a Windows profile, taken whole: the per-user setup logs (ie4uinit, brndlog — when the profile first ran it), the tab recovery files, the suggestion and compatibility lists. </p>
+
+</div>
+</div>
 <a id="ad22de2e7f057c692373f35ff0d0b8137" name="ad22de2e7f057c692373f35ff0d0b8137"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad22de2e7f057c692373f35ff0d0b8137">&#9670;&#160;</a></span>INETCACHE_EXTENSIONS</h2>
 
@@ -1089,6 +1338,22 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="ae99d4cba33d87088ad43abdaedd575e2" name="ae99d4cba33d87088ad43abdaedd575e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae99d4cba33d87088ad43abdaedd575e2">&#9670;&#160;</a></span>SESSION_FILE_MAX</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uintmax_t SESSION_FILE_MAX = 256ull * 1024 * 1024</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>a session file: a few MiB with many tabs and their page states </p>
+
+</div>
+</div>
 <a id="a60327df1abc040486d30115bc714f33c" name="a60327df1abc040486d30115bc714f33c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a60327df1abc040486d30115bc714f33c">&#9670;&#160;</a></span>WEBCACHE_FOLDER</h2>
 
@@ -1102,6 +1367,23 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>The WebCache folder of Internet Explorer and Edge Legacy, relative to a Windows profile. </p>
+
+</div>
+</div>
+<a id="ae79b550b98388425a9c8db9a11273a28" name="ae79b550b98388425a9c8db9a11273a28"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae79b550b98388425a9c8db9a11273a28">&#9670;&#160;</a></span>WININET_LOCAL_FOLDERS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt;std::wstring&gt; WININET_LOCAL_FOLDERS</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= {</div>
+<div class="line">    L<span class="stringliteral">&quot;\\AppData\\Local\\Microsoft\\Windows\\INetCookies&quot;</span>, L<span class="stringliteral">&quot;\\AppData\\Local\\Microsoft\\Windows\\IEDownloadHistory&quot;</span> }</div>
+</div><!-- fragment --><p>WinINet's local folders of a Windows profile, taken whole: the cookies' and the downloads' containers of Windows 10 and later (the deprecated cookie, container.dat). </p>
 
 </div>
 </div>

@@ -42,7 +42,7 @@ var searchData=
   ['diagnostic_39',['diagnostic',['../structEvtxSummary.html#a40ce38e07788b6236d64cdeac87ff231',1,'EvtxSummary']]],
   ['dir_40',['dir',['../structDirStrings.html#a7d72bcd11872251c3867aac55e2f4b84',1,'DirStrings']]],
   ['directories_41',['directories',['../structoleParser.html#ac9e9c8259357d665a533b4dea51ec7fc',1,'oleParser']]],
-  ['directory_42',['directory',['../structFileAttributes.html#a3bfc41633eed27ebfe1d770ab011c950',1,'FileAttributes::Directory'],['../structFatEntry.html#a09e447dfb4bd7a0d381c3002058c47c3',1,'FatEntry::directory'],['../structMftEntry.html#a9759687f039eecfafeb0726dd84ba945',1,'MftEntry::directory']]],
+  ['directory_42',['directory',['../structFatEntry.html#a09e447dfb4bd7a0d381c3002058c47c3',1,'FatEntry::directory'],['../structMftEntry.html#a9759687f039eecfafeb0726dd84ba945',1,'MftEntry::directory'],['../structFileAttributes.html#a3bfc41633eed27ebfe1d770ab011c950',1,'FileAttributes::Directory']]],
   ['directorysize_43',['directorySize',['../structDirectory.html#a576cd6ab6ad1aa5c565a8f3578d53f64',1,'Directory']]],
   ['directorystreamfirstsectorid_44',['directoryStreamFirstSectorId',['../structoleHeader.html#a9d45fc027a7b82ba9ea60bc5f3c8a19f',1,'oleHeader']]],
   ['dirstrings_45',['dirStrings',['../structVolumeInfo.html#a271513d86cf1b7a0eff91fb35a6e5915',1,'VolumeInfo']]],

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>WAC (Windows Artefacts Collector): /var/www/html/WAC/sources/hive_recover.h File Reference</title>
+<title>WAC (Windows Artefacts Collector): /home/sebastien/.claude/jobs/366fdfd2/tmp/wac-2.0.x/sources/hive_recover.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.1</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -127,6 +127,8 @@ Functions</h2></td></tr>
 <tr class="separator:abfdcef62f94d212392944c4002628be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeede55581b96ea19bbf2f99ae6a71bac" id="r_aeede55581b96ea19bbf2f99ae6a71bac"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover_8h.html#aeede55581b96ea19bbf2f99ae6a71bac">HiveFixInfoToString</a> (const <a class="el" href="structHiveFixInfo.html">HiveFixInfo</a> &amp;i)</td></tr>
 <tr class="separator:aeede55581b96ea19bbf2f99ae6a71bac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7d53c97de114e1f96c5374b1e684b79" id="r_ac7d53c97de114e1f96c5374b1e684b79"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover_8h.html#ac7d53c97de114e1f96c5374b1e684b79">HiveLogDigest</a> (const uint8_t *data, size_t size)</td></tr>
+<tr class="separator:ac7d53c97de114e1f96c5374b1e684b79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adda4598814204241193452d100f79120" id="r_adda4598814204241193452d100f79120"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structHiveReplayInfo.html">HiveReplayInfo</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover_8h.html#adda4598814204241193452d100f79120">ReplayHiveLogs</a> (const std::filesystem::path &amp;hive, const std::wstring &amp;md5Before)</td></tr>
 <tr class="separator:adda4598814204241193452d100f79120"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed27fc60a5eff5f8813438a08f198e97" id="r_aed27fc60a5eff5f8813438a08f198e97"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover_8h.html#aed27fc60a5eff5f8813438a08f198e97">HiveReplayInfoToString</a> (const <a class="el" href="structHiveReplayInfo.html">HiveReplayInfo</a> &amp;i)</td></tr>
@@ -159,6 +161,41 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Readable details for the log/report (one line). </p>
+
+</div>
+</div>
+<a id="ac7d53c97de114e1f96c5374b1e684b79" name="ac7d53c97de114e1f96c5374b1e684b79"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7d53c97de114e1f96c5374b1e684b79">&#9670;&#160;</a></span>HiveLogDigest()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t HiveLogDigest </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The digest of the transaction logs' entries (Marvin32 with the format's seed), on 8 bytes: the low half then the high half. Public for the test that forges logs (<a class="el" href="hive__recover__test_8cpp.html" title="Checks the replay of a hive&#39;s transaction logs (hive_recover.cpp) on a hive and logs forged here,...">hive_recover_test.cpp</a>). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data,size</td><td>the bytes digested </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the digest, as an entry stores it </dd></dl>
 
 </div>
 </div>
@@ -232,14 +269,16 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Applies the transaction logs to an extracted hive.</p>
-<p>TWO TRAPS, both met on real data and both decisive for the report's accuracy:</p>
+<p>THREE TRAPS, all met on real data and all decisive for the report's accuracy:</p>
 <ul>
+<li><b>THE HIVE'S SEQUENCE NUMBER IS THE NEXT ENTRY IT EXPECTS.</b> An entry is already in the hive if its number is LOWER than the hive's secondary sequence; the entry EQUAL to it is the first to apply. Taken for already applied, it was lost at every replay (see ReplayHiveLogs' body).</li>
 <li><b>FILE ORDER, NOT SEQUENCE ORDER.</b> A log is reused in place: entries from an earlier generation survive AFTER the end of the current chain. Sorting them by sequence number brings a stale entry to the front, whose pages are OLDER than the hive. Measured: BAM timestamps — execution evidence — moved fifteen minutes backwards. Each log is therefore walked in file order, stopping at the first break in the sequence, as Windows' recovery does; what follows is leftover.</li>
 <li><b>EVERY ENTRY IS CHECKED BEFORE BEING APPLIED.</b> The header's two Marvin32 checksums cover the header (first 32 bytes) and the body (offset 40 to the end). Verified correct on 60 entries from 11 logs of a real machine. An entry that fails ends the chain: applying doubtful pages to evidence would be worse than applying nothing.</li>
 </ul>
+<p>An entry also states the size of the bins data once applied: the hive can GROW. The pages are bounded by that size, the file is extended to it, and the base block carries it afterwards — as Windows' own recovery leaves it.</p>
 <p>An undo log <code>&lt;hive&gt;.undo</code> is written beside the hive, holding the ORIGINAL content of every replaced page. Its format is deliberately trivial, so that a third party can undo the operation: </p><pre class="fragment">0   8   "WACUNDO1"
 8  32   MD5 of the hive BEFORE replay, as ASCII hexadecimal
-</pre><p> 40 4 number of pages 44 8 size of the hive before replay 52 4 reserved (0) 56 12×N page table: offset (8 bytes), size (4 bytes) ... original content of the pages, in table order</p>
+</pre><p> 40 4 number of pages 44 8 size of the hive before replay (the file is cut back to it: a replay can extend it) 52 4 reserved (0) 56 12×N page table: offset (8 bytes), size (4 bytes) ... original content of the pages, in table order</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">hive</td><td>path of the extracted hive (modified in place if the replay succeeds) </td></tr>

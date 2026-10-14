@@ -256,6 +256,8 @@ var annotated_dup =
     [ "ShortcutLocation", "structShortcutLocation.html", "structShortcutLocation" ],
     [ "Shortcuts", "classShortcuts.html", "classShortcuts" ],
     [ "SignatureVerdict", "structSignatureVerdict.html", "structSignatureVerdict" ],
+    [ "SnssContents", "structSnssContents.html", "structSnssContents" ],
+    [ "SnssNavigation", "structSnssNavigation.html", "structSnssNavigation" ],
     [ "SPS", "structSPS.html", "structSPS" ],
     [ "SPSValue", "structSPSValue.html", "structSPSValue" ],
     [ "SqliteDatabase", "classSqliteDatabase.html", "classSqliteDatabase" ],

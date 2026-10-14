@@ -269,6 +269,8 @@ var hierarchy =
     [ "Shortcuts", "classShortcuts.html", null ],
     [ "KnownNetwork::Signature", "structKnownNetwork_1_1Signature.html", null ],
     [ "SignatureVerdict", "structSignatureVerdict.html", null ],
+    [ "SnssContents", "structSnssContents.html", null ],
+    [ "SnssNavigation", "structSnssNavigation.html", null ],
     [ "SPS", "structSPS.html", null ],
     [ "SPSValue", "structSPSValue.html", null ],
     [ "SqliteDatabase", "classSqliteDatabase.html", null ],

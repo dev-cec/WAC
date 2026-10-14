@@ -4,7 +4,7 @@
 # The version of WAC this file was written for (--write-config). A file of
 # another version is refused: it may lack settings added since, or carry
 # some that are gone. Write it again with --write-config.
-wac_version: 2.0.0
+wac_version: 2.0.1
 
 
 # Executables: none; unverified (collect those whose signature does not hold);
