@@ -117,24 +117,39 @@ void parseBag(const std::vector<uint8_t>& bag, std::vector<DetectionProperty>& o
 	}
 }
 
-/*! Names the fields of a Magic.Version 1.2 file whose position the reference
- *  confirmed; marks them in `named`.
- *  Position 3 the threat's name, 5 and 6 its severity and category (as
- *  MSFT_MpThreat gives them); each resource a Magic.Version marker then its
- *  type and path; after the resources, the quarantine entry's GUID, then at
- *  +1 CurrentThreatExecutionStatusID, +3 the account, +5 the process, +9
- *  InitialDetectionTime. A field of an unexpected type is left unnamed. */
-void nameFields(const std::vector<DetectionField>& f, DefenderDetection& d, std::vector<bool>& named) {
+/*! Names the fields whose position the reference confirmed; marks them in
+ *  `named`. Two layouts, the same from the quarantine entry's GUID on:
+ *  - Magic.Version 1.2 (Defender of Windows 10 and 11): the marker at 2, the
+ *    threat's name at 3, each resource a marker then its type and path;
+ *  - without any marker (Defender of Windows 8.1): the name at 2, each
+ *    resource its type and path, two strings in a row.
+ *  Two positions after the name its severity, three its category (as
+ *  MSFT_MpThreat gives them); after the resources, the quarantine entry's
+ *  GUID, then at +1 CurrentThreatExecutionStatusID, +3 the account, +5 the
+ *  process, +9 InitialDetectionTime. A field of an unexpected type is left
+ *  unnamed.
+ *  @param nameAt position of the threat's name
+ *  @param markers true for Magic.Version 1.2 */
+void nameFields(const std::vector<DetectionField>& f, size_t nameAt, bool markers, DefenderDetection& d, std::vector<bool>& named) {
 	auto at = [&](size_t i, uint32_t type) { return i < f.size() && f[i].type == type; };
-	if (at(3, FIELD_STRING)) { d.threatName = fieldString(f[3]); named[3] = true; }
-	if (at(5, FIELD_NUMBER32) && f[5].value.size() == 4) { d.severityId = readLittleEndian<uint32_t>(f[5].value.data()); d.severityKnown = named[5] = true; }
-	if (at(6, FIELD_NUMBER32) && f[6].value.size() == 4) { d.categoryId = readLittleEndian<uint32_t>(f[6].value.data()); d.categoryKnown = named[6] = true; }
-	size_t last = 3;
-	for (size_t i = 4; i + 2 < f.size(); ++i) {
-		if (!isMagic(f[i]) || !at(i + 1, FIELD_STRING) || !at(i + 2, FIELD_STRING)) continue;
-		d.resources.push_back({ fieldString(f[i + 1]), fieldString(f[i + 2]) });
-		named[i + 1] = named[i + 2] = true;
-		last = i + 2;
+	auto number = [&](size_t i, uint32_t& out, bool& known) {
+		if (!at(i, FIELD_NUMBER32) || f[i].value.size() != 4) return;
+		out = readLittleEndian<uint32_t>(f[i].value.data());
+		known = named[i] = true;
+	};
+	if (at(nameAt, FIELD_STRING)) { d.threatName = fieldString(f[nameAt]); named[nameAt] = true; }
+	number(nameAt + 2, d.severityId, d.severityKnown);
+	number(nameAt + 3, d.categoryId, d.categoryKnown);
+	size_t last = nameAt;
+	// Without markers, the resources end at the quarantine entry's GUID: a
+	// string pair after it (account, process) is not a resource.
+	for (size_t i = nameAt + 1; i + 1 < f.size() && (markers || !at(i, FIELD_GUID)); ++i) {
+		const size_t type = markers ? i + 1 : i;
+		if ((markers && !isMagic(f[i])) || !at(type, FIELD_STRING) || !at(type + 1, FIELD_STRING)) continue;
+		d.resources.push_back({ fieldString(f[type]), fieldString(f[type + 1]) });
+		named[type] = named[type + 1] = true;
+		last = type + 1;
+		i = last;
 	}
 	size_t q = last + 1;
 	while (q < f.size() && !(f[q].type == FIELD_GUID && f[q].value.size() == 16)) ++q;
@@ -294,16 +309,19 @@ bool parseDetectionHistory(const std::vector<uint8_t>& bytes, DefenderDetection&
 		p += 8 + (size_t)length;
 		p += (8 - p % 8) % 8;
 	}
-	// The header: the threat's identifier, then the detection's.
+	// The header: the threat's identifier, the detection's, then a string —
+	// the Magic.Version marker, or, without one (Windows 8.1), the threat's name.
 	if (fields.size() < 3 || fields[0].type != FIELD_NUMBER64 || fields[0].value.size() != 8
-	    || fields[1].type != FIELD_GUID || fields[1].value.size() != 16 || !isMagic(fields[2]))
+	    || fields[1].type != FIELD_GUID || fields[1].value.size() != 16 || fields[2].type != FIELD_STRING)
 		return false;
 	d.threatId = readLittleEndian<uint64_t>(fields[0].value.data());
 	d.detectionId = guid_to_wstring(fields[1].value.data());
-	d.magicVersion = fieldString(fields[2]).substr(wcslen(MAGIC_PREFIX));
+	const bool markers = isMagic(fields[2]);
+	if (markers) d.magicVersion = fieldString(fields[2]).substr(wcslen(MAGIC_PREFIX));
 	std::vector<bool> named(fields.size(), false);
 	named[0] = named[1] = true;
-	if (d.magicVersion == L"1.2") nameFields(fields, d, named);
+	if (!markers) nameFields(fields, 2, false, d, named);
+	else if (d.magicVersion == L"1.2") nameFields(fields, 3, true, d, named);
 	for (size_t i = 0; i < fields.size(); ++i) {
 		if (fields[i].type == FIELD_BAG) parseBag(fields[i].value, d.threatTracking);
 		else if (!named[i] && !isMagic(fields[i])) d.unnamed.push_back(fields[i]);

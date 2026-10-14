@@ -19,6 +19,10 @@
  *  other one is given as read — offset, type, value — without a meaning
  *  made up. Two fields that both follow DetectionSourceTypeID, two dates that
  *  both equal RemediationTime, stay unnamed for that reason.
+ *  Defender of Windows 8.1 writes the same fields without any Magic.Version
+ *  marker — the threat's name comes right after the detection's GUID, a
+ *  resource is its type and path alone —, established the same way against
+ *  MSFT_MpThreat and MSFT_MpThreatDetection on two detections.
  *
  *  THE QUARANTINE, established the same way against a file of known dates.
  *  Entries\{GUID} describes a quarantine: three parts, each encrypted with
@@ -71,7 +75,7 @@ struct DetectionResource {
 /*! A detection of Microsoft Defender. */
 struct DefenderDetection {
 	std::wstring file;                    //!< the DetectionHistory file on the examined machine
-	std::wstring magicVersion;            //!< "1.2": the version the named fields were established on
+	std::wstring magicVersion;            //!< "1.2": the version the named fields were established on; none on Windows 8.1
 	std::wstring detectionId, threatName, quarantineEntryId, domainUser, processName;
 	uint64_t threatId = 0;
 	bool severityKnown = false, categoryKnown = false, executionStatusKnown = false;

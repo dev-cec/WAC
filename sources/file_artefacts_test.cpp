@@ -276,6 +276,44 @@ void defenderHistory() {
 	DefenderDetection refused;
 	check(!parseDetectionHistory(other, refused), "DetectionHistory: another header accepted");
 
+	/* DetectionHistory of Defender on Windows 8.1, field by field as it wrote
+	   DetectionHistory\00\08344BE3-… in the test VM (2026-10-13): no
+	   Magic.Version marker, the name right after the detection's GUID. */
+	const uint8_t detection81[16] = { 0xE3, 0x4B, 0x34, 0x08, 0x28, 0x32, 0xE0, 0x47, 0x8F, 0xF1, 0xCD, 0x41, 0x62, 0x9E, 0x5E, 0x02 };
+	std::vector<uint8_t> dh81;
+	putField(dh81, 0x08, number64(0x80008A1B));
+	putField(dh81, 0x1E, std::vector<uint8_t>(detection81, detection81 + 16));
+	putField(dh81, 0x15, wide(L"Virus:DOS/EICAR_Test_File"));
+	for (uint32_t n : { 0u, 5u, 42u, 110u, 4u, 3u, 3u, 3u, 2u, 6u, 1u }) putField(dh81, 0x06, number32(n));
+	putField(dh81, 0x15, wide(L"file"));
+	putField(dh81, 0x15, wide(L"C:\\wactest\\eicar-held\\wac-eicar-220958.txt"));
+	putField(dh81, 0x06, number32(0));
+	putField(dh81, 0x0A, number64(0x01DD5B4EDAC61327ULL));
+	putField(dh81, 0x05, number32(0));
+	putField(dh81, 0x06, number32(0));
+	putField(dh81, 0x1E, std::vector<uint8_t>(16, 0));
+	putField(dh81, 0x06, number32(0));
+	putField(dh81, 0x06, number32(2));
+	putField(dh81, 0x15, wide(L"NT AUTHORITY\\LOCAL SERVICE"));
+	putField(dh81, 0x06, number32(2));
+	putField(dh81, 0x15, wide(L"Unknown"));
+	for (uint32_t n : { 2u, 1u, 0u }) putField(dh81, 0x06, number32(n));
+	putField(dh81, 0x0A, number64(0x01DD5B4ED62FD7A3ULL));
+	putField(dh81, 0x15, wide(L"NT AUTHORITY\\SYSTEM"));
+	DefenderDetection d81;
+	check(parseDetectionHistory(dh81, d81) && d81.magicVersion.empty() && d81.threatId == 0x80008A1B
+	      && d81.detectionId == L"{08344BE3-3228-47E0-8FF1-CD41629E5E02}" && d81.threatName == L"Virus:DOS/EICAR_Test_File",
+	      "DetectionHistory of Windows 8.1: no marker, threat and detection identifiers");
+	check(d81.severityKnown && d81.severityId == 5 && d81.categoryKnown && d81.categoryId == 42,
+	      "DetectionHistory of Windows 8.1: severity and category two and three fields after the name");
+	check(d81.resources.size() == 1 && d81.resources[0].type == L"file"
+	      && d81.resources[0].path == L"C:\\wactest\\eicar-held\\wac-eicar-220958.txt",
+	      "DetectionHistory of Windows 8.1: the resource, its type and path alone; account and process are not resources");
+	check(d81.quarantineEntryId.empty() && d81.executionStatusKnown && d81.executionStatusId == 0
+	      && d81.domainUser == L"NT AUTHORITY\\LOCAL SERVICE" && d81.processName == L"Unknown"
+	      && value(d81.initialDetectionUtc) == 0x01DD5B4ED62FD7A3ULL,
+	      "DetectionHistory of Windows 8.1: no quarantine, execution status, account, process and InitialDetectionTime by their position");
+
 	// A quarantine entry: threat, then one resource with its fields.
 	std::vector<uint8_t> threat;
 	put64(threat, 0x80008A1B);
