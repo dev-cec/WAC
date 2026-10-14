@@ -720,9 +720,14 @@ if [[ $SPLIT -eq 1 ]]; then
   else
     echo "   ❌ conversion ended abnormally"; ABNORMAL_STOP=1
   fi
+  # The reads concern the separate collection: the reference goes with its
+  # results only, where conversion.json is the one of that conversion — in
+  # the main folder, a later run of check-json.py would set them against the
+  # main conversion's copy time, and count them all as "after".
   if [[ -n "$AUDIT_SINCE" ]]; then
+    mkdir -p "$SPLIT_OUT/reference"
     $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Stop "$VMDIR\\split\\exhibits" -Since "$AUDIT_SINCE" -Output "$VMDIR\\exhibit-reads.txt" >/dev/null 2>&1 \
-      && $QGA read "$VMDIR\\exhibit-reads.txt" "$OUTPUT/reference/exhibit-reads.txt" >/dev/null 2>&1 \
+      && $QGA read "$VMDIR\\exhibit-reads.txt" "$SPLIT_OUT/reference/exhibit-reads.txt" >/dev/null 2>&1 \
       && echo "   + reference/exhibit-reads.txt" || echo "   ⚠️ reads of the exhibit store not listed"
   else
     echo "   ⚠️ read audit of the exhibit store not set"

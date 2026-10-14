@@ -1863,12 +1863,22 @@ def check_small_file_artefacts(folder):
                f"setupapi.json: {len(setupapi)} section(s), at least the {reference['setupapi']} counted before, {dated} dated",
                f"setupapi.json: {len(setupapi)} section(s) ({dated} dated), {reference['setupapi']} counted before")
 
+    # Lines are expected when an MPLog held more than its byte-order mark when
+    # collected: Defender of Windows 8.1 can leave its log at those 2 bytes
+    # for hours, and writes it after the collection (the count of the
+    # reference is read later, the size in the manifest is the collected one).
     defender = load(folder, "defender_log.json")
     if isinstance(defender, list) and "mplog" in reference:
         lines = sum(len(d.get("Lines", [])) for d in defender)
-        report(len(defender) >= int(reference["mplog"]) and (lines > 0 or int(reference["mplog"]) == 0),
-               f"defender_log.json: {len(defender)} log(s), {lines} line(s)",
-               f"defender_log.json: {len(defender)} log(s) for {reference['mplog']} present, {lines} line(s)")
+        manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+        items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+        written = [i for i in items if re.search(r"\\windows defender\\support\\mplog-[^\\]*$", str(i.get("SourcePath", "")), re.I)
+                   and int(i.get("Bytes") or 0) > 2]
+        report(len(defender) >= int(reference["mplog"]) and (lines > 0 or not written),
+               f"defender_log.json: {len(defender)} log(s), {lines} line(s)"
+               + ("" if lines else " — every MPLog held only its byte-order mark when collected"),
+               f"defender_log.json: {len(defender)} log(s) for {reference['mplog']} present, {lines} line(s), "
+               f"{len(written)} collected with content")
 
     # WMI subscriptions: the harness's, and every one of every namespace as
     # Get-CimInstance counts them.
