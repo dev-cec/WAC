@@ -95,8 +95,110 @@ def release_pending(dom):
     pending_save(dom, kept)
 
 
+# POWERSHELL 2 (Windows 7) cannot be started by the agent: its console host
+# looks for a console the agent's processes do not have, and fails
+# (GetActiveScreenBufferHandle, in Windows Error Reporting) with exit code 1
+# and no output. A process started by the Task Scheduler gets a hidden
+# console: on such a VM, powershell.exe is run through a one-shot task, its
+# output and exit code coming back through files, removed after.
+PS_TASK = "WacQgaPowerShell"
+PS_DIR = r"C:\wac-qga-ps"
+
+
+def powershell_two_only(dom):
+    """True when the VM has PowerShell 2 and no later one; asked once, kept."""
+    cache = os.path.join(PENDING, f"{dom}.powershell")
+    try:
+        with open(cache, encoding="utf-8") as f:
+            return f.read().strip() == "2"
+    except OSError:
+        pass
+    code, _, _ = run_direct(dom, ["reg.exe", "query", r"HKLM\SOFTWARE\Microsoft\PowerShell\3"])
+    two = code != 0
+    os.makedirs(PENDING, exist_ok=True)
+    with open(cache, "w", encoding="utf-8") as f:
+        f.write("2" if two else "3+")
+    return two
+
+
+def cmd_quote(arg):
+    """One argument on a cmd.exe line: quoted when it holds a space or a
+    character cmd would interpret."""
+    if arg and not any(c in arg for c in ' \t"&|<>^()%!'):
+        return arg
+    return '"' + arg.replace('"', '\\"') + '"'
+
+
+def powershell_through_task(dom, argv, timeout):
+    """Runs powershell.exe through a one-shot task of the SYSTEM account."""
+    args = list(argv[1:])
+    lowered = [a.lower() for a in args]
+    if "-command" in lowered:
+        # The command as UTF-16 base64: no quoting, no "%" for cmd to expand.
+        i = lowered.index("-command")
+        script = " ".join(args[i + 1:])
+        args = args[:i] + ["-EncodedCommand", base64.b64encode(script.encode("utf-16-le")).decode()]
+    line = "powershell.exe " + " ".join(cmd_quote(a) for a in args)
+    if not line.isascii():
+        sys.exit("[qga] a PowerShell 2 command line run through a task must be ASCII (use -Command, encoded)")
+    wrapper = ("@echo off\r\n"
+               f"{line} > {PS_DIR}\\out.txt 2> {PS_DIR}\\err.txt < NUL\r\n"
+               f"(echo %errorlevel%)> {PS_DIR}\\code.txt\r\n")   # "echo 0> f" would redirect handle 0
+    run_direct(dom, ["cmd.exe", "/c", f"(if exist {PS_DIR} rmdir /s /q {PS_DIR}) & mkdir {PS_DIR}"])
+    h = qga(dom, {"execute": "guest-file-open", "arguments": {"path": PS_DIR + "\\run.cmd", "mode": "wb"}})
+    try:
+        qga(dom, {"execute": "guest-file-write", "arguments": {"handle": h, "buf-b64": base64.b64encode(wrapper.encode("ascii")).decode()}})
+    finally:
+        qga(dom, {"execute": "guest-file-close", "arguments": {"handle": h}})
+    run_direct(dom, ["schtasks.exe", "/create", "/tn", PS_TASK, "/tr", PS_DIR + "\\run.cmd", "/sc", "once",
+                     "/st", "00:00", "/ru", "SYSTEM", "/rl", "HIGHEST", "/f"])
+    run_direct(dom, ["schtasks.exe", "/run", "/tn", PS_TASK])
+    t0 = time.time()
+    try:
+        while not guest_read_text(dom, PS_DIR + "\\code.txt"):
+            if time.time() - t0 > timeout:
+                sys.exit(f"[qga] execution timeout ({timeout} s) — PowerShell may still be running in the VM")
+            time.sleep(1)
+        code = int((guest_read_text(dom, PS_DIR + "\\code.txt") or "1").strip() or 1)
+        out = guest_read_text(dom, PS_DIR + "\\out.txt") or ""
+        err = guest_read_text(dom, PS_DIR + "\\err.txt") or ""
+        return code, out, err
+    finally:
+        run_direct(dom, ["schtasks.exe", "/delete", "/tn", PS_TASK, "/f"])
+        run_direct(dom, ["cmd.exe", "/c", f"rmdir /s /q {PS_DIR}"])
+
+
+def guest_read_text(dom, guest_path):
+    """A small file of the VM as text, or None when it is not there."""
+    h = qga(dom, {"execute": "guest-file-open", "arguments": {"path": guest_path, "mode": "rb"}}, fatal=False)
+    if h is None:
+        return None
+    data = b""
+    try:
+        while True:
+            r = qga(dom, {"execute": "guest-file-read", "arguments": {"handle": h, "count": 256 << 10}})
+            data += base64.b64decode(r["buf-b64"])
+            if r.get("eof"):
+                break
+    finally:
+        qga(dom, {"execute": "guest-file-close", "arguments": {"handle": h}})
+    # UTF-8 when the script set its output so, the console's code page otherwise.
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        return data.decode("cp850", "replace")
+
+
 def run(dom, argv, capture=True, timeout=DEFAULT_TIMEOUT):
-    """Runs argv[0] with argv[1:] in the VM; returns (code, stdout, stderr)."""
+    """Runs argv[0] with argv[1:] in the VM; returns (code, stdout, stderr).
+    powershell.exe goes through a task on a VM with PowerShell 2 only."""
+    if os.path.basename(argv[0]).lower() == "powershell.exe" and powershell_two_only(dom):
+        return powershell_through_task(dom, argv, timeout)
+    return run_direct(dom, argv, capture, timeout)
+
+
+def run_direct(dom, argv, capture=True, timeout=DEFAULT_TIMEOUT):
+    """Runs argv[0] with argv[1:] in the VM through the agent; returns (code, stdout, stderr)."""
     release_pending(dom)
     pid = qga(dom, {"execute": "guest-exec", "arguments": {
         "path": argv[0], "arg": argv[1:],
