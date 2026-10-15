@@ -13,9 +13,8 @@ const wchar_t THUMBCACHE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Windows\\Expl
 
 namespace {
 
-const size_t FILE_HEADER = 24;           //!< signature, version, type, unknown, first entry, first free place
-const size_t ENTRY_HEADER = 56;          //!< the entry's fixed part, Windows 8 to 11
-const size_t HEADER_CHECKED = 48;        //!< what the header checksum covers: the entry up to it
+const size_t FILE_HEADER = 24;           //!< signature, version, type, then three offsets and counts of the version
+const uint32_t WINDOWS_7 = 0x15;         //!< the version of Windows 7's caches
 const size_t DATA_FIRST = 1024;          //!< the image's bytes covered whole by its checksum
 const size_t DATA_STRIDE = 400;          //!< beyond them, four bytes every this many
 const uint64_t POLYNOMIAL = 0x92C64265D32139A4ULL;   //!< reflected, as thumbcache.dll's table holds it
@@ -53,6 +52,24 @@ std::wstring exportImage(const std::wstring& folder, const ThumbcacheEntry& e, c
 	return L"";
 }
 
+/*! Where a version keeps what the decoder reads. Windows 7 has neither the
+ *  header's unknown field nor the entry's width and height: its offsets come
+ *  four bytes earlier in the header, and its entry is 48 bytes, not 56. The
+ *  header checksum covers the entry up to itself in both. */
+struct Layout {
+	size_t firstEntryAt;   //!< in the file header, the offset of the first entry
+	size_t firstFreeAt;    //!< in the file header, the offset of the first free place
+	size_t entryHeader;    //!< the entry's fixed part
+	size_t dataChecksumAt; //!< in the entry, the data checksum; the header checksum follows it
+	bool hasSize;          //!< the entry gives the image's width and height
+};
+
+//! The layout of a decoded version: Windows 7's, or Windows 8 to 11's.
+Layout layoutOf(uint32_t version) {
+	if (version == WINDOWS_7) return { 12, 16, 48, 32, false };
+	return { 16, 20, 56, 40, true };
+}
+
 } // namespace
 
 uint64_t thumbcacheCrc64(const uint8_t* bytes, size_t size, uint64_t initial) {
@@ -70,10 +87,12 @@ uint64_t thumbcacheDataChecksum(const uint8_t* data, size_t size) {
 	return thumbcacheCrc64(data, DATA_FIRST, 0) ^ sampled;
 }
 
-std::wstring thumbcacheSize(uint32_t type) {
-	static const wchar_t* const SIZES[] = { L"16", L"32", L"48", L"96", L"256", L"768", L"1280", L"1920", L"2560",
-	                                        L"sr", L"wide", L"exif", L"wide_alternate", L"custom_stream" };
-	return type < sizeof(SIZES) / sizeof(SIZES[0]) ? SIZES[type] : L"";
+std::wstring thumbcacheSize(uint32_t version, uint32_t type) {
+	static const std::vector<std::wstring> SEVEN = { L"32", L"96", L"256", L"1024", L"sr" };
+	static const std::vector<std::wstring> LATER = { L"16", L"32", L"48", L"96", L"256", L"768", L"1280", L"1920", L"2560",
+	                                                 L"sr", L"wide", L"exif", L"wide_alternate", L"custom_stream" };
+	const std::vector<std::wstring>& sizes = version == WINDOWS_7 ? SEVEN : LATER;
+	return type < sizes.size() ? sizes[type] : L"";
 }
 
 bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file) {
@@ -82,26 +101,28 @@ bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file) {
 	file.version = readLittleEndian<uint32_t>(bytes.data() + 4);
 	file.type = readLittleEndian<uint32_t>(bytes.data() + 8);
 	/* The version decides, and the table holds which ones are decoded
-	   (pieceFormat): Vista and 7 have another entry layout, and a version
-	   nobody has seen yet may have another one still. Such a cache used to be
-	   skipped without a word; it is now declared "unsupported format". */
+	   (pieceFormat): Vista has another entry layout, and a version nobody has
+	   seen yet may have another one still. Such a cache used to be skipped
+	   without a word; it is now declared "unsupported format". */
 	if (!pieceFormat("thumbcache", file.version).decoded) {
 		file.unsupportedFormat = true;
 		return true;
 	}
-	size_t offset = readLittleEndian<uint32_t>(bytes.data() + 16);
+	const Layout layout = layoutOf(file.version);
+	const size_t entryHeader = layout.entryHeader;
+	size_t offset = readLittleEndian<uint32_t>(bytes.data() + layout.firstEntryAt);
 	// The first free place ends the entries; never beyond the file itself.
-	const size_t end = std::min<size_t>(readLittleEndian<uint32_t>(bytes.data() + 20), bytes.size());
-	while (fits(end, offset, ENTRY_HEADER) && memcmp(bytes.data() + offset, "CMMM", 4) == 0) {
+	const size_t end = std::min<size_t>(readLittleEndian<uint32_t>(bytes.data() + layout.firstFreeAt), bytes.size());
+	while (fits(end, offset, entryHeader) && memcmp(bytes.data() + offset, "CMMM", 4) == 0) {
 		const uint8_t* p = bytes.data() + offset;
 		const size_t size = readLittleEndian<uint32_t>(p + 4);
 		const size_t identifierSize = readLittleEndian<uint32_t>(p + 16);
 		const size_t padding = readLittleEndian<uint32_t>(p + 20);
 		const size_t dataSize = readLittleEndian<uint32_t>(p + 24);
 		// Each length is the file's word: the entry must hold them all, and lie in the file.
-		if (size < ENTRY_HEADER || !fits(end, offset, size) || identifierSize % 2 != 0
-		    || identifierSize > size - ENTRY_HEADER || padding > size - ENTRY_HEADER - identifierSize
-		    || dataSize > size - ENTRY_HEADER - identifierSize - padding) {
+		if (size < entryHeader || !fits(end, offset, size) || identifierSize % 2 != 0
+		    || identifierSize > size - entryHeader || padding > size - entryHeader - identifierSize
+		    || dataSize > size - entryHeader - identifierSize - padding) {
 			log(2, L"🔥Thumbnail cache: entry at " + std::to_wstring(offset) + L" outside its bounds, reading stopped");
 			break;
 		}
@@ -109,13 +130,17 @@ bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file) {
 		e.offset = offset;
 		e.hash = readLittleEndian<uint64_t>(p + 8);
 		for (size_t i = 0; i < identifierSize; i += 2)
-			e.identifier += (wchar_t)readLittleEndian<uint16_t>(p + ENTRY_HEADER + i);
-		e.width = readLittleEndian<uint32_t>(p + 28);
-		e.height = readLittleEndian<uint32_t>(p + 32);
-		e.dataOffset = offset + ENTRY_HEADER + identifierSize + padding;
+			e.identifier += (wchar_t)readLittleEndian<uint16_t>(p + entryHeader + i);
+		if (layout.hasSize) {
+			e.width = readLittleEndian<uint32_t>(p + 28);
+			e.height = readLittleEndian<uint32_t>(p + 32);
+		}
+		e.dataOffset = offset + entryHeader + identifierSize + padding;
 		e.dataSize = dataSize;
-		e.headerChecksumValid = thumbcacheCrc64(p, HEADER_CHECKED, ~0ULL) == readLittleEndian<uint64_t>(p + 48);
-		e.dataChecksumValid = thumbcacheDataChecksum(bytes.data() + e.dataOffset, dataSize) == readLittleEndian<uint64_t>(p + 40);
+		const size_t headerChecked = layout.dataChecksumAt + 8;
+		e.headerChecksumValid = thumbcacheCrc64(p, headerChecked, ~0ULL) == readLittleEndian<uint64_t>(p + headerChecked);
+		e.dataChecksumValid = thumbcacheDataChecksum(bytes.data() + e.dataOffset, dataSize)
+		                      == readLittleEndian<uint64_t>(p + layout.dataChecksumAt);
 		file.entries.push_back(std::move(e));
 		offset += size;
 	}
@@ -148,7 +173,8 @@ HRESULT Thumbcaches::getData() {
 				Json o = Json::obj();
 				addUser(o, sid);
 				o.add(L"Cache", Json::str(source));
-				if (!thumbcacheSize(cache.type).empty()) o.add(L"CacheSize", Json::str(thumbcacheSize(cache.type)));
+				const std::wstring cacheSize = thumbcacheSize(cache.version, cache.type);
+				if (!cacheSize.empty()) o.add(L"CacheSize", Json::str(cacheSize));
 				o.add(L"Offset", Json::num((unsigned long long)e.offset));
 				o.add(L"Hash", Json::str(to_hex(e.hash, 16)));
 				if (!e.identifier.empty()) o.add(L"Identifier", Json::str(e.identifier));
@@ -156,8 +182,9 @@ HRESULT Thumbcaches::getData() {
 				// An entry without image (a placeholder Explorer keeps): no size, no data.
 				if (e.dataSize) {
 					const uint8_t* data = bytes.data() + e.dataOffset;
-					o.add(L"Width", Json::num((unsigned long long)e.width));
-					o.add(L"Height", Json::num((unsigned long long)e.height));
+					// Windows 7's entry has no size: none given rather than zeros.
+					if (e.width) o.add(L"Width", Json::num((unsigned long long)e.width));
+					if (e.height) o.add(L"Height", Json::num((unsigned long long)e.height));
 					o.add(L"DataSize", Json::num((unsigned long long)e.dataSize));
 					o.add(L"Format", Json::str(imageExtension(data, e.dataSize)));
 					o.add(L"DataChecksumValid", Json::boolean(e.dataChecksumValid));

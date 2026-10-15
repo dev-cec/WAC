@@ -5,6 +5,11 @@
 
 namespace {
 
+const uint8_t RECENT_FILE_CACHE_SIGNATURE[8] = { 0xFE, 0xFF, 0xEE, 0xFF, 0x11, 0x22, 0x00, 0x00 };
+const size_t RECENT_FILE_CACHE_HEADER = 20;      //!< the signature, then 12 bytes not known
+const uintmax_t RECENT_FILE_CACHE_MAX = 16u << 20; //!< a few KiB in practice
+const wchar_t RECENT_FILE_CACHE[] = L"\\Windows\\AppCompat\\Programs\\RecentFileCache.bcf";
+
 /*! A text date Windows writes in UTC ("month/day/year hour:minute:second"):
  *  its UTC and local forms, to the second. */
 void addUtcTextDate(std::vector<std::pair<std::wstring, Json>>& values, const std::wstring& name, const std::wstring& text) {
@@ -164,10 +169,51 @@ Json AmcacheEntry::toJson(bool withTable) const {
 	return o;
 }
 
+bool decodeRecentFileCache(const std::vector<uint8_t>& bytes, std::vector<std::wstring>& paths) {
+	paths.clear();
+	if (bytes.size() < RECENT_FILE_CACHE_HEADER
+	    || memcmp(bytes.data(), RECENT_FILE_CACHE_SIGNATURE, sizeof RECENT_FILE_CACHE_SIGNATURE) != 0) return false;
+	size_t at = RECENT_FILE_CACHE_HEADER;
+	while (fits(bytes.size(), at, 4)) {
+		const size_t characters = readLittleEndian<uint32_t>(bytes.data() + at);
+		// The characters and their null, within the file: a count beyond it is forged or cut.
+		if (characters == 0 || characters > (bytes.size() - at - 4) / 2 || !fits(bytes.size(), at + 4, characters * 2 + 2)) {
+			log(2, L"🔥RecentFileCache.bcf: entry at " + std::to_wstring(at) + L" outside the file, reading stopped");
+			break;
+		}
+		std::wstring path;
+		for (size_t i = 0; i < characters; ++i) path += (wchar_t)readLittleEndian<uint16_t>(bytes.data() + at + 4 + 2 * i);
+		paths.push_back(std::move(path));
+		at += 4 + characters * 2 + 2;
+	}
+	return true;
+}
+
 HRESULT Amcache::getData() {
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Amcache :");
 	log(0, L"*******************************************************************************************************************");
+	const bool recent = readRecentFileCache();
+	const HRESULT hr = readHive();
+	// Windows 7 without KB2952664 has no Amcache.hve: RecentFileCache.bcf is its answer.
+	return (hr != ERROR_SUCCESS && recent) ? ERROR_SUCCESS : hr;
+}
+
+bool Amcache::readRecentFileCache() {
+	const std::wstring file = extractedPath(RECENT_FILE_CACHE);
+	std::error_code ec;
+	if (!std::filesystem::is_regular_file(file, ec)) return false;
+	std::vector<uint8_t> bytes;
+	if (!readWholeFile(file, RECENT_FILE_CACHE_MAX, bytes) || !decodeRecentFileCache(bytes, recentFiles)) {
+		log(2, L"🔥RecentFileCache.bcf unreadable, or without its signature: " + file, ERROR_INVALID_DATA);
+		return false;
+	}
+	recentFileCache = originalPath(file);
+	log(2, L"❇️RecentFileCache.bcf: " + std::to_wstring(recentFiles.size()) + L" path(s)");
+	return true;
+}
+
+HRESULT Amcache::readHive() {
 	const std::wstring path = conf.mountpoint + L"\\Windows\\AppCompat\\Programs\\Amcache.hve";
 	ORHKEY hive = nullptr, root = nullptr;
 	HRESULT hr = OROpenHive(path.c_str(), &hive);
@@ -246,6 +292,13 @@ HRESULT Amcache::toJson() {
 		else if (e.table == L"InventoryApplicationFile" || e.table == L"File") files.push(e.toJson(false));
 		else others.push(e.toJson(true));
 	}
+	for (const std::wstring& path : recentFiles) {
+		Json o = Json::obj();
+		o.add(L"Table", Json::str(L"RecentFileCache"));
+		o.add(L"Source", Json::str(recentFileCache));
+		o.add(L"Path", Json::str(path));
+		files.push(std::move(o));
+	}
 	HRESULT hr = writeJsonFile("amcache_applications.json", applications);
 	const HRESULT hrFiles = writeJsonFile("amcache_application_files.json", files);
 	const HRESULT hrOthers = writeJsonFile("amcache_inventory.json", others);
@@ -256,4 +309,5 @@ HRESULT Amcache::toJson() {
 
 void Amcache::clear() {
 	entries.clear();   // destroys the elements -> really releases them
+	recentFiles.clear();
 }

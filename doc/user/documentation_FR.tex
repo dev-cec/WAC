@@ -1134,7 +1134,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         et le GUID de son volume ; pour un programme, \champ{Name},
         \champ{Version}, \champ{Publisher}, \champ{UninstallKeys} et
         \champ{Files} ---, et rend les autres telles que lues
-        (\champ{UnnamedValues} : nom, type, valeur).
+        (\champ{UnnamedValues} : nom, type, valeur). Sous Windows~7, les
+        exécutables lancés depuis le dernier passage de sa tâche d'inventaire,
+        que liste \fichier{RecentFileCache.bcf}, sont donnés dans
+        \fichier{amcache\_application\_files.json} avec \champ{Table}
+        \texttt{RecentFileCache} : leur chemin seulement, le fichier ne porte
+        aucune date.
   \item[\fichier{shimcache.json}] cache de compatibilité : chemin et date de
         modification du fichier, position dans le cache (\champ{CachePosition},
         0 pour la plus récente). Une entrée prouve que le binaire était présent,
@@ -1142,7 +1147,7 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         publient n'est \emph{pas} relevé : mesuré contre le Prefetch, son « oui »
         est presque toujours juste, mais son « non » est faux pour 9 binaires
         exécutés sur 10 — il ferait conclure qu'un programme n'a jamais tourné.
-        Formats décodés : Windows~8.1, 10 et 11 ; sous Windows~8.1, le chemin
+        Formats décodés : Windows~7, 8.1, 10 et 11 ; sous Windows~8.1, le chemin
         commence par \texttt{SYSVOL\textbackslash}, le volume système, et il est
         publié tel quel.
   \item[\fichier{bams.json}] dernière exécution par programme et par utilisateur
@@ -1511,8 +1516,15 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         converti sous la même forme ; le type d'une propriété, que cette base
         ne dit pas, vient de la table que Windows~11 déclare, et une propriété
         qu'elle ne connaît pas est donnée en hexadécimal. Mesuré sous
-        Windows~8.1 ; une valeur de Windows~10 compressée autrement que sur
+        Windows~8.1, et sous Windows~7, dont la base nomme autrement ses tables
+        et ses colonnes, écrit ses nombres et ses dates en gros-boutiste et
+        brouille son texte ; une valeur de Windows~10 compressée autrement que sur
         7~bits (XPRESS) est signalée, non décodée.
+        \textbf{Attention} : sous Windows~7, l'indexeur garde en mémoire
+        plusieurs minutes ce qu'il vient d'indexer avant de l'écrire dans sa
+        base ; \wac{} lit la base telle qu'elle est sur le disque --- il ne
+        redémarre aucun service sur la machine examinée --- et les dernières
+        minutes peuvent y manquer.
   \item[\fichier{rdp\_client.json}] connexions Bureau à distance \emph{sortantes} de
         chaque profil : connexions récentes (\champ{RecentConnection},
         \champ{MruPosition} 0 pour la plus récente) et serveurs contactés
@@ -1577,8 +1589,8 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<hachage>.<ext>}).
         Les deux sommes de contrôle que Windows écrit pour chaque entrée sont
         recalculées (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}) :
-        une entrée lue de travers les échoue. Windows 8 à 11 ; la disposition
-        de Vista et 7 n'est pas décodée.
+        une entrée lue de travers les échoue. Windows 7 à 11 (Windows~7 ne
+        donne pas les dimensions) ; la disposition de Vista n'est pas décodée.
   \item[\fichier{error\_reports.json}] rapports d'erreurs Windows
         (\fichier{Report.wer}) de la machine et de chaque profil : programme,
         chemin, instant (\champ{EventTimeUtc}), signature du problème
@@ -1940,22 +1952,22 @@ shellbags et des raccourcis est ajoutée systématiquement.
 \section{Format non pris en charge}\label{sec:format}
 
 Le format d'une pièce se lit sur la pièce elle-même --- sa signature ou sa
-version interne ---, jamais sur la version de Windows : un Prefetch de Vista
-retrouvé sur un Windows~10 reste un Prefetch de Vista. Quand \wac{} n'a pas de
+version interne ---, jamais sur la version de Windows : un Prefetch de XP
+retrouvé sur un Windows~10 reste un Prefetch de XP. Quand \wac{} n'a pas de
 décodeur pour le format rencontré, qu'il soit ancien ou qu'il n'ait encore
 jamais été vu, il ne convertit rien et le dit ; la pièce, elle, est dans la
 consigne, prête pour un autre outil.
 
 \begin{lstlisting}
 {
-  "Path": "C:\\Windows\\Prefetch\\CMD.EXE-4A81B364.pf",
-  "Hash": "4A81B364",
+  "Path": "C:\\WINDOWS\\Prefetch\\CMD.EXE-087B4001.pf",
+  "Hash": "087B4001",
   "Filename": "CMD.EXE",
   "CreatedUtc": "2026-10-13T06:12:44.1835527Z",
-  "FormatVersion": 23,
+  "FormatVersion": 17,
   "DecodingStatus": "UnsupportedFormat",
-  "FormatSignature": "0x00000017",
-  "FormatName": "SCCA version 23",
+  "FormatSignature": "0x00000011",
+  "FormatName": "SCCA version 17",
   "Note": "Collected raw, not converted: this version of WAC has no
            decoder for this format. The exhibit store holds the source."
 }

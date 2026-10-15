@@ -131,11 +131,12 @@ int main(int argc, char** argv) {
 	check(std::wstring(releaseOf(eleven, known).name) == L"Windows 11" && known, "26200 is not Windows 11");
 	check(std::wstring(releaseOf(server2019, known).name) == L"Windows Server 2019" && known, "17763 server is not Server 2019");
 	const ArtefactEntry* prefetch = artefactEntry("prefetch");
-	check(prefetch && std::wstring(formOf(*prefetch, vista).format) == L"SCCA version 23" && !formOf(*prefetch, vista).decoded, "Prefetch on Vista");
+	check(prefetch && std::wstring(formOf(*prefetch, vista).format) == L"SCCA version 23" && formOf(*prefetch, vista).decoded
+	      && !formOf(*prefetch, xp).decoded, "Prefetch: decoded on Vista, not on XP");
 	check(prefetch && formOf(*prefetch, eleven).decoded && formOf(*prefetch, eleven).sinceBuild == 10240, "Prefetch on Windows 11");
 	const ArtefactEntry* amcache = artefactEntry("amcache");
-	check(amcache && formOf(*amcache, ten).decoded && formOf(*amcache, eight).decoded && !formOf(*amcache, seven).decoded,
-	      "Amcache: Inventory keys and File and Programs keys decoded, RecentFileCache.bcf not");
+	check(amcache && formOf(*amcache, ten).decoded && formOf(*amcache, eight).decoded && formOf(*amcache, seven).decoded,
+	      "Amcache: Inventory keys, File and Programs keys, RecentFileCache.bcf decoded");
 
 	/* THE GUARD ON THE MACHINE'S SIDE (expectedOn): a source not found is
 	   "expected but missing" only where this version always has one. */
@@ -155,17 +156,20 @@ int main(int argc, char** argv) {
 	   known and not converted, and a signature nobody has seen yet, are both
 	   "unsupported" — the first with its name, the second without. */
 	check(pieceFormat("prefetch", 30).decoded && pieceFormat("prefetch", 31).decoded, "Prefetch 30 or 31 not decoded");
-	const PieceFormat vistaPrefetch = pieceFormat("prefetch", 23);
-	check(!vistaPrefetch.decoded && vistaPrefetch.form && std::wstring(vistaPrefetch.form->format) == L"SCCA version 23",
-	      "a Vista Prefetch is decoded, or not named");
+	const PieceFormat xpPrefetch = pieceFormat("prefetch", 17);
+	check(!xpPrefetch.decoded && xpPrefetch.form && std::wstring(xpPrefetch.form->format) == L"SCCA version 17",
+	      "an XP Prefetch is decoded, or not named");
+	check(pieceFormat("prefetch", 23).decoded, "a Vista and 7 Prefetch not decoded");
 	const PieceFormat tomorrow = pieceFormat("prefetch", 32);
 	check(!tomorrow.decoded && !tomorrow.form, "a Prefetch version nobody has seen is decoded, or given a form");
 	check(pieceFormat("recycle_bin", 1).decoded && pieceFormat("recycle_bin", 2).decoded && !pieceFormat("recycle_bin", 3).decoded,
 	      "$I: versions 1 and 2 decoded, no other");
-	check(pieceFormat("thumbcache", 0x20).decoded && !pieceFormat("thumbcache", 0x15).decoded && pieceFormat("thumbcache", 0x15).form,
-	      "thumbcache: Windows 10 layout decoded, Windows 7 layout known and not decoded");
-	check(pieceFormat("shimcache", 0x34).decoded && !pieceFormat("shimcache", 0xBADC0FEE).decoded && !pieceFormat("shimcache", 0x80).form,
-	      "ShimCache: Windows 10 header decoded, Windows 7 header not, 0x80 alone is no signature");
+	check(pieceFormat("thumbcache", 0x20).decoded && pieceFormat("thumbcache", 0x15).decoded
+	      && !pieceFormat("thumbcache", 0x14).decoded && pieceFormat("thumbcache", 0x14).form,
+	      "thumbcache: Windows 10 and 7 layouts decoded, Vista's known and not decoded");
+	check(pieceFormat("shimcache", 0x34).decoded && pieceFormat("shimcache", 0xBADC0FEE).decoded && !pieceFormat("shimcache", 0xBADC0FFE).decoded
+	      && !pieceFormat("shimcache", 0x80).form,
+	      "ShimCache: Windows 10 and 7 headers decoded, Server 2003 not, 0x80 alone is no signature");
 	check(pieceFormat("shimcache", 0x73743031).decoded && !pieceFormat("shimcache", 0x73743030).decoded,
 	      "ShimCache: Windows 8.1 entries (\"10ts\" after 0x80 bytes) decoded, Windows 8 (\"00ts\") not");
 	check(pieceFormat("jump_lists", 1).decoded && pieceFormat("jump_lists", 4).decoded && pieceFormat("jump_lists", 6).decoded

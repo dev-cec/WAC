@@ -24,6 +24,10 @@ const int VT_TIME = 64;        //!< VT_FILETIME
 const int VT_GUID = 72;        //!< VT_CLSID
 const int VT_VECTOR_FLAG = 0x1000;
 
+// The first byte of Windows 7's text once decoded: its form (decodeSearchText).
+const uint8_t SEARCH_TEXT_RUNS = 0;   //!< runs of characters sharing their high byte
+const uint8_t SEARCH_TEXT_BYTES = 1;  //!< one byte per character, the high one zero
+
 //! Deepest scope chain followed when rebuilding a URL: a loop stops there.
 const int SCOPE_DEPTH_MAX = 256;
 
@@ -72,6 +76,26 @@ void addEseValue(Json& o, const std::wstring& key, const EseColumn& column, cons
 	o.add(key, eseCellToJson(column, cell));
 }
 
+/*! A value of Windows 7's property store (SystemIndex_0A): its numbers and
+ *  dates are 8 big-endian bytes, its text in a long binary column encoded
+ *  (decodeSearchText). Anything else as on Windows 8. */
+void addWindows7Value(Json& o, const std::wstring& key, const EseColumn& column, const EseCell& cell, int variantType) {
+	if (cell.compressionScheme < 0 && !cell.longValueMissing && cell.values.size() == 1) {
+		const std::vector<uint8_t>& bytes = cell.values.front();
+		if (column.type == JET_BINARY && bytes.size() == 8
+		    && (variantType == VT_TIME || variantType == VT_UNSIGNED_64 || variantType == VT_SIGNED_64)) {
+			addSearchBlob(o, key, variantType, std::vector<uint8_t>(bytes.rbegin(), bytes.rend()));
+			return;
+		}
+		std::wstring text;
+		if (column.type == JET_LONG_BINARY && variantType == VT_UTF16 && decodeSearchText(bytes, text)) {
+			if (!text.empty()) o.add(key, Json::str(text));
+			return;
+		}
+	}
+	addEseValue(o, key, column, cell, variantType);
+}
+
 //! The column of that identifier, or nullptr.
 const EseColumn* columnOf(const EseTable& table, uint32_t id) {
 	for (const EseColumn& c : table.columns) if (c.id == id) return &c;
@@ -87,6 +111,33 @@ std::wstring propertyKey(const std::wstring& name) {
 }
 
 } // namespace
+
+bool decodeSearchText(const std::vector<uint8_t>& encoded, std::wstring& text) {
+	text.clear();
+	if (encoded.empty()) return false;
+	// The obfuscation: each byte XOR a byte of (0x05000113 XOR the size), in
+	// turn, XOR its own position's low byte.
+	const uint32_t mask = 0x05000113u ^ (uint32_t)encoded.size();
+	std::vector<uint8_t> d(encoded.size());
+	for (size_t i = 0; i < encoded.size(); ++i)
+		d[i] = (uint8_t)(encoded[i] ^ (uint8_t)(mask >> (8 * (i & 3))) ^ (uint8_t)i);
+	if (d[0] == SEARCH_TEXT_BYTES) {
+		for (size_t i = 1; i < d.size(); ++i) text += (wchar_t)d[i];
+		return true;
+	}
+	if (d[0] != SEARCH_TEXT_RUNS) return false;
+	// Runs: a count, the high byte they share, then the low byte of each.
+	for (size_t at = 1; at < d.size();) {
+		if (!fits(d.size(), at, 2)) return false;
+		const size_t count = d[at];
+		const wchar_t high = (wchar_t)(d[at + 1] << 8);
+		at += 2;
+		if (!fits(d.size(), at, count)) return false;
+		for (size_t i = 0; i < count; ++i) text += (wchar_t)(high | d[at + i]);
+		at += count;
+	}
+	return true;
+}
 
 void addSearchBlob(Json& o, const std::wstring& key, int variantType, const std::vector<uint8_t>& bytes) {
 	if (variantType == VT_TIME && bytes.size() == 8) {
@@ -225,11 +276,17 @@ HRESULT readSearchEdb(const std::wstring& file, const std::wstring& path, std::v
 	EseDatabase db;
 	const HRESULT opened = db.open(file);
 	if (opened != ERROR_SUCCESS) return opened;
-	if (const EseTable* store = db.table(L"SystemIndex_PropertyStore")) {
+	// Windows 7 names its property store otherwise (see search_index.h).
+	const EseTable* store = db.table(L"SystemIndex_PropertyStore");
+	const bool windows7 = store == nullptr;
+	if (windows7) store = db.table(L"SystemIndex_0A");
+	if (store) {
 		std::vector<std::pair<std::wstring, int>> properties;   // by column: JSON key, VARIANT type
 		for (const EseColumn& c : store->columns) {
 			const std::wstring name = edbPropertyName(c.name);
-			properties.emplace_back(c.name == L"WorkID" ? L"WorkId" : propertyKey(name), searchPropertyVariantType(name));
+			// Windows 7's DocID is Windows 8's WorkID: the item, DocumentID in the crawler's table.
+			const bool identifier = c.name == L"WorkID" || c.name == L"DocID";
+			properties.emplace_back(identifier ? L"WorkId" : propertyKey(name), searchPropertyVariantType(name));
 		}
 		for (const EseRecord& r : db.records(*store)) {
 			SearchIndexItem item;
@@ -239,7 +296,8 @@ HRESULT readSearchEdb(const std::wstring& file, const std::wstring& path, std::v
 				const EseColumn* column = columnOf(*store, cell.columnId);
 				if (!column || cell.values.empty()) continue;
 				const auto& property = properties[column - store->columns.data()];
-				addEseValue(item.fields, property.first, *column, cell, property.second);
+				if (windows7) addWindows7Value(item.fields, property.first, *column, cell, property.second);
+				else addEseValue(item.fields, property.first, *column, cell, property.second);
 			}
 			items.push_back(std::move(item));
 		}

@@ -1106,14 +1106,18 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         read in its key's name) and its volume's GUID; for a program,
         \champ{Name}, \champ{Version}, \champ{Publisher},
         \champ{UninstallKeys} and \champ{Files} ---, and gives the others as
-        read (\champ{UnnamedValues}: name, type, value).
+        read (\champ{UnnamedValues}: name, type, value). On Windows~7, the
+        executables run since the last pass of its inventory task, listed in
+        \fichier{RecentFileCache.bcf}, are given in
+        \fichier{amcache\_application\_files.json} with \champ{Table}
+        \texttt{RecentFileCache}: their path only, the file holds no date.
   \item[\fichier{shimcache.json}] compatibility cache: path and modification date
         of the file, position in the cache (\champ{CachePosition}, 0 for the most
         recent). An entry proves the binary was present, not that it ran. The
         execution flag other tools publish is \emph{not} collected: measured
         against Prefetch, its ``yes'' is nearly always right, but its ``no'' is
         wrong for 9 executed binaries out of 10 — it would lead to conclude that
-        a program never ran. Formats decoded: Windows~8.1, 10 and 11; on
+        a program never ran. Formats decoded: Windows~7, 8.1, 10 and 11; on
         Windows~8.1 the path starts with \texttt{SYSVOL\textbackslash}, the system
         volume, and is published as it is.
   \item[\fichier{bams.json}] last execution per program and per user
@@ -1460,8 +1464,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         working copy, then it is converted in the same form; a property's
         type, which that database does not say, comes from the table
         Windows~11 declares, and a property that table does not know is given
-        in hexadecimal. Measured on Windows~8.1; a value of Windows~10
+        in hexadecimal. Measured on Windows~8.1, and on Windows~7, whose
+        database names its tables and columns otherwise, writes its numbers
+        and dates big-endian and obfuscates its text; a value of Windows~10
         compressed otherwise than on 7~bits (XPRESS) is said, not decoded.
+        \textbf{Beware}: on Windows~7 the indexer keeps what it just indexed
+        in memory for several minutes before writing it to its database;
+        \wac{} reads the database as it is on disk --- it restarts no service
+        on the examined machine --- and the last few minutes may be missing.
   \item[\fichier{rdp\_client.json}] \emph{outgoing} Remote Desktop connections of
         each profile: recent connections (\champ{RecentConnection},
         \champ{MruPosition} 0 for the latest) and servers reached
@@ -1525,8 +1535,8 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<hash>.<ext>}).
         The two checksums Windows writes for each entry are recomputed
         (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}): an entry read
-        wrong fails them. Windows 8 to 11; the layout of Vista and 7 is not
-        decoded.
+        wrong fails them. Windows 7 to 11 (Windows~7 gives no dimensions); the
+        layout of Vista is not decoded.
   \item[\fichier{error\_reports.json}] Windows error reports
         (\fichier{Report.wer}) of the machine and of each profile: program, path,
         instant (\champ{EventTimeUtc}), problem signature (faulting module,
@@ -1874,21 +1884,21 @@ With \opt{dump}, the raw value of shellbags and shortcuts is always added.
 \section{Unsupported format}\label{sec:format}
 
 The format of a piece is read on the piece itself --- its signature or its
-internal version ---, never on the version of Windows: a Vista Prefetch found
-on a Windows~10 remains a Vista Prefetch. When \wac{} has no decoder for the
+internal version ---, never on the version of Windows: an XP Prefetch found
+on a Windows~10 remains an XP Prefetch. When \wac{} has no decoder for the
 format met, be it an old one or one never seen yet, it converts nothing and
 says so; the piece itself is in the exhibit store, ready for another tool.
 
 \begin{lstlisting}
 {
-  "Path": "C:\\Windows\\Prefetch\\CMD.EXE-4A81B364.pf",
-  "Hash": "4A81B364",
+  "Path": "C:\\WINDOWS\\Prefetch\\CMD.EXE-087B4001.pf",
+  "Hash": "087B4001",
   "Filename": "CMD.EXE",
   "CreatedUtc": "2026-10-13T06:12:44.1835527Z",
-  "FormatVersion": 23,
+  "FormatVersion": 17,
   "DecodingStatus": "UnsupportedFormat",
-  "FormatSignature": "0x00000017",
-  "FormatName": "SCCA version 23",
+  "FormatSignature": "0x00000011",
+  "FormatName": "SCCA version 17",
   "Note": "Collected raw, not converted: this version of WAC has no
            decoder for this format. The exhibit store holds the source."
 }

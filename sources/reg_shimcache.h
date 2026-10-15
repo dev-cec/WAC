@@ -75,10 +75,24 @@ public:
 	 *  @return S_OK, or the failure of the read. */
 	HRESULT getData();
 
+	/*! Parses an AppCompatCache value according to its format.
+	 *  @param value the value's bytes
+	 *  @return S_OK, or why it cannot be read */
+	HRESULT parse(const std::vector<BYTE>& value);
+
 	/*! Writes `shimcache.json` into the output directory.
 	 *  @return the result of the write. */
 	HRESULT toJson();
 
 	//! Releases the memory held by the entries.
 	void clear();
+
+private:
+	/*! Adds one entry, in cache order: its path, its fingerprints with
+	 *  `--binary`, its last modification. */
+	void addEntry(const std::wstring& path, const FILETIME& lastModifiedUtc);
+
+	/*! Reads the value of Windows 7 and Server 2008 R2 (magic 0xBADC0FEE).
+	 *  @return S_OK, or ERROR_INVALID_DATA if neither layout fits it */
+	HRESULT parseWindows7(const BYTE* data, size_t size);
 };

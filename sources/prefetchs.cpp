@@ -305,7 +305,7 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 	hash_string = to_hex(hash, 8, HexLetters::Upper);
 
 	/* THE VERSION DECIDES, and the table holds which ones are decoded
-	   (pieceFormat): an older layout — 17, 23, 26 — or one nobody has seen yet
+	   (pieceFormat): an older layout — 17 — or one nobody has seen yet
 	   is not parsed with the offsets of version 30. The file used to be left
 	   out of the JSON, with a line in the log: it is now listed, with its
 	   name, its hash and its version, as "unsupported format" — the name and
@@ -353,8 +353,11 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 		volume_offset = volume_size = nb_volumes = 0;
 	}
 	if (trace_offset < 0 || (size_t)trace_offset > dataSize) trace_offset = 0;
-	//run times
-	for (int i = 0; i < 8; i++) {
+	/* Run times: eight from version 26 on; version 23 (Vista, 7) keeps only
+	   the last one, at the same place, the bytes after it unknown — read as
+	   dates, they gave runs that never were. */
+	const int runTimes = (version == 23) ? 1 : 8;
+	for (int i = 0; i < runTimes; i++) {
 		FILETIME tempUtc = *reinterpret_cast<FILETIME*>(data + 84 + 44 + i * 8);
 		// null dates are not kept, there are not always 8 dates
 		log(3, L"🔈timeToIso8601 last_runsUtc");
@@ -362,11 +365,13 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 			last_runsUtc.push_back(tempUtc);
 		}
 	}
-	/* Version 26 (Windows 8.1) has its run count at 84 + 124, as the first
-	   layout of version 30, whose marker — a zero at 84 + 120 — version 26
-	   does not promise: measured zero on the Windows 8.1 VM, it is not relied
-	   upon. */
-	if (version == 26 || *reinterpret_cast<int*>(data + 84 + 120) == 0) // old_format
+	/* Version 23 has its run count at 84 + 68 (measured on the Windows 7 VM,
+	   the count libscca reads). Version 26 (Windows 8.1) at 84 + 124, as the
+	   first layout of version 30, whose marker — a zero at 84 + 120 — version
+	   26 does not promise: measured zero on the Windows 8.1 VM, it is not
+	   relied upon. */
+	if (version == 23) run_count = *reinterpret_cast<int*>(data + 84 + 68);
+	else if (version == 26 || *reinterpret_cast<int*>(data + 84 + 120) == 0) // old_format
 	{
 		run_count = *reinterpret_cast<int*>(data + 84 + 124);
 	}
@@ -374,11 +379,11 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 		run_count = *reinterpret_cast<int*>(data + 84 + 116);
 	}
 	// VOLUMES
-	// A volume entry is 104 bytes in version 26, 96 from version 30 on
+	// A volume entry is 104 bytes in versions 23 and 26, 96 from version 30 on
 	// (measured: the first volume's name starts right after its entry, at 104
-	// in the Prefetch of Windows 8.1). Beyond what the block can hold, the
-	// count is wrong and the reading would go out of the buffer.
-	const size_t volumeEntry = (version == 26) ? 104 : 96;
+	// in the Prefetch of Windows 7 and 8.1). Beyond what the block can hold,
+	// the count is wrong and the reading would go out of the buffer.
+	const size_t volumeEntry = (version == 23 || version == 26) ? 104 : 96;
 	const int maxVolumes = (volume_size > 0) ? (int)((size_t)volume_size / volumeEntry) : 0;
 	if (nb_volumes > maxVolumes) {
 		log(2, L"🔥Prefetch : " + std::to_wstring(nb_volumes)
@@ -393,9 +398,9 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 	/*  FILE METRICS ARRAY. It was not read at all, while it carries, for EACH
 	    loaded file, its $MFT reference — which identifies the file on the volume
 	    independently of its name, hence even if the executable has been renamed
-	    or deleted since. An entry is 32 bytes in versions 26 and 30
-	    and above (measured in version 26: the array ends exactly where the
-	    trace chains begin):
+	    or deleted since. An entry is 32 bytes in versions 23, 26 and 30
+	    and above (measured in versions 23 and 26: the array ends exactly where
+	    the trace chains begin):
 	    0  start, 4 duration, 8 average duration,
 	    12 offset of the name in the strings block, 16 number of characters,
 	    20 flags, 24 $MFT reference (48 bits of entry + 16 of sequence). */

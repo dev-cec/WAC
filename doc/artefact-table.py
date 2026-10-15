@@ -43,7 +43,7 @@ PHRASES = [
     ("…and exFAT volumes (Vista SP1; XP with KB955704)", "…et volumes exFAT (Vista SP1 ; XP avec KB955704)"),
     ("FAT12, FAT16, FAT32 volumes", "volumes FAT12, FAT16, FAT32"),
     ("the same folder, with", "le même dossier, avec"),
-    ("the same folders", "les mêmes dossiers"), ("the same keys", "les mêmes clés"),
+    ("the same folders", "les mêmes dossiers"), ("the same folder", "le même dossier"), ("the same keys", "les mêmes clés"),
     ("the same stream", "le même flux"), ("the same value", "la même valeur"),
     ("Thumbs.db in each folder", "Thumbs.db dans chaque dossier"),
     ("SOFTWARE, SYSTEM and NTUSER.DAT:", "SOFTWARE, SYSTEM et NTUSER.DAT :"),
@@ -60,7 +60,8 @@ PHRASES = [
     ("BITS state file", "fichier d'état de BITS"), ("certificate blobs", "certificats (blobs)"),
     ("CIM repository of Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, in FS)", "dépôt CIM de Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, dans FS)"),
     ("CIM repository", "dépôt CIM"),
-    ("CMMM, Vista and 7 layout", "CMMM, disposition de Vista et 7"),
+    ("CMMM, Vista layout", "CMMM, disposition de Vista"),
+    ("CMMM, Windows 7 layout", "CMMM, disposition de Windows 7"),
     ("CMMM, Windows 8 and later layout", "CMMM, disposition de Windows 8 et suivants"),
     ("DetectionHistory records", "enregistrements DetectionHistory"),
     ("header 0x30 or 0x34, entries", "en-tête 0x30 ou 0x34, entrées"),
@@ -136,8 +137,8 @@ NOTES = {
         "Windows XP et Server 2003 : événements 528 et 682 de Security.evt, non convertis.",
     "Empty since Windows 10 1803 unless the backup task was switched back on. Copied raw: not converted.":
         "Vide depuis Windows 10 1803, sauf si la tâche de sauvegarde a été réactivée. Copié brut : non converti.",
-    "Windows.edb converted with its 7-bit text (Windows 8.1 measured); a value compressed otherwise (XPRESS) is said, not decoded. Windows XP: Windows Desktop Search, an optional install.":
-        "Windows.edb converti, avec son texte compressé sur 7 bits (mesuré sous Windows 8.1) ; une valeur compressée autrement (XPRESS) est signalée, non décodée. Windows XP : Windows Desktop Search, une installation facultative.",
+    "Windows.edb converted with its 7-bit text (Windows 8.1 measured), and Windows 7's layout: its own table and column names, big-endian numbers, obfuscated text (measured); a value compressed otherwise (XPRESS) is said, not decoded. Windows XP: Windows Desktop Search, an optional install.":
+        "Windows.edb converti, avec son texte compressé sur 7 bits (mesuré sous Windows 8.1), et la disposition de Windows 7 : ses propres noms de table et de colonnes, ses nombres gros-boutistes, son texte brouillé (mesurés) ; une valeur compressée autrement (XPRESS) est signalée, non décodée. Windows XP : Windows Desktop Search, une installation facultative.",
     "The journal exists only where it was created: always on the system volume from Vista on.":
         "Le journal n'existe que là où il a été créé : toujours sur le volume système à partir de Vista.",
     "Chromium and Firefox depend on the browser installed, not on Windows.":

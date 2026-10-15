@@ -23,6 +23,7 @@
 #include "setupapi_log.h"
 #include "recycle_bin.h"
 #include "hosts_file.h"
+#include "reg_shimcache.h"
 #include "error_reports.h"
 #include "defender_history.h"
 #include "defender_log.h"
@@ -39,6 +40,7 @@
 #include "rdp_client.h"
 #include "rdp_server.h"
 #include "thumbcache.h"
+#include "reg_amcache.h"
 #include "oleparser.h"
 #include "emails.h"
 #include "mbox_mail.h"
@@ -993,7 +995,7 @@ void thumbcache() {
 	check(decodeThumbcache(file, cache) && cache.entries.size() == 1 && cache.entries[0].hash == 0x0123456789ABCDEFULL
 	      && cache.entries[0].identifier == identifier && cache.entries[0].width == 256 && cache.entries[0].height == 192
 	      && cache.entries[0].dataSize == 2000 && cache.entries[0].headerChecksumValid && cache.entries[0].dataChecksumValid
-	      && thumbcacheSize(cache.type) == L"256", "thumbcache: an entry decoded, both checksums valid");
+	      && thumbcacheSize(cache.version, cache.type) == L"256", "thumbcache: an entry decoded, both checksums valid");
 	const size_t at = cache.entries.empty() ? 0 : cache.entries[0].dataOffset;
 	std::vector<uint8_t> sampled = file, skipped = file;
 	sampled[at + 1024] ^= 0xFF;   // the first of the four bytes taken every 400
@@ -1010,14 +1012,62 @@ void thumbcache() {
 	writeLittleEndian<uint32_t>(cut.data() + 20, 0xFFFFFFFF);   // first free place beyond the file
 	ThumbcacheFile d;
 	check(decodeThumbcache(cut, d) && d.entries.empty(), "thumbcache: a cut file read no further than its end");
-	std::vector<uint8_t> seven = file;
-	writeLittleEndian<uint32_t>(seven.data() + 4, 0x15);   // Windows 7: another entry layout
+	std::vector<uint8_t> vista = file;
+	writeLittleEndian<uint32_t>(vista.data() + 4, 0x14);   // Vista: another entry layout, never measured
 	ThumbcacheFile g;
-	check(decodeThumbcache(seven, g) && g.unsupportedFormat && g.version == 0x15 && g.entries.empty(),
-	      "thumbcache: a Windows 7 layout decoded as Windows 8 to 11's, or not declared unsupported");
-	writeLittleEndian<uint32_t>(seven.data() + 4, 0x21);   // a version nobody has seen yet
-	check(decodeThumbcache(seven, g) && g.unsupportedFormat && g.entries.empty(), "thumbcache: an unknown version decoded");
+	check(decodeThumbcache(vista, g) && g.unsupportedFormat && g.version == 0x14 && g.entries.empty(),
+	      "thumbcache: a Vista layout decoded as a later one's, or not declared unsupported");
+	writeLittleEndian<uint32_t>(vista.data() + 4, 0x21);   // a version nobody has seen yet
+	check(decodeThumbcache(vista, g) && g.unsupportedFormat && g.entries.empty(), "thumbcache: an unknown version decoded");
 	check(!cache.unsupportedFormat, "thumbcache: the Windows 10 layout declared unsupported");
+}
+
+/*! Windows 7's layout (version 0x15): first the 48 bytes of an entry of the
+ *  test VM's thumbcache_256.db, whose header checksum, over its first 40
+ *  bytes, is the one Windows wrote after them. Then a cache of that version
+ *  built here — offsets at 12 and 16 in the file header, an entry of 48
+ *  bytes, checksums at 32 and 40, no width nor height — decoded with both
+ *  checksums valid, its type named by Windows 7's sizes. */
+void thumbcacheWindows7() {
+	const uint8_t header[48] = { 0x43, 0x4D, 0x4D, 0x4D, 0x80, 0x00, 0x00, 0x00, 0xE8, 0x4E, 0xB8, 0xF9, 0x51, 0xBC, 0x24, 0x09,
+	                             0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1D, 0xFE, 0x28, 0x91, 0x9F, 0x41, 0x8B, 0x4D };
+	check(thumbcacheCrc64(header, 40, ~0ULL) == readLittleEndian<uint64_t>(header + 40),
+	      "thumbcache: Windows 7 header checksum as Windows wrote it");
+	const std::wstring identifier = L"a5c4cc8a55cc40e9";
+	std::vector<uint8_t> data(1500);
+	for (size_t i = 0; i < data.size(); ++i) data[i] = (uint8_t)(i * 11 + 5);
+	data[0] = 'B';
+	data[1] = 'M';
+	std::vector<uint8_t> file(24 + 48 + identifier.size() * 2 + data.size());
+	memcpy(file.data(), "CMMM", 4);
+	writeLittleEndian<uint32_t>(file.data() + 4, 0x15);
+	writeLittleEndian<uint32_t>(file.data() + 8, 1);                      // 96 pixels on Windows 7
+	writeLittleEndian<uint32_t>(file.data() + 12, 24);                    // first entry
+	writeLittleEndian<uint32_t>(file.data() + 16, (uint32_t)file.size()); // first free place
+	writeLittleEndian<uint32_t>(file.data() + 20, 1);                     // entries
+	uint8_t* e = file.data() + 24;
+	memcpy(e, "CMMM", 4);
+	writeLittleEndian<uint32_t>(e + 4, (uint32_t)(file.size() - 24));
+	writeLittleEndian<uint64_t>(e + 8, 0xA5C4CC8A55CC40E9ULL);
+	writeLittleEndian<uint32_t>(e + 16, (uint32_t)identifier.size() * 2);
+	writeLittleEndian<uint32_t>(e + 24, (uint32_t)data.size());
+	for (size_t i = 0; i < identifier.size(); ++i) writeLittleEndian<uint16_t>(e + 48 + 2 * i, (uint16_t)identifier[i]);
+	memcpy(e + 48 + identifier.size() * 2, data.data(), data.size());
+	writeLittleEndian<uint64_t>(e + 32, thumbcacheDataChecksum(data.data(), data.size()));
+	writeLittleEndian<uint64_t>(e + 40, thumbcacheCrc64(e, 40, ~0ULL));
+	ThumbcacheFile cache;
+	check(decodeThumbcache(file, cache) && !cache.unsupportedFormat && cache.entries.size() == 1
+	      && cache.entries[0].hash == 0xA5C4CC8A55CC40E9ULL && cache.entries[0].identifier == identifier
+	      && cache.entries[0].dataSize == data.size() && cache.entries[0].width == 0 && cache.entries[0].height == 0
+	      && cache.entries[0].headerChecksumValid && cache.entries[0].dataChecksumValid
+	      && thumbcacheSize(cache.version, cache.type) == L"96",
+	      "thumbcache: a Windows 7 entry decoded, both checksums valid, its size named as Windows 7 numbers them");
+	std::vector<uint8_t> later = file;
+	writeLittleEndian<uint32_t>(later.data() + 4, 0x20);   // the same bytes read as Windows 10's
+	ThumbcacheFile other;
+	check(decodeThumbcache(later, other) && (other.entries.empty() || !other.entries[0].headerChecksumValid),
+	      "thumbcache: a Windows 7 entry read with Windows 10's layout and found valid");
 }
 
 /*! Thunderbird's mail: an mbox of two messages written here, decoded. What a
@@ -1099,7 +1149,54 @@ void destListVersion() {
 	check(!eleven.unsupportedFormat && eleven.destfiles.size() == 1, "jump list: the DestList version of Windows 11 not read");
 }
 
+/*! ShimCache of Windows 7 (0xBADC0FEE), 64-bit and 32-bit layouts, as the
+ *  format lays them out: two entries, their paths stored after the table. */
+std::vector<BYTE> windows7Cache(bool wide, bool lyingOffset) {
+	const size_t header = 0x80, entry = wide ? 48 : 32;
+	const std::wstring paths[2] = { L"\\??\\C:\\Windows\\a.exe", L"\\??\\C:\\b.dll" };
+	std::vector<BYTE> v(header + 2 * entry, 0);
+	const uint32_t magic = 0xBADC0FEE, count = 2;
+	memcpy(v.data(), &magic, 4);
+	memcpy(v.data() + 4, &count, 4);
+	for (int i = 0; i < 2; ++i) {
+		BYTE* e = v.data() + header + i * entry;
+		const uint16_t length = (uint16_t)(paths[i].size() * 2);
+		const uint64_t offset = v.size() + (lyingOffset && i == 1 ? 4096 : 0);
+		memcpy(e, &length, 2);
+		memcpy(e + 2, &length, 2);
+		if (wide) memcpy(e + 8, &offset, 8); else { const uint32_t o = (uint32_t)offset; memcpy(e + 4, &o, 4); }
+		const uint64_t modified = 0x01D8A0A0B0C0D0E0ULL + i;
+		memcpy(e + (wide ? 16 : 8), &modified, 8);
+		const size_t at = v.size();
+		v.resize(at + length);
+		memcpy(v.data() + at, paths[i].data(), length);
+	}
+	return v;
+}
+
+void shimcacheWindows7() {
+	for (const bool wide : { true, false }) {
+		Shimcaches s;
+		check(s.parse(windows7Cache(wide, false)) == S_OK && s.shimcaches.size() == 2
+		      && s.shimcaches[0].path == L"\\??\\C:\\Windows\\a.exe" && s.shimcaches[1].path == L"\\??\\C:\\b.dll"
+		      && s.shimcaches[1].position == 1 && !s.shimcaches[0].lastModificationUtc.empty(),
+		      wide ? "ShimCache of Windows 7, 64-bit: paths, order, dates" : "ShimCache of Windows 7, 32-bit: paths, order, dates");
+	}
+	Shimcaches lying;
+	check(lying.parse(windows7Cache(true, true)) == S_OK && lying.shimcaches.size() == 1,
+	      "ShimCache of Windows 7: a path beyond the value read");
+	std::vector<BYTE> outside = windows7Cache(true, false);
+	outside[0x80 + 9] = 0xFF;                                       // the first path beyond the value, in both readings
+	Shimcaches none;
+	check(none.parse(outside) == ERROR_INVALID_DATA && none.shimcaches.empty(), "ShimCache of Windows 7: a layout guessed");
+	const std::vector<BYTE> whole = windows7Cache(true, false);
+	Shimcaches cut;
+	check(cut.parse(std::vector<BYTE>(whole.begin(), whole.begin() + 0x40)) == ERROR_INVALID_DATA,
+	      "ShimCache of Windows 7: a value shorter than its header read");
+}
+
 int wmain() {
+	shimcacheWindows7();
 	destListVersion();
 	powershell();
 	setupapi();
@@ -1118,6 +1215,7 @@ int wmain() {
 	sqliteReader();
 	prefetchReference();
 	thumbcache();
+	thumbcacheWindows7();
 	mboxMail();
 	check(plainExtension(L"report.PDF") == L"pdf" && plainExtension(L"..\\..\\Windows\\evil.exe") == L"exe"
 	      && plainExtension(L"x.<script>") == L"" && plainExtension(L"noextension") == L"" && plainExtension(L"a.toolongext") == L""
@@ -1364,6 +1462,64 @@ int wmain() {
 		      && text(L"VolumeId") == L"{3DCA16FA-6CCE-1546-9B57-1D6441CB0488}" && text(L"Kind") == L"folder"
 		      && keywords && keywords->size() == 2 && text(L"Odd") == L"66006F" && !o.find(L"ZeroUtc"),
 		      "search index: FILETIME, VT_UI8, CLSID, UTF-16 text and vector decoded; odd blob in hex; zero date left out");
+	}
+	{
+		/* Windows 7's index (SystemIndex_0A): two AutoSummary values as the
+		   test VM's Windows.edb holds them. The first is in runs (form 0),
+		   one of them the right quotation mark U+2019 of "opponent’s"; the
+		   second one byte per character (form 1), the harness's witness. */
+		const std::vector<uint8_t> runs = {
+			0xB3, 0x91, 0x02, 0x43, 0xD9, 0x6E, 0x69, 0x7B, 0x9B, 0x7C, 0x62, 0x6B, 0x9F, 0x6F, 0x62, 0x6B,
+			0xD0, 0x63, 0x7B, 0x75, 0x87, 0x67, 0x62, 0x60, 0xCA, 0x6C, 0x7F, 0x79, 0xD6, 0x3C, 0x79, 0x7B,
+			0xFE, 0x45, 0x02, 0x49, 0xF1, 0x04, 0x65, 0x4A, 0xFE, 0x5B, 0x59, 0x00, 0xBF, 0x7C, 0x42, 0x4B,
+			0xFA, 0x10, 0x53, 0x51, 0xE6, 0x5D, 0x58, 0x41, 0xFF, 0x18, 0x4E, 0x56, 0xEA, 0x1C, 0x5D, 0x55,
+			0x9E, 0x30, 0x37, 0x32, 0x92, 0x36, 0x6A, 0x62, 0x94, 0x3A, 0x6A, 0x2D, 0x90, 0x21, 0x3E, 0x2F,
+			0x97, 0x35, 0x72, 0x37, 0x80, 0x35, 0x3F, 0x3C, 0x98, 0x2C, 0x7A, 0x3F, 0xCF, 0x3A, 0x2C, 0x33,
+			0xB6, 0x0E, 0x06, 0x48, 0xF7, 0x30, 0x0E, 0x07, 0xFB, 0x1F, 0x03, 0x00, 0xB1, 0x09, 0x1C, 0x4A,
+			0xAA, 0x03, 0x52, 0x02, 0xAF, 0x11, 0x56, 0x14, 0xA2, 0x0A, 0x09, 0x0A, 0xEF, 0x08, 0x11, 0x5A,
+			0x50, 0xE1, 0xF2, 0xF2, 0x42, 0xF6, 0xE3, 0xA2, 0x4F, 0xE0, 0xEF, 0xAE, 0x50, 0xFC, 0xFE, 0xE5,
+			0x4D, 0xF5, 0xFC, 0xE2, 0x26, 0xB4, 0x8F, 0x95, 0x2B, 0xEB, 0xBA, 0xF5, 0x46, 0xF2, 0xF9, 0xB4
+		};
+		const std::vector<uint8_t> bytes = {
+			0x28, 0x77, 0x63, 0x65, 0x5E, 0x61, 0x67, 0x70, 0x42, 0x60, 0x7D, 0x67, 0x51, 0x62, 0x6B, 0x79,
+			0x4A, 0x22, 0x22, 0x24, 0x0B, 0x25, 0x26, 0x23, 0x04, 0x28, 0x23, 0x2D, 0x0C, 0x2C, 0x2A, 0x3A,
+			0x6A, 0x4F, 0x4C, 0x52, 0x68, 0x4A, 0x53, 0x02, 0x65, 0x5D, 0x0A, 0x4A, 0x6A, 0x4F, 0x5B, 0x47,
+			0x7C, 0x5E, 0x46, 0x16, 0x69, 0x51, 0x5B, 0x5D, 0x78, 0x56
+		};
+		// The obfuscation is its own inverse: values built here, decoded, encoded so.
+		auto encode = [](std::vector<uint8_t> v) {
+			const uint32_t mask = 0x05000113u ^ (uint32_t)v.size();
+			for (size_t i = 0; i < v.size(); ++i) v[i] ^= (uint8_t)(mask >> (8 * (i & 3))) ^ (uint8_t)i;
+			return v;
+		};
+		const std::vector<uint8_t> cut = encode({ 0x00, 0x05, 0x00, 'a', 'b' });   // a run of 5, 2 there
+		const std::vector<uint8_t> unknown = encode({ 0x02, 'a', 'b' });           // a form not known
+		std::wstring a, b, c, d;
+		check(decodeSearchText(runs, a) && a.compare(0, 10, L"Enjoy the ") == 0 && a.find(L"opponent\u2019s king.") != std::wstring::npos
+		      && decodeSearchText(bytes, b) && b == L"wacsearchwitness20261015093904 contenu du document temoin",
+		      "search index: Windows 7's text decoded, in runs and one byte per character");
+		check(!decodeSearchText(cut, c) && !decodeSearchText(unknown, d),
+		      "search index: Windows 7's text with a run past its end, or of another form, decoded");
+	}
+	{
+		/* RecentFileCache.bcf of the Windows 7 VM: its header and first path,
+		   as Windows wrote them; then a second path whose count passes the
+		   file's end, which ends the reading with the first one kept. */
+		std::vector<uint8_t> bytes = {
+			0xFE, 0xFF, 0xEE, 0xFF, 0x11, 0x22, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x0D, 0x0B, 0x1D, 0x9E,
+			0x22, 0x00, 0x00, 0x00 };
+		for (const wchar_t c : std::wstring(L"c:\\windows\\system32\\sdiagnhost.exe")) { bytes.push_back((uint8_t)c); bytes.push_back(0); }
+		bytes.push_back(0);
+		bytes.push_back(0);
+		std::vector<std::wstring> paths;
+		check(decodeRecentFileCache(bytes, paths) && paths == std::vector<std::wstring>{ L"c:\\windows\\system32\\sdiagnhost.exe" },
+		      "RecentFileCache.bcf: the path of Windows 7 read");
+		std::vector<uint8_t> forged = bytes;
+		for (const uint8_t b : { 0xFF, 0xFF, 0xFF, 0x7F, 0x61, 0x00 }) forged.push_back(b);   // 2^31 characters, one there
+		std::vector<uint8_t> foreign = bytes;
+		foreign[0] = 0x00;
+		check(decodeRecentFileCache(forged, paths) && paths.size() == 1 && !decodeRecentFileCache(foreign, paths) && paths.empty(),
+		      "RecentFileCache.bcf: a forged count read past the file, or a file without the signature decoded");
 	}
 	check(webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 3, L"wac[1].hta") == L"C:\\c\\IE\\E5E1CFPF\\wac[1].hta"
 	      && webCacheFile(L"C:\\c\\IE\\", L"L4YBWS0NA4VP7Z24E5E1CFPFBODANLF1", 4, L"x") == L"C:\\c\\IE\\BODANLF1\\x"

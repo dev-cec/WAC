@@ -8,6 +8,13 @@ namespace {
  *  them apart: 0x80 under Windows 8, 0 under Windows 8.1 (measured, build
  *  9600) — neither a magic number nor, for 8.1, a size. */
 const size_t WINDOWS_8_HEADER_SIZE = 0x80;
+
+//! The magic number of the Windows 7 and Server 2008 R2 value.
+const unsigned WINDOWS_7_MAGIC = 0xBADC0FEE;
+//! Its header: the magic, the number of entries, then reserved bytes.
+const size_t WINDOWS_7_HEADER_SIZE = 0x80;
+//! An entry of the 64-bit layout, and of the 32-bit one.
+const size_t WINDOWS_7_ENTRY_64 = 48, WINDOWS_7_ENTRY_32 = 32;
 } // namespace
 
 Json Shimcache::toJson() {
@@ -55,6 +62,10 @@ HRESULT Shimcaches::getData() {
 		log(2, L"🔥getRegBinaryValue AppCompatCache", hresult );
 		return hresult;
 	}
+	return parse(value);
+}
+
+HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 	const BYTE* data = value.data();
 	const size_t size = value.size();
 	/* Layout of the Windows 10/11 cache: a header whose first DWORD is its own
@@ -93,6 +104,7 @@ HRESULT Shimcaches::getData() {
 	   at the byte their size announces, the last at the end of the value.
 	   The flags are not given: what they say of an execution is not proven
 	   (decision of 2026-09-30, "executed" not reported). */
+	if (formatSignature == WINDOWS_7_MAGIC) return parseWindows7(data, size);
 	const bool windows81 = offset == 0;
 	if (windows81) offset = WINDOWS_8_HEADER_SIZE;
 	while (fits(size, offset, 14)) {
@@ -111,8 +123,7 @@ HRESULT Shimcaches::getData() {
 			log(2, L"🔥AppCompatCache: entry truncated at offset " + std::to_wstring(entryStart));
 			break;
 		}
-		Shimcache shimcache;
-		shimcache.path = std::wstring((const wchar_t*)(data + offset), pathSize / sizeof(wchar_t));
+		const std::wstring path((const wchar_t*)(data + offset), pathSize / sizeof(wchar_t));
 		offset += pathSize;
 		if (windows81) {
 			// Package name and the two flag DWORDs, skipped; the date and data size must still fit.
@@ -124,23 +135,7 @@ HRESULT Shimcaches::getData() {
 			offset += 2 + packageSize + 8;
 		}
 
-		// Fingerprint on the normalised path (quotes, \??\), read raw.
-		shimcache.fingerprint = FingerprintFile(shimcache.path);
-		/* A packaged application's entry is not a path but tab-separated fields
-		   (version, architecture, package name, publisher). The tabs were
-		   replaced by spaces "because JSON does not support them" — it escapes
-		   them: the value is now kept as Windows stores it (B-015, against
-		   AppCompatCacheParser). */
-		shimcache.position = shimcaches.size();
-
-		/* The last modification is a FILETIME, hence UTC — the file's own
-		   $STANDARD_INFORMATION date. It used to be formatted as a LOCAL time:
-		   both keys came out shifted by the time-zone offset. Checked on the test
-		   VM against the NTFS dates of the same files: exactly -2 h before the
-		   fix, 0 after. */
-		const FILETIME filetime = *reinterpret_cast<const FILETIME*>(data + offset);
-		shimcache.lastModificationUtc = timeToIso8601Utc(filetime);
-		shimcache.lastModification = utcTimeToIso8601Local(filetime);
+		const FILETIME modified = *reinterpret_cast<const FILETIME*>(data + offset);
 		offset += 8;
 
 		const DWORD dataSize = *reinterpret_cast<const DWORD*>(data + offset);
@@ -154,12 +149,84 @@ HRESULT Shimcaches::getData() {
 		// The entry size, when consistent, is the reference for the next entry.
 		if (entrySize >= offset - entryStart - 12 && fits(size, entryStart + 12, entrySize))
 			offset = entryStart + 12 + entrySize;
-
-		log(1, L"➕Shimcache ");
-		log(2, L"❇️Shimcache Path : " + shimcache.path);
-		shimcaches.push_back(shimcache);
+		addEntry(path, modified);
 	}
 
+	return ERROR_SUCCESS;
+}
+
+void Shimcaches::addEntry(const std::wstring& path, const FILETIME& lastModifiedUtc) {
+	Shimcache shimcache;
+	shimcache.path = path;
+	// Fingerprint on the normalised path (quotes, \??\), read raw.
+	shimcache.fingerprint = FingerprintFile(shimcache.path);
+	/* A packaged application's entry is not a path but tab-separated fields
+	   (version, architecture, package name, publisher). The tabs were
+	   replaced by spaces "because JSON does not support them" — it escapes
+	   them: the value is now kept as Windows stores it (B-015, against
+	   AppCompatCacheParser). */
+	shimcache.position = shimcaches.size();
+	/* The last modification is a FILETIME, hence UTC — the file's own
+	   $STANDARD_INFORMATION date. It used to be formatted as a LOCAL time:
+	   both keys came out shifted by the time-zone offset. Checked on the test
+	   VM against the NTFS dates of the same files: exactly -2 h before the
+	   fix, 0 after. */
+	shimcache.lastModificationUtc = timeToIso8601Utc(lastModifiedUtc);
+	shimcache.lastModification = utcTimeToIso8601Local(lastModifiedUtc);
+	log(1, L"➕Shimcache ");
+	log(2, L"❇️Shimcache Path : " + shimcache.path);
+	shimcaches.push_back(std::move(shimcache));
+}
+
+HRESULT Shimcaches::parseWindows7(const BYTE* data, size_t size) {
+	/* WINDOWS 7 AND SERVER 2008 R2 (magic 0xBADC0FEE): a header of 0x80
+	   bytes — the magic, the number of entries —, then a table of entries,
+	   the paths stored after it, each entry pointing at its own:
+	     64-bit: path length (2), its room (2), reserved (4), path offset (8),
+	             last modification (8), insertion and shim flags (2 x 4),
+	             data size and offset (2 x 8) — 48 bytes;
+	     32-bit: path length (2), room (2), path offset (4), last
+	             modification (8), flags (2 x 4), data size and offset
+	             (2 x 4) — 32 bytes.
+	   Windows stores the paths at the END of the value, the first entry's
+	   last (measured on Windows 7 x64: 102 entries, the first path at byte
+	   14,856 of 14,928). The layout is the one whose first entry points
+	   between the end of its table and the end of the value — with its
+	   reserved DWORD at zero in the 64-bit one; read the other way, either
+	   gives an offset out of the value. Neither fits: nothing is guessed.
+	   Every offset comes from the hive: bounded by the value. */
+	if (!fits(size, 0, WINDOWS_7_HEADER_SIZE)) return ERROR_INVALID_DATA;
+	const size_t count = *reinterpret_cast<const DWORD*>(data + 4);
+	size_t entrySize = 0;
+	for (const size_t candidate : { WINDOWS_7_ENTRY_64, WINDOWS_7_ENTRY_32 }) {
+		if (count == 0 || count > (size - WINDOWS_7_HEADER_SIZE) / candidate) continue;
+		const BYTE* first = data + WINDOWS_7_HEADER_SIZE;
+		const bool wideCandidate = candidate == WINDOWS_7_ENTRY_64;
+		const uint64_t pathOffset = wideCandidate ? *reinterpret_cast<const uint64_t*>(first + 8)
+		                                          : *reinterpret_cast<const DWORD*>(first + 4);
+		const bool reservedClear = !wideCandidate || *reinterpret_cast<const DWORD*>(first + 4) == 0;
+		if (reservedClear && pathOffset >= WINDOWS_7_HEADER_SIZE + count * candidate && pathOffset < size) {
+			entrySize = candidate;
+			break;
+		}
+	}
+	if (count == 0) return ERROR_SUCCESS;
+	if (entrySize == 0) {
+		log(2, L"🔥AppCompatCache of Windows 7: neither the 64-bit nor the 32-bit layout fits its first entry");
+		return ERROR_INVALID_DATA;
+	}
+	const bool wide = entrySize == WINDOWS_7_ENTRY_64;
+	for (size_t i = 0; i < count; ++i) {
+		const BYTE* e = data + WINDOWS_7_HEADER_SIZE + i * entrySize;
+		const size_t pathLength = *reinterpret_cast<const unsigned short*>(e);
+		const uint64_t pathOffset = wide ? *reinterpret_cast<const uint64_t*>(e + 8) : *reinterpret_cast<const DWORD*>(e + 4);
+		const FILETIME modified = *reinterpret_cast<const FILETIME*>(e + (wide ? 16 : 8));
+		if (pathOffset > size || !fits(size, (size_t)pathOffset, pathLength)) {
+			log(2, L"🔥AppCompatCache of Windows 7: path of entry " + std::to_wstring(i) + L" beyond the value");
+			continue;
+		}
+		addEntry(std::wstring((const wchar_t*)(data + pathOffset), pathLength / sizeof(wchar_t)), modified);
+	}
 	return ERROR_SUCCESS;
 }
 

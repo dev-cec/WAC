@@ -211,8 +211,8 @@ unsigned long long exercise(const std::string& kind, const std::vector<BYTE>& da
  * @param argc,argv `<kind> <file> [file ...]`
  * @return 0 if no input made a parser read outside its buffer or loop */
 /*! A FORMAT WITHOUT DECODER, presented to the decoder: the decompressed
- *  Prefetch with its version rewritten to those of XP, Vista and 8 — known,
- *  not decoded — and to one nobody has seen yet. Each must be declared
+ *  Prefetch with its version rewritten to XP's — known, not decoded — and to
+ *  one nobody has seen yet. Each must be declared
  *  "unsupported format", with its name and hash read and NOTHING decoded with
  *  the offsets of another layout; the file's own version must still decode.
  *  @param data a decompressed Prefetch of a decoded version
@@ -225,7 +225,7 @@ bool unsupportedVersionsDeclared(const std::vector<BYTE>& data, const char* name
 		std::printf("  FAILED  %s: its own version %d is not decoded\n", name, own.version);
 		return false;
 	}
-	for (int version : { 17, 23, own.version + 1 }) {
+	for (int version : { 17, own.version + 1 }) {
 		copy = data;
 		std::memcpy(copy.data(), &version, sizeof(version));
 		Prefetch other(L"test.pf");
@@ -236,7 +236,7 @@ bool unsupportedVersionsDeclared(const std::vector<BYTE>& data, const char* name
 			return false;
 		}
 	}
-	std::printf("  ok     %s: versions 17, 23 and %d declared unsupported, nothing decoded but name and hash\n",
+	std::printf("  ok     %s: versions 17 and %d declared unsupported, nothing decoded but name and hash\n",
 	            name, own.version + 1);
 	return true;
 }

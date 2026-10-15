@@ -441,6 +441,8 @@ HRESULT ExtractFileArtefactsRaw() {
 
 	// Each artefact as the configuration asks (wac.yml, artefacts:): what is switched off is not read at all.
 	if (conf.artefacts.prefetch) addTarget(L"\\Windows\\Prefetch", { L".pf" });
+	// RecentFileCache.bcf: Windows 7's list of the executables run lately (reg_amcache.h).
+	if (conf.artefacts.amcache) addTarget(L"\\Windows\\AppCompat\\Programs", { L".bcf" });
 
 	/* Event logs: extracted ONLY on request (--events). They are the system's
 	   largest artefacts — over a hundred megabytes on an ordinary installation,

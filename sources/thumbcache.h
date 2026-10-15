@@ -17,8 +17,15 @@
  *  header checksum; then the identifier (the hash in hexadecimal, or a shell
  *  name), the padding, and the image itself: BMP, PNG or JPEG. The hash is
  *  the file's System.ThumbnailCacheId, which Windows gives for a file through
- *  its property system: it ties a thumbnail to its file. Vista and 7 lay their
- *  entries out otherwise: they are not decoded (backlog B-037).
+ *  its property system: it ties a thumbnail to its file.
+ *
+ *  WINDOWS 7 (version 0x15) has neither the header's unknown field — its
+ *  offsets of the first entry and of the first free place come at 12 and 16,
+ *  the number of entries at 20 — nor the entry's width and height: its entry
+ *  is 48 bytes, the checksums at 32 and 40, and its cache types name other
+ *  sizes (32, 96, 256, 1024, sr). Measured on the test VM's caches, every
+ *  checksum recomputed valid. Vista's (0x14) adds an extension of 8 bytes
+ *  after the hash; no sample was at hand: it stays declared unsupported.
  *
  *  THE CHECKSUMS are the format's own control, recomputed for every entry:
  *  a CRC-64 (reflected polynomial 0x92C64265D32139A4, the table of
@@ -40,7 +47,7 @@ struct ThumbcacheEntry {
 	size_t offset = 0;              //!< position of the entry in the file
 	uint64_t hash = 0;              //!< the file's System.ThumbnailCacheId
 	std::wstring identifier;        //!< the hash in hexadecimal, or the shell name of what is shown
-	uint32_t width = 0, height = 0; //!< size of the image, in pixels
+	uint32_t width = 0, height = 0; //!< size of the image, in pixels; 0 on Windows 7, whose entry has none
 	size_t dataOffset = 0;          //!< position of the image in the file
 	size_t dataSize = 0;            //!< its size, 0 for an entry without image
 	bool headerChecksumValid = false; //!< the entry's header is as Windows wrote it
@@ -69,10 +76,12 @@ uint64_t thumbcacheCrc64(const uint8_t* bytes, size_t size, uint64_t initial);
  *  @return the checksum */
 uint64_t thumbcacheDataChecksum(const uint8_t* data, size_t size);
 
-/*! The size a cache type names ("256", "sr", "wide"…).
+/*! The size a cache type names ("256", "sr", "wide"…): Windows 7 numbers
+ *  its sizes otherwise than Windows 8 and later.
+ *  @param version the file's version
  *  @param type the header's type
  *  @return its name, empty if unknown */
-std::wstring thumbcacheSize(uint32_t type);
+std::wstring thumbcacheSize(uint32_t version, uint32_t type);
 
 /*! Decodes a cache file. Every length comes from the file and is bounded by
  *  its real size; a cut or forged entry ends the reading, those before kept.

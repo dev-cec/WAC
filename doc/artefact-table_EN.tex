@@ -7,7 +7,7 @@
 \texttt{activities\_cache} & Windows 10 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}ConnectedDevicesPlatform\textbackslash{}\textless{}account\textgreater{}\textbackslash{}ActivitiesCache.db} & SQLite & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Still written by Windows 11 (measured, build 26200), though the Timeline is no longer shown. Server editions to be measured.} \\
 \addlinespace
-\texttt{amcache} & Windows 7 & \texttt{Windows\textbackslash{}AppCompat\textbackslash{}Programs\textbackslash{}RecentFileCache.bcf} & BCF & no \\
+\texttt{amcache} & Windows 7 & \texttt{Windows\textbackslash{}AppCompat\textbackslash{}Programs\textbackslash{}RecentFileCache.bcf} & BCF & yes \\
  & Windows 8 & \texttt{Windows\textbackslash{}AppCompat\textbackslash{}Programs\textbackslash{}Amcache.hve} & registry hive, File and Programs keys & yes \\
  & Windows 10 & \texttt{Windows\textbackslash{}AppCompat\textbackslash{}Programs\textbackslash{}Amcache.hve} & registry hive, Inventory* keys & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows 10; Amcache.hve also on Windows 7 with update KB2952664.} \\
@@ -115,7 +115,7 @@
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Earlier with PSReadLine installed by hand (PowerShell 5, Windows 7 and later).} \\
 \addlinespace
 \texttt{prefetch} & Windows XP & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 17 & no \\
- & Windows Vista & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 23 & no \\
+ & Windows Vista & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 23 & yes \\
  & Windows 8 & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 26 & yes \\
  & Windows 10 & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 30 and 31, compressed (MAM) & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Switched off by default on the server editions.} \\
@@ -156,7 +156,7 @@
 \addlinespace
 \texttt{search\_index} & Windows Vista & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Search\textbackslash{}Data\textbackslash{}Applications\textbackslash{}Windows\textbackslash{}Windows.edb} & ESE & yes \\
  & Windows 11 & \texttt{…\textbackslash{}Windows\textbackslash{}Windows.db, Windows-gather.db} & SQLite & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows.edb converted with its 7-bit text (Windows 8.1 measured); a value compressed otherwise (XPRESS) is said, not decoded. Windows XP: Windows Desktop Search, an optional install.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows.edb converted with its 7-bit text (Windows 8.1 measured), and Windows 7's layout: its own table and column names, big-endian numbers, obfuscated text (measured); a value compressed otherwise (XPRESS) is said, not decoded. Windows XP: Windows Desktop Search, an optional install.} \\
 \addlinespace
 \texttt{security} & Windows XP & \texttt{SECURITY hive: Policy\textbackslash{}Secrets, Cache, PolAdtEv} & registry values & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
@@ -177,7 +177,7 @@
 \addlinespace
 \texttt{shimcache} & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatibility\textbackslash{}AppCompatCache} & header 0xDEADBEEF, 96 entries & no \\
  & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatCache\textbackslash{}AppCompatCache} & header 0xBADC0FFE & no \\
- & Windows 7 & \texttt{the same value} & header 0xBADC0FEE & no \\
+ & Windows 7 & \texttt{the same value} & header 0xBADC0FEE & yes \\
  & Windows 8 & \texttt{the same value} & header 0x80, entries ''00ts'' & no \\
  & Windows 8.1 & \texttt{the same value} & header of 0x80 bytes starting with 0, entries ''10ts'' & yes \\
  & Windows 10 & \texttt{the same value} & header 0x30 or 0x34, entries ''10ts'' & yes \\
@@ -191,7 +191,8 @@
 \texttt{startup\_folders} & Windows XP & \texttt{Start Menu\textbackslash{}Programs\textbackslash{}Startup of each profile and of All Users} & files & yes \\
 \addlinespace
 \texttt{thumbcache} & Windows XP & \texttt{Thumbs.db in each folder} & OLE compound file & no \\
- & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Explorer\textbackslash{}thumbcache\_*.db} & CMMM, Vista and 7 layout & no \\
+ & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Explorer\textbackslash{}thumbcache\_*.db} & CMMM, Vista layout & no \\
+ & Windows 7 & \texttt{the same folder} & CMMM, Windows 7 layout & yes \\
  & Windows 8 & \texttt{the same folder, with iconcache\_*.db} & CMMM, Windows 8 and later layout & yes \\
 \addlinespace
 \texttt{typed\_paths} & Windows Vista & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}CurrentVersion\textbackslash{}Explorer\textbackslash{}TypedPaths} & registry values & yes \\

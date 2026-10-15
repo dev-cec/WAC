@@ -31,6 +31,16 @@
  *  InventoryApplicationFile in `amcache_application_files.json` (their names
  *  since the start), every other table in `amcache_inventory.json`, each entry
  *  with its `Table`.
+ *
+ *  WINDOWS 7: RecentFileCache.bcf. Before Amcache.hve (and next to it once
+ *  KB2952664 brought it to Windows 7), Windows lists in
+ *  `Windows\AppCompat\Programs\RecentFileCache.bcf` the executables run
+ *  since the last pass of its ProgramDataUpdater task: their paths only, no
+ *  date. A header of 20 bytes, its first 8 a signature (FE FF EE FF 11 22 00
+ *  00), the others not known; then each path as a count of characters on 32
+ *  bits, the characters in UTF-16 and a null. Measured on the Windows 7 VM.
+ *  Each path goes to `amcache_application_files.json` with `Table`
+ *  "RecentFileCache".
  */
 #pragma once
 #include <windows.h>
@@ -66,12 +76,24 @@ struct AmcacheEntry {
 	Json toJson(bool withTable) const;
 };
 
-/*! Every table of the Amcache hive. */
+/*! Decodes RecentFileCache.bcf (see the file's header). Every count is
+ *  bounded by the file's size: a cut or forged entry ends the reading, the
+ *  paths before it kept.
+ *  @param bytes the file
+ *  @param paths receives the paths, in the file's order
+ *  @return false if the signature is not there */
+bool decodeRecentFileCache(const std::vector<uint8_t>& bytes, std::vector<std::wstring>& paths);
+
+/*! Every table of the Amcache hive, and the paths of RecentFileCache.bcf. */
 struct Amcache {
 	std::vector<AmcacheEntry> entries; //!< every entry, table after table
+	std::vector<std::wstring> recentFiles; //!< the paths RecentFileCache.bcf lists
+	std::wstring recentFileCache;      //!< that file on the examined machine, when read
 
-	/*! Opens Amcache.hve and reads every table under `Root`.
-	 *  @return S_OK, or why the hive or its root could not be read */
+	/*! Reads RecentFileCache.bcf, then opens Amcache.hve and reads every
+	 *  table under `Root`.
+	 *  @return S_OK, or why the hive or its root could not be read when
+	 *          RecentFileCache.bcf was not read either */
 	HRESULT getData();
 
 	/*! Writes amcache_applications.json, amcache_application_files.json and
@@ -83,6 +105,14 @@ struct Amcache {
 	void clear();
 
 private:
+	/*! Reads RecentFileCache.bcf of the copy, if there is one.
+	 *  @return true if it was read */
+	bool readRecentFileCache();
+
+	/*! Opens Amcache.hve and reads every table under `Root`.
+	 *  @return S_OK, or why the hive or its root could not be read */
+	HRESULT readHive();
+
 	/*! Reads the files of one volume of the Windows 8 File table.
 	 *  @param volumeKey the volume's key, open
 	 *  @param volume its name, the volume's GUID */

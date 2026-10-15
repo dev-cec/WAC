@@ -36,6 +36,14 @@
  *  LastModified is big-endian there. Measured on Windows 8.1; a value of
  *  Windows 10 compressed otherwise (XPRESS) is said, not decoded.
  *
+ *  WINDOWS 7 names its property store SystemIndex_0A, its columns by the
+ *  property's name alone ("System_ItemPathDisplay"), its item DocID (given
+ *  as WorkId, the same number). Its numbers and dates are 8 big-endian bytes
+ *  — the size of a 57-byte file reads 57, a ThumbnailCacheId the one Windows
+ *  gives, only that way. A text property in a long binary column (the
+ *  AutoSummary) is obfuscated and packed (decodeSearchText). Measured on the
+ *  test VM; Vista's index was not.
+ *
  *  NOT CONVERTED. The inverted index (SystemIndex_1_DATA_*, the words of the
  *  files): the summary and the properties are what an analysis reads.
  */
@@ -58,6 +66,17 @@ struct SearchIndexItem {
 	//! @return the item as a JSON object
 	Json toJson() const;
 };
+
+/*! Decodes a text value of Windows 7's index, as libyal describes the
+ *  format and as measured on the test VM: each byte XOR a byte of
+ *  (0x05000113 XOR the value's size), in turn, XOR its position's low byte;
+ *  then a first byte for the form — 1: one byte per character; 0: runs of a
+ *  count, the high byte the run shares, the low byte of each character.
+ *  Every run is bounded by the value's size.
+ *  @param encoded the value as the column holds it
+ *  @param text receives the text
+ *  @return false for another form, or a run past the value's end */
+bool decodeSearchText(const std::vector<uint8_t>& encoded, std::wstring& text);
 
 /*! Converts one property-store value by its VARIANT type.
  *  @param o the item's fields
