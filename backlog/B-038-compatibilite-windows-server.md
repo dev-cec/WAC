@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire (prérequis : B-039) | P3 | fort |
+| en cours (VM serveur créées sans interaction ; premier cycle sous Server 2022) | P3 | fort |
 
 ## Pourquoi
 Les serveurs sont une cible de premier ordre (contrôleurs de domaine, serveurs web, de fichiers, d'applications), et beaucoup tournent sous des versions anciennes. WAC est développé et éprouvé sur Windows 10 et 11, des postes clients. Demande utilisateur du 2026-10-06 : la collecte doit fonctionner sur les versions serveur, de Windows Server 2003 à 2026. Les artefacts sont sensiblement les mêmes que ceux du client de la même génération. Prérequis de B-035 (web côté serveur).
@@ -27,7 +27,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Une installation Server Core collectée sans erreur, ses artefacts absents déclarés.
 
 ## Tâches
-- [ ] Images des versions serveur et VM dans le harnais
+- [x] Images des versions serveur (2012 R2 à 2025, évaluation) et profils de create-vm.sh ; Server 2022 créée
+- [ ] Cycle du harnais sous chaque génération (2012 R2, 2016+), écarts départagés
 - [ ] Artefacts propres aux rôles (à répartir avec B-035 pour IIS)
 - [ ] Server Core
 - [ ] Contrôleur de domaine : `NTDS.dit` (à étudier)
@@ -38,3 +39,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
 ## Journal
 - 2026-10-06 : créée à la demande de l'utilisateur — compatibilité avec les versions serveur de Windows, de 2003 à 2026, avant B-035 ; les artefacts sont sensiblement ceux du client de même génération.
 - 2026-10-07 : décision utilisateur — version 3.0, avec les artefacts de compromission d'Active Directory (B-041).
+- 2026-10-15 : profils srv2012r2 à srv2025 dans create-vm.sh (médias d'évaluation : édition Standard avec interface, index 2, sans clé ; mot de passe synthétique complexe, le serveur refusant « wac ») ; Server 2022 créée sans interaction (ServerStandardEval, build 20348). Premier cycle du harnais lancé (WAC_VM=srv2022-test).
