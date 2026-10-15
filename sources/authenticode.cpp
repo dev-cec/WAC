@@ -1462,9 +1462,15 @@ void VulnerableDriversFromJson(const Json& file, std::set<std::wstring>& hashes,
 	}
 }
 
-std::string VulnerableDrivers::match(const DriverFacts& facts) const {
+std::string VulnerableDrivers::matchFingerprint(const DriverFacts& facts) const {
 	for (const std::wstring* h : { &facts.authenticodeSha256, &facts.authenticodeSha1, &facts.fileSha256, &facts.fileSha1 })
 		if (!h->empty() && hashes_.count(*h)) return "listed as a vulnerable or malicious driver (fingerprint " + narrowText(*h) + ")";
+	return std::string();
+}
+
+std::string VulnerableDrivers::match(const DriverFacts& facts) const {
+	const std::string listed = matchFingerprint(facts);
+	if (!listed.empty()) return listed;
 	for (const DeniedSigner& signer : signers_) {
 		if (signer.tbsHash.empty()) continue;
 		bool inChain = false;

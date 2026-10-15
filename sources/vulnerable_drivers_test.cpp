@@ -15,7 +15,10 @@
  *      match a file rule, one not read for it does.
  *
  *  Usage: vulnerable_drivers_test
- *  Native build (Linux): g++ -std=c++17 -g -fsanitize=address,undefined -I. authenticode.cpp rsa.cpp sha.cpp quickdigest5.cpp version_info.cpp vulnerable_drivers_test.cpp -o vulnerable_drivers_test
+ *  Build (MinGW, run under Wine; long_path.h needs windows.h, the native build no longer compiles):
+ *  x86_64-w64-mingw32-g++ -std=c++17 -DUNICODE -D_UNICODE -include ../third_party/compat-include/wac_mingw_compat.h
+ *    -I../third_party/compat-include -I. authenticode.cpp rsa.cpp sha.cpp quickdigest5.cpp version_info.cpp
+ *    vulnerable_drivers_test.cpp -static -o vulnerable_drivers_test.exe
  */
 #include "authenticode.h"
 #include <cstdio>
@@ -73,6 +76,9 @@ int main() {
 	f = clean;
 	f.fileSha1 = L"FFFF2222";
 	listed(f, "fingerprint", "file fingerprint listed");
+	// The fingerprint alone, as said of a driver whose chain does not hold: exact, no signer rule.
+	check(drivers.matchFingerprint(f).find("fingerprint") != std::string::npos && drivers.matchFingerprint(clean).empty(),
+	      "fingerprint listing alone: found, and nothing for a clean binary");
 
 	f = clean;
 	f.chainTbsHashes = { L"tbs1" };                            // compared regardless of case

@@ -263,6 +263,10 @@ public:
 		: hashes_(hashes), signers_(signers) {}
 	/*! @return why the binary is listed, or "" if it is not */
 	std::string match(const DriverFacts& facts) const;
+	/*! The listing by fingerprint alone: exact, whatever the chain and the
+	 *  version — what can be said of a binary whose chain does not hold.
+	 *  @return why the binary is listed, or "" if no fingerprint is */
+	std::string matchFingerprint(const DriverFacts& facts) const;
 private:
 	const std::set<std::wstring>& hashes_;
 	const std::vector<DeniedSigner>& signers_;

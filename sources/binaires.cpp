@@ -653,7 +653,21 @@ const VulnerableDrivers* vulnerableDrivers() {
 void checkVulnerableDriver(const std::wstring& path, const RawHiveExtraction& line, VerdictMicrosoft& verdict,
                            const std::vector<uint8_t>* content) {
 	const VulnerableDrivers* drivers = vulnerableDrivers();
-	if (!verdict.chainTrusted || !drivers) return;
+	if (!drivers) return;
+	/* A chain that does not hold clears nothing, and yet a listed driver
+	   must say so: its fingerprint is exact, whatever the chain. Windows 7,
+	   measured: the revocation of the witness driver's chain could not be
+	   verified, and that reason hid the listing. */
+	if (!verdict.chainTrusted) {
+		DriverFacts fingerprints;
+		fingerprints.authenticodeSha1 = line.fingerprints.authenticodeSha1;
+		fingerprints.authenticodeSha256 = line.fingerprints.authenticodeSha256;
+		fingerprints.fileSha1 = line.fingerprints.sha1;
+		fingerprints.fileSha256 = line.fingerprints.sha256;
+		const std::string listed = drivers->matchFingerprint(fingerprints);
+		if (!listed.empty()) verdict.chainReason = listed + "; and " + verdict.chainReason;
+		return;
+	}
 	const std::wstring lower = toLower(path);
 	if (!CollectionTrustSet().driverListsMissing.empty() && lower.size() > 4 && lower.compare(lower.size() - 4, 4, L".sys") == 0) {
 		verdict.chainTrusted = false;
