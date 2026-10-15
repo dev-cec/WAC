@@ -809,6 +809,25 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 	};
 
 	if (!worthCollecting(path)) {
+		/* --convert, a document or data file of the exhibit store: the
+		   fingerprints the manifest recorded when it was taken. Its working
+		   copy may be changed by the conversion itself — a hive or an ESE
+		   database whose logs are replayed into it —, and was read before or
+		   after that change depending on the order of the artefacts: two
+		   conversions of one collection gave two SHA-256 of Windows.edb, cited
+		   by the Prefetch of SearchIndexer. */
+		if (conf.mode == RunMode::Convert) {
+			const std::map<std::wstring, StoredExhibit>& index = ExhibitStoreIndex();
+			const auto stored = index.find(key);
+			if (stored != index.end() && !stored->second.sha256.empty()) {
+				e.md5 = stored->second.md5;
+				e.sha1 = stored->second.sha1;
+				e.sha256 = stored->second.sha256;
+				e.result = ERROR_SUCCESS;
+				++g_read;
+				return g_cache.emplace(key, std::move(e)).first->second;
+			}
+		}
 		// Document or data: fingerprints only, nothing is written.
 		RawHiveExtraction line;
 		e.result = g_reader->read(path, std::wstring(), line);
