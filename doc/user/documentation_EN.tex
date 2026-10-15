@@ -467,7 +467,10 @@ artefacts:              # one key per artefact; a missing key is true
   (\fichier{wanted-crls.txt}), and writes them into \fichier{folder} (by default
   \fichier{trust}, next to \fichier{WAC.exe}), to be carried on the key with
   \fichier{WAC.exe}. The only mode that uses the network: the network library
-  is loaded there alone. Refused with any other option. \\
+  is loaded there alone. Refused with any other option. On Windows~7, the
+  sites served over TLS~1.2 only (driver lists, CCADB) need update
+  KB3140245: without it, those lists are missing from the trust set, and
+  \fichier{investigation.json} says so. \\
 -{}-dump & Adds the raw hexadecimal value of shellbag and \fichier{.lnk} shortcut
   items, for later decoding. \\
 -{}-output=folder & Output folder, relative to the current directory. Default:
