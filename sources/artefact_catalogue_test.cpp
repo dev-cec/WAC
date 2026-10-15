@@ -182,10 +182,10 @@ int main(int argc, char** argv) {
 	/* THE FORMAT TOLD BY THE VERSION (undecodedOn): a form WAC only collects
 	   raw, of an artefact it converts in another form. */
 	const WindowsVersion eightOne{ 9600, false, false };
-	check(!undecodedOn("amcache", eightOne) && undecodedOn("bits", eightOne) && undecodedOn("search_index", eightOne),
-	      "Windows 8.1: Amcache (File and Programs) declared unconverted, or BITS or the search index not");
-	check(undecodedOn("search_index", ten) && !undecodedOn("search_index", eleven) && !undecodedOn("amcache", ten) && !undecodedOn("bits", ten),
-	      "Windows 10 and 11: the search index is ESE before 11; Amcache and BITS are converted on a current 10");
+	check(!undecodedOn("amcache", eightOne) && undecodedOn("bits", eightOne) && !undecodedOn("search_index", eightOne),
+	      "Windows 8.1: Amcache or the search index declared unconverted, or BITS not");
+	check(!undecodedOn("search_index", ten) && !undecodedOn("search_index", eleven) && !undecodedOn("amcache", ten) && !undecodedOn("bits", ten),
+	      "Windows 10 and 11: the search index, Amcache and BITS are converted");
 	check(undecodedOn("wmi", xp) && !undecodedOn("wmi", vista), "the WMI repository of XP (in FS) converted, or Vista's not");
 	check(!undecodedOn("prefetch", eightOne) && !undecodedOn("shimcache", eightOne), "an artefact with signatures decided by the version");
 	check(!undecodedOn("log_file", eightOne) && !undecodedOn("registry_backups", eightOne), "an artefact only ever copied raw declared unconverted");
@@ -193,8 +193,8 @@ int main(int argc, char** argv) {
 	      && !undecodedOn("an_artefact_of_tomorrow", ten), "absent, converted or unknown: declared unconverted");
 	std::set<std::string> rawOnEightOne;
 	for (const std::string& key : keys) if (undecodedOn(key, eightOne)) rawOnEightOne.insert(key);
-	check(rawOnEightOne == std::set<std::string>{ "bits", "search_index" },
-	      "Windows 8.1: " + std::to_string(rawOnEightOne.size()) + " artefacts in an unconverted form, 2 measured (BITS, search index)");
+	check(rawOnEightOne == std::set<std::string>{ "bits" },
+	      "Windows 8.1: " + std::to_string(rawOnEightOne.size()) + " artefacts in an unconverted form, 1 measured (BITS)");
 
 	/* THE GUARD (absentAmong): everything asked for on a Windows 7, on an XP,
 	   on a Windows 11 — only what the version lacks is held back, and an

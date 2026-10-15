@@ -136,8 +136,8 @@ NOTES = {
         "Windows XP et Server 2003 : événements 528 et 682 de Security.evt, non convertis.",
     "Empty since Windows 10 1803 unless the backup task was switched back on. Copied raw: not converted.":
         "Vide depuis Windows 10 1803, sauf si la tâche de sauvegarde a été réactivée. Copié brut : non converti.",
-    "Windows.edb is collected with its logs, not converted. Windows XP: Windows Desktop Search, an optional install.":
-        "Windows.edb est collecté avec ses journaux, non converti. Windows XP : Windows Desktop Search, installation facultative.",
+    "Windows.edb converted with its 7-bit text (Windows 8.1 measured); a value compressed otherwise (XPRESS) is said, not decoded. Windows XP: Windows Desktop Search, an optional install.":
+        "Windows.edb converti, avec son texte compressé sur 7 bits (mesuré sous Windows 8.1) ; une valeur compressée autrement (XPRESS) est signalée, non décodée. Windows XP : Windows Desktop Search, une installation facultative.",
     "The journal exists only where it was created: always on the system volume from Vista on.":
         "Le journal n'existe que là où il a été créé : toujours sur le volume système à partir de Vista.",
     "Chromium and Firefox depend on the browser installed, not on Windows.":

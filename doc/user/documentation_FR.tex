@@ -1501,9 +1501,14 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         collecteur (\champ{Table} \texttt{Gather}, \champ{DocumentId}, le
         même numéro que \champ{WorkId}) : son URL et sa dernière modification
         au passage du collecteur. L'enregistrement survit au fichier jusqu'au
-        passage suivant : un document supprimé peut encore y paraître. Sous
-        Windows~10, l'index (\fichier{Windows.edb}, ESE) est collecté avec
-        ses journaux mais pas converti.
+        passage suivant : un document supprimé peut encore y paraître.
+        Jusqu'à Windows~10, l'index est une base ESE, \fichier{Windows.edb} :
+        ses journaux y sont rejoués dans la copie de travail, puis il est
+        converti sous la même forme ; le type d'une propriété, que cette base
+        ne dit pas, vient de la table que Windows~11 déclare, et une propriété
+        qu'elle ne connaît pas est donnée en hexadécimal. Mesuré sous
+        Windows~8.1 ; une valeur de Windows~10 compressée autrement que sur
+        7~bits (XPRESS) est signalée, non décodée.
   \item[\fichier{rdp\_client.json}] connexions Bureau à distance \emph{sortantes} de
         chaque profil : connexions récentes (\champ{RecentConnection},
         \champ{MruPosition} 0 pour la plus récente) et serveurs contactés

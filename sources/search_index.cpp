@@ -3,6 +3,8 @@
  */
 #include "search_index.h"
 #include "conversions.h"
+#include "ese_database.h"
+#include "ese_recovery.h"
 #include "sqlite_reader.h"
 #include <algorithm>
 #include <cstring>
@@ -43,6 +45,37 @@ bool utf16Strings(const std::vector<uint8_t>& bytes, std::vector<std::wstring>& 
 	}
 	if (!current.empty()) strings.push_back(current);
 	return !strings.empty();
+}
+
+// JET column types (esent.h) of the ESE index whose bytes are converted here.
+const uint32_t JET_BINARY = 9, JET_LONG_BINARY = 11;
+
+/*! The canonical name of a property-store column of Windows.edb: the column
+ *  is the property's number, "-", then its name with "_" for ".".
+ *  @param column "4385-System_ItemPathDisplay"
+ *  @return "System.ItemPathDisplay" */
+std::wstring edbPropertyName(const std::wstring& column) {
+	const size_t dash = column.find(L'-');
+	std::wstring name = dash == std::wstring::npos ? column : column.substr(dash + 1);
+	std::replace(name.begin(), name.end(), L'_', L'.');
+	return name;
+}
+
+/*! A value of the ESE index: its bytes by the property's VARIANT type when
+ *  the column is binary, as ESE types it otherwise (text, number, boolean). */
+void addEseValue(Json& o, const std::wstring& key, const EseColumn& column, const EseCell& cell, int variantType) {
+	if ((column.type == JET_BINARY || column.type == JET_LONG_BINARY) && cell.compressionScheme < 0
+	    && !cell.longValueMissing && cell.values.size() == 1) {
+		addSearchBlob(o, key, variantType, cell.values.front());
+		return;
+	}
+	o.add(key, eseCellToJson(column, cell));
+}
+
+//! The column of that identifier, or nullptr.
+const EseColumn* columnOf(const EseTable& table, uint32_t id) {
+	for (const EseColumn& c : table.columns) if (c.id == id) return &c;
+	return nullptr;
 }
 
 /*! The JSON key of a property: its name without "System.", PascalCase.
@@ -185,11 +218,107 @@ HRESULT readSearchGather(const std::wstring& file, const std::wstring& path, std
 	return ERROR_SUCCESS;
 }
 
+HRESULT readSearchEdb(const std::wstring& file, const std::wstring& path, std::vector<SearchIndexItem>& items) {
+	// What the indexer wrote since its last checkpoint is in edb*.log, collected with it.
+	const EseReplay replayed = ReplayEseLogsOnce(file, path);
+	if (replayed.attempted && !replayed.applied) log(1, L"⚠️Search index logs not replayed: " + replayed.detail);
+	EseDatabase db;
+	const HRESULT opened = db.open(file);
+	if (opened != ERROR_SUCCESS) return opened;
+	if (const EseTable* store = db.table(L"SystemIndex_PropertyStore")) {
+		std::vector<std::pair<std::wstring, int>> properties;   // by column: JSON key, VARIANT type
+		for (const EseColumn& c : store->columns) {
+			const std::wstring name = edbPropertyName(c.name);
+			properties.emplace_back(c.name == L"WorkID" ? L"WorkId" : propertyKey(name), searchPropertyVariantType(name));
+		}
+		for (const EseRecord& r : db.records(*store)) {
+			SearchIndexItem item;
+			item.path = path;
+			item.table = L"PropertyStore";
+			for (const EseCell& cell : r) {
+				const EseColumn* column = columnOf(*store, cell.columnId);
+				if (!column || cell.values.empty()) continue;
+				const auto& property = properties[column - store->columns.data()];
+				addEseValue(item.fields, property.first, *column, cell, property.second);
+			}
+			items.push_back(std::move(item));
+		}
+	}
+	else log(2, L"🔥Search index: no property store in " + path);
+	readEseGather(db, path, items);
+	return ERROR_SUCCESS;
+}
+
+void readEseGather(EseDatabase& db, const std::wstring& path, std::vector<SearchIndexItem>& items) {
+	const EseTable* gather = db.table(L"SystemIndex_Gthr");
+	const EseTable* tree = db.table(L"SystemIndex_GthrPth");
+	if (!gather) {
+		log(2, L"🔥Search index: no crawler's table in " + path);
+		return;
+	}
+	// The scope tree: each scope's parent and its part of the URL.
+	std::map<int64_t, std::pair<int64_t, std::wstring>> scopes;
+	if (tree)
+		for (const EseRecord& r : db.records(*tree)) {
+			int64_t scope = -1, parent = -1;
+			std::wstring name;
+			for (const EseCell& cell : r) {
+				const EseColumn* column = columnOf(*tree, cell.columnId);
+				if (!column || cell.values.empty()) continue;
+				const Json value = eseCellToJson(*column, cell);
+				if (column->name == L"Scope") scope = std::stoll(value.text());
+				else if (column->name == L"Parent") parent = std::stoll(value.text());
+				else if (column->name == L"Name") name = value.text();
+			}
+			if (scope >= 0) scopes[scope] = { parent, name };
+		}
+	auto url = [&](int64_t scope) {
+		std::wstring text;
+		for (int depth = 0; depth < SCOPE_DEPTH_MAX; ++depth) {
+			const auto s = scopes.find(scope);
+			if (s == scopes.end()) break;
+			text = s->second.second + text;
+			if (s->second.first == scope) break;
+			scope = s->second.first;
+		}
+		return text;
+	};
+	for (const EseRecord& r : db.records(*gather)) {
+		SearchIndexItem item;
+		item.path = path;
+		item.table = L"Gather";
+		std::wstring scopeUrl, name;
+		for (const EseCell& cell : r) {
+			const EseColumn* column = columnOf(*gather, cell.columnId);
+			if (!column || cell.values.empty()) continue;
+			if (column->name == L"ScopeID") scopeUrl = url(std::stoll(eseCellToJson(*column, cell).text()));
+			if (column->name == L"FileName") name = eseCellToJson(*column, cell).text();
+		}
+		item.fields.add(L"Url", Json::str(scopeUrl + name));
+		for (const EseCell& cell : r) {
+			const EseColumn* column = columnOf(*gather, cell.columnId);
+			if (!column || cell.values.empty()) continue;
+			const std::wstring key = registryNameToJsonKey(column->name);
+			if (column->name == L"LastModified" && cell.values.size() == 1 && cell.values.front().size() == 8) {
+				/* The FILETIME the crawler saw, written BIG-endian in the ESE
+				   index (Windows 8.1, measured: read the other way, the date
+				   falls in the year 6961), little-endian in Windows 11's
+				   SQLite one. */
+				std::vector<uint8_t> littleEndian(cell.values.front().rbegin(), cell.values.front().rend());
+				addSearchBlob(item.fields, key, VT_TIME, littleEndian);
+			}
+			else addEseValue(item.fields, key, *column, cell, 0);
+		}
+		items.push_back(std::move(item));
+	}
+}
+
 HRESULT SearchIndex::getData() {
 	log(0, L"ℹ️Windows Search index :");
 	const std::wstring folder = extractedPath(SEARCH_INDEX_FOLDER);
 	struct Database { const wchar_t* name; HRESULT (*read)(const std::wstring&, const std::wstring&, std::vector<SearchIndexItem>&); };
-	for (const Database& d : { Database{ L"Windows.db", readSearchPropertyStore }, Database{ L"Windows-gather.db", readSearchGather } }) {
+	for (const Database& d : { Database{ L"Windows.db", readSearchPropertyStore }, Database{ L"Windows-gather.db", readSearchGather },
+	                           Database{ L"Windows.edb", readSearchEdb } }) {
 		const std::wstring file = folder + L"\\" + d.name;
 		std::error_code ec;
 		if (!std::filesystem::is_regular_file(file, ec)) continue;

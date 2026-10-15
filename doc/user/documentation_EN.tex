@@ -1451,9 +1451,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         crawler saw (\champ{Table} \texttt{Gather}, \champ{DocumentId}, the
         same number as \champ{WorkId}): its URL and its last modification when
         crawled. The record outlives the file until the next crawl: a deleted
-        document may still show there. On Windows~10, the index
-        (\fichier{Windows.edb}, ESE) is collected with its logs but not
-        converted.
+        document may still show there. Up to Windows~10, the index is an ESE
+        database, \fichier{Windows.edb}: its logs are replayed into the
+        working copy, then it is converted in the same form; a property's
+        type, which that database does not say, comes from the table
+        Windows~11 declares, and a property that table does not know is given
+        in hexadecimal. Measured on Windows~8.1; a value of Windows~10
+        compressed otherwise than on 7~bits (XPRESS) is said, not decoded.
   \item[\fichier{rdp\_client.json}] \emph{outgoing} Remote Desktop connections of
         each profile: recent connections (\champ{RecentConnection},
         \champ{MruPosition} 0 for the latest) and servers reached

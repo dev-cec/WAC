@@ -1,6 +1,7 @@
 /*! \file
- *  \brief Windows Search index (Windows 11): what the indexer recorded of each
- *         file, read in Windows.db and Windows-gather.db.
+ *  \brief Windows Search index: what the indexer recorded of each file, read
+ *         in Windows.db and Windows-gather.db (Windows 11), or in Windows.edb
+ *         (Windows 10 and earlier).
  *
  *  WHAT THE ARTEFACT PROVES. The indexer keeps, for each item it crawled —
  *  file, folder, shortcut, mail —, its path, its dates (created, modified,
@@ -25,11 +26,18 @@
  *  (System.ItemPathDisplay) becomes a key without its "System." prefix
  *  (ItemPathDisplay). A zero date is not emitted.
  *
- *  NOT READ HERE. Windows 10 and earlier keep the same index in an ESE
- *  database, Windows.edb, its columns compressed: it is collected with the
- *  folder but not converted (backlog B-010, to be checked on a real Windows
- *  10). The inverted index (SystemIndex_1_DATA_*, the words of the files) is
- *  not converted: the summary and the properties are what an analysis reads.
+ *  WINDOWS.EDB. Windows 10 and earlier keep the same index in an ESE
+ *  database: the same tables, SystemIndex_PropertyStore with one column per
+ *  property ("4385-System_ItemPathDisplay": its number, then its name with
+ *  "_" for ".") and SystemIndex_Gthr with SystemIndex_GthrPth. Its text is
+ *  compressed on 7 bits (unpacked by the ESE reader); it does not say the
+ *  VARIANT type of a binary column, which the table of search_property_types
+ *  gives — a FILETIME and a size are both 8 bytes. The crawler's
+ *  LastModified is big-endian there. Measured on Windows 8.1; a value of
+ *  Windows 10 compressed otherwise (XPRESS) is said, not decoded.
+ *
+ *  NOT CONVERTED. The inverted index (SystemIndex_1_DATA_*, the words of the
+ *  files): the summary and the properties are what an analysis reads.
  */
 #pragma once
 
@@ -71,6 +79,28 @@ HRESULT readSearchPropertyStore(const std::wstring& file, const std::wstring& pa
  *  @param items receives one item per document
  *  @return ERROR_SUCCESS, or the failure to open the database */
 HRESULT readSearchGather(const std::wstring& file, const std::wstring& path, std::vector<SearchIndexItem>& items);
+
+/*! Reads the ESE index of Windows 10 and earlier, Windows.edb: its property
+ *  store and its crawler's table, one item per WorkID and per document as
+ *  from the SQLite databases of Windows 11. Its transaction logs are
+ *  replayed into the copy first.
+ *  @param file the database in the working copy of the collection
+ *  @param path the database on the examined machine
+ *  @param items receives the items
+ *  @return ERROR_SUCCESS, or the failure to open the database */
+HRESULT readSearchEdb(const std::wstring& file, const std::wstring& path, std::vector<SearchIndexItem>& items);
+
+/*! Reads the crawler's table of an open ESE index, its URLs rebuilt from the
+ *  scope tree.
+ *  @param db the database
+ *  @param path the database on the examined machine
+ *  @param items receives one item per document */
+void readEseGather(class EseDatabase& db, const std::wstring& path, std::vector<SearchIndexItem>& items);
+
+/*! The VARIANT type a property has in the index (search_property_types.cpp).
+ *  @param name its canonical name (System.ItemPathDisplay)
+ *  @return its type, 0 for a property the table does not hold */
+int searchPropertyVariantType(const std::wstring& name);
 
 /*! The Windows Search index (search_index.json). */
 class SearchIndex {

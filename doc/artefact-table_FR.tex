@@ -154,9 +154,9 @@
  & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}Tasks, SOFTWARE …\textbackslash{}Schedule\textbackslash{}TaskCache} & XML, valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
-\texttt{search\_index} & Windows Vista & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Search\textbackslash{}Data\textbackslash{}Applications\textbackslash{}Windows\textbackslash{}Windows.edb} & ESE & non \\
+\texttt{search\_index} & Windows Vista & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Search\textbackslash{}Data\textbackslash{}Applications\textbackslash{}Windows\textbackslash{}Windows.edb} & ESE & oui \\
  & Windows 11 & \texttt{…\textbackslash{}Windows\textbackslash{}Windows.db, Windows-gather.db} & SQLite & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows.edb est collecté avec ses journaux, non converti. Windows XP : Windows Desktop Search, installation facultative.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows.edb converti, avec son texte compressé sur 7 bits (mesuré sous Windows 8.1) ; une valeur compressée autrement (XPRESS) est signalée, non décodée. Windows XP : Windows Desktop Search, une installation facultative.} \\
 \addlinespace
 \texttt{security} & Windows XP & \texttt{ruche SECURITY : Policy\textbackslash{}Secrets, Cache, PolAdtEv} & valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
