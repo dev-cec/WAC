@@ -383,6 +383,7 @@ def cross_checks(folder):
     found += guarded(check_prefetch_runs, folder)
     found += guarded(check_amcache_windows8, folder)
     found += guarded(check_prefetch_mft_references, folder)
+    found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
     found += guarded(check_jumplist_entries, folder)
     found += guarded(check_events, folder)
@@ -3529,6 +3530,38 @@ def check_mft_timeline(folder):
         print(f"  ✅ usn_journal.json: {len(usn)} record(s) on {len(by_volume)} volume(s), numbers rising, "
               f"none after the collection ({incomplete} path(s) incomplete)")
     return found
+
+
+def check_cited_fingerprints(folder):
+    """The fingerprints of a file a Prefetch cites, against the manifest's
+    for the same file: they are those of the exhibit as collected. They used
+    to be read in the working copy, which the conversion changes — a hive
+    whose logs are replayed, an ESE database —: the SHA-256 of a content that
+    never was on the machine, and, for a database replayed during the
+    conversion, one that changed from one conversion to the next."""
+    prefetchs = load(folder, "prefetchs.json")
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    if not isinstance(prefetchs, list) or not isinstance(manifest, dict):
+        print("  ⏭️  prefetchs.json or manifest absent: cited fingerprints not confronted")
+        return 0
+    stored = {str(i.get("SourcePath", "")).lower(): str(i.get("SHA256", "")).upper()
+              for i in manifest.get("Items") or [] if i.get("SHA256") and i.get("Result") == "OK"}
+    compared, wrong = 0, []
+    for p in prefetchs:
+        for f in p.get("FileNames") or []:
+            theirs = stored.get(str(f.get("FullPath", "")).lower())
+            if theirs and f.get("SHA256"):
+                compared += 1
+                if str(f["SHA256"]).upper() != theirs:
+                    wrong.append(f"{f.get('FullPath')}: {f['SHA256']}, manifest {theirs}")
+    if not compared:
+        print("  ⏭️  no file cited by a Prefetch with a fingerprint in the manifest (without --binary): not confronted")
+        return 0
+    if wrong:
+        print(f"  ❌ prefetchs.json: {len(wrong)}/{compared} cited file(s) whose SHA-256 is not the manifest's, e.g. {wrong[0]}")
+        return 1
+    print(f"  ✅ prefetchs.json: {compared} cited file(s) with the SHA-256 the manifest recorded when they were taken")
+    return 0
 
 
 def check_prefetch_mft_references(folder):
