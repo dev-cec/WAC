@@ -1,8 +1,16 @@
 ﻿# verifier-consigne.ps1 — checks the seal and every exhibit of a WAC collection
 # (French output messages.) Usage: powershell -ExecutionPolicy Bypass -File verifier-consigne.ps1 -Sortie E:\output
-# Exit code: 0 if everything matches, 1 otherwise.
+# Exit code: 0 if everything matches, 1 otherwise, 2 if PowerShell is older than 4.
 
 param([string]$Sortie = '.\output')
+
+# Get-FileHash, ConvertFrom-Json, Get-Content -Raw and the extended paths
+# came with PowerShell 4: on an older one the reading would fail, and its
+# failure read as a mismatch of the seal. Said so instead.
+if ($PSVersionTable.PSVersion.Major -lt 4) {
+    Write-Output "PowerShell 4 ou plus est nécessaire (version $($PSVersionTable.PSVersion)) : utiliser verifier-consigne.sh, ou un Windows plus récent"
+    exit 2
+}
 
 # 1. The seal: the manifest's fingerprint must be the one recorded beside it.
 $annonce = ((Get-Content -Raw "$Sortie\exhibits\MANIFEST.sha256") -split '\s+')[0]

@@ -959,7 +959,9 @@ vérifient le sceau puis le SHA-256 de chaque pièce :
 \fichier{verifier-consigne.ps1} sous Windows, \fichier{verifier-consigne.sh}
 sous Linux. Leurs équivalents anglais, \fichier{verify-exhibits.ps1} et
 \fichier{verify-exhibits.sh}, font les mêmes contrôles avec des messages en
-anglais.
+anglais. Les scripts PowerShell demandent PowerShell~4 ou plus (Windows~8.1
+et suivants) : sous un PowerShell plus ancien, ils le disent et s'arrêtent
+(code~2) plutôt que de lire de travers.
 
 \textbf{Vérifier depuis une machine Linux.} C'est la voie recommandée : la
 collecte peut contenir ce qui a infecté la machine examinée, et une machine

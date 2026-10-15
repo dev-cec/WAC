@@ -1,8 +1,16 @@
 ﻿# verify-exhibits.ps1 — checks the seal and every exhibit of a WAC collection.
 # Usage: powershell -ExecutionPolicy Bypass -File verify-exhibits.ps1 -Output E:\output
-# Exit code: 0 if everything matches, 1 otherwise.
+# Exit code: 0 if everything matches, 1 otherwise, 2 if PowerShell is older than 4.
 
 param([string]$Output = '.\output')
+
+# Get-FileHash, ConvertFrom-Json, Get-Content -Raw and the extended paths
+# came with PowerShell 4: on an older one the reading would fail, and its
+# failure read as a mismatch of the seal. Said so instead.
+if ($PSVersionTable.PSVersion.Major -lt 4) {
+    Write-Output "PowerShell 4 or later is needed (this is $($PSVersionTable.PSVersion)): use verify-exhibits.sh, or a more recent Windows"
+    exit 2
+}
 
 # 1. The seal: the manifest's fingerprint must be the one recorded beside it.
 $recorded = ((Get-Content -Raw "$Output\exhibits\MANIFEST.sha256") -split '\s+')[0]

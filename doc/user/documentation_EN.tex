@@ -946,7 +946,9 @@ Two scripts, delivered with \fichier{WAC.exe} in \fichier{bin}, check the
 seal, then the SHA-256 of every exhibit: \fichier{verify-exhibits.ps1} on
 Windows, \fichier{verify-exhibits.sh} on Linux. Their French counterparts,
 \fichier{verifier-consigne.ps1} and \fichier{verifier-consigne.sh}, make the
-same checks with French messages.
+same checks with French messages. The PowerShell scripts need PowerShell~4 or
+later (Windows~8.1 onwards): on an older PowerShell they say so and stop
+(code~2) rather than read wrongly.
 
 \textbf{Verify from a Linux machine.} This is the recommended way: the
 collection may hold what infected the examined machine, and a Linux
