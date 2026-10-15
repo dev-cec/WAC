@@ -62,6 +62,7 @@ versions serveur, artefacts propres aux serveurs (web, Active Directory).
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider (reportée en 3.0) | P3 | fort |
 | [B-037](B-037-compatibilite-windows-xp.md) | Collecte compatible avec toutes les versions de Windows depuis XP SP1 (après B-039) | en cours | P3 | fort |
 | [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à décider (étude, reportée en 3.0) | P2 | fort |
+| [B-050](B-050-revue-code-securite-avant-3.0.md) | Revue de code et revue de sécurité de tout le projet — préalable à la publication de la 3.0.0 | à faire | P1 | fort |
 
 ## Réalisé
 
