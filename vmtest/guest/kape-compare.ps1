@@ -36,8 +36,8 @@ Copy-Item C:\wactest\kapecmp\investigation.json "$root\wac-investigation.json"
 Get-ChildItem $tdest -Recurse -Filter *CopyLog*.csv | Copy-Item -Destination $root
 Get-ChildItem $tdest -Recurse -Filter *SkipLog*.csv -ErrorAction SilentlyContinue | Copy-Item -Destination $root
 # Through \\?\: the collection holds paths past 260 characters (B-049).
-$wacBytes = (Get-ChildItem -LiteralPath '\\?\C:\wactest\kapecmp' -Recurse -File -Force | Measure-Object Length -Sum).Sum
-$kapeBytes = (Get-ChildItem $tdest -Recurse -File | Measure-Object Length -Sum).Sum
+$wacBytes = (Get-ChildItem -LiteralPath '\\?\C:\wactest\kapecmp' -Recurse -Force | Where-Object { -not $_.PSIsContainer } | Measure-Object Length -Sum).Sum
+$kapeBytes = (Get-ChildItem $tdest -Recurse | Where-Object { -not $_.PSIsContainer } | Measure-Object Length -Sum).Sum
 Compress-Archive -Force "$root\*.csv", "$root\*.json", "$root\*.txt" "$root\kape-compare.zip"
 "wac_seconds={0:N1}" -f $wac.TotalSeconds
 "wac_exit=$wacExit"

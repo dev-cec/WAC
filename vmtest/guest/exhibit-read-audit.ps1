@@ -10,25 +10,27 @@
 #                    of a file of the folder by WAC.exe since that instant
 #                    (Security event 4663): "instant UTC to 100 ns|file".
 # Test VM only: the harness runs it around the conversion of the separate
-# collection, after the main collection has read the logs.
+# collection, after the main collection has read the logs. Get-Acl and
+# Set-Acl by -Path: PowerShell 2 (Windows 7) has no -LiteralPath for them,
+# and the store's path holds no wildcard.
 param([string]$Start, [string]$Stop, [string]$Since, [string]$Output)
 $ErrorActionPreference = 'Stop'
 $fileSystem = '{0CCE921D-69AE-11D9-BED3-505054503030}'
 $everyone = New-Object Security.Principal.SecurityIdentifier 'S-1-1-0'
 if ($Start) {
     auditpol /set /subcategory:$fileSystem /success:enable | Out-Null
-    $acl = Get-Acl -LiteralPath $Start -Audit
+    $acl = Get-Acl -Path $Start -Audit
     $rule = New-Object Security.AccessControl.FileSystemAuditRule($everyone, 'ReadData',
         'ContainerInherit,ObjectInherit', 'None', 'Success')
     $acl.AddAuditRule($rule)
-    Set-Acl -LiteralPath $Start -AclObject $acl
+    Set-Acl -Path $Start -AclObject $acl
     (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')
 }
 if ($Stop) {
-    $acl = Get-Acl -LiteralPath $Stop -Audit
+    $acl = Get-Acl -Path $Stop -Audit
     $acl.SetAuditRuleProtection($false, $false)
     foreach ($r in @($acl.GetAuditRules($true, $false, [Security.Principal.SecurityIdentifier]))) { [void]$acl.RemoveAuditRule($r) }
-    Set-Acl -LiteralPath $Stop -AclObject $acl
+    Set-Acl -Path $Stop -AclObject $acl
     auditpol /set /subcategory:$fileSystem /success:disable | Out-Null
     $from = [datetime]::Parse($Since, $null, [Globalization.DateTimeStyles]::AdjustToUniversal -bor [Globalization.DateTimeStyles]::AssumeUniversal)
     $prefix = $Stop.TrimEnd('\') + '\'
@@ -40,6 +42,8 @@ if ($Stop) {
             $e.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffffff') + '|' + $data['ObjectName']
         }
     }
-    [IO.File]::WriteAllLines($Output, [string[]]@($lines), (New-Object Text.UTF8Encoding $false))
-    "$(@($lines).Count) read(s)"
+    # No read: $lines is $null, which @() counts as one element on PowerShell 2.
+    $lines = @($lines | Where-Object { $_ })
+    [IO.File]::WriteAllLines($Output, [string[]]$lines, (New-Object Text.UTF8Encoding $false))
+    "$($lines.Count) read(s)"
 }

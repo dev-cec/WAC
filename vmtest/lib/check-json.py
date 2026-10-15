@@ -157,8 +157,8 @@ WINDOWS_10 = 10240
 # test machine is decoded.
 VALIDATED_SINCE_BUILD = WINDOWS_10
 
-# The Prefetch versions WAC decodes: 26 (Windows 8.1), 30 and 31.
-DECODED_PREFETCH_VERSIONS = {26, 30, 31}
+# The Prefetch versions WAC decodes: 23 (Vista, 7), 26 (Windows 8.1), 30 and 31.
+DECODED_PREFETCH_VERSIONS = {23, 26, 30, 31}
 
 # WHAT WAC DECLARES ON THE OLDER TEST VMs (WAC_VM=win81-test, win7-test), as
 # measured on each: the artefacts their Windows does not have, and those whose
@@ -172,9 +172,17 @@ OLDER_VERSION_STATUSES = {
     7601: ("Windows 7",
            {"activities_cache.json", "bams.json", "defender_detections.json", "defender_log.json",
             "defender_quarantine.json", "powershell_history.json", "srum.json"},
-           {"amcache_application_files.json", "amcache_applications.json", "amcache_inventory.json",
-            "bits_jobs.json", "search_index.json", "shimcache.json"}),
+           set()),
 }
+
+
+def skipped_unplaced(folder, section, reference):
+    """True, with the line that says so, when a check has no reference because
+    the witnesses of its section were not placed: nothing to confront."""
+    if reference or not witness_not_placed(folder, section):
+        return False
+    print(f"  ⏭️  {section}.json: no reference (witnesses of {section} not placed): not confronted")
+    return True
 
 
 def witness_not_placed(folder, section):
@@ -421,6 +429,7 @@ def cross_checks(folder):
     found += guarded(check_rdp, folder)
     found += guarded(check_thumbcache, folder)
     found += guarded(check_emails, folder)
+    found += guarded(check_prefetch_libscca, folder)
     found += guarded(check_thunderbird, folder)
     return found
 
@@ -566,6 +575,13 @@ def check_vulnerable_driver(folder):
         return 0
     item = found[0]
     reason = str(item.get("EmbeddedChainReason") or "")
+    # The trust set without its driver lists (--update-trust could not fetch
+    # them: Windows 7 without KB3140245 has no TLS 1.2 in WinHTTP): nothing
+    # names the driver, its chain must only not be cleared.
+    investigation = load(folder, "investigation.json")
+    if "driver list missing" in json.dumps(investigation) and item.get("EmbeddedChainTrusted") is False:
+        print(f"  ⏭️  vulnerable driver: the trust set has no driver list (not downloadable here); not cleared all the same ({reason[:80]})")
+        return 0
     if item.get("EmbeddedChainTrusted") is not False or "vulnerable" not in reason:
         print(f"  ❌ vulnerable driver not recognised: trusted={item.get('EmbeddedChainTrusted')}, reason={reason!r}")
         return 1
@@ -701,7 +717,12 @@ def check_file_artefact_dates(folder):
     What it caught: the dates were read on the working copy, and the 335
     Prefetch files of a collection all bore the minute of the collection.
     A Prefetch rewritten between the collection and the reference (a program
-    run meanwhile) legitimately differs: 90 % must match to the 100 ns.
+    run meanwhile) legitimately differs: it is admitted when one of the two
+    dates comes after the earlier of the two readings — the collection's
+    start, the moment Windows was asked (taken|) —, and while most dates
+    still match: a share of 90 % failed on Windows 7, whose Superfetch
+    rewrites a third of its few Prefetch files within minutes; the separate
+    collection, later than the reference, sees the rewrites the other way.
     """
     reference_path = os.path.join(folder, "reference", "prefetch-times.txt")
     prefetchs = load(folder, "prefetchs.json")
@@ -710,7 +731,11 @@ def check_file_artefact_dates(folder):
         return 0
     with open(reference_path, encoding="utf-8", errors="replace") as f:
         windows = dict(line.strip().split("|", 1) for line in f if "|" in line)
-    compared = same = 0
+    investigation = load(folder, "investigation.json")
+    started = ((investigation or {}).get("Collection") or {}).get("StartUtc", "") if isinstance(investigation, dict) else ""
+    taken = windows.pop("taken", "")
+    since = min(d for d in (started, taken) if d) if (started or taken) else ""
+    compared = same = rewritten = 0
     examples = []
     for p in prefetchs:
         name = ntpath.basename(str(p.get("Path", "")))
@@ -719,18 +744,21 @@ def check_file_artefact_dates(folder):
         compared += 1
         if p["ModifiedUtc"] == windows[name]:
             same += 1
+        elif since and max(windows[name], p["ModifiedUtc"]) > since:
+            rewritten += 1
         elif len(examples) < 3:
             examples.append(f"{name}: WAC {p['ModifiedUtc']}, Windows {windows[name]}")
     if not compared:
         print("  ⏭️  no Prefetch in common with the reference: dates not checked")
         return 0
-    if same < 0.9 * compared:
-        print(f"  ❌ Prefetch dates: {same}/{compared} equal to Windows' — dates of the working copy?")
+    if same + rewritten < compared or same < compared / 2:
+        print(f"  ❌ Prefetch dates: {same}/{compared} equal to Windows', {rewritten} rewritten between the two readings "
+              f"— dates of the working copy?")
         for e in examples:
             print(f"        {e}")
         return 1
     print(f"  ✅ Prefetch dates: {same}/{compared} equal to Windows' to the 100 ns "
-          f"(the others rewritten since the collection)")
+          f"({rewritten} rewritten between the two readings)")
     return 0
 
 
@@ -1536,8 +1564,8 @@ def check_small_file_artefacts(folder):
             decoded = [k for k in ("RunCount", "RunsUtc", "FileNames", "Volumes", "FullPath") if k in p]
             if decoded:
                 faults.append(f"{name}: decoded all the same: {decoded}")
-        # The machine's own Prefetch: those of a version WAC decodes (26 of
-        # Windows 8.1, 30 and 31) all decoded; the others (23 of Windows 7)
+        # The machine's own Prefetch: those of a version WAC decodes (23 of
+        # Windows 7, 26 of Windows 8.1, 30 and 31) all decoded; the others
         # all declared, of one version.
         versions = {p.get("FormatVersion") for p in undecoded.values()}
         wrongly = [where for where, p in undecoded.items() if p.get("FormatVersion") in DECODED_PREFETCH_VERSIONS]
@@ -1547,7 +1575,7 @@ def check_small_file_artefacts(folder):
             faults.append(f"real Prefetch declared unsupported in versions {sorted(versions, key=str)}")
         decoded = len(prefetchs) - 2 - len(undecoded)
         report(not faults,
-               "prefetchs.json: Prefetch versions 23 and 32 declared unsupported (the known form named, the unknown "
+               "prefetchs.json: Prefetch versions 17 and 32 declared unsupported (the known form named, the unknown "
                "one not), name and hash read, nothing else decoded; "
                + (f"the {len(undecoded)} real Prefetch of this Windows all declared version {next(iter(versions))}"
                   if undecoded else f"the {decoded} real Prefetch decoded"),
@@ -1640,9 +1668,10 @@ def check_small_file_artefacts(folder):
             got = (j.get("UsnJournalId"), j.get("MaximumSize"), j.get("AllocationDelta"), j.get("LowestValidUsn"))
             if got != (journal_id, int(maximum), int(delta), int(lowest)):
                 wrong.append(f"{letter} journal: Windows {journal_id} {maximum} {delta} {lowest}, WAC {got}")
-        report(seen and not wrong,
-               f"ntfs_volumes.json: serial, geometry and journal header of {len(mine)} volume(s), as DeviceIoControl gives them ({seen} reading(s))",
-               f"ntfs_volumes.json: {wrong[:3]}")
+        if not skipped_unplaced(folder, "ntfs_volumes", seen):
+            report(seen and not wrong,
+                   f"ntfs_volumes.json: serial, geometry and journal header of {len(mine)} volume(s), as DeviceIoControl gives them ({seen} reading(s))",
+                   f"ntfs_volumes.json: {wrong[:3]}")
 
     # Defender's WPP traces (B-032): copied raw, every one Windows lists.
     if os.path.exists(path):
@@ -1664,8 +1693,14 @@ def check_small_file_artefacts(folder):
         live = {l[len("dpapikey="):].lower() for l in lines if l.startswith("dpapikey=")}
         mine = {(k.get("Path") or "").lower(): k for k in keys}
         unnamed = [p for p, k in mine.items() if k.get("Guid") != ntpath.basename(p)]
+        # A key created after Windows' list was read (a service account's
+        # first, during the cycle) is not among Windows' keys, rightly.
+        listed_at = next((l[len("dpapilisted="):][:19] for l in lines if l.startswith("dpapilisted=")), "")
+        later = {p for p, k in mine.items() if p not in live and listed_at and str(k.get("SourceCreatedUtc", ""))[:19] > listed_at}
+        mine = {p: k for p, k in mine.items() if p not in later}
         report(live and live == set(mine) and not unnamed,
-               f"dpapi_master_keys.json: the {len(live)} master key file(s) Windows lists, each header naming its file",
+               f"dpapi_master_keys.json: the {len(live)} master key file(s) Windows lists, each header naming its file"
+               + (f" ({len(later)} created after the list, not confronted)" if later else ""),
                f"dpapi_master_keys.json: missing {sorted(live - set(mine))[:2]}, extra {sorted(set(mine) - live)[:2]}, header not its name {unnamed[:2]}")
         wrong, count = [], 0
         for l in (l for l in lines if l.startswith("dpapipreferred=")):
@@ -2141,9 +2176,10 @@ def check_small_file_artefacts(folder):
         mine = {(e.get("Kind"), str(e.get("Value", "")).lower()) for e in defender.get("Exclusions") or [] if e.get("Source") == "Settings"}
         theirs = {(kind, v.lower()) for kind, *values in listed for v in values if v}
         witnesses = {("Paths", "c:\\wactest\\wac-excluded"), ("Extensions", "wactestext"), ("Processes", "wac-excluded.exe")}
-        report(listed and mine == theirs and witnesses <= mine,
-               f"defender_configuration.json: the {len(theirs)} exclusion(s) Defender lists, of their kind, the 3 witnesses among them",
-               f"defender_configuration.json: WAC only {sorted(mine - theirs)[:3]}, Defender only {sorted(theirs - mine)[:3]}")
+        if not skipped_unplaced(folder, "defender_configuration", listed):
+            report(listed and mine == theirs and witnesses <= mine,
+                   f"defender_configuration.json: the {len(theirs)} exclusion(s) Defender lists, of their kind, the 3 witnesses among them",
+                   f"defender_configuration.json: WAC only {sorted(mine - theirs)[:3]}, Defender only {sorted(theirs - mine)[:3]}")
 
     # Explorer's RecentDocs: the witness file, added by the shell, first of its
     # extension's list and of the list of every extension (B-031).
@@ -2308,9 +2344,10 @@ def check_small_file_artefacts(folder):
             access = {tuple(l.strip()[len("shareaccess="):].split("|")[1:]) for l in f if l.startswith("shareaccess=")}
         witness = next((sh for sh in shares if sh.get("Name") == "WacShare"), {})
         aces = {(a.get("Sid"), a.get("Type")) for a in (witness.get("SecurityDescriptor") or {}).get("Dacl") or []}
-        report(theirs and mine == theirs and ("WacShare", "C:\\wactest") in mine and access and aces == access,
-               f"network_shares.json: the {len(theirs)} share(s) Get-SmbShare lists, with their path; the witness's DACL as Get-SmbShareAccess reads it",
-               f"network_shares.json: WAC only {sorted(mine - theirs)}, Windows only {sorted(theirs - mine)}; DACL {sorted(aces)}, Windows {sorted(access)}")
+        if not skipped_unplaced(folder, "network_shares", theirs):
+            report(theirs and mine == theirs and ("WacShare", "C:\\wactest") in mine and access and aces == access,
+                   f"network_shares.json: the {len(theirs)} share(s) Get-SmbShare lists, with their path; the witness's DACL as Get-SmbShareAccess reads it",
+                   f"network_shares.json: WAC only {sorted(mine - theirs)}, Windows only {sorted(theirs - mine)}; DACL {sorted(aces)}, Windows {sorted(access)}")
 
     # Network configuration: each adapter Windows lists, with its description,
     # its hardware address and its DHCP address, from the offline hives (B-031).
@@ -2338,9 +2375,10 @@ def check_small_file_artefacts(folder):
                 wrong.append(f"{guid}: DHCP address {ipv4.get('DhcpIPAddress')}, Windows {ip}")
         address = ("hardware address" if address_in_hives
                    else "no hardware address (none in the hives before Windows 10)")
-        report(live and not wrong,
-               f"network_configuration.json: the {len(live)} adapter(s) Windows lists, description and DHCP address identical, {address}",
-               f"network_configuration.json: {wrong[:2]}")
+        if not skipped_unplaced(folder, "network_configuration", live):
+            report(live and not wrong,
+                   f"network_configuration.json: the {len(live)} adapter(s) Windows lists, description and DHCP address identical, {address}",
+                   f"network_configuration.json: {wrong[:2]}")
 
     # Event log configuration: each log Windows lists, with the same state
     # (enabled or not), read from WINEVT\Channels in the offline hive; a
@@ -2974,6 +3012,14 @@ def check_search_index(folder):
         if queried and (r.get("SearchGatherTimeUtc") or "")[:19] >= queried:
             later += 1
             continue
+        # Modified after the record on disk was gathered: the indexer had
+        # the new state in memory, not yet written (Windows 7, measured: four
+        # minutes after the change). The record is an older state, not a
+        # wrong one.
+        gathered = (r.get("SearchGatherTimeUtc") or "")[:19]
+        if modified and gathered and modified[:19] > gathered:
+            later += 1
+            continue
         both += 1
         if (modified and not (r.get("DateModifiedUtc") or "").startswith(modified)) or (size and str(r.get("Size")) != size):
             wrong += 1
@@ -2991,9 +3037,11 @@ def check_event_messages(folder):
     machine — provider, identifier, version, qualifiers — on the same record.
 
     The dates inserted in a message are compared without Windows' direction
-    marks (U+200E) and to the 100 ns (Windows writes 9 decimals, WAC 7): a
-    difference of presentation, not of value. The rest must be identical,
-    whitespace runs aside. A residue is explained (documented in the
+    marks (U+200E) and to the 100 ns (Windows writes 9 decimals, WAC 7), the
+    GUIDs and hexadecimal numbers without their case (Windows 7 writes GUIDs
+    in upper case and "0x3e7" in lower case, 8 and later the other way round,
+    as WAC): a difference of presentation, not of value. The rest must be
+    identical, whitespace runs aside. A residue is explained (documented in the
     validation file: Windows' own deviations from a manifest, a satellite on
     disk older than its binary); the check fails below 90 % of identical
     kinds among those Windows gives a message — the wrong step of the
@@ -3016,8 +3064,12 @@ def check_event_messages(folder):
         print("  ⏭️  no events.json: event messages not confronted")
         return 0
     dates = re.compile(r"\u200e?(\d{4})\u200e?-\u200e?(\d\d)\u200e?-\u200e?(\d\dT\d\d:\d\d:\d\d)\.(\d{7})\d*Z")
+    hexadecimal = re.compile(r"\b0[xX][0-9A-Fa-f]+\b")
+    guids = re.compile(r"\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}")
     def norm(text):
         text = dates.sub(lambda m: f"{m.group(1)}-{m.group(2)}-{m.group(3)}.{m.group(4)}Z", text or "")
+        text = guids.sub(lambda m: m.group(0).lower(), text)
+        text = hexadecimal.sub(lambda m: m.group(0).lower(), text)
         return re.sub(r"\s+", " ", text.replace("\u200e", "")).strip()
     counts = collections.Counter()
     differing = []
@@ -3118,6 +3170,51 @@ def check_thunderbird(folder):
     return 0
 
 
+def check_prefetch_libscca(folder):
+    """prefetchs.json against libscca (pyscca, written independently of WAC),
+    which read the same working copies (prefetch-libscca.txt, written by
+    run-wac-test.sh through lib/prefetch-reference.py): for every Prefetch of
+    a version WAC decodes, the version, the hash, the run count, the run
+    times to the 100 ns, the serial of each volume and the number of file
+    names must be libscca's. A file libscca cannot read is said, not counted."""
+    path = os.path.join(folder, "prefetch-libscca.txt")
+    prefetchs = load(folder, "prefetchs.json")
+    if not os.path.exists(path) or not isinstance(prefetchs, list):
+        print("  ⏭️  prefetch-libscca.txt or prefetchs.json absent: Prefetch not confronted with libscca")
+        return 0
+    mine = {ntpath.basename(str(p.get("Path", ""))).lower(): p for p in prefetchs}
+    epoch = datetime.datetime(1601, 1, 1)
+    def utc(filetime):   # FILETIME to WAC's ISO form, to the 100 ns
+        moment = epoch + datetime.timedelta(microseconds=int(filetime) // 10)
+        return moment.strftime("%Y-%m-%dT%H:%M:%S.") + f"{int(filetime) % 10_000_000:07d}Z"
+    compared, unread, wrong = 0, [], []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            parts = line.rstrip("\n").split("|")
+            if len(parts) == 3 and parts[1] == "error":
+                unread.append(parts[0])
+                continue
+            name, version, digest, runs, times, serials, files = parts
+            if int(version) not in DECODED_PREFETCH_VERSIONS:
+                continue
+            p = mine.get(name.lower())
+            if p is None:
+                wrong.append(f"{name}: absent from prefetchs.json")
+                continue
+            compared += 1
+            theirs = (int(version), digest, int(runs), [utc(t) for t in times.split(",") if t],
+                      [v for v in serials.split(",") if v], int(files))
+            got = (p.get("FormatVersion"), p.get("Hash"), p.get("RunCount"), p.get("RunsUtc") or [],
+                   [v.get("SerialNumber") for v in p.get("Volumes") or []], p.get("FileCount"))
+            if got != theirs:
+                wrong.append(f"{name}: WAC {got}, libscca {theirs}")
+    ok = compared > 0 and not wrong
+    print(f"  {'✅' if ok else '❌'} prefetchs.json: {compared} Prefetch as libscca reads them (version, hash, run count, "
+          f"run times, volume serials, number of files)" + (f", {len(unread)} unread by libscca" if unread else "")
+          + ("" if ok else f": {wrong[:3]}"))
+    return 0 if ok else 1
+
+
 def check_emails(folder):
     """emails.json against pypff, on the mail witness: a PST of the public
     corpus pst_fixtures.sh pins, placed in the Outlook Files of "wac".
@@ -3190,7 +3287,14 @@ def check_thumbcache(folder):
     witness (place-file-artefacts.ps1, section 41) is a picture "wac" saw in
     Explorer: Windows gives its System.ThumbnailCacheId, which must be the
     hash of an entry holding an image, exported with the SHA-256 the JSON
-    gives."""
+    gives.
+
+    A data checksum may fail on its own, under a valid header: Windows 8.1
+    wrote one entry of iconcache_32.db (its last) with 0x5AEBB0AC00000000,
+    which its header checksum covers — Windows' value, not WAC's misreading,
+    and WAC says so (DataChecksumValid false). Such failures are shown, not
+    failed, while they are few (under 1 in 20 of the images): a wrong offset
+    of the data fails them all."""
     import hashlib, re
     entries = load(folder, "thumbcache.json")
     if not isinstance(entries, list):
@@ -3201,6 +3305,14 @@ def check_thumbcache(folder):
     bad_data = [e for e in entries if e.get("DataSize") and e.get("DataChecksumValid") is not True]
     bad_id = [e for e in entries if re.fullmatch(r"[0-9a-f]{16}", str(e.get("Identifier", ""))) and e.get("Identifier") != e.get("Hash")]
     with_data = sum(1 for e in entries if e.get("DataSize"))
+    isolated = bool(bad_data) and not bad_header and len(bad_data) * 20 < with_data
+    shown = len(bad_data) if isolated else 0
+    if isolated:
+        print(f"  ⚠️  thumbcache.json: {len(bad_data)} data checksum(s) out of {with_data} not the image's, under a valid "
+              f"header — as Windows wrote them:")
+        for e in bad_data[:3]:
+            print(f"        {e.get('Cache')} @ {e.get('Offset')}: {e.get('Hash')}")
+        bad_data = []
     if bad_header or bad_data or bad_id or not entries:
         print(f"  ❌ thumbcache.json: {len(entries)} entry(ies), {len(bad_header)} header and {len(bad_data)} data "
               f"checksum(s) failed, {len(bad_id)} identifier(s) not their hash")
@@ -3209,7 +3321,7 @@ def check_thumbcache(folder):
         found += 1
     else:
         print(f"  ✅ thumbcache.json: {len(entries)} entry(ies) of {len({e.get('Cache') for e in entries})} cache(s), "
-              f"every header checksum and the {with_data} data checksum(s) as Windows wrote them")
+              f"every header checksum and {with_data - shown} data checksum(s) of {with_data} as Windows wrote them")
     path = os.path.join(folder, "reference", "file-artefacts.txt")
     witness = None
     if os.path.exists(path):
@@ -3301,9 +3413,11 @@ def check_rdp(folder):
                       and str(e.get("EvtSystemEventRecordId")) == record_id), None)
             if r is None or (user and r.get("User") != user) or (source and r.get("SourceAddress") != source):
                 wrong.append(f"{log} {record_id}: {user} {source}, WAC {r and (r.get('User'), r.get('SourceAddress'))}")
-        ok = bool(incoming) and not wrong
-        report(ok, f"rdp_server.json: the {len(incoming)} incoming trace(s) Windows lists for the session, same user and source",
-               f"rdp_server.json: {len(incoming)} expected, {wrong[:3]}")
+        skipped = skipped_unplaced(folder, "rdp_server", incoming)
+        ok = skipped or bool(incoming) and not wrong
+        if not skipped:
+            report(ok, f"rdp_server.json: the {len(incoming)} incoming trace(s) Windows lists for the session, same user and source",
+                   f"rdp_server.json: {len(incoming)} expected, {wrong[:3]}")
         found += 0 if ok else 1
     return found
 
@@ -3577,7 +3691,9 @@ def check_prefetch_mft_references(folder):
     creation date, the change of its $FILE_NAME — after the program's last
     run: the file was deleted, or replaced by a rename, and created again at
     the same path, reusing the record (GoogleUpdater's prefs.json, replaced
-    11 s into the run its Prefetch records). And a record the $MFT marks
+    11 s into the run its Prefetch records); in version 23, whose file list
+    carries references of earlier traces, any older sequence of the record.
+    And a record the $MFT marks
     deleted still carries its name, but NTFS raised its sequence by one when
     it freed it: the reference must then be the record's sequence less one
     (a Chrome version removed by its update, the $UsnJrnl showing the deletion
@@ -3613,6 +3729,13 @@ def check_prefetch_mft_references(folder):
                 same += not record[3]
                 deleted += record[3]
             elif record[2] > max(p.get("RunsUtc") or [""]):
+                recreated += 1
+            elif p.get("FormatVersion") == 23 and (ref.get("SequenceNumber") or 0) < (record[1] or 0):
+                # Version 23 keeps one run time, and its file list carries
+                # references of earlier traces (Windows 7, measured: a log
+                # file created again at 09:09, the run of 09:10 still giving
+                # its former sequence): an older sequence of the same record
+                # is a file created again since some run, sequences only rise.
                 recreated += 1
             else:
                 wrong.append((path, ref, record[:2]))
@@ -3792,8 +3915,10 @@ def check_shimcache_dates(folder):
               if i.get("SourceModifiedUtc")}
     same = shifted = other = 0
     for e in sh:
-        # Windows 8 and 8.1 name the system volume "SYSVOL\".
+        # Windows 8 and 8.1 name the system volume "SYSVOL\", Windows 7 writes "\??\C:\".
         path = str(e.get("Path", "")).upper()
+        if path.startswith("\\??\\"):
+            path = path[4:]
         i = source.get("C:\\" + path[len("SYSVOL\\"):] if path.startswith("SYSVOL\\") else path)
         if not i or not e.get("LastModificationUtc"):
             continue

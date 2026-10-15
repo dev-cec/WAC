@@ -74,9 +74,9 @@ $ErrorActionPreference = 'Stop'
 # The files of a folder and of its subfolders, down to a depth: what
 # Get-ChildItem -Recurse -Depth does from PowerShell 5 on.
 function FilesToDepth([string]$folder, [int]$depth) {
-    Get-ChildItem -LiteralPath $folder -Force -File -ErrorAction SilentlyContinue
+    Get-ChildItem -LiteralPath $folder -Force -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer }
     if ($depth -gt 0) {
-        Get-ChildItem -LiteralPath $folder -Force -Directory -ErrorAction SilentlyContinue |
+        Get-ChildItem -LiteralPath $folder -Force -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer } |
             ForEach-Object { FilesToDepth $_.FullName ($depth - 1) }
     }
 }
@@ -154,7 +154,7 @@ try { if (Wants 'search_index') {
 try { if (Wants 'powershell_history') {
     $history = 'C:\Users\wac\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine'
     New-Item -ItemType Directory -Force $history | Out-Null
-    $lines = @('whoami /all', 'Get-Process |`', '  Where-Object CPU -gt 10', 'Invoke-WebRequest http://wac-test.invalid/a.ps1')
+    $lines = @('whoami /all', 'Get-Process |`', '  Where-Object { $_.CPU -gt 10 }', 'Invoke-WebRequest http://wac-test.invalid/a.ps1')
     [IO.File]::WriteAllText("$history\WacTest_history.txt", ($lines -join "`r`n") + "`r`n", (New-Object Text.UTF8Encoding $false))
     Write-Output "powershell=WacTest|3|whoami /all"
 } } catch { WitnessFailure 'powershell_history' $_ }
@@ -192,9 +192,12 @@ try { if (Wants 'hosts') {
 # 3b. Two Prefetch files of a version WAC has no decoder for, written by hand
 # and always the same: an uncompressed SCCA header (version, "SCCA", the
 # executable's name at 16, the path hash at 76), zeros after it. Windows does
-# not read them: no program of that name is ever run.
+# not read them: no program of that name is ever run. Version 17 (XP) is the
+# known form; the witness of version 23, decoded since, is removed where an
+# earlier cycle left it.
 try { if (Wants 'prefetch') {
-    foreach ($witness in @(@('pfold', 23, 'WACV23.EXE', 0x0BADF023), @('pfnew', 32, 'WACV32.EXE', 0x0BADF032))) {
+    Remove-Item -LiteralPath 'C:\Windows\Prefetch\WACV23.EXE-0BADF023.pf' -ErrorAction SilentlyContinue
+    foreach ($witness in @(@('pfold', 17, 'WACV17.EXE', 0x0BADF017), @('pfnew', 32, 'WACV32.EXE', 0x0BADF032))) {
         $bytes = New-Object byte[] 512
         [BitConverter]::GetBytes([int]$witness[1]).CopyTo($bytes, 0)
         [Text.Encoding]::ASCII.GetBytes('SCCA').CopyTo($bytes, 4)
@@ -221,8 +224,15 @@ try { if (Wants 'zone_identifiers', 'mft') {
     $downloaded = 'C:\Users\wac\Downloads\wac-downloaded.exe'
     New-Item -ItemType Directory -Force 'C:\Users\wac\Downloads' | Out-Null
     Set-Content $downloaded 'MZ WAC harness download witness'
-    Set-Content -Path $downloaded -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3`r`nHostUrl=https://wac-test.invalid/wac-downloaded.exe"
-    $hostUrl = (Get-Content -Path $downloaded -Stream Zone.Identifier | Where-Object { $_ -like 'HostUrl=*' }) -replace '^HostUrl=', ''
+    if ($PSVersionTable.PSVersion.Major -ge 3) {
+        Set-Content -Path $downloaded -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3`r`nHostUrl=https://wac-test.invalid/wac-downloaded.exe"
+        $hostUrl = (Get-Content -Path $downloaded -Stream Zone.Identifier | Where-Object { $_ -like 'HostUrl=*' }) -replace '^HostUrl=', ''
+    }
+    else {
+        # PowerShell 2 has no -Stream: the stream written and read by cmd, the same three lines.
+        & cmd.exe /c "(echo [ZoneTransfer]& echo ZoneId=3& echo HostUrl=https://wac-test.invalid/wac-downloaded.exe)> `"${downloaded}:Zone.Identifier`""
+        $hostUrl = (& cmd.exe /c "more < `"${downloaded}:Zone.Identifier`"" | Where-Object { $_ -like 'HostUrl=*' }) -replace '^HostUrl=', ''
+    }
     Write-Output "zone=$downloaded|3|$hostUrl"
 } } catch { WitnessFailure 'zone_identifiers,mft' $_ }
 
@@ -245,7 +255,8 @@ try { if (Wants 'run_keys') {
         [IO.File]::WriteAllText($script, "@echo off`r`nrem WAC B-045 witness`r`n")
         foreach ($k in 1..8) {
             $name = "$links\wac-links-" + ('{0:D2}' -f $k) + '-' + ('x' * 110) + '.cmd'
-            New-Item -ItemType HardLink -Path $name -Target $script | Out-Null
+            # mklink rather than New-Item -ItemType HardLink, which came with PowerShell 5.
+            & cmd.exe /c "mklink /H `"$name`" `"$script`"" | Out-Null
         }
     }
     New-ItemProperty -Force -Path $runKey -Name 'WacTestLinks' -Value $script | Out-Null
@@ -278,10 +289,12 @@ try { if (Wants 'binaries') {
 
 # 7. The SECURITY hive as Windows reads it live (the harness runs as SYSTEM).
 try { if (Wants 'security') {
-    $secrets = (Get-ChildItem 'HKLM:\SECURITY\Policy\Secrets' | ForEach-Object PSChildName | Sort-Object) -join ','
+    $secrets = (Get-ChildItem 'HKLM:\SECURITY\Policy\Secrets' | ForEach-Object { $_.PSChildName } | Sort-Object) -join ','
     Write-Output "secrets=$secrets"
-    $audit = (Get-Item 'HKLM:\SECURITY\Policy\PolAdtEv').GetValue('')
-    Write-Output ("audit=" + (($audit | ForEach-Object { $_.ToString('X2') }) -join ''))
+    # Through reg.exe: the value is of type REG_NONE, which .NET 2 (Windows 7)
+    # reads as nothing; reg.exe gives its bytes in hexadecimal on every Windows.
+    $audit = & reg.exe query 'HKLM\SECURITY\Policy\PolAdtEv' /ve | Where-Object { $_ -match '\sREG_NONE\s' }
+    Write-Output ("audit=" + ($audit -split '\s+')[-1])
     $slots = @((Get-Item 'HKLM:\SECURITY\Cache' -ErrorAction SilentlyContinue).Property | Where-Object { $_ -match '^NL\$\d+$' }).Count
     Write-Output "nl_slots=$slots"
 } } catch { WitnessFailure 'security' $_ }
@@ -347,7 +360,7 @@ try { if (Wants 'office_trust_records', 'typed_paths', 'word_wheel_query', 'inte
     Write-Output "fwrule=WAC test rule|Block|In|65001"
     $rules = 'HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\FirewallRules'
     Write-Output ("fwcount=" + (Get-Item $rules).ValueCount)
-    $roots = Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\SystemCertificates\ROOT\Certificates' | ForEach-Object PSChildName | Sort-Object
+    $roots = Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\SystemCertificates\ROOT\Certificates' | ForEach-Object { $_.PSChildName } | Sort-Object
     Write-Output ("roots=" + ($roots -join ','))
     $first = Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $roots -contains $_.Thumbprint } | Select-Object -First 1
     if ($first) { Write-Output ("rootsubject=" + $first.Thumbprint + '|' + $first.GetNameInfo('SimpleName', $false)) }
@@ -453,14 +466,14 @@ try { if (Wants 'wmi') {
 #     added, not when a property changes. BITS is restarted once, so that the
 #     database holds it (a live copy misses what is still in edb.log).
 try { if (Wants 'bits') {
-    $job = Get-BitsTransfer -AllUsers -ErrorAction SilentlyContinue | Where-Object DisplayName -eq 'WacTestJob' | Select-Object -First 1
+    $job = Get-BitsTransfer -AllUsers -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq 'WacTestJob' } | Select-Object -First 1
     if (-not $job) {
         & bitsadmin /create WacTestJob | Out-Null
         & bitsadmin /SetNotifyCmdLine WacTestJob 'C:\Windows\System32\cmd.exe' '/c echo wac-bits-test' | Out-Null
         & bitsadmin /SetDescription WacTestJob 'WAC harness witness, never resumed' | Out-Null
         & bitsadmin /addfile WacTestJob https://wac-test.invalid/wac-bits.bin C:\wactest\wac-bits.bin | Out-Null
         Restart-Service BITS -Force -WarningAction SilentlyContinue
-        $job = Get-BitsTransfer -AllUsers | Where-Object DisplayName -eq 'WacTestJob' | Select-Object -First 1
+        $job = Get-BitsTransfer -AllUsers | Where-Object { $_.DisplayName -eq 'WacTestJob' } | Select-Object -First 1
     }
     Write-Output ("bits=" + (@($job.JobId.ToString('B').ToUpper(), $job.Description, $job.JobState,
         $job.CreationTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
@@ -490,7 +503,7 @@ try { if (Wants 'fat_volumes') {
             $volume = $part | Format-Volume -FileSystem $key.FileSystem -NewFileSystemLabel $key.Label -Confirm:$false
         }
         $root = "$($volume.DriveLetter):\"
-        Get-ChildItem -LiteralPath $root -Force | Where-Object Name -ne 'System Volume Information' | Remove-Item -Recurse -Force
+        Get-ChildItem -LiteralPath $root -Force | Where-Object { $_.Name -ne 'System Volume Information' } | Remove-Item -Recurse -Force
         # Built by code points: PowerShell 5.1 reads this script as ANSI.
         $long = Join-Path $root "Wac Long Name $([char]0x2013) $([char]0xE9)t$([char]0xE9).txt"
         [IO.File]::WriteAllText($long, 'wac fat witness')
@@ -524,7 +537,7 @@ try { if (Wants 'fat_volumes') {
         [IO.File]::WriteAllText((Join-Path $root 'DELDIR\inner.txt'), 'inside a deleted folder')
         Remove-Item -LiteralPath (Join-Path $root 'DELDIR') -Recurse
         Write-Output "fat=$($volume.DriveLetter):|$($key.Label)|$($key.FileSystem)"
-        foreach ($f in Get-ChildItem -LiteralPath $root -Recurse -Force -File | Where-Object FullName -notlike '*System Volume Information*') {
+        foreach ($f in Get-ChildItem -LiteralPath $root -Recurse -Force | Where-Object { -not $_.PSIsContainer } | Where-Object { $_.FullName -notlike '*System Volume Information*' }) {
             # The path percent-encoded (UTF-8): PowerShell 4 writes its output in
             # the console's code page, where the long name's accents are lost.
             Write-Output ("fatfile=" + (@([uri]::EscapeDataString($f.FullName), $f.Length, $f.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
@@ -781,7 +794,7 @@ $data = "$env:LOCALAPPDATA\Google\Chrome\User Data"
 # never written to places.sqlite (both measured): the file there, the trace
 # absent, and WAC reading the disk right.
 function Close-Browser([string]$name) {
-    Get-Process $name -ErrorAction SilentlyContinue | Where-Object MainWindowHandle -ne 0 | ForEach-Object { $null = $_.CloseMainWindow() }
+    Get-Process $name -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | ForEach-Object { $null = $_.CloseMainWindow() }
     Start-Sleep 8
     Get-Process $name -ErrorAction SilentlyContinue | Stop-Process -Force
 }
@@ -929,7 +942,7 @@ net use W: /delete /y | Out-Null
     Start-Sleep 20
     Unregister-ScheduledTask -TaskName WacMountPoints -Confirm:$false
     $base = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2"
-    $names = @(Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object PSChildName -ne 'CPC' | ForEach-Object PSChildName)
+    $names = @(Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object { $_.PSChildName -ne 'CPC' } | ForEach-Object { $_.PSChildName })
     Write-Output ("mountpoints=$wacSid|" + ($names -join '|'))
 } } catch { WitnessFailure 'mount_points' $_ }
 
@@ -968,6 +981,8 @@ try { if (Wants 'operating_system') {
         if ($null -ne $v) { Write-Output ("setting=" + $w[1] + '|' + $v) }
     }
     $boot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
+    # Through WMI (PowerShell 2, ps2-compat.ps1) the date is WMI's text.
+    if ($boot -is [string]) { $boot = [Management.ManagementDateTimeConverter]::ToDateTime($boot) }
     $down = Get-WinEvent -LogName System -FilterXPath "*[System[Provider[@Name='Microsoft-Windows-Kernel-General'] and EventID=13]]" -MaxEvents 20 -ErrorAction SilentlyContinue |
         Where-Object { $_.TimeCreated -lt $boot } | Select-Object -First 1
     if ($down) { Write-Output ("shutdown=" + $down.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) }
@@ -1218,8 +1233,8 @@ try { if (Wants 'shortcuts') {
     foreach ($f in $folders) {
         if (-not (Test-Path -LiteralPath $f[0])) { continue }
         $found = if ($f[1]) { FilesToDepth $f[0] 6 }
-                 else { Get-ChildItem -LiteralPath $f[0] -Force -File -ErrorAction SilentlyContinue }
-        $found | Where-Object { $_.Extension -in '.lnk', '.url' -and $_.FullName -notmatch '\\Start Menu\\Programs\\Startup\\' } |
+                 else { Get-ChildItem -LiteralPath $f[0] -Force -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } }
+        $found | Where-Object { @('.lnk', '.url') -contains $_.Extension -and $_.FullName -notmatch '\\Start Menu\\Programs\\Startup\\' } |
             ForEach-Object { Write-Output ("shortcutfile=" + $_.FullName) }
     }
 } } catch { WitnessFailure 'shortcuts' $_ }
@@ -1249,7 +1264,7 @@ try { if (Wants 'security_descriptors') {
     icacls $witness /setowner wac | Out-Null
     icacls $witness /grant '*S-1-1-0:(R)' | Out-Null
     Write-Output ("sdswitness=" + $witness + '|' + $wacSid)
-    $files = @(Get-ChildItem 'C:\Windows\System32\drivers\etc', 'C:\Users\wac\Documents', 'C:\wactest' -File -Force -ErrorAction SilentlyContinue | Select-Object -First 40)
+    $files = @(Get-ChildItem 'C:\Windows\System32\drivers\etc', 'C:\Users\wac\Documents', 'C:\wactest' -Force -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | Select-Object -First 40)
     foreach ($f in $files) {
         try { Write-Output ("sdsowner=" + $f.FullName + '|' + (Get-Acl -LiteralPath $f.FullName).GetOwner([Security.Principal.SecurityIdentifier]).Value) } catch {}
     }
@@ -1315,10 +1330,10 @@ try { if (Wants 'dpapi_master_keys') {
         [Environment]::ExpandEnvironmentVariables((Get-ItemProperty $_.PSPath).ProfileImagePath) + '\AppData\Roaming\Microsoft\Protect' })
     foreach ($protect in $folders) {
         if (-not (Test-Path -LiteralPath $protect)) { continue }
-        foreach ($sidFolder in Get-ChildItem -LiteralPath $protect -Directory -Force -Filter 'S-1-*' -ErrorAction SilentlyContinue) {
+        foreach ($sidFolder in Get-ChildItem -LiteralPath $protect -Force -Filter 'S-1-*' -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer }) {
             foreach ($folder in @($sidFolder.FullName, (Join-Path $sidFolder.FullName 'User'))) {
                 if (-not (Test-Path -LiteralPath $folder)) { continue }
-                Get-ChildItem -LiteralPath $folder -File -Force -ErrorAction SilentlyContinue |
+                Get-ChildItem -LiteralPath $folder -Force -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } |
                     Where-Object { $_.Name -match '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' } |
                     ForEach-Object { Write-Output ("dpapikey=" + $_.FullName) }
                 $preferred = Join-Path $folder 'Preferred'
@@ -1332,6 +1347,9 @@ try { if (Wants 'dpapi_master_keys') {
             }
         }
     }
+    # When the list was read: a key Windows creates later (a service account's
+    # first one, during the cycle) is the collection's, not a key WAC made up.
+    Write-Output ("dpapilisted=" + [DateTime]::UtcNow.ToString('o'))
 } } catch { WitnessFailure 'dpapi_master_keys' $_ }
 
 # 38. B-016 — TypedURLs: two addresses typed by "wac", with their instants in
@@ -1382,6 +1400,19 @@ try { if (Wants 'search_index') {
         if ($rows.Count -gt 0 -and $rows[0][2]) { $found = $rows[0] }
     }
     if ($found) { Write-Output ("searchwitness=" + $found[0] + '|' + $found[1] + '|' + $found[2]) }
+    # Windows 7's indexer keeps what it just indexed in memory for minutes:
+    # its database on disk, which WAC reads, did not hold the witness yet.
+    # Stopping the service writes it there; the query waits for it to answer
+    # again. TEST VM ONLY: WAC itself never restarts a service on the
+    # examined machine — there, the index read is the one on disk, minutes
+    # behind on Windows 7, and the documentation says so.
+    if ($found -and $PSVersionTable.PSVersion.Major -lt 3) {
+        Restart-Service WSearch
+        for ($i = 0; $i -lt 40; $i++) {
+            Start-Sleep 3
+            try { if ((& $query "SELECT System.ItemUrl FROM SystemIndex WHERE System.FileName = '$name'").Count -gt 0) { break } } catch {}
+        }
+    }
     Write-Output ("searchquery=" + (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss'))
     foreach ($row in (& $query "SELECT System.ItemUrl, System.DateModified, System.Size FROM SystemIndex")) {
         $modified = if ($row[1] -is [datetime]) { $row[1].ToString('yyyy-MM-ddTHH:mm:ss') } else { '' }

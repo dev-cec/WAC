@@ -14,7 +14,7 @@ Usage:
   qga.py read  <guest_path> <host_output>
   qga.py write <host_file> <guest_path>
 """
-import argparse, base64, json, os, subprocess, sys, time
+import argparse, base64, json, os, re, subprocess, sys, time
 
 CONN = "qemu:///session"
 
@@ -133,11 +133,30 @@ def powershell_through_task(dom, argv, timeout):
     """Runs powershell.exe through a one-shot task of the SYSTEM account."""
     args = list(argv[1:])
     lowered = [a.lower() for a in args]
+    # The cmdlets PowerShell 2 lacks (guest/ps2-compat.ps1) are loaded first.
+    compat = PS_DIR + "\\compat.ps1"
+    prelude = f". '{compat}'; "
     if "-command" in lowered:
-        # The command as UTF-16 base64: no quoting, no "%" for cmd to expand.
         i = lowered.index("-command")
-        script = " ".join(args[i + 1:])
-        args = args[:i] + ["-EncodedCommand", base64.b64encode(script.encode("utf-16-le")).decode()]
+        script = prelude + " ".join(args[i + 1:])
+        args = args[:i]
+    elif "-file" in lowered:
+        # A script and its arguments: called from a command, the prelude before it.
+        i = lowered.index("-file")
+        quote = lambda a: a if re.fullmatch(r"-[A-Za-z]+", a) else "'" + a.replace("'", "''") + "'"
+        # -File gives the script's exit code; a command gives 0 or 1 unless
+        # it exits with the script's own.
+        script = (prelude + "& " + quote(args[i + 1]) + "".join(" " + quote(a) for a in args[i + 2:])
+                  + "; exit $LASTEXITCODE")
+        args = args[:i]
+    else:
+        script = None
+    if script is not None:
+        # The command as UTF-16 base64: no quoting, no "%" for cmd to expand.
+        # The prelude is a script: allowed to run whatever the machine's policy.
+        if "-executionpolicy" not in [x.lower() for x in args]:
+            args += ["-ExecutionPolicy", "Bypass"]
+        args += ["-EncodedCommand", base64.b64encode(script.encode("utf-16-le")).decode()]
     line = "powershell.exe " + " ".join(cmd_quote(a) for a in args)
     if not line.isascii():
         sys.exit("[qga] a PowerShell 2 command line run through a task must be ASCII (use -Command, encoded)")
@@ -145,6 +164,7 @@ def powershell_through_task(dom, argv, timeout):
                f"{line} > {PS_DIR}\\out.txt 2> {PS_DIR}\\err.txt < NUL\r\n"
                f"(echo %errorlevel%)> {PS_DIR}\\code.txt\r\n")   # "echo 0> f" would redirect handle 0
     run_direct(dom, ["cmd.exe", "/c", f"(if exist {PS_DIR} rmdir /s /q {PS_DIR}) & mkdir {PS_DIR}"])
+    write_file(dom, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "guest", "ps2-compat.ps1"), compat, quiet=True)
     h = qga(dom, {"execute": "guest-file-open", "arguments": {"path": PS_DIR + "\\run.cmd", "mode": "wb"}})
     try:
         qga(dom, {"execute": "guest-file-write", "arguments": {"handle": h, "buf-b64": base64.b64encode(wrapper.encode("ascii")).decode()}})
@@ -183,6 +203,9 @@ def guest_read_text(dom, guest_path):
     finally:
         qga(dom, {"execute": "guest-file-close", "arguments": {"handle": h}})
     # UTF-8 when the script set its output so, the console's code page otherwise.
+    # PowerShell 2 heads a redirected UTF-8 output with a byte-order mark: not part of it.
+    if data.startswith(b"\xef\xbb\xbf"):
+        data = data[3:]
     try:
         return data.decode("utf-8")
     except UnicodeDecodeError:
@@ -242,7 +265,7 @@ def read_file(dom, guest_path, host_path):
         qga(dom, {"execute": "guest-file-close", "arguments": {"handle": h}})
     print(f"{total} bytes -> {host_path}")
 
-def write_file(dom, host_path, guest_path):
+def write_file(dom, host_path, guest_path, quiet=False):
     with open(host_path, "rb") as f:
         data = f.read()
     h = qga(dom, {"execute": "guest-file-open",
@@ -257,7 +280,8 @@ def write_file(dom, host_path, guest_path):
                       "arguments": {"handle": h, "buf-b64": encoded}})
     finally:
         qga(dom, {"execute": "guest-file-close", "arguments": {"handle": h}})
-    print(f"{len(data)} bytes -> VM:{guest_path}")
+    if not quiet:
+        print(f"{len(data)} bytes -> VM:{guest_path}")
 
 def main():
     ap = argparse.ArgumentParser()

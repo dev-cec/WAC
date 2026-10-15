@@ -63,6 +63,16 @@ for script in "$HERE"/lib/*.py; do
   python3 -m py_compile "$script" || { echo "   ❌ $(basename "$script") does not compile"; exit 1; }
 done
 
+# The VM's clock against the host's: after a long pause of the host, Windows 7
+# caught up the lost ticks, ran 30 min ahead, then stepped back during the
+# cycle — events, USN records and keys came out "after the collection".
+# Set to the host's time when it is more than 5 s off (test VM only).
+vmEpoch=$($QGA run -- powershell.exe -NoProfile -Command '[int64](([DateTime]::UtcNow - [DateTime]"1970-01-01").TotalSeconds)' 2>/dev/null | tr -d '\r' || true)
+if [[ "$vmEpoch" =~ ^[0-9]+$ ]] && (( vmEpoch - $(date -u +%s) > 5 || $(date -u +%s) - vmEpoch > 5 )); then
+  echo "   ⚠️ VM clock off by $(( vmEpoch - $(date -u +%s) )) s: set to the host's"
+  $QGA run -- powershell.exe -NoProfile -Command "Set-Date ([DateTime]::Parse('$(date -u +%FT%T.%3NZ)').ToLocalTime()) | Out-Null" >/dev/null 2>&1 || true
+fi
+
 if wants mft usn_journal zone_identifiers; then
 echo "== 0a. Data volume == ($(date +%H:%M:%S))"
 # The second fixed disk of create-vm.sh, formatted NTFS on first use (label
@@ -70,7 +80,7 @@ echo "== 0a. Data volume == ($(date +%H:%M:%S))"
 DATA_STATE=$($QGA run -- powershell.exe -NoProfile -Command '
   $v = Get-Volume -FileSystemLabel WACDATA -ErrorAction SilentlyContinue | Where-Object DriveLetter
   if ($v) { "ready $($v.DriveLetter):" ; exit }
-  $d = Get-Disk | Where-Object PartitionStyle -eq RAW | Select-Object -First 1
+  $d = Get-Disk | Where-Object { $_.PartitionStyle -eq 'RAW' } | Select-Object -First 1
   if (-not $d) { "absent"; exit }
   $d | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -UseMaximumSize -AssignDriveLetter |
     Format-Volume -FileSystem NTFS -NewFileSystemLabel WACDATA -Confirm:$false | Out-Null
@@ -382,14 +392,11 @@ fetch_results() {
   # Written to a file in the VM, then fetched: tens of thousands of lines
   # (--collect --binary) exceed what the guest agent returns as output — the
   # list came back empty, and every exhibit looked missing.
-  # Written by PowerShell in UTF-8 without BOM: cmd's dir, even after chcp
-  # 65001, wrote accented names in another code page ("Navigation priv?e de
-  # Firefox.lnk"), and they no longer matched the manifest.
-  # Listed by robocopy (/L: nothing copied), which goes past MAX_PATH on every
-  # Windows — an exhibit's path can (B-049), where Get-ChildItem stops, and
-  # its \\?\ form is refused before .NET 4.6.2 (Windows 8.1 and earlier). Its
-  # log is UTF-16, one full path per line.
-  $QGA run -- powershell.exe -NoProfile -Command "robocopy.exe '$vm\\exhibits' '$VMDIR\\exhibit-list-nowhere' /L /S /FP /NC /NS /NDL /NJH /NJS /R:0 /UNILOG:'$VMDIR\\exhibit-list.log' | Out-Null; [IO.File]::WriteAllLines('$VMDIR\\exhibit-list.txt', [string[]](Get-Content -LiteralPath '$VMDIR\\exhibit-list.log' -Encoding Unicode | ForEach-Object { \$_.Trim() } | Where-Object { \$_ })); Remove-Item -LiteralPath '$VMDIR\\exhibit-list.log'" >/dev/null 2>&1 \
+  # Listed by guest/list-tree.ps1 (FindFirstFileW on the \\?\ form): every
+  # name as it is, and paths past MAX_PATH (B-049), on every Windows — the
+  # script says why neither Get-ChildItem, dir nor robocopy does.
+  $QGA write "$HERE/guest/list-tree.ps1" "$VMDIR\\list-tree.ps1" >/dev/null \
+    && $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\list-tree.ps1" -Path "$vm\\exhibits" -Output "$VMDIR\\exhibit-list.txt" >/dev/null 2>&1 \
     && $QGA read "$VMDIR\\exhibit-list.txt" "$host/exhibits/LIST.txt" >/dev/null 2>&1 \
     && [[ -s "$host/exhibits/LIST.txt" ]] \
     && echo "   + exhibits/LIST.txt" || echo "   ⚠️ list of the exhibit store not read"
@@ -414,12 +421,16 @@ fetch_results() {
   # rdp_client: PowerShell then ends in error, and without `|| true` that
   # status ended the whole harness before its checks.
   # The thumbnail of the B-026 witness, exported by WAC: only its own, out of
-  # the thousands a cache holds. And the working copy of Thunderbird's Inbox
-  # (B-017), which check-json.py reads with Python's mailbox module.
+  # the thousands a cache holds. The working copy of Thunderbird's Inbox
+  # (B-017), which check-json.py reads with Python's mailbox module. And the
+  # working copies of the Prefetch files, which libscca reads below.
   local thumbnailId
   thumbnailId=$(sed -n 's/^thumbcache=\([0-9a-f]\{16\}\)|.*/\1/p' "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null | tr -d '\r' | head -1)
+  # Built apart: within ${thumbnailId:+…}, the "}" of a script block would end the expansion.
+  local thumbnailQuery=""
+  [[ -n "$thumbnailId" ]] && thumbnailQuery="; Get-ChildItem -LiteralPath '$vm\\thumbcache' -Recurse -Filter '$thumbnailId.*' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | ForEach-Object { \$_.FullName }"
   local rdpFiles
-  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Terminal Server Client*' | ForEach-Object FullName; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -File -Filter '*.bmp' -ErrorAction SilentlyContinue | ForEach-Object FullName${thumbnailId:+; Get-ChildItem -LiteralPath '$vm\\thumbcache' -Recurse -File -Filter '$thumbnailId.*' -ErrorAction SilentlyContinue | ForEach-Object FullName}; Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -File -Force -Filter 'Inbox' -ErrorAction SilentlyContinue | Where-Object FullName -like '*Thunderbird*' | ForEach-Object FullName" 2>/dev/null | tr -d '\r' || true)
+  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | Where-Object { \$_.FullName -like '*Terminal Server Client*' } | ForEach-Object { \$_.FullName }; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -Filter '*.bmp' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | ForEach-Object { \$_.FullName }$thumbnailQuery; Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -Force -Filter 'Inbox' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | Where-Object { \$_.FullName -like '*Thunderbird*' } | ForEach-Object { \$_.FullName }; Get-ChildItem -LiteralPath '$vm\\working\\Windows\\Prefetch' -Force -Filter '*.pf' -ErrorAction SilentlyContinue | ForEach-Object { \$_.FullName }" 2>/dev/null | tr -d '\r' || true)
   while read -r f; do
     [[ -z "$f" ]] && continue
     # The prefix quoted: unquoted, the backslashes of the VM's path are read as escapes.
@@ -427,6 +438,13 @@ fetch_results() {
     mkdir -p "$host/$(dirname "${relative//\\//}")"
     $QGA read "$f" "$host/${relative//\\//}" >/dev/null 2>&1 || echo "   ⚠️ ${relative//\\//} not fetched"
   done <<< "$rdpFiles"
+  # libscca's reading of those Prefetch files (lib/prefetch-reference.py),
+  # next to the JSON of the same collection: check-json.py confronts them.
+  local scca="$HERE/tools/scca-venv/bin/python"
+  if [[ -x "$scca" && -d "$host/working/Windows/Prefetch" ]]; then
+    "$scca" -I "$HERE/lib/prefetch-reference.py" "$host/working/Windows/Prefetch" "$host/prefetch-libscca.txt" \
+      && echo "   + prefetch-libscca.txt" || echo "   ⚠️ Prefetch not read by libscca"
+  fi
 }
 
 echo "== 5. Fetch of the JSON files == ($(date +%H:%M:%S))"
@@ -491,7 +509,7 @@ fi
 # the executables of System32, for the dates of USBSTOR and of Amcache.
 if wants usbstor amcache; then
 $QGA run -- powershell.exe -NoProfile -Command \
-  'Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object InstanceId -like "USBSTOR*" | ForEach-Object { $i = $_.InstanceId; foreach ($k in "DEVPKEY_Device_InstallDate", "DEVPKEY_Device_LastArrivalDate") { $p = Get-PnpDeviceProperty -InstanceId $i -KeyName $k; if ($p.Data) { "{0}|{1}|{2}" -f $i, $k, $p.Data.ToUniversalTime().ToString("o") } } }' \
+  'Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like "USBSTOR*" } | ForEach-Object { $i = $_.InstanceId; foreach ($k in "DEVPKEY_Device_InstallDate", "DEVPKEY_Device_LastArrivalDate") { $p = Get-PnpDeviceProperty -InstanceId $i -KeyName $k; if ($p.Data) { "{0}|{1}|{2}" -f $i, $k, $p.Data.ToUniversalTime().ToString("o") } } }' \
   > "$OUTPUT/reference/usbstor.txt" 2>/dev/null \
   && echo "   + reference/usbstor.txt" || echo "   ⚠️ USBSTOR reference not read"
 $QGA run -- powershell.exe -NoProfile -Command \
@@ -516,10 +534,11 @@ $QGA run -- powershell.exe -NoProfile -Command \
 fi
 
 # The last write of each Prefetch file as Windows gives it, for the dates of
-# the file artefacts (WAC reads them in the manifest, from the raw $MFT).
+# the file artefacts (WAC reads them in the manifest, from the raw $MFT), and
+# when Windows was asked (taken|).
 if wants prefetch; then
 $QGA run -- powershell.exe -NoProfile -Command \
-  'Get-ChildItem C:\Windows\Prefetch\*.pf | ForEach-Object { "{0}|{1}" -f $_.Name, $_.LastWriteTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ") }' \
+  '"taken|{0}" -f [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ"); Get-ChildItem C:\Windows\Prefetch\*.pf | ForEach-Object { "{0}|{1}" -f $_.Name, $_.LastWriteTimeUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ") }' \
   > "$OUTPUT/reference/prefetch-times.txt" 2>/dev/null \
   && echo "   + reference/prefetch-times.txt" || echo "   ⚠️ Prefetch times reference not read"
 fi
@@ -675,7 +694,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # Independent reference for the completeness of the collection: the
   # executables of System32 and SysWOW64 as Windows lists them.
   $QGA run -- powershell.exe -NoProfile -Command \
-    '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-ChildItem C:\Windows\System32, C:\Windows\SysWOW64 -Recurse -File -Force -Include *.exe, *.dll, *.sys -ErrorAction SilentlyContinue | ForEach-Object FullName; exit 0' \
+    '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-ChildItem C:\Windows\System32, C:\Windows\SysWOW64 -Recurse -Force -Include *.exe, *.dll, *.sys -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | ForEach-Object { $_.FullName }; exit 0' \
     > "$OUTPUT/reference/executables.txt" 2>/dev/null \
     && echo "   + reference/executables.txt" || echo "   ⚠️ executables reference not read"
 
@@ -695,9 +714,14 @@ if [[ $SPLIT -eq 1 ]]; then
   # The verification script shipped with the documentation, on this
   # collection: seal and every exhibit, the fingerprint-only ones apart.
   $QGA write "$ROOT/sources/scripts/verify-exhibits.ps1" "$VMDIR\\verify-exhibits.ps1" >/dev/null
-  if $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\verify-exhibits.ps1" \
-       -Output "$VMDIR\\split" > "$OUTPUT/verify-exhibits.log" 2>&1; then
+  code=0
+  $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\verify-exhibits.ps1" \
+       -Output "$VMDIR\\split" > "$OUTPUT/verify-exhibits.log" 2>&1 || code=$?
+  if [[ $code -eq 0 ]]; then
     echo "   ✅ verify-exhibits.ps1: $(grep -a 'verified,' "$OUTPUT/verify-exhibits.log" | tr -d '\r')"
+  elif [[ $code -eq 2 ]]; then
+    # PowerShell older than 4 (Windows 7): the script says so and stops.
+    echo "   ⏭️  verify-exhibits.ps1 not run here: $(tail -1 "$OUTPUT/verify-exhibits.log" | tr -d '\r')"
   else
     echo "   ❌ verify-exhibits.ps1 refuses the collection: $(tail -3 "$OUTPUT/verify-exhibits.log" | tr -d '\r')"
   fi
@@ -707,7 +731,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # Windows' reading of the embedded signatures of third-party binaries, for
   # the signer and the integrity WAC records of those it collects.
   $QGA run -- powershell.exe -NoProfile -Command \
-    '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-ChildItem "C:\Program Files\Qemu-ga", "C:\Program Files\Virtio-Win" -Recurse -File -Include *.exe, *.dll, *.sys -ErrorAction SilentlyContinue | ForEach-Object { $s = Get-AuthenticodeSignature $_.FullName; "{0}|{1}|{2}" -f $_.FullName, $s.Status, $s.SignerCertificate.Subject }; exit 0' \
+    '[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-ChildItem "C:\Program Files\Qemu-ga", "C:\Program Files\Virtio-Win" -Recurse -Include *.exe, *.dll, *.sys -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | ForEach-Object { $s = Get-AuthenticodeSignature $_.FullName; "{0}|{1}|{2}" -f $_.FullName, $s.Status, $s.SignerCertificate.Subject }; exit 0' \
     > "$OUTPUT/reference/third-party-signatures.txt" 2>/dev/null \
     && echo "   + reference/third-party-signatures.txt" || echo "   ⚠️ third-party signatures reference not read"
 
@@ -728,7 +752,10 @@ if [[ $SPLIT -eq 1 ]]; then
   # Windows' audit of the reads of the exhibit store around the conversion
   # (B-040): it may read the store to check and copy it, never afterwards.
   $QGA write "$HERE/guest/exhibit-read-audit.ps1" "$VMDIR\\exhibit-read-audit.ps1" >/dev/null
-  AUDIT_SINCE=$($QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Start "$VMDIR\\split\\exhibits" 2>/dev/null | tr -d '\r' | tail -1)
+  # A failed start must not end the harness (set -e): said below, and the
+  # audit it may have switched on is switched off again.
+  AUDIT_SINCE=$($QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Start "$VMDIR\\split\\exhibits" 2>/dev/null | tr -d '\r' | tail -1 || true)
+  [[ "$AUDIT_SINCE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]] || AUDIT_SINCE=""
   if run_wac convert --convert=split $EVENTS_OPTION $BINARY_FLAG --loglevel=2; then
     echo "   ✅ conversion went to the end"
   else
@@ -745,6 +772,7 @@ if [[ $SPLIT -eq 1 ]]; then
       && echo "   + reference/exhibit-reads.txt" || echo "   ⚠️ reads of the exhibit store not listed"
   else
     echo "   ⚠️ read audit of the exhibit store not set"
+    $QGA run --shell "auditpol /set /subcategory:{0CCE921D-69AE-11D9-BED3-505054503030} /success:disable >nul" >/dev/null 2>&1 || true
   fi
   $QGA run --shell "del /q $VMDIR\\exhibit-reads.txt $VMDIR\\exhibit-read-audit.ps1 >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
   fetch_results split "$SPLIT_OUT"

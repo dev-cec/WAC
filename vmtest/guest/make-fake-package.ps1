@@ -21,10 +21,10 @@ param([string]$Destination = "C:\wactest\fakepkg")
 $ErrorActionPreference = "Stop"
 if (Test-Path $Destination) { Remove-Item $Destination -Recurse -Force }
 
-foreach ($package in Get-ChildItem "C:\Program Files\WindowsApps" -Directory) {
+foreach ($package in Get-ChildItem "C:\Program Files\WindowsApps" | Where-Object { $_.PSIsContainer }) {
     $root = $package.FullName
     if (-not (Test-Path "$root\AppxSignature.p7x") -or -not (Test-Path "$root\AppxBlockMap.xml")) { continue }
-    $scripts = Get-ChildItem $root -Recurse -File -Filter *.js | Where-Object Length -lt 1MB | Select-Object -First 2
+    $scripts = Get-ChildItem $root -Recurse -Filter *.js | Where-Object { -not $_.PSIsContainer } | Where-Object { $_.Length -lt 1MB } | Select-Object -First 2
     if (($scripts | Measure-Object).Count -lt 2) { continue }
 
     New-Item -ItemType Directory -Path $Destination | Out-Null
