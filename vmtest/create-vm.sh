@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # create-vm.sh — creates a Windows test VM from scratch, entirely without interaction.
 #
-# Usage: ./create-vm.sh [win11|win81|win8|win7|winxp]
+# Usage: ./create-vm.sh [win11|win81|win8|win7|winxp|srv2012r2|srv2016|srv2019|srv2022|srv2025]
 #   win11  (default) the VM of the test cycle, Windows 11 — domain win11-test
 #   win81  Windows 8.1 x64, for the compatibility with the older versions —
 #          domain win81-test; run-wac-test.sh is given it with DOM=win81-test
 #   win8   Windows 8 Pro x86 (32 bits: the machine of WAC32.exe) — domain win8-test
 #   win7   Windows 7 SP1 Ultimate x64 — domain win7-test
+#   srv2012r2, srv2016, srv2019, srv2022, srv2025
+#          Windows Server Standard with its graphical interface, from the
+#          evaluation media of vmtest/tools/isos — domains srv2012r2-test…
 #   winxp  Windows XP Professional SP1 x86 — domain winxp-test. No guest agent
 #          exists for it: installed from an answer floppy (WINNT.SIF), driven
 #          by the keyboard (lib/vmkeys.py, US layout), its output read on its
@@ -81,11 +84,34 @@ case "$PROFILE" in
     # SHA-2 update (KB3033929) accepts.
     ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.173.iso}"
     FIRMWARE=(--boot hd,cdrom) ;;
+  srv2012r2|srv2016|srv2019|srv2022|srv2025)
+    # Evaluation media: no product key (the element is removed from the
+    # answer file), the edition by its index — 2, Standard with the graphical
+    # interface, on every evaluation medium of 2012 R2 to 2025 (1 is its
+    # Server Core). A server refuses the password "wac" (complexity): its
+    # accounts get SERVER_PASSWORD, synthetic, for a throwaway VM.
+    DOM="${DOM:-$PROFILE-test}"; MEMORY=4096
+    IMAGE='<Key>/IMAGE/INDEX</Key><Value>2</Value>'; KEY=""
+    OOBE_ENTER=0; BIOS=0; OOBE7=0; ARCH=amd64; CPU=host-passthrough; MACHINE=q35
+    SERVER_PASSWORD="Wac-Server-2026!"
+    FIRMWARE=(--boot firmware=efi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no)
+    case "$PROFILE" in
+      srv2012r2) OSINFO=win2k12r2; ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2012r2_eval_fr-fr.iso}"; MEDIA_LANGUAGE=fr-FR
+                 GA_DRIVERS='2k12R2\amd64'; ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.189.iso}" ;;
+      srv2016)   OSINFO=win2k16;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2016_eval_fr-fr.iso}";   MEDIA_LANGUAGE=fr-FR
+                 GA_DRIVERS='2k16\amd64'; ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.189.iso}" ;;
+      srv2019)   OSINFO=win2k19;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2019_eval_fr-fr.iso}";   MEDIA_LANGUAGE=fr-FR
+                 GA_DRIVERS=""; ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}" ;;
+      srv2022)   OSINFO=win2k22;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2022_eval_fr-fr.iso}";   MEDIA_LANGUAGE=fr-FR
+                 GA_DRIVERS=""; ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}" ;;
+      srv2025)   OSINFO=win2k25;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2025_eval_en-us.iso}";   MEDIA_LANGUAGE=en-US
+                 GA_DRIVERS=""; ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}" ;;
+    esac ;;
   winxp)
     DOM="${DOM:-winxp-test}"
     ISO_WIN="${ISO_WIN:-$HERE/tools/isos/Windows XP Professional (SP1) (x86).iso}"
     ISO_VIRTIO="$ISO_WIN" ;;   # no virtio driver: nothing but what XP itself has
-  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, winxp)" >&2; exit 2 ;;
+  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, winxp, srv2012r2, srv2016, srv2019, srv2022, srv2025)" >&2; exit 2 ;;
 esac
 
 ISO_ANS="$VMS/autounattend-$PROFILE.iso"
@@ -224,7 +250,7 @@ TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 # and Setup's language, and adds the agent's channel driver where the guest
 # tools installer does not install it (pnputil, the driver store's own tool).
 sed -e "s#<Key>/IMAGE/NAME</Key><Value>Windows 11 Pro</Value>#$IMAGE#" \
-    -e "s#VK7JG-NPHTM-C97JM-9MPGT-3V66T#$KEY#" \
+    -e "s#VK7JG-NPHTM-C97JM-9MPGT-3V66T#${KEY:-VK7JG-NPHTM-C97JM-9MPGT-3V66T}#" \
     -e "s#<UILanguage>fr-FR</UILanguage>#<UILanguage>$MEDIA_LANGUAGE</UILanguage>#g" \
     -e "s#processorArchitecture=\"amd64\"#processorArchitecture=\"$ARCH\"#g" \
     -e "s#qemu-ga-x86_64.msi#qemu-ga-$([[ $ARCH == x86 ]] && echo i386 || echo x86_64).msi#g" \
@@ -278,7 +304,23 @@ text = text.replace("      <UserAccounts>", "      <TimeZone>Romance Standard Ti
 open(path, "w", encoding="utf-8").write(text)
 PY
 fi
-grep -q "$KEY" "$TMP/autounattend.xml" || { echo "answer file not adapted to $PROFILE" >&2; exit 1; }
+if [[ -z "$KEY" ]]; then
+  # An evaluation medium: no product key at all.
+  python3 - "$TMP/autounattend.xml" <<'PY'
+import re, sys
+path = sys.argv[1]
+text = open(path, encoding="utf-8").read()
+text, count = re.subn(r"\s*<ProductKey><Key>[^<]*</Key><WillShowUI>OnError</WillShowUI></ProductKey>", "", text)
+if count != 1:
+    sys.exit("answer file: the product key element was not found once")
+open(path, "w", encoding="utf-8").write(text)
+PY
+fi
+if [[ -n "${SERVER_PASSWORD:-}" ]]; then
+  sed -i "s#<Password><Value>wac</Value>#<Password><Value>$SERVER_PASSWORD</Value>#g" "$TMP/autounattend.xml"
+  grep -q "$SERVER_PASSWORD" "$TMP/autounattend.xml" || { echo "answer file: the password was not replaced" >&2; exit 1; }
+fi
+[[ -z "$KEY" ]] || grep -q "$KEY" "$TMP/autounattend.xml" || { echo "answer file not adapted to $PROFILE" >&2; exit 1; }
 xorriso -as mkisofs -J -R -V UNATTEND -o "$ISO_ANS" "$TMP" >/dev/null 2>&1
 
 # --- 2. ISO of the WAC binaries (if the build exists) ----------------------
