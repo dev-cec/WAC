@@ -107,6 +107,8 @@ natively, under \texttt{wine}, or in the virtual machine.
 sudo apt install g++-mingw-w64-x86-64 wine64 python3 python3-pip
 pip install olefile          # independent OLE reader, for the cross-checks
 pip install dissect.esedb    # independent ESE reader: WebCache (check skipped otherwise)
+# or, leaving the system's Python alone: vmtest/tools/ese-venv
+python3 -m venv vmtest/tools/ese-venv && vmtest/tools/ese-venv/bin/pip install dissect.esedb==3.18
 \end{lstlisting}
 
 \section{Building WAC and the harnesses}

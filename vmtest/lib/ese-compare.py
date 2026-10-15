@@ -52,19 +52,36 @@ def same(column, mine, theirs):
     return mine == theirs
 
 
+def padding_group(record, name, mine, theirs):
+    """dissect.esedb unpacks every bit of a 7-bit value, the padding of its
+    last byte included: when that padding is 7 bits — the header's low 3
+    bits at 0 —, it gives one zero unit more than the value holds. Excused
+    only when the raw header says so and the extra unit is all zeros."""
+    if not (isinstance(mine, str) and isinstance(theirs, str) and theirs.startswith(mine)):
+        return False
+    extra = theirs[len(mine):]
+    if not extra or set(extra) - set("0\x00"):
+        return False
+    raw = bytes(record.get(name, raw=True) or b"")
+    return len(raw) > 1 and raw[0] >> 3 in (1, 2) and raw[0] & 7 == 0
+
+
 def main():
     path, dump = sys.argv[1], sys.argv[2]
     mine = {}
     with open(dump, encoding="utf-8") as f:
         for line in f:
             table, _, record = line.rstrip("\n").partition("\t")
+            if not record.startswith("{"):
+                continue   # ese_test's own lines (its check count), not a record
             mine.setdefault(table, []).append(json.loads(record))
     db = EseDB(open(path, "rb"))
-    compared = differences = 0
+    compared = differences = padded = 0
     for table in db.tables():
         columns = {c.name: c for c in table.columns}
         theirs = []
-        for record in table.records():
+        records = list(table.records())
+        for record in records:
             values = {}
             for name, column in columns.items():
                 try:
@@ -83,11 +100,15 @@ def main():
         for index, (a, b) in enumerate(zip(ours, theirs)):
             for name in set(a) | set(b):
                 compared += 1
+                if not same(columns[name], a.get(name), b.get(name)) and padding_group(records[index], name, a.get(name), b.get(name)):
+                    padded += 1
+                    continue
                 if not same(columns[name], a.get(name), b.get(name)):
                     differences += 1
                     if differences <= 10:
                         print(f"  ❌ {table.name}[{index}].{name}: WAC {a.get(name)!r}, dissect {b.get(name)!r}")
-    print(f"{'✅' if not differences else '❌'} {compared} value(s) compared, {differences} difference(s)")
+    print(f"{'✅' if not differences else '❌'} {compared} value(s) compared, {differences} difference(s)"
+          + (f"; {padded} with one more zero unit by dissect, which the 7-bit header says is padding" if padded else ""))
     return 1 if differences else 0
 
 

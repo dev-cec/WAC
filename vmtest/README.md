@@ -22,7 +22,7 @@ administrator rights, no UAC).
 | `vmtest/` | `ez-compare.sh` | WAC against an Eric Zimmerman tool for one artefact (B-015): times both in the VM on the exhibits of the last cycle, brings the outputs back to `results/ez/<key>-<date>/`, compares them with `lib/ez-compare.py`. |
 | `lib/` (host) | `qga.py` | Guest-agent helper: `ping`, `run` (execute), `read`/`write` (exchange files). |
 | `lib/` (host) | `check-json.py` | Checks the outputs: JSON validity, Windows paths, and **cross-checks** (see below). Also usable alone: `python3 lib/check-json.py results/<timestamp>`. |
-| `lib/` (host) | `ese-compare.py` | WAC's ESE reader against dissect.esedb, value by value, on the same database. |
+| `lib/` (host) | `ese-compare.py` | WAC's ESE reader against dissect.esedb, value by value, on the same database (`tools/ese-venv/bin/python lib/ese-compare.py <database> <ese_test dump>`). dissect.esedb 3.18 also decodes the padding of a 7-bit compressed value as one more null character: excused only when the value's raw header declares it. |
 | `lib/` (host) | `ez-compare.py` | Field-by-field comparison with the EZ tool's CSV; every difference is counted and classed: convention of one side (each checked against Windows), or defect. |
 | `guest/` (VM) | `autounattend.xml` | Silent Windows install (French, Win11 Pro, local admin account `wac`/`wac`, OOBE skipped, autologon) **and automatic guest-agent install** at first logon from the virtio-win CD. |
 | `guest/` (VM) | `place-file-artefacts.ps1` | Places the witnesses of the artefacts (files, registry, EICAR, WMI, data volume…) and prints the references Windows gives for them. |

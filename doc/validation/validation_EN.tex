@@ -372,7 +372,12 @@ with it.
   multi-valued columns), lying lengths refused, BITS blobs; on the VM's
   \fichier{SRUDB.dat} and \fichier{qmgr.db} (4 and 16~KiB pages, long values
   with 64-bit identifiers), 1,064,268 values identical to dissect.esedb's;
-  19 checks, no failure. Revealed the 8-byte long-value identifiers \\
+  19 checks, no failure. Revealed the 8-byte long-value identifiers. On
+  the \fichier{Windows.edb} of Windows~8.1 (text compressed on 7~bits),
+  62,653 identical values; revealed the last character lost of UTF-16 text
+  packed as 7-bit bytes. For 89 values, dissect.esedb decodes one more null
+  character: the padding of the last byte, which the value's header
+  declares \\
 \texttt{cim\_test} & hash of a name read in the VM's \fichier{INDEX.BTR};
   \texttt{Get-CimInstance} &
   class, ancestor and instance built as the format lays them out

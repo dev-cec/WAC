@@ -168,7 +168,7 @@ DECODED_PREFETCH_VERSIONS = {26, 30, 31}
 OLDER_VERSION_STATUSES = {
     9600: ("Windows 8.1",
            {"activities_cache.json", "bams.json", "powershell_history.json"},
-           {"bits_jobs.json", "search_index.json"}),
+           {"bits_jobs.json"}),
     7601: ("Windows 7",
            {"activities_cache.json", "bams.json", "defender_detections.json", "defender_log.json",
             "defender_quarantine.json", "powershell_history.json", "srum.json"},

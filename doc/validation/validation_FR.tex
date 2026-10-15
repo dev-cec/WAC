@@ -385,7 +385,11 @@ lui.
   \fichier{SRUDB.dat} et \fichier{qmgr.db} de la VM (pages de 4 et 16~Kio,
   valeurs longues à identifiant de 64~bits), 1~064~268 valeurs identiques à
   celles de dissect.esedb ; 19 contrôles, aucun échec. A révélé les
-  identifiants de valeurs longues de 8 octets \\
+  identifiants de valeurs longues de 8 octets. Sur le \fichier{Windows.edb}
+  de Windows~8.1 (texte compressé sur 7~bits), 62~653 valeurs identiques ; a
+  révélé le dernier caractère perdu d'un texte UTF-16 rangé par octets de
+  7~bits. Pour 89 valeurs, dissect.esedb décode un caractère nul de plus : le
+  bourrage du dernier octet, que l'en-tête de la valeur déclare \\
 \texttt{cim\_test} & condensat d'un nom relevé dans l'\fichier{INDEX.BTR}
   de la VM ; \texttt{Get-CimInstance} &
   classe, ancêtre et instance construits selon le format (défaut hérité,
