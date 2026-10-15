@@ -85,6 +85,26 @@ void records() {
 	check(cellOf(partial, 128) && !cellOf(partial, 256), "record: a tagged value beyond the record read");
 }
 
+/*! 7-bit compressed values, as the Windows.edb of Windows 8.1 holds them
+ *  (record 83 and 128 of its property store), each confronted with
+ *  dissect.esedb. */
+void sevenBit() {
+	// Scheme 1, header 0x0F: bytes of UTF-16 text, the last one the zero high byte of "s".
+	std::vector<uint8_t> name = { 0x0f, 0x4f, 0x00, 0x1c, 0x50, 0x06, 0xb8, 0x01, 0x62, 0x40, 0x18, 0x20, 0x07, 0x94, 0x01,
+	                              0x20, 0x80, 0x1d, 0x90, 0x06, 0x90, 0x01, 0x65, 0xc0, 0x1b, 0x90, 0x01, 0xcd, 0x01 };
+	check(decompressSevenBit(name) && name.size() == 32
+	      && std::wstring(reinterpret_cast<const wchar_t*>(name.data()), 16) == L"Openbare video\u2019s",
+	      "7-bit, scheme 1: UTF-16 text whose last byte is a zero, kept");
+	// Scheme 2, header 0x10: its low bits say 7 bits of padding, so 7 characters, not 8.
+	std::vector<uint8_t> kind = { 0x10, 0x70, 0xf9, 0xfb, 0x2c, 0x0f, 0xb7, 0x01 };
+	check(decompressSevenBit(kind) && kind.size() == 14
+	      && std::wstring(reinterpret_cast<const wchar_t*>(kind.data()), 7) == L"program",
+	      "7-bit, scheme 2: the padding of the last byte is no character");
+	std::vector<uint8_t> xpress = { 0x18, 1, 2, 3 }, header = { 0x0f };
+	check(!decompressSevenBit(xpress) && xpress.size() == 4 && !decompressSevenBit(header),
+	      "7-bit: another scheme, or a header alone, left untouched");
+}
+
 //! A UTF-16 string preceded by its length in characters, terminator included.
 void putPascal(std::vector<uint8_t>& b, const std::wstring& s) {
 	put32(b, (uint32_t)s.size() + 1);
@@ -172,6 +192,7 @@ void dump(const std::wstring& path) {
 
 int wmain(int argc, wchar_t** argv) {
 	records();
+	sevenBit();
 	artefacts();
 	if (argc > 1) dump(argv[1]);
 	std::fprintf(stderr, "%llu check(s), %llu failure(s)\n", g_checks, g_failures);

@@ -24,9 +24,9 @@
  *     large is "separated" into the long-value tree, keyed by its identifier
  *     then its offset, big-endian.
  *
- *  NOT DECODED: compressed values (7-bit, XPRESS), met in neither SRUDB.dat
- *  nor qmgr.db of the test VM — they are said so, with their scheme, rather
- *  than guessed. Records whose tagged columns are in the pre-Vista format.
+ *  COMPRESSED VALUES: 7-bit text (ASCII or UTF-16), met in the Windows.edb
+ *  of Windows 8.1, is unpacked; XPRESS, met in neither SRUDB.dat, qmgr.db
+ *  nor that Windows.edb, is said so, with its scheme, rather than guessed. Records whose tagged columns are in the pre-Vista format.
  *
  *  A DATABASE COPIED LIVE is in "dirty shutdown" state: what the service
  *  changed since its last checkpoint may be only in its transaction logs,
@@ -64,7 +64,7 @@ struct EseCell {
 	uint32_t columnId = 0;
 	std::vector<std::vector<uint8_t>> values;
 	std::vector<bool> separated;  //!< per value: the long-value key, until resolved
-	int compressionScheme = -1;   //!< >= 0: compressed, not decoded (1 7-bit ASCII, 2 7-bit Unicode, 3 XPRESS…)
+	int compressionScheme = -1;   //!< >= 0: compressed in a scheme not decoded (3 XPRESS…); 7-bit text is unpacked
 	bool longValueMissing = false; //!< separated into the long-value tree, not found there
 };
 
@@ -77,6 +77,16 @@ using EseRecord = std::vector<EseCell>;
  *  @param column the cell's column
  *  @param cell the cell */
 Json eseCellToJson(const EseColumn& column, const EseCell& cell);
+
+/*! Unpacks a value compressed on 7 bits (schemes 1 and 2): after a header
+ *  byte — the scheme in its high 5 bits, in its low 3 the data bits of the
+ *  last byte less one —, units of 7 bits packed from the lowest bit: bytes
+ *  under scheme 1 (of any text, UTF-16 included), UTF-16 characters whose
+ *  high byte is zero under scheme 2. Measured on the Windows.edb of Windows
+ *  8.1, every value confronted with dissect.esedb.
+ *  @param value the value with its header byte; receives the text's bytes
+ *  @return false, and the value untouched, for another scheme (XPRESS…) */
+bool decompressSevenBit(std::vector<uint8_t>& value);
 
 /*! Decodes one record.
  *  @param data the record

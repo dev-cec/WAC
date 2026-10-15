@@ -113,8 +113,11 @@ void parseTagged(const uint8_t* d, size_t size, size_t start, const std::vector<
 			cell.values.emplace_back(d + valueBegin, d + end);
 			cell.separated.push_back((flags & TAGGED_SEPARATED) != 0);
 		}
-		if ((flags & TAGGED_COMPRESSED) && !cell.values.front().empty() && !cell.separated.front())
-			cell.compressionScheme = cell.values.front()[0] >> 3;
+		if ((flags & TAGGED_COMPRESSED) && !cell.values.front().empty() && !cell.separated.front()) {
+			// 7-bit text is unpacked here; another scheme is said, not guessed.
+			// Of a multi-valued cell, only the first value is compressed.
+			if (!decompressSevenBit(cell.values.front())) cell.compressionScheme = cell.values.front()[0] >> 3;
+		}
 		out.push_back(std::move(cell));
 	}
 }
@@ -158,6 +161,37 @@ Json valueToJson(const EseColumn& column, const std::vector<uint8_t>& v) {
 }
 
 } // namespace
+
+bool decompressSevenBit(std::vector<uint8_t>& value) {
+	const unsigned SEVEN_BIT_ASCII = 1, SEVEN_BIT_UNICODE = 2;
+	if (value.empty()) return false;
+	const unsigned scheme = value[0] >> 3;
+	if (scheme != SEVEN_BIT_ASCII && scheme != SEVEN_BIT_UNICODE) return false;
+	if (value.size() < 2) return false;
+	/* The header's low 3 bits: the bits of the last byte that are data, less
+	   one — they give the exact count. A trailing zero is no padding: under
+	   scheme 1 the 7-bit units are BYTES, of UTF-16 text in the search index
+	   ("’", 0x2019, is the bytes 0x19 0x20), and its last one is often the
+	   zero high byte of the last character (dropping it lost that character,
+	   caught against dissect.esedb). */
+	const size_t totalBits = (value.size() - 2) * 8 + (value[0] & 7) + 1;
+	const size_t count = totalBits / 7;
+	std::vector<uint8_t> out;
+	uint32_t bits = 0;
+	unsigned held = 0;
+	for (size_t i = 1; i < value.size() && out.size() < count * (scheme == SEVEN_BIT_UNICODE ? 2 : 1); ++i) {
+		bits |= (uint32_t)value[i] << held;
+		held += 8;
+		while (held >= 7 && out.size() < count * (scheme == SEVEN_BIT_UNICODE ? 2 : 1)) {
+			out.push_back((uint8_t)(bits & 0x7F));
+			if (scheme == SEVEN_BIT_UNICODE) out.push_back(0);
+			bits >>= 7;
+			held -= 7;
+		}
+	}
+	value = std::move(out);
+	return true;
+}
 
 Json eseCellToJson(const EseColumn& column, const EseCell& cell) {
 	if (cell.compressionScheme >= 0 || cell.longValueMissing) {
