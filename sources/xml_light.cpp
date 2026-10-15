@@ -84,7 +84,11 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 		const size_t dn = pos;
 		while (pos < s.size() && s[pos] != L'=' && !iswspace(s[pos])
 		       && s[pos] != L'>' && s[pos] != L'/') ++pos;
-		const std::wstring attrName = withoutPrefix(s.substr(dn, pos - dn));
+		const std::wstring rawName = s.substr(dn, pos - dn);
+		// A namespace declaration is no attribute of the data: without its
+		// prefix, "xmlns:auto-ns2" would read as an attribute "auto-ns2".
+		const bool declaration = rawName == L"xmlns" || rawName.compare(0, 6, L"xmlns:") == 0;
+		const std::wstring attrName = withoutPrefix(rawName);
 		while (pos < s.size() && iswspace(s[pos])) ++pos;
 		std::wstring value;
 		if (pos < s.size() && s[pos] == L'=') {
@@ -99,7 +103,7 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 				++pos;
 			}
 		}
-		if (!attrName.empty()) node->attributes.emplace_back(attrName, value);
+		if (!attrName.empty() && !declaration) node->attributes.emplace_back(attrName, value);
 	}
 	if (empty) return node;                                // <tag ... />
 

@@ -41,6 +41,8 @@
 #include "rdp_server.h"
 #include "thumbcache.h"
 #include "reg_amcache.h"
+#include "events.h"
+#include "xml_light.h"
 #include "oleparser.h"
 #include "emails.h"
 #include "mbox_mail.h"
@@ -1500,6 +1502,26 @@ int wmain() {
 		      "search index: Windows 7's text decoded, in runs and one byte per character");
 		check(!decodeSearchText(cut, c) && !decodeSearchText(unknown, d),
 		      "search index: Windows 7's text with a run past its end, or of another form, decoded");
+	}
+	{
+		/* UserData whose values are attributes before child elements: UMDF's
+		   event 2004 as Windows 7 renders it (measured). Windows' message is
+		   "loading driver %4 at level %3 for device %1": the attributes come
+		   first, the namespace declarations are none. */
+		const std::unique_ptr<XmlNode> root = xmlParse(
+			L"<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><EventID>2004</EventID></System>"
+			L"<UserData><UMDFHostAddDeviceBegin instance='WPDBUSENUMROOT\\UMB\\2&amp;37C186B' lifetime='{16C46B32-D0DF-4BA1-8AA2-4D7F005CBA1B}'"
+			L" xmlns:auto-ns2='http://schemas.microsoft.com/win/2004/08/events' xmlns='http://www.microsoft.com/DriverFrameworks/UserMode/Event'>"
+			L"<Level>0</Level><Service>WpdFs</Service><DriverClsid>{112DE495-AC4C-46F8-B663-6A4266C53313}</DriverClsid>"
+			L"</UMDFHostAddDeviceBegin></UserData></Event>", true);
+		const std::vector<std::wstring> expected = { L"WPDBUSENUMROOT\\UMB\\2&37C186B", L"{16C46B32-D0DF-4BA1-8AA2-4D7F005CBA1B}",
+		                                             L"0", L"WpdFs", L"{112DE495-AC4C-46F8-B663-6A4266C53313}" };
+		bool read = false;
+		if (root) {
+			const Event e(*root, L"Microsoft-Windows-DriverFrameworks-UserMode/Operational", 1, L"x.evtx");
+			read = e.rawValues == expected && e.rawNames.size() == 5 && e.rawNames[0] == L"instance" && e.rawNames[3] == L"Service";
+		}
+		check(read, "events: UserData's attributes read first, in order, without the namespace declarations");
 	}
 	{
 		/* RecentFileCache.bcf of the Windows 7 VM: its header and first path,

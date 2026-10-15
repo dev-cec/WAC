@@ -26,7 +26,7 @@
 struct XmlNode {
 	std::wstring name;                                  //!< local name, without the namespace prefix
 	std::wstring text;                                //!< direct text content, edge spaces stripped
-	std::vector<std::pair<std::wstring, std::wstring>> attributes; //!< attributes, in document order
+	std::vector<std::pair<std::wstring, std::wstring>> attributes; //!< attributes, in document order, namespace declarations left out
 	std::vector<std::unique_ptr<XmlNode>> children;                //!< child elements, in document order
 
 	/*! First child carrying that name, or nullptr. */

@@ -93,6 +93,23 @@ Json eventData(const XmlNode& root, std::vector<std::wstring>* rawValues, std::v
 		while (!pile.empty()) {
 			const XmlNode* n = pile.back();
 			pile.pop_back();
+			/* A provider may put its data in attributes, before the element's
+			   children: UMDF's <UMDFHostAddDeviceBegin instance='…' lifetime='…'>
+			   then <Level>, <Service>. They were skipped, and every %N of the
+			   message took another value (Windows 7, measured: "loading driver
+			   %4 at level {clsid}"). */
+			for (const std::pair<std::wstring, std::wstring>& a : n->attributes) {
+				if (!a.second.empty()) {
+					Json o = Json::obj();
+					o.add(L"Name",  Json::str(a.first));
+					o.add(L"Value", Json::str(a.second));
+					arr.push(std::move(o));
+				}
+				if (rawValues) rawValues->push_back(a.second);
+				if (rawNames) rawNames->push_back(a.first);
+			}
+			// An empty element carrying attributes is their holder, not a value of its own.
+			if (n->children.empty() && !n->attributes.empty() && n->text.empty()) continue;
 			if (n->children.empty()) {
 				// Same form as EventData: the element's name SERVES as the field name,
 				// instead of being glued to the value by an "=" that a consumer
