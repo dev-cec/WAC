@@ -16,9 +16,9 @@
  & Windows 10 & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}bam\textbackslash{}State\textbackslash{}UserSettings} & registry values, FILETIME & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Server editions to be measured.} \\
 \addlinespace
-\texttt{bits} & Windows XP & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader\textbackslash{}qmgr0.dat, qmgr1.dat} & BITS state file & no \\
+\texttt{bits} & Windows XP & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader\textbackslash{}qmgr0.dat, qmgr1.dat} & BITS state file & yes \\
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader\textbackslash{}qmgr.db} & ESE & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Before Vista: Documents and Settings\textbackslash{}All Users\textbackslash{}Application Data\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Before Vista: Documents and Settings\textbackslash{}All Users\textbackslash{}Application Data\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader. The queue files measured on Windows 8.1; the earlier versions read as bits\_parser (ANSSI) describes them, not measured.} \\
 \addlinespace
 \texttt{defender} & Windows 8 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Support\textbackslash{}MPLog-*.log} & UTF-16 text & yes \\
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Scans\textbackslash{}History\textbackslash{}Service\textbackslash{}DetectionHistory} & DetectionHistory records & yes \\

@@ -1283,7 +1283,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (run when the transfer ends or fails: a persistence), delays, dates,
         and each file: source URL, destination, temporary file, sizes. The
         whole blob is given in hexadecimal: BITS~10 keeps more there (the
-        creating program) at places not described.
+        creating program) at places not described. Before Windows~10, the jobs
+        are in the queue files \fichier{qmgr0.dat} and \fichier{qmgr1.dat},
+        which BITS writes in turn: each job says which one it was read in
+        (\champ{QueueFile}), since the older one may keep an earlier state of
+        the same job.
   \item[\fichier{wmi\_persistence.json}] WMI event subscriptions, read
         \textbf{offline} in the CIM repository copied raw
         (\path|wbem\Repository|): no WMI query, nothing run on the machine. In

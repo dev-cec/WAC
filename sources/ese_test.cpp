@@ -158,6 +158,40 @@ void artefacts() {
 	BitsFile partial;
 	check(!parseBitsFile(cut, partial), "BITS file: a volume beyond the blob accepted");
 
+	/* A queue file of Windows 8.1 as BITS wrote the witness's (qmgr1.dat):
+	   its header, the job between two delimiters, without the blob's header,
+	   two files written in it — the first followed by its trailer —, the
+	   metadata after the second XFER. */
+	const uint8_t delimiter[16] = { 0x8C, 0x93, 0xEA, 0x64, 0x03, 0x0F, 0x68, 0x40, 0xB4, 0x6F, 0xF9, 0x7F, 0xE5, 0x1D, 0x4D, 0xCD };
+	std::vector<uint8_t> queue(60, 0x11);
+	queue.insert(queue.end(), delimiter, delimiter + 16);
+	std::vector<uint8_t> control(job.begin() + 16, job.end());
+	const auto firstXfer = std::search(control.begin(), control.end(), xfer, xfer + 16);
+	control.erase(firstXfer, control.end());                        // the control part and its access token
+	queue.insert(queue.end(), control.begin(), control.end());
+	queue.insert(queue.end(), xfer, xfer + 16); put32(queue, 2);
+	queue.insert(queue.end(), file.begin() + 16, file.end());
+	const uint8_t trailer[12] = { 3, 0, 0, 0, 0x98, 0xDE, 0x5D, 0x5E, 0xFF, 0xFF, 0xFF, 0xFF };
+	queue.insert(queue.end(), trailer, trailer + 12);
+	for (int i = 0; i < 61; ++i) queue.push_back(0);
+	std::vector<uint8_t> second(file.begin() + 16, file.end());
+	second[4] = 'D';                                                // D:\wactest\wac-bits.bin
+	queue.insert(queue.end(), second.begin(), second.end());
+	queue.insert(queue.end(), xfer, xfer + 16);
+	put32(queue, 0); put32(queue, 0); put32(queue, 600); put32(queue, 1209600);
+	put32(queue, 0xBBFF61E8); put32(queue, 0x01DD50A0); put32(queue, 0xBC0963AC); put32(queue, 0x01DD50A0);
+	queue.insert(queue.end(), delimiter, delimiter + 16);
+	std::vector<BitsJob> queued;
+	check(parseBitsQueue(queue, L"C:\\ProgramData\\Microsoft\\Network\\Downloader\\qmgr1.dat", queued) && queued.size() == 1
+	      && queued[0].id == L"{761A2C65-D51A-4DBB-8BB6-610000A89192}" && queued[0].notifyArguments == L"/c echo wac-bits-test"
+	      && queued[0].metadataParsed && queued[0].retryDelay == 600,
+	      "BITS queue: the job between its delimiters, its command line and metadata");
+	check(queued.size() == 1 && queued[0].inlineFiles.size() == 2 && queued[0].inlineFiles[0].source == L"https://wac-test.invalid/wac-bits.bin"
+	      && queued[0].inlineFiles[1].destination == L"D:\\wactest\\wac-bits.bin",
+	      "BITS queue: its two files, the second found past the first one's trailer");
+	std::vector<BitsJob> none;
+	check(!parseBitsQueue(std::vector<uint8_t>(64, 0), L"qmgr0.dat", none) && none.empty(), "BITS queue: an empty queue gives a job");
+
 	check(srumKey(L"Energy Data") == L"EnergyData" && srumKey(L"BytesRecvd") == L"BytesRecvd", "SRUM: column names as keys");
 	check(srumProviderName(L"{973f5d5c-1d90-4944-be8e-24b94231a174}") == L"NetworkUsage"
 	      && srumProviderName(L"{B6D82AF1-F780-4E17-8077-6CB9AD8A6FC4}").empty(), "SRUM: documented providers only");

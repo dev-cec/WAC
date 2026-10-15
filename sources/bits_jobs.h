@@ -23,6 +23,14 @@
  *  keeps more (the path of the program that created the job) at places not
  *  described.
  *
+ *  BEFORE WINDOWS 10, qmgr0.dat and qmgr1.dat, which BITS writes in turn: a
+ *  header, the jobs each framed by a delimiter of its version of BITS, the
+ *  same job layout without the blob's header, its files written in it after
+ *  their count — each followed by a trailer not described —, then the same
+ *  metadata (bits_parser, ANSSI; measured on the witness job of the Windows
+ *  8.1 VM). Each job names the queue file it was read in: the older one may
+ *  hold an earlier state of the same job.
+ *
  *  A job is written to qmgr.db when created and when a file is added; BITS
  *  changes made since may be only in the service's logs (edb*.log),
  *  collected alongside.
@@ -52,6 +60,8 @@ struct BitsJob {
 	uint32_t errorCount = 0, transientErrorCount = 0, retryDelay = 0, noProgressTimeout = 0;
 	FILETIME createdUtc = { 0 }, modifiedUtc = { 0 };
 	std::vector<std::wstring> fileIds;
+	std::wstring queueFile;            //!< before Windows 10: the queue file it was read in (qmgr0.dat, qmgr1.dat)
+	std::vector<BitsFile> inlineFiles; //!< before Windows 10: its files, written in the job itself
 	bool parsed = false, metadataParsed = false;
 	std::vector<uint8_t> blob;
 	Json toJson(const std::vector<BitsFile>& files) const;   //!< @return the job, its files included
@@ -61,6 +71,15 @@ struct BitsJob {
  *  @return false if its first part (up to the notification flags) does not fit */
 bool parseBitsJob(const std::vector<uint8_t>& blob, BitsJob& job);
 
+/*! Reads the jobs of a queue file of Windows 8.1 and earlier (qmgr0.dat,
+ *  qmgr1.dat): each between two delimiters of its version of BITS, its files
+ *  written in it. Every length is bounded by the file.
+ *  @param queue the queue file
+ *  @param queueFile its path on the examined machine
+ *  @param jobs receives the jobs read
+ *  @return false if no known job delimiter is in it */
+bool parseBitsQueue(const std::vector<uint8_t>& queue, const std::wstring& queueFile, std::vector<BitsJob>& jobs);
+
 /*! Reads a file's blob.
  *  @return false if a length does not fit */
 bool parseBitsFile(const std::vector<uint8_t>& blob, BitsFile& file);
@@ -68,10 +87,12 @@ bool parseBitsFile(const std::vector<uint8_t>& blob, BitsFile& file);
 //! BITS jobs (bits_jobs.json).
 class BitsJobs {
 public:
-	HRESULT getData();          //!< @return ERROR_SUCCESS, or why qmgr.db cannot be read
+	HRESULT getData();          //!< @return ERROR_SUCCESS, or why neither qmgr.db nor a queue file can be read
 	HRESULT toJson();           //!< @return the result of the write
 	void clear();               //!< releases the jobs
 private:
+	//! @return ERROR_SUCCESS if a queue file of Windows 8.1 and earlier was read
+	HRESULT readQueueFiles();
 	std::vector<BitsJob> jobs_;
 	std::vector<BitsFile> files_;
 };

@@ -1320,7 +1320,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         persistance), délais, dates, et chaque fichier : URL source,
         destination, fichier temporaire, tailles. Le blob complet est donné en
         hexadécimal : BITS~10 y garde plus (le programme créateur) à des
-        endroits non décrits.
+        endroits non décrits. Avant Windows~10, les travaux sont dans les
+        fichiers de file d'attente \fichier{qmgr0.dat} et
+        \fichier{qmgr1.dat}, que BITS écrit tour à tour : chaque travail dit
+        dans lequel il a été lu (\champ{QueueFile}), car le plus ancien peut
+        garder un état antérieur du même travail.
   \item[\fichier{wmi\_persistence.json}] abonnements aux événements WMI, lus
         \textbf{hors ligne} dans le dépôt CIM copié en brut
         (\path|wbem\Repository|) : aucune requête WMI, rien exécuté sur la

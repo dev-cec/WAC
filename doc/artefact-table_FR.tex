@@ -16,9 +16,9 @@
  & Windows 10 & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}bam\textbackslash{}State\textbackslash{}UserSettings} & valeurs de registre, FILETIME & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Éditions serveur à mesurer.} \\
 \addlinespace
-\texttt{bits} & Windows XP & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader\textbackslash{}qmgr0.dat, qmgr1.dat} & fichier d'état de BITS & non \\
+\texttt{bits} & Windows XP & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader\textbackslash{}qmgr0.dat, qmgr1.dat} & fichier d'état de BITS & oui \\
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader\textbackslash{}qmgr.db} & ESE & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Avant Vista : Documents and Settings\textbackslash{}All Users\textbackslash{}Application Data\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Avant Vista : Documents and Settings\textbackslash{}All Users\textbackslash{}Application Data\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader. Les fichiers de file d'attente mesurés sous Windows 8.1 ; les versions antérieures lues comme bits\_parser (ANSSI) les décrit, sans mesure.} \\
 \addlinespace
 \texttt{defender} & Windows 8 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Support\textbackslash{}MPLog-*.log} & texte UTF-16 & oui \\
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Scans\textbackslash{}History\textbackslash{}Service\textbackslash{}DetectionHistory} & enregistrements DetectionHistory & oui \\

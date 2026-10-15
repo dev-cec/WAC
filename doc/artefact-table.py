@@ -113,8 +113,8 @@ NOTES = {
     "Server editions to be measured.": "Éditions serveur à mesurer.",
     "Before Windows 10, the adapters' hardware addresses are in no documented key of the hives: not given.":
         "Avant Windows 10, les adresses matérielles des cartes ne sont dans aucune clé documentée des ruches : non données.",
-    "Before Vista: Documents and Settings\\All Users\\Application Data\\Microsoft\\Network\\Downloader.":
-        "Avant Vista : Documents and Settings\\All Users\\Application Data\\Microsoft\\Network\\Downloader.",
+    "Before Vista: Documents and Settings\\All Users\\Application Data\\Microsoft\\Network\\Downloader. The queue files measured on Windows 8.1; the earlier versions read as bits_parser (ANSSI) describes them, not measured.":
+        "Avant Vista : Documents and Settings\\All Users\\Application Data\\Microsoft\\Network\\Downloader. Les fichiers de file d'attente mesurés sous Windows 8.1 ; les versions antérieures lues comme bits_parser (ANSSI) les décrit, sans mesure.",
     "Server 2012 and 2012 R2 have no built-in Defender; quarantine copied encrypted on every version.":
         "Server 2012 et 2012 R2 n'ont pas de Defender intégré ; la quarantaine est copiée chiffrée sur toutes les versions.",
     "Depends on the mail program installed, not on Windows.": "Dépend du logiciel de messagerie installé, non de Windows.",
