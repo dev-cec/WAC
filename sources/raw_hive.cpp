@@ -2035,7 +2035,15 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
         return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
     }
 
-    createFolders(outDir);
+    /* The volume's root is "\\": its children are "\\name", not "\\\\name"
+       (Thumbs.db is looked for from the root). */
+    const std::wstring base = !volumePath.empty() && volumePath.back() == L'\\'
+                            ? volumePath.substr(0, volumePath.size() - 1) : volumePath;
+    const std::wstring outBase = !outDir.empty() && outDir.back() == L'\\' ? outDir.substr(0, outDir.size() - 1) : outDir;
+    /* The output folder is made when a file goes there, not before: walked
+       for one name (Thumbs.db), a whole volume would leave its tree of empty
+       folders in the exhibit store. */
+    bool folderMade = false;
 
     HRESULT global = ERROR_SUCCESS;
     for (const RawDirEntry& e : entries){
@@ -2046,23 +2054,24 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
                 RVLOG(L"[raw] tree: maximum depth reached at %ls\n", e.name.c_str());
                 continue;
             }
-            if (isSkipped(volumePath + L"\\" + e.name, skipped)) continue;
+            if (isSkipped(base + L"\\" + e.name, skipped)) continue;
             const HRESULT h = extractTree(
-                vol, e.mftIndex, volumePath + L"\\" + e.name,
-                outDir + L"\\" + e.name, extensions, extracted, depthLeft - 1,
+                vol, e.mftIndex, base + L"\\" + e.name,
+                outBase + L"\\" + e.name, extensions, extracted, depthLeft - 1,
                 volumeLetter, reading, skipped);
             if (h == S_FALSE) global = S_FALSE;
             continue;
         }
         if (!extensionMatches(e.name, extensions)) continue;
 
+        if (!folderMade) { createFolders(outBase); folderMade = true; }
         RawHiveExtraction line;
-        line.volumePath = volumeLetter + L":" + volumePath + L"\\" + e.name;
-        line.outputPath = outDir + L"\\" + e.name;
+        line.volumePath = volumeLetter + L":" + base + L"\\" + e.name;
+        line.outputPath = outBase + L"\\" + e.name;
         // Fingerprints are ALWAYS computed: they cost nothing beyond the read
         // already made, and without them the exhibit is unidentified.
         line.result = vol.extractData(e.mftIndex, e.sequence, line.outputPath,
-                                         volumePath + L"\\" + e.name, &line.fingerprints, nullptr, e.name);
+                                         base + L"\\" + e.name, &line.fingerprints, nullptr, e.name);
         if (FAILED(line.result)){
             RVLOG(L"[raw] tree: extraction failed %ls\n", e.name.c_str());
             global = S_FALSE;
