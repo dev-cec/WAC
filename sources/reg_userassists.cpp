@@ -21,6 +21,16 @@ UserAssist::UserAssist(std::wstring hKey, const std::wstring& valueName, const s
 			Name = replaceAll(Name, s, n);
 		}
 	}
+	if (data.size() == XP_ENTRY_SIZE) {
+		// Before Windows 7: the counter from its base of 5, then the last run.
+		int counter = 0;
+		std::memcpy(&counter, data.data() + 4, 4);
+		windowsXp = true;
+		countKnown = counter >= XP_COUNT_BASE;
+		Count = countKnown ? counter - XP_COUNT_BASE : 0;
+		std::memcpy(&lastRunUtc, data.data() + 8, sizeof(lastRunUtc));
+		return;
+	}
 	// The caller guarantees ENTRY_SIZE bytes; read by copy, the buffer carries no alignment guarantee.
 	if (data.size() < ENTRY_SIZE) return;
 	std::memcpy(&Count, data.data() + 4, 4);        // number of runs
@@ -42,9 +52,12 @@ Json UserAssist::toJson() {
 	addUser(o, Sid);
 	o.add(L"Class",         Json::str(Class));
 	o.add(L"Name",          Json::str(Name));
-	o.add(L"Count",         Json::num((long long)Count));
-	o.add(L"FocusCount",    Json::num((long long)FocusCount));
-	o.add(L"FocusTimeMs",   Json::num((long long)FocusTimeMs));
+	if (countKnown) o.add(L"Count", Json::num((long long)Count));
+	// Windows XP keeps no focus: none given rather than zeros.
+	if (!windowsXp) {
+		o.add(L"FocusCount",  Json::num((long long)FocusCount));
+		o.add(L"FocusTimeMs", Json::num((long long)FocusTimeMs));
+	}
 	o.add(L"LastRun",       Json::str(utcTimeToIso8601Local(lastRunUtc)));
 	o.add(L"LastRunUtc",    Json::str(timeToIso8601Utc(lastRunUtc)));
 	return o;
@@ -60,7 +73,10 @@ HRESULT UserAssists::getData() {
 	log(0, L"ℹ️User assists :");
 	log(0, L"*******************************************************************************************************************");
 
-	const std::wstring userAssistKeys[2] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}" }; // executables, shortcuts
+	// Executables and shortcuts since Windows 7; before it, the shell's
+	// objects ({75048700-…}: programs, shortcuts, paths) and Internet Explorer's toolbar ({5E6AB780-…}).
+	const std::wstring userAssistKeys[] = { L"{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}", L"{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}",
+	                                        L"{75048700-EF1F-11D0-9888-006097DEACF9}", L"{5E6AB780-7743-11CF-A12B-00AA004AE837}" };
 	for (const std::wstring& key : userAssistKeys) {
 		for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 			const std::wstring hive = extractedPath(std::get<1>(profileEntry)) + L"\\ntuser.dat";
@@ -91,10 +107,11 @@ HRESULT UserAssists::getData() {
 					log(2, L"🔥enumRegistryValue " + subkey + L" " + std::to_wstring(i), hresult);
 					break;
 				}
-				if (data.size() != UserAssist::ENTRY_SIZE) {
+				if (data.size() != UserAssist::ENTRY_SIZE && data.size() != UserAssist::XP_ENTRY_SIZE) {
 					// Not a program entry (UEME_CTLSESSION: session statistics).
 					log(2, L"🔈UserAssist " + ROT13(valueName) + L": " + std::to_wstring(data.size())
-					     + L" bytes, not an entry of " + std::to_wstring(UserAssist::ENTRY_SIZE) + L": skipped");
+					     + L" bytes, not an entry of " + std::to_wstring(UserAssist::ENTRY_SIZE) + L" or "
+					     + std::to_wstring(UserAssist::XP_ENTRY_SIZE) + L": skipped");
 					continue;
 				}
 				log(1, L"➕UserAssist ");

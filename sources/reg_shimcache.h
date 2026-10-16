@@ -45,6 +45,9 @@ public:
 	BinaryFingerprint fingerprint;  //!< fingerprints of that file, if `--binary` was given
 	std::wstring lastModification = L"";    //!< the file's last modification, suspect's local time
 	std::wstring lastModificationUtc = L"";	//!< the same instant in UTC
+	unsigned long long fileSize = 0;        //!< the file's size, as Windows XP records it
+	bool fileSizeKnown = false;             //!< a Windows XP entry: the size is given
+	FILETIME lastUpdateUtc = { 0, 0 };      //!< when Windows XP last updated the entry; zero before or after XP
 	/* No execution flag. One used to be read at the end of the entry and
 	   emitted as "Executes"; confronted with Prefetch on the test VM, it said
 	   nothing: 12 % "true" among binaries Prefetch proves were run, 23 % among
@@ -95,4 +98,9 @@ private:
 	/*! Reads the value of Windows 7 and Server 2008 R2 (magic 0xBADC0FEE).
 	 *  @return S_OK, or ERROR_INVALID_DATA if neither layout fits it */
 	HRESULT parseWindows7(const BYTE* data, size_t size);
+
+	/*! Reads the value of Windows XP (magic 0xDEADBEEF), in the order of its
+	 *  LRU table.
+	 *  @return S_OK, or ERROR_INVALID_DATA if its header does not fit */
+	HRESULT parseWindowsXp(const BYTE* data, size_t size);
 };

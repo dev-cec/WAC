@@ -441,6 +441,8 @@ HRESULT ExtractFileArtefactsRaw() {
 
 	// Each artefact as the configuration asks (wac.yml, artefacts:): what is switched off is not read at all.
 	if (conf.artefacts.prefetch) addTarget(L"\\Windows\\Prefetch", { L".pf" });
+	// Windows XP and Server 2003 keep their scheduled tasks as .job files (scheduledTasks.h).
+	if (conf.artefacts.scheduledTasks) addTarget(L"\\Windows\\Tasks", { L".job" });
 	// RecentFileCache.bcf: Windows 7's list of the executables run lately (reg_amcache.h).
 	if (conf.artefacts.amcache) addTarget(L"\\Windows\\AppCompat\\Programs", { L".bcf" });
 
@@ -456,8 +458,14 @@ HRESULT ExtractFileArtefactsRaw() {
 		if (classicEventLogs(conf.examinedVersion)) addTarget(L"\\Windows\\System32\\config", { L".evt" });
 		else addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
 	}
-	// setupapi.dev.log and its rotations, with the other setup logs of the folder (a few, small).
-	if (conf.artefacts.setupApi) addTarget(L"\\Windows\\INF", { L".log" });
+	/* setupapi.dev.log and its rotations, with the other setup logs of the
+	   folder (a few, small): the folder the artefact table gives for the
+	   examined Windows — INF since Vista, Windows itself for XP's setupapi.log. */
+	if (conf.artefacts.setupApi) {
+		const ArtefactEntry* setupApi = artefactEntry("setupapi");
+		const std::wstring location = setupApi ? formOf(*setupApi, conf.examinedVersion).location : L"Windows\\INF\\setupapi.dev.log";
+		addTarget(L"\\" + location.substr(0, location.rfind(L'\\')), { L".log" });
+	}
 	// hosts has no extension: the whole folder, a handful of small files.
 	if (conf.artefacts.hosts) addTarget(L"\\Windows\\System32\\drivers\\etc", {});
 	/* RegBack: the copies Windows made of the hives (task RegIdleBackup) —
@@ -665,21 +673,26 @@ HRESULT ExtractFileArtefactsRaw() {
 		     + L" file(s) [" + diagnostic + L"]");
 	}
 	/* RECYCLE BINS: the `$I` of every user folder, on every fixed NTFS volume
-	   (each has its own `\$Recycle.Bin`). Only the `$I`: the `$R` are the
-	   deleted files themselves, of any size (see recycle_bin.h). */
+	   (each has its own `\$Recycle.Bin`), and before Vista the INFO2 of
+	   `\RECYCLER`. Only the indexes: the `$R` and `Dc<n>` are the deleted
+	   files themselves, of any size (see recycle_bin.h). */
 	if (conf.artefacts.recycleBin) {
-		for (const std::wstring& drive : fixedNtfsVolumes()) {
+		auto isIndex = [](const std::wstring& name) {
+			return (name.size() > 2 && (name.compare(0, 2, L"$I") == 0 || name.compare(0, 2, L"$i") == 0))
+			       || _wcsicmp(name.c_str(), L"INFO2") == 0;
+		};
+		for (const std::wstring& drive : fixedNtfsVolumes())
+		for (const std::wstring& bin : { std::wstring(L"\\$Recycle.Bin"), std::wstring(L"\\RECYCLER") }) {
 			const std::wstring volume = drive.substr(0, 1);
-			const std::wstring bin = L"\\$Recycle.Bin";
 			std::vector<RawDirEntry> users;
-			if (FAILED(ListDirectoryRaw(volume, bin, users))) continue;   // no bin on this volume
+			if (FAILED(ListDirectoryRaw(volume, bin, users))) continue;   // no bin of this form on this volume
 			std::vector<std::pair<std::wstring, std::wstring>> items;
 			for (const RawDirEntry& user : users) {
 				if (!user.isDirectory) continue;
 				std::vector<RawDirEntry> files;
 				if (FAILED(ListDirectoryRaw(volume, bin + L"\\" + user.name, files))) continue;
 				for (const RawDirEntry& f : files)
-					if (!f.isDirectory && f.name.size() > 2 && (f.name.compare(0, 2, L"$I") == 0 || f.name.compare(0, 2, L"$i") == 0)) {
+					if (!f.isDirectory && isIndex(f.name)) {
 						const std::wstring onVolume = bin + L"\\" + user.name + L"\\" + f.name;
 						items.emplace_back(onVolume, exhibitTarget(drive + onVolume));
 					}
@@ -690,7 +703,7 @@ HRESULT ExtractFileArtefactsRaw() {
 			const HRESULT hrBin = items.empty() ? S_OK : ExtractFilesRaw(volume, items, nullptr, &reading);
 			ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volume
 			                        + L": — $MFT, directory indexes, $DATA attribute); no file opened by the system");
-			auditRecord(L"Raw extraction of the recycle bin indexes $I (" + std::to_wstring(items.size()) + L" file(s))",
+			auditRecord(L"Raw extraction of the recycle bin indexes, $I or INFO2 (" + std::to_wstring(items.size()) + L" file(s))",
 			            std::wstring(L"\\\\.\\") + volume + L":" + bin, hrBin, Footprint::VOLUME_BRUT);
 			total += items.size();
 			if (hrBin == S_FALSE) global = S_FALSE;

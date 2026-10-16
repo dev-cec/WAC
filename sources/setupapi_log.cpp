@@ -11,6 +11,9 @@ const wchar_t HEADER[] = L">>>  [";               //!< first line of a section
 const wchar_t START[] = L">>>  Section start ";   //!< its start date
 const wchar_t END[] = L"<<<  Section end ";       //!< its end date
 const wchar_t STATUS[] = L"<<<  [Exit status: ";  //!< its outcome
+const wchar_t XP_LOG[] = L"[SetupAPI Log]";        //!< first line of Windows XP's setupapi.log
+const wchar_t XP_INSTALLED[] = L"Device install of \"";   //!< #I121: a device installed, its instance quoted
+const wchar_t XP_FINISHED[] = L"\" finished successfully";
 
 /*! The logs reach tens of megabytes on a machine that installs a lot; beyond
  *  this, the file is not read — its exhibit stays in the store. */
@@ -52,12 +55,57 @@ bool parseSetupApiDate(const std::wstring& text, FILETIME& local) {
 	return SystemTimeToFileTime(&t, &local) != 0;
 }
 
+namespace {
+
+/*! Windows XP's setupapi.log (see setupapi_log.h): a section per
+ *  "[YYYY/MM/DD HH:MM:SS pid.n]" line, its lines "#<code> <message>". */
+std::vector<SetupApiSection> parseXpLog(const std::vector<std::wstring>& lines, const std::wstring& file) {
+	std::vector<SetupApiSection> sections;
+	size_t current = SIZE_MAX;
+	for (size_t i = 0; i < lines.size(); ++i) {
+		const std::wstring& line = lines[i];
+		FILETIME start;
+		if (line.size() > 21 && line[0] == L'[' && parseSetupApiDate(line.substr(1), start)) {
+			SetupApiSection section;
+			section.file = file;
+			section.line = i + 1;
+			section.startLocal = start;
+			sections.push_back(std::move(section));
+			current = sections.size() - 1;
+			continue;
+		}
+		if (current == SIZE_MAX || line.size() < 6 || line[0] != L'#') continue;
+		// "#-199 Executing …", "#I121 Device install of …", "#E361 …": the message after the code.
+		const size_t space = line.find(L' ');
+		if (space == std::wstring::npos) continue;
+		const std::wstring message = line.substr(space + 1);
+		SetupApiSection& s = sections[current];
+		if (s.operation.empty()) s.operation = message;
+		const size_t installed = message.find(XP_INSTALLED);
+		if (installed != std::wstring::npos) {
+			const size_t from = installed + wcslen(XP_INSTALLED);
+			const size_t quote = message.find(L'"', from);
+			if (quote != std::wstring::npos) {
+				s.subject = message.substr(from, quote - from);
+				if (message.compare(quote, wcslen(XP_FINISHED), XP_FINISHED) == 0) s.exitStatus = L"SUCCESS";
+			}
+		}
+		// An error line (#E…): the outcome, when none was given yet.
+		if (line[1] == L'E' && s.exitStatus.empty()) s.exitStatus = message;
+	}
+	return sections;
+}
+
+} // namespace
+
 std::vector<SetupApiSection> parseSetupApiLog(const std::wstring& text, const std::wstring& file) {
+	const std::vector<std::wstring> all = splitLines(text);
+	if (!all.empty() && startsWith(all.front(), XP_LOG)) return parseXpLog(all, file);
 	std::vector<SetupApiSection> sections;
 	// The section being read, by its index: a pointer would not survive the vector growing.
 	size_t current = SIZE_MAX;
 	unsigned long long lineNumber = 0;
-	for (std::wstring line : splitLines(text)) {
+	for (const std::wstring& line : all) {
 		++lineNumber;
 
 		if (startsWith(line, HEADER)) {
@@ -102,10 +150,13 @@ Json SetupApiSection::toJson() const {
 
 HRESULT SetupApiLogs::getData() {
 	log(0, L"ℹ️setupapi.dev.log :");
-	const std::filesystem::path folder = extractedPath(conf.systemDrive + L"\\Windows\\INF");
-	for (const std::filesystem::path& path : listFilesByExtension(folder, { L".log" })) {
-		// setupapi.dev.log and its rotations setupapi.dev.<date>.log; the other logs of INF are not device installs.
-		if (toLower(path.filename().wstring()).compare(0, 13, L"setupapi.dev.") != 0) continue;
+	std::vector<std::filesystem::path> logs = listFilesByExtension(extractedPath(conf.systemDrive + L"\\Windows\\INF"), { L".log" });
+	for (const std::filesystem::path& p : listFilesByExtension(extractedPath(conf.systemDrive + L"\\Windows"), { L".log" })) logs.push_back(p);
+	for (const std::filesystem::path& path : logs) {
+		/* setupapi.dev.log and its rotations setupapi.dev.<date>.log (INF), or
+		   Windows XP's setupapi.log (Windows); the other logs are not device installs. */
+		const std::wstring name = toLower(path.filename().wstring());
+		if (name.compare(0, 13, L"setupapi.dev.") != 0 && name != L"setupapi.log") continue;
 		std::string bytes;
 		if (!readWholeFile(path, LOG_MAX, bytes)) {
 			log(2, L"🔥setupapi log not read (unreadable or larger than 256 MiB): " + path.wstring());

@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
 	check(std::wstring(releaseOf(server2019, known).name) == L"Windows Server 2019" && known, "17763 server is not Server 2019");
 	const ArtefactEntry* prefetch = artefactEntry("prefetch");
 	check(prefetch && std::wstring(formOf(*prefetch, vista).format) == L"SCCA version 23" && formOf(*prefetch, vista).decoded
-	      && !formOf(*prefetch, xp).decoded, "Prefetch: decoded on Vista, not on XP");
+	      && formOf(*prefetch, xp).decoded, "Prefetch: decoded on XP and Vista");
 	check(prefetch && formOf(*prefetch, eleven).decoded && formOf(*prefetch, eleven).sinceBuild == 10240, "Prefetch on Windows 11");
 	const ArtefactEntry* amcache = artefactEntry("amcache");
 	check(amcache && formOf(*amcache, ten).decoded && formOf(*amcache, eight).decoded && formOf(*amcache, seven).decoded,
@@ -156,14 +156,12 @@ int main(int argc, char** argv) {
 	   known and not converted, and a signature nobody has seen yet, are both
 	   "unsupported" — the first with its name, the second without. */
 	check(pieceFormat("prefetch", 30).decoded && pieceFormat("prefetch", 31).decoded, "Prefetch 30 or 31 not decoded");
-	const PieceFormat xpPrefetch = pieceFormat("prefetch", 17);
-	check(!xpPrefetch.decoded && xpPrefetch.form && std::wstring(xpPrefetch.form->format) == L"SCCA version 17",
-	      "an XP Prefetch is decoded, or not named");
-	check(pieceFormat("prefetch", 23).decoded, "a Vista and 7 Prefetch not decoded");
+	check(pieceFormat("prefetch", 17).decoded && pieceFormat("prefetch", 23).decoded, "an XP, Vista or 7 Prefetch not decoded");
 	const PieceFormat tomorrow = pieceFormat("prefetch", 32);
 	check(!tomorrow.decoded && !tomorrow.form, "a Prefetch version nobody has seen is decoded, or given a form");
-	check(pieceFormat("recycle_bin", 1).decoded && pieceFormat("recycle_bin", 2).decoded && !pieceFormat("recycle_bin", 3).decoded,
-	      "$I: versions 1 and 2 decoded, no other");
+	check(pieceFormat("recycle_bin", 1).decoded && pieceFormat("recycle_bin", 2).decoded && pieceFormat("recycle_bin", 5).decoded
+	      && !pieceFormat("recycle_bin", 3).decoded,
+	      "$I versions 1 and 2, INFO2 version 5 decoded, no other");
 	check(pieceFormat("thumbcache", 0x20).decoded && pieceFormat("thumbcache", 0x15).decoded
 	      && !pieceFormat("thumbcache", 0x14).decoded && pieceFormat("thumbcache", 0x14).form,
 	      "thumbcache: Windows 10 and 7 layouts decoded, Vista's known and not decoded");

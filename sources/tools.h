@@ -1042,6 +1042,13 @@ HRESULT getRegBinaryValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vect
 * @return ERROR_SUCCESS, or the error of the read */
 HRESULT readMruListEx(ORHKEY key, std::vector<unsigned int>& ids);
 
+/*! Reads the MRUList value of a key, the form of Windows XP: a string whose
+* characters name its values, most recent first ("ba": b, then a).
+* @param key the key holding MRUList
+* @param names receives the value names, in that order
+* @return ERROR_SUCCESS, or the error of the read */
+HRESULT readMruList(ORHKEY key, std::vector<std::wstring>& names);
+
 /*! Opens a hive of each profile in the working copy, hands it over, closes it.
 * @param relativeHive the hive's file, relative to the profile
 *        (L"\\ntuser.dat", L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat")

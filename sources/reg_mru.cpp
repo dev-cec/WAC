@@ -14,6 +14,7 @@ Json Mru::toJson() const {
 	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
 	log(3, L"🔈timeToIso8601 lastWriteTimeUtc");
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
+	o.add(L"Path", Json::str(path));
 	Json items = Json::arr();
 	for (const std::unique_ptr<IdList>& item : shellitems) items.push(item->toJson());
 	o.add(L"ShellItems", std::move(items));
@@ -52,6 +53,7 @@ HRESULT Mrus::getData(int _level) {
 			hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname).c_str(), &hKey);
 			if (hresult != ERROR_SUCCESS) {
 				log(2, L"🔥OROpenKey Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname, hresult);
+				ORCloseHive(Offhive);   // opened for each key: never left open
 				continue;
 			}
 
@@ -59,10 +61,10 @@ HRESULT Mrus::getData(int _level) {
 			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
 			if (hresult != ERROR_SUCCESS) {
 				log(2, L"🔥ORQueryInfoKey hKey", hresult);
-				continue;
+				nSubkeys = 0;
 			}
 
-			for (int i = 1; i < (int)nSubkeys; i++) {//i=0 = *, on passe
+			for (int i = 1; i < (int)nSubkeys; i++) {   // index 0 is "*", every extension at once: skipped
 				bufferSize = MAX_KEY_NAME;
 				log(3, L"🔈OREnumKey hKey");
 				hresult = OREnumKey(hKey, i, valueName, &bufferSize, NULL, NULL, NULL);
@@ -77,11 +79,11 @@ HRESULT Mrus::getData(int _level) {
 					continue;
 				}
 				hresult = parse(hSubKey, std::get<0>(profileEntry), keyname, &mrus, 1, false, valueName);
-				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥parse", hresult);
-					continue;
-				}
+				if (hresult != ERROR_SUCCESS) log(2, L"🔥parse", hresult);
+				ORCloseKey(hSubKey);
 			}
+			ORCloseKey(hKey);
+			ORCloseHive(Offhive);
 		}
 	}
 	return ERROR_SUCCESS;
@@ -103,8 +105,26 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 	log(3, L"🔈getRegBinaryValue hkey\\MRUListEx");
 	hresult = readMruListEx(hKey, ids);
 	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥getRegBinaryValue hkey\\MRUListEx", hresult);
-		return hresult;
+		/* Windows XP's OpenSaveMRU: MRUList and a path per value, as text
+		   (measured on the XP VM). The rank is the entry's place in that
+		   list, 0 for the most recent. */
+		std::vector<std::wstring> names;
+		if (readMruList(hKey, names) != ERROR_SUCCESS) {
+			log(2, L"🔥MRUListEx or MRUList unreadable", hresult);
+			return hresult;
+		}
+		for (size_t rank = 0; rank < names.size(); ++rank) {
+			Mru mru;
+			mru.id = (unsigned)rank;
+			mru.lastWriteTimeUtc = lastWriteTimeUtc;
+			mru.extension = extension;
+			mru.level = level;
+			mru.sid = sid;
+			mru.source = source;
+			if (getRegSzValue(hKey, nullptr, names[rank].c_str(), &mru.path) != ERROR_SUCCESS) continue;
+			out->push_back(std::move(mru));
+		}
+		return ERROR_SUCCESS;
 	}
 	for (int id : ids) {
 		bool Parentiszip = false | _Parentiszip;

@@ -15,6 +15,14 @@
  *      <<<  Section end 2023/05/12 10:11:13.456
  *      <<<  [Exit status: SUCCESS]
  *
+ *  WINDOWS XP writes `\\Windows\\setupapi.log` otherwise (measured on the XP
+ *  VM): a "[SetupAPI Log]" header, then a section per line
+ *  "[2026/10/13 17:38:19 280.16]" (start, process, sequence) and its lines
+ *  "#<code> <message>" — "#-199 Executing …", "#I121 Device install of
+ *  "<instance>" finished successfully.", "#E… <error>". The operation is the
+ *  first message, the subject the instance #I121 names, the outcome SUCCESS
+ *  by #I121 or the first error; there is no end date.
+ *
  *  THE DATES are in the LOCAL time of the examined machine, with no offset
  *  written: they are converted with its time zone (suspectLocalToUtc), as
  *  every local date of WAC.

@@ -41,6 +41,8 @@ public:
 	std::wstring Name = L"";     //!< what was started, ROT13-decoded and its
 	                             //!< known folder GUIDs resolved to paths
 	int Count = 0;               //!< number of runs counted by Explorer
+	bool countKnown = true;      //!< false for an XP counter below its base: no number of runs given
+	bool windowsXp = false;      //!< an entry of 16 bytes (XP, Server 2003, Vista): no focus fields
 	int FocusCount = 0;          //!< number of times the window received the focus
 	unsigned int FocusTimeMs = 0; //!< total time the window had the focus, in milliseconds (offset 12)
 	FILETIME lastRunUtc = { 0, 0 };   //!< last run, in UTC as the value stores it
@@ -52,7 +54,13 @@ public:
 	 *  same offsets it gave a last run in 1691. */
 	static const size_t ENTRY_SIZE = 72;
 
-	/*! Builds the entry from a registry value of ENTRY_SIZE bytes.
+	/*! Size of an entry before Windows 7: session (4), counter (4), last run
+	 *  FILETIME (8). The counter starts at 5: measured on the XP VM, Notepad
+	 *  started twice from the Run box read 7, shutdown.exe once read 6. */
+	static const size_t XP_ENTRY_SIZE = 16;
+	static const int XP_COUNT_BASE = 5;
+
+	/*! Builds the entry from a registry value of ENTRY_SIZE or XP_ENTRY_SIZE bytes.
 	 *  @param hKey name of the GUID subkey the value comes from.
 	 *  @param valueName name of the value, ROT13-encoded.
 	 *  @param data the value's bytes: run count, focus count and last run.

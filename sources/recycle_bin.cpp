@@ -4,6 +4,7 @@
 #include "conversions.h"
 #include "recycle_bin.h"
 #include "consigne.h"
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 
@@ -16,6 +17,13 @@ const size_t V2_LENGTH_OFFSET = 24;     //!< version 2: length of the path, in c
 const size_t V2_PATH_OFFSET = 28;       //!< version 2: the path
 //! Largest `$I`: version 2 with a path of 32,767 characters (28 + 65,534 bytes), rounded up.
 const uint64_t INDEX_MAX = 64 * 1024 + 64;
+
+// INFO2 (Windows XP, Server 2003): see recycle_bin.h.
+const size_t INFO2_HEADER = 20;
+const size_t INFO2_RECORD = 800;
+const size_t INFO2_ANSI_PATH = 260;
+const size_t INFO2_NUMBER = 260, INFO2_DRIVE = 264, INFO2_DELETED = 268, INFO2_SIZE = 276, INFO2_PATH = 280;
+const uint64_t INFO2_MAX = 64ull << 20;   //!< 80,000 deleted files
 
 
 
@@ -59,6 +67,39 @@ bool parseRecycleBinIndex(const std::vector<uint8_t>& bytes, RecycledFile& recyc
 	return false;
 }
 
+bool parseInfo2(const std::vector<uint8_t>& bytes, const std::wstring& indexFile, const std::wstring& sid,
+                std::vector<RecycledFile>& files) {
+	if (bytes.size() < INFO2_HEADER) return false;
+	const uint32_t version = readLittleEndian<uint32_t>(bytes.data());
+	if (!pieceFormat("recycle_bin", version).decoded || readLittleEndian<uint32_t>(bytes.data() + 12) != INFO2_RECORD) {
+		RecycledFile unknown;
+		unknown.indexFile = indexFile;
+		unknown.sid = sid;
+		unknown.version = version;
+		unknown.unsupportedFormat = true;
+		files.push_back(std::move(unknown));
+		return true;
+	}
+	for (size_t at = INFO2_HEADER; fits(bytes.size(), at, INFO2_RECORD); at += INFO2_RECORD) {
+		const uint8_t* r = bytes.data() + at;
+		RecycledFile f;
+		f.indexFile = indexFile;
+		f.sid = sid;
+		f.version = version;
+		f.originalPath = readWideZ(r, INFO2_PATH + 2 * INFO2_ANSI_PATH, INFO2_PATH);
+		if (f.originalPath.empty()) f.originalPath = decodeText(std::string((const char*)r, strnlen((const char*)r, INFO2_ANSI_PATH)));
+		f.deletedUtc = filetimeFromTicks(readLittleEndian<uint64_t>(r + INFO2_DELETED));
+		f.size = readLittleEndian<uint32_t>(r + INFO2_SIZE);
+		// The copy: "Dc", the record's number, the original's extension.
+		const size_t dot = f.originalPath.find_last_of(L'.');
+		const size_t slash = f.originalPath.find_last_of(L'\\');
+		const std::wstring extension = dot != std::wstring::npos && (slash == std::wstring::npos || dot > slash) ? f.originalPath.substr(dot) : L"";
+		f.recycledName = L"Dc" + std::to_wstring(readLittleEndian<uint32_t>(r + INFO2_NUMBER)) + extension;
+		files.push_back(std::move(f));
+	}
+	return true;
+}
+
 Json RecycledFile::toJson() const {
 	Json o = Json::obj();
 	addUser(o, sid);
@@ -69,6 +110,7 @@ Json RecycledFile::toJson() const {
 		return o;
 	}
 	o.add(L"OriginalPath", Json::str(originalPath));
+	o.add(L"RecycledName", Json::str(recycledName));
 	o.add(L"Size", Json::num(size));
 	addDate(o, L"Deleted", deletedUtc);
 	o.add(L"IndexFile", Json::str(indexFile));
@@ -82,9 +124,18 @@ HRESULT RecycleBin::getData() {
 	   their path on the examined machine, "X:\$Recycle.Bin\<SID>\$I…", on
 	   whichever volume. */
 	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
-		if (key.size() < 3 || key.compare(2, 14, L"\\$recycle.bin\\") != 0 || exhibit.workingFile.empty()) continue;
+		if (key.size() < 3 || exhibit.workingFile.empty()) continue;
 		const std::filesystem::path source(exhibit.sourcePath);
 		const std::wstring name = source.filename().wstring();
+		// Windows XP and Server 2003: \RECYCLER\<SID>\INFO2, every deleted file in one index.
+		if (key.compare(2, 10, L"\\recycler\\") == 0 && _wcsicmp(name.c_str(), L"INFO2") == 0) {
+			std::vector<uint8_t> bytes;
+			if (!readWholeFile(std::filesystem::path(exhibit.workingFile), INFO2_MAX, bytes)
+			    || !parseInfo2(bytes, exhibit.sourcePath, source.parent_path().filename().wstring(), files_))
+				log(2, L"🔥Recycle bin INFO2 not read (unreadable, too large or without header): " + exhibit.sourcePath);
+			continue;
+		}
+		if (key.compare(2, 14, L"\\$recycle.bin\\") != 0) continue;
 		if (name.size() < 3 || (name.compare(0, 2, L"$I") != 0 && name.compare(0, 2, L"$i") != 0)) continue;
 		std::vector<uint8_t> bytes;
 		if (!readWholeFile(std::filesystem::path(exhibit.workingFile), INDEX_MAX, bytes)) {

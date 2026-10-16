@@ -1461,6 +1461,16 @@ HRESULT readMruListEx(ORHKEY key, std::vector<unsigned int>& ids)
 }
 
 
+HRESULT readMruList(ORHKEY key, std::vector<std::wstring>& names)
+{
+	std::wstring list;
+	const HRESULT hresult = getRegSzValue(key, nullptr, L"MRUList", &list);
+	if (hresult != ERROR_SUCCESS) return hresult;
+	for (const wchar_t c : list) names.push_back(std::wstring(1, c));
+	return ERROR_SUCCESS;
+}
+
+
 // Read a boolean value from the registry
 HRESULT getRegboolValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool* value)
 {

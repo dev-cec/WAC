@@ -305,7 +305,7 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 	hash_string = to_hex(hash, 8, HexLetters::Upper);
 
 	/* THE VERSION DECIDES, and the table holds which ones are decoded
-	   (pieceFormat): an older layout — 17 — or one nobody has seen yet
+	   (pieceFormat): a layout nobody has seen yet
 	   is not parsed with the offsets of version 30. The file used to be left
 	   out of the JSON, with a line in the log: it is now listed, with its
 	   name, its hash and its version, as "unsupported format" — the name and
@@ -353,24 +353,27 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 		volume_offset = volume_size = nb_volumes = 0;
 	}
 	if (trace_offset < 0 || (size_t)trace_offset > dataSize) trace_offset = 0;
-	/* Run times: eight from version 26 on; version 23 (Vista, 7) keeps only
-	   the last one, at the same place, the bytes after it unknown — read as
-	   dates, they gave runs that never were. */
-	const int runTimes = (version == 23) ? 1 : 8;
+	/* Run times: eight from version 26 on; versions 17 (XP) and 23 (Vista, 7)
+	   keep only the last one — at 84 + 36 in version 17 (measured against
+	   libscca on the XP VM), 84 + 44 later —, the bytes after it unknown:
+	   read as dates, they gave runs that never were. */
+	const int runTimes = (version == 17 || version == 23) ? 1 : 8;
+	const size_t runTimesAt = 84 + (version == 17 ? 36 : 44);
 	for (int i = 0; i < runTimes; i++) {
-		FILETIME tempUtc = *reinterpret_cast<FILETIME*>(data + 84 + 44 + i * 8);
+		FILETIME tempUtc = *reinterpret_cast<FILETIME*>(data + runTimesAt + i * 8);
 		// null dates are not kept, there are not always 8 dates
 		log(3, L"🔈timeToIso8601 last_runsUtc");
 		if (timeToIso8601Utc(tempUtc) != L"") {
 			last_runsUtc.push_back(tempUtc);
 		}
 	}
-	/* Version 23 has its run count at 84 + 68 (measured on the Windows 7 VM,
-	   the count libscca reads). Version 26 (Windows 8.1) at 84 + 124, as the
+	/* Version 17 has its run count at 84 + 60 (XP VM), version 23 at 84 + 68
+	   (Windows 7 VM) — the counts libscca reads. Version 26 (Windows 8.1) at 84 + 124, as the
 	   first layout of version 30, whose marker — a zero at 84 + 120 — version
 	   26 does not promise: measured zero on the Windows 8.1 VM, it is not
 	   relied upon. */
-	if (version == 23) run_count = *reinterpret_cast<int*>(data + 84 + 68);
+	if (version == 17) run_count = *reinterpret_cast<int*>(data + 84 + 60);
+	else if (version == 23) run_count = *reinterpret_cast<int*>(data + 84 + 68);
 	else if (version == 26 || *reinterpret_cast<int*>(data + 84 + 120) == 0) // old_format
 	{
 		run_count = *reinterpret_cast<int*>(data + 84 + 124);
@@ -383,7 +386,8 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 	// (measured: the first volume's name starts right after its entry, at 104
 	// in the Prefetch of Windows 7 and 8.1). Beyond what the block can hold,
 	// the count is wrong and the reading would go out of the buffer.
-	const size_t volumeEntry = (version == 23 || version == 26) ? 104 : 96;
+	// Version 17 (XP): 40 bytes, the same fields without the unknown ones after them.
+	const size_t volumeEntry = version == 17 ? 40 : (version == 23 || version == 26) ? 104 : 96;
 	const int maxVolumes = (volume_size > 0) ? (int)((size_t)volume_size / volumeEntry) : 0;
 	if (nb_volumes > maxVolumes) {
 		log(2, L"🔥Prefetch : " + std::to_wstring(nb_volumes)
@@ -405,7 +409,9 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 	    12 offset of the name in the strings block, 16 number of characters,
 	    20 flags, 24 $MFT reference (48 bits of entry + 16 of sequence). */
 	std::map<std::wstring, MFTInformation> metrics;   // file name -> reference
-	{
+	/* Version 17 (XP) has entries of 20 bytes without any $MFT reference:
+	   nothing to read there, the names come from the strings block. */
+	if (version != 17) {
 		const int METRIC_SIZE = 32;
 		/*  The count comes from the file: it is bounded by the room really
 		    available. The bound is the start of the trace chains, which follow

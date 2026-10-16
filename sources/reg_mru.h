@@ -40,6 +40,7 @@ public:
 	std::wstring source = L"";     //!< the key it comes from: `OpenSavePidlMRU` or `OpenSaveMRU`
 	FILETIME lastWriteTimeUtc = { 0 }; //!< last write to the KEY, UTC (the local time is derived at output)
 	std::vector<std::unique_ptr<IdList>> shellitems; //!< the PIDL, item by item
+	std::wstring path = L"";       //!< Windows XP (OpenSaveMRU): the file's path, as text
 
 	/*! Converts the entry to JSON, shell items included.
 	 *  @return its JSON object. */

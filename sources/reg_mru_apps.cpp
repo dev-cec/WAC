@@ -8,6 +8,7 @@ Json MruApp::toJson() const {
 	Json o = Json::obj();
 	o.add(L"ID",      Json::num(id));
 	o.add(L"Name",    Json::str(name));
+	o.add(L"Folder",  Json::str(folder));
 	addUser(o, sid);
 	o.add(L"Source",  Json::str(source));
 	log(3, L"🔈timeToIso8601 lastWriteTime");
@@ -50,15 +51,15 @@ HRESULT MruApps::getData(int _level) {
 			hresult = OROpenKey(Offhive, (L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname).c_str(), &hKey);
 			if (hresult != ERROR_SUCCESS) {
 				log(2, L"🔥OROpenHive Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\" + keyname, hresult);
+				ORCloseHive(Offhive);   // opened for each key: never left open
 				continue;
 			}
 
 			log(3, L"🔈parse");
 			hresult = parse(hKey, std::get<0>(profileEntry), keyname, &mruApps, 1, false);
-			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥parse", hresult);
-				continue;
-			};
+			if (hresult != ERROR_SUCCESS) log(2, L"🔥parse", hresult);
+			ORCloseKey(hKey);
+			ORCloseHive(Offhive);
 		}
 	}
 	return ERROR_SUCCESS;
@@ -80,8 +81,29 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 	log(3, L"🔈getRegBinaryValue hKey\\MRUListEx");
 	hresult = readMruListEx(hKey, ids);
 	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥parse", hresult);
-		return hresult;
+		/* Windows XP's LastVisitedMRU: MRUList, and per value the program
+		   then the folder, both UTF-16, each ending with its null (measured on
+		   the XP VM: "notepad.exe", "C:"). The rank is the place in MRUList. */
+		std::vector<std::wstring> names;
+		if (readMruList(hKey, names) != ERROR_SUCCESS) {
+			log(2, L"🔥MRUListEx or MRUList unreadable", hresult);
+			return hresult;
+		}
+		for (size_t rank = 0; rank < names.size(); ++rank) {
+			std::vector<BYTE> value;
+			if (getRegBinaryValue(hKey, L"", names[rank].c_str(), value) != ERROR_SUCCESS) continue;
+			MruApp mruApp;
+			mruApp.id = (unsigned)rank;
+			mruApp.lastWriteTimeUtc = lastWriteTimeUtc;
+			mruApp.level = level;
+			mruApp.sid = sid;
+			mruApp.source = source;
+			mruApp.name = readWideZ(value.data(), value.size(), 0);
+			const size_t folderAt = (mruApp.name.size() + 1) * 2;
+			if (folderAt < value.size()) mruApp.folder = readWideZ(value.data(), value.size(), folderAt);
+			out->push_back(std::move(mruApp));
+		}
+		return ERROR_SUCCESS;
 	}
 
 	for (int id : ids) {

@@ -34,10 +34,13 @@ namespace {
 /*! Where Windows keeps a user's shellbags. UsrClass.dat holds those of
  *  Explorer's folders; NTUSER.DAT keeps another tree — network locations,
  *  "Computers and Devices", the desktop —, which SBECmd reads too and WAC used
- *  to miss (compared on the test VM). */
+ *  to miss (compared on the test VM). Windows XP keeps Explorer's folders in
+ *  NTUSER.DAT's ShellNoRoam — the same MRUListEx and shell items, their
+ *  extension blocks of version 3 (measured on the XP VM). */
 const struct { const wchar_t* file; const wchar_t* hive; const wchar_t* key; } SHELLBAG_TREES[] = {
 	{ L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat", L"UsrClass.dat", L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU" },
 	{ L"\\ntuser.dat", L"NTUSER.DAT", L"Software\\Microsoft\\Windows\\Shell\\BagMRU" },
+	{ L"\\ntuser.dat", L"NTUSER.DAT", L"Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU" },
 };
 
 //! Names the hive of a tree just read, down to its leaves.

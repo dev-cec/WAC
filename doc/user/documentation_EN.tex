@@ -439,7 +439,8 @@ artefacts:              # one key per artefact; a missing key is true
 -{}-convert=folder & Conversion only, on an analysis workstation, of the
   collection made with \opt{collect} in that folder, after checking the seal
   and every fingerprint. See chapter~\ref{chap:separation}. \\
--{}-events & Takes the event logs (\fichier{.evtx}) even if \fichier{wac.yml}
+-{}-events & Takes the event logs (\fichier{.evtx}, or \fichier{.evt} on
+  Windows~XP and Server~2003) even if \fichier{wac.yml}
   says \texttt{events: false}; otherwise they are taken by default (key
   \texttt{events}). Each event gets its readable message, rebuilt from its
   provider's resources. About 250~MB of copies. \\
@@ -1081,6 +1082,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\fichier{ScheduledTasks.json}] scheduled tasks, read from their XML
         definitions: author, run-as account, state, last run and its result,
         triggers and actions (with \opt{binary}, fingerprints of the command).
+        On Windows~XP and Server~2003, from their \fichier{.job} files
+        (\champ{SourceJob}): program, parameters, working directory, author,
+        comment, last run (local time converted), exit code, triggers, and the
+        scheduler's status (\champ{JobStatus}: \texttt{HasNotRun},
+        \texttt{Ready}\ldots); the account a task runs as is not in the file.
 \end{description}
 
 \subsection{Program execution}
@@ -1090,8 +1096,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         volumes, and list of loaded files with their \path|$MFT| reference (and
         their fingerprints with \opt{binary}). A missing reference is not a
         failed read: Windows writes it as zero, for every file of a program run
-        only once and for some of the others. Versions decoded: 26
-        (Windows~8.1), 30 and 31 (Windows~10 and 11, compressed); the others
+        only once and for some of the others. Versions decoded: 17 (Windows~XP,
+        which records no \path|$MFT| reference and one run time), 23 (Vista
+        and~7, one run time), 26 (Windows~8.1), 30 and 31 (Windows~10 and 11,
+        compressed); the others
         are declared ``unsupported format'' (section~\ref{sec:format}).
   \item[\fichier{amcache\_application\_files.json},
         \fichier{amcache\_applications.json},
@@ -1124,7 +1132,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         wrong for 9 executed binaries out of 10 — it would lead to conclude that
         a program never ran. Formats decoded: Windows~7, 8, 8.1, 10 and 11; on
         Windows~8.1 the path starts with \texttt{SYSVOL\textbackslash}, the system
-        volume, and is published as it is.
+        volume, and is published as it is. Windows~XP also records the file's
+        size (\champ{FileSize}) and when it updated the entry
+        (\champ{LastUpdateUtc}).
   \item[\fichier{bams.json}] last execution per program and per user
         (Background Activity Moderator). The hives being read from the disk,
         an execution of the last minute or so may be missing: Windows keeps a
@@ -1134,8 +1144,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         disk.
   \item[\fichier{userassists.json}] programs launched from the user interface:
         count, number and duration in the foreground (\champ{FocusTimeMs}), last
-        execution.
-  \item[\fichier{muicache.json}] display names of executed programs.
+        execution. On Windows~XP the value keeps no foreground, and its
+        counter starts at~5 (measured: two launches read~7): \champ{Count} is
+        the counter less~5.
+  \item[\fichier{muicache.json}] display names of executed programs (on
+        Windows~XP, in \texttt{ShellNoRoam\textbackslash MUICache} of
+        NTUSER.DAT).
   \item[\fichier{run.json}] programs started at boot or logon (Run and RunOnce
         keys), with the key's last write: in SOFTWARE (the whole machine), in
         the DEFAULT hive (the system account) and in each profile's NTUSER.DAT
@@ -1650,8 +1664,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\champ{KeyLastWriteTime}: its addition, or the browsing of a
         subfolder), and its \champ{NodeSlot}. The ``first'' and ``last
         interaction'' of other tools are only readings of these two times.
+        On Windows~XP, Explorer's folders are in NTUSER.DAT
+        (\texttt{ShellNoRoam\textbackslash BagMRU}), read the same way.
   \item[\fichier{mrus.json}, \fichier{mruApps.json}] most-recently-used files
-        and applications.
+        and applications. On Windows~XP, as text: the file's path
+        (\champ{Path}), the program and its folder (\champ{Folder}), ranked by
+        \champ{ID}, 0 for the most recent.
   \item[\fichier{zone\_identifiers.json}] \fichier{Zone.Identifier} streams
         (``Mark of the Web'') that browsers and mail clients write on what they
         download: file, zone (\champ{ZoneId}, \champ{ZoneName} —
@@ -1664,7 +1682,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         fixed NTFS volume, from their \path|$I| index: original path, size,
         instant of the deletion (\champ{DeletedUtc}), and the user
         (\champ{SID}). Only the \path|$I| are collected; the files themselves
-        (\path|$R|) are in \fichier{mft.json}.
+        (\path|$R|) are in \fichier{mft.json}. On Windows~XP and Server~2003,
+        from \fichier{INFO2} of \path|RECYCLER\<SID>|, one entry per record,
+        with the copy's name in the bin (\champ{RecycledName},
+        \texttt{Dc<n>.<ext>}); the size is the space the file occupied.
 \end{description}
 
 \subsection{Devices}
@@ -1675,7 +1696,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\champ{Subject}, with a USB key's serial number), start and end
         converted from the examined machine's local time, outcome. The first
         connection of a device is dated there, even when the \fichier{USBSTOR}
-        key was cleaned.
+        key was cleaned. On Windows~XP, from \fichier{setupapi.log}: a section
+        per dated line, its first message as the operation, the device an
+        \texttt{\#I121} line names as the subject, \texttt{SUCCESS} by that
+        line or the first error as the outcome; no end date.
   \item[\fichier{Usbstor.json}] USB storage devices known to the system:
         \champ{Vendor}, \champ{Product}, \champ{Revision} and \champ{Type},
         from \champ{DeviceId}; \champ{SerialNumber}, from \champ{InstanceId}
@@ -1693,7 +1717,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
 
 \subsection{Event logs (\opt{events})}
 
-\fichier{events.json} holds one object per event:
+\fichier{events.json} holds one object per event, in the same form whatever
+the log's format: the \fichier{.evt} logs of Windows~XP and Server~2003 are
+read into the fields Windows renders for a classic source in an
+\fichier{.evtx} (identifier and its qualifiers, level from the event type,
+category as the task, strings as \champ{Data}, binary data as
+\champ{Binary}), their circular area walked from the oldest record:
 
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[\champ{EvtSystem*}] the system section: provider, identifier, level,
@@ -1889,21 +1918,20 @@ With \opt{dump}, the raw value of shellbags and shortcuts is always added.
 \section{Unsupported format}\label{sec:format}
 
 The format of a piece is read on the piece itself --- its signature or its
-internal version ---, never on the version of Windows: an XP Prefetch found
-on a Windows~10 remains an XP Prefetch. When \wac{} has no decoder for the
+internal version ---, never on the version of Windows: a Vista thumbnail cache
+found on a Windows~10 remains a Vista cache. When \wac{} has no decoder for the
 format met, be it an old one or one never seen yet, it converts nothing and
 says so; the piece itself is in the exhibit store, ready for another tool.
 
 \begin{lstlisting}
 {
-  "Path": "C:\\WINDOWS\\Prefetch\\CMD.EXE-087B4001.pf",
-  "Hash": "087B4001",
-  "Filename": "CMD.EXE",
-  "CreatedUtc": "2026-10-13T06:12:44.1835527Z",
-  "FormatVersion": 17,
+  "SID": "S-1-5-21-1004336348-1177238915-682003330-1000",
+  "SIDName": "jean",
+  "Cache": "C:\\Users\\jean\\AppData\\Local\\Microsoft\\Windows\\Explorer\\thumbcache_96.db",
+  "FormatVersion": 20,
   "DecodingStatus": "UnsupportedFormat",
-  "FormatSignature": "0x00000011",
-  "FormatName": "SCCA version 17",
+  "FormatSignature": "0x00000014",
+  "FormatName": "CMMM, Vista layout",
   "Note": "Collected raw, not converted: this version of WAC has no
            decoder for this format. The exhibit store holds the source."
 }

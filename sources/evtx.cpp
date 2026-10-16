@@ -68,32 +68,6 @@ enum : uint8_t {
 //! references itself; without a guard, the stack overflows.
 const unsigned MAX_DEPTH = 24;
 
-// ---------------------------------------------------------------------------
-//  XML escaping
-// ---------------------------------------------------------------------------
-/*  Values come straight from the log: a file name can contain "&" or "<".
- *  Without escaping, the XML produced would be malformed and xml_light would
- *  return an empty tree — the event would be lost, not just badly displayed.
- */
-std::wstring escape(const std::wstring& s) {
-	std::wstring r;
-	r.reserve(s.size());
-	for (wchar_t c : s) {
-		switch (c) {
-		case L'&':  r += L"&amp;";  break;
-		case L'<':  r += L"&lt;";   break;
-		case L'>':  r += L"&gt;";   break;
-		case L'"':  r += L"&quot;"; break;
-		case L'\'': r += L"&apos;"; break;
-		default:
-			// Control characters are forbidden in XML 1.0; a log can contain them
-			// (binary data rendered as a string).
-			if (c < 0x20 && c != L'\t' && c != L'\n' && c != L'\r') r += L' ';
-			else r += c;
-		}
-	}
-	return r;
-}
 
 // ---------------------------------------------------------------------------
 //  Decoder
@@ -172,12 +146,12 @@ private:
 			// No terminator: the announced size is authoritative.
 			std::wstring s(reinterpret_cast<const wchar_t*>(d), size / 2);
 			while (!s.empty() && s.back() == L'\0') s.pop_back();
-			return escape(s);
+			return EvtxXmlEscape(s);
 		}
 		case T_ANSI: {
 			std::string s(reinterpret_cast<const char*>(d), size);
 			while (!s.empty() && s.back() == '\0') s.pop_back();
-			return escape(decodeText(s));
+			return EvtxXmlEscape(decodeText(s));
 		}
 		case T_INT8:   return size >= 1 ? std::to_wstring((int)(int8_t)d[0]) : L"";
 		case T_UINT8:  return size >= 1 ? std::to_wstring((unsigned)d[0]) : L"";
@@ -372,7 +346,7 @@ private:
 			}
 			case JET_CDATA: {
 				const uint16_t nbCar = readLittleEndian<uint16_t>(c, tc, p + 1);
-				output += escape(name(p));   // same encoding: length + UTF-16
+				output += EvtxXmlEscape(name(p));   // same encoding: length + UTF-16
 				p += 3 + 2ULL * nbCar;
 				break;
 			}
@@ -626,6 +600,33 @@ private:
 };
 
 } // namespace
+
+// ---------------------------------------------------------------------------
+//  XML escaping
+// ---------------------------------------------------------------------------
+/*  Values come straight from the log: a file name can contain "&" or "<".
+ *  Without escaping, the XML produced would be malformed and xml_light would
+ *  return an empty tree — the event would be lost, not just badly displayed.
+ */
+std::wstring EvtxXmlEscape(const std::wstring& s) {
+	std::wstring r;
+	r.reserve(s.size());
+	for (wchar_t c : s) {
+		switch (c) {
+		case L'&':  r += L"&amp;";  break;
+		case L'<':  r += L"&lt;";   break;
+		case L'>':  r += L"&gt;";   break;
+		case L'"':  r += L"&quot;"; break;
+		case L'\'': r += L"&apos;"; break;
+		default:
+			// Control characters are forbidden in XML 1.0; a log can contain them
+			// (binary data rendered as a string).
+			if (c < 0x20 && c != L'\t' && c != L'\n' && c != L'\r') r += L' ';
+			else r += c;
+		}
+	}
+	return r;
+}
 
 // ---------------------------------------------------------------------------
 //  Reading the file

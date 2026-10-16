@@ -9,8 +9,11 @@
  *  which a renamed executable contradicts.
  *
  *  WHERE IT IS READ. In each user's UsrClass.dat
- *  (`Local Settings\Software\Microsoft\Windows\Shell\MuiCache`), so the
- *  entries are attributed to the user whose hive holds them. The keys carry no
+ *  (`Local Settings\Software\Microsoft\Windows\Shell\MuiCache`), and on
+ *  Windows XP and Server 2003 in NTUSER.DAT
+ *  (`Software\Microsoft\Windows\ShellNoRoam\MUICache`, the same values,
+ *  with a binary LangID beside them), so the entries are attributed to the
+ *  user whose hive holds them. The keys carry no
  *  timestamp of their own: only the key's last write time bounds the cache.
  */
 #pragma once
@@ -50,7 +53,7 @@ struct Muicaches {
 public:
 	std::vector<Muicache> muicaches;  //!< the entries, in the order they were read
 
-	/*! Reads the MuiCache key of each user's UsrClass.dat.
+	/*! Reads the MuiCache key of each user's UsrClass.dat, or of NTUSER.DAT before Vista.
 	 *  @return S_OK, or the failure of the last read attempted. */
 	HRESULT getData();
 

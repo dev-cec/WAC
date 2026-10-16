@@ -42,7 +42,7 @@
  & Windows Vista & \texttt{…et SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}CurrentVersion\textbackslash{}WINEVT\textbackslash{}Channels, Control\textbackslash{}WMI\textbackslash{}Autologger} & clés de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
-\texttt{events} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}config\textbackslash{}*.evt} & EVT (enregistrements LfLe) & non \\
+\texttt{events} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}config\textbackslash{}*.evt} & EVT (enregistrements LfLe) & oui \\
  & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}winevt\textbackslash{}Logs\textbackslash{}*.evtx} & EVTX, XML binaire & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
@@ -83,13 +83,13 @@
 \addlinespace
 \texttt{mount\_points} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}CurrentVersion\textbackslash{}Explorer\textbackslash{}MountPoints2} & clés de registre & oui \\
 \addlinespace
-\texttt{mru} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}ComDlg32\textbackslash{}OpenSaveMRU, LastVisitedMRU} & MRUList et chaînes & non \\
+\texttt{mru} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}ComDlg32\textbackslash{}OpenSaveMRU, LastVisitedMRU} & MRUList et chaînes & oui \\
  & Windows Vista & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}ComDlg32\textbackslash{}OpenSavePidlMRU, LastVisitedPidlMRU} & MRUListEx et éléments de shell & oui \\
 \addlinespace
-\texttt{mru\_apps} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}ComDlg32\textbackslash{}LastVisitedMRU} & MRUList et chaînes & non \\
+\texttt{mru\_apps} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}ComDlg32\textbackslash{}LastVisitedMRU} & MRUList et chaînes & oui \\
  & Windows Vista & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}ComDlg32\textbackslash{}LastVisitedPidlMRU} & MRUListEx et éléments de shell & oui \\
 \addlinespace
-\texttt{muicache} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}ShellNoRoam\textbackslash{}MUICache} & valeurs de registre & non \\
+\texttt{muicache} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}ShellNoRoam\textbackslash{}MUICache} & valeurs de registre & oui \\
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell\textbackslash{}MuiCache} & valeurs de registre & oui \\
 \addlinespace
 \texttt{network} & Windows XP & \texttt{en direct : tables TCP/IP du système en marche} & observation & oui \\
@@ -114,7 +114,7 @@
 \texttt{powershell\_history} & Windows 10 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}PowerShell\textbackslash{}PSReadLine\textbackslash{}ConsoleHost\_history.txt} & texte UTF-8 & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Plus tôt si PSReadLine a été installé à la main (PowerShell 5, Windows 7 et suivants).} \\
 \addlinespace
-\texttt{prefetch} & Windows XP & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 17 & non \\
+\texttt{prefetch} & Windows XP & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 17 & oui \\
  & Windows Vista & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 23 & oui \\
  & Windows 8 & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 26 & oui \\
  & Windows 10 & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 30 et 31, compressé (MAM) & oui \\
@@ -136,7 +136,7 @@
 \texttt{recent\_documents} & Windows XP & \texttt{\textless{}profile\textgreater{}\textbackslash{}Recent\textbackslash{}*.lnk} & raccourci & oui \\
  & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Recent\textbackslash{}*.lnk} & raccourci & oui \\
 \addlinespace
-\texttt{recycle\_bin} & Windows XP & \texttt{RECYCLER\textbackslash{}\textless{}SID\textgreater{}\textbackslash{}INFO2} & enregistrements INFO2 & non \\
+\texttt{recycle\_bin} & Windows XP & \texttt{RECYCLER\textbackslash{}\textless{}SID\textgreater{}\textbackslash{}INFO2} & enregistrements INFO2, version 5 & oui \\
  & Windows Vista & \texttt{\$Recycle.Bin\textbackslash{}\textless{}SID\textgreater{}\textbackslash{}\$I*} & \$I version 1 & oui \\
  & Windows 10 & \texttt{\$Recycle.Bin\textbackslash{}\textless{}SID\textgreater{}\textbackslash{}\$I*} & \$I version 2 & oui \\
 \addlinespace
@@ -150,7 +150,7 @@
 \texttt{run\_keys} & Windows XP & \texttt{SOFTWARE et NTUSER.DAT …\textbackslash{}CurrentVersion\textbackslash{}Run, RunOnce} & valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
-\texttt{scheduled\_tasks} & Windows XP & \texttt{Windows\textbackslash{}Tasks\textbackslash{}*.job} & binaire JOB & non \\
+\texttt{scheduled\_tasks} & Windows XP & \texttt{Windows\textbackslash{}Tasks\textbackslash{}*.job} & binaire JOB & oui \\
  & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}Tasks, SOFTWARE …\textbackslash{}Schedule\textbackslash{}TaskCache} & XML, valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
@@ -168,14 +168,14 @@
 \addlinespace
 \texttt{sessions} & Windows XP & \texttt{en direct : sessions ouvertes sur le système en marche} & observation & oui \\
 \addlinespace
-\texttt{setupapi} & Windows XP & \texttt{Windows\textbackslash{}setupapi.log} & texte, disposition de XP & non \\
+\texttt{setupapi} & Windows XP & \texttt{Windows\textbackslash{}setupapi.log} & texte, disposition de XP & oui \\
  & Windows Vista & \texttt{Windows\textbackslash{}INF\textbackslash{}setupapi.dev.log} & texte, sections & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
 \texttt{shellbags} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell et ShellNoRoam} & éléments de shell de BagMRU & non \\
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell, et NTUSER.DAT} & éléments de shell de BagMRU & oui \\
 \addlinespace
-\texttt{shimcache} & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatibility\textbackslash{}AppCompatCache} & en-tête 0xDEADBEEF, 96 entrées & non \\
+\texttt{shimcache} & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatibility\textbackslash{}AppCompatCache} & en-tête 0xDEADBEEF, 96 entrées & oui \\
  & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatCache\textbackslash{}AppCompatCache} & en-tête 0xBADC0FFE & non \\
  & Windows 7 & \texttt{la même valeur} & en-tête 0xBADC0FEE & oui \\
  & Windows 8 & \texttt{la même valeur} & en-tête 0x80, entrées ''00ts'' & oui \\
@@ -200,7 +200,7 @@
 \texttt{usbstor} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Enum\textbackslash{}USBSTOR} & clés de registre & oui \\
  & Windows 8 & \texttt{…avec les dates des propriétés du périphérique (première installation, dernière connexion, dernier retrait)} & clés de registre, FILETIME & oui \\
 \addlinespace
-\texttt{userassist} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}UserAssist\textbackslash{}\{5E6AB780-…\}, \{75048700-…\}} & noms en ROT13, valeurs de 16 octets & non \\
+\texttt{userassist} & Windows XP & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}UserAssist\textbackslash{}\{5E6AB780-…\}, \{75048700-…\}} & noms en ROT13, valeurs de 16 octets & oui \\
  & Windows 7 & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}UserAssist\textbackslash{}\{CEBFF5CD-…\}, \{F4E57C4B-…\}} & noms en ROT13, valeurs de 72 octets & oui \\
 \addlinespace
 \texttt{users} & Windows XP & \texttt{SAM\textbackslash{}SAM\textbackslash{}Domains\textbackslash{}Account\textbackslash{}Users} & enregistrements F et V, condensats sous RC4 (clé de démarrage) & oui \\

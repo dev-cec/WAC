@@ -31,6 +31,17 @@
  *  does not exist offline.
  *  `State` is now only "enabled / disabled" (read from the XML): the "running"
  *  state is volatile by nature.
+ *
+ *  WINDOWS XP AND SERVER 2003: one binary `.job` file per task under
+ *  `\\Windows\\Tasks` (MS-TSCH 2.4, measured on the XP VM): a fixed part of
+ *  68 bytes — versions, UUID, priority, maximum run time, exit code of the
+ *  last run, status, flags, last run (SYSTEMTIME, local time) — then the
+ *  running-instance count, five counted UTF-16 strings (application,
+ *  parameters, working directory, author, comment), user data, reserved data
+ *  and the triggers, 48 bytes each. The task is given in the same form as a
+ *  Vista one: its program an Exec action, its triggers named as in the XML
+ *  (TimeTrigger, CalendarTrigger, IdleTrigger, BootTrigger, LogonTrigger),
+ *  the scheduler's status as `JobStatus`. No account is stored in the file.
  */
 #pragma once
 
@@ -76,6 +87,8 @@ struct ScheduledTask {
 	LONG         lastTaskResult = 0;       //!< value the last run returned
 	std::wstring registrationDate;         //!< the XML's Date, as written
 	std::wstring sourceXml;                //!< path of the source XML, for traceability
+	std::wstring sourceJob;                //!< Windows XP: path of the source .job, for traceability
+	std::wstring jobStatus;                //!< Windows XP: the scheduler's status in the .job (HasNotRun, Ready…)
 	std::vector<Action>  actions;          //!< what the task runs
 	std::vector<Trigger> triggers;         //!< what sets it off
 
@@ -87,6 +100,13 @@ struct ScheduledTask {
 	void clear();
 };
 
+/*! Reads a .job file of Windows XP and Server 2003 into a task (see the
+ *  file's header). Every count and offset is bounded by the file's size.
+ *  @param bytes the file
+ *  @param task receives its program, author, comment, status, last run and triggers
+ *  @return false if the file is shorter than its fixed part or its strings */
+bool parseJobFile(const std::vector<uint8_t>& bytes, ScheduledTask& task);
+
 /*! All the scheduled tasks of the examined machine. */
 struct ScheduledTasks {
 	std::vector<ScheduledTask> scheduledTasks; //!< the tasks, as the XML files were listed
@@ -96,6 +116,9 @@ struct ScheduledTasks {
 	 *  @return S_OK, or the failure of the last read attempted.
 	 */
 	HRESULT getData();
+
+	/*! Reads the .job files of Windows XP and Server 2003 (parseJobFile). */
+	void readJobFiles();
 
 	/*! Writes `ScheduledTasks.json` into the output directory.
 	 *  @return the result of the write. */

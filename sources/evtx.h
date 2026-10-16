@@ -98,6 +98,13 @@ HRESULT EvtxReadFile(const std::wstring& path,
                         const std::function<bool(const EvtxRecord&)>& onRecord,
                         EvtxSummary* summary = nullptr);
 
+/*! A value escaped for the XML of an event (&, <, >, quotes; control
+ *  characters, forbidden in XML 1.0, as spaces): a malformed XML would lose
+ *  the whole event.
+ *  @param s the value, as read in the log
+ *  @return the escaped value */
+std::wstring EvtxXmlEscape(const std::wstring& s);
+
 /*! Channel name from the log's file name.
 *
 *  Windows encodes the channel in the name: "Microsoft-Windows-Kernel-Boot%4Operational.evtx"

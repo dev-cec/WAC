@@ -445,7 +445,8 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
 -{}-convert=\newline dossier & Conversion seule, sur un poste d'analyse, de la collecte
   faite avec \opt{collect} dans ce dossier, après vérification du sceau et de
   chaque empreinte. Voir chapitre~\ref{chap:separation}. \\
--{}-events & Prend les journaux d'événements (\fichier{.evtx}) même si
+-{}-events & Prend les journaux d'événements (\fichier{.evtx}, ou
+  \fichier{.evt} sous Windows~XP et Server~2003) même si
   \fichier{wac.yml} dit \texttt{events: false} ; sans cela, ils sont pris par
   défaut (clé \texttt{events}). Chaque événement reçoit son message lisible,
   reconstitué à partir des ressources de son fournisseur. Environ 250~Mo de
@@ -1105,7 +1106,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
   \item[\fichier{ScheduledTasks.json}] tâches planifiées, lues dans leurs
         définitions XML : auteur, compte d'exécution, état, dernière exécution et
         son résultat, déclencheurs et actions (avec \opt{binary}, empreintes de la
-        commande).
+        commande). Sous Windows~XP et Server~2003, d'après leurs fichiers
+        \fichier{.job} (\champ{SourceJob}) : programme, paramètres, dossier de
+        travail, auteur, commentaire, dernière exécution (heure locale
+        convertie), code de sortie, déclencheurs, et état du planificateur
+        (\champ{JobStatus} : \texttt{HasNotRun}, \texttt{Ready}\ldots) ; le
+        compte d'exécution n'est pas dans le fichier.
 \end{description}
 
 \subsection{Exécution de programmes}
@@ -1116,8 +1122,10 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \path|$MFT| (et leurs empreintes avec \opt{binary}). Une référence
         absente n'est pas une lecture ratée : Windows l'écrit à zéro, pour tous
         les fichiers d'un programme lancé une seule fois et pour une partie des
-        autres. Versions décodées : 26 (Windows~8.1), 30 et 31 (Windows~10 et
-        11, compressées) ; les autres sont déclarées « format non pris en
+        autres. Versions décodées : 17 (Windows~XP, qui n'enregistre aucune
+        référence \path|$MFT| et une seule date d'exécution), 23 (Vista et~7,
+        une seule date), 26 (Windows~8.1), 30 et 31 (Windows~10 et 11,
+        compressées) ; les autres sont déclarées « format non pris en
         charge » (section~\ref{sec:format}).
   \item[\fichier{amcache\_application\_files.json},
         \fichier{amcache\_applications.json},
@@ -1154,7 +1162,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         exécutés sur 10 — il ferait conclure qu'un programme n'a jamais tourné.
         Formats décodés : Windows~7, 8, 8.1, 10 et 11 ; sous Windows~8.1, le chemin
         commence par \texttt{SYSVOL\textbackslash}, le volume système, et il est
-        publié tel quel.
+        publié tel quel. Windows~XP y note aussi la taille du fichier
+        (\champ{FileSize}) et le moment où il a mis l'entrée à jour
+        (\champ{LastUpdateUtc}).
   \item[\fichier{bams.json}] dernière exécution par programme et par utilisateur
         (Background Activity Moderator). Les ruches étant lues sur le disque,
         une exécution de la ou des dernières minutes peut manquer : Windows
@@ -1164,8 +1174,12 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         modifierait le disque examiné.
   \item[\fichier{userassists.json}] programmes lancés depuis l'interface :
         compteur, nombre et durée de premier plan (\champ{FocusTimeMs}),
-        dernière exécution.
-  \item[\fichier{muicache.json}] noms d'affichage des programmes exécutés.
+        dernière exécution. Sous Windows~XP, la valeur ne garde pas le premier
+        plan, et son compteur part de~5 (mesuré : deux lancements donnent~7) :
+        \champ{Count} est le compteur moins~5.
+  \item[\fichier{muicache.json}] noms d'affichage des programmes exécutés
+        (sous Windows~XP, dans \texttt{ShellNoRoam\textbackslash MUICache} de
+        NTUSER.DAT).
   \item[\fichier{run.json}] programmes lancés au démarrage ou à l'ouverture de
         session (clés Run et RunOnce), avec la dernière écriture de la clé : dans
         SOFTWARE (toute la machine), dans la ruche DEFAULT (le compte système) et
@@ -1710,9 +1724,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         de la clé qui le porte (\champ{LastWriteTime}) et de sa propre clé
         (\champ{KeyLastWriteTime} : son ajout, ou le parcours d'un sous-dossier),
         et son \champ{NodeSlot}. Les « première » et « dernière interactions »
-        d'autres outils ne sont que des lectures de ces deux dates.
+        d'autres outils ne sont que des lectures de ces deux dates. Sous
+        Windows~XP, les dossiers de l'Explorateur sont dans NTUSER.DAT
+        (\texttt{ShellNoRoam\textbackslash BagMRU}), lus de même.
   \item[\fichier{mrus.json}, \fichier{mruApps.json}] listes de fichiers et
-        d'applications récemment utilisés.
+        d'applications récemment utilisés. Sous Windows~XP, en texte : le chemin
+        du fichier (\champ{Path}), le programme et son dossier (\champ{Folder}),
+        rangés par \champ{ID}, 0 pour le plus récent.
   \item[\fichier{zone\_identifiers.json}] flux \fichier{Zone.Identifier}
         (« marque du web ») que navigateurs et messageries écrivent sur ce qu'ils
         téléchargent : fichier, zone (\champ{ZoneId}, \champ{ZoneName} —
@@ -1725,7 +1743,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         volume NTFS fixe, d'après leur index \path|$I| : chemin d'origine,
         taille, instant de la suppression (\champ{DeletedUtc}), et l'utilisateur
         (\champ{SID}). Seuls les \path|$I| sont prélevés ; les fichiers eux-mêmes
-        (\path|$R|) figurent dans \fichier{mft.json}.
+        (\path|$R|) figurent dans \fichier{mft.json}. Sous Windows~XP et
+        Server~2003, d'après \fichier{INFO2} de \path|RECYCLER\<SID>|, une
+        entrée par enregistrement, avec le nom de la copie dans la corbeille
+        (\champ{RecycledName}, \texttt{Dc<n>.<ext>}) ; la taille est l'espace
+        qu'occupait le fichier.
 \end{description}
 
 \subsection{Périphériques}
@@ -1736,7 +1758,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (\champ{Subject}, avec le numéro de série d'une clé USB), début et fin
         convertis depuis l'heure locale de la machine examinée, résultat. La
         première connexion d'un périphérique s'y date, même quand la clé
-        \fichier{USBSTOR} a été nettoyée.
+        \fichier{USBSTOR} a été nettoyée. Sous Windows~XP, d'après
+        \fichier{setupapi.log} : une section par ligne datée, son premier
+        message en opération, le périphérique qu'une ligne \texttt{\#I121}
+        nomme en sujet, \texttt{SUCCESS} par cette ligne ou la première erreur
+        en résultat ; pas de date de fin.
   \item[\fichier{Usbstor.json}] périphériques de stockage USB connus du système :
         \champ{Vendor}, \champ{Product}, \champ{Revision} et \champ{Type}, tirés
         de \champ{DeviceId} ; \champ{SerialNumber}, tiré de \champ{InstanceId}
@@ -1755,7 +1781,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
 
 \subsection{Journaux d'événements (\opt{events})}
 
-\fichier{events.json} contient un objet par événement :
+\fichier{events.json} contient un objet par événement, de la même forme
+quel que soit le format du journal : les journaux \fichier{.evt} de
+Windows~XP et Server~2003 sont lus dans les champs que Windows rend pour une
+source classique dans un \fichier{.evtx} (identifiant et ses qualificateurs,
+niveau d'après le type d'événement, catégorie en tâche, chaînes en
+\champ{Data}, données binaires en \champ{Binary}), leur zone circulaire
+parcourue depuis l'enregistrement le plus ancien :
 
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[\champ{EvtSystem*}] la section système : fournisseur, identifiant,
@@ -1957,22 +1989,21 @@ shellbags et des raccourcis est ajoutée systématiquement.
 \section{Format non pris en charge}\label{sec:format}
 
 Le format d'une pièce se lit sur la pièce elle-même --- sa signature ou sa
-version interne ---, jamais sur la version de Windows : un Prefetch de XP
-retrouvé sur un Windows~10 reste un Prefetch de XP. Quand \wac{} n'a pas de
+version interne ---, jamais sur la version de Windows : un cache de miniatures
+de Vista retrouvé sur un Windows~10 reste un cache de Vista. Quand \wac{} n'a pas de
 décodeur pour le format rencontré, qu'il soit ancien ou qu'il n'ait encore
 jamais été vu, il ne convertit rien et le dit ; la pièce, elle, est dans la
 consigne, prête pour un autre outil.
 
 \begin{lstlisting}
 {
-  "Path": "C:\\WINDOWS\\Prefetch\\CMD.EXE-087B4001.pf",
-  "Hash": "087B4001",
-  "Filename": "CMD.EXE",
-  "CreatedUtc": "2026-10-13T06:12:44.1835527Z",
-  "FormatVersion": 17,
+  "SID": "S-1-5-21-1004336348-1177238915-682003330-1000",
+  "SIDName": "jean",
+  "Cache": "C:\\Users\\jean\\AppData\\Local\\Microsoft\\Windows\\Explorer\\thumbcache_96.db",
+  "FormatVersion": 20,
   "DecodingStatus": "UnsupportedFormat",
-  "FormatSignature": "0x00000011",
-  "FormatName": "SCCA version 17",
+  "FormatSignature": "0x00000014",
+  "FormatName": "CMMM, Vista layout",
   "Note": "Collected raw, not converted: this version of WAC has no
            decoder for this format. The exhibit store holds the source."
 }

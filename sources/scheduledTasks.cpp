@@ -10,6 +10,14 @@ namespace {
 
 //! Root of the task definitions, relative to the extraction point.
 const wchar_t* TASKS_SUBFOLDER = L"\\Windows\\System32\\Tasks";
+//! Before Vista: the .job files.
+const wchar_t* JOBS_SUBFOLDER = L"\\Windows\\Tasks";
+
+// The .job file (MS-TSCH 2.4.1): offsets of its fixed part, flags and statuses.
+const size_t JOB_FIXED = 68, JOB_EXIT_CODE = 40, JOB_STATUS = 44, JOB_FLAGS = 48, JOB_RUN_DATE = 52;
+const size_t JOB_TRIGGER = 48;           //!< size of a trigger
+const uint32_t JOB_DISABLED = 0x4;       //!< TASK_FLAG_DISABLED, and TASK_TRIGGER_FLAG_DISABLED in a trigger
+const uintmax_t JOB_MAX = 1 << 20;       //!< a .job is a few hundred bytes
 
 /*! Execution history of a task, read in the TaskCache. */
 struct History {
@@ -178,7 +186,70 @@ void readDefinition(const XmlNode& root, ScheduledTask& t) {
 	}
 }
 
+//! The SCHED_S_TASK_* status of a .job, by name; another one in hexadecimal.
+std::wstring jobStatusName(uint32_t status) {
+	static const wchar_t* const NAMES[] = { L"Ready", L"Running", L"Disabled", L"HasNotRun", L"NoMoreRuns",
+	                                        L"NotScheduled", L"Terminated", L"NoValidTriggers", L"EventTrigger" };
+	if (status >= 0x41300 && status < 0x41300 + sizeof(NAMES) / sizeof(NAMES[0])) return NAMES[status - 0x41300];
+	return L"0x" + to_hex(status, 8, HexLetters::Upper);
+}
+
+//! A counted UTF-16 string of a .job (its count, terminating null included); false past the end.
+bool readJobString(const std::vector<uint8_t>& b, size_t& at, std::wstring& text) {
+	if (!fits(b.size(), at, 2)) return false;
+	const size_t count = readLittleEndian<uint16_t>(b.data() + at);
+	at += 2;
+	if (!fits(b.size(), at, count * 2)) return false;
+	text = readWideZ(b.data(), at + count * 2, at);
+	at += count * 2;
+	return true;
+}
+
 } // namespace
+
+bool parseJobFile(const std::vector<uint8_t>& b, ScheduledTask& task) {
+	if (b.size() < JOB_FIXED + 2) return false;
+	const uint32_t flags = readLittleEndian<uint32_t>(b.data() + JOB_FLAGS);
+	task.enabled = (flags & JOB_DISABLED) == 0;
+	task.state = task.enabled ? L"Enabled" : L"Disabled";
+	task.jobStatus = jobStatusName(readLittleEndian<uint32_t>(b.data() + JOB_STATUS));
+	task.lastTaskResult = (LONG)readLittleEndian<uint32_t>(b.data() + JOB_EXIT_CODE);
+	// The last run, a SYSTEMTIME in the machine's local time; all zero when it never ran.
+	SYSTEMTIME run = {};
+	std::memcpy(&run, b.data() + JOB_RUN_DATE, sizeof run);
+	FILETIME local = {};
+	if (run.wYear && SystemTimeToFileTime(&run, &local)) task.lastRunTimeUtc = suspectLocalToUtc(local);
+	size_t at = JOB_FIXED + 2;   // after the running-instance count
+	Action exec;
+	exec.type = L"Exec";
+	if (!readJobString(b, at, exec.command) || !readJobString(b, at, exec.arguments) || !readJobString(b, at, exec.workingDir)
+	    || !readJobString(b, at, task.author) || !readJobString(b, at, task.description)) return false;
+	task.actions.push_back(std::move(exec));
+	// User data and reserved data, each counted in bytes: skipped.
+	for (int block = 0; block < 2; ++block) {
+		if (!fits(b.size(), at, 2)) return true;
+		at += 2 + readLittleEndian<uint16_t>(b.data() + at);
+	}
+	if (!fits(b.size(), at, 2)) return true;
+	const size_t count = readLittleEndian<uint16_t>(b.data() + at);
+	at += 2;
+	static const wchar_t* const TYPES[] = { L"TimeTrigger", L"CalendarTrigger", L"CalendarTrigger", L"CalendarTrigger",
+	                                        L"CalendarTrigger", L"IdleTrigger", L"BootTrigger", L"LogonTrigger" };
+	for (size_t i = 0; i < count && fits(b.size(), at, JOB_TRIGGER); ++i, at += JOB_TRIGGER) {
+		const uint8_t* t = b.data() + at;
+		Trigger trigger;
+		const uint32_t type = readLittleEndian<uint32_t>(t + 32);
+		trigger.type = type < sizeof(TYPES) / sizeof(TYPES[0]) ? TYPES[type] : L"0x" + to_hex(type, 8, HexLetters::Upper);
+		trigger.active = (readLittleEndian<uint32_t>(t + 28) & JOB_DISABLED) == 0;
+		// The start as the XML's StartBoundary writes it: local time, to the minute.
+		wchar_t start[32];
+		swprintf(start, 32, L"%04u-%02u-%02uT%02u:%02u:00", readLittleEndian<uint16_t>(t + 4), readLittleEndian<uint16_t>(t + 6),
+		         readLittleEndian<uint16_t>(t + 8), readLittleEndian<uint16_t>(t + 16), readLittleEndian<uint16_t>(t + 18));
+		trigger.start = start;
+		task.triggers.push_back(std::move(trigger));
+	}
+	return true;
+}
 
 Json ScheduledTask::toJson() const {
 	log(3, L"🔈Scheduled task");
@@ -196,6 +267,8 @@ Json ScheduledTask::toJson() const {
 	o.add(L"LastTaskResult",     Json::num((long long)lastTaskResult));
 	o.add(L"RegistrationDate",   Json::str(registrationDate));
 	o.add(L"SourceXml",          Json::str(sourceXml));   // traceability of the source
+	o.add(L"SourceJob",          Json::str(sourceJob));
+	o.add(L"JobStatus",          Json::str(jobStatus));
 
 	Json jsonActions = Json::arr();
 	for (const Action& a : actions) {
@@ -244,9 +317,11 @@ HRESULT ScheduledTasks::getData() {
 	log(0, L"ℹ️Scheduled tasks (offline) :");
 	log(0, L"*******************************************************************************************************************");
 
+	readJobFiles();
 	const std::filesystem::path root = conf.mountpoint + TASKS_SUBFOLDER;
 	std::error_code ec;
 	if (!std::filesystem::exists(root, ec)) {
+		if (!scheduledTasks.empty()) return ERROR_SUCCESS;   // Windows XP: the .job files are the tasks
 		log(2, L"🔥Task definitions absent: " + root.wstring(), ERROR_PATH_NOT_FOUND);
 		return ERROR_PATH_NOT_FOUND;
 	}
@@ -300,6 +375,22 @@ HRESULT ScheduledTasks::getData() {
 	if (ignores)
 		log(2, L"❇️" + std::to_wstring(ignores) + L" file(s) ignored under Tasks\\");
 	return ERROR_SUCCESS;
+}
+
+void ScheduledTasks::readJobFiles() {
+	for (const std::filesystem::path& file : listFilesByExtension(extractedPath(JOBS_SUBFOLDER), { L".job" })) {
+		std::vector<uint8_t> bytes;
+		ScheduledTask t;
+		t.name = file.stem().wstring();
+		t.path = L"\\" + t.name;
+		t.sourceJob = originalPath(file.wstring());
+		if (!readWholeFile(file, JOB_MAX, bytes) || !parseJobFile(bytes, t)) {
+			log(2, L"🔥.job unreadable or cut short: " + t.sourceJob);
+			continue;
+		}
+		log(1, L"➕ScheduledTask");
+		scheduledTasks.push_back(std::move(t));
+	}
 }
 
 HRESULT ScheduledTasks::toJson() {

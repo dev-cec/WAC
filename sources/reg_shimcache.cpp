@@ -11,6 +11,19 @@ const size_t WINDOWS_8_HEADER_SIZE = 0x80;
 //! The tag of a Windows 8 entry, "00ts", as the first DWORD after that header.
 const unsigned SHIMCACHE_WINDOWS_8 = 0x73743030;
 
+/*! THE WINDOWS XP VALUE (magic 0xDEADBEEF), measured on the XP VM: a header
+ *  of 0x190 bytes — the magic, the maximum number of entries (96), the
+ *  number in use, a DWORD, then the LRU table: 96 DWORDs, the entry index at
+ *  each cache position, the most recent first — and entries of 552 bytes:
+ *  the path (UTF-16, 528 bytes, null-terminated), the file's last
+ *  modification, its size (8 bytes), the time Windows updated the entry. */
+const unsigned WINDOWS_XP_MAGIC = 0xDEADBEEF;
+const size_t WINDOWS_XP_HEADER_SIZE = 0x190;
+const size_t WINDOWS_XP_LRU_AT = 0x10;
+const size_t WINDOWS_XP_MAX_ENTRIES = 96;
+const size_t WINDOWS_XP_ENTRY = 552;
+const size_t WINDOWS_XP_PATH = 528;
+
 //! The magic number of the Windows 7 and Server 2008 R2 value.
 const unsigned WINDOWS_7_MAGIC = 0xBADC0FEE;
 //! Its header: the magic, the number of entries, then reserved bytes.
@@ -27,6 +40,11 @@ Json Shimcache::toJson() {
 	addFingerprints(o, fingerprint);
 	o.add(L"LastModification",    Json::str(lastModification));
 	o.add(L"LastModificationUtc", Json::str(lastModificationUtc));
+	if (fileSizeKnown) o.add(L"FileSize", Json::num(fileSize));
+	if (lastUpdateUtc.dwLowDateTime || lastUpdateUtc.dwHighDateTime) {
+		o.add(L"LastUpdate",    Json::str(utcTimeToIso8601Local(lastUpdateUtc)));
+		o.add(L"LastUpdateUtc", Json::str(timeToIso8601Utc(lastUpdateUtc)));
+	}
 	return o;
 }	//! Releases the memory held by the entry.
 
@@ -110,6 +128,7 @@ HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 	   The flags are not given: what they say of an execution is not proven
 	   (decision of 2026-09-30, "executed" not reported). */
 	if (formatSignature == WINDOWS_7_MAGIC) return parseWindows7(data, size);
+	if (formatSignature == WINDOWS_XP_MAGIC) return parseWindowsXp(data, size);
 	const bool windows8 = offset == 0 || offset == WINDOWS_8_HEADER_SIZE;
 	if (windows8) offset = WINDOWS_8_HEADER_SIZE;
 	// Every entry carries the tag of the first: "00ts" on Windows 8, "10ts" since 8.1.
@@ -233,6 +252,41 @@ HRESULT Shimcaches::parseWindows7(const BYTE* data, size_t size) {
 			continue;
 		}
 		addEntry(std::wstring((const wchar_t*)(data + pathOffset), pathLength / sizeof(wchar_t)), modified);
+	}
+	return ERROR_SUCCESS;
+}
+
+HRESULT Shimcaches::parseWindowsXp(const BYTE* data, size_t size) {
+	if (!fits(size, 0, WINDOWS_XP_HEADER_SIZE)) {
+		log(2, L"🔥AppCompatCache of Windows XP: value shorter than its header");
+		return ERROR_INVALID_DATA;
+	}
+	// The number in use, bounded by the table's 96 slots and by the value's size.
+	const size_t room = (size - WINDOWS_XP_HEADER_SIZE) / WINDOWS_XP_ENTRY;
+	const size_t count = std::min<size_t>({ readLittleEndian<uint32_t>(data + 8), WINDOWS_XP_MAX_ENTRIES, room });
+	std::vector<bool> seen(count, false);
+	for (size_t position = 0; position < count; ++position) {
+		const size_t index = readLittleEndian<uint32_t>(data + WINDOWS_XP_LRU_AT + 4 * position);
+		if (index >= count || seen[index]) {
+			log(2, L"🔥AppCompatCache of Windows XP: position " + std::to_wstring(position) + L" names no entry in use");
+			continue;
+		}
+		seen[index] = true;
+		const BYTE* entry = data + WINDOWS_XP_HEADER_SIZE + index * WINDOWS_XP_ENTRY;
+		std::wstring path;
+		for (size_t i = 0; i + 1 < WINDOWS_XP_PATH; i += 2) {
+			const wchar_t c = (wchar_t)readLittleEndian<uint16_t>(entry + i);
+			if (c == 0) break;
+			path += c;
+		}
+		FILETIME modified, updated;
+		std::memcpy(&modified, entry + WINDOWS_XP_PATH, sizeof modified);
+		std::memcpy(&updated, entry + WINDOWS_XP_PATH + 16, sizeof updated);
+		addEntry(path, modified);
+		Shimcache& added = shimcaches.back();
+		added.fileSize = readLittleEndian<uint64_t>(entry + WINDOWS_XP_PATH + 8);
+		added.fileSizeKnown = true;
+		added.lastUpdateUtc = updated;
 	}
 	return ERROR_SUCCESS;
 }

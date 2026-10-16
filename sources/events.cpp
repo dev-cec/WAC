@@ -1,5 +1,6 @@
 #include "events.h"
 #include "evtx.h"
+#include "evt.h"
 #include "event_messages.h"
 #include <filesystem>
 #include "raw_hive.h"
@@ -235,15 +236,42 @@ Json Event::toJson() const {
 	return o;
 }
 
+namespace {
+
+//! One log of the working copy: its file, its channel, its format.
+struct LogFile {
+	std::filesystem::path path;
+	std::wstring channel;
+	bool classic = false;   //!< an .evt of Windows XP or Server 2003
+};
+
+/*! The logs of the working copy: the .evtx of winevt\\Logs, and the .evt of
+ *  System32\\config before Vista — both read into the same XML. */
+std::vector<LogFile> workingLogs() {
+	std::vector<LogFile> logs;
+	for (const std::filesystem::path& p : listFilesByExtension(extractedPath(L"\\Windows\\System32\\winevt\\Logs"), { L".evtx" }))
+		logs.push_back({ p, EvtxChannelFromFileName(p.filename().wstring()), false });
+	for (const std::filesystem::path& p : listFilesByExtension(extractedPath(L"\\Windows\\System32\\config"), { L".evt" }))
+		logs.push_back({ p, EvtChannelFromFile(conf.CurrentControlSet, p.filename().wstring()), true });
+	return logs;
+}
+
+//! Reads one log, whatever its format.
+HRESULT readLog(const LogFile& log, const std::function<bool(const EvtxRecord&)>& onRecord, EvtxSummary* summary) {
+	return log.classic ? EvtReadFile(log.path.wstring(), log.channel, onRecord, summary)
+	                   : EvtxReadFile(log.path.wstring(), onRecord, summary);
+}
+
+} // namespace
+
 HRESULT EventProvidersCited(std::set<std::wstring>& guids, std::set<std::pair<std::wstring, std::wstring>>& sources) {
 	/* The working copy of the logs, as Events::getData reads them: the exhibit
 	   store is not touched again once copied — not even read. */
-	const std::wstring directory = extractedPath(L"\\Windows\\System32\\winevt\\Logs");
-	const std::vector<std::filesystem::path> logs = listFilesByExtension(directory, { L".evtx" });
+	const std::vector<LogFile> logs = workingLogs();
 	if (logs.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	for (const std::filesystem::path& logFile : logs) {
-		const std::wstring channel = EvtxChannelFromFileName(logFile.filename().wstring());
-		const HRESULT hr = EvtxReadFile(logFile.wstring(), [&](const EvtxRecord& e) {
+	for (const LogFile& logFile : logs) {
+		const std::wstring& channel = logFile.channel;
+		const HRESULT hr = readLog(logFile, [&](const EvtxRecord& e) {
 			const std::unique_ptr<XmlNode> root = xmlParse(e.xml, true);
 			const XmlNode* system = root ? root->child(L"System") : nullptr;
 			const XmlNode* provider = system ? system->child(L"Provider") : nullptr;
@@ -255,8 +283,8 @@ HRESULT EventProvidersCited(std::set<std::wstring>& guids, std::set<std::pair<st
 			const std::wstring logName = system->textOf(L"Channel").empty() ? channel : system->textOf(L"Channel");
 			if (!source.empty()) sources.emplace(logName, source);
 			return true;
-		});
-		if (FAILED(hr)) log(2, L"🔥Log unreadable while listing its providers: " + logFile.wstring(), hr);
+		}, nullptr);
+		if (FAILED(hr)) log(2, L"🔥Log unreadable while listing its providers: " + logFile.path.wstring(), hr);
 	}
 	return ERROR_SUCCESS;
 }
@@ -266,15 +294,12 @@ HRESULT Events::getData() {
 	log(0, L"ℹ️Events : ");
 	log(0, L"*******************************************************************************************************************");
 
-	const std::wstring directory =
-		extractedPath(L"\\Windows\\System32\\winevt\\Logs");
-	const std::vector<std::filesystem::path> logs =
-		listFilesByExtension(directory, { L".evtx" });
+	const std::vector<LogFile> logs = workingLogs();
 
 	if (logs.empty()) {
 		/* No log extracted. This is NOT "no event": it is an extraction that did not
 		   happen, and the report must tell the two apart. */
-		log(2, L"🔥No .evtx log extracted under " + directory, ERROR_FILE_NOT_FOUND);
+		log(2, L"🔥No event log extracted (.evtx, or .evt before Vista)", ERROR_FILE_NOT_FOUND);
 		return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	}
 
@@ -293,16 +318,16 @@ HRESULT Events::getData() {
 	using Clock = std::chrono::steady_clock;
 	Clock::duration readingTime{}, parseTime{}, buildTime{}, messageTime{}, writeTime{};
 	const RawReadTimes rawBefore = RawHiveTimes();
-	for (const std::filesystem::path& logFile : logs) {
-		const std::wstring fileName = logFile.filename().wstring();
-		const std::wstring channel = EvtxChannelFromFileName(fileName);
+	for (const LogFile& logFile : logs) {
+		const std::wstring fileName = logFile.path.filename().wstring();
+		const std::wstring& channel = logFile.channel;
 		printProgressStep(L"EventLog " + channel, ++iFile, logs.size());
 		log(1, L"➕Journal");
 		log(2, L"❇️Journal : " + channel);
 
 		EvtxSummary summary;
 		const Clock::time_point fileStart = Clock::now();
-		const HRESULT hr = EvtxReadFile(logFile.wstring(),
+		const HRESULT hr = readLog(logFile,
 			[&](const EvtxRecord& e) {
 				Clock::time_point step = Clock::now();
 				auto lap = [&](Clock::duration& counter) { const Clock::time_point now = Clock::now(); counter += now - step; step = now; };

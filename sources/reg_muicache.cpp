@@ -33,65 +33,60 @@ void Muicache::clear() {
 	log(3, L"🔈Muicache clear");
 }
 
+namespace {
+
+/*! The REG_SZ values of a MUICache key of one hive, as entries of `sid`;
+ *  the hive and the key closed whatever happens. A hive or a key that is not
+ *  there is not an error: the other form of the cache is.
+ *  @param hive the hive's working copy
+ *  @param key the MUICache key in it
+ *  @param sid the user whose hive it is
+ *  @param entries receives the entries */
+void readMuiCacheKey(const std::wstring& hive, const wchar_t* key, const std::wstring& sid, std::vector<Muicache>& entries) {
+	std::error_code ec;
+	if (!std::filesystem::is_regular_file(hive, ec)) return;
+	ORHKEY root = nullptr, muiKey = nullptr;
+	HRESULT hr = OROpenHive(hive.c_str(), &root);
+	if (hr != ERROR_SUCCESS) {
+		log(2, L"🔥OROpenHive " + hive, hr);
+		return;
+	}
+	if (OROpenKey(root, key, &muiKey) == ERROR_SUCCESS) {
+		DWORD nValues = 0;
+		hr = ORQueryInfoKey(muiKey, nullptr, nullptr, nullptr, nullptr, nullptr, &nValues, nullptr, nullptr, nullptr, nullptr);
+		if (hr != ERROR_SUCCESS) log(2, L"🔥ORQueryInfoKey MuiCache " + hive, hr);
+		for (DWORD i = 0; hr == ERROR_SUCCESS && i < nValues; ++i) {
+			printProgressStep(L"Muicache", i + 1, nValues);
+			WCHAR valueName[MAX_VALUE_NAME] = L"";
+			DWORD nameSize = MAX_VALUE_NAME, type = 0, dataSize = MAX_DATA;
+			const HRESULT value = OREnumValue(muiKey, i, valueName, &nameSize, &type, nullptr, &dataSize);
+			if (value != ERROR_SUCCESS) {
+				log(2, L"🔥OREnumValue " + std::to_wstring(i), value);
+				continue;
+			}
+			// XP's key also holds LangID, a binary: not an entry.
+			if (type != REG_SZ) continue;
+			log(1, L"➕Muicache");
+			entries.push_back(Muicache(muiKey, valueName, sid));
+		}
+		ORCloseKey(muiKey);
+	}
+	ORCloseHive(root);
+}
+
+} // namespace
+
 HRESULT Muicaches::getData() {
-	
 	log(0, L"*******************************************************************************************************************");
 	log(0, L"ℹ️Muicache : ");
 	log(0, L"*******************************************************************************************************************");
-
-
-	HRESULT hresult=0;
-	ORHKEY hKey=NULL;
-	ORHKEY Offhive=NULL;
-	DWORD nSubkeys = 0;
-	DWORD nValues=0;
-	DWORD dType = 0;
-	WCHAR valueName[MAX_VALUE_NAME]=L"";
-
-	std::wstring hive = L"";
-	for (std::tuple<std::wstring, std::wstring> profileEntry : conf.profiles) {
-		// open the user hive
-		log(3, L"🔈replaceAll profile");
-		hive = extractedPath(std::get<1>(profileEntry)) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat";
-		log(3, L"🔈OROpenHive " + std::get<1>(profileEntry) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat");
-		hresult = OROpenHive(hive.c_str(), &Offhive);
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥OROpenHive " + std::get<1>(profileEntry) + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat", GetLastError());
-			continue;
-		};
-
-		log(3, L"🔈OROpenKey Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache");
-		hresult = OROpenKey(Offhive, L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache", &hKey);
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥OROpenKey Local Settings\\\\Software\\\\Microsoft\\\\Windows\\\\Shell\\\\MuiCache", hresult );
-			continue;
-		};
-
-		log(3, L"🔈ORQueryInfoKey MuiCache");
-		hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥ORQueryInfoKey MuiCache", hresult );
-			continue;
-		};
-
-		for (int i = 0; i < (int)nValues; i++) {
-			printProgressStep(L"Muicache", (unsigned)i + 1, nValues);
-			DWORD bufferSize = MAX_VALUE_NAME;
-			DWORD cData = MAX_DATA;
-			log(3, L"🔈OREnumValue " + std::to_wstring(i));
-			hresult = OREnumValue(hKey, i, valueName, &bufferSize, &dType, NULL, &cData);
-			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥OREnumValue " + std::to_wstring(i), hresult);
-				continue;
-			};
-			if (dType != REG_SZ) {
-				log(2, L"🔥OREnumValue " + std::wstring(valueName) + L" not REG_SZ type");
-				continue;
-			}
-			//save
-			log(1, L"➕Muicache");
-			muicaches.push_back(Muicache(hKey, valueName, std::get<0>(profileEntry)));
-		}
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+		const std::wstring profile = extractedPath(std::get<1>(profileEntry));
+		// Vista and later: UsrClass.dat. Windows XP and Server 2003: NTUSER.DAT, ShellNoRoam.
+		readMuiCacheKey(profile + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat",
+		                L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache", std::get<0>(profileEntry), muicaches);
+		readMuiCacheKey(profile + L"\\ntuser.dat", L"Software\\Microsoft\\Windows\\ShellNoRoam\\MUICache",
+		                std::get<0>(profileEntry), muicaches);
 	}
 	return ERROR_SUCCESS;
 }
