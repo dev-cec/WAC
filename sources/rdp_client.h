@@ -23,9 +23,18 @@
  *  (`rdp_cache\\<SID>\\<file>\\tile_<NNNN>.bmp`); the JSON gives its size, keys
  *  and the SHA-256 of its pixels. The format was established on a session of
  *  the test VM and confronted with bmc-tools (ANSSI) tile by tile.
- *  The older `bcache2*.bmc` (compressed tiles of the RDP 6/7 drawing orders)
- *  are collected but not decoded: the test VM writes them empty, and nothing
- *  is decoded without a sample to check it on.
+ *
+ *  `bcache22.bmc` (the client of Windows XP; Vista's and 7's when the server
+ *  draws by orders) is read too: no file header, one slot per tile — a header
+ *  of 20 bytes (two keys, width and height on two bytes, the length of the
+ *  data and flags on four) and 64 × 64 pixels of two bytes, the data of a
+ *  smaller tile at the start of its slot. A tile whose flags carry 0x08 is
+ *  compressed by the interleaved RLE codec of RDP (MS-RDPBCGR 3.1.9), rows
+ *  from the bottom, pixels RGB 5-6-5. Measured on the client of XP SP1
+ *  against Windows Server 2012 R2: sessions asked at 8, 15, 16 and 24 bits
+ *  per pixel all wrote this one file, every tile compressed with flags 0x19.
+ *  The other names (bcache2.bmc, bcache24.bmc) and an uncompressed tile are
+ *  counted, not decoded: no sample of them was ever written to check them on.
  */
 #pragma once
 
@@ -49,6 +58,31 @@ struct RdpCacheTile {
  *  @return true if the file has the format; a tile cut by the end of the file
  *          ends the reading, the tiles before it kept */
 bool decodeRdpBitmapCache(const std::vector<uint8_t>& bytes, uint32_t& version, std::vector<RdpCacheTile>& tiles);
+
+/*! The bytes per pixel of a `.bmc` bitmap cache, told by its name.
+ *  @param fileName the file's name
+ *  @return 2 for bcache22.bmc, 0 for a name WAC has no sample of */
+unsigned bmcBytesPerPixel(const std::wstring& fileName);
+
+/*! Decompresses a bitmap of the interleaved RLE codec of RDP (MS-RDPBCGR
+ *  3.1.9), pixels of two bytes. Every order is bounded by the data and by
+ *  the bitmap: a run that would pass either fails the bitmap.
+ *  @param data the compressed bitmap
+ *  @param size its length
+ *  @param width its width in pixels, the length of a row
+ *  @param height its height
+ *  @param pixels receives width × height pixels, rows from the bottom
+ *  @return true if the data fills the bitmap exactly */
+bool rdpRleDecompress16(const uint8_t* data, size_t size, unsigned width, unsigned height, std::vector<uint16_t>& pixels);
+
+/*! Decodes a `bcache22.bmc` bitmap cache.
+ *  @param bytes the file
+ *  @param tiles receives its decoded tiles, in the file's order
+ *  @param unread receives the number of tiles not decoded (uncompressed, or
+ *         whose data does not fill the tile)
+ *  @return true if the file has the layout: a first tile of 1 to 64 pixels
+ *          a side; the reading stops at the first slot that is not one */
+bool decodeRdpBmcCache(const std::vector<uint8_t>& bytes, std::vector<RdpCacheTile>& tiles, size_t& unread);
 
 /*! A tile as a BMP file: 32 bits per pixel, rows from the bottom as BMP
  *  stores them.

@@ -511,8 +511,8 @@ HRESULT ExtractFileArtefactsRaw() {
 		/* The WebCache of Internet Explorer and Edge Legacy: an ESE database in
 		   use, copied raw with its transaction logs and checkpoint. */
 		if (conf.artefacts.webClient) addTarget(profile + WEBCACHE_FOLDER, {});
-		/* Outgoing RDP: the bitmap cache, whatever its format (.bin read, .bmc
-		   kept as it is), and the connection files of the Documents. */
+		/* Outgoing RDP: the bitmap cache, .bin and .bmc, and the connection
+		   files of the Documents. */
 		if (conf.artefacts.rdpClient) {
 			addTarget(profile + RDP_CACHE_FOLDER, { L".bin", L".bmc" });
 			addTarget(profile + L"\\Documents", { L".rdp" });
