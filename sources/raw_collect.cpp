@@ -478,7 +478,12 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.defender)
 		addTarget(L"\\ProgramData\\Microsoft\\Windows Defender\\Support", { L".log", L".bin" });
 	// The WMI repository: INDEX.BTR, OBJECTS.DATA and the MAPPING files, open by WMI, read raw.
-	if (conf.artefacts.wmi) addTarget(L"\\Windows\\System32\\wbem\\Repository", {});
+	/* The repository's folder as the artefact table gives it for the examined
+	   Windows: Repository, or Repository\\FS on Windows XP. */
+	if (conf.artefacts.wmi) {
+		const ArtefactEntry* wmi = artefactEntry("wmi");
+		addTarget(L"\\" + std::wstring(wmi ? formOf(*wmi, conf.examinedVersion).location : L"Windows\\System32\\wbem\\Repository"), {});
+	}
 	// The ESE databases with their transaction logs and checkpoint, for a
 	// replay by the analyst: copied live, what the last minutes changed is
 	// only in the logs.

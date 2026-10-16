@@ -4,6 +4,7 @@
 #include "conversions.h"
 #include "cim_repository.h"
 #include "sha.h"
+#include "quickdigest5.h"
 #include "whole_file.h"
 #include <algorithm>
 #include <cstring>
@@ -15,9 +16,13 @@ namespace {
 const size_t PAGE = 0x2000;
 const uint32_t MAPPING_START = 0xABCD, MAPPING_END = 0xDCBA, INDEX_PAGE_ACTIVE = 0xACCC;
 const size_t MAPPING_ENTRY = 24;              //!< six 32-bit fields per logical page (Vista and later)
+const size_t MAPPING_ENTRY_XP = 4;            //!< the physical page alone (Windows XP)
+const size_t MAPPING_HEADER = 24, MAPPING_HEADER_XP = 16;   //!< XP has no two identifiers in its header
 const unsigned DEPTH_MAX = 64;                //!< B-tree, namespaces, inheritance: far beyond any real depth
 const size_t RECORD_MAX = 64 * 1024 * 1024;   //!< a class or an instance is a few kilobytes
 const size_t INSTANCE_HASH = 0x80;            //!< an instance starts with its class's hash, 64 UTF-16 characters
+const size_t INSTANCE_HASH_XP = 0x40;         //!< the MD5 of Windows XP, 32 characters
+const size_t INDEX_ROOT_XP = 12;              //!< Windows XP: the root's logical page, in the header of the index's page 0
 const char SYSTEM_NAMESPACE[] = "__SystemClass";
 
 //! Size of a value in a value table: 4 bytes (a heap offset) for an array, a string, a reference, a date.
@@ -134,24 +139,31 @@ bool defaultValue(const std::vector<const CimClass*>& chain, const CimProperty& 
 	return false;
 }
 
-//! "NS_<hash>" of a namespace.
-std::string namespacePart(const std::wstring& space) {
-	return "NS_" + cimNameHash(space);
-}
-
 } // namespace
 
-std::string cimNameHash(const std::wstring& name) {
+std::string CimRepository::namespacePart(const std::wstring& space) const {
+	return "NS_" + cimNameHash(space, xp_);
+}
+
+std::string cimNameHash(const std::wstring& name, bool md5) {
 	std::vector<uint8_t> bytes;
 	for (wchar_t c : name) {
 		const wchar_t upper = (wchar_t)std::towupper(c);
 		bytes.push_back((uint8_t)upper);
 		bytes.push_back((uint8_t)(upper >> 8));
 	}
-	uint8_t digest[32];
-	sha256Bytes(bytes.data(), bytes.size(), digest);
+	std::wstring text;
+	if (md5) {
+		Md5Stream digest;
+		digest.update(bytes.data(), bytes.size());
+		text = digest.hexDigest();
+	} else {
+		uint8_t digest[32];
+		sha256Bytes(bytes.data(), bytes.size(), digest);
+		text = toHexadecimal(digest, sizeof digest);
+	}
 	std::string hex;
-	for (wchar_t c : toHexadecimal(digest, sizeof digest)) hex.push_back((char)c);
+	for (wchar_t c : text) hex.push_back((char)std::towupper(c));
 	return hex;
 }
 
@@ -207,12 +219,12 @@ bool parseCimClass(const std::vector<uint8_t>& b, CimClass& c) {
 	return true;
 }
 
-bool parseCimInstance(const std::vector<uint8_t>& b, const std::vector<const CimClass*>& chain, CimValues& out) {
+bool parseCimInstance(const std::vector<uint8_t>& b, const std::vector<const CimClass*>& chain, CimValues& out, bool xp) {
 	if (chain.empty()) return false;
 	const auto props = layoutUpTo(chain, chain.size() - 1);
 	const size_t size = b.size();
 	// Class hash, two FILETIMEs, record length (4), class name's heap offset (4), a byte.
-	size_t o = INSTANCE_HASH + 16 + 9;
+	size_t o = (xp ? INSTANCE_HASH_XP : INSTANCE_HASH) + 16 + 9;
 	const size_t states = o, stateBytes = (2 * props.size() + 7) / 8;
 	if (!fits(size, o, stateBytes)) return false;
 	o += stateBytes;
@@ -248,19 +260,20 @@ bool parseCimInstance(const std::vector<uint8_t>& b, const std::vector<const Cim
 	return true;
 }
 
-bool parseCimMappings(const std::vector<uint8_t>& file, CimMapping& data, CimMapping& index) {
+bool parseCimMappings(const std::vector<uint8_t>& file, CimMapping& data, CimMapping& index, bool xp) {
 	size_t o = 0;
+	const size_t header = xp ? MAPPING_HEADER_XP : MAPPING_HEADER, entry = xp ? MAPPING_ENTRY_XP : MAPPING_ENTRY;
 	for (CimMapping* m : { &data, &index }) {
-		// Signature, version, two identifiers, physical page count, entry count.
-		if (!fits(file.size(), o, 24) || readLittleEndian<uint32_t>(file.data() + o) != MAPPING_START) return false;
-		const size_t count = readLittleEndian<uint32_t>(file.data() + o + 20);
-		o += 24;
-		if (count > (file.size() - o) / MAPPING_ENTRY) return false;
+		// Signature, version, (two identifiers, Vista and later,) physical page count, entry count.
+		if (!fits(file.size(), o, header) || readLittleEndian<uint32_t>(file.data() + o) != MAPPING_START) return false;
+		const size_t count = readLittleEndian<uint32_t>(file.data() + o + header - 4);
+		o += header;
+		if (count > (file.size() - o) / entry) return false;
 		m->physical.resize(count);
-		for (size_t i = 0; i < count; ++i) m->physical[i] = readLittleEndian<uint32_t>(file.data() + o + i * MAPPING_ENTRY) & CimMapping::UNMAPPED;
-		// For the index, entry 0's "used space" field holds the root's logical page.
-		if (count) m->indexRoot = readLittleEndian<uint32_t>(file.data() + o + 12);
-		o += count * MAPPING_ENTRY;
+		for (size_t i = 0; i < count; ++i) m->physical[i] = readLittleEndian<uint32_t>(file.data() + o + i * entry) & CimMapping::UNMAPPED;
+		// For the index, entry 0's "used space" field holds the root's logical page (Vista and later).
+		if (count && !xp) m->indexRoot = readLittleEndian<uint32_t>(file.data() + o + 12);
+		o += count * entry;
 		if (!fits(file.size(), o, 4)) return false;
 		const size_t free = readLittleEndian<uint32_t>(file.data() + o);
 		o += 4;
@@ -274,14 +287,25 @@ bool parseCimMappings(const std::vector<uint8_t>& file, CimMapping& data, CimMap
 
 // ------------------------------------------------------------ repository
 
-HRESULT CimRepository::open(const std::wstring& index, const std::wstring& objects, const std::vector<std::wstring>& mappings) {
+HRESULT CimRepository::open(const std::wstring& index, const std::wstring& objects, const std::vector<std::wstring>& mappings,
+                            bool xp) {
+	std::vector<std::vector<uint8_t>> contents;
+	for (const std::wstring& path : mappings) {
+		std::vector<uint8_t> file;
+		if (readWholeFile(std::filesystem::path(path), RECORD_MAX, file)) contents.push_back(std::move(file));
+	}
+	return openMappings(index, objects, contents, xp);
+}
+
+HRESULT CimRepository::openMappings(const std::wstring& index, const std::wstring& objects,
+                                    const std::vector<std::vector<uint8_t>>& mappings, bool xp) {
+	xp_ = xp;
 	// The current mapping: the highest version among those that read whole.
 	uint32_t best = 0;
 	bool found = false;
-	for (const std::wstring& path : mappings) {
-		std::vector<uint8_t> file;
+	for (const std::vector<uint8_t>& file : mappings) {
 		CimMapping data, idx;
-		if (!readWholeFile(std::filesystem::path(path), RECORD_MAX, file) || file.size() < 8 || !parseCimMappings(file, data, idx)) continue;
+		if (file.size() < 8 || !parseCimMappings(file, data, idx, xp)) continue;
 		const uint32_t version = readLittleEndian<uint32_t>(file.data() + 4);
 		if (found && version <= best) continue;
 		best = version;
@@ -298,6 +322,13 @@ HRESULT CimRepository::open(const std::wstring& index, const std::wstring& objec
 	indexFile_.open(std::filesystem::path(extendedPath(index)), std::ios::binary);
 	objectsFile_.open(std::filesystem::path(extendedPath(objects)), std::ios::binary);
 	if (!indexFile_ || !objectsFile_) return HRESULT_FROM_WIN32(ERROR_OPEN_FAILED);
+	if (xp) {
+		// Windows XP keeps the B-tree's root in the header of the index's logical page 0.
+		std::vector<uint8_t> first;
+		if (!readPage(indexFile_, indexSize_, index_, 0, first) || first.size() < INDEX_ROOT_XP + 4)
+			return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+		index_.indexRoot = readLittleEndian<uint32_t>(first.data() + INDEX_ROOT_XP);
+	}
 	std::vector<bool> visited(index_.physical.size(), false);
 	collectKeys(index_.indexRoot, 0, visited);
 	std::sort(keys_.begin(), keys_.end());
@@ -408,14 +439,14 @@ bool CimRepository::object(const std::string& key, std::vector<uint8_t>& out) {
 
 std::vector<std::wstring> CimRepository::namespaces() {
 	std::vector<std::wstring> out;
-	const std::vector<const CimClass*> chain = classChain(L"root", cimNameHash(L"__namespace"));
+	const std::vector<const CimClass*> chain = classChain(L"root", cimNameHash(L"__namespace", xp_));
 	std::vector<std::pair<std::wstring, unsigned>> pending = { { L"root", 0 } };
 	while (!pending.empty() && out.size() < 100000) {
 		const auto [space, depth] = pending.back();
 		pending.pop_back();
 		out.push_back(space);
 		if (depth >= DEPTH_MAX || chain.empty()) continue;
-		for (const CimValues& values : instances(space, cimNameHash(L"__namespace"), chain))
+		for (const CimValues& values : instances(space, cimNameHash(L"__namespace", xp_), chain))
 			for (const auto& [name, value] : values)
 				if (name == L"Name" && !value.text().empty()) pending.push_back({ space + L"\\" + value.text(), depth + 1 });
 	}
@@ -435,7 +466,7 @@ std::vector<std::string> CimRepository::classHashesWithInstances(const std::wstr
 }
 
 const CimClass* CimRepository::definition(const std::wstring& space, const std::string& classHash) {
-	for (const std::string& ns : { namespacePart(space), "NS_" + cimNameHash(std::wstring(SYSTEM_NAMESPACE, SYSTEM_NAMESPACE + strlen(SYSTEM_NAMESPACE))) }) {
+	for (const std::string& ns : { namespacePart(space), "NS_" + cimNameHash(std::wstring(SYSTEM_NAMESPACE, SYSTEM_NAMESPACE + strlen(SYSTEM_NAMESPACE)), xp_) }) {
 		const std::string id = ns + "/CD_" + classHash;
 		const auto cached = classes_.find(id);
 		if (cached != classes_.end()) return cached->second.get();
@@ -458,7 +489,7 @@ std::vector<const CimClass*> CimRepository::classChain(const std::wstring& space
 			std::reverse(chain.begin(), chain.end());
 			return chain;
 		}
-		c = definition(space, cimNameHash(c->superName));
+		c = definition(space, cimNameHash(c->superName, xp_));
 	}
 	return {};
 }
@@ -469,7 +500,7 @@ std::vector<CimValues> CimRepository::instances(const std::wstring& space, const
 	for (const std::string& key : keys(namespacePart(space) + "/CI_" + classHash + "/IL_")) {
 		std::vector<uint8_t> record;
 		CimValues values;
-		if (object(key, record) && parseCimInstance(record, chain, values)) out.push_back(std::move(values));
+		if (object(key, record) && parseCimInstance(record, chain, values, xp_)) out.push_back(std::move(values));
 		else log(2, L"🔥WMI instance not read: " + decodeText(key, CP_UTF8));
 	}
 	return out;

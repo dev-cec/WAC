@@ -9,7 +9,7 @@
  *  known result; the hostile ones (a count that lies, a record cut short)
  *  must be refused, never read beyond the bytes given.
  *
- *  Usage (runs under wine): cim_test.exe [Repository folder]
+ *  Usage (runs under wine): cim_test.exe [Repository folder [xp]]
  */
 #include "cim_repository.h"
 #include "wmi_persistence.h"
@@ -159,13 +159,28 @@ void hashes() {
 	check(cimNameHash(L"root\\subscription") == "E1DD43413ED9FD9C458D2051F082D1D739399B29035B455F09073926E5ED9870",
 	      "hash: root\\subscription as WMI files it");
 	check(cimNameHash(L"ROOT\\SUBSCRIPTION") == cimNameHash(L"root\\subscription"), "hash: case does not matter");
+	// Windows XP: MD5 of the same upper-case UTF-16 name, computed by Python's hashlib.
+	check(cimNameHash(L"root\\subscription", true) == "E98854F51C0C7D3BA51357D7346C8D70", "hash: root\\subscription as Windows XP files it");
 }
 
-//! A real repository: its namespaces and subscription objects, printed.
-void repository(const std::wstring& folder) {
+/*! A real repository: its namespaces and subscription objects, printed.
+ *  @param folder the repository's folder
+ *  @param xp Windows XP's format; without MAPPING1.MAP, OBJECTS.MAP and
+ *         INDEX.MAP joined, as Windows XP SP1 keeps them */
+void repository(const std::wstring& folder, bool xp) {
 	CimRepository r;
-	const HRESULT opened = r.open(folder + L"\\INDEX.BTR", folder + L"\\OBJECTS.DATA",
-	                              { folder + L"\\MAPPING1.MAP", folder + L"\\MAPPING2.MAP", folder + L"\\MAPPING3.MAP" });
+	std::vector<std::vector<uint8_t>> mappings;
+	for (const wchar_t* name : { L"\\MAPPING1.MAP", L"\\MAPPING2.MAP", L"\\MAPPING3.MAP" }) {
+		std::vector<uint8_t> bytes;
+		if (readWholeFile(std::filesystem::path(folder + name), 16 << 20, bytes)) mappings.push_back(std::move(bytes));
+	}
+	std::vector<uint8_t> objectsMap, indexMap;
+	if (xp && mappings.empty() && readWholeFile(std::filesystem::path(folder + L"\\OBJECTS.MAP"), 16 << 20, objectsMap)
+	    && readWholeFile(std::filesystem::path(folder + L"\\INDEX.MAP"), 16 << 20, indexMap)) {
+		objectsMap.insert(objectsMap.end(), indexMap.begin(), indexMap.end());
+		mappings.push_back(std::move(objectsMap));
+	}
+	const HRESULT opened = r.openMappings(folder + L"\\INDEX.BTR", folder + L"\\OBJECTS.DATA", mappings, xp);
 	check(opened == ERROR_SUCCESS, "repository: not opened");
 	if (opened != ERROR_SUCCESS) return;
 	const std::vector<std::wstring> spaces = r.namespaces();
@@ -188,7 +203,7 @@ int wmain(int argc, wchar_t** argv) {
 	records();
 	mappings();
 	hashes();
-	if (argc > 1) repository(argv[1]);
+	if (argc > 1) repository(argv[1], argc > 2 && std::wstring(argv[2]) == L"xp");
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

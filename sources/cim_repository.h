@@ -23,7 +23,13 @@
  *     state bits, then a value table, then a heap of strings and arrays.
  *  Every length read in the files is bounded by the page or the record.
  *
- *  Windows XP's format (MD5 hashes, other mapping) is not read.
+ *  WINDOWS XP (python-cim's "XP" type, measured on the XP VMs): the names are
+ *  hashed with MD5 (32 hexadecimal digits, an instance's class hash 0x40
+ *  bytes); a mapping's header is 16 bytes (no two identifiers) and its
+ *  entries 4 (the physical page alone); the index's root is in the header
+ *  of the index's logical page 0. The files are in `Repository\\FS`: the
+ *  mappings in MAPPING1..2.MAP (SP2 and later), or in OBJECTS.MAP and
+ *  INDEX.MAP, the same two mappings in two files (SP1).
  */
 #pragma once
 
@@ -69,13 +75,15 @@ using CimValues = std::vector<std::pair<std::wstring, Json>>;
  *  @param chain the class and its ancestors, the root first
  *  @param out receives the values
  *  @return false if the record does not fit its class */
-bool parseCimInstance(const std::vector<uint8_t>& record, const std::vector<const CimClass*>& chain, CimValues& out);
+bool parseCimInstance(const std::vector<uint8_t>& record, const std::vector<const CimClass*>& chain, CimValues& out,
+                      bool xp = false);
 
 /*! The hash WMI files a name under: SHA-256 of the upper-case UTF-16 name,
- *  in upper-case hexadecimal.
+ *  MD5 on Windows XP, in upper-case hexadecimal.
  *  @param name a namespace, class or instance name
- *  @return the 64 hexadecimal digits */
-std::string cimNameHash(const std::wstring& name);
+ *  @param md5 Windows XP's repository
+ *  @return the 64 (or 32) hexadecimal digits */
+std::string cimNameHash(const std::wstring& name, bool md5 = false);
 
 /*! The page mapping of one file: logical page → physical page. */
 struct CimMapping {
@@ -89,7 +97,7 @@ struct CimMapping {
  *  @param data receives OBJECTS.DATA's
  *  @param index receives INDEX.BTR's
  *  @return false if a signature is missing or a count exceeds the file */
-bool parseCimMappings(const std::vector<uint8_t>& file, CimMapping& data, CimMapping& index);
+bool parseCimMappings(const std::vector<uint8_t>& file, CimMapping& data, CimMapping& index, bool xp = false);
 
 /*! A WMI repository, read from its copied files. */
 class CimRepository {
@@ -98,8 +106,16 @@ public:
 	 *  @param index INDEX.BTR
 	 *  @param objects OBJECTS.DATA
 	 *  @param mappings MAPPING1..3.MAP, those present
+	 *  @param xp Windows XP's format (see the file's header)
 	 *  @return ERROR_SUCCESS, or why the repository cannot be read */
-	HRESULT open(const std::wstring& index, const std::wstring& objects, const std::vector<std::wstring>& mappings);
+	HRESULT open(const std::wstring& index, const std::wstring& objects, const std::vector<std::wstring>& mappings,
+	             bool xp = false);
+
+	/*! The same, from the mappings' contents already read — Windows XP SP1's
+	 *  OBJECTS.MAP and INDEX.MAP joined into the one mapping file they make.
+	 *  @return ERROR_SUCCESS, or why the repository cannot be read */
+	HRESULT openMappings(const std::wstring& index, const std::wstring& objects,
+	                     const std::vector<std::vector<uint8_t>>& mappings, bool xp);
 
 	/*! @return every namespace, from root down (root\\subscription, root\\cimv2…) */
 	std::vector<std::wstring> namespaces();
@@ -123,6 +139,9 @@ public:
 	                                 const std::vector<const CimClass*>& chain);
 
 private:
+	bool xp_ = false;   //!< Windows XP's format
+	//! "NS_<hash>" of a namespace, hashed as the repository's version does.
+	std::string namespacePart(const std::wstring& space) const;
 	std::vector<std::string> keys(const std::string& prefix) const;
 	bool object(const std::string& key, std::vector<uint8_t>& out);
 	bool readPage(std::ifstream& file, uint64_t size, const CimMapping& mapping, uint32_t logical, std::vector<uint8_t>& page);

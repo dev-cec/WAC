@@ -6,6 +6,9 @@
 
 namespace {
 
+//! A mapping file is a few kilobytes; beyond this it is not one.
+const uintmax_t MAPPING_MAX = 16 << 20;
+
 //! The repository's folder, relative to the system volume, in lower case as the manifest index is.
 const wchar_t REPOSITORY_FOLDER[] = L"\\windows\\system32\\wbem\\repository\\";
 
@@ -57,15 +60,27 @@ Json WmiSubscriptionObject::toJson() const {
 
 HRESULT WmiPersistence::getData() {
 	log(0, L"ℹ️WMI subscriptions :");
-	std::vector<std::wstring> mappings;
+	// Windows XP keeps its repository in FS, in its own format (cim_repository.h).
+	const bool xp = !repositoryFile(L"fs\\index.btr").empty();
+	const std::wstring folder = xp ? L"fs\\" : L"";
+	auto read = [](const std::wstring& file, std::vector<uint8_t>& bytes) {
+		return !file.empty() && readWholeFile(std::filesystem::path(file), MAPPING_MAX, bytes);
+	};
+	std::vector<std::vector<uint8_t>> mappings;
 	for (const wchar_t* name : { L"mapping1.map", L"mapping2.map", L"mapping3.map" }) {
-		const std::wstring file = repositoryFile(name);
-		if (!file.empty()) mappings.push_back(file);
+		std::vector<uint8_t> bytes;
+		if (read(repositoryFile(folder + name), bytes)) mappings.push_back(std::move(bytes));
 	}
-	const std::wstring index = repositoryFile(L"index.btr"), objects = repositoryFile(L"objects.data");
+	// Windows XP SP1: OBJECTS.MAP then INDEX.MAP, the one mapping file of later versions in two.
+	std::vector<uint8_t> objectsMap, indexMap;
+	if (xp && mappings.empty() && read(repositoryFile(L"fs\\objects.map"), objectsMap) && read(repositoryFile(L"fs\\index.map"), indexMap)) {
+		objectsMap.insert(objectsMap.end(), indexMap.begin(), indexMap.end());
+		mappings.push_back(std::move(objectsMap));
+	}
+	const std::wstring index = repositoryFile(folder + L"index.btr"), objects = repositoryFile(folder + L"objects.data");
 	if (index.empty() || objects.empty() || mappings.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	CimRepository repository;
-	const HRESULT opened = repository.open(index, objects, mappings);
+	const HRESULT opened = repository.openMappings(index, objects, mappings, xp);
 	if (opened != ERROR_SUCCESS) return opened;
 	const std::vector<std::wstring> spaces = repository.namespaces();
 	namespaces_ = spaces.size();
