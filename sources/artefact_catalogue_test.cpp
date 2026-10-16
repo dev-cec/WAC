@@ -170,8 +170,8 @@ int main(int argc, char** argv) {
 	check(pieceFormat("shimcache", 0x34).decoded && pieceFormat("shimcache", 0xBADC0FEE).decoded && !pieceFormat("shimcache", 0xBADC0FFE).decoded
 	      && !pieceFormat("shimcache", 0x80).form,
 	      "ShimCache: Windows 10 and 7 headers decoded, Server 2003 not, 0x80 alone is no signature");
-	check(pieceFormat("shimcache", 0x73743031).decoded && !pieceFormat("shimcache", 0x73743030).decoded,
-	      "ShimCache: Windows 8.1 entries (\"10ts\" after 0x80 bytes) decoded, Windows 8 (\"00ts\") not");
+	check(pieceFormat("shimcache", 0x73743031).decoded && pieceFormat("shimcache", 0x73743030).decoded,
+	      "ShimCache: Windows 8.1 entries (\"10ts\" after 0x80 bytes) and Windows 8's (\"00ts\") decoded");
 	check(pieceFormat("jump_lists", 1).decoded && pieceFormat("jump_lists", 4).decoded && pieceFormat("jump_lists", 6).decoded
 	      && !pieceFormat("jump_lists", 5).decoded && !pieceFormat("jump_lists", 7).decoded,
 	      "DestList: versions 1, 3, 4 and 6 decoded, no other");

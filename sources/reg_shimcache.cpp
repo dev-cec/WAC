@@ -5,9 +5,11 @@
 
 namespace {
 /*! Header size of the Windows 8 and 8.1 value. Its first DWORD does not tell
- *  them apart: 0x80 under Windows 8, 0 under Windows 8.1 (measured, build
- *  9600) — neither a magic number nor, for 8.1, a size. */
+ *  them apart: 0 under Windows 8 and 8.1 (measured, builds 9200 and 9600) —
+ *  neither a magic number nor a size. */
 const size_t WINDOWS_8_HEADER_SIZE = 0x80;
+//! The tag of a Windows 8 entry, "00ts", as the first DWORD after that header.
+const unsigned SHIMCACHE_WINDOWS_8 = 0x73743030;
 
 //! The magic number of the Windows 7 and Server 2008 R2 value.
 const unsigned WINDOWS_7_MAGIC = 0xBADC0FEE;
@@ -83,9 +85,10 @@ HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 	size_t offset = *reinterpret_cast<const DWORD*>(data);
 	/* THE FORMAT, AS THE VALUE STATES IT. Its first DWORD is a magic number
 	   up to Windows 7 (0xDEADBEEF, 0xBADC0FFE, 0xBADC0FEE), then the size of
-	   the header: 0x80 under Windows 8 and, measured, 0 under Windows 8.1 —
-	   both with a header of 0x80 bytes, told apart by the tag of the first
-	   entry, "00ts" or "10ts" —, 0x30 or 0x34 since Windows 10. The
+	   the header: 0 under Windows 8 and 8.1 (measured on both; 0x80 is
+	   accepted too) — both with a header of 0x80 bytes, told apart by the
+	   tag of the first entry, "00ts" or "10ts" —, 0x30 or 0x34 since
+	   Windows 10. The
 	   artefact table says which ones are decoded (pieceFormat). An older
 	   value used to give an empty list — "no program was ever shimmed" —:
 	   it is now declared "unsupported format". */
@@ -97,19 +100,23 @@ HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 		unsupportedFormat = true;
 		return ERROR_SUCCESS;
 	}
-	/* WINDOWS 8.1, the "10ts" entries after a header of 0x80 bytes: after the
-	   path, the name of a package (its size on 2 bytes, then UTF-16) and two
-	   DWORDs of flags (insertion, shim), then the date and the data as since
-	   Windows 10. Measured on the Windows 8.1 VM: its 147 entries each end
-	   at the byte their size announces, the last at the end of the value.
+	/* WINDOWS 8 AND 8.1, the "00ts" and "10ts" entries after a header of
+	   0x80 bytes: after the path, the name of a package (its size on 2
+	   bytes, then UTF-16) and two DWORDs of flags (insertion, shim), then
+	   the date and the data as since Windows 10. Measured on the Windows 8.1
+	   VM — its 147 entries each end at the byte their size announces, the
+	   last at the end of the value — and on the Windows 8 VM: the same
+	   layout under "00ts", its package size 0.
 	   The flags are not given: what they say of an execution is not proven
 	   (decision of 2026-09-30, "executed" not reported). */
 	if (formatSignature == WINDOWS_7_MAGIC) return parseWindows7(data, size);
-	const bool windows81 = offset == 0;
-	if (windows81) offset = WINDOWS_8_HEADER_SIZE;
+	const bool windows8 = offset == 0 || offset == WINDOWS_8_HEADER_SIZE;
+	if (windows8) offset = WINDOWS_8_HEADER_SIZE;
+	// Every entry carries the tag of the first: "00ts" on Windows 8, "10ts" since 8.1.
+	const char* tag = formatSignature == SHIMCACHE_WINDOWS_8 ? "00ts" : "10ts";
 	while (fits(size, offset, 14)) {
 		printProgressStep(L"Shimcache", (unsigned)offset, size);
-		if (std::memcmp(data + offset, "10ts", 4) != 0) {
+		if (std::memcmp(data + offset, tag, 4) != 0) {
 			log(2, L"🔥AppCompatCache: unexpected entry signature at offset " + std::to_wstring(offset)
 			       + L", walk stopped");
 			break;
@@ -125,7 +132,7 @@ HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 		}
 		const std::wstring path((const wchar_t*)(data + offset), pathSize / sizeof(wchar_t));
 		offset += pathSize;
-		if (windows81) {
+		if (windows8) {
 			// Package name and the two flag DWORDs, skipped; the date and data size must still fit.
 			const size_t packageSize = fits(size, offset, 2) ? *reinterpret_cast<const unsigned short*>(data + offset) : 0;
 			if (!fits(size, offset, 2 + packageSize + 8 + 8 + 4)) {
