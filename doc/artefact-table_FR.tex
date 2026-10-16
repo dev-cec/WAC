@@ -126,9 +126,9 @@
  & Windows Vista & \texttt{…et AppCompatFlags\textbackslash{}Compatibility Assistant\textbackslash{}Store, Explorer\textbackslash{}Taskband} & valeurs de registre & oui \\
  & Windows 10 & \texttt{…et Explorer\textbackslash{}FeatureUsage, Search\textbackslash{}JumplistData} & valeurs de registre & oui \\
 \addlinespace
-\texttt{rdp\_client} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Terminal Server Client; …\textbackslash{}Terminal Server Client\textbackslash{}Cache\textbackslash{}bcache*.bmc} & valeurs de registre; cache d'images BMC & non \\
+\texttt{rdp\_client} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Terminal Server Client; …\textbackslash{}Terminal Server Client\textbackslash{}Cache\textbackslash{}bcache*.bmc} & valeurs de registre; cache d'images BMC & oui \\
  & Windows 7 & \texttt{…et Cache\textbackslash{}Cache????.bin} & cache d'images BIN & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Valeurs de registre et fichiers .rdp lus sur toutes les versions ; seules les tuiles du cache .bmc ne sont pas exportées.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape bcache22.bmc décodé (16 bits par pixel, mesuré sous XP SP1) ; un autre .bmc est compté, ses tuiles non exportées.} \\
 \addlinespace
 \texttt{rdp\_server} & Windows Vista & \texttt{Security.evtx, journaux TerminalServices-LocalSessionManager et RemoteConnectionManager} & événements EVTX & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP et Server 2003 : événements 528 et 682 de Security.evt, non convertis.} \\

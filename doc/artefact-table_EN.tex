@@ -126,9 +126,9 @@
  & Windows Vista & \texttt{…and AppCompatFlags\textbackslash{}Compatibility Assistant\textbackslash{}Store, Explorer\textbackslash{}Taskband} & registry values & yes \\
  & Windows 10 & \texttt{…and Explorer\textbackslash{}FeatureUsage, Search\textbackslash{}JumplistData} & registry values & yes \\
 \addlinespace
-\texttt{rdp\_client} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Terminal Server Client; …\textbackslash{}Terminal Server Client\textbackslash{}Cache\textbackslash{}bcache*.bmc} & registry values; BMC bitmap cache & no \\
+\texttt{rdp\_client} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Terminal Server Client; …\textbackslash{}Terminal Server Client\textbackslash{}Cache\textbackslash{}bcache*.bmc} & registry values; BMC bitmap cache & yes \\
  & Windows 7 & \texttt{…and Cache\textbackslash{}Cache????.bin} & BIN bitmap cache & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Registry values and .rdp files read on every version; only the tiles of the .bmc cache are not exported.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape bcache22.bmc decoded (16 bits per pixel, measured on XP SP1); another .bmc is counted, its tiles not exported.} \\
 \addlinespace
 \texttt{rdp\_server} & Windows Vista & \texttt{Security.evtx, TerminalServices-LocalSessionManager and RemoteConnectionManager logs} & EVTX events & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP and Server 2003: events 528 and 682 of Security.evt, not converted.} \\

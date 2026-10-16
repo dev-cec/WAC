@@ -1508,8 +1508,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         remote screen as the client drew it, is exported as an image in
         \fichier{rdp\_cache\textbackslash<SID>\textbackslash<file>}, with its
         size, keys and the SHA-256 of its pixels. The older
-        \fichier{bcache*.bmc} are collected but not decoded, for want of a
-        sample.
+        \fichier{bcache22.bmc}, the client of Windows~XP's, is decoded the
+        same way: tiles compressed by RDP's interleaved RLE, 16~bits per pixel
+        (\champ{BitsPerPixel}), \champ{UnreadTiles} counting those that could
+        not be. The cache keeps what was shown on the screen, a text typed in
+        clear in a visible field included. Another \fichier{.bmc}, of a depth
+        WAC has no sample of, is counted without being decoded
+        (\champ{DecodingStatus} \texttt{UnsupportedFormat}).
   \item[\fichier{rdp\_server.json}] \emph{incoming} Remote Desktop connections,
         read in the collected logs: connection received and authentication
         (RemoteConnectionManager 261 and 1149), TCP connection accepted
@@ -1882,6 +1887,15 @@ of \fichier{wac.yml}, the first Windows that has the artefact, where it lies and
 its format according to the version. It is produced from the program's own
 table, the only one \wac{} consults. Version~2 of \wac{} is only validated under
 Windows~10 and 11; the older forms are listed for what comes next.
+
+The locations are written as Windows~Vista and later lay out their folders.
+On Windows~XP and Server~2003, \wac{} looks for them where those versions keep
+the same data: \path|AppData\Local| becomes
+\path|Local Settings\Application Data|, \path|AppData\Roaming| becomes
+\path|Application Data|, the recent documents and the Start menu are at the
+profile's root, \path|Documents| becomes \path|My Documents|, and
+\path|ProgramData| becomes \path|All Users\Application Data|, next to the
+profiles.
 
 \input{../artefact-table_EN.tex}
 

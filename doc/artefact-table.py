@@ -131,8 +131,8 @@ NOTES = {
         "DestList version 6 mesurée sur le build 26200 ; les listes personnalisées (CustomDestinations) ne portent pas de version.",
     "Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600.":
         "Windows 8 et 8.1 ont un en-tête de 0x80 octets : ils se distinguent par la marque de leur première entrée, qui tient ici lieu de signature. Windows 8.1 mesuré sur le build 9600.",
-    "Registry values and .rdp files read on every version; only the tiles of the .bmc cache are not exported.":
-        "Valeurs de registre et fichiers .rdp lus sur toutes les versions ; seules les tuiles du cache .bmc ne sont pas exportées.",
+    "bcache22.bmc decoded (16 bits per pixel, measured on XP SP1); another .bmc is counted, its tiles not exported.":
+        "bcache22.bmc décodé (16 bits par pixel, mesuré sous XP SP1) ; un autre .bmc est compté, ses tuiles non exportées.",
     "Windows XP and Server 2003: events 528 and 682 of Security.evt, not converted.":
         "Windows XP et Server 2003 : événements 528 et 682 de Security.evt, non convertis.",
     "Empty since Windows 10 1803 unless the backup task was switched back on. Copied raw: not converted.":
