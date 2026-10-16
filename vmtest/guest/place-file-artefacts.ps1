@@ -1400,13 +1400,13 @@ try { if (Wants 'search_index') {
         if ($rows.Count -gt 0 -and $rows[0][2]) { $found = $rows[0] }
     }
     if ($found) { Write-Output ("searchwitness=" + $found[0] + '|' + $found[1] + '|' + $found[2]) }
-    # Windows 7's indexer keeps what it just indexed in memory for minutes:
+    # Windows 7's and 8's indexer keeps what it just indexed in memory for minutes:
     # its database on disk, which WAC reads, did not hold the witness yet.
     # Stopping the service writes it there; the query waits for it to answer
     # again. TEST VM ONLY: WAC itself never restarts a service on the
     # examined machine — there, the index read is the one on disk, minutes
-    # behind on Windows 7, and the documentation says so.
-    if ($found -and $PSVersionTable.PSVersion.Major -lt 3) {
+    # behind on Windows 7 and 8, and the documentation says so.
+    if ($found -and $PSVersionTable.PSVersion.Major -lt 4) {
         Restart-Service WSearch
         for ($i = 0; $i -lt 40; $i++) {
             Start-Sleep 3

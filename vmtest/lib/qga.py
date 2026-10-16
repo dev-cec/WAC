@@ -105,35 +105,29 @@ PS_TASK = "WacQgaPowerShell"
 PS_DIR = r"C:\wac-qga-ps"
 
 
-def powershell_two_only(dom):
-    """True when the VM has PowerShell 2 and no later one; asked once, kept."""
-    cache = os.path.join(PENDING, f"{dom}.powershell")
+def powershell_major(dom):
+    """The major version of the VM's PowerShell (2, 3, 4, 5); asked once, kept.
+    Versions 3 to 5 are registered under PowerShell\\3, 2 alone not."""
+    cache = os.path.join(PENDING, f"{dom}.powershell-major")
     try:
         with open(cache, encoding="utf-8") as f:
-            return f.read().strip() == "2"
-    except OSError:
+            return int(f.read().strip())
+    except (OSError, ValueError):
         pass
-    code, _, _ = run_direct(dom, ["reg.exe", "query", r"HKLM\SOFTWARE\Microsoft\PowerShell\3"])
-    two = code != 0
+    code, out, _ = run_direct(dom, ["reg.exe", "query", r"HKLM\SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine",
+                                    "/v", "PowerShellVersion"])
+    found = re.search(r"REG_SZ\s+(\d+)\.", out or "") if code == 0 else None
+    major = int(found.group(1)) if found else 2
     os.makedirs(PENDING, exist_ok=True)
     with open(cache, "w", encoding="utf-8") as f:
-        f.write("2" if two else "3+")
-    return two
+        f.write(str(major))
+    return major
 
 
-def cmd_quote(arg):
-    """One argument on a cmd.exe line: quoted when it holds a space or a
-    character cmd would interpret."""
-    if arg and not any(c in arg for c in ' \t"&|<>^()%!'):
-        return arg
-    return '"' + arg.replace('"', '\\"') + '"'
-
-
-def powershell_through_task(dom, argv, timeout):
-    """Runs powershell.exe through a one-shot task of the SYSTEM account."""
-    args = list(argv[1:])
+def with_compat_prelude(args):
+    """powershell.exe's arguments with guest/ps2-compat.ps1 loaded first,
+    the command given encoded: the cmdlets PowerShell 2 and 3 lack."""
     lowered = [a.lower() for a in args]
-    # The cmdlets PowerShell 2 lacks (guest/ps2-compat.ps1) are loaded first.
     compat = PS_DIR + "\\compat.ps1"
     prelude = f". '{compat}'; "
     if "-command" in lowered:
@@ -150,21 +144,50 @@ def powershell_through_task(dom, argv, timeout):
                   + "; exit $LASTEXITCODE")
         args = args[:i]
     else:
-        script = None
-    if script is not None:
-        # The command as UTF-16 base64: no quoting, no "%" for cmd to expand.
-        # The prelude is a script: allowed to run whatever the machine's policy.
-        if "-executionpolicy" not in [x.lower() for x in args]:
-            args += ["-ExecutionPolicy", "Bypass"]
-        args += ["-EncodedCommand", base64.b64encode(script.encode("utf-16-le")).decode()]
+        return args
+    # The command as UTF-16 base64: no quoting, no "%" for cmd to expand.
+    # The prelude is a script: allowed to run whatever the machine's policy.
+    if "-executionpolicy" not in [x.lower() for x in args]:
+        args += ["-ExecutionPolicy", "Bypass"]
+    return args + ["-EncodedCommand", base64.b64encode(script.encode("utf-16-le")).decode()]
+
+
+def place_compat(dom):
+    """A fresh PS_DIR holding guest/ps2-compat.ps1."""
+    run_direct(dom, ["cmd.exe", "/c", f"(if exist {PS_DIR} rmdir /s /q {PS_DIR}) & mkdir {PS_DIR}"])
+    write_file(dom, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "guest", "ps2-compat.ps1"),
+               PS_DIR + "\\compat.ps1", quiet=True)
+
+
+def powershell_with_compat(dom, argv, capture, timeout):
+    """PowerShell 3 (Windows 8): started by the agent as later ones, the
+    compatibility functions loaded first, their folder removed after."""
+    place_compat(dom)
+    try:
+        return run_direct(dom, [argv[0]] + with_compat_prelude(list(argv[1:])), capture, timeout)
+    finally:
+        run_direct(dom, ["cmd.exe", "/c", f"rmdir /s /q {PS_DIR}"])
+
+
+def cmd_quote(arg):
+    """One argument on a cmd.exe line: quoted when it holds a space or a
+    character cmd would interpret."""
+    if arg and not any(c in arg for c in ' \t"&|<>^()%!'):
+        return arg
+    return '"' + arg.replace('"', '\\"') + '"'
+
+
+def powershell_through_task(dom, argv, timeout):
+    """Runs powershell.exe through a one-shot task of the SYSTEM account."""
+    # The cmdlets PowerShell 2 lacks (guest/ps2-compat.ps1) are loaded first.
+    args = with_compat_prelude(list(argv[1:]))
     line = "powershell.exe " + " ".join(cmd_quote(a) for a in args)
     if not line.isascii():
         sys.exit("[qga] a PowerShell 2 command line run through a task must be ASCII (use -Command, encoded)")
     wrapper = ("@echo off\r\n"
                f"{line} > {PS_DIR}\\out.txt 2> {PS_DIR}\\err.txt < NUL\r\n"
                f"(echo %errorlevel%)> {PS_DIR}\\code.txt\r\n")   # "echo 0> f" would redirect handle 0
-    run_direct(dom, ["cmd.exe", "/c", f"(if exist {PS_DIR} rmdir /s /q {PS_DIR}) & mkdir {PS_DIR}"])
-    write_file(dom, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "guest", "ps2-compat.ps1"), compat, quiet=True)
+    place_compat(dom)
     h = qga(dom, {"execute": "guest-file-open", "arguments": {"path": PS_DIR + "\\run.cmd", "mode": "wb"}})
     try:
         qga(dom, {"execute": "guest-file-write", "arguments": {"handle": h, "buf-b64": base64.b64encode(wrapper.encode("ascii")).decode()}})
@@ -214,9 +237,14 @@ def guest_read_text(dom, guest_path):
 
 def run(dom, argv, capture=True, timeout=DEFAULT_TIMEOUT):
     """Runs argv[0] with argv[1:] in the VM; returns (code, stdout, stderr).
-    powershell.exe goes through a task on a VM with PowerShell 2 only."""
-    if os.path.basename(argv[0]).lower() == "powershell.exe" and powershell_two_only(dom):
-        return powershell_through_task(dom, argv, timeout)
+    powershell.exe goes through a task on a VM with PowerShell 2 only, and
+    loads the compatibility functions on PowerShell 2 and 3."""
+    if os.path.basename(argv[0]).lower() == "powershell.exe":
+        major = powershell_major(dom)
+        if major == 2:
+            return powershell_through_task(dom, argv, timeout)
+        if major == 3:
+            return powershell_with_compat(dom, argv, capture, timeout)
     return run_direct(dom, argv, capture, timeout)
 
 

@@ -181,7 +181,11 @@ wants_registry_witness() { wants $REGISTRY_WITNESSES; }
 # A `reg load` left mounted by an interrupted run locks the extracted hive.
 $QGA run --shell "reg unload HKLM\\WAC_TEST >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
 
-$QGA write "$ROOT/build-windows/WAC.exe"           "$VMDIR\\WAC.exe"
+# A 32-bit Windows (8 x86, XP) runs WAC32 and the 32-bit raw_hive_test, put
+# under the usual names: every path of the harness stays the same.
+BITS_SUFFIX=""
+[[ "$($QGA run -- powershell.exe -NoProfile -Command '[IntPtr]::Size' 2>/dev/null | tr -d '\r')" == 4 ]] && BITS_SUFFIX=32
+$QGA write "$ROOT/build-windows/WAC$BITS_SUFFIX.exe" "$VMDIR\\WAC.exe"
 # No configuration file left by an earlier cycle: the runs below give their
 # options, and must behave as without wac.yml (step 8 tests the file).
 $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
@@ -205,7 +209,7 @@ if [[ -n "$ONLY" ]]; then
   $QGA write "$OUTPUT/wac-only.yml" "$VMDIR\\wac.yml" >/dev/null
   echo "   wac.yml: only $ONLY"
 fi
-full_cycle && $QGA write "$ROOT/build-windows/raw_hive_test.exe" "$VMDIR\\raw_hive_test.exe"
+full_cycle && $QGA write "$ROOT/build-windows/raw_hive_test$BITS_SUFFIX.exe" "$VMDIR\\raw_hive_test.exe"
 
 # The trust set, as the analysis workstation prepares it before a collection:
 # --update-trust, into `trust` next to WAC.exe, where the collection reads it.

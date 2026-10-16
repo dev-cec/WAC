@@ -209,6 +209,16 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     "$SRC/sha.cpp" "$SRC/lznt1.cpp" "$SRC/xpress.cpp" "$SRC/lzx.cpp" \
     "$SRC/raw_hive_test.cpp" -o "$BUILD/raw_hive_test.exe"
   echo "   -> $BUILD/raw_hive_test.exe"
+  # Its 32-bit twin, for the harness on a 32-bit Windows (8 x86, XP), with
+  # the XP equivalents WAC32 links (xp_imports.o); not copied to bin.
+  if [[ -n "$WAC32" ]]; then
+    mapfile -t FLAGS32 < "$BUILD32/flags.txt"
+    "$CXX32" "${FLAGS32[@]}" -municode -static -static-libgcc -static-libstdc++ -Wl,--no-insert-timestamp \
+      "$SRC/raw_hive.cpp" "$SRC/hive_recover.cpp" "$SRC/quickdigest5.cpp" \
+      "$SRC/sha.cpp" "$SRC/lznt1.cpp" "$SRC/xpress.cpp" "$SRC/lzx.cpp" \
+      "$SRC/raw_hive_test.cpp" "$BUILD32/xp_imports.o" -o "$BUILD/raw_hive_test32.exe" -ladvapi32
+    echo "   -> $BUILD/raw_hive_test32.exe"
+  fi
 
   # The test harnesses go into a SEPARATE folder: they are never to be copied
   # onto a collection key with WAC.exe.

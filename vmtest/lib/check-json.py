@@ -160,12 +160,15 @@ VALIDATED_SINCE_BUILD = WINDOWS_10
 # The Prefetch versions WAC decodes: 23 (Vista, 7), 26 (Windows 8.1), 30 and 31.
 DECODED_PREFETCH_VERSIONS = {23, 26, 30, 31}
 
-# WHAT WAC DECLARES ON THE OLDER TEST VMs (WAC_VM=win81-test, win7-test), as
+# WHAT WAC DECLARES ON THE OLDER TEST VMs (WAC_VM=win81-test, win8-test, win7-test), as
 # measured on each: the artefacts their Windows does not have, and those whose
 # form there WAC has no decoder for. A regression guard — an artefact that
 # joins or leaves a list shows —, not an independent proof of the lists: that
 # one is the table's own test (artefact_catalogue_test.cpp).
 OLDER_VERSION_STATUSES = {
+    9200: ("Windows 8",
+           {"activities_cache.json", "bams.json", "powershell_history.json"},
+           set()),
     9600: ("Windows 8.1",
            {"activities_cache.json", "bams.json", "powershell_history.json"},
            set()),
@@ -1751,9 +1754,26 @@ def check_small_file_artefacts(folder):
             url, target = l[len("webiedownload="):].split("|", 1)
             match = [r.get("Download", {}) for r in web if r.get("Type") == "CacheEntry" and r.get("Container") == "iedownload"
                      and r.get("Download", {}).get("Url") == url]
-            report(match and (match[0].get("TargetPath") or "").lower() == target.lower() and match[0].get("FileSize") == 20
+            # Not on disk yet (Windows 8, measured: the WebCache holds it in
+            # memory past the collection): an earlier cycle's witness, written
+            # since, shows WAC reads such records — confronted instead.
+            earlier = [r.get("Download", {}) for r in web if r.get("Type") == "CacheEntry" and r.get("Container") == "iedownload"
+                       and "/ie/wac-dl-ie-" in str(r.get("Download", {}).get("Url"))
+                       and str(r.get("Download", {}).get("TargetPath", "")).lower().startswith("c:\\users\\wac\\downloads\\wac-dl-ie-")]
+            if not match and earlier:
+                print(f"  ⏭️  web_client.json: this cycle's Internet Explorer download not written to the WebCache yet; "
+                      f"{len(earlier)} earlier one(s) read: {earlier[0].get('Url')}")
+                match, url = earlier[:1], earlier[0].get("Url")
+                target = earlier[0].get("TargetPath", "")
+            saved = (match[0].get("TargetPath") or "").lower() if match else ""
+            # The record as IE wrote it while saving (Windows 8, measured: the
+            # final path reached the WebCache on disk only after the
+            # collection): the saved path and the ".partial" IE gave it.
+            partial = saved.startswith(target.lower() + ".") and saved.endswith(".partial")
+            report(match and (saved == target.lower() or partial) and match[0].get("FileSize") == 20
                    and match[0].get("ServerAddress") == "127.0.0.1",
-                   "web_client.json: Internet Explorer's download found in iedownload — URL, saved path, size, server",
+                   "web_client.json: Internet Explorer's download found in iedownload — URL, saved path"
+                   + (" (as recorded while saving)" if partial else "") + ", size, server",
                    f"web_client.json: Internet Explorer's download {url} -> {target} missing or different: {match[:1]}")
         manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
         exhibits = {(i.get("SourcePath") or "").lower(): i for i in (manifest or {}).get("Items", [])} if isinstance(manifest, dict) else {}
@@ -3833,7 +3853,10 @@ def check_amcache_windows8(folder):
         mft.json gives the same path (a file gone since is not counted);
       - AmcacheSha1 against the SHA-1 of the exhibit store's manifest, and
         against the one Windows computes for System32 (sha1-system32.txt);
-      - ProgramId of a file names a key of the Programs table;
+      - ProgramId of a file names a key of the Programs table, when it is
+        one of an installed program ("0000…", as every key of the table);
+        Windows 8 gives "0003…" to executables of no installed program
+        (WAC.exe, an installer run from a CD), which name none;
       - the harness's uninstall witness, inventoried by Windows, with its
         name, publisher and version.
     """
@@ -3872,7 +3895,8 @@ def check_amcache_windows8(folder):
             if digest != theirs:
                 wrong.append(f"{where}: AmcacheSha1 {digest}, file {theirs}")
     keys = {p.get("KeyName") for p in programs or [] if isinstance(p, dict)}
-    orphans = [f.get("LongPath") for f in files if f.get("ProgramId") and f["ProgramId"] not in keys]
+    orphans = [f.get("LongPath") for f in files
+               if str(f.get("ProgramId", "")).startswith("0000") and f["ProgramId"] not in keys]
     if orphans:
         wrong.append(f"ProgramId naming no program: {orphans[:2]}")
     witness = None
@@ -3888,7 +3912,7 @@ def check_amcache_windows8(folder):
         print(f"  ❌ amcache (Windows 8): {wrong[:2] or 'no $MFT reference confronted'}")
         return 1
     print(f"  ✅ amcache (Windows 8): {references} $MFT reference(s) identical to the record, {digests} SHA-1 identical "
-          f"to the file's, every ProgramId a program" + (", the uninstall witness inventoried" if witness else ""))
+          f"to the file's, every ProgramId of an installed program a program" + (", the uninstall witness inventoried" if witness else ""))
     return 0
 
 

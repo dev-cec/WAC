@@ -15,6 +15,11 @@
 # Reads only: nothing written to the logs.
 param([string]$Output = 'C:\wactest\event-messages.txt')
 $ErrorActionPreference = 'SilentlyContinue'
+# In the interface language, as the Event Viewer shows it: .NET hands
+# EvtFormatMessage the regional culture, and a binary holding its messages in
+# several languages (msimsg.dll) then answered in French on a Windows 8 whose
+# interface is English and whose formats are French.
+[Threading.Thread]::CurrentThread.CurrentCulture = [Globalization.CultureInfo]::CurrentUICulture
 $seen = @{}
 $lines = New-Object System.Collections.Generic.List[string]
 foreach ($log in (Get-WinEvent -ListLog * | Where-Object { $_.RecordCount -gt 0 })) {
