@@ -400,15 +400,15 @@ dans le reste du cycle, où rien ne manque à la machine de test, il est une
 faute. Vu échouer sur une collecte ordinaire.
 
 Un format sans décodeur est présenté aux décodeurs eux-mêmes.
-\texttt{parsers\_test} réécrit la version d'un vrai Prefetch en 17 (XP) puis
-en la version suivante : chacune doit être déclarée non prise en charge, le nom
+\texttt{parsers\_test} réécrit la version d'un vrai Prefetch en la version
+suivante : elle doit être déclarée non prise en charge, le nom
 et l'empreinte lus, rien d'autre décodé. \texttt{file\_artefacts\_test} fait
 de même pour un index \fichier{\$I} de version~3, un cache de miniatures de
 Vista et un DestList de jump list de version 5 ou 7 (la version~6 de
-Windows~11, mesurée avec \texttt{olefile}, est lue). Dans le cycle, deux fichiers Prefetch écrits à la main (versions 17
-et 32) sont posés dans \path|C:\Windows\Prefetch| : \fichier{prefetchs.json}
-doit les déclarer tous deux, nommer le format du premier et pas celui du second,
-et ne déclarer aucun vrai Prefetch. Chaque vrai Prefetch de la machine est
+Windows~11, mesurée avec \texttt{olefile}, est lue). Dans le cycle, un fichier Prefetch écrit à la main (version 32, jamais
+vue) est posé dans \path|C:\Windows\Prefetch| : \fichier{prefetchs.json}
+doit le déclarer sans nommer de format, et ne déclarer aucun vrai Prefetch
+--- toutes les versions depuis celle de XP sont décodées. Chaque vrai Prefetch de la machine est
 ensuite lu par libscca, écrit indépendamment de \wac{} : version, empreinte,
 nombre d'exécutions, dates d'exécution à 100~ns près, numéros de série des
 volumes et nombre de fichiers doivent être les siens.

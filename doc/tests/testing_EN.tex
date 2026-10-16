@@ -388,16 +388,16 @@ cycle, where the test machine lacks nothing, it is a fault. Seen failing on an
 ordinary collection.
 
 A format without decoder is presented to the decoders themselves.
-\texttt{parsers\_test} rewrites the version of a real Prefetch to 17 (XP)
-then to the next one: each must be declared unsupported, the name and the hash
+\texttt{parsers\_test} rewrites the version of a real Prefetch to the next
+one: it must be declared unsupported, the name and the hash
 read, nothing else decoded. \texttt{file\_artefacts\_test} does the same for
 a \fichier{\$I} index of version~3, a thumbnail cache of Vista and a jump
 list DestList of version 5 or 7 (version~6 of Windows~11, measured with
 \texttt{olefile}, is read). In the
-cycle, two Prefetch files written by hand (versions 17 and 32) are placed in
-\path|C:\Windows\Prefetch|: \fichier{prefetchs.json} must declare both, name
-the format of the first and not that of the second, and declare no real
-Prefetch. Every real Prefetch of the machine is then read by libscca, written
+cycle, a Prefetch file written by hand (version 32, never seen) is placed in
+\path|C:\Windows\Prefetch|: \fichier{prefetchs.json} must declare it without
+naming a format, and declare no real Prefetch --- every version from XP's on
+is decoded. Every real Prefetch of the machine is then read by libscca, written
 independently of \wac{}: version, hash, run count, run times to the 100~ns,
 volume serials and number of files must be its.
 

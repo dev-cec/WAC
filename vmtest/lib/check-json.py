@@ -157,8 +157,8 @@ WINDOWS_10 = 10240
 # test machine is decoded.
 VALIDATED_SINCE_BUILD = WINDOWS_10
 
-# The Prefetch versions WAC decodes: 23 (Vista, 7), 26 (Windows 8.1), 30 and 31.
-DECODED_PREFETCH_VERSIONS = {23, 26, 30, 31}
+# The Prefetch versions WAC decodes: 17 (XP), 23 (Vista, 7), 26 (Windows 8.1), 30 and 31.
+DECODED_PREFETCH_VERSIONS = {17, 23, 26, 30, 31}
 
 # WHAT WAC DECLARES ON THE OLDER TEST VMs (WAC_VM=win81-test, win8-test, win7-test), as
 # measured on each: the artefacts their Windows does not have, and those whose
@@ -1545,13 +1545,13 @@ def check_small_file_artefacts(folder):
                f"hosts.json: {address} {name} missing")
 
     # A format WAC has no decoder for (B-039): declared, with the version met,
-    # and nothing decoded — the two witnesses written by hand, and no other
-    # piece of this Windows 11, whose every format is decoded.
+    # and nothing decoded — the witness written by hand, of a version nobody
+    # has seen (every known one is decoded since XP's), and no real Prefetch.
     prefetchs = load(folder, "prefetchs.json")
-    if isinstance(prefetchs, list) and "pfold" in reference and "pfnew" in reference:
+    if isinstance(prefetchs, list) and "pfnew" in reference:
         undecoded = {(p.get("Path") or "").lower(): p for p in prefetchs if p.get("DecodingStatus")}
         faults = []
-        for key, named in (("pfold", True), ("pfnew", False)):
+        for key, named in (("pfnew", False),):
             where, version, name, digest = reference[key].split("|")
             p = undecoded.pop(where.lower(), None)
             if p is None:
@@ -1576,10 +1576,10 @@ def check_small_file_artefacts(folder):
             faults.append(f"{len(wrongly)} real Prefetch of a decoded version declared unsupported: {wrongly[:2]}")
         if len(versions) > 1:
             faults.append(f"real Prefetch declared unsupported in versions {sorted(versions, key=str)}")
-        decoded = len(prefetchs) - 2 - len(undecoded)
+        decoded = len(prefetchs) - 1 - len(undecoded)
         report(not faults,
-               "prefetchs.json: Prefetch versions 17 and 32 declared unsupported (the known form named, the unknown "
-               "one not), name and hash read, nothing else decoded; "
+               "prefetchs.json: Prefetch version 32 declared unsupported (its form not named), name and hash "
+               "read, nothing else decoded; "
                + (f"the {len(undecoded)} real Prefetch of this Windows all declared version {next(iter(versions))}"
                   if undecoded else f"the {decoded} real Prefetch decoded"),
                "prefetchs.json: unsupported formats not as placed: " + " ; ".join(faults))
@@ -3139,10 +3139,20 @@ def check_exhibit_reads_after_copy(folder):
     copied = max(copies)[:27]   # to the 100 ns, as both logs write it
     with open(path, encoding="utf-8-sig", errors="replace") as f:
         reads = [l.rstrip("\r\n").split("|", 1) for l in f if "|" in l]
-    after = [r for r in reads if r[0][:27] > copied]
+    # Before Windows 8, the system time advances by ticks of 15.625 ms, the
+    # copy's instant and the audit's alike (Windows 7, measured: the last
+    # files copied read one tick after the copy's instant): a read in the
+    # same tick is not after it. From Windows 8 on, the rule is strict.
+    def ticks(text):
+        moment = datetime.datetime.strptime(text[:19], "%Y-%m-%dT%H:%M:%S")
+        return (moment - datetime.datetime(1601, 1, 1)) // datetime.timedelta(microseconds=1) * 10 + int((text[20:27] or "0").ljust(7, "0"))
+    tick = 156250 if (examined_build(folder) or WINDOWS_10) < 9200 else 0
+    after = [r for r in reads if ticks(r[0]) > ticks(copied) + tick]
+    within = sum(1 for r in reads if ticks(copied) < ticks(r[0]) <= ticks(copied) + tick)
     ok = bool(reads) and not after
     print(f"  {'✅' if ok else '❌'} exhibit store: {len(reads)} read(s) by WAC.exe before its working copy ({copied}Z), "
-          f"{len(after)} after" + ("" if ok else (": the audit recorded no read at all" if not reads else f": {after[:3]}")))
+          f"{len(after)} after" + (f" ({within} in the same 15.625 ms tick of this Windows' clock)" if within else "")
+          + ("" if ok else (": the audit recorded no read at all" if not reads else f": {after[:3]}")))
     return 0 if ok else 1
 
 

@@ -7,9 +7,9 @@
 #   recycled     a file of the user "wac" sent to the recycle bin from that
 #                user's interactive session -> recycle_bin.json, its original path
 #   hosts        an entry of the hosts file -> hosts.json
-#   pfold, pfnew two Prefetch files written by hand, of a version WAC has no
-#                decoder for: 23 (Vista) and 32 (not seen yet) -> prefetchs.json,
-#                each declared "unsupported format", nothing decoded
+#   pfnew        a Prefetch file written by hand, of a version WAC has no
+#                decoder for, 32 (not seen yet) -> prefetchs.json, declared
+#                "unsupported format", nothing decoded
 #   startup      a script dropped in the startup folder of all users, with its
 #                SHA-256 -> startup_folders.json
 #   shortcut, shortcutfile  a shortcut on the public desktop and one pinned to
@@ -189,15 +189,15 @@ try { if (Wants 'hosts') {
     Write-Output "hosts=10.11.12.13|wac-test.invalid"
 } } catch { WitnessFailure 'hosts' $_ }
 
-# 3b. Two Prefetch files of a version WAC has no decoder for, written by hand
-# and always the same: an uncompressed SCCA header (version, "SCCA", the
-# executable's name at 16, the path hash at 76), zeros after it. Windows does
-# not read them: no program of that name is ever run. Version 17 (XP) is the
-# known form; the witness of version 23, decoded since, is removed where an
-# earlier cycle left it.
+# 3b. A Prefetch file of a version WAC has no decoder for — none known is
+# left undecoded: one nobody has seen yet —, written by hand and always the
+# same: an uncompressed SCCA header (version, "SCCA", the executable's name
+# at 16, the path hash at 76), zeros after it. Windows does not read it: no
+# program of that name is ever run. The witnesses of versions 23 and 17,
+# decoded since, are removed where an earlier cycle left them.
 try { if (Wants 'prefetch') {
-    Remove-Item -LiteralPath 'C:\Windows\Prefetch\WACV23.EXE-0BADF023.pf' -ErrorAction SilentlyContinue
-    foreach ($witness in @(@('pfold', 17, 'WACV17.EXE', 0x0BADF017), @('pfnew', 32, 'WACV32.EXE', 0x0BADF032))) {
+    Remove-Item -LiteralPath 'C:\Windows\Prefetch\WACV23.EXE-0BADF023.pf', 'C:\Windows\Prefetch\WACV17.EXE-0BADF017.pf' -ErrorAction SilentlyContinue
+    foreach ($witness in @(,@('pfnew', 32, 'WACV32.EXE', 0x0BADF032))) {
         $bytes = New-Object byte[] 512
         [BitConverter]::GetBytes([int]$witness[1]).CopyTo($bytes, 0)
         [Text.Encoding]::ASCII.GetBytes('SCCA').CopyTo($bytes, 4)
