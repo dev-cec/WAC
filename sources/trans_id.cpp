@@ -19544,7 +19544,7 @@ struct UserClassHives {
 		if (opened) return hives;
 		opened = true;
 		for (const std::tuple<std::wstring, std::wstring>& p : conf.profiles) {
-			const std::wstring path = extractedPath(std::get<1>(p)) + L"\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat";
+			const std::wstring path = extractedPath(std::get<1>(p) + L"\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat");
 			ORHKEY hive = NULL;
 			if (OROpenHive(path.c_str(), &hive) == ERROR_SUCCESS) hives.push_back(hive);
 		}

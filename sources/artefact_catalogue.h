@@ -178,3 +178,24 @@ bool undecodedOn(const std::string& key, const WindowsVersion& version);
  *  @return its latest form not newer than the version; the oldest one for an
  *          older build */
 const ArtefactForm& formOf(const ArtefactEntry& entry, const WindowsVersion& version);
+
+/*! A path written in the folder layout of Windows Vista and later, as it
+ *  lies on the examined version.
+ *
+ *  WHY. Every collector names its folders as Vista laid them out
+ *  (`<profile>\\AppData\\Local\\…`, `\\ProgramData\\…`). Windows XP and
+ *  Server 2003 keep the same data elsewhere: `Local Settings\\Application
+ *  Data`, `Application Data`, `Recent`, `My Documents`, and the shared folders
+ *  in `All Users` next to the profiles. Translated here, in one place, for
+ *  the collection and the conversion alike, rather than by each collector.
+ *
+ *  A path under a profile is translated after that profile's folder; a path
+ *  under `\\ProgramData` goes to `All Users`, next to the first profile (the
+ *  profiles folder of XP), or under `\\Documents and Settings` without one.
+ *  From Vista on, or for a build not read (0), the path is returned as is.
+ *  @param path absolute, with its letter or relative to the system volume
+ *  @param version the examined Windows
+ *  @param profileRoots the examined machine's profile folders, absolute
+ *  @return the path on that version */
+std::wstring examinedFolderLayout(const std::wstring& path, const WindowsVersion& version,
+                                  const std::vector<std::wstring>& profileRoots);

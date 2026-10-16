@@ -3,6 +3,9 @@
  *         artefact_catalogue.h).
  */
 #include "artefact_catalogue.h"
+#include <cwchar>
+#include <cwctype>
+#include <utility>
 
 namespace {
 
@@ -326,4 +329,70 @@ const ArtefactForm& formOf(const ArtefactEntry& entry, const WindowsVersion& ver
 	for (const ArtefactForm& f : entry.forms)
 		if (version.build >= f.sinceBuild) form = &f;
 	return *form;
+}
+
+namespace {
+
+/*! Vista's folders of a profile, and where Windows XP keeps them: the most
+ *  specific first, each matched up to a separator. */
+const std::pair<const wchar_t*, const wchar_t*> XP_PROFILE_FOLDERS[] = {
+	{ L"\\AppData\\Roaming\\Microsoft\\Windows\\Recent", L"\\Recent" },
+	{ L"\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu", L"\\Start Menu" },
+	{ L"\\AppData\\Roaming\\Microsoft\\Windows\\Cookies", L"\\Cookies" },
+	{ L"\\AppData\\Local\\Microsoft\\Windows\\Temporary Internet Files", L"\\Local Settings\\Temporary Internet Files" },
+	{ L"\\AppData\\Local\\Microsoft\\Windows\\History", L"\\Local Settings\\History" },
+	{ L"\\AppData\\Local\\Temp", L"\\Local Settings\\Temp" },
+	{ L"\\AppData\\Local", L"\\Local Settings\\Application Data" },
+	{ L"\\AppData\\Roaming", L"\\Application Data" },
+	{ L"\\Documents", L"\\My Documents" } };
+
+/*! Vista's shared folders, and where Windows XP keeps them, under All Users. */
+const std::pair<const wchar_t*, const wchar_t*> XP_COMMON_FOLDERS[] = {
+	{ L"\\ProgramData\\Microsoft\\Windows\\Start Menu", L"\\Start Menu" },
+	{ L"\\ProgramData", L"\\Application Data" } };
+
+/*! Whether `path` starts with `prefix`, case-insensitively, the prefix
+ *  ending at a separator or at the end of the path. */
+bool startsWithFolder(const std::wstring& path, const std::wstring& prefix) {
+	if (path.size() < prefix.size() || (path.size() > prefix.size() && path[prefix.size()] != L'\\')) return false;
+	for (size_t i = 0; i < prefix.size(); ++i)
+		if (std::towlower(path[i]) != std::towlower(prefix[i])) return false;
+	return true;
+}
+
+/*! Replaces the first folder of `table` that `rest` starts with.
+ *  @return true if a folder was replaced, `rest` left as is otherwise */
+template <size_t N>
+bool replaceFolder(std::wstring& rest, const std::pair<const wchar_t*, const wchar_t*> (&table)[N]) {
+	for (const auto& folder : table)
+		if (startsWithFolder(rest, folder.first)) {
+			rest = folder.second + rest.substr(std::wcslen(folder.first));
+			return true;
+		}
+	return false;
+}
+
+} // namespace
+
+std::wstring examinedFolderLayout(const std::wstring& path, const WindowsVersion& version,
+                                  const std::vector<std::wstring>& profileRoots) {
+	if (version.build == 0 || version.build >= VISTA) return path;
+	for (std::wstring root : profileRoots) {
+		while (!root.empty() && root.back() == L'\\') root.pop_back();
+		if (root.empty() || !startsWithFolder(path, root)) continue;
+		std::wstring rest = path.substr(root.size());
+		return replaceFolder(rest, XP_PROFILE_FOLDERS) ? root + rest : path;
+	}
+	// A shared folder: from the volume's root, the letter kept if the path has one.
+	const size_t letter = path.size() >= 2 && path[1] == L':' ? 2 : 0;
+	std::wstring rest = path.substr(letter);
+	if (!replaceFolder(rest, XP_COMMON_FOLDERS)) return path;
+	std::wstring profiles = L"\\Documents and Settings";
+	if (!profileRoots.empty()) {
+		const std::wstring& first = profileRoots.front();
+		const size_t slash = first.find_last_of(L'\\', first.find_last_not_of(L'\\'));
+		const size_t start = first.size() >= 2 && first[1] == L':' ? 2 : 0;
+		if (slash != std::wstring::npos && slash > start) profiles = first.substr(start, slash - start);
+	}
+	return path.substr(0, letter) + profiles + L"\\All Users" + rest;
 }

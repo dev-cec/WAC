@@ -489,7 +489,7 @@ HRESULT RecentDocs::getData() {
 			// extractedPath() handles the case of a profile on another volume than
 			// Windows, which replaceAll(conf.systemDrive) left absolute.
 			const std::filesystem::path directory =
-				extractedPath(std::get<1>(profileEntry)) + rep;
+				extractedPath(std::get<1>(profileEntry) + rep);
 			const std::vector<std::filesystem::path> files =
 				listFilesByExtension(directory, { L".lnk", L".url" });
 			size_t iFile = 0;

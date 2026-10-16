@@ -55,7 +55,7 @@ HRESULT Shellbags::getData(int _level) {
 	level = _level;
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		for (const auto& tree : SHELLBAG_TREES) {
-			const std::wstring hive = extractedPath(std::get<1>(profileEntry)) + tree.file;
+			const std::wstring hive = extractedPath(std::get<1>(profileEntry) + tree.file);
 			ORHKEY offhive = NULL;
 			HRESULT hresult = OROpenHive(hive.c_str(), &offhive);
 			if (hresult != ERROR_SUCCESS) {

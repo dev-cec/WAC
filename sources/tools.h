@@ -311,6 +311,16 @@ std::wstring pathRelativeToVolume(const std::wstring& absolute);
 */
 std::wstring extractedPath(const std::wstring& absolute);
 
+/*! A path written as Windows Vista and later lay out their folders, as it
+ *  lies on the examined Windows (examinedFolderLayout,
+ *  artefact_catalogue.h): `Local Settings\\Application Data`, `Recent`,
+ *  `My Documents`, `All Users` on Windows XP. Applied where every path
+ *  passes — the targets of the collection and `extractedPath` — so that no
+ *  collector writes the layout of XP itself.
+ *  @param path absolute, with its letter or relative to the system volume
+ *  @return the path on the examined Windows; unchanged from Vista on */
+std::wstring examinedLayout(const std::wstring& path);
+
 /*! Canonical "X:\\…" form of a file path found in an artefact.
 *
 * THE path normalisation rule: NT object prefixes (`\\??\\`, `\\\\?\\`), the

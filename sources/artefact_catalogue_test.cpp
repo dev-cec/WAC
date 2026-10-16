@@ -226,6 +226,40 @@ int main(int argc, char** argv) {
 	const WindowsVersion older{ 1381, false, false };   // Windows NT 4
 	check(std::wstring(releaseOf(older, known).name) == L"Windows XP" && !known, "an older build not flagged");
 
+	/* THE FOLDERS OF WINDOWS XP. A path written as Vista lays it out lands
+	   where XP keeps the same data; from Vista on, and while the version is
+	   not read, nothing moves. */
+	const std::vector<std::wstring> xpProfiles = { L"C:\\Documents and Settings\\Administrator", L"C:\\Documents and Settings\\wac" };
+	const auto onXpLayout = [&](const std::wstring& path) { return examinedFolderLayout(path, xp, xpProfiles); };
+	check(onXpLayout(L"C:\\Documents and Settings\\wac\\AppData\\Local\\Microsoft\\Terminal Server Client\\Cache")
+	      == L"C:\\Documents and Settings\\wac\\Local Settings\\Application Data\\Microsoft\\Terminal Server Client\\Cache",
+	      "XP: AppData\\Local is Local Settings\\Application Data");
+	check(onXpLayout(L"C:\\Documents and Settings\\Administrator\\AppData\\Roaming\\Microsoft\\Windows\\Recent")
+	      == L"C:\\Documents and Settings\\Administrator\\Recent", "XP: Recent is at the profile's root");
+	check(onXpLayout(L"C:\\Documents and Settings\\wac\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup")
+	      == L"C:\\Documents and Settings\\wac\\Start Menu\\Programs\\Startup", "XP: the Start Menu is at the profile's root");
+	check(onXpLayout(L"C:\\Documents and Settings\\wac\\AppData\\Roaming\\Microsoft\\Protect")
+	      == L"C:\\Documents and Settings\\wac\\Application Data\\Microsoft\\Protect", "XP: AppData\\Roaming is Application Data");
+	check(onXpLayout(L"C:\\Documents and Settings\\wac\\appdata\\local\\Microsoft\\Windows\\Temporary Internet Files\\Content.IE5")
+	      == L"C:\\Documents and Settings\\wac\\Local Settings\\Temporary Internet Files\\Content.IE5", "XP: the IE cache, case aside");
+	check(onXpLayout(L"C:\\Documents and Settings\\wac\\Documents") == L"C:\\Documents and Settings\\wac\\My Documents",
+	      "XP: Documents is My Documents");
+	check(onXpLayout(L"C:\\Documents and Settings\\wac\\Documentsx") == L"C:\\Documents and Settings\\wac\\Documentsx",
+	      "XP: a folder is matched whole, not by its first letters");
+	check(onXpLayout(L"C:\\Documents and Settings\\wac\\Desktop") == L"C:\\Documents and Settings\\wac\\Desktop",
+	      "XP: a folder XP keeps at the same place moves not");
+	check(onXpLayout(L"\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp")
+	      == L"\\Documents and Settings\\All Users\\Start Menu\\Programs\\StartUp", "XP: the common Start Menu is in All Users");
+	check(onXpLayout(L"C:\\ProgramData\\Microsoft\\Network\\Downloader")
+	      == L"C:\\Documents and Settings\\All Users\\Application Data\\Microsoft\\Network\\Downloader",
+	      "XP: ProgramData is All Users\\Application Data, the letter kept");
+	check(examinedFolderLayout(L"\\ProgramData\\x", xp, { L"D:\\Profiles\\wac" }) == L"\\Profiles\\All Users\\Application Data\\x",
+	      "XP: All Users is next to the profiles");
+	check(onXpLayout(L"\\Windows\\Prefetch") == L"\\Windows\\Prefetch", "XP: a system folder moves not");
+	check(examinedFolderLayout(L"C:\\Users\\wac\\AppData\\Local", seven, { L"C:\\Users\\wac" }) == L"C:\\Users\\wac\\AppData\\Local",
+	      "Windows 7: nothing moves");
+	check(examinedFolderLayout(L"\\ProgramData", WindowsVersion{}, xpProfiles) == L"\\ProgramData", "a version not read: nothing moves");
+
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

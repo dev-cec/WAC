@@ -75,7 +75,7 @@ Json PowerShellHistory::toJson() const {
 HRESULT PowerShellHistories::getData() {
 	log(0, L"ℹ️PowerShell history :");
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-		const std::filesystem::path folder = extractedPath(std::get<1>(profileEntry)) + PSREADLINE_FOLDER;
+		const std::filesystem::path folder = extractedPath(std::get<1>(profileEntry) + PSREADLINE_FOLDER);
 		for (const std::filesystem::path& file : listFilesByExtension(folder, { L".txt" })) {
 			const std::wstring name = file.filename().wstring();
 			const size_t suffix = name.size() >= wcslen(HISTORY_SUFFIX) ? name.size() - wcslen(HISTORY_SUFFIX) : std::wstring::npos;

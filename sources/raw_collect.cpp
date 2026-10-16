@@ -433,8 +433,10 @@ HRESULT ExtractFileArtefactsRaw() {
 	};
 	std::vector<Target> targets;
 	// `absolute` carries its letter, or is relative to the system volume.
-	auto addTarget = [&](const std::wstring& absolute,
+	// Written as Vista lays its folders out, taken where the examined Windows keeps them.
+	auto addTarget = [&](const std::wstring& written,
 	                    const std::vector<std::wstring>& ext) {
+		const std::wstring absolute = examinedLayout(written);
 		targets.push_back({ volumeOfPath(absolute), pathRelativeToVolume(absolute),
 		                   exhibitTarget(absolute), ext });
 	};
@@ -641,7 +643,10 @@ HRESULT ExtractFileArtefactsRaw() {
 				                  here ? output : L"" });
 			}
 	}
-	for (const Tree& tree : trees) {
+	for (const Tree& written : trees) {
+		Tree tree = written;
+		tree.absolute = examinedLayout(written.absolute);   // as for the targets above
+		tree.skipped = examinedLayout(written.skipped);
 		const std::wstring volume = volumeOfPath(tree.absolute), path = pathRelativeToVolume(tree.absolute);
 		size_t extractedFiles = 0;
 		std::vector<RawHiveExtraction> reading;

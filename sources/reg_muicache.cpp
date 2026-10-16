@@ -81,11 +81,11 @@ HRESULT Muicaches::getData() {
 	log(0, L"ℹ️Muicache : ");
 	log(0, L"*******************************************************************************************************************");
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-		const std::wstring profile = extractedPath(std::get<1>(profileEntry));
+		const std::wstring profile = std::get<1>(profileEntry);
 		// Vista and later: UsrClass.dat. Windows XP and Server 2003: NTUSER.DAT, ShellNoRoam.
-		readMuiCacheKey(profile + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat",
+		readMuiCacheKey(extractedPath(profile + L"\\AppData\\Local\\Microsoft\\Windows\\usrClass.dat"),
 		                L"Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache", std::get<0>(profileEntry), muicaches);
-		readMuiCacheKey(profile + L"\\ntuser.dat", L"Software\\Microsoft\\Windows\\ShellNoRoam\\MUICache",
+		readMuiCacheKey(extractedPath(profile + L"\\ntuser.dat"), L"Software\\Microsoft\\Windows\\ShellNoRoam\\MUICache",
 		                std::get<0>(profileEntry), muicaches);
 	}
 	return ERROR_SUCCESS;

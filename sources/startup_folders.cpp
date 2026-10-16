@@ -58,7 +58,7 @@ HRESULT StartupFolders::getData() {
 	log(0, L"ℹ️Startup folders :");
 	readFolder(extractedPath(conf.systemDrive + STARTUP_ALL_USERS), L"", items_);
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
-		readFolder(extractedPath(std::get<1>(profileEntry)) + STARTUP_PROFILE, std::get<0>(profileEntry), items_);
+		readFolder(extractedPath(std::get<1>(profileEntry) + STARTUP_PROFILE), std::get<0>(profileEntry), items_);
 	return ERROR_SUCCESS;
 }
 

@@ -151,7 +151,7 @@ HRESULT DpapiMasterKeys::getData() {
 	log(0, L"ℹ️DPAPI master keys :");
 	readProtectFolder(extractedPath(conf.systemDrive + DPAPI_SYSTEM_FOLDER), L"System", keys_);
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
-		readProtectFolder(extractedPath(std::get<1>(profileEntry)) + DPAPI_PROFILE_FOLDER, L"User", keys_);
+		readProtectFolder(extractedPath(std::get<1>(profileEntry) + DPAPI_PROFILE_FOLDER), L"User", keys_);
 	return ERROR_SUCCESS;
 }
 

@@ -944,7 +944,7 @@ HRESULT WebClient::getData() {
 	log(0, L"ℹ️Web client (browsers) :");
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 		for (size_t i = 0; i < CHROMIUM_ROOT_COUNT; ++i) {
-			const std::filesystem::path root = extractedPath(std::get<1>(profileEntry)) + CHROMIUM_ROOTS[i].relative;
+			const std::filesystem::path root = extractedPath(std::get<1>(profileEntry) + CHROMIUM_ROOTS[i].relative);
 			std::error_code ec;
 			if (!std::filesystem::is_directory(root, ec)) continue;
 			std::vector<std::filesystem::path> folders = { root };
@@ -990,7 +990,7 @@ HRESULT WebClient::getData() {
 	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) { readTypedUrls(root, sid, records_); });
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 		for (const IeIndexFolder& f : IE_INDEX_FOLDERS) {
-			const std::filesystem::path root = extractedPath(std::get<1>(profileEntry)) + f.relative;
+			const std::filesystem::path root = extractedPath(std::get<1>(profileEntry) + f.relative);
 			std::error_code ec;
 			std::filesystem::recursive_directory_iterator it(root, ec), end;
 			for (; !ec && it != end; it.increment(ec)) {
@@ -1004,7 +1004,7 @@ HRESULT WebClient::getData() {
 			}
 		}
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-		const std::filesystem::path cache = extractedPath(std::get<1>(profileEntry)) + WEBCACHE_FOLDER + L"\\WebCacheV01.dat";
+		const std::filesystem::path cache = extractedPath(std::get<1>(profileEntry) + WEBCACHE_FOLDER + L"\\WebCacheV01.dat");
 		std::error_code ec;
 		if (!std::filesystem::is_regular_file(cache, ec)) continue;
 		WebClientRecord base;
@@ -1019,7 +1019,7 @@ HRESULT WebClient::getData() {
 		if (readWebCache(cache.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥WebCache not read: " + base.source);
 	}
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-		const std::filesystem::path root = extractedPath(std::get<1>(profileEntry)) + FIREFOX_PROFILES;
+		const std::filesystem::path root = extractedPath(std::get<1>(profileEntry) + FIREFOX_PROFILES);
 		std::error_code ec;
 		for (const std::filesystem::directory_entry& e : std::filesystem::directory_iterator(root, ec)) {
 			if (!e.is_directory(ec)) continue;

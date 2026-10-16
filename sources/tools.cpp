@@ -878,7 +878,13 @@ std::wstring pathUnder(const std::wstring& root, const std::wstring& absolute) {
 }
 
 std::wstring extractedPath(const std::wstring& absolute) {
-	return pathUnder(conf.mountpoint, absolute);
+	return pathUnder(conf.mountpoint, examinedLayout(absolute));
+}
+
+std::wstring examinedLayout(const std::wstring& path) {
+	std::vector<std::wstring> roots;
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) roots.push_back(std::get<1>(profileEntry));
+	return examinedFolderLayout(path, conf.examinedVersion, roots);
 }
 
 std::wstring originalPath(const std::wstring& extracted) {
@@ -1844,7 +1850,7 @@ std::vector<std::wstring> splitLines(const std::wstring& text) {
 void forEachProfileHive(const std::wstring& relativeHive,
                         const std::function<void(ORHKEY root, const std::wstring& sid)>& visit) {
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
-		const std::wstring file = extractedPath(std::get<1>(profileEntry)) + relativeHive;
+		const std::wstring file = extractedPath(std::get<1>(profileEntry) + relativeHive);
 		ORHKEY root = NULL;
 		const HRESULT hresult = OROpenHive(file.c_str(), &root);
 		if (hresult != ERROR_SUCCESS) {
