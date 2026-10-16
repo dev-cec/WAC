@@ -528,6 +528,8 @@ HRESULT ExtractFileArtefactsRaw() {
 	   filter. It replaces reading through the Task Scheduler COM interface,
 	   which removes both the execution trace and the dependency on COM.
 	   Error reports: one folder per report, Report.wer inside. */
+	//! Deepest folder walked for Thumbs.db: far below any folder a user browses.
+	const unsigned THUMBS_DB_DEPTH = 32;
 	struct Tree {
 		std::wstring absolute;                 //!< the folder, with its letter or relative to the system volume
 		std::vector<std::wstring> extensions;  //!< filter, empty for every file
@@ -617,6 +619,23 @@ HRESULT ExtractFileArtefactsRaw() {
 				trees.push_back({ where.absolute, { L".lnk", L".url" }, SHORTCUT_TREE_DEPTH, L"shortcuts", where.startup });
 			else addTarget(where.absolute, { L".lnk", L".url" });
 		}
+	/* Windows XP and Server 2003 keep a folder's thumbnails in the folder
+	   itself, Thumbs.db, wherever it was shown as thumbnails: every fixed
+	   NTFS volume is walked for that name alone. Later versions keep them in
+	   the profile (thumbcache_*.db, taken with the profile). */
+	if (conf.artefacts.thumbcache) {
+		const ArtefactEntry* thumbcache = artefactEntry("thumbcache");
+		if (thumbcache && std::wstring(formOf(*thumbcache, conf.examinedVersion).location).compare(0, 9, L"Thumbs.db") == 0)
+			for (const std::wstring& drive : fixedNtfsVolumes()) {
+				/* The collection's own output, when it lies on that volume, is
+				   not walked: the Thumbs.db it is copying would be taken again. */
+				std::error_code ec;
+				const std::wstring output = std::filesystem::absolute(conf._outputDir, ec).wstring();
+				const bool here = output.size() > 2 && _wcsnicmp(output.c_str(), drive.c_str(), 2) == 0;
+				trees.push_back({ drive + L"\\", { L"Thumbs.db" }, THUMBS_DB_DEPTH, L"thumbnail databases (Thumbs.db)",
+				                  here ? output : L"" });
+			}
+	}
 	for (const Tree& tree : trees) {
 		const std::wstring volume = volumeOfPath(tree.absolute), path = pathRelativeToVolume(tree.absolute);
 		size_t extractedFiles = 0;

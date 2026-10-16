@@ -1904,14 +1904,15 @@ HRESULT ExtractFileRaw(const std::wstring& volumeLetter,
     return r.empty() ? E_FAIL : r[0];
 }
 
-/* Compares two extensions, case-insensitively (ASCII). */
+/* Compares a name with the filter, case-insensitively (ASCII): an entry
+   starting with "." is an extension, any other a whole name ("Thumbs.db",
+   which Windows XP writes in every folder shown as thumbnails). */
 static bool extensionMatches(const std::wstring& name, const std::vector<std::wstring>& extensions){
     if (extensions.empty()) return true;              // no filter: everything is kept
     const size_t point = name.rfind(L'.');
-    if (point == std::wstring::npos) return false;
-    const std::wstring ext = name.substr(point);
+    const std::wstring ext = point == std::wstring::npos ? std::wstring() : name.substr(point);
     for (const std::wstring& expected : extensions)
-        if (iequals(ext, expected)) return true;
+        if (!expected.empty() && expected[0] == L'.' ? iequals(ext, expected) : iequals(name, expected)) return true;
     return false;
 }
 

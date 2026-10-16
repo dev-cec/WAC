@@ -91,6 +91,31 @@ std::wstring thumbcacheSize(uint32_t version, uint32_t type);
 bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file);
 
 /*! The thumbnail and icon caches of every profile (thumbcache.json). */
+/*! One thumbnail of a Windows XP Thumbs.db: an entry of its Catalog and the
+ *  stream of the same number. */
+struct ThumbsDbEntry {
+	uint32_t index = 0;            //!< the entry's number, which names its stream (digits reversed)
+	std::wstring name;             //!< the image's file name, in the folder holding the Thumbs.db
+	FILETIME sourceModifiedUtc = {}; //!< the image's last modification when its thumbnail was made
+	uint32_t width = 0, height = 0;  //!< size of the thumbnail
+	std::vector<uint8_t> image;      //!< the thumbnail's bytes as stored; empty when its stream is missing
+};
+
+/*! Decodes a Thumbs.db of Windows XP and Server 2003 (measured on the XP VM).
+ *  An OLE compound file: a "Catalog" stream — a header (its size, a version,
+ *  the number of entries, the thumbnails' width and height), then per entry
+ *  its size, number, the image's modification (FILETIME) and file name
+ *  (UTF-16) — and one stream per thumbnail, named by the number's digits in
+ *  reverse ("21" for 12): a header of 12 bytes, a second of 16 (type,
+ *  length, width, height), then the image. The image is a JPEG of four
+ *  components (R, G, B, A) without its quantization and Huffman tables,
+ *  which no ordinary viewer renders: it is given as stored, with its
+ *  SHA-256, not rendered. Every size is bounded by its stream.
+ *  @param bytes the file
+ *  @param entries receives the catalogued thumbnails
+ *  @return false if it is not an OLE file with a Catalog */
+bool decodeThumbsDb(const std::vector<uint8_t>& bytes, std::vector<ThumbsDbEntry>& entries);
+
 class Thumbcaches {
 public:
 	/*! Reads the cache files extracted from every profile and exports their
@@ -103,6 +128,8 @@ public:
 	//! Releases the entries read.
 	void clear();
 private:
+	//! Reads the Thumbs.db of the collection (Windows XP), each thumbnail an entry.
+	void readThumbsDb();
 	Json entries_ = Json::arr();
 };
 

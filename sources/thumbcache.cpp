@@ -5,6 +5,8 @@
 #include "conversions.h"
 #include "consigne.h"
 #include "sha.h"
+#include "oleparser.h"
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <fstream>
@@ -147,6 +149,48 @@ bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file) {
 	return true;
 }
 
+bool decodeThumbsDb(const std::vector<uint8_t>& bytes, std::vector<ThumbsDbEntry>& entries) {
+	entries.clear();
+	try {
+		std::vector<uint8_t> copy = bytes;   // the OLE reader takes a writable buffer
+		oleParser ole(copy.data(), copy.size());
+		const Directory catalogue = ole.findDirectory(L"Catalog");
+		if (catalogue.name.empty()) return false;
+		const std::vector<BYTE> c = ole.Getdata(catalogue);
+		if (c.size() < 16) return false;
+		const size_t headerSize = readLittleEndian<uint16_t>(c.data());
+		const uint32_t count = readLittleEndian<uint32_t>(c.data() + 4);
+		size_t at = std::max<size_t>(headerSize, 16);
+		for (uint32_t i = 0; i < count && fits(c.size(), at, 16); ++i) {
+			const size_t size = readLittleEndian<uint32_t>(c.data() + at);
+			if (size < 16 || !fits(c.size(), at, size)) break;   // a forged size ends the catalogue
+			ThumbsDbEntry e;
+			e.index = readLittleEndian<uint32_t>(c.data() + at + 4);
+			std::memcpy(&e.sourceModifiedUtc, c.data() + at + 8, sizeof e.sourceModifiedUtc);
+			e.name = readWideZ(c.data(), at + size, at + 16);
+			at += size;
+			std::wstring stream = std::to_wstring(e.index);
+			std::reverse(stream.begin(), stream.end());
+			const Directory d = ole.findDirectory(stream);
+			if (!d.name.empty()) {
+				const std::vector<BYTE> s = ole.Getdata(d);
+				// The stream's header gives its own size; the image's then gives its length and size.
+				const size_t header = s.size() >= 4 ? readLittleEndian<uint32_t>(s.data()) : 0;
+				if (header >= 12 && fits(s.size(), header, 16)) {
+					const size_t length = readLittleEndian<uint32_t>(s.data() + header + 4);
+					e.width = readLittleEndian<uint32_t>(s.data() + header + 8);
+					e.height = readLittleEndian<uint32_t>(s.data() + header + 12);
+					if (fits(s.size(), header + 16, length)) e.image.assign(s.begin() + header + 16, s.begin() + header + 16 + length);
+				}
+			}
+			entries.push_back(std::move(e));
+		}
+	} catch (const std::exception&) {
+		return false;   // a chain outside the file: not read further
+	}
+	return true;
+}
+
 HRESULT Thumbcaches::getData() {
 	log(0, L"ℹ️Thumbnail and icon caches :");
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
@@ -199,7 +243,51 @@ HRESULT Thumbcaches::getData() {
 			log(2, L"❇️" + source + L" : " + std::to_wstring(cache.entries.size()) + L" entry(ies)");
 		}
 	}
+	readThumbsDb();
 	return ERROR_SUCCESS;
+}
+
+void Thumbcaches::readThumbsDb() {
+	// Windows XP: one Thumbs.db per folder shown as thumbnails, found by name in the exhibit store.
+	size_t file = 0;
+	for (const auto& [key, exhibit] : ExhibitStoreIndex()) {
+		const std::filesystem::path source(exhibit.sourcePath);
+		if (exhibit.workingFile.empty() || _wcsicmp(source.filename().c_str(), L"Thumbs.db") != 0) continue;
+		std::vector<uint8_t> bytes;
+		std::vector<ThumbsDbEntry> thumbnails;
+		if (!readWholeFile(std::filesystem::path(exhibit.workingFile), FILE_MAX, bytes) || !decodeThumbsDb(bytes, thumbnails)) {
+			log(2, L"🔥Thumbs.db unreadable or without its Catalog: " + exhibit.sourcePath);
+			continue;
+		}
+		const std::wstring folder = L"thumbcache\\Thumbs.db\\" + std::to_wstring(++file);
+		std::error_code ec;
+		std::filesystem::create_directories(std::filesystem::path(conf._outputDir) / folder, ec);
+		for (const ThumbsDbEntry& t : thumbnails) {
+			Json o = Json::obj();
+			o.add(L"Cache", Json::str(exhibit.sourcePath));
+			o.add(L"Index", Json::num((unsigned long long)t.index));
+			o.add(L"Name", Json::str(t.name));
+			o.add(L"Path", Json::str(source.parent_path().wstring() + L"\\" + t.name));
+			addDate(o, L"SourceModified", t.sourceModifiedUtc);
+			if (!t.image.empty()) {
+				o.add(L"Width", Json::num((unsigned long long)t.width));
+				o.add(L"Height", Json::num((unsigned long long)t.height));
+				o.add(L"DataSize", Json::num((unsigned long long)t.image.size()));
+				// Not a JPEG a viewer renders (see decodeThumbsDb): named for what it is.
+				o.add(L"Format", Json::str(L"JPEG with four components (R, G, B, A), without its tables"));
+				Sha256Stream digest;
+				digest.update(t.image.data(), t.image.size());
+				o.add(L"Sha256", Json::str(digest.hexDigest()));
+				const std::wstring image = folder + L"\\" + std::to_wstring(t.index) + L".bin";
+				std::ofstream out(std::filesystem::path(conf._outputDir) / image, std::ios::binary);
+				out.write(reinterpret_cast<const char*>(t.image.data()), (std::streamsize)t.image.size());
+				if (out) o.add(L"Image", Json::str(image));
+				else log(2, L"🔥Thumbnail not written: " + image);
+			}
+			entries_.push(std::move(o));
+		}
+		log(2, L"❇️" + exhibit.sourcePath + L" : " + std::to_wstring(thumbnails.size()) + L" thumbnail(s)");
+	}
 }
 
 HRESULT Thumbcaches::toJson() {

@@ -213,7 +213,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		{ "startup_folders", XP, 0, 0,
 		  { { XP, L"Start Menu\\Programs\\Startup of each profile and of All Users", L"files", true } }, L"" },
 		{ "thumbcache", XP, 0, 0,
-		  { { XP, L"Thumbs.db in each folder", L"OLE compound file", false },
+		  { { XP, L"Thumbs.db in each folder", L"OLE compound file", true },
 		    { VISTA, L"Users\\<user>\\AppData\\Local\\Microsoft\\Windows\\Explorer\\thumbcache_*.db", L"CMMM, Vista layout", false, { 0x14 } },
 		    { SEVEN, L"the same folder", L"CMMM, Windows 7 layout", true, { 0x15 } },
 		    { EIGHT, L"the same folder, with iconcache_*.db", L"CMMM, Windows 8 and later layout", true, { 0x1E, 0x1F, 0x20 } } }, L"" },

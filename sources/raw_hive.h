@@ -358,7 +358,8 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
  *  @param volumeLetter letter of the volume to read, without the colon (e.g. L"C")
  *  @param dirPathOnVolume path of the directory on the volume
  *  @param outDir destination directory; the tree is reproduced there
- *  @param extensions extensions to extract (empty = all)
+ *  @param extensions extensions to extract (empty = all); an entry without
+ *         a leading "." is a whole file name ("Thumbs.db")
  *  @param extracted receives the number of files extracted
  *  @param maxDepth guard against a cyclic or abnormal tree (a corrupt
  *         NTFS index could loop); 0 = no descent
