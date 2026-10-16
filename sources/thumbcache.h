@@ -24,8 +24,11 @@
  *  the number of entries at 20 — nor the entry's width and height: its entry
  *  is 48 bytes, the checksums at 32 and 40, and its cache types name other
  *  sizes (32, 96, 256, 1024, sr). Measured on the test VM's caches, every
- *  checksum recomputed valid. Vista's (0x14) adds an extension of 8 bytes
- *  after the hash; no sample was at hand: it stays declared unsupported.
+ *  checksum recomputed valid. VISTA (0x14) has Windows 7's file header and
+ *  types, and adds after the entry's hash the source file's extension (four
+ *  UTF-16 characters, given as SourceExtension): its entry is 56 bytes, the
+ *  sizes at 24, the checksums at 40 and 48. Measured on the Vista VM's
+ *  caches, every checksum recomputed valid.
  *
  *  THE CHECKSUMS are the format's own control, recomputed for every entry:
  *  a CRC-64 (reflected polynomial 0x92C64265D32139A4, the table of
@@ -47,6 +50,7 @@ struct ThumbcacheEntry {
 	size_t offset = 0;              //!< position of the entry in the file
 	uint64_t hash = 0;              //!< the file's System.ThumbnailCacheId
 	std::wstring identifier;        //!< the hash in hexadecimal, or the shell name of what is shown
+	std::wstring extension;         //!< the source file's extension ("jpg"), on Vista only
 	uint32_t width = 0, height = 0; //!< size of the image, in pixels; 0 on Windows 7, whose entry has none
 	size_t dataOffset = 0;          //!< position of the image in the file
 	size_t dataSize = 0;            //!< its size, 0 for an entry without image

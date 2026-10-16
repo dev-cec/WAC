@@ -16,6 +16,7 @@ const wchar_t THUMBCACHE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Windows\\Expl
 namespace {
 
 const size_t FILE_HEADER = 24;           //!< signature, version, type, then three offsets and counts of the version
+const uint32_t VISTA = 0x14;             //!< the version of Vista's caches
 const uint32_t WINDOWS_7 = 0x15;         //!< the version of Windows 7's caches
 const size_t DATA_FIRST = 1024;          //!< the image's bytes covered whole by its checksum
 const size_t DATA_STRIDE = 400;          //!< beyond them, four bytes every this many
@@ -56,20 +57,28 @@ std::wstring exportImage(const std::wstring& folder, const ThumbcacheEntry& e, c
 
 /*! Where a version keeps what the decoder reads. Windows 7 has neither the
  *  header's unknown field nor the entry's width and height: its offsets come
- *  four bytes earlier in the header, and its entry is 48 bytes, not 56. The
- *  header checksum covers the entry up to itself in both. */
+ *  four bytes earlier in the header, and its entry is 48 bytes, not 56.
+ *  Vista has Windows 7's file header, and after the entry's hash the source
+ *  file's extension (four UTF-16 characters): every later field comes eight
+ *  bytes further, its entry is 56 bytes (measured on Vista SP2, 28 entries,
+ *  every checksum as Windows wrote it; read the same way by
+ *  dissect.thumbcache). The header checksum covers the entry up to itself in
+ *  all three. */
 struct Layout {
 	size_t firstEntryAt;   //!< in the file header, the offset of the first entry
 	size_t firstFreeAt;    //!< in the file header, the offset of the first free place
+	size_t extensionAt;    //!< in the entry, the source's extension; 0 when the version has none
+	size_t sizesAt;        //!< in the entry, the identifier's size, then the padding's and the data's
 	size_t entryHeader;    //!< the entry's fixed part
 	size_t dataChecksumAt; //!< in the entry, the data checksum; the header checksum follows it
 	bool hasSize;          //!< the entry gives the image's width and height
 };
 
-//! The layout of a decoded version: Windows 7's, or Windows 8 to 11's.
+//! The layout of a decoded version: Vista's, Windows 7's, or Windows 8 to 11's.
 Layout layoutOf(uint32_t version) {
-	if (version == WINDOWS_7) return { 12, 16, 48, 32, false };
-	return { 16, 20, 56, 40, true };
+	if (version == VISTA) return { 12, 16, 16, 24, 56, 40, false };
+	if (version == WINDOWS_7) return { 12, 16, 0, 16, 48, 32, false };
+	return { 16, 20, 0, 16, 56, 40, true };
 }
 
 } // namespace
@@ -93,7 +102,7 @@ std::wstring thumbcacheSize(uint32_t version, uint32_t type) {
 	static const std::vector<std::wstring> SEVEN = { L"32", L"96", L"256", L"1024", L"sr" };
 	static const std::vector<std::wstring> LATER = { L"16", L"32", L"48", L"96", L"256", L"768", L"1280", L"1920", L"2560",
 	                                                 L"sr", L"wide", L"exif", L"wide_alternate", L"custom_stream" };
-	const std::vector<std::wstring>& sizes = version == WINDOWS_7 ? SEVEN : LATER;
+	const std::vector<std::wstring>& sizes = version == VISTA || version == WINDOWS_7 ? SEVEN : LATER;
 	return type < sizes.size() ? sizes[type] : L"";
 }
 
@@ -118,9 +127,9 @@ bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file) {
 	while (fits(end, offset, entryHeader) && memcmp(bytes.data() + offset, "CMMM", 4) == 0) {
 		const uint8_t* p = bytes.data() + offset;
 		const size_t size = readLittleEndian<uint32_t>(p + 4);
-		const size_t identifierSize = readLittleEndian<uint32_t>(p + 16);
-		const size_t padding = readLittleEndian<uint32_t>(p + 20);
-		const size_t dataSize = readLittleEndian<uint32_t>(p + 24);
+		const size_t identifierSize = readLittleEndian<uint32_t>(p + layout.sizesAt);
+		const size_t padding = readLittleEndian<uint32_t>(p + layout.sizesAt + 4);
+		const size_t dataSize = readLittleEndian<uint32_t>(p + layout.sizesAt + 8);
 		// Each length is the file's word: the entry must hold them all, and lie in the file.
 		if (size < entryHeader || !fits(end, offset, size) || identifierSize % 2 != 0
 		    || identifierSize > size - entryHeader || padding > size - entryHeader - identifierSize
@@ -131,6 +140,12 @@ bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file) {
 		ThumbcacheEntry e;
 		e.offset = offset;
 		e.hash = readLittleEndian<uint64_t>(p + 8);
+		// Vista's extension: up to four characters, null-padded.
+		for (size_t i = 0; layout.extensionAt && i < 8; i += 2) {
+			const wchar_t c = (wchar_t)readLittleEndian<uint16_t>(p + layout.extensionAt + i);
+			if (c == 0) break;
+			e.extension += c;
+		}
 		for (size_t i = 0; i < identifierSize; i += 2)
 			e.identifier += (wchar_t)readLittleEndian<uint16_t>(p + entryHeader + i);
 		if (layout.hasSize) {
@@ -222,6 +237,7 @@ HRESULT Thumbcaches::getData() {
 				o.add(L"Offset", Json::num((unsigned long long)e.offset));
 				o.add(L"Hash", Json::str(to_hex(e.hash, 16)));
 				if (!e.identifier.empty()) o.add(L"Identifier", Json::str(e.identifier));
+				if (!e.extension.empty()) o.add(L"SourceExtension", Json::str(e.extension));
 				o.add(L"HeaderChecksumValid", Json::boolean(e.headerChecksumValid));
 				// An entry without image (a placeholder Explorer keeps): no size, no data.
 				if (e.dataSize) {

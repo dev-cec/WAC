@@ -1023,11 +1023,42 @@ void thumbcache() {
 	writeLittleEndian<uint32_t>(cut.data() + 20, 0xFFFFFFFF);   // first free place beyond the file
 	ThumbcacheFile d;
 	check(decodeThumbcache(cut, d) && d.entries.empty(), "thumbcache: a cut file read no further than its end");
-	std::vector<uint8_t> vista = file;
-	writeLittleEndian<uint32_t>(vista.data() + 4, 0x14);   // Vista: another entry layout, never measured
+	/* VISTA (0x14): the first entry header of the Vista VM's thumbcache_96.db
+	   and the checksum Windows wrote after its first 48 bytes; then a Vista
+	   cache built here, the source's extension after the hash and every later
+	   field eight bytes further than on Windows 7. */
+	const uint8_t vistaHeader[56] = {
+	                                 0x43, 0x4D, 0x4D, 0x4D, 0x90, 0x6C, 0x00, 0x00, 0x7E, 0x5A, 0x2D, 0x8B, 0xB0, 0x2B, 0x25, 0x36,
+	                                 0x6A, 0x00, 0x70, 0x00, 0x67, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+	                                 0x36, 0x6C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x89, 0xD6, 0x65, 0x0C, 0xFF, 0xF4, 0xE5, 0x5A,
+	                                 0x0A, 0x5E, 0x8F, 0x93, 0x32, 0xE3, 0xB8, 0xA4 };
+	check(thumbcacheCrc64(vistaHeader, 48, ~0ULL) == readLittleEndian<uint64_t>(vistaHeader + 48),
+	      "thumbcache of Vista: header checksum as Windows wrote it");
+	std::vector<uint8_t> vista(24 + 56 + identifier.size() * 2 + 2 + data.size());
+	memcpy(vista.data(), "CMMM", 4);
+	writeLittleEndian<uint32_t>(vista.data() + 4, 0x14);
+	writeLittleEndian<uint32_t>(vista.data() + 8, 1);                   // 96 pixels
+	writeLittleEndian<uint32_t>(vista.data() + 12, 24);
+	writeLittleEndian<uint32_t>(vista.data() + 16, (uint32_t)vista.size());
+	writeLittleEndian<uint32_t>(vista.data() + 20, 1);
+	uint8_t* v = vista.data() + 24;
+	memcpy(v, "CMMM", 4);
+	writeLittleEndian<uint32_t>(v + 4, (uint32_t)(vista.size() - 24));
+	writeLittleEndian<uint64_t>(v + 8, 0x36252BB08B2D5A7EULL);
+	for (size_t i = 0; i < 3; ++i) writeLittleEndian<uint16_t>(v + 16 + 2 * i, (uint16_t)"png"[i]);
+	writeLittleEndian<uint32_t>(v + 24, (uint32_t)identifier.size() * 2);
+	writeLittleEndian<uint32_t>(v + 28, 2);
+	writeLittleEndian<uint32_t>(v + 32, (uint32_t)data.size());
+	for (size_t i = 0; i < identifier.size(); ++i) writeLittleEndian<uint16_t>(v + 56 + 2 * i, (uint16_t)identifier[i]);
+	memcpy(v + 56 + identifier.size() * 2 + 2, data.data(), data.size());
+	writeLittleEndian<uint64_t>(v + 40, thumbcacheDataChecksum(data.data(), data.size()));
+	writeLittleEndian<uint64_t>(v + 48, thumbcacheCrc64(v, 48, ~0ULL));
 	ThumbcacheFile g;
-	check(decodeThumbcache(vista, g) && g.unsupportedFormat && g.version == 0x14 && g.entries.empty(),
-	      "thumbcache: a Vista layout decoded as a later one's, or not declared unsupported");
+	check(decodeThumbcache(vista, g) && !g.unsupportedFormat && g.entries.size() == 1 && g.entries[0].hash == 0x36252BB08B2D5A7EULL
+	      && g.entries[0].extension == L"png" && g.entries[0].identifier == identifier && g.entries[0].dataSize == 2000
+	      && g.entries[0].width == 0 && g.entries[0].headerChecksumValid && g.entries[0].dataChecksumValid
+	      && thumbcacheSize(g.version, g.type) == L"96",
+	      "thumbcache of Vista: extension, identifier, image and both checksums at their places");
 	writeLittleEndian<uint32_t>(vista.data() + 4, 0x21);   // a version nobody has seen yet
 	check(decodeThumbcache(vista, g) && g.unsupportedFormat && g.entries.empty(), "thumbcache: an unknown version decoded");
 	check(!cache.unsupportedFormat, "thumbcache: the Windows 10 layout declared unsupported");

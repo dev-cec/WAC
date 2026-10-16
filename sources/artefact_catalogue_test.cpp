@@ -162,9 +162,9 @@ int main(int argc, char** argv) {
 	check(pieceFormat("recycle_bin", 1).decoded && pieceFormat("recycle_bin", 2).decoded && pieceFormat("recycle_bin", 5).decoded
 	      && !pieceFormat("recycle_bin", 3).decoded,
 	      "$I versions 1 and 2, INFO2 version 5 decoded, no other");
-	check(pieceFormat("thumbcache", 0x20).decoded && pieceFormat("thumbcache", 0x15).decoded
-	      && !pieceFormat("thumbcache", 0x14).decoded && pieceFormat("thumbcache", 0x14).form,
-	      "thumbcache: Windows 10 and 7 layouts decoded, Vista's known and not decoded");
+	check(pieceFormat("thumbcache", 0x20).decoded && pieceFormat("thumbcache", 0x15).decoded && pieceFormat("thumbcache", 0x14).decoded
+	      && !pieceFormat("thumbcache", 0x21).decoded && !pieceFormat("thumbcache", 0x21).form,
+	      "thumbcache: Windows 10, 7 and Vista layouts decoded, an unknown version not");
 	check(pieceFormat("shimcache", 0x34).decoded && pieceFormat("shimcache", 0xBADC0FEE).decoded && !pieceFormat("shimcache", 0xBADC0FFE).decoded
 	      && !pieceFormat("shimcache", 0x80).form,
 	      "ShimCache: Windows 10 and 7 headers decoded, Server 2003 not, 0x80 alone is no signature");
