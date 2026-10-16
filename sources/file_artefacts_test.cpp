@@ -1279,7 +1279,9 @@ int wmain() {
 			std::vector<uint8_t> b(0x158 - shift, 0);
 			b[0] = version;
 			b[0x50] = 23;                                       // the file's size
-			b[0xA0 - shift] = 2; b[0xA4 - shift] = 127; b[0xA7 - shift] = 1;   // AF_INET, 127.0.0.1
+			// A sockaddr_in: AF_INET on 16 bits, port 8765 in network order, 127.0.0.1.
+			b[0xA0 - shift] = 2; b[0xA2 - shift] = 0x22; b[0xA3 - shift] = 0x3D;
+			b[0xA4 - shift] = 127; b[0xA7 - shift] = 1;
 			for (const std::wstring& t : { std::wstring(L"text/plain"), std::wstring(L"C:\\Users\\wac\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Low\\IE\\0VDERP2C\\w[1].txt"),
 			                               std::wstring(L"http://127.0.0.1:8765/w.txt"), last }) {
 				for (wchar_t c : t) { b.push_back((uint8_t)c); b.push_back((uint8_t)(c >> 8)); }

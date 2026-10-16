@@ -583,7 +583,11 @@ bool decodeIeDownload(const std::vector<uint8_t>& blob, Json& fields) {
 	const bool path = strings[3].size() > 2 && strings[3][1] == L':' && strings[3][2] == L'\\';
 	fields.add(path ? L"TargetPath" : L"SuggestedName", Json::str(strings[3]));
 	fields.add(L"FileSize", Json::num((unsigned long long)readLittleEndian<uint64_t>(blob.data() + SIZE)));
-	if (readLittleEndian<uint32_t>(blob.data() + ADDRESS) == 2) {   // AF_INET, then the address in network order
+	/* A sockaddr_in: the family on 16 bits (AF_INET), the port, then the
+	   address in network order. The family read on 32 bits took the port
+	   with it, and a server on another port than 0 lost its address
+	   (Windows 8, measured: port 8765). */
+	if (readLittleEndian<uint16_t>(blob.data() + ADDRESS) == 2) {
 		const uint8_t* ip = blob.data() + ADDRESS + 4;
 		fields.add(L"ServerAddress", Json::str(std::to_wstring(ip[0]) + L"." + std::to_wstring(ip[1]) + L"."
 		                                       + std::to_wstring(ip[2]) + L"." + std::to_wstring(ip[3])));
