@@ -125,8 +125,8 @@ NOTES = {
     "Earlier with PSReadLine installed by hand (PowerShell 5, Windows 7 and later).":
         "Plus tôt si PSReadLine a été installé à la main (PowerShell 5, Windows 7 et suivants).",
     "Switched off by default on the server editions.": "Désactivé par défaut sur les éditions serveur.",
-    "Windows XP keeps the repository in a FS subfolder (measured, SP1): collected, not converted until its layout is checked.":
-        "Windows XP range le dépôt dans un sous-dossier FS (mesuré, SP1) : prélevé, non converti tant que sa disposition n'est pas vérifiée.",
+    "Windows XP keeps the repository in a FS subfolder, MD5 hashes and 4-byte page entries (measured, SP1 and SP3).":
+        "Windows XP range le dépôt dans un sous-dossier FS, avec des condensats MD5 et des entrées de page de 4 octets (mesuré, SP1 et SP3).",
     "DestList version 6 measured on build 26200; the custom lists (CustomDestinations) carry no version.":
         "DestList version 6 mesurée sur le build 26200 ; les listes personnalisées (CustomDestinations) ne portent pas de version.",
     "Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600.":

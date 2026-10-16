@@ -1322,7 +1322,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         defined), binding and timer, with all its properties
         (\champ{Properties}: name and value; \champ{CreatorSID} in text). A
         persistence invisible in the registry. The two dates at the start of
-        an instance are not emitted: they are not creation dates.
+        an instance are not emitted: they are not creation dates. On
+        Windows XP the repository is in \path|wbem\Repository\FS| and has
+        another layout (MD5 hashes, 4-byte page entries, two mapping files
+        in SP1): it is read the same way.
   \item[\fichier{web\_client.json}] each user's browsing in the Chromium
         browsers (Edge, Chrome, Brave, Vivaldi, Chromium, Opera), read in the
         \fichier{History} database of each browser profile. One record per URL
@@ -1558,7 +1561,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         The two checksums Windows writes for each entry are recomputed
         (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}): an entry read
         wrong fails them. Windows 7 to 11 (Windows~7 gives no dimensions); the
-        layout of Vista is not decoded.
+        layout of Vista is not decoded. On Windows~XP and Server~2003, the
+        \fichier{Thumbs.db} that Explorer writes in every folder shown as
+        thumbnails, searched by name on every fixed NTFS volume: per
+        thumbnail, the image's name and path, its modification when the
+        thumbnail was made (\champ{SourceModifiedUtc}), even after the image
+        was deleted, the thumbnail's size and SHA-256, and its bytes exported
+        as stored (\texttt{.bin}): a JPEG of four components without its
+        tables, which no ordinary viewer renders.
   \item[\fichier{error\_reports.json}] Windows error reports
         (\fichier{Report.wer}) of the machine and of each profile: program, path,
         instant (\champ{EventTimeUtc}), problem signature (faulting module,

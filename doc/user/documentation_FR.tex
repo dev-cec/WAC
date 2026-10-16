@@ -1362,7 +1362,10 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         liaison et minuterie, avec toutes ses propriétés (\champ{Properties} :
         nom et valeur ; \champ{CreatorSID} en clair). C'est une persistance
         invisible au registre. Les deux dates d'en-tête d'une instance ne sont
-        pas émises : ce ne sont pas des dates de création.
+        pas émises : ce ne sont pas des dates de création. Sous Windows XP,
+        le dépôt est dans \path|wbem\Repository\FS| et suit une autre
+        disposition (condensats MD5, entrées de page de 4 octets, deux
+        fichiers de correspondance au SP1) : il est lu de la même façon.
   \item[\fichier{web\_client.json}] navigation de chaque utilisateur dans les
         navigateurs Chromium (Edge, Chrome, Brave, Vivaldi, Chromium, Opera),
         lue dans la base \fichier{History} de chaque profil de navigateur. Un
@@ -1614,6 +1617,14 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         recalculées (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}) :
         une entrée lue de travers les échoue. Windows 7 à 11 (Windows~7 ne
         donne pas les dimensions) ; la disposition de Vista n'est pas décodée.
+        Sous Windows~XP et Server~2003, les \fichier{Thumbs.db} que
+        l'Explorateur écrit dans chaque dossier affiché en miniatures,
+        cherchés par leur nom sur chaque volume NTFS fixe : pour chaque
+        miniature, le nom et le chemin de l'image, sa date de modification
+        au moment de la miniature (\champ{SourceModifiedUtc}), même une fois
+        l'image effacée, la taille et le SHA-256 de la miniature, et ses
+        octets exportés tels quels (\texttt{.bin}) : un JPEG à quatre
+        composantes sans ses tables, qu'aucun visualiseur ordinaire n'affiche.
   \item[\fichier{error\_reports.json}] rapports d'erreurs Windows
         (\fichier{Report.wer}) de la machine et de chaque profil : programme,
         chemin, instant (\champ{EventTimeUtc}), signature du problème

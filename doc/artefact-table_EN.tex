@@ -190,7 +190,7 @@
 \addlinespace
 \texttt{startup\_folders} & Windows XP & \texttt{Start Menu\textbackslash{}Programs\textbackslash{}Startup of each profile and of All Users} & files & yes \\
 \addlinespace
-\texttt{thumbcache} & Windows XP & \texttt{Thumbs.db in each folder} & OLE compound file & no \\
+\texttt{thumbcache} & Windows XP & \texttt{Thumbs.db in each folder} & OLE compound file & yes \\
  & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Explorer\textbackslash{}thumbcache\_*.db} & CMMM, Vista layout & no \\
  & Windows 7 & \texttt{the same folder} & CMMM, Windows 7 layout & yes \\
  & Windows 8 & \texttt{the same folder, with iconcache\_*.db} & CMMM, Windows 8 and later layout & yes \\
@@ -219,9 +219,9 @@
  & Windows 10 & \texttt{…and Chromium browsers, Firefox: History, places.sqlite, session files} & SQLite, SNSS, mozLz4 & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chromium and Firefox depend on the browser installed, not on Windows.} \\
 \addlinespace
-\texttt{wmi} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository\textbackslash{}FS} & CIM repository of Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, in FS) & no \\
+\texttt{wmi} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository\textbackslash{}FS} & CIM repository of Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, in FS) & yes \\
  & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository} & CIM repository (INDEX.BTR, OBJECTS.DATA, MAPPING) & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP; Windows XP keeps the repository in a FS subfolder (measured, SP1): collected, not converted until its layout is checked.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP; Windows XP keeps the repository in a FS subfolder, MD5 hashes and 4-byte page entries (measured, SP1 and SP3).} \\
 \addlinespace
 \texttt{word\_wheel\_query} & Windows 7 & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}WordWheelQuery} & MRUListEx and UTF-16 strings & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP: Search Assistant\textbackslash{}ACMru, not collected.} \\

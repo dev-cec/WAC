@@ -190,7 +190,7 @@
 \addlinespace
 \texttt{startup\_folders} & Windows XP & \texttt{Start Menu\textbackslash{}Programs\textbackslash{}Startup de chaque profil et de All Users} & fichiers & oui \\
 \addlinespace
-\texttt{thumbcache} & Windows XP & \texttt{Thumbs.db dans chaque dossier} & fichier composé OLE & non \\
+\texttt{thumbcache} & Windows XP & \texttt{Thumbs.db dans chaque dossier} & fichier composé OLE & oui \\
  & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Explorer\textbackslash{}thumbcache\_*.db} & CMMM, disposition de Vista & non \\
  & Windows 7 & \texttt{le même dossier} & CMMM, disposition de Windows 7 & oui \\
  & Windows 8 & \texttt{le même dossier, avec iconcache\_*.db} & CMMM, disposition de Windows 8 et suivants & oui \\
@@ -219,9 +219,9 @@
  & Windows 10 & \texttt{…et navigateurs Chromium, Firefox : History, places.sqlite, fichiers de session} & SQLite, SNSS, mozLz4 & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chromium et Firefox dépendent du navigateur installé, non de Windows.} \\
 \addlinespace
-\texttt{wmi} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository\textbackslash{}FS} & dépôt CIM de Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, dans FS) & non \\
+\texttt{wmi} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository\textbackslash{}FS} & dépôt CIM de Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, dans FS) & oui \\
  & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository} & dépôt CIM (INDEX.BTR, OBJECTS.DATA, MAPPING) & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP ; Windows XP range le dépôt dans un sous-dossier FS (mesuré, SP1) : prélevé, non converti tant que sa disposition n'est pas vérifiée.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP ; Windows XP range le dépôt dans un sous-dossier FS, avec des condensats MD5 et des entrées de page de 4 octets (mesuré, SP1 et SP3).} \\
 \addlinespace
 \texttt{word\_wheel\_query} & Windows 7 & \texttt{NTUSER.DAT …\textbackslash{}Explorer\textbackslash{}WordWheelQuery} & MRUListEx et chaînes UTF-16 & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP : Search Assistant\textbackslash{}ACMru, non collecté.} \\
