@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # create-vm.sh — creates a Windows test VM from scratch, entirely without interaction.
 #
-# Usage: ./create-vm.sh [win11|win81|win8|win7|winxp|srv2012r2|srv2016|srv2019|srv2022|srv2025]
+# Usage: ./create-vm.sh [win11|win81|win8|win7|vista|winxp|srv2012r2|srv2016|srv2019|srv2022|srv2025]
 #   win11  (default) the VM of the test cycle, Windows 11 — domain win11-test
 #   win81  Windows 8.1 x64, for the compatibility with the older versions —
 #          domain win81-test; run-wac-test.sh is given it with DOM=win81-test
 #   win8   Windows 8 Pro x86 (32 bits: the machine of WAC32.exe) — domain win8-test
 #   win7   Windows 7 SP1 Ultimate x64 — domain win7-test
+#   vista  Windows Vista SP2 Business x86 — domain vista-test. No PowerShell:
+#          the agent's channel driver is installed by certutil and pnputil,
+#          and the VM runs WAC32 through the agent (`qga.py run --shell`)
 #   srv2012r2, srv2016, srv2019, srv2022, srv2025
 #          Windows Server Standard with its graphical interface, from the
 #          evaluation media of vmtest/tools/isos — domains srv2012r2-test…
@@ -84,6 +87,16 @@ case "$PROFILE" in
     # SHA-2 update (KB3033929) accepts.
     ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.173.iso}"
     FIRMWARE=(--boot hd,cdrom) ;;
+  vista)
+    # Business: Microsoft's public KMS client setup key installs it, without
+    # activating (30 days, enough for a throw-away VM). Its Setup refuses the
+    # settings Windows 7 introduced (see VISTA below).
+    DOM="${DOM:-vista-test}"; OSINFO=winvista; MEMORY=2048
+    ISO_WIN="${ISO_WIN:-$HERE/tools/isos/en_windows_vista_with_sp2_x86_dvd_342266.iso}"
+    IMAGE='<Key>/IMAGE/NAME</Key><Value>Windows Vista BUSINESS</Value>'; KEY=YFKBB-PQJJV-G996G-VWGXY-2V3X8
+    MEDIA_LANGUAGE=en-US; GA_DRIVERS=""; OOBE_ENTER=1; BIOS=1; OOBE7=1; ARCH=x86; CPU=host-passthrough; MACHINE=pc
+    ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.173.iso}"
+    FIRMWARE=(--boot hd,cdrom) ;;
   srv2012r2|srv2016|srv2019|srv2022|srv2025)
     # Evaluation media: no product key (the element is removed from the
     # answer file), the edition by its index — 2, Standard with the graphical
@@ -111,7 +124,7 @@ case "$PROFILE" in
     DOM="${DOM:-winxp-test}"
     ISO_WIN="${ISO_WIN:-$HERE/tools/isos/Windows XP Professional (SP1) (x86).iso}"
     ISO_VIRTIO="$ISO_WIN" ;;   # no virtio driver: nothing but what XP itself has
-  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, winxp, srv2012r2, srv2016, srv2019, srv2022, srv2025)" >&2; exit 2 ;;
+  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, vista, winxp, srv2012r2, srv2016, srv2019, srv2022, srv2025)" >&2; exit 2 ;;
 esac
 
 ISO_ANS="$VMS/autounattend-$PROFILE.iso"
@@ -255,20 +268,57 @@ sed -e "s#<Key>/IMAGE/NAME</Key><Value>Windows 11 Pro</Value>#$IMAGE#" \
     -e "s#processorArchitecture=\"amd64\"#processorArchitecture=\"$ARCH\"#g" \
     -e "s#qemu-ga-x86_64.msi#qemu-ga-$([[ $ARCH == x86 ]] && echo i386 || echo x86_64).msi#g" \
     "$HERE/guest/autounattend.xml" > "$TMP/autounattend.xml"
+# The first of the first-logon commands, the others moving down by one: the
+# agent's service starts only once its channel has a driver.
+GA_COMMAND=""
 if [[ -n "$GA_DRIVERS" ]]; then
   cp "$HERE/guest/install-agent-driver.ps1" "$TMP/"
-  # First of the first-logon commands, the others moving down by one: the
-  # agent's service starts only once its channel has a driver.
-  python3 - "$TMP/autounattend.xml" "$GA_DRIVERS" <<'PY'
+  # The script travels on the answer file's own medium (see its header for why
+  # the publisher is trusted before pnputil is run).
+  GA_COMMAND="cmd /c for %d in (D E F G H I J) do if exist %d:\\install-agent-driver.ps1 powershell -NoProfile -ExecutionPolicy Bypass -File %d:\\install-agent-driver.ps1 $GA_DRIVERS"
+fi
+if [[ "$PROFILE" == vista ]]; then
+  # No PowerShell on Vista: the driver of Server 2008 (same kernel), its
+  # publisher and the root of its chain trusted by certutil, then pnputil.
+  # The root, DigiCert Assured ID Root CA, is not in the store of a Vista that
+  # never went online: taken from DigiCert, kept only if its SHA-1 is the one
+  # DigiCert publishes; without it pnputil would ask, and nobody would answer.
+  xorriso -osirrox on -indev "$ISO_VIRTIO" -extract /vioserial/2k8/x86 "$TMP/vioserial" >/dev/null 2>&1
+  chmod -R u+w "$TMP/vioserial"
+  openssl pkcs7 -inform DER -in "$TMP/vioserial/vioser.cat" -print_certs \
+    | awk '/subject=.*CN ?= ?"?Red Hat/{p=1} p{print} /END CERTIFICATE/{if(p)exit}' \
+    | openssl x509 -outform DER -out "$TMP/vioser-publisher.cer"
+  curl -fsSL -o "$TMP/digicert-root.cer" https://cacerts.digicert.com/DigiCertAssuredIDRootCA.crt
+  [[ "$(openssl x509 -inform DER -in "$TMP/digicert-root.cer" -noout -fingerprint -sha1)" == *05:63:B8:63:0D:62:D7:5A:BB:C8:AB:1E:4B:DF:B5:A8:99:B2:4D:43 ]] \
+    || { echo "DigiCert Assured ID Root CA: not the certificate expected" >&2; exit 1; }
+  cp "$HERE/guest/install-vioserial-vista.cmd" "$TMP/"
+  # In the specialize pass, as SYSTEM and before any session: the agent,
+  # installed at the first logon, then finds its channel. The steps are in a
+  # script on the answer file's medium: Setup refuses a command longer than
+  # 259 characters (measured, "Value is invalid"), and the script logs each
+  # step's result to C:\Windows\Temp\wac-vioserial.log.
+  python3 - "$TMP/autounattend.xml" <<'PY'
+import sys
+path = sys.argv[1]
+text = open(path, encoding="utf-8").read()
+command = r"cmd /c for %d in (D E F G H I J) do if exist %d:\install-vioserial-vista.cmd %d:\install-vioserial-vista.cmd"
+anchor = "        </RunSynchronousCommand>\n      </RunSynchronous>"
+if text.count(anchor) != 1:
+    sys.exit("answer file: the specialize commands were not found once")
+text = text.replace(anchor, "        </RunSynchronousCommand>\n        <RunSynchronousCommand wcm:action=\"add\">\n          <Order>2</Order>\n"
+                    f"          <Path>{command}</Path>\n        </RunSynchronousCommand>\n      </RunSynchronous>")
+open(path, "w", encoding="utf-8").write(text)
+PY
+  # And the OOBE setting Windows 7 introduced, which Vista's Setup refuses.
+  sed -i '/<HideWirelessSetupInOOBE>/d' "$TMP/autounattend.xml"
+fi
+if [[ -n "$GA_COMMAND" ]]; then
+  python3 - "$TMP/autounattend.xml" "$GA_COMMAND" <<'PY'
 import re, sys
-path, drivers = sys.argv[1], sys.argv[2]
+path, command = sys.argv[1], sys.argv[2]
 text = open(path, encoding="utf-8").read()
 start, end = text.index("<FirstLogonCommands>"), text.index("</FirstLogonCommands>")
 block = re.sub(r"<Order>(\d+)</Order>", lambda m: f"<Order>{int(m.group(1)) + 1}</Order>", text[start:end])
-# The script travels on the answer file's own medium (see its header for why
-# the publisher is trusted before pnputil is run).
-command = (r"cmd /c for %d in (D E F G H I J) do if exist %d:\install-agent-driver.ps1 "
-           rf"powershell -NoProfile -ExecutionPolicy Bypass -File %d:\install-agent-driver.ps1 {drivers}")
 first = ('<FirstLogonCommands>\n        <SynchronousCommand wcm:action="add">\n          <Order>1</Order>\n'
          "          <Description>Pilote du canal de l'agent (vioserial)</Description>\n"
          f"          <CommandLine>{command}</CommandLine>\n        </SynchronousCommand>")

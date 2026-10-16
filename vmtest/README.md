@@ -184,13 +184,16 @@ finished when the guest-agent answers (no screenshot to interpret).
 ### The machines of the older versions
 
 `create-vm.sh` takes a profile: `win11` (the default, the machine of the test
-cycle), `win81`, `win8` (32 bits), `win7`, `winxp`. Each has its own domain
+cycle), `win81`, `win8` (32 bits), `win7`, `vista` (32 bits), `winxp`. Each has its own domain
 (`win81-test`…), and its profile holds what differs from one version to the
 next: the ISO (in `tools/isos/`), the edition and its generic installation
 key, the language of the medium, BIOS or UEFI, the virtio-win release whose
 drivers that Windows accepts (0.1.189 for 8 and 8.1, 0.1.173 for Windows 7 SP1).
 The driver of the agent's channel is installed by
-`guest/install-agent-driver.ps1`, which first trusts its publisher.
+`guest/install-agent-driver.ps1`, which first trusts its publisher; Vista,
+without PowerShell, by `guest/install-vioserial-vista.cmd` (certutil, then
+pnputil) during Setup's specialize pass, its log in
+`C:\Windows\Temp\wac-vioserial.log`.
 
 `create-rdp-server.sh` makes `wac-rdp-server`, the Remote Desktop server every
 test VM connects to so that its client writes a bitmap cache: a Windows Server
