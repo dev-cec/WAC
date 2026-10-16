@@ -279,6 +279,14 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
       "$SRC/xp_imports_test.cpp" "$BUILD32/xp_imports.o" -o "$TESTS/xp_imports_test.exe"
     echo "   -> $TESTS/xp_imports_test.exe"
   fi
+
+  echo "== artefact_catalogue_test (native, run here) =="
+  # The table of the artefacts is portable C++ without windows.h: built for
+  # this machine and run at once. Run before only when the documentation's
+  # table was rebuilt, a change of the table once broke it unnoticed.
+  g++ -std=c++17 -Wall -Wextra -I"$SRC" "$SRC/artefact_catalogue.cpp" "$SRC/artefact_catalogue_test.cpp" \
+    -o "$TESTS/artefact_catalogue_test"
+  "$TESTS/artefact_catalogue_test" "$SRC/wac.yml" | tail -1 | sed 's/^/   /'
 fi
 
 # Each executable built answers the same checks: WAC.exe, and WAC32.exe when it was built.

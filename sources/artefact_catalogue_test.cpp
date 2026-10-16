@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
 	      "Windows 8.1: Amcache, BITS or the search index declared unconverted");
 	check(!undecodedOn("search_index", ten) && !undecodedOn("search_index", eleven) && !undecodedOn("amcache", ten) && !undecodedOn("bits", ten),
 	      "Windows 10 and 11: the search index, Amcache and BITS are converted");
-	check(undecodedOn("wmi", xp) && !undecodedOn("wmi", vista), "the WMI repository of XP (in FS) converted, or Vista's not");
+	check(!undecodedOn("wmi", xp) && !undecodedOn("wmi", vista), "the WMI repository is converted on XP (in FS) as on Vista");
 	check(!undecodedOn("prefetch", eightOne) && !undecodedOn("shimcache", eightOne), "an artefact with signatures decided by the version");
 	check(!undecodedOn("log_file", eightOne) && !undecodedOn("registry_backups", eightOne), "an artefact only ever copied raw declared unconverted");
 	check(!undecodedOn("srum", seven) && !undecodedOn("hosts", eightOne) && !undecodedOn("amcache", WindowsVersion{})
