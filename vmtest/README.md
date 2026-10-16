@@ -192,6 +192,16 @@ drivers that Windows accepts (0.1.189 for 8 and 8.1, 0.1.173 for Windows 7 SP1).
 The driver of the agent's channel is installed by
 `guest/install-agent-driver.ps1`, which first trusts its publisher.
 
+`create-rdp-server.sh` makes `wac-rdp-server`, the Remote Desktop server every
+test VM connects to so that its client writes a bitmap cache: a Windows Server
+2012 R2 (profile `srv2012r2`) with the RDP security layer and no NLA, which the
+client of XP SP1 needs, its port 3389 published on the host's 127.0.0.1:33389.
+The test VMs are each behind their own NAT and reach the host as 10.0.2.2:
+`mstsc /v:10.0.2.2:33389`, account `wac`. Windows 7 and later can also connect
+to themselves (127.0.0.2); XP cannot. xrdp was tried first and does not do: it
+never sends a bitmap with a persistent key, and the client then writes no
+cache at all.
+
 Windows XP has no guest agent. It is installed from an answer floppy
 (`WINNT.SIF`), says it is ready on its serial port, and is then driven as a
 person would, by `lib/vmkeys.py` (keys, text typed for the machine's keyboard

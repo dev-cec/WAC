@@ -198,6 +198,17 @@ accepte les pilotes (0.1.189 pour 8 et 8.1, 0.1.173 pour Windows 7 SP1). Le
 pilote du canal de l'agent est posé par `guest/install-agent-driver.ps1`, qui
 approuve d'abord son éditeur.
 
+`create-rdp-server.sh` crée `wac-rdp-server`, le serveur Bureau à distance
+auquel chaque VM de test se connecte pour que son client écrive un cache
+bitmap : un Windows Server 2012 R2 (profil `srv2012r2`) en couche de sécurité
+RDP, sans NLA, ce dont le client de XP SP1 a besoin, son port 3389 publié sur
+le 127.0.0.1:33389 de l'hôte. Les VM de test sont chacune derrière leur propre
+NAT et joignent l'hôte en 10.0.2.2 : `mstsc /v:10.0.2.2:33389`, compte `wac`.
+Windows 7 et suivants peuvent aussi se connecter à eux-mêmes (127.0.0.2) ;
+XP ne le peut pas. xrdp a été essayé d'abord et ne convient pas : il n'envoie
+jamais de bitmap avec une clé persistante, et le client n'écrit alors aucun
+cache.
+
 Windows XP n'a pas d'agent invité. Il s'installe depuis une disquette de
 réponses (`WINNT.SIF`), annonce qu'il est prêt sur son port série, puis se
 pilote comme le ferait une personne, par `lib/vmkeys.py` (touches, texte tapé
