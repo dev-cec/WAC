@@ -176,12 +176,13 @@
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell, and NTUSER.DAT} & BagMRU shell items & yes \\
 \addlinespace
 \texttt{shimcache} & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatibility\textbackslash{}AppCompatCache} & header 0xDEADBEEF, 96 entries & yes \\
- & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatCache\textbackslash{}AppCompatCache} & header 0xBADC0FFE & no \\
+ & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatCache\textbackslash{}AppCompatCache} & header 0xBADC0FFE, the file's size & no \\
+ & Windows Vista & \texttt{the same value} & header 0xBADC0FFE, entries of 24 or 32 bytes & yes \\
  & Windows 7 & \texttt{the same value} & header 0xBADC0FEE & yes \\
  & Windows 8 & \texttt{the same value} & header 0x80, entries ''00ts'' & yes \\
  & Windows 8.1 & \texttt{the same value} & header of 0x80 bytes starting with 0, entries ''10ts'' & yes \\
  & Windows 10 & \texttt{the same value} & header 0x30 or 0x34, entries ''10ts'' & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP; Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP; Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600. Server 2003 and Vista share their magic: the version picks the form; Vista measured on SP2 x86, Server 2003 not yet.} \\
 \addlinespace
 \texttt{shortcuts} & Windows XP & \texttt{Start menu, desktops, Quick Launch of each profile and of All Users} & shell link & yes \\
 \addlinespace
@@ -191,7 +192,7 @@
 \texttt{startup\_folders} & Windows XP & \texttt{Start Menu\textbackslash{}Programs\textbackslash{}Startup of each profile and of All Users} & files & yes \\
 \addlinespace
 \texttt{thumbcache} & Windows XP & \texttt{Thumbs.db in each folder} & OLE compound file & yes \\
- & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Explorer\textbackslash{}thumbcache\_*.db} & CMMM, Vista layout & no \\
+ & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Explorer\textbackslash{}thumbcache\_*.db} & CMMM, Vista layout & yes \\
  & Windows 7 & \texttt{the same folder} & CMMM, Windows 7 layout & yes \\
  & Windows 8 & \texttt{the same folder, with iconcache\_*.db} & CMMM, Windows 8 and later layout & yes \\
 \addlinespace

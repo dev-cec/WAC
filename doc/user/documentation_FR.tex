@@ -1160,11 +1160,14 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         publient n'est \emph{pas} relevé : mesuré contre le Prefetch, son « oui »
         est presque toujours juste, mais son « non » est faux pour 9 binaires
         exécutés sur 10 — il ferait conclure qu'un programme n'a jamais tourné.
-        Formats décodés : Windows~7, 8, 8.1, 10 et 11 ; sous Windows~8.1, le chemin
+        Formats décodés : Windows~XP, Vista, 7, 8, 8.1, 10 et 11 ; sous Windows~8.1, le chemin
         commence par \texttt{SYSVOL\textbackslash}, le volume système, et il est
         publié tel quel. Windows~XP y note aussi la taille du fichier
         (\champ{FileSize}) et le moment où il a mis l'entrée à jour
-        (\champ{LastUpdateUtc}).
+        (\champ{LastUpdateUtc}). Server~2003 écrit la même signature que Vista
+        (\texttt{0xBADC0FFE}) avec un autre contenu : la version examinée les
+        départage, et la forme de Server~2003, pas encore mesurée, est
+        déclarée non prise en charge.
   \item[\fichier{bams.json}] dernière exécution par programme et par utilisateur
         (Background Activity Moderator). Les ruches étant lues sur le disque,
         une exécution de la ou des dernières minutes peut manquer : Windows
@@ -1621,8 +1624,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<hachage>.<ext>}).
         Les deux sommes de contrôle que Windows écrit pour chaque entrée sont
         recalculées (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}) :
-        une entrée lue de travers les échoue. Windows 7 à 11 (Windows~7 ne
-        donne pas les dimensions) ; la disposition de Vista n'est pas décodée.
+        une entrée lue de travers les échoue. Vista à Windows~11 (Vista et 7
+        ne donnent pas les dimensions ; Vista donne l'extension du fichier
+        d'origine, \champ{SourceExtension}). Seules les entrées en service
+        sont lues : celles qui suivent la première place libre que l'en-tête
+        annonce, restes d'un état antérieur, ne le sont pas.
         Sous Windows~XP et Server~2003, les \fichier{Thumbs.db} que
         l'Explorateur écrit dans chaque dossier affiché en miniatures,
         cherchés par leur nom sur chaque volume NTFS fixe : pour chaque

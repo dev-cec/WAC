@@ -67,6 +67,8 @@ PHRASES = [
     ("header 0x30 or 0x34, entries", "en-tête 0x30 ou 0x34, entrées"),
     ("header of 0x80 bytes starting with 0, entries", "en-tête de 0x80 octets commençant par 0, entrées"),
     ("header 0xDEADBEEF, 96 entries", "en-tête 0xDEADBEEF, 96 entrées"),
+    ("header 0xBADC0FFE, the file's size", "en-tête 0xBADC0FFE, taille du fichier"),
+    ("header 0xBADC0FFE, entries of 24 or 32 bytes", "en-tête 0xBADC0FFE, entrées de 24 ou 32 octets"),
     ("header ", "en-tête "), ("entries \"", "entrées \""),
     ("EVT (LfLe records)", "EVT (enregistrements LfLe)"), ("EVTX, binary XML", "EVTX, XML binaire"),
     ("EVTX events", "événements EVTX"),
@@ -129,8 +131,8 @@ NOTES = {
         "Windows XP range le dépôt dans un sous-dossier FS, avec des condensats MD5 et des entrées de page de 4 octets (mesuré, SP1 et SP3).",
     "DestList version 6 measured on build 26200; the custom lists (CustomDestinations) carry no version.":
         "DestList version 6 mesurée sur le build 26200 ; les listes personnalisées (CustomDestinations) ne portent pas de version.",
-    "Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600.":
-        "Windows 8 et 8.1 ont un en-tête de 0x80 octets : ils se distinguent par la marque de leur première entrée, qui tient ici lieu de signature. Windows 8.1 mesuré sur le build 9600.",
+    "Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600. Server 2003 and Vista share their magic: the version picks the form; Vista measured on SP2 x86, Server 2003 not yet.":
+        "Windows 8 et 8.1 ont un en-tête de 0x80 octets : ils se distinguent par la marque de leur première entrée, qui tient ici lieu de signature. Windows 8.1 mesuré sur le build 9600. Server 2003 et Vista partagent leur signature : la version choisit la forme ; Vista mesuré sur SP2 x86, Server 2003 pas encore.",
     "bcache22.bmc decoded (16 bits per pixel, measured on XP SP1); another .bmc is counted, its tiles not exported.":
         "bcache22.bmc décodé (16 bits par pixel, mesuré sous XP SP1) ; un autre .bmc est compté, ses tuiles non exportées.",
     "Windows XP and Server 2003: events 528 and 682 of Security.evt, not converted.":

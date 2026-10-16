@@ -1130,11 +1130,14 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         execution flag other tools publish is \emph{not} collected: measured
         against Prefetch, its ``yes'' is nearly always right, but its ``no'' is
         wrong for 9 executed binaries out of 10 — it would lead to conclude that
-        a program never ran. Formats decoded: Windows~7, 8, 8.1, 10 and 11; on
+        a program never ran. Formats decoded: Windows~XP, Vista, 7, 8, 8.1, 10 and 11; on
         Windows~8.1 the path starts with \texttt{SYSVOL\textbackslash}, the system
         volume, and is published as it is. Windows~XP also records the file's
         size (\champ{FileSize}) and when it updated the entry
-        (\champ{LastUpdateUtc}).
+        (\champ{LastUpdateUtc}). Server~2003 writes Vista's signature
+        (\texttt{0xBADC0FFE}) with other contents: the examined version tells
+        them apart, and Server~2003's form, not measured yet, is declared
+        unsupported.
   \item[\fichier{bams.json}] last execution per program and per user
         (Background Activity Moderator). The hives being read from the disk,
         an execution of the last minute or so may be missing: Windows keeps a
@@ -1565,8 +1568,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<hash>.<ext>}).
         The two checksums Windows writes for each entry are recomputed
         (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}): an entry read
-        wrong fails them. Windows 7 to 11 (Windows~7 gives no dimensions); the
-        layout of Vista is not decoded. On Windows~XP and Server~2003, the
+        wrong fails them. Vista to Windows~11 (Vista and 7 give no dimensions;
+        Vista gives the source file's extension, \champ{SourceExtension}). Only
+        the entries in use are read: those after the first free place the
+        header gives, remains of an earlier state, are not. On Windows~XP and Server~2003, the
         \fichier{Thumbs.db} that Explorer writes in every folder shown as
         thumbnails, searched by name on every fixed NTFS volume: per
         thumbnail, the image's name and path, its modification when the
