@@ -35,6 +35,8 @@
 #include "binaires.h"
 #include "usb.h"
 
+struct ShimcachePathTable;
+
 /*! One ShimCache entry: a binary the compatibility layer examined. */
 struct Shimcache {
 public:
@@ -95,9 +97,12 @@ private:
 	 *  `--binary`, its last modification. */
 	void addEntry(const std::wstring& path, const FILETIME& lastModifiedUtc);
 
-	/*! Reads the value of Windows 7 and Server 2008 R2 (magic 0xBADC0FEE).
-	 *  @return S_OK, or ERROR_INVALID_DATA if neither layout fits it */
-	HRESULT parseWindows7(const BYTE* data, size_t size);
+	/*! Reads a value whose entries point at their paths: Windows 7 and
+	 *  Server 2008 R2 (magic 0xBADC0FEE), Vista (0xBADC0FFE).
+	 *  @param table its layout
+	 *  @return S_OK, or ERROR_INVALID_DATA if neither its 64-bit nor its
+	 *          32-bit layout fits it */
+	HRESULT parsePathTable(const BYTE* data, size_t size, const ShimcachePathTable& table);
 
 	/*! Reads the value of Windows XP (magic 0xDEADBEEF), in the order of its
 	 *  LRU table.

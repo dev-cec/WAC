@@ -24,12 +24,33 @@ const size_t WINDOWS_XP_MAX_ENTRIES = 96;
 const size_t WINDOWS_XP_ENTRY = 552;
 const size_t WINDOWS_XP_PATH = 528;
 
-//! The magic number of the Windows 7 and Server 2008 R2 value.
-const unsigned WINDOWS_7_MAGIC = 0xBADC0FEE;
-//! Its header: the magic, the number of entries, then reserved bytes.
-const size_t WINDOWS_7_HEADER_SIZE = 0x80;
-//! An entry of the 64-bit layout, and of the 32-bit one.
-const size_t WINDOWS_7_ENTRY_64 = 48, WINDOWS_7_ENTRY_32 = 32;
+} // namespace
+
+/*! A value whose entries are a table of fixed size, each pointing at its
+ *  path, stored after the table: Windows 7 and Vista. An entry starts the
+ *  same way in both — path length (2), its room (2), then the path's
+ *  offset (4 bytes in 32 bits; 8 after 4 reserved bytes in 64 bits), then
+ *  the file's last modification —; the header and what follows the date
+ *  differ. */
+struct ShimcachePathTable {
+	unsigned magic;          //!< the value's first DWORD
+	size_t header;           //!< the header: the magic, the number of entries, reserved bytes
+	size_t entry64, entry32; //!< an entry of the 64-bit layout, and of the 32-bit one
+	const wchar_t* release;  //!< for the log
+};
+
+namespace {
+/*! Windows 7 and Server 2008 R2: a header of 0x80 bytes; after the date,
+ *  insertion and shim flags (2 × 4), data size and offset (2 × 8, or 2 × 4
+ *  in 32 bits). */
+const ShimcachePathTable WINDOWS_7_TABLE = { 0xBADC0FEE, 0x80, 48, 32, L"Windows 7" };
+/*! Vista: a header of 8 bytes; after the date, insertion and shim flags
+ *  (2 × 4), nothing more. Measured on Vista SP2 x86: 88 entries of 24 bytes,
+ *  the paths at the end of the value, the first entry's last — as on
+ *  Windows 7 —, identical to what dissect.target reads. Server 2003 writes
+ *  the same magic with the file's size in place of the flags: not measured,
+ *  its form is not decoded (the table picks it by the examined version). */
+const ShimcachePathTable VISTA_TABLE = { 0xBADC0FFE, 8, 32, 24, L"Vista" };
 } // namespace
 
 Json Shimcache::toJson() {
@@ -113,7 +134,8 @@ HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 	formatSignature = (unsigned)offset;
 	if ((offset == WINDOWS_8_HEADER_SIZE || offset == 0) && fits(size, WINDOWS_8_HEADER_SIZE, 4))
 		formatSignature = *reinterpret_cast<const DWORD*>(data + WINDOWS_8_HEADER_SIZE);
-	if (!pieceFormat("shimcache", formatSignature).decoded) {
+	// Vista and Server 2003 share their magic: the examined version tells their forms apart.
+	if (!pieceFormat("shimcache", formatSignature, conf.examinedVersion).decoded) {
 		log(2, L"❇️AppCompatCache in an unsupported format, signature 0x" + to_hex(formatSignature));
 		unsupportedFormat = true;
 		return ERROR_SUCCESS;
@@ -127,7 +149,8 @@ HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 	   layout under "00ts", its package size 0.
 	   The flags are not given: what they say of an execution is not proven
 	   (decision of 2026-09-30, "executed" not reported). */
-	if (formatSignature == WINDOWS_7_MAGIC) return parseWindows7(data, size);
+	if (formatSignature == WINDOWS_7_TABLE.magic) return parsePathTable(data, size, WINDOWS_7_TABLE);
+	if (formatSignature == VISTA_TABLE.magic) return parsePathTable(data, size, VISTA_TABLE);
 	if (formatSignature == WINDOWS_XP_MAGIC) return parseWindowsXp(data, size);
 	const bool windows8 = offset == 0 || offset == WINDOWS_8_HEADER_SIZE;
 	if (windows8) offset = WINDOWS_8_HEADER_SIZE;
@@ -204,51 +227,45 @@ void Shimcaches::addEntry(const std::wstring& path, const FILETIME& lastModified
 	shimcaches.push_back(std::move(shimcache));
 }
 
-HRESULT Shimcaches::parseWindows7(const BYTE* data, size_t size) {
-	/* WINDOWS 7 AND SERVER 2008 R2 (magic 0xBADC0FEE): a header of 0x80
-	   bytes — the magic, the number of entries —, then a table of entries,
-	   the paths stored after it, each entry pointing at its own:
-	     64-bit: path length (2), its room (2), reserved (4), path offset (8),
-	             last modification (8), insertion and shim flags (2 x 4),
-	             data size and offset (2 x 8) — 48 bytes;
-	     32-bit: path length (2), room (2), path offset (4), last
-	             modification (8), flags (2 x 4), data size and offset
-	             (2 x 4) — 32 bytes.
-	   Windows stores the paths at the END of the value, the first entry's
-	   last (measured on Windows 7 x64: 102 entries, the first path at byte
-	   14,856 of 14,928). The layout is the one whose first entry points
+HRESULT Shimcaches::parsePathTable(const BYTE* data, size_t size, const ShimcachePathTable& table) {
+	/* WINDOWS 7 AND VISTA (see ShimcachePathTable): a header — the magic,
+	   the number of entries —, then a table of entries, the paths stored
+	   after it, each entry pointing at its own. Windows stores the paths at
+	   the END of the value, the first entry's last (measured on Windows 7
+	   x64: 102 entries, the first path at byte 14,856 of 14,928; on Vista
+	   x86 alike). The layout is the one whose first entry points
 	   between the end of its table and the end of the value — with its
 	   reserved DWORD at zero in the 64-bit one; read the other way, either
 	   gives an offset out of the value. Neither fits: nothing is guessed.
 	   Every offset comes from the hive: bounded by the value. */
-	if (!fits(size, 0, WINDOWS_7_HEADER_SIZE)) return ERROR_INVALID_DATA;
+	if (!fits(size, 0, table.header)) return ERROR_INVALID_DATA;
 	const size_t count = *reinterpret_cast<const DWORD*>(data + 4);
 	size_t entrySize = 0;
-	for (const size_t candidate : { WINDOWS_7_ENTRY_64, WINDOWS_7_ENTRY_32 }) {
-		if (count == 0 || count > (size - WINDOWS_7_HEADER_SIZE) / candidate) continue;
-		const BYTE* first = data + WINDOWS_7_HEADER_SIZE;
-		const bool wideCandidate = candidate == WINDOWS_7_ENTRY_64;
+	for (const size_t candidate : { table.entry64, table.entry32 }) {
+		if (count == 0 || count > (size - table.header) / candidate) continue;
+		const BYTE* first = data + table.header;
+		const bool wideCandidate = candidate == table.entry64;
 		const uint64_t pathOffset = wideCandidate ? *reinterpret_cast<const uint64_t*>(first + 8)
 		                                          : *reinterpret_cast<const DWORD*>(first + 4);
 		const bool reservedClear = !wideCandidate || *reinterpret_cast<const DWORD*>(first + 4) == 0;
-		if (reservedClear && pathOffset >= WINDOWS_7_HEADER_SIZE + count * candidate && pathOffset < size) {
+		if (reservedClear && pathOffset >= table.header + count * candidate && pathOffset < size) {
 			entrySize = candidate;
 			break;
 		}
 	}
 	if (count == 0) return ERROR_SUCCESS;
 	if (entrySize == 0) {
-		log(2, L"🔥AppCompatCache of Windows 7: neither the 64-bit nor the 32-bit layout fits its first entry");
+		log(2, L"🔥AppCompatCache of " + std::wstring(table.release) + L": neither the 64-bit nor the 32-bit layout fits its first entry");
 		return ERROR_INVALID_DATA;
 	}
-	const bool wide = entrySize == WINDOWS_7_ENTRY_64;
+	const bool wide = entrySize == table.entry64;
 	for (size_t i = 0; i < count; ++i) {
-		const BYTE* e = data + WINDOWS_7_HEADER_SIZE + i * entrySize;
+		const BYTE* e = data + table.header + i * entrySize;
 		const size_t pathLength = *reinterpret_cast<const unsigned short*>(e);
 		const uint64_t pathOffset = wide ? *reinterpret_cast<const uint64_t*>(e + 8) : *reinterpret_cast<const DWORD*>(e + 4);
 		const FILETIME modified = *reinterpret_cast<const FILETIME*>(e + (wide ? 16 : 8));
 		if (pathOffset > size || !fits(size, (size_t)pathOffset, pathLength)) {
-			log(2, L"🔥AppCompatCache of Windows 7: path of entry " + std::to_wstring(i) + L" beyond the value");
+			log(2, L"🔥AppCompatCache of " + std::wstring(table.release) + L": path of entry " + std::to_wstring(i) + L" beyond the value");
 			continue;
 		}
 		addEntry(std::wstring((const wchar_t*)(data + pathOffset), pathLength / sizeof(wchar_t)), modified);

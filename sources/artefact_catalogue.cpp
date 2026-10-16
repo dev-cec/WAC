@@ -203,12 +203,13 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		    { VISTA, L"UsrClass.dat\\Local Settings\\Software\\Microsoft\\Windows\\Shell, and NTUSER.DAT", L"BagMRU shell items", true } }, L"" },
 		{ "shimcache", XP, 0, XP,
 		  { { XP, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatibility\\AppCompatCache", L"header 0xDEADBEEF, 96 entries", true, { 0xDEADBEEF } },
-		    { SERVER_2003, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", L"header 0xBADC0FFE", false, { 0xBADC0FFE } },
+		    { SERVER_2003, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", L"header 0xBADC0FFE, the file's size", false, { 0xBADC0FFE } },
+		    { VISTA, L"the same value", L"header 0xBADC0FFE, entries of 24 or 32 bytes", true, { 0xBADC0FFE } },
 		    { SEVEN, L"the same value", L"header 0xBADC0FEE", true, { 0xBADC0FEE } },
 		    { EIGHT, L"the same value", L"header 0x80, entries \"00ts\"", true, { SHIMCACHE_00TS } },
 		    { EIGHT_1, L"the same value", L"header of 0x80 bytes starting with 0, entries \"10ts\"", true, { SHIMCACHE_10TS } },
 		    { TEN, L"the same value", L"header 0x30 or 0x34, entries \"10ts\"", true, { 0x30, 0x34 } } },
-		  L"Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600." },
+		  L"Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600. Server 2003 and Vista share their magic: the version picks the form; Vista measured on SP2 x86, Server 2003 not yet." },
 		{ "shortcuts", XP, 0, 0,
 		  { { XP, L"Start menu, desktops, Quick Launch of each profile and of All Users", L"shell link", true } }, L"" },
 		{ "srum", EIGHT, 0, EIGHT,
@@ -304,12 +305,20 @@ bool expectedOn(const std::string& key, const WindowsVersion& version) {
 	    && availabilityOf(key, version) == Availability::Present;
 }
 
-PieceFormat pieceFormat(const std::string& key, unsigned signature) {
+PieceFormat pieceFormat(const std::string& key, unsigned signature, const WindowsVersion& version) {
 	const ArtefactEntry* entry = artefactEntry(key);
-	if (entry)
-		for (const ArtefactForm& form : entry->forms)
-			for (unsigned known : form.signatures)
-				if (known == signature) return PieceFormat{ form.decoded, &form };
+	if (!entry) return PieceFormat{ false, nullptr };
+	const auto carries = [signature](const ArtefactForm& form) {
+		for (unsigned known : form.signatures)
+			if (known == signature) return true;
+		return false;
+	};
+	if (version.build != 0 && carries(formOf(*entry, version))) {
+		const ArtefactForm& own = formOf(*entry, version);
+		return PieceFormat{ own.decoded, &own };
+	}
+	for (const ArtefactForm& form : entry->forms)
+		if (carries(form)) return PieceFormat{ form.decoded, &form };
 	return PieceFormat{ false, nullptr };
 }
 

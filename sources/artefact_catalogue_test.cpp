@@ -168,17 +168,29 @@ int main(int argc, char** argv) {
 	check(pieceFormat("shimcache", 0x34).decoded && pieceFormat("shimcache", 0xBADC0FEE).decoded && !pieceFormat("shimcache", 0xBADC0FFE).decoded
 	      && !pieceFormat("shimcache", 0x80).form,
 	      "ShimCache: Windows 10 and 7 headers decoded, Server 2003 not, 0x80 alone is no signature");
+	/* One magic, two forms: the ShimCache of Server 2003 and of Vista. The
+	   examined version picks the form; without it, the oldest one. */
+	const WindowsVersion server2003{ 3790, true, false };
+	check(pieceFormat("shimcache", 0xBADC0FFE, vista).decoded && !pieceFormat("shimcache", 0xBADC0FFE, server2003).decoded
+	      && pieceFormat("shimcache", 0xBADC0FFE, server2003).form && !pieceFormat("shimcache", 0xBADC0FFE).decoded
+	      && pieceFormat("shimcache", 0xBADC0FEE, vista).decoded,
+	      "shimcache 0xBADC0FFE: Vista's form decoded, Server 2003's not; a version without that signature's form takes the oldest");
 	check(pieceFormat("shimcache", 0x73743031).decoded && pieceFormat("shimcache", 0x73743030).decoded,
 	      "ShimCache: Windows 8.1 entries (\"10ts\" after 0x80 bytes) and Windows 8's (\"00ts\") decoded");
 	check(pieceFormat("jump_lists", 1).decoded && pieceFormat("jump_lists", 4).decoded && pieceFormat("jump_lists", 6).decoded
 	      && !pieceFormat("jump_lists", 5).decoded && !pieceFormat("jump_lists", 7).decoded,
 	      "DestList: versions 1, 3, 4 and 6 decoded, no other");
 	check(!pieceFormat("an_artefact_of_tomorrow", 1).decoded && !pieceFormat("hosts", 0).decoded, "a piece of an artefact without signature is decoded");
+	/* A signature names one form — but for the one case where two releases
+	   wrote the same magic with different contents, the examined version
+	   then choosing (pieceFormat above): the ShimCache of Server 2003 and
+	   of Vista. */
 	for (const ArtefactEntry& e : artefactCatalogue()) {
 		std::set<unsigned> seen;
 		for (const ArtefactForm& f : e.forms)
 			for (unsigned signature : f.signatures)
-				check(seen.insert(signature).second, std::string(e.key) + ": one signature for two forms");
+				check(seen.insert(signature).second || (std::string(e.key) == "shimcache" && signature == 0xBADC0FFE),
+				      std::string(e.key) + ": one signature for two forms");
 	}
 
 	/* THE FORMAT TOLD BY THE VERSION (undecodedOn): a form WAC only collects

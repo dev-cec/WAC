@@ -155,9 +155,15 @@ bool expectedOn(const std::string& key, const WindowsVersion& version);
  *  raw and its JSON says "unsupported format" with the signature met — never
  *  a wrong conversion, never a silence. Adding a format is adding its form,
  *  with its signature, to the table.
+ *
+ *  Two releases can write the same signature with different contents —
+ *  the ShimCache 0xBADC0FFE of Server 2003 and of Vista —: the examined
+ *  version then picks the form, its own if it carries that signature.
  *  @param key the key of wac.yml
- *  @param signature the internal version or magic number read on the piece */
-PieceFormat pieceFormat(const std::string& key, unsigned signature);
+ *  @param signature the internal version or magic number read on the piece
+ *  @param version the examined Windows, for a signature several forms
+ *         share; without it (build 0), the oldest form that carries it */
+PieceFormat pieceFormat(const std::string& key, unsigned signature, const WindowsVersion& version = WindowsVersion{});
 
 /*! THE FORMAT TOLD BY THE VERSION, when the piece cannot tell it itself:
  *  whether the form an artefact takes on a version is one WAC has no decoder
