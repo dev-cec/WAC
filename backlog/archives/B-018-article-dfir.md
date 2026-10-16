@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P3 | moyen |
+| fait (ea0222d8, 36b7001a) | P3 | moyen |
 
 ## Pourquoi
 Faire connaître et relire WAC par des pairs : c'est aussi la meilleure validation externe.
@@ -40,10 +40,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Tâches
 - [x] Plan : chapô ; ce qui est prélevé ; une procédure respectée (consigne scellée, journal d'investigation) ; du JSON ; aucune trace, mesurée ; des tests qui savent échouer ; en chiffres ; disponibilité
 - [x] Rédaction : `doc/article/article_FR.tex` et `article_EN.tex`, une page A4 à deux colonnes chacune, compilées par `doc/build-docs.sh`
-- [ ] Relecture
+- [x] Relecture : article validé par l'utilisateur
 
 ## Journal
 - (vide)
 - 2026-10-07 : décision utilisateur — l'article suit la montée en 2.0.0 et précède la rétrocompatibilité, qui fera la version 3.0.
 - 2026-10-09 : modèles d'articles relevés (MISC, DFIR Review) ; à décider : le support visé, qui fixe la longueur — « 2 pages » ne correspond à aucun des deux.
 - 2026-10-12 : décision utilisateur — FR et EN, une page ; mettre en avant les artefacts prélevés, la conversion JSON, l'absence de trace, les tests, et le respect de la procédure (consigne, journal des actions). Premier jet écrit, chiffres repris des dossiers (mesures du 9 octobre, version 2.0.0). Reste la relecture.
+- 2026-10-16 : l'utilisateur déclare l'article validé « pour le moment » ; fiche close et archivée. Les fichiers de l'article sont tenus par l'utilisateur (renommés `article_*_2.0.*`).

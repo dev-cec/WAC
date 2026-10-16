@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (WAC et WAC32 collectent de XP SP1 à 8.1 ; cycles du harnais sans échec sous 7, 8 x86, 8.1 et 11 ; XP SP1 à SP3 validé hors harnais ; reste Vista, ISO trouvée) | P3 | fort |
+| en cours (WAC et WAC32 collectent de XP SP1 à 8.1 ; cycles du harnais sans échec sous 7, 8 x86, 8.1 et 11 ; XP SP1 à SP3 validé hors harnais ; Vista en cours) | P3 | fort |
 
 ## Pourquoi
 Les machines examinées ne sont pas toutes récentes : postes industriels, caisses, serveurs oubliés tournent encore sous Windows XP, Server 2003, Vista ou 7. WAC est aujourd'hui développé et éprouvé sur Windows 10 et 11. Demande utilisateur du 2026-10-02 : la collecte doit fonctionner depuis Windows XP SP1. Pas prioritaire, à faire après les autres fiches.
@@ -50,8 +50,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Étape « fichiers de ressources des fournisseurs » non tentée quand les journaux sont au format `.evt`, et consignée
 - [x] Journaux `.evt` de XP prélevés (`System32\config\*.evt`) — ils ne l'étaient pas du tout
 - [x] ShimCache de XP vérifié après un redémarrage : clé `AppCompatibility`, signature 0xDEADBEEF, déclaré non pris en charge
-- [ ] Décodeurs des formats de XP déclarés non pris en charge — faits : `.evt`, Prefetch 17, UserAssist, MUICache, ShimCache (0xDEADBEEF), setupapi.log, INFO2, OpenSaveMRU/LastVisitedMRU, `.job`, ShellBags, pare-feu, Thumbs.db, dépôt WMI, cache RDP (`bcache22.bmc`) ; reste le ShimCache de Server 2003 (avec les serveurs, B-038)
-- [ ] Même inventaire sous Windows 8 x86 et Vista
+- [x] Décodeurs des formats de XP déclarés non pris en charge — faits : `.evt`, Prefetch 17, UserAssist, MUICache, ShimCache (0xDEADBEEF), setupapi.log, INFO2, OpenSaveMRU/LastVisitedMRU, `.job`, ShellBags, pare-feu, Thumbs.db, dépôt WMI, cache RDP (`bcache22.bmc`) ; le ShimCache de Server 2003 passe à B-038 (décision utilisateur du 2026-10-16)
+- [x] Même inventaire sous Windows 8 x86 (cycle du harnais, WAC32)
+- [ ] Vista SP2 x86 : VM (`create-vm.sh vista`), passages WAC32 par l'agent, puis les formes déclarées non décodées pour Vista : ShimCache `0xBADC0FFE`, caches de miniatures de Vista
 - [x] VM Windows 8.1 et Windows 7 SP1 (x64) créées sans interaction (`create-vm.sh win81`, `win7`), agent invité compris
 - [x] WAC 64 bits collecte et convertit sous Windows 8.1 et Windows 7 SP1, sans échec
 - [x] Cycle du harnais sur Windows 8.1 (`WAC_VM=win81-test`) : il va au bout ; témoins écrits pour PowerShell 4, statuts attendus par version dans le vérificateur
@@ -60,11 +61,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Cycle du harnais sur Windows 7 (PowerShell 2, agent sensible au `%`) : 362 ✅, 0 ❌
 - [x] Décodeurs des formats de Windows 7 : ShimCache (0xBADC0FEE), caches de miniatures (0x15), Prefetch 23, index de recherche (SystemIndex_0A), RecentFileCache.bcf
 - [x] Windows 8 (x86) dans le harnais : WAC32 et raw_hive_test 32 bits déposés selon l'architecture, compatibilité PowerShell 3
-- [ ] VM XP SP1 dans le harnais ; canal de pilotage sans qemu-guest-agent pour XP
+- [ ] VM XP SP1 dans le harnais (pas de PowerShell : passages WAC32 au clavier, sortie relue disque éteint) ; canal de pilotage sans qemu-guest-agent fait (`vmkeys.py`, port série)
 - [ ] Console sous Windows 7 : la bannière sort en caractères illisibles (police de la console)
 - [x] Emplacements XP (Documents and Settings…) : `examinedFolderLayout`, une seule traduction pour la collecte et la conversion
-- [ ] Décodeur des journaux `.evt` (et, avec lui, les ressources des sources qu'ils citent)
-- [ ] Prefetch v17, ShimCache XP/2003
+- [x] Décodeur des journaux `.evt` (et, avec lui, les ressources des sources qu'ils citent)
+- [x] Prefetch v17, ShimCache XP (celui de 2003 avec B-038)
 
 ## Journal
 - 2026-10-02 : créée à la demande de l'utilisateur — compatibilité depuis Windows XP SP1, à faire en dernier.
@@ -171,3 +172,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-16 : **cache RDP de XP décodé** (`bcache22.bmc`) : pas d'en-tête de fichier, un emplacement par tuile (en-tête de 20 octets, 64 × 64 pixels de 2 octets), tuiles compressées par le RLE entrelacé de RDP (MS-RDPBCGR 3.1.9, décision « première ligne » par ordre comme la spécification), RGB 5-6-5, lignes depuis le bas. Sessions demandées en 8, 15, 16 et 24 bits : toutes écrites dans ce seul fichier, drapeaux 0x19. Confronté à **bmc-tools** : 344 tuiles sur 346 identiques au pixel près ; les 2 autres, larges de 32 pixels, bmc-tools les lit avec des lignes de 64 (faux : WAC rend l'aplat bleu de l'écran d'ouverture de session). Le cache montre ce qui s'est affiché, y compris un mot de passe tapé par erreur dans le champ du nom d'utilisateur.
 - 2026-10-16 : **emplacements de profil de XP** : WAC composait les dossiers de profil à la manière de Vista (`AppData\Local`, `Documents`, `ProgramData`) ; sous XP les documents récents, raccourcis, fichiers d'IE, clés DPAPI, cache RDP, `.rdp` n'étaient pas prélevés (constaté : `recentdocs.json` vide). Une seule traduction (`examinedFolderLayout`, table des artefacts, testée nativement) appliquée aux cibles de la collecte, aux arbres et à `extractedPath`. Sous XP SP1 : documents récents 0 → 3, raccourcis 0 → 30, navigation 2 → 9, `Default.rdp` de `My Documents` lu. Le test de la table des artefacts, cassé par le passage du dépôt WMI de XP à « converti », tourne désormais avec `build-windows.sh --test`.
 - 2026-10-16 : **ISO de Vista** : `en_windows_vista_with_sp2_x86_dvd_342266.iso` (MSDN, toutes éditions, x86) sur archive.org ; SHA-1 identique à celui que publient deux sources indépendantes et deux copies d'archive.org, `setup.exe` signé Microsoft. Rangée dans `vmtest/tools/isos`. Incident : la suppression de la VM SP2 (`--remove-all-storage`) a effacé l'ISO de XP SP1, partagée ; les VM XP installées n'en ont plus besoin (supports détachés).
+- 2026-10-16 : **Vista** : profil `vista` de `create-vm.sh` (Business SP2 x86, clé client KMS publique de Microsoft, sans activation ; réglage `HideWirelessSetupInOOBE`, introduit par Windows 7, retiré pour Vista). Pas de PowerShell sous Vista : le pilote du canal de l'agent (`vioserial` de Server 2008 x86, virtio-win 0.1.173) est posé par `certutil` (éditeur Red Hat ; racine DigiCert Assured ID Root CA prise chez DigiCert, SHA-1 vérifié) et `pnputil`. Première installation : sans aucune question, mais la commande du premier démarrage a laissé le pilote non installé (cause non établie ; la même commande à la main a réussi, et l'agent ne s'est connecté qu'après un redémarrage). Déplacée dans la passe `specialize` ; réinstallation en cours.
