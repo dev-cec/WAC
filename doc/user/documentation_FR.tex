@@ -1225,7 +1225,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         automatique de chaque utilisateur.
   \item[\fichier{firewall.json}] règles du pare-feu (nom, action, sens, ports,
         programme ; tous les champs dans \champ{Fields}) et réglages des profils
-        domaine, privé et public.
+        domaine, privé et public. Sous Windows~XP SP2 et suivants et
+        Server~2003 SP1, les exceptions de chaque profil --- programmes
+        autorisés et ports ouverts --- en règles de \champ{Version}
+        \texttt{XP}, avec leur \champ{Profile} et leur \champ{Scope} ; XP~SP1
+        n'a pas de politique de pare-feu.
   \item[\fichier{installed\_programs.json}] programmes installés, lus dans les
         clés \texttt{Uninstall} de la machine (64 et 32~bits) et de chaque
         utilisateur, et produits Windows Installer (\champ{Scope} \texttt{MSI

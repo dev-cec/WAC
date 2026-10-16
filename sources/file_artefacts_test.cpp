@@ -1477,6 +1477,27 @@ void jobFile() {
 	check(!parseJobFile(std::vector<uint8_t>(job.begin(), job.begin() + 0x60), cut), ".job: a file cut in its strings read");
 }
 
+/*! The firewall exceptions of Windows XP SP3, as the test VM's Standard
+ *  profile holds them: an application whose path has its own colon, one
+ *  whose state is written in lower case, a port; and a value of another
+ *  layout, left out. */
+void firewallXp() {
+	const std::vector<FirewallRule> apps = parseXpFirewallList(L"StandardProfile", false, {
+		{ L"C:\\WINDOWS\\system32\\notepad.exe", L"C:\\WINDOWS\\system32\\notepad.exe:*:Enabled:WacNotepad" },
+		{ L"%windir%\\system32\\sessmgr.exe", L"%windir%\\system32\\sessmgr.exe:*:enabled:@xpsp2res.dll,-22019" },
+		{ L"odd", L"no colon" } });
+	const std::vector<FirewallRule> ports = parseXpFirewallList(L"StandardProfile", true, { { L"8765:TCP", L"8765:TCP:*:Enabled:WacPort" } });
+	auto field = [](const FirewallRule& r, const wchar_t* k) {
+		for (const auto& [n, v] : r.fields) if (n == k) return v;
+		return std::wstring();
+	};
+	check(apps.size() == 2 && field(apps[0], L"App") == L"C:\\WINDOWS\\system32\\notepad.exe" && field(apps[0], L"Name") == L"WacNotepad"
+	      && field(apps[0], L"Active") == L"TRUE" && field(apps[1], L"Active") == L"TRUE" && field(apps[0], L"Scope") == L"*"
+	      && ports.size() == 1 && field(ports[0], L"LPort") == L"8765" && field(ports[0], L"Protocol") == L"TCP"
+	      && field(ports[0], L"Name") == L"WacPort" && field(ports[0], L"Profile") == L"StandardProfile",
+	      "firewall XP: applications and ports of a profile, as netsh shows them");
+}
+
 int wmain() {
 	shimcacheWindows7();
 	shimcacheWindows8();
@@ -1487,6 +1508,7 @@ int wmain() {
 	setupApiXp();
 	recycleBinInfo2();
 	jobFile();
+	firewallXp();
 	destListVersion();
 	powershell();
 	setupapi();

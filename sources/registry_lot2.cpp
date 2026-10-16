@@ -299,6 +299,52 @@ Json FirewallRule::toJson() const {
 	return o;
 }
 
+std::vector<FirewallRule> parseXpFirewallList(const std::wstring& profile, bool ports,
+                                              const std::vector<std::pair<std::wstring, std::wstring>>& values) {
+	std::vector<FirewallRule> rules;
+	for (const auto& [id, text] : values) {
+		/* An application: "path:scope:state:name", the path holding its own
+		   colon ("C:\\…"): split from the right. A port: "port:protocol:
+		   scope:state:name", from the left. */
+		std::vector<std::wstring> parts;
+		if (ports) {
+			size_t start = 0;
+			for (int i = 0; i < 4; ++i) {
+				const size_t colon = text.find(L':', start);
+				if (colon == std::wstring::npos) break;
+				parts.push_back(text.substr(start, colon - start));
+				start = colon + 1;
+			}
+			parts.push_back(text.substr(start));
+		} else {
+			std::wstring rest = text;
+			std::vector<std::wstring> tail;
+			for (int i = 0; i < 3; ++i) {
+				const size_t colon = rest.rfind(L':');
+				if (colon == std::wstring::npos) break;
+				tail.insert(tail.begin(), rest.substr(colon + 1));
+				rest = rest.substr(0, colon);
+			}
+			parts.push_back(rest);
+			parts.insert(parts.end(), tail.begin(), tail.end());
+		}
+		if (parts.size() != (ports ? 5u : 4u)) continue;   // not the layout Windows writes
+		FirewallRule r;
+		r.id = id;
+		r.version = L"XP";
+		const std::wstring& state = parts[ports ? 3 : 2];
+		r.fields = { { L"Profile", profile }, { L"Name", parts.back() },
+		             { L"Active", _wcsicmp(state.c_str(), L"Enabled") == 0 ? L"TRUE" : L"FALSE" },
+		             { L"Scope", parts[ports ? 2 : 1] } };
+		if (ports) {
+			r.fields.emplace_back(L"LPort", parts[0]);
+			r.fields.emplace_back(L"Protocol", parts[1]);
+		} else r.fields.emplace_back(L"App", parts[0]);
+		rules.push_back(std::move(r));
+	}
+	return rules;
+}
+
 HRESULT Firewall::getData() {
 	if (!conf.CurrentControlSet) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	const std::wstring policy = L"Services\\SharedAccess\\Parameters\\FirewallPolicy";
@@ -329,6 +375,23 @@ HRESULT Firewall::getData() {
 		}
 		ORCloseKey(key);
 		profiles_.emplace_back(profile, std::move(values));
+		/* Windows XP SP2 and Server 2003 SP1: the exceptions are two lists of
+		   each profile, no FirewallRules (measured on the XP SP3 VM, against
+		   netsh firewall show config). */
+		for (const bool ports : { false, true }) {
+			const std::wstring list = policy + L"\\" + profile + (ports ? L"\\GloballyOpenPorts\\List" : L"\\AuthorizedApplications\\List");
+			if (OROpenKey(conf.CurrentControlSet, list.c_str(), &key) != ERROR_SUCCESS) continue;
+			std::vector<std::pair<std::wstring, std::wstring>> entries;
+			for (DWORD i = 0;; ++i) {
+				std::wstring name;
+				DWORD type = 0;
+				std::vector<BYTE> data;
+				if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
+				if (type == REG_SZ) entries.emplace_back(name, readWideZ(data.data(), data.size(), 0));
+			}
+			ORCloseKey(key);
+			for (FirewallRule& r : parseXpFirewallList(profile, ports, entries)) rules_.push_back(std::move(r));
+		}
 	}
 	return ERROR_SUCCESS;
 }

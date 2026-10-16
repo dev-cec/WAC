@@ -1194,7 +1194,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         configuration script.
   \item[\fichier{firewall.json}] firewall rules (name, action, direction, ports,
         program; every field in \champ{Fields}) and the domain, private and
-        public profile settings.
+        public profile settings. On Windows~XP SP2 and later and Server~2003
+        SP1, the exceptions of each profile --- allowed programs and open
+        ports --- as rules of \champ{Version} \texttt{XP}, with their
+        \champ{Profile} and \champ{Scope}; XP~SP1 has no firewall policy.
   \item[\fichier{installed\_programs.json}] installed programs, read in the
         \texttt{Uninstall} keys of the machine (64- and 32-bit) and of each user
         and Windows Installer products (\champ{Scope} \texttt{MSI product},

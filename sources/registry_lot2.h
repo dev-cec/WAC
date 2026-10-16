@@ -156,12 +156,24 @@ private:
  *  @return the Name/Value pairs, in order */
 NameValues parseFirewallRule(const std::wstring& rule, std::wstring& version);
 
+
 //! One firewall rule.
 struct FirewallRule {
 	std::wstring id, version;
 	NameValues fields;
 	Json toJson() const;             //!< @return the rule as a JSON object
 };
+
+/*! The exceptions of a Windows XP SP2 profile: AuthorizedApplications\\List
+ *  ("path:scope:state:name") or GloballyOpenPorts\\List ("port:protocol:
+ *  scope:state:name"), as rules of version "XP" with the fields of the later
+ *  rules (Name, Active, App or LPort and Protocol) and Profile and Scope.
+ *  @param profile DomainProfile or StandardProfile
+ *  @param ports true for the ports' list
+ *  @param values the list's values: name, text
+ *  @return the rules; a value of another layout is left out */
+std::vector<FirewallRule> parseXpFirewallList(const std::wstring& profile, bool ports,
+                                              const std::vector<std::pair<std::wstring, std::wstring>>& values);
 
 //! Firewall rules and profile settings (firewall.json).
 class Firewall {

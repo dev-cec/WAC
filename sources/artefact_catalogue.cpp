@@ -88,7 +88,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		  { { XP, L"FAT12, FAT16, FAT32 volumes", L"FAT directory entries", true },
 		    { VISTA, L"…and exFAT volumes (Vista SP1; XP with KB955704)", L"exFAT directory entries", true } }, L"" },
 		{ "firewall", XP, 0, 0,
-		  { { XP, L"SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy (XP SP2)", L"registry values, profiles and port lists", false },
+		  { { XP, L"SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy (XP SP2)", L"registry values, profiles and port lists", true },
 		    { VISTA, L"…\\FirewallPolicy\\FirewallRules", L"registry values, rule strings v2.x", true } }, L"" },
 		{ "hosts", XP, 0, XP,
 		  { { XP, L"Windows\\System32\\drivers\\etc\\hosts", L"text", true } }, L"" },

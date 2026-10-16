@@ -51,7 +51,7 @@
 \texttt{fat\_volumes} & Windows XP & \texttt{FAT12, FAT16, FAT32 volumes} & FAT directory entries & yes \\
  & Windows Vista & \texttt{…and exFAT volumes (Vista SP1; XP with KB955704)} & exFAT directory entries & yes \\
 \addlinespace
-\texttt{firewall} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}SharedAccess\textbackslash{}Parameters\textbackslash{}FirewallPolicy (XP SP2)} & registry values, profiles and port lists & no \\
+\texttt{firewall} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}SharedAccess\textbackslash{}Parameters\textbackslash{}FirewallPolicy (XP SP2)} & registry values, profiles and port lists & yes \\
  & Windows Vista & \texttt{…\textbackslash{}FirewallPolicy\textbackslash{}FirewallRules} & registry values, rule strings v2.x & yes \\
 \addlinespace
 \texttt{hosts} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}drivers\textbackslash{}etc\textbackslash{}hosts} & text & yes \\
@@ -172,7 +172,7 @@
  & Windows Vista & \texttt{Windows\textbackslash{}INF\textbackslash{}setupapi.dev.log} & text, sections & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
-\texttt{shellbags} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell and ShellNoRoam} & BagMRU shell items & no \\
+\texttt{shellbags} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell and ShellNoRoam} & BagMRU shell items & yes \\
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell, and NTUSER.DAT} & BagMRU shell items & yes \\
 \addlinespace
 \texttt{shimcache} & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatibility\textbackslash{}AppCompatCache} & header 0xDEADBEEF, 96 entries & yes \\

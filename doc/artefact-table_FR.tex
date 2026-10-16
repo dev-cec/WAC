@@ -51,7 +51,7 @@
 \texttt{fat\_volumes} & Windows XP & \texttt{volumes FAT12, FAT16, FAT32} & entrées de répertoire FAT & oui \\
  & Windows Vista & \texttt{…et volumes exFAT (Vista SP1 ; XP avec KB955704)} & entrées de répertoire exFAT & oui \\
 \addlinespace
-\texttt{firewall} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}SharedAccess\textbackslash{}Parameters\textbackslash{}FirewallPolicy (XP SP2)} & valeurs de registre, profils et listes de ports & non \\
+\texttt{firewall} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}SharedAccess\textbackslash{}Parameters\textbackslash{}FirewallPolicy (XP SP2)} & valeurs de registre, profils et listes de ports & oui \\
  & Windows Vista & \texttt{…\textbackslash{}FirewallPolicy\textbackslash{}FirewallRules} & valeurs de registre, règles en chaînes v2.x & oui \\
 \addlinespace
 \texttt{hosts} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}drivers\textbackslash{}etc\textbackslash{}hosts} & texte & oui \\
@@ -172,7 +172,7 @@
  & Windows Vista & \texttt{Windows\textbackslash{}INF\textbackslash{}setupapi.dev.log} & texte, sections & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
-\texttt{shellbags} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell et ShellNoRoam} & éléments de shell de BagMRU & non \\
+\texttt{shellbags} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell et ShellNoRoam} & éléments de shell de BagMRU & oui \\
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell, et NTUSER.DAT} & éléments de shell de BagMRU & oui \\
 \addlinespace
 \texttt{shimcache} & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatibility\textbackslash{}AppCompatCache} & en-tête 0xDEADBEEF, 96 entrées & oui \\
