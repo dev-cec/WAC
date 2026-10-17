@@ -15,6 +15,9 @@ La matrice Enterprise d'ATT&CK, plateforme Windows, dans sa version publiée (ST
 - Les traces manquantes : soit ajoutées (fiche par ajout, avant la 3.0 si utiles à la détection), soit écartées avec leur raison (trace seulement vivante — mémoire, réseau en cours —, hors du périmètre d'une collecte sans trace, etc.).
 - **Le résultat dans la documentation** (demande utilisateur) : un tableau de couverture ATT&CK dans les manuels FR et EN — technique, trace, artefact WAC, couvert ou non et pourquoi —, la version d'ATT&CK citée.
 
+## Partage avec WAE
+Décision utilisateur du 2026-10-17 : WAC prélève et convertit ; **tout ce qui relève de l'analyse des pièces (les JSON)** — règles de détection par technique, rapprochements entre artefacts, chronologie, scores — revient à **WAE**. Chaque besoin d'analyse que la vérification fait apparaître est consigné, pour le moment, dans `WAE/TODO.txt` (technique ATT&CK, JSON de WAC concernés, ce qu'il faut y chercher) ; seules les traces absentes de la collecte donnent des fiches dans ce backlog.
+
 ## Référence indépendante
 ATT&CK lui-même (données STIX officielles) ; le tableau est produit depuis ces données et la table des artefacts de WAC, pas écrit à la main, pour pouvoir être refait à la version suivante.
 
@@ -27,7 +30,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [ ] Récupérer les données ATT&CK (version figée, empreinte notée)
 - [ ] Rapprocher Data Components et artefacts de WAC
 - [ ] Traces manquantes : fiches d'ajout ou raisons d'écart
+- [ ] Besoins d'analyse (détection sur les JSON) consignés dans `WAE/TODO.txt`
 - [ ] Tableau de couverture dans les manuels FR et EN
 
 ## Journal
 - 2026-10-17 : créée à la demande de l'utilisateur — à faire avant de clore la 3.0 ; le résultat va dans la documentation.
+- 2026-10-17 : décision utilisateur — ce qui relève de l'analyse des JSON va dans WAE (`WAE/TODO.txt` pour le moment) ; ici, seulement les traces à prélever.
