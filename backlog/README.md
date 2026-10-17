@@ -54,6 +54,7 @@ supprimés (B-036), la couverture MITRE ATT&CK (B-052), puis la revue (B-050) et
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à faire (après le harnais Vista) | P3 | fort |
 | [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à faire (après B-014) | P2 | fort |
 | [B-051](B-051-profils-powershell.md) | Profils PowerShell, une persistance hors registre (clé `powershell_profiles`) | à faire | P2 | moyen |
+| [B-053](B-053-sysmon.md) | Sysmon s'il est présent : journal (même déplacé), configuration, archives des fichiers supprimés | à faire | P1 | moyen |
 | [B-052](B-052-couverture-mitre-attack.md) | Couverture MITRE ATT&CK : toutes les traces utiles à la détection prélevées ? Résultat dans la documentation | à faire (avant de clore la 3.0) | P1 | fort |
 | [B-050](B-050-revue-code-securite-avant-3.0.md) | Revue de code et revue de sécurité de tout le projet — préalable à la publication de la 3.0.0 | à faire | P1 | fort |
 
