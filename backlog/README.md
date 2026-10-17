@@ -40,21 +40,31 @@ Remplace `TODO.txt`.
 
 ## Ouvert
 
-### Version 3.0 — rétrocompatibilité et serveurs
+### Version 3.0 — tous les clients, de XP à 11, et tous leurs artefacts
 
-Très gros chantier, après l'article : collecte depuis Windows XP SP1 et sur les
-versions serveur, artefacts propres aux serveurs (web, Active Directory).
+Décision utilisateur du 2026-10-17 : la 3.0.0 couvre les versions clientes de
+Windows XP SP1 à Windows 11, avec tous les artefacts ; les serveurs passent en
+4.0. Ordre : harnais sous Vista (B-037), clichés instantanés (B-014), fichiers
+supprimés (B-036), puis la revue (B-050) et la publication.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-039](B-039-artefacts-par-version-windows.md) | Artefacts organisés par version de Windows et par disponibilité (prérequis de B-035, B-037, B-038) | en cours | P3 | moyen |
+| [B-037](B-037-compatibilite-windows-xp.md) | Collecte compatible avec toutes les versions clientes depuis XP SP1 — reste le harnais sous Vista | en cours | P3 | fort |
+| [B-039](B-039-artefacts-par-version-windows.md) | Artefacts organisés par version de Windows et par disponibilité (la partie serveurs suit la 4.0) | en cours | P3 | moyen |
+| [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à faire (après le harnais Vista) | P3 | fort |
+| [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à faire (après B-014) | P2 | fort |
+| [B-050](B-050-revue-code-securite-avant-3.0.md) | Revue de code et revue de sécurité de tout le projet — préalable à la publication de la 3.0.0 | à faire | P1 | fort |
+
+### Version 4.0 — serveurs
+
+Collecte sur les versions serveur, de Server 2003 à 2025, et artefacts propres
+aux serveurs (web, Active Directory).
+
+| Fiche | Sujet | Statut | Priorité | Effort |
+|---|---|---|---|---|
 | [B-038](B-038-compatibilite-windows-server.md) | Collecte compatible avec les versions serveur, de Server 2003 à 2026 (prérequis de B-035) | en cours | P3 | fort |
 | [B-035](B-035-web-serveur.md) | Web côté serveur : journaux, code des sites, bases de données (clé `web_server`) — après B-039 et B-038 | à faire | P3 | fort |
 | [B-041](B-041-active-directory.md) | Artefacts de compromission d'Active Directory (contrôleurs de domaine) | à faire | P2 | fort |
-| [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à décider (reportée en 3.0) | P3 | fort |
-| [B-037](B-037-compatibilite-windows-xp.md) | Collecte compatible avec toutes les versions de Windows depuis XP SP1 (après B-039) | en cours | P3 | fort |
-| [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à décider (étude, reportée en 3.0) | P2 | fort |
-| [B-050](B-050-revue-code-securite-avant-3.0.md) | Revue de code et revue de sécurité de tout le projet — préalable à la publication de la 3.0.0 | à faire | P1 | fort |
 
 ## Réalisé
 

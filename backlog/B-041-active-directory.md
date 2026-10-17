@@ -1,8 +1,8 @@
-# B-041 — Artefacts de compromission d'Active Directory (version 3.0)
+# B-041 — Artefacts de compromission d'Active Directory (version 4.0)
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire (version 3.0, prérequis : B-039, B-038) | P2 | fort |
+| à faire (version 4.0, prérequis : B-039, B-038) | P2 | fort |
 
 ## Pourquoi
 Sur un contrôleur de domaine, la compromission se joue dans l'annuaire : comptes ajoutés aux groupes privilégiés, réplication détournée pour lire les secrets (DCSync), tickets forgés, délégations abusives, stratégies de groupe modifiées pour se propager. Ces traces sont propres aux serveurs et n'existent sur aucun poste. Demande utilisateur du 2026-10-07 : pour les serveurs, la version 3.0 doit les relever.
@@ -31,3 +31,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-10-07 : créée à la demande de l'utilisateur — version 3.0, pour les serveurs.
+- 2026-10-17 : décision utilisateur — version 4.0, avec les serveurs.

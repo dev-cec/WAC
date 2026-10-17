@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à décider (étude, reportée en 3.0) | P2 | fort |
+| à faire (version 3.0, après B-014) | P2 | fort |
 
 ## Pourquoi
 mft.json liste déjà les fichiers supprimés dont l'enregistrement n'est pas encore réutilisé (`Deleted`), et usn_journal.json les suppressions, mais pas leur **contenu**. Or l'outil, le script ou l'archive qu'un intrus a effacés sont souvent encore sur le disque : le contenu reste dans des clusters libres tant que NTFS ne les a pas réattribués. Le récupérer **en lisant le volume en brut** (`\\.\X:`, comme $MFT et $UsnJrnl aujourd'hui) ne laisse aucune trace sur la machine examinée : aucun fichier ouvert par le système, aucun outil de récupération installé ou lancé dessus, aucune écriture sur le volume. Demande utilisateur du 2026-10-01.
@@ -40,3 +40,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Journal
 - 2026-10-01 : créée à la demande de l'utilisateur — récupérer le contenu des fichiers supprimés par lecture brute du disque, pour ne laisser aucune trace sur la machine examinée.
 - 2026-10-08 : reportée en 3.0 (décision utilisateur).
+- 2026-10-17 : décision utilisateur — à faire pour la 3.0.0, après les clichés instantanés (B-014) ; c'est le dernier élément de la 3.0 avant la revue (B-050).

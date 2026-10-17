@@ -42,3 +42,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-02 : décision utilisateur — passée en P3 : peu de serveurs web sous Windows ; tout ce qui touche au client d'abord.
 - 2026-10-06 : prérequis ajoutés à la demande de l'utilisateur : B-039 (artefacts par version de Windows), puis B-038 (versions serveur, de 2003 à 2026).
 - 2026-10-07 : décision utilisateur — version 3.0, avec la rétrocompatibilité.
+- 2026-10-17 : décision utilisateur — version 4.0, avec les serveurs.

@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à décider | P3 | fort |
+| à faire (version 3.0, après le harnais Vista) | P3 | fort |
 
 ## Pourquoi
 Les anciennes versions des ruches et fichiers retrouvent ce qu'un intrus a effacé ; KAPE les parcourt avec --vss. WAC y a renoncé par principe (pas de service VSS).
@@ -27,3 +27,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Journal
 - (vide)
 - 2026-10-07 : reportée en 3.0 (décision utilisateur).
+- 2026-10-17 : décision utilisateur — à faire pour la 3.0.0, après le harnais sous Vista et avant les fichiers supprimés (B-036). Le principe reste : lecture brute de la zone de différences, sans le service VSS.

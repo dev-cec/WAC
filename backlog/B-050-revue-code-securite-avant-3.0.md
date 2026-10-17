@@ -48,3 +48,4 @@ Toute pièce lue est hostile (règle commune n° 3) : ruches, bases ESE et SQLit
 
 ## Journal
 - 2026-10-15 : fiche créée à la demande de l'utilisateur : revue de code de l'ensemble du projet avant de publier la 3.0.0, gros chantier ; idéalement une revue de sécurité avec le greffon adapté (`/security-review`).
+- 2026-10-17 : décision utilisateur — la 3.0.0 couvre les clients de XP à 11 avec tous les artefacts (clichés instantanés et fichiers supprimés compris) ; la revue porte sur ce périmètre, avant la publication.
