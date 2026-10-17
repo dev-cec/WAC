@@ -214,8 +214,13 @@ int main(int argc, char** argv) {
 	   on a Windows 11 — only what the version lacks is held back, and an
 	   artefact switched off in wac.yml (not asked) is never listed. */
 	const std::set<std::string> onSeven = [&] { const auto v = absentAmong(keys, seven); return std::set<std::string>(v.begin(), v.end()); }();
-	check(onSeven == std::set<std::string>{ "activities_cache", "bam", "defender", "powershell_history", "srum" },
-	      "Windows 7: " + std::to_string(onSeven.size()) + " artefacts held back, 5 expected (Timeline, BAM, Defender, PSReadLine, SRUM)");
+	/* PSReadLine's history is not held back on Windows 7: PowerShell 3 and
+	   later, and PSReadLine, install there — a history that may be there is
+	   looked for. */
+	check(onSeven == std::set<std::string>{ "activities_cache", "bam", "defender", "srum" },
+	      "Windows 7: " + std::to_string(onSeven.size()) + " artefacts held back, 4 expected (Timeline, BAM, Defender, SRUM)");
+	check(availabilityOf("powershell_history", vista) == Availability::AbsentFromThisVersion && !expectedOn("powershell_history", seven),
+	      "PSReadLine's history: absent from Vista (PowerShell 2 at most), looked for and not expected on Windows 7");
 	const std::vector<std::string> onXp = absentAmong(keys, xp);
 	check(onXp.size() == 14, "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 14 expected");
 	check(absentAmong(keys, eleven).empty(), "Windows 11: an artefact held back");

@@ -165,16 +165,18 @@ DECODED_PREFETCH_VERSIONS = {17, 23, 26, 30, 31}
 # form there WAC has no decoder for. A regression guard — an artefact that
 # joins or leaves a list shows —, not an independent proof of the lists: that
 # one is the table's own test (artefact_catalogue_test.cpp).
+# PSReadLine's history is looked for from Windows 7 (PowerShell 3 and later
+# install there): absent from none of these lists, its witness is confronted.
 OLDER_VERSION_STATUSES = {
     9200: ("Windows 8",
-           {"activities_cache.json", "bams.json", "powershell_history.json"},
+           {"activities_cache.json", "bams.json"},
            set()),
     9600: ("Windows 8.1",
-           {"activities_cache.json", "bams.json", "powershell_history.json"},
+           {"activities_cache.json", "bams.json"},
            set()),
     7601: ("Windows 7",
            {"activities_cache.json", "bams.json", "defender_detections.json", "defender_log.json",
-            "defender_quarantine.json", "powershell_history.json", "srum.json"},
+            "defender_quarantine.json", "srum.json"},
            set()),
 }
 
