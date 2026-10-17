@@ -53,6 +53,7 @@ supprimés (B-036), puis la revue (B-050) et la publication.
 | [B-039](B-039-artefacts-par-version-windows.md) | Artefacts organisés par version de Windows et par disponibilité (la partie serveurs suit la 4.0) | en cours | P3 | moyen |
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | à faire (après le harnais Vista) | P3 | fort |
 | [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à faire (après B-014) | P2 | fort |
+| [B-051](B-051-profils-powershell.md) | Profils PowerShell, une persistance hors registre (clé `powershell_profiles`) | à décider (proposée pour la 3.0) | P2 | moyen |
 | [B-050](B-050-revue-code-securite-avant-3.0.md) | Revue de code et revue de sécurité de tout le projet — préalable à la publication de la 3.0.0 | à faire | P1 | fort |
 
 ### Version 4.0 — serveurs

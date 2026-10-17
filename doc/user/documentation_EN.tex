@@ -1461,6 +1461,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         and each host (\champ{Host}: \texttt{ConsoleHost}, the ISE, VS~Code):
         the commands in the order they were typed, a command on several lines
         joined. No date per command: \champ{SourceModified} dates the last one.
+        Looked for from Windows~7: there by default from Windows~10, it exists
+        on 7, 8 and 8.1 once PowerShell~3 or later and PSReadLine were
+        installed. Vista and XP stop at PowerShell~2, without a history on
+        disk; their PowerShell logs are in \fichier{events.json}.
   \item[\fichier{activities\_cache.json}] Windows Timeline
         (\fichier{ActivitiesCache.db} of each account of each profile, with
         its \texttt{-wal} log): every row of the \texttt{Activity} and

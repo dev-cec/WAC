@@ -1509,7 +1509,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         profil et de chaque hôte (\champ{Host} : \texttt{ConsoleHost},
         l'ISE, VS~Code) : les commandes dans l'ordre où elles ont été tapées,
         une commande sur plusieurs lignes réunie. Aucune date par commande :
-        \champ{SourceModified} date la dernière.
+        \champ{SourceModified} date la dernière. Cherché dès Windows~7 : par
+        défaut depuis Windows~10, il existe sous 7, 8 et 8.1 dès que
+        PowerShell~3 ou plus et PSReadLine y ont été installés. Vista et XP
+        s'arrêtent à PowerShell~2, sans historique sur disque ; leurs
+        journaux PowerShell sont dans \fichier{events.json}.
   \item[\fichier{activities\_cache.json}] Chronologie Windows
         (\fichier{ActivitiesCache.db} de chaque compte de chaque profil, avec
         son journal \texttt{-wal}) : chaque ligne des tables

@@ -111,8 +111,8 @@
 \texttt{persistence} & Windows XP & \texttt{SOFTWARE, SYSTEM et NTUSER.DAT : IFEO, AppInit\_DLLs, Winlogon, LSA, Active Setup…} & valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
-\texttt{powershell\_history} & Windows 10 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}PowerShell\textbackslash{}PSReadLine\textbackslash{}ConsoleHost\_history.txt} & texte UTF-8 & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Plus tôt si PSReadLine a été installé à la main (PowerShell 5, Windows 7 et suivants).} \\
+\texttt{powershell\_history} & Windows 7 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}PowerShell\textbackslash{}PSReadLine\textbackslash{}ConsoleHost\_history.txt} & texte UTF-8 & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Écrit par PSReadLine : par défaut depuis Windows 10 ; sous Windows 7, 8 et 8.1 une fois PowerShell 3 ou plus et PSReadLine installés. Vista et XP s'arrêtent à PowerShell 2, sur lequel PSReadLine ne fonctionne pas.} \\
 \addlinespace
 \texttt{prefetch} & Windows XP & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 17 & oui \\
  & Windows Vista & \texttt{Windows\textbackslash{}Prefetch\textbackslash{}*.pf} & SCCA version 23 & oui \\

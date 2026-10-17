@@ -124,8 +124,8 @@ NOTES = {
     "Windows XP: Dr Watson (drwtsn32.log, user.dmp), not collected.": "Windows XP : Dr Watson (drwtsn32.log, user.dmp), non collecté.",
     "Copied raw on every version: not converted.": "Copié brut sur toutes les versions : non converti.",
     "Depends on Office (2010 and later), not on Windows.": "Dépend d'Office (2010 et suivants), non de Windows.",
-    "Earlier with PSReadLine installed by hand (PowerShell 5, Windows 7 and later).":
-        "Plus tôt si PSReadLine a été installé à la main (PowerShell 5, Windows 7 et suivants).",
+    "Written by PSReadLine: by default from Windows 10; on Windows 7, 8 and 8.1 once PowerShell 3 or later and PSReadLine are installed. Vista and XP stop at PowerShell 2, which PSReadLine does not run on.":
+        "Écrit par PSReadLine : par défaut depuis Windows 10 ; sous Windows 7, 8 et 8.1 une fois PowerShell 3 ou plus et PSReadLine installés. Vista et XP s'arrêtent à PowerShell 2, sur lequel PSReadLine ne fonctionne pas.",
     "Switched off by default on the server editions.": "Désactivé par défaut sur les éditions serveur.",
     "Windows XP keeps the repository in a FS subfolder, MD5 hashes and 4-byte page entries (measured, SP1 and SP3).":
         "Windows XP range le dépôt dans un sous-dossier FS, avec des condensats MD5 et des entrées de page de 4 octets (mesuré, SP1 et SP3).",
