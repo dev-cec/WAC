@@ -48,7 +48,7 @@
 /*! One entry of a cache file. */
 struct ThumbcacheEntry {
 	size_t offset = 0;              //!< position of the entry in the file
-	uint64_t hash = 0;              //!< the file's System.ThumbnailCacheId
+	uint64_t hash = 0;              //!< the entry's key: the file's System.ThumbnailCacheId from Windows 7 on (see thumbnailCacheId)
 	std::wstring identifier;        //!< the hash in hexadecimal, or the shell name of what is shown
 	std::wstring extension;         //!< the source file's extension ("jpg"), on Vista only
 	uint32_t width = 0, height = 0; //!< size of the image, in pixels; 0 on Windows 7, whose entry has none
@@ -56,7 +56,18 @@ struct ThumbcacheEntry {
 	size_t dataSize = 0;            //!< its size, 0 for an entry without image
 	bool headerChecksumValid = false; //!< the entry's header is as Windows wrote it
 	bool dataChecksumValid = false;   //!< the image is as Windows wrote it
+	bool remnant = false;             //!< found past the first free place: an earlier state's entry, its header checksum valid
 };
+
+/*! The System.ThumbnailCacheId Windows gives the file an entry shows — what
+ *  ties a thumbnail to its file. From Windows 7 on, the entry's hash; on
+ *  Vista, its identifier, the hash being another key (measured on the Vista
+ *  VM: the witness picture's id was the identifier of its entry, not its
+ *  hash).
+ *  @param version the cache's version
+ *  @param e the entry
+ *  @return 16 hexadecimal digits in lower case, empty when the entry carries none */
+std::wstring thumbnailCacheId(uint32_t version, const ThumbcacheEntry& e);
 
 /*! A decoded cache file. */
 struct ThumbcacheFile {

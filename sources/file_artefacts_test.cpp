@@ -1023,6 +1023,22 @@ void thumbcache() {
 	writeLittleEndian<uint32_t>(cut.data() + 20, 0xFFFFFFFF);   // first free place beyond the file
 	ThumbcacheFile d;
 	check(decodeThumbcache(cut, d) && d.entries.empty(), "thumbcache: a cut file read no further than its end");
+	/* REMNANTS: an entry past the first free place, whole, is read and
+	   flagged; one whose header was rewritten is not, and the walk stops
+	   there; one whose image was rewritten keeps its header, not its image. */
+	std::vector<uint8_t> withRemnant = file;
+	withRemnant.insert(withRemnant.end(), file.begin() + 24, file.end());   // the same entry again, past the free place
+	ThumbcacheFile r;
+	check(decodeThumbcache(withRemnant, r) && r.entries.size() == 2 && !r.entries[0].remnant && r.entries[1].remnant
+	      && r.entries[1].headerChecksumValid && r.entries[1].dataChecksumValid && r.entries[1].offset == file.size(),
+	      "thumbcache: a whole entry past the first free place read as a remnant");
+	std::vector<uint8_t> rewrittenHeader = withRemnant;
+	rewrittenHeader[file.size() + 8] ^= 0xFF;   // its hash, which its header checksum covers
+	check(decodeThumbcache(rewrittenHeader, r) && r.entries.size() == 1, "thumbcache: a remnant whose header was rewritten kept");
+	std::vector<uint8_t> rewrittenImage = withRemnant;
+	rewrittenImage[file.size() + (cache.entries.empty() ? 0 : cache.entries[0].dataOffset - 24)] ^= 0xFF;   // the remnant's first image byte
+	check(decodeThumbcache(rewrittenImage, r) && r.entries.size() == 2 && r.entries[1].remnant && !r.entries[1].dataChecksumValid,
+	      "thumbcache: a remnant whose image was rewritten lost, or its image taken as valid");
 	/* VISTA (0x14): the first entry header of the Vista VM's thumbcache_96.db
 	   and the checksum Windows wrote after its first 48 bytes; then a Vista
 	   cache built here, the source's extension after the hash and every later

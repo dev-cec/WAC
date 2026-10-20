@@ -45,9 +45,15 @@ std::wstring imageExtension(const uint8_t* data, size_t size) {
 	return L"bin";
 }
 
-//! The image of an entry written next to the JSON. @return its path, empty if not written
-std::wstring exportImage(const std::wstring& folder, const ThumbcacheEntry& e, const uint8_t* data) {
-	const std::wstring image = folder + L"\\" + to_hex(e.hash, 16) + L"." + imageExtension(data, e.dataSize);
+/*! The image of an entry written next to the JSON, named by the file's
+ *  ThumbnailCacheId when the entry gives it (its hash otherwise); a
+ *  remnant's name says so and its offset, as it may share its id with an
+ *  entry in use.
+ *  @return its path, empty if not written */
+std::wstring exportImage(const std::wstring& folder, const ThumbcacheEntry& e, const std::wstring& cacheId, const uint8_t* data) {
+	const std::wstring stem = (cacheId.empty() ? to_hex(e.hash, 16) : cacheId)
+	                        + (e.remnant ? L"-remnant-" + std::to_wstring(e.offset) : L"");
+	const std::wstring image = folder + L"\\" + stem + L"." + imageExtension(data, e.dataSize);
 	std::ofstream out(std::filesystem::path(conf._outputDir) / image, std::ios::binary);
 	out.write(reinterpret_cast<const char*>(data), (std::streamsize)e.dataSize);
 	if (out) return image;
@@ -81,6 +87,13 @@ Layout layoutOf(uint32_t version) {
 	return { 16, 20, 0, 16, 56, 40, true };
 }
 
+/*! One entry of a cache, at `offset`, every length bounded by `limit`.
+ *  @param size receives the entry's size, to the next
+ *  @return false if there is no entry there ("CMMM") or one of its lengths
+ *          passes the entry or the limit (logged) */
+bool readEntry(const std::vector<uint8_t>& bytes, size_t offset, size_t limit, const Layout& layout,
+               ThumbcacheEntry& e, size_t& size);
+
 } // namespace
 
 uint64_t thumbcacheCrc64(const uint8_t* bytes, size_t size, uint64_t initial) {
@@ -106,6 +119,13 @@ std::wstring thumbcacheSize(uint32_t version, uint32_t type) {
 	return type < sizes.size() ? sizes[type] : L"";
 }
 
+std::wstring thumbnailCacheId(uint32_t version, const ThumbcacheEntry& e) {
+	if (version != VISTA) return to_hex(e.hash, 16);
+	// Vista: the identifier, when it is the 16 hexadecimal digits of an id.
+	if (e.identifier.size() != 16 || e.identifier.find_first_not_of(L"0123456789abcdefABCDEF") != std::wstring::npos) return L"";
+	return toLower(e.identifier);
+}
+
 bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file) {
 	file = ThumbcacheFile{};
 	if (bytes.size() < FILE_HEADER || memcmp(bytes.data(), "CMMM", 4) != 0) return false;
@@ -120,49 +140,75 @@ bool decodeThumbcache(const std::vector<uint8_t>& bytes, ThumbcacheFile& file) {
 		return true;
 	}
 	const Layout layout = layoutOf(file.version);
-	const size_t entryHeader = layout.entryHeader;
 	size_t offset = readLittleEndian<uint32_t>(bytes.data() + layout.firstEntryAt);
-	// The first free place ends the entries; never beyond the file itself.
-	const size_t end = std::min<size_t>(readLittleEndian<uint32_t>(bytes.data() + layout.firstFreeAt), bytes.size());
-	while (fits(end, offset, entryHeader) && memcmp(bytes.data() + offset, "CMMM", 4) == 0) {
-		const uint8_t* p = bytes.data() + offset;
-		const size_t size = readLittleEndian<uint32_t>(p + 4);
-		const size_t identifierSize = readLittleEndian<uint32_t>(p + layout.sizesAt);
-		const size_t padding = readLittleEndian<uint32_t>(p + layout.sizesAt + 4);
-		const size_t dataSize = readLittleEndian<uint32_t>(p + layout.sizesAt + 8);
-		// Each length is the file's word: the entry must hold them all, and lie in the file.
-		if (size < entryHeader || !fits(end, offset, size) || identifierSize % 2 != 0
-		    || identifierSize > size - entryHeader || padding > size - entryHeader - identifierSize
-		    || dataSize > size - entryHeader - identifierSize - padding) {
-			log(2, L"🔥Thumbnail cache: entry at " + std::to_wstring(offset) + L" outside its bounds, reading stopped");
-			break;
-		}
-		ThumbcacheEntry e;
-		e.offset = offset;
-		e.hash = readLittleEndian<uint64_t>(p + 8);
-		// Vista's extension: up to four characters, null-padded.
-		for (size_t i = 0; layout.extensionAt && i < 8; i += 2) {
-			const wchar_t c = (wchar_t)readLittleEndian<uint16_t>(p + layout.extensionAt + i);
-			if (c == 0) break;
-			e.extension += c;
-		}
-		for (size_t i = 0; i < identifierSize; i += 2)
-			e.identifier += (wchar_t)readLittleEndian<uint16_t>(p + entryHeader + i);
-		if (layout.hasSize) {
-			e.width = readLittleEndian<uint32_t>(p + 28);
-			e.height = readLittleEndian<uint32_t>(p + 32);
-		}
-		e.dataOffset = offset + entryHeader + identifierSize + padding;
-		e.dataSize = dataSize;
-		const size_t headerChecked = layout.dataChecksumAt + 8;
-		e.headerChecksumValid = thumbcacheCrc64(p, headerChecked, ~0ULL) == readLittleEndian<uint64_t>(p + headerChecked);
-		e.dataChecksumValid = thumbcacheDataChecksum(bytes.data() + e.dataOffset, dataSize)
-		                      == readLittleEndian<uint64_t>(p + layout.dataChecksumAt);
+	// The first free place ends the entries in use; never beyond the file itself.
+	const size_t firstFree = std::min<size_t>(readLittleEndian<uint32_t>(bytes.data() + layout.firstFreeAt), bytes.size());
+	ThumbcacheEntry e;
+	size_t size = 0;
+	while (readEntry(bytes, offset, firstFree, layout, e, size)) {
+		file.entries.push_back(std::move(e));
+		offset += size;
+	}
+	/* REMNANTS. Past the first free place, the entries of an earlier state
+	   may still be whole (measured on Vista: six thumbnails after it, every
+	   checksum valid). One is kept only if it is exploitable — its header as
+	   Windows wrote it (header checksum); its image is exported only if its
+	   data checksum holds too —, and the walk stops at the first that is
+	   not: nothing is searched for, nothing guessed. Only when the entries in
+	   use end exactly at that place: otherwise their chain broke, and what
+	   follows is not known. */
+	if (offset != firstFree) return true;
+	while (readEntry(bytes, offset, bytes.size(), layout, e, size) && e.headerChecksumValid) {
+		e.remnant = true;
 		file.entries.push_back(std::move(e));
 		offset += size;
 	}
 	return true;
 }
+
+namespace {
+
+bool readEntry(const std::vector<uint8_t>& bytes, size_t offset, size_t limit, const Layout& layout,
+               ThumbcacheEntry& e, size_t& size) {
+	const size_t entryHeader = layout.entryHeader;
+	if (!fits(limit, offset, entryHeader) || memcmp(bytes.data() + offset, "CMMM", 4) != 0) return false;
+	const uint8_t* p = bytes.data() + offset;
+	size = readLittleEndian<uint32_t>(p + 4);
+	const size_t identifierSize = readLittleEndian<uint32_t>(p + layout.sizesAt);
+	const size_t padding = readLittleEndian<uint32_t>(p + layout.sizesAt + 4);
+	const size_t dataSize = readLittleEndian<uint32_t>(p + layout.sizesAt + 8);
+	// Each length is the file's word: the entry must hold them all, and lie within the limit.
+	if (size < entryHeader || !fits(limit, offset, size) || identifierSize % 2 != 0
+	    || identifierSize > size - entryHeader || padding > size - entryHeader - identifierSize
+	    || dataSize > size - entryHeader - identifierSize - padding) {
+		log(2, L"🔥Thumbnail cache: entry at " + std::to_wstring(offset) + L" outside its bounds, reading stopped");
+		return false;
+	}
+	e = ThumbcacheEntry{};
+	e.offset = offset;
+	e.hash = readLittleEndian<uint64_t>(p + 8);
+	// Vista's extension: up to four characters, null-padded.
+	for (size_t i = 0; layout.extensionAt && i < 8; i += 2) {
+		const wchar_t c = (wchar_t)readLittleEndian<uint16_t>(p + layout.extensionAt + i);
+		if (c == 0) break;
+		e.extension += c;
+	}
+	for (size_t i = 0; i < identifierSize; i += 2)
+		e.identifier += (wchar_t)readLittleEndian<uint16_t>(p + entryHeader + i);
+	if (layout.hasSize) {
+		e.width = readLittleEndian<uint32_t>(p + 28);
+		e.height = readLittleEndian<uint32_t>(p + 32);
+	}
+	e.dataOffset = offset + entryHeader + identifierSize + padding;
+	e.dataSize = dataSize;
+	const size_t headerChecked = layout.dataChecksumAt + 8;
+	e.headerChecksumValid = thumbcacheCrc64(p, headerChecked, ~0ULL) == readLittleEndian<uint64_t>(p + headerChecked);
+	e.dataChecksumValid = thumbcacheDataChecksum(bytes.data() + e.dataOffset, dataSize)
+	                      == readLittleEndian<uint64_t>(p + layout.dataChecksumAt);
+	return true;
+}
+
+} // namespace
 
 bool decodeThumbsDb(const std::vector<uint8_t>& bytes, std::vector<ThumbsDbEntry>& entries) {
 	entries.clear();
@@ -237,10 +283,15 @@ HRESULT Thumbcaches::getData() {
 				o.add(L"Offset", Json::num((unsigned long long)e.offset));
 				o.add(L"Hash", Json::str(to_hex(e.hash, 16)));
 				if (!e.identifier.empty()) o.add(L"Identifier", Json::str(e.identifier));
+				const std::wstring cacheId = thumbnailCacheId(cache.version, e);
+				if (!cacheId.empty()) o.add(L"ThumbnailCacheId", Json::str(cacheId));
 				if (!e.extension.empty()) o.add(L"SourceExtension", Json::str(e.extension));
 				o.add(L"HeaderChecksumValid", Json::boolean(e.headerChecksumValid));
-				// An entry without image (a placeholder Explorer keeps): no size, no data.
-				if (e.dataSize) {
+				if (e.remnant) o.add(L"Remnant", Json::boolean(true));
+				/* An entry without image (a placeholder Explorer keeps): no size,
+				   no data. A remnant's image only when its checksum holds: its
+				   place may since have been partly rewritten. */
+				if (e.dataSize && (!e.remnant || e.dataChecksumValid)) {
 					const uint8_t* data = bytes.data() + e.dataOffset;
 					// Windows 7's entry has no size: none given rather than zeros.
 					if (e.width) o.add(L"Width", Json::num((unsigned long long)e.width));
@@ -251,7 +302,7 @@ HRESULT Thumbcaches::getData() {
 					Sha256Stream digest;
 					digest.update(data, e.dataSize);
 					o.add(L"Sha256", Json::str(digest.hexDigest()));
-					const std::wstring image = exportImage(folder, e, data);
+					const std::wstring image = exportImage(folder, e, cacheId, data);
 					if (!image.empty()) o.add(L"Image", Json::str(image));
 				}
 				entries_.push(std::move(o));
