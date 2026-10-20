@@ -297,6 +297,16 @@ LONG WINAPI wacBCryptSetProperty(void* object, LPCWSTR property, PUCHAR input, U
 	return real ? real(object, property, input, inputSize, flags) : NOT_SUPPORTED;
 }
 
+LONG WINAPI wacBCryptGetProperty(void* object, LPCWSTR property, PUCHAR output, ULONG outputSize, ULONG* resultSize,
+                                 ULONG flags) __asm__("_BCryptGetProperty@24");
+LONG WINAPI wacBCryptGetProperty(void* object, LPCWSTR property, PUCHAR output, ULONG outputSize, ULONG* resultSize,
+                                 ULONG flags) {
+	using Real = LONG (WINAPI*)(void*, LPCWSTR, PUCHAR, ULONG, ULONG*, ULONG);
+	static Lookup bcrypt7;
+	const Real real = bcryptFunction<Real>(bcrypt7, "BCryptGetProperty");
+	return real ? real(object, property, output, outputSize, resultSize, flags) : NOT_SUPPORTED;
+}
+
 LONG WINAPI wacBCryptGenerateSymmetricKey(void* algorithm, void** key, PUCHAR keyObject, ULONG keyObjectSize,
                                           PUCHAR secret, ULONG secretSize, ULONG flags) __asm__("_BCryptGenerateSymmetricKey@28");
 LONG WINAPI wacBCryptGenerateSymmetricKey(void* algorithm, void** key, PUCHAR keyObject, ULONG keyObjectSize,

@@ -2,6 +2,7 @@
  *  \brief Implementation of the SAM hash decryption (see sam_secrets.h).
  */
 #include "sam_secrets.h"
+#include "des.h"
 
 #include <array>
 #include <cstring>
@@ -64,7 +65,7 @@ std::wstring readClass(ORHKEY controlSet, const std::wstring& subKey) {
 	return std::wstring(cls, clsLen);
 }
 
-// --- keyed stream and block ciphers (BCrypt for AES and DES) ----------------
+// --- keyed stream and block ciphers (RC4 and DES here, AES through BCrypt) --
 
 /*! RC4 with a given key (the quarantine RC4 in defender_history.cpp uses a
  *  fixed key and cannot be reused here). */
@@ -87,25 +88,31 @@ std::vector<uint8_t> rc4(const std::vector<uint8_t>& key, const uint8_t* data, s
 	return out;
 }
 
-/*! One pass of a BCrypt block cipher in decryption, no padding.
- *  @param algo BCRYPT_AES_ALGORITHM or BCRYPT_DES_ALGORITHM
- *  @param chaining BCRYPT_CHAIN_MODE_CBC or BCRYPT_CHAIN_MODE_ECB
+/*! AES-CBC in decryption through BCrypt, no padding (the AES revision of
+ *  the SAM, Windows 10 1607 and later).
  *  @param key the symmetric key
- *  @param iv the initialisation vector (copied; CBC only), or empty for ECB
+ *  @param iv the initialisation vector (copied)
  *  @param data the ciphertext (a multiple of the block size)
  *  @return the plaintext, or an empty vector on any failure */
-std::vector<uint8_t> blockDecrypt(const wchar_t* algo, const wchar_t* chaining,
-                                  const std::vector<uint8_t>& key,
-                                  const std::vector<uint8_t>& iv,
-                                  const std::vector<uint8_t>& data) {
+std::vector<uint8_t> aesCbcDecrypt(const std::vector<uint8_t>& key,
+                                   const std::vector<uint8_t>& iv,
+                                   const std::vector<uint8_t>& data) {
 	BCRYPT_ALG_HANDLE hAlg = NULL;
-	if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&hAlg, algo, NULL, 0))) return {};
+	if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, NULL, 0))) return {};
 	std::vector<uint8_t> out;
 	BCRYPT_KEY_HANDLE hKey = NULL;
+	/* The key object's memory, from the caller: only Windows 7 and later
+	   accept none, and WAC converts on any Windows (Vista refused it). */
+	std::vector<uint8_t> keyObject;
 	do {
+		const wchar_t* chaining = BCRYPT_CHAIN_MODE_CBC;
 		if (!BCRYPT_SUCCESS(BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE,
 		        (PUCHAR)chaining, (ULONG)((wcslen(chaining) + 1) * sizeof(wchar_t)), 0))) break;
-		if (!BCRYPT_SUCCESS(BCryptGenerateSymmetricKey(hAlg, &hKey, NULL, 0,
+		DWORD objectLength = 0;
+		ULONG got = 0;
+		if (!BCRYPT_SUCCESS(BCryptGetProperty(hAlg, BCRYPT_OBJECT_LENGTH, (PUCHAR)&objectLength, sizeof objectLength, &got, 0))) break;
+		keyObject.resize(objectLength);
+		if (!BCRYPT_SUCCESS(BCryptGenerateSymmetricKey(hAlg, &hKey, keyObject.data(), (ULONG)keyObject.size(),
 		        (PUCHAR)key.data(), (ULONG)key.size(), 0))) break;
 		std::vector<uint8_t> ivCopy = iv;   // BCryptDecrypt overwrites the IV
 		out.resize(data.size());
@@ -119,12 +126,6 @@ std::vector<uint8_t> blockDecrypt(const wchar_t* algo, const wchar_t* chaining,
 	if (hKey) BCryptDestroyKey(hKey);
 	BCryptCloseAlgorithmProvider(hAlg, 0);
 	return out;
-}
-
-std::vector<uint8_t> aesCbcDecrypt(const std::vector<uint8_t>& key,
-                                   const std::vector<uint8_t>& iv,
-                                   const std::vector<uint8_t>& data) {
-	return blockDecrypt(BCRYPT_AES_ALGORITHM, BCRYPT_CHAIN_MODE_CBC, key, iv, data);
 }
 
 // --- the DES layer keyed on the RID -----------------------------------------
@@ -144,29 +145,24 @@ std::array<uint8_t, 8> transformKey(const std::array<uint8_t, 7>& in) {
 	return out;
 }
 
-//! The two DES keys derived from a RID (the last layer over NT and LM hashes).
-void ridKeys(uint32_t rid, std::vector<uint8_t>& key1, std::vector<uint8_t>& key2) {
-	const uint8_t r[4] = { uint8_t(rid), uint8_t(rid >> 8), uint8_t(rid >> 16), uint8_t(rid >> 24) };
-	const std::array<uint8_t, 7> a = { r[0], r[1], r[2], r[3], r[0], r[1], r[2] };
-	const std::array<uint8_t, 7> b = { r[3], r[0], r[1], r[2], r[3], r[0], r[1] };
-	const auto k1 = transformKey(a), k2 = transformKey(b);
-	key1.assign(k1.begin(), k1.end());
-	key2.assign(k2.begin(), k2.end());
-}
-
-/*! Removes the RID-keyed DES layer from a 16-byte block: the two halves are DES
- *  decrypted with the two RID keys. Gives the final NT or LM hash.
- *  @return the 16-byte hash, or an empty vector on failure */
+/*! Removes the RID-keyed DES layer from a 16-byte block: each half DES
+ *  decrypted with its key derived from the RID. Gives the final NT or LM hash.
+ *  WAC's own DES (des.h): through BCrypt, this layer failed on XP (no
+ *  BCrypt) and on Vista (a key object required), and every hash came out
+ *  empty.
+ *  @return the 16-byte hash, or an empty vector if the block is short */
 std::vector<uint8_t> removeDes(uint32_t rid, const std::vector<uint8_t>& block) {
 	if (block.size() < 16) return {};
-	std::vector<uint8_t> key1, key2;
-	ridKeys(rid, key1, key2);
-	const std::vector<uint8_t> a = blockDecrypt(BCRYPT_DES_ALGORITHM, BCRYPT_CHAIN_MODE_ECB,
-	        key1, {}, std::vector<uint8_t>(block.begin(), block.begin() + 8));
-	const std::vector<uint8_t> b = blockDecrypt(BCRYPT_DES_ALGORITHM, BCRYPT_CHAIN_MODE_ECB,
-	        key2, {}, std::vector<uint8_t>(block.begin() + 8, block.begin() + 16));
-	if (a.size() != 8 || b.size() != 8) return {};
-	return join({ a, b });
+	const uint8_t r[4] = { uint8_t(rid), uint8_t(rid >> 8), uint8_t(rid >> 16), uint8_t(rid >> 24) };
+	const std::array<uint8_t, 8> key1 = transformKey({ r[0], r[1], r[2], r[3], r[0], r[1], r[2] });
+	const std::array<uint8_t, 8> key2 = transformKey({ r[3], r[0], r[1], r[2], r[3], r[0], r[1] });
+	std::array<uint8_t, 8> a{}, b{};
+	std::copy(block.begin(), block.begin() + 8, a.begin());
+	std::copy(block.begin() + 8, block.begin() + 16, b.begin());
+	const std::array<uint8_t, 8> plainA = desDecryptBlock(key1, a), plainB = desDecryptBlock(key2, b);
+	std::vector<uint8_t> hash(plainA.begin(), plainA.end());
+	hash.insert(hash.end(), plainB.begin(), plainB.end());
+	return hash;
 }
 
 // --- the SAM structures -----------------------------------------------------
