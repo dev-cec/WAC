@@ -1048,7 +1048,8 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         boot key from \fichier{SYSTEM}, the hashed boot key from the \fichier{SAM},
         the AES scheme of Windows~10 and later or the older RC4, whose checksum
         is verified: a wrong key gives no hash rather than wrong ones, then a
-        DES layer keyed on the RID). If the account carries password-reset security
+        DES layer keyed on the RID, which WAC decrypts itself so that it holds
+        from XP to Windows~11). If the account carries password-reset security
         questions (\champ{SecurityQuestions}, the \texttt{ResetData} value), they
         are converted as they are, questions AND answers: stored in the clear, a
         trivial answer is a weakness WAE judges like a weak password.
@@ -1316,7 +1317,8 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         are in the queue files \fichier{qmgr0.dat} and \fichier{qmgr1.dat},
         which BITS writes in turn: each job says which one it was read in
         (\champ{QueueFile}), since the older one may keep an earlier state of
-        the same job.
+        the same job. On Vista (BITS~3.0), the delimiter of the jobs is known
+        to no published tool; it was measured and is read the same way.
   \item[\fichier{wmi\_persistence.json}] WMI event subscriptions, read
         \textbf{offline} in the CIM repository copied raw
         (\path|wbem\Repository|): no WMI query, nothing run on the machine. In
@@ -1490,7 +1492,8 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         without the \texttt{System.} prefix. One record per document the
         crawler saw (\champ{Table} \texttt{Gather}, \champ{DocumentId}, the
         same number as \champ{WorkId}): its URL and its last modification when
-        crawled. The record outlives the file until the next crawl: a deleted
+        crawled (on Vista, its path \champ{ItemPath} in capitals, from the path
+        table, and all its dates as FILETIMEs). The record outlives the file until the next crawl: a deleted
         document may still show there. Up to Windows~10, the index is an ESE
         database, \fichier{Windows.edb}: its logs are replayed into the
         working copy, then it is converted in the same form; a property's
@@ -1564,18 +1567,22 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
   \item[\fichier{thumbcache.json}] Explorer's thumbnail and icon caches of
         every profile (\fichier{thumbcache\_*.db}, \fichier{iconcache\_*.db}):
         what the user had on screen, even if the file was deleted since. For
-        each entry: its cache and size, its hash (\champ{Hash} — the
-        \texttt{System.ThumbnailCacheId} Windows gives for the file, which ties
-        a thumbnail to its file), its identifier, its dimensions, its format
-        (\texttt{png}, \texttt{jpg}, \texttt{bmp}), the SHA-256 of the image, and
-        the image itself, exported next to the JSON
-        (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<hash>.<ext>}).
+        each entry: its cache and size, its key (\champ{Hash}), its identifier,
+        the \champ{ThumbnailCacheId} Windows gives for the file, which ties a
+        thumbnail to its file (the key from Windows~7 on, the identifier on
+        Vista), its dimensions, its format (\texttt{png}, \texttt{jpg},
+        \texttt{bmp}), the SHA-256 of the image, and the image itself, exported
+        next to the JSON
+        (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<ThumbnailCacheId>.<ext>}).
         The two checksums Windows writes for each entry are recomputed
         (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}): an entry read
         wrong fails them. Vista to Windows~11 (Vista and 7 give no dimensions;
-        Vista gives the source file's extension, \champ{SourceExtension}). Only
-        the entries in use are read: those after the first free place the
-        header gives, remains of an earlier state, are not. On Windows~XP and Server~2003, the
+        Vista gives the source file's extension, \champ{SourceExtension}).
+        Past the first free place the header gives, entries of an earlier state
+        may remain whole: they are given as remnants (\champ{Remnant}) when
+        their header checksum holds, their image only when its own checksum
+        holds too (\fichier{<ThumbnailCacheId>-remnant-<offset>.<ext>}); the
+        reading stops at the first that does not. On Windows~XP and Server~2003, the
         \fichier{Thumbs.db} that Explorer writes in every folder shown as
         thumbnails, searched by name on every fixed NTFS volume: per
         thumbnail, the image's name and path, its modification when the

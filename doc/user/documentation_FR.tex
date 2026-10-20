@@ -1069,7 +1069,8 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         clé de hachage de la \fichier{SAM}, schéma AES de Windows~10 et suivants
         ou RC4 plus ancien, dont la somme de contrôle est vérifiée : une clé
         fausse ne donne aucun condensat plutôt que des condensats faux, puis
-        couche DES par RID). Si le compte porte des
+        couche DES par RID, déchiffrée par WAC lui-même pour valoir de XP à
+        Windows~11). Si le compte porte des
         questions de sécurité de réinitialisation (\champ{SecurityQuestions},
         valeur \texttt{ResetData}), elles sont converties telles quelles,
         questions ET réponses : stockées en clair, une réponse triviale est une
@@ -1355,7 +1356,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         fichiers de file d'attente \fichier{qmgr0.dat} et
         \fichier{qmgr1.dat}, que BITS écrit tour à tour : chaque travail dit
         dans lequel il a été lu (\champ{QueueFile}), car le plus ancien peut
-        garder un état antérieur du même travail.
+        garder un état antérieur du même travail. Sous Vista (BITS~3.0), le
+        séparateur des travaux n'est connu d'aucun outil publié ; il est
+        mesuré et lu de même.
   \item[\fichier{wmi\_persistence.json}] abonnements aux événements WMI, lus
         \textbf{hors ligne} dans le dépôt CIM copié en brut
         (\path|wbem\Repository|) : aucune requête WMI, rien exécuté sur la
@@ -1542,7 +1545,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         sans le préfixe \texttt{System.}. Une fiche par document vu par le
         collecteur (\champ{Table} \texttt{Gather}, \champ{DocumentId}, le
         même numéro que \champ{WorkId}) : son URL et sa dernière modification
-        au passage du collecteur. L'enregistrement survit au fichier jusqu'au
+        au passage du collecteur (sous Vista, son chemin \champ{ItemPath} en
+        capitales, tiré de la table des chemins, et toutes ses dates en
+        FILETIME). L'enregistrement survit au fichier jusqu'au
         passage suivant : un document supprimé peut encore y paraître.
         Jusqu'à Windows~10, l'index est une base ESE, \fichier{Windows.edb} :
         ses journaux y sont rejoués dans la copie de travail, puis il est
@@ -1620,19 +1625,23 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         l'Explorateur, de chaque profil (\fichier{thumbcache\_*.db},
         \fichier{iconcache\_*.db}) : ce que l'utilisateur a eu sous les yeux,
         même si le fichier a été supprimé depuis. Pour chaque entrée : son
-        cache et sa taille, son hachage (\champ{Hash} — le
-        \texttt{System.ThumbnailCacheId} que Windows donne pour le fichier, ce
-        qui relie une miniature à son fichier), son identifiant, ses
-        dimensions, son format (\texttt{png}, \texttt{jpg}, \texttt{bmp}), le
-        SHA-256 de l'image, et l'image elle-même, exportée à côté du JSON
-        (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<hachage>.<ext>}).
+        cache et sa taille, sa clé (\champ{Hash}), son identifiant, le
+        \champ{ThumbnailCacheId} que Windows donne pour le fichier, ce qui
+        relie une miniature à son fichier (la clé depuis Windows~7,
+        l'identifiant sous Vista), ses dimensions, son format (\texttt{png},
+        \texttt{jpg}, \texttt{bmp}), le SHA-256 de l'image, et l'image
+        elle-même, exportée à côté du JSON
+        (\fichier{thumbcache\textbackslash<SID>\textbackslash<cache>\textbackslash<ThumbnailCacheId>.<ext>}).
         Les deux sommes de contrôle que Windows écrit pour chaque entrée sont
         recalculées (\champ{HeaderChecksumValid}, \champ{DataChecksumValid}) :
         une entrée lue de travers les échoue. Vista à Windows~11 (Vista et 7
         ne donnent pas les dimensions ; Vista donne l'extension du fichier
-        d'origine, \champ{SourceExtension}). Seules les entrées en service
-        sont lues : celles qui suivent la première place libre que l'en-tête
-        annonce, restes d'un état antérieur, ne le sont pas.
+        d'origine, \champ{SourceExtension}). Après la première place libre
+        que l'en-tête annonce, des entrées d'un état antérieur peuvent rester
+        entières : elles sont rendues comme vestiges (\champ{Remnant}) si leur
+        somme d'en-tête est juste, leur image seulement si sa somme l'est aussi
+        (\fichier{<ThumbnailCacheId>-remnant-<position>.<ext>}) ; la lecture
+        s'arrête à la première qui ne l'est pas.
         Sous Windows~XP et Server~2003, les \fichier{Thumbs.db} que
         l'Explorateur écrit dans chaque dossier affiché en miniatures,
         cherchés par leur nom sur chaque volume NTFS fixe : pour chaque
