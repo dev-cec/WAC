@@ -21,6 +21,7 @@ const int VT_SIGNED_64 = 20;   //!< VT_I8
 const int VT_UNSIGNED_64 = 21; //!< VT_UI8
 const int VT_UTF16 = 31;       //!< VT_LPWSTR
 const int VT_TIME = 64;        //!< VT_FILETIME
+const uint32_t JET_COLTYP_DATETIME = 8;   //!< an ESE DateTime column
 const int VT_GUID = 72;        //!< VT_CLSID
 const int VT_VECTOR_FLAG = 0x1000;
 
@@ -314,8 +315,17 @@ void readEseGather(EseDatabase& db, const std::wstring& path, std::vector<Search
 		log(2, L"🔥Search index: no crawler's table in " + path);
 		return;
 	}
-	// The scope tree: each scope's parent and its part of the URL.
+	/* VISTA'S LAYOUT, told by the table itself (a FileName1 column, no
+	   ScopeID): the item's folder is found by its PathId in the path table
+	   (LookupMD5 -> LookupValue, upper case, as Vista writes it), its name
+	   in FileName1, and every DateTime column holds a FILETIME, little-endian
+	   (measured on the Vista VM, read the same way by dissect.esedb; decoded
+	   as later versions write them, its dates fell in 1899 and 9821). */
+	const bool vista = std::any_of(gather->columns.begin(), gather->columns.end(),
+	                               [](const EseColumn& c) { return c.name == L"FileName1"; });
+	// The scope tree: each scope's parent and its part of the URL; on Vista, each path's folder.
 	std::map<int64_t, std::pair<int64_t, std::wstring>> scopes;
+	std::map<int64_t, std::wstring> folders;
 	if (tree)
 		for (const EseRecord& r : db.records(*tree)) {
 			int64_t scope = -1, parent = -1;
@@ -324,11 +334,12 @@ void readEseGather(EseDatabase& db, const std::wstring& path, std::vector<Search
 				const EseColumn* column = columnOf(*tree, cell.columnId);
 				if (!column || cell.values.empty()) continue;
 				const Json value = eseCellToJson(*column, cell);
-				if (column->name == L"Scope") scope = std::stoll(value.text());
+				if (column->name == L"Scope" || column->name == L"LookupMD5") scope = std::stoll(value.text());
 				else if (column->name == L"Parent") parent = std::stoll(value.text());
-				else if (column->name == L"Name") name = value.text();
+				else if (column->name == L"Name" || column->name == L"LookupValue") name = value.text();
 			}
-			if (scope >= 0) scopes[scope] = { parent, name };
+			if (vista && scope != -1) folders[scope] = name;
+			else if (scope >= 0) scopes[scope] = { parent, name };
 		}
 	auto url = [&](int64_t scope) {
 		std::wstring text;
@@ -345,19 +356,34 @@ void readEseGather(EseDatabase& db, const std::wstring& path, std::vector<Search
 		SearchIndexItem item;
 		item.path = path;
 		item.table = L"Gather";
-		std::wstring scopeUrl, name;
+		std::wstring scopeUrl, name, folder;
 		for (const EseCell& cell : r) {
 			const EseColumn* column = columnOf(*gather, cell.columnId);
 			if (!column || cell.values.empty()) continue;
 			if (column->name == L"ScopeID") scopeUrl = url(std::stoll(eseCellToJson(*column, cell).text()));
 			if (column->name == L"FileName") name = eseCellToJson(*column, cell).text();
+			// Vista's FileName1 is binary: UTF-16, null-terminated, bounded by the cell.
+			if (column->name == L"FileName1" && cell.values.size() == 1) {
+				const std::vector<uint8_t>& bytes = cell.values.front();
+				for (size_t i = 0; i + 1 < bytes.size(); i += 2) {
+					const wchar_t c = (wchar_t)readLittleEndian<uint16_t>(bytes.data() + i);
+					if (c == 0) break;
+					name += c;
+				}
+			}
+			if (vista && column->name == L"PathId") {
+				const auto f = folders.find(std::stoll(eseCellToJson(*column, cell).text()));
+				if (f != folders.end()) folder = f->second;
+			}
 		}
-		item.fields.add(L"Url", Json::str(scopeUrl + name));
+		// Vista gives a path, the later versions a URL: each under its own name.
+		if (!vista) item.fields.add(L"Url", Json::str(scopeUrl + name));
+		else if (!folder.empty() && !name.empty()) item.fields.add(L"ItemPath", Json::str(folder + name));
 		for (const EseCell& cell : r) {
 			const EseColumn* column = columnOf(*gather, cell.columnId);
 			if (!column || cell.values.empty()) continue;
 			const std::wstring key = registryNameToJsonKey(column->name);
-			if (column->name == L"LastModified" && cell.values.size() == 1 && cell.values.front().size() == 8) {
+			if (column->name == L"LastModified" && !vista && cell.values.size() == 1 && cell.values.front().size() == 8) {
 				/* The FILETIME the crawler saw, written BIG-endian in the ESE
 				   index (Windows 8.1, measured: read the other way, the date
 				   falls in the year 6961), little-endian in Windows 11's
@@ -365,6 +391,8 @@ void readEseGather(EseDatabase& db, const std::wstring& path, std::vector<Search
 				std::vector<uint8_t> littleEndian(cell.values.front().rbegin(), cell.values.front().rend());
 				addSearchBlob(item.fields, key, VT_TIME, littleEndian);
 			}
+			else if (vista && column->type == JET_COLTYP_DATETIME && cell.values.size() == 1 && cell.values.front().size() == 8)
+				addSearchBlob(item.fields, key, VT_TIME, cell.values.front());
 			else addEseValue(item.fields, key, *column, cell, 0);
 		}
 		items.push_back(std::move(item));
