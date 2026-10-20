@@ -96,6 +96,9 @@ case "$PROFILE" in
     IMAGE='<Key>/IMAGE/NAME</Key><Value>Windows Vista BUSINESS</Value>'; KEY=YFKBB-PQJJV-G996G-VWGXY-2V3X8
     MEDIA_LANGUAGE=en-US; GA_DRIVERS=""; OOBE_ENTER=1; BIOS=1; OOBE7=1; ARCH=x86; CPU=host-passthrough; MACHINE=pc
     ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.173.iso}"
+    # Vista has no driver for the e1000e; the RTL8139 it has (measured: no
+    # network at all with the e1000e — no route, no known network).
+    NIC_MODEL=rtl8139
     FIRMWARE=(--boot hd,cdrom) ;;
   srv2012r2|srv2016|srv2019|srv2022|srv2025)
     # Evaluation media: no product key (the element is removed from the
@@ -400,7 +403,7 @@ ARGS=(
   --cdrom "$ISO_WIN"
   --disk "path=$ISO_ANS,device=cdrom,readonly=on"
   --disk "path=$ISO_VIRTIO,device=cdrom,readonly=on"
-  --network user,model=e1000e --graphics spice --video qxl --noautoconsole
+  --network "user,model=${NIC_MODEL:-e1000e}" --graphics spice --video qxl --noautoconsole
 )
 [[ -n "$ISO_WAC" ]] && ARGS+=(--disk "path=$ISO_WAC,device=cdrom,readonly=on")
 virt-install "${ARGS[@]}"
@@ -423,6 +426,42 @@ if [[ "$BIOS" != "1" ]] && $C screenshot "$DOM" --file "$TMP/s.png" >/dev/null 2
   for _ in $(seq 1 20); do $C send-key "$DOM" --codeset linux KEY_SPACE >/dev/null 2>&1 || true; sleep 0.5; done
 fi
 
+# What the harness needs on Vista and Vista lacks: PowerShell 2.0 (Windows
+# Management Framework Core, KB968930), which runs the witness and reference
+# scripts as on Windows 7, and .NET Framework 3.5 SP1, without which
+# Get-WinEvent does not exist and the references of the event messages, of
+# the logs and of the last shutdown came out empty. Both from Microsoft,
+# checked before they reach the VM: the package by the SHA-1 the Update
+# Catalog publishes for it (also its file name), the installer by its
+# Authenticode signature (signify, vmtest/tools/sign-venv). Kept in
+# $VMS/vista-wmf; removed from the VM once installed.
+vista_harness_prerequisites() {
+  local dir="$VMS/vista-wmf" msu="windows6.0-kb968930-x86_16fd2e93be2e7265821191119ddfc0cdaa6f4243.msu"
+  local qga=(python3 "$HERE/lib/qga.py" --dom "$DOM")
+  mkdir -p "$dir"
+  [[ -f "$dir/$msu" ]] || curl -fsSL -o "$dir/$msu" "https://catalog.s.download.windowsupdate.com/msdownload/update/software/updt/2011/02/$msu"
+  [[ "$(sha1sum "$dir/$msu" | cut -d' ' -f1)" == 16fd2e93be2e7265821191119ddfc0cdaa6f4243 ]] || { echo "KB968930: not the package expected" >&2; exit 1; }
+  [[ -f "$dir/dotnetfx35.exe" ]] || curl -fsSL -o "$dir/dotnetfx35.exe" https://download.microsoft.com/download/2/0/e/20e90413-712f-438c-988e-fdaa79a8ac3d/dotnetfx35.exe
+  "$HERE/tools/sign-venv/bin/python" -I -c '
+import sys
+from signify.authenticode.signed_file.pe import SignedPEFile
+with open(sys.argv[1], "rb") as fh:
+    pe = SignedPEFile(fh); pe.verify()
+    sys.exit(0 if "Microsoft" in list(pe.iter_embedded_signatures())[0].signer_info.issuer.dn else 1)' "$dir/dotnetfx35.exe" \
+    || { echo "dotnetfx35.exe: no valid Microsoft signature" >&2; exit 1; }
+  echo "   PowerShell 2.0 and .NET 3.5 SP1 (the harness's prerequisites on Vista)"
+  "${qga[@]}" write "$dir/$msu" 'C:\Windows\Temp\kb968930.msu' >/dev/null
+  # The exit code as cmd prints it: through qga.py's own, Linux keeps 8 bits of it.
+  # 0 installed, 3010 installed and a restart needed (the VM restarts below), 2359302 already there.
+  local code
+  code=$("${qga[@]}" run --timeout 1800 --shell 'cmd /v:on /c "wusa C:\Windows\Temp\kb968930.msu /quiet /norestart & echo EXIT=!errorlevel!"' | sed -n 's/^EXIT=\([0-9-]*\).*/\1/p' || true)
+  [[ $code == 0 || $code == 3010 || $code == 2359302 ]] || { echo "KB968930: wusa exit code '$code'" >&2; exit 1; }
+  "${qga[@]}" write "$dir/dotnetfx35.exe" 'C:\Windows\Temp\dotnetfx35.exe' >/dev/null
+  code=$("${qga[@]}" run --timeout 3500 --shell 'cmd /v:on /c "C:\Windows\Temp\dotnetfx35.exe /q /norestart & echo EXIT=!errorlevel!"' | sed -n 's/^EXIT=\([0-9-]*\).*/\1/p' || true)
+  [[ $code == 0 || $code == 3010 ]] || { echo ".NET 3.5 SP1: installer exit code '$code'" >&2; exit 1; }
+  "${qga[@]}" run --shell 'del C:\Windows\Temp\kb968930.msu C:\Windows\Temp\dotnetfx35.exe' >/dev/null 2>&1 || true
+}
+
 # --- 6. Waiting for the agent (= install finished) ----------------------------
 # virt-install --noautoconsole does not restart the VM after Setup's first
 # reboot: it is restarted when needed, and the install is considered finished
@@ -438,6 +477,7 @@ for i in $(seq 1 120); do
   [[ "$OOBE_ENTER" == "1" ]] && { $C send-key "$DOM" --codeset linux KEY_ENTER >/dev/null 2>&1 || true; }
   if python3 "$HERE/lib/qga.py" --dom "$DOM" ping >/dev/null 2>&1; then
     echo "   ✅ agent operational after ~$((i / 4)) min — the VM can be driven"
+    [[ "$PROFILE" == vista ]] && vista_harness_prerequisites
     [[ -f "$DATA_DISK" ]] || qemu-img create -f qcow2 "$DATA_DISK" 2G >/dev/null
     # SATA has no hot plug: the disk goes into the definition, and the VM
     # restarts to see it. Target sdf: sda to sde are the system disk and the

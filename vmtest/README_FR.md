@@ -199,7 +199,10 @@ pilote du canal de l'agent est posé par `guest/install-agent-driver.ps1`, qui
 approuve d'abord son éditeur ; sous Vista, sans PowerShell, par
 `guest/install-vioserial-vista.cmd` (certutil puis pnputil) pendant la passe
 `specialize` de l'installation, son journal dans
-`C:\Windows\Temp\wac-vioserial.log`.
+`C:\Windows\Temp\wac-vioserial.log`. Puis, pour le harnais, PowerShell 2.0
+(KB968930, du catalogue Microsoft Update, SHA-1 vérifié) et .NET Framework
+3.5 SP1 (Get-WinEvent ; signature Authenticode vérifiée), et une carte réseau
+RTL8139, la e1000e n'ayant pas de pilote sous Vista.
 
 `create-rdp-server.sh` crée `wac-rdp-server`, le serveur Bureau à distance
 auquel chaque VM de test se connecte pour que son client écrive un cache

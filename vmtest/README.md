@@ -193,7 +193,10 @@ The driver of the agent's channel is installed by
 `guest/install-agent-driver.ps1`, which first trusts its publisher; Vista,
 without PowerShell, by `guest/install-vioserial-vista.cmd` (certutil, then
 pnputil) during Setup's specialize pass, its log in
-`C:\Windows\Temp\wac-vioserial.log`.
+`C:\Windows\Temp\wac-vioserial.log`. Then, for the harness, PowerShell 2.0
+(KB968930, from the Microsoft Update Catalog, its SHA-1 checked) and .NET
+Framework 3.5 SP1 (Get-WinEvent; its Authenticode signature checked), and an
+RTL8139 network card, the e1000e having no driver on Vista.
 
 `create-rdp-server.sh` makes `wac-rdp-server`, the Remote Desktop server every
 test VM connects to so that its client writes a bitmap cache: a Windows Server

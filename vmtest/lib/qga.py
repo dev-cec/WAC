@@ -184,9 +184,15 @@ def powershell_through_task(dom, argv, timeout):
     line = "powershell.exe " + " ".join(cmd_quote(a) for a in args)
     if not line.isascii():
         sys.exit("[qga] a PowerShell 2 command line run through a task must be ASCII (use -Command, encoded)")
+    # ONE line: cmd reads a batch file line by line from the disk, and before
+    # Windows 8 it stops reading it once the console's code page becomes
+    # 65001 — which the witness script sets ([Console]::OutputEncoding):
+    # measured on Vista, the exit code was never written. A line is read
+    # whole before it runs; `call` expands %errorlevel% only then, and the
+    # redirection comes first ("echo 0> f" would redirect handle 0).
     wrapper = ("@echo off\r\n"
-               f"{line} > {PS_DIR}\\out.txt 2> {PS_DIR}\\err.txt < NUL\r\n"
-               f"(echo %errorlevel%)> {PS_DIR}\\code.txt\r\n")   # "echo 0> f" would redirect handle 0
+               f"{line} > {PS_DIR}\\out.txt 2> {PS_DIR}\\err.txt < NUL"
+               f" & > {PS_DIR}\\code.txt call echo %%errorlevel%%\r\n")
     place_compat(dom)
     h = qga(dom, {"execute": "guest-file-open", "arguments": {"path": PS_DIR + "\\run.cmd", "mode": "wb"}})
     try:

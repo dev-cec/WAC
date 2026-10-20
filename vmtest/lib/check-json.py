@@ -2250,9 +2250,13 @@ def check_small_file_artefacts(folder):
                 dated += 1
                 if n["DateLastConnectedUtc"][:19] != connected[name]:
                     wrong.append(f"{name}: DateLastConnected {n['DateLastConnectedUtc']}, event 10000 {connected[name]}Z")
-        report(listed and not wrong and dated,
+        # Vista has no NetworkProfile log (it came with Windows 7): without
+        # any event 10000, the dates have no reference — said, not failed.
+        report(listed and not wrong and (dated or not connected),
                f"known_networks.json: the {len(listed)} profile(s) and gateways of the registry; DateLastConnected of {dated} equal to its event 10000 (UTC)",
                f"known_networks.json: {wrong[:2] if wrong else 'no network dated by an event'}")
+        if listed and not connected:
+            print("  ⏭️  known_networks.json: no NetworkProfile event 10000 on this Windows: DateLastConnected not confronted")
 
     # System settings (OperatingSystem.json): the values of the live registry,
     # and ShutdownTime within a minute of the System log's last shutdown (B-031).
@@ -3015,7 +3019,10 @@ def check_search_index(folder):
         url, size, summary = witness[0]
         r = store.get(url.lower(), {})
         name = url.rsplit("/", 1)[-1].lower()
-        gathered = any((g.get("Url") or "").lower().endswith("/users/wac/documents/" + name) for g in records if g.get("Table") == "Gather")
+        # Vista's crawler gives a path (ItemPath), the later versions a URL.
+        gathered = any((g.get("Url") or "").lower().endswith("/users/wac/documents/" + name)
+                       or (g.get("ItemPath") or "").lower().endswith("\\users\\wac\\documents\\" + name)
+                       for g in records if g.get("Table") == "Gather")
         ok = str(r.get("Size")) == size and r.get("SearchAutoSummary") == summary and gathered
         print(f"  {'✅' if ok else '❌'} search_index.json: the witness document found with its size and summary, and in the crawler's table"
               + ("" if ok else f": {url} {size} {summary!r}, WAC {r.get('Size')} {r.get('SearchAutoSummary')!r}, gathered {gathered}"))
@@ -3093,6 +3100,14 @@ def check_event_messages(folder):
         text = guids.sub(lambda m: m.group(0).lower(), text)
         text = hexadecimal.sub(lambda m: m.group(0).lower(), text)
         return re.sub(r"\s+", " ", text.replace("\u200e", "")).strip()
+    # Vista renders a date to the millisecond (".467Z"), truncated: such a
+    # reference is compared at that precision, WAC's seven digits cut to three.
+    milliseconds = re.compile(r"(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3})\d*Z")
+    def same(mine, theirs):
+        if norm(mine) == norm(theirs):
+            return True
+        return bool(re.search(r"T\d\d:\d\d:\d\d\.\d{3}Z", theirs)) and \
+            milliseconds.sub(r"\1Z", norm(mine)) == milliseconds.sub(r"\1Z", norm(theirs))
     counts = collections.Counter()
     differing = []
     for e in events:
@@ -3102,7 +3117,7 @@ def check_event_messages(folder):
         mine = e.get("EvtEventMessage") or ""
         if not mine:
             counts["missing"] += 1
-        elif norm(mine) == norm(r[2]):
+        elif same(mine, r[2]):
             counts["identical"] += 1
         else:
             counts["different"] += 1
@@ -3318,8 +3333,8 @@ def check_thumbcache(folder):
     hexadecimal digits is the hash written out: the two must agree. The
     witness (place-file-artefacts.ps1, section 41) is a picture "wac" saw in
     Explorer: Windows gives its System.ThumbnailCacheId, which must be the
-    hash of an entry holding an image, exported with the SHA-256 the JSON
-    gives.
+    ThumbnailCacheId of an entry holding an image (its hash from Windows 7
+    on, its identifier on Vista), exported with the SHA-256 the JSON gives.
 
     A data checksum may fail on its own, under a valid header: Windows 8.1
     wrote one entry of iconcache_32.db (its last) with 0x5AEBB0AC00000000,
@@ -3335,7 +3350,9 @@ def check_thumbcache(folder):
     found = 0
     bad_header = [e for e in entries if e.get("HeaderChecksumValid") is not True]
     bad_data = [e for e in entries if e.get("DataSize") and e.get("DataChecksumValid") is not True]
-    bad_id = [e for e in entries if re.fullmatch(r"[0-9a-f]{16}", str(e.get("Identifier", ""))) and e.get("Identifier") != e.get("Hash")]
+    # An identifier of 16 hexadecimal digits is the file's ThumbnailCacheId: the
+    # entry's hash from Windows 7 on, not on Vista (its hash is another key).
+    bad_id = [e for e in entries if re.fullmatch(r"[0-9a-f]{16}", str(e.get("Identifier", ""))) and e.get("Identifier") != e.get("ThumbnailCacheId")]
     with_data = sum(1 for e in entries if e.get("DataSize"))
     isolated = bool(bad_data) and not bad_header and len(bad_data) * 20 < with_data
     shown = len(bad_data) if isolated else 0
@@ -3347,7 +3364,7 @@ def check_thumbcache(folder):
         bad_data = []
     if bad_header or bad_data or bad_id or not entries:
         print(f"  ❌ thumbcache.json: {len(entries)} entry(ies), {len(bad_header)} header and {len(bad_data)} data "
-              f"checksum(s) failed, {len(bad_id)} identifier(s) not their hash")
+              f"checksum(s) failed, {len(bad_id)} identifier(s) not their ThumbnailCacheId")
         for e in (bad_header + bad_data + bad_id)[:3]:
             print(f"        {e.get('Cache')} @ {e.get('Offset')}: {e.get('Hash')}")
         found += 1
@@ -3363,7 +3380,7 @@ def check_thumbcache(folder):
         print("  ⏭️  no thumbnail witness: its entry not looked for")
         return found
     cache_id, picture = witness[0], witness[1] if len(witness) > 1 else ""
-    entry = next((e for e in entries if e.get("Hash") == cache_id and e.get("DataSize")), None)
+    entry = next((e for e in entries if e.get("ThumbnailCacheId") == cache_id and e.get("DataSize")), None)
     image = os.path.join(folder, str(entry.get("Image", "")).replace("\\", os.sep)) if entry and entry.get("Image") else None
     same = False
     if image and os.path.exists(image):
@@ -4446,7 +4463,7 @@ def check_utc_sources(folder):
 
 # Registry value names WAC publishes as Windows writes them (registryNameToJsonKey
 # only drops their separators), whose abbreviation is Windows' choice, not WAC's.
-WINDOWS_VALUE_NAMES = {"NumRssQueues"}
+WINDOWS_VALUE_NAMES = {"NumRssQueues", "NumCoalesce"}   # NumCoalesce: the RTL8139 driver's parameter (Vista)
 
 
 def check_key_names(folder):

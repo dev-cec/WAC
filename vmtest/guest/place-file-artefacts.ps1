@@ -971,7 +971,8 @@ try { if (Wants 'known_networks') {
 # 24. B-031 — settings that decide how the other artefacts read, from the live
 #     registry (OperatingSystem.json, Settings), and the last shutdown as the
 #     System log records it (Kernel-General 13, "the operating system is
-#     shutting down", UTC): the reference for ShutdownTime. Nothing is changed.
+#     shutting down", UTC; EventLog 6006 on Vista): the reference for
+#     ShutdownTime. Nothing is changed.
 try { if (Wants 'operating_system') {
     $cs = 'HKLM:\SYSTEM\CurrentControlSet\Control'
     foreach ($w in @(@("$cs\FileSystem", 'NtfsDisableLastAccessUpdate'), @("$cs\Session Manager\Memory Management\PrefetchParameters", 'EnablePrefetcher'),
@@ -985,6 +986,12 @@ try { if (Wants 'operating_system') {
     if ($boot -is [string]) { $boot = [Management.ManagementDateTimeConverter]::ToDateTime($boot) }
     $down = Get-WinEvent -LogName System -FilterXPath "*[System[Provider[@Name='Microsoft-Windows-Kernel-General'] and EventID=13]]" -MaxEvents 20 -ErrorAction SilentlyContinue |
         Where-Object { $_.TimeCreated -lt $boot } | Select-Object -First 1
+    # Vista has no Kernel-General 13 (it came with Windows 7): its shutdown is
+    # the event log service stopping, EventLog 6006.
+    if (-not $down) {
+        $down = Get-WinEvent -LogName System -FilterXPath "*[System[Provider[@Name='EventLog'] and EventID=6006]]" -MaxEvents 20 -ErrorAction SilentlyContinue |
+            Where-Object { $_.TimeCreated -lt $boot } | Select-Object -First 1
+    }
     if ($down) { Write-Output ("shutdown=" + $down.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) }
 } } catch { WitnessFailure 'operating_system' $_ }
 
