@@ -3809,12 +3809,17 @@ def check_prefetch_mft_references(folder):
                 deleted += record[3]
             elif record[2] > max(p.get("RunsUtc") or [""]):
                 recreated += 1
-            elif p.get("FormatVersion") == 23 and (ref.get("SequenceNumber") or 0) < (record[1] or 0):
-                # Version 23 keeps one run time, and its file list carries
-                # references of earlier traces (Windows 7, measured: a log
-                # file created again at 09:09, the run of 09:10 still giving
-                # its former sequence): an older sequence of the same record
-                # is a file created again since some run, sequences only rise.
+            elif (ref.get("SequenceNumber") or 0) < (record[1] or 0) and (
+                    p.get("FormatVersion") == 23 or record[2] > min(p.get("RunsUtc") or [""])):
+                # The file list carries references of earlier runs: version 23
+                # keeps one run time (Windows 7, measured: a log file created
+                # again at 09:09, the run of 09:10 still giving its former
+                # sequence), and version 26 keeps the reference its first run
+                # read (Windows 8.1, measured: WAC.exe's trust files created
+                # again by --update-trust at 15:32, between its runs of 15:31
+                # and 15:37). An older sequence of the same record, created
+                # again after one of the runs, is a file created again since:
+                # sequences only rise.
                 recreated += 1
             else:
                 wrong.append((path, ref, record[:2]))
