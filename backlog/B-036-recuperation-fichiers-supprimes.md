@@ -23,6 +23,7 @@ Dans la VM : des fichiers de contenu connu (texte, exécutable, archive, un fich
 ## Critères d'acceptation
 En plus de la définition de « fini » commune (backlog/README.md) :
 - Décision de principe avant tout développement : quels niveaux, quels fichiers (tous les supprimés, ou filtrés par type, taille, date), plafond de taille et de durée, sort des malveillants.
+- Une clé `deleted_files` sous `artefacts:` de `wac.yml` (rappel utilisateur du 2026-10-21 : tout artefact a sa clé), au catalogue des artefacts par version et dans les manuels.
 - Lecture seule du volume, rien d'écrit sur la machine examinée : contrôle d'innocuité vert, dossier d'innocuité mis à jour.
 - Un contenu n'est jamais publié comme récupéré si un de ses clusters est réattribué : récupération partielle signalée comme telle.
 - Lectures bornées : une liste de plages forgée (longueur, décalage hors volume, boucle) est refusée.
@@ -41,3 +42,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-01 : créée à la demande de l'utilisateur — récupérer le contenu des fichiers supprimés par lecture brute du disque, pour ne laisser aucune trace sur la machine examinée.
 - 2026-10-08 : reportée en 3.0 (décision utilisateur).
 - 2026-10-17 : décision utilisateur — à faire pour la 3.0.0, après les clichés instantanés (B-014) ; c'est le dernier élément de la 3.0 avant la revue (B-050).
+- 2026-10-21 : rappel utilisateur — tout artefact a sa clé dans `wac.yml` : `deleted_files` pour celui-ci (critère ajouté) ; les clichés instantanés (B-014) ont la leur, `shadow_copies`.
