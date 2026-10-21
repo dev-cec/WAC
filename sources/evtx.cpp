@@ -606,9 +606,19 @@ private:
 		   does not show (Vista's Servicing: a localized state, %3). */
 		if (depth > 0 && values_ && !valuesTaken_) {
 			valuesTaken_ = true;
-			for (const SubstValue& v : values)
-				// value() escapes for the XML it builds: the message wants the text itself.
-				values_->push_back(v.type == T_NULL ? std::wstring() : xmlDecodeEntities(value(v.type, v.offset, v.size, -1, depth)));
+			/* An array gives one value per element: an event reported the
+			   classic way (ReportEvent) keeps all its strings in a single
+			   array substitution, and its message numbers them %1, %2...
+			   Joined, Vista's "Grace days=%1 Grace type=%2" read "30 3" for
+			   %1. value() escapes for the XML it builds: the message wants
+			   the text itself. */
+			for (const SubstValue& v : values) {
+				if (v.type == T_NULL) values_->push_back(std::wstring());
+				else if (v.type & T_ARRAY)
+					for (const std::wstring& element : array(v.type & 0x7f, v.offset, v.size, depth))
+						values_->push_back(xmlDecodeEntities(element));
+				else values_->push_back(xmlDecodeEntities(value(v.type, v.offset, v.size, -1, depth)));
+			}
 		}
 		// The definition's fragment is decoded with these values.
 		size_t q = fragmentStart;
