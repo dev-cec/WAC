@@ -259,6 +259,14 @@ bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILE
  *  @return true if an exhibit holds it */
 bool ExhibitStoreHolds(const std::wstring& storedPath);
 
+/*! The exhibit a file of the volume AS IT IS NOW was stored as: what the
+ *  same file in a shadow copy is compared with, to store it only if it
+ *  differs. Scanned at each call, the collection adding exhibits as it goes.
+ *  @param sourcePath the file, "X:\\…"
+ *  @param stored receives its record
+ *  @return false if the collection stored no content for that file */
+bool ExhibitStoreCurrent(const std::wstring& sourcePath, RawHiveExtraction& stored);
+
 /*! Writes `exhibits\MANIFEST.json` then its seal `exhibits\MANIFEST.sha256`.
  *
  *  To be called once every extraction is over. The seal is written AFTER the

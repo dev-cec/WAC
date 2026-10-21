@@ -25,6 +25,8 @@
 #include "shortcuts.h"
 #include "dpapi_master_keys.h"
 #include "web_client.h"
+#include "live_snapshot.h"
+#include <algorithm>
 
 namespace {
 
@@ -837,6 +839,173 @@ HRESULT ExtractNtfsMetadataRaw() {
 		if (result != S_OK) global = S_FALSE;
 	}
 	return global;
+}
+
+namespace {
+
+//! The VSS catalog, a file of System Volume Information named after VSS's identifier.
+const wchar_t VSS_CATALOG[] = L"\\System Volume Information\\{3808876b-c176-4e48-b7ae-04046e6cc752}";
+
+//! Names of VSS_VOLUME_SNAPSHOT_ATTRIBUTES' bits, as vssadmin shows them.
+const std::pair<uint32_t, const wchar_t*> COPY_ATTRIBUTES[] = {
+	{ 0x1, L"Persistent" }, { 0x2, L"NoAutoRecovery" }, { 0x4, L"ClientAccessible" }, { 0x8, L"NoAutoRelease" },
+	{ 0x10, L"NoWriters" }, { 0x20, L"Transportable" }, { 0x40, L"NotSurfaced" }, { 0x80, L"NotTransacted" },
+	{ 0x10000, L"HardwareAssisted" }, { 0x20000, L"Differential" }, { 0x40000, L"Plex" }, { 0x80000, L"Imported" },
+	{ 0x100000, L"ExposedLocally" }, { 0x200000, L"ExposedRemotely" }, { 0x400000, L"AutoRecover" },
+	{ 0x800000, L"RollbackRecovery" }, { 0x1000000, L"DelayedPostSnapshot" }, { 0x2000000, L"TxFRecovery" } };
+
+//! Names of the VSS_SNAPSHOT_CONTEXT values.
+const std::pair<uint32_t, const wchar_t*> COPY_CONTEXTS[] = {
+	{ 0x0, L"Backup" }, { 0x9, L"AppRollback" }, { 0xD, L"ClientAccessibleWriters" }, { 0x10, L"FileShareBackup" },
+	{ 0x19, L"NasRollback" }, { 0x1D, L"ClientAccessible" } };
+
+/*! The folder of the exhibit store a copy's files go to: its creation time
+ *  then its identifier, so that the folders sort in time order.
+ *  @param copy the copy
+ *  @return "vss\\20261021T122107Z_9aa8315b-…" */
+std::wstring shadowCopyFolder(const ShadowCopyInfo& copy) {
+	const FILETIME created = { (DWORD)copy.creationTime, (DWORD)(copy.creationTime >> 32) };
+	std::wstring stamp;
+	for (wchar_t c : timeToIso8601Utc(created, Precision::Second)) if (c != L'-' && c != L':') stamp += c;
+	std::wstring id = toLower(guid_to_wstring(copy.copyId.data()));
+	id.erase(std::remove(id.begin(), id.end(), L'{'), id.end());
+	id.erase(std::remove(id.begin(), id.end(), L'}'), id.end());
+	return L"vss\\" + stamp + L"_" + id;
+}
+
+/*! The files a copy kept that the collection reads: the system hives and
+ *  Amcache (system volume), the profiles' hives (every volume's \\Users),
+ *  the event logs — each hive with its two transaction logs.
+ *  @param reader the copy's reader
+ *  @param drive the volume, "C:"
+ *  @return their paths on the volume, "\\Windows\\…" */
+std::vector<std::wstring> shadowCopyTargets(RawReader& reader, const std::wstring& drive) {
+	std::vector<std::wstring> paths;
+	auto hive = [&](const std::wstring& path) {
+		for (const wchar_t* suffix : { L"", L".LOG1", L".LOG2" }) paths.push_back(path + suffix);
+	};
+	const bool system = toLower(drive) == toLower(conf.systemDrive.substr(0, 2));
+	if (system) {
+		for (const wchar_t* name : { L"SYSTEM", L"SOFTWARE", L"SAM", L"SECURITY", L"DEFAULT" })
+			hive(std::wstring(L"\\Windows\\System32\\config\\") + name);
+		if (conf.artefacts.amcache) hive(L"\\Windows\\AppCompat\\Programs\\Amcache.hve");
+	}
+	if (conf.artefacts.needsUserHives()) {
+		std::vector<RawDirEntry> profiles;
+		if (SUCCEEDED(reader.list(drive + L"\\Users", profiles)))
+			for (const RawDirEntry& p : profiles) {
+				if (!p.isDirectory) continue;
+				std::vector<RawDirEntry> files;
+				const std::wstring profile = L"\\Users\\" + p.name;
+				if (FAILED(reader.list(drive + profile, files))) continue;
+				for (const RawDirEntry& f : files)
+					if (!f.isDirectory && toLower(f.name) == L"ntuser.dat") hive(profile + L"\\" + f.name);
+				hive(profile + L"\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat");
+			}
+	}
+	if (system && conf.artefacts.events) {
+		std::vector<RawDirEntry> logs;
+		if (SUCCEEDED(reader.list(drive + L"\\Windows\\System32\\winevt\\Logs", logs)))
+			for (const RawDirEntry& l : logs)
+				if (!l.isDirectory && l.name.size() > 5 && toLower(l.name.substr(l.name.size() - 5)) == L".evtx")
+					paths.push_back(L"\\Windows\\System32\\winevt\\Logs\\" + l.name);
+	}
+	return paths;
+}
+
+/*! A copy, as the live snapshot records it: what the catalog and its store's
+ *  header say, and where its files went. */
+Json shadowCopyJson(const std::wstring& drive, const ShadowCopyInfo& copy, const std::wstring& folder) {
+	const FILETIME created = { (DWORD)copy.creationTime, (DWORD)(copy.creationTime >> 32) };
+	Json o = Json::obj();
+	o.add(L"Volume", Json::str(drive));
+	o.add(L"ShadowCopyId", Json::str(guid_to_wstring(copy.copyId.data())));
+	o.add(L"ShadowCopySetId", Json::str(guid_to_wstring(copy.copySetId.data())));
+	o.add(L"StoreId", Json::str(guid_to_wstring(copy.storeId.data())));
+	o.add(L"CreationTimeUtc", Json::str(timeToIso8601Utc(created)));
+	if (copy.deleted) o.add(L"Deleted", Json::boolean(true));
+	o.add(L"VolumeSize", Json::num(copy.volumeSize));
+	for (const auto& [value, name] : COPY_CONTEXTS)
+		if (copy.hasStore && copy.context == value) o.add(L"Context", Json::str(name));
+	Json attributes = Json::arr();
+	for (const auto& [bit, name] : COPY_ATTRIBUTES) if (copy.attributes & bit) attributes.push(Json::str(name));
+	if (!attributes.members().empty()) o.add(L"Attributes", std::move(attributes));
+	if (!copy.operatingMachine.empty()) o.add(L"OperatingMachine", Json::str(copy.operatingMachine));
+	if (!copy.serviceMachine.empty()) o.add(L"ServiceMachine", Json::str(copy.serviceMachine));
+	if (copy.hasStore) {
+		o.add(L"StoredBlocks", Json::num(copy.storedBlocks));
+		o.add(L"ExhibitFolder", Json::str(folder));
+	}
+	return o;
+}
+
+} // namespace
+
+HRESULT ExtractShadowCopiesRaw() {
+	if (!conf.artefacts.shadowCopies) return HRESULT_FROM_WIN32(ERROR_EMPTY);
+	HRESULT global = S_OK;
+	Json listed = Json::arr();
+	for (const std::wstring& drive : fixedNtfsVolumes()) {
+		const std::wstring volume = drive.substr(0, 1);
+		std::vector<ShadowCopyInfo> copies;
+		std::wstring diagnostic;
+		const HRESULT hr = RawShadowCopies(volume, copies, diagnostic);
+		auditRecord(L"Raw reading of the shadow copy catalog and stores (" + diagnostic + L")",
+		            L"\\\\.\\" + drive, hr, Footprint::VOLUME_BRUT);
+		if (FAILED(hr)) { global = S_FALSE; continue; }
+		if (copies.empty()) continue;
+		/* The catalog itself, raw: what the list recorded below was read from. */
+		std::vector<RawHiveExtraction> catalog;
+		createFolders(parentFolder(exhibitTarget(drive + VSS_CATALOG)));
+		ExtractFilesRaw(volume, { { VSS_CATALOG, exhibitTarget(drive + VSS_CATALOG) } }, nullptr, &catalog);
+		ExhibitStoreAdd(catalog, L"Raw NTFS reading (\\\\.\\" + volume + L": — $MFT record, $DATA attribute); no file opened by the system");
+
+		/* NEWEST FIRST: each file is compared with its next newer version —
+		   the volume as it is now for the newest copy, the copy after it for
+		   the others — and stored only if it differs. */
+		std::map<std::wstring, RawHiveExtraction> newer;   // by lower-case path on the volume
+		for (size_t i = copies.size(); i-- > 0;) {
+			const ShadowCopyInfo& copy = copies[i];
+			const std::wstring folder = shadowCopyFolder(copy);
+			listed.push(shadowCopyJson(drive, copy, folder));
+			if (!copy.hasStore) continue;
+			const std::wstring root = exhibitStoreFolder() + L"\\" + folder;
+			const std::wstring method = L"Raw NTFS reading through shadow copy " + guid_to_wstring(copy.copyId.data())
+			                          + L" of \\\\.\\" + volume + L": (catalog and stores read raw, without the VSS service)";
+			RawReader reader((int)i);
+			unsigned stored = 0, shared = 0, failed = 0;
+			RawHiveSetProgress(&reportProgress);
+			for (const std::wstring& path : shadowCopyTargets(reader, drive)) {
+				RawHiveExtraction probe;
+				if (FAILED(reader.read(drive + path, std::wstring(), probe))) continue;   // not in this copy
+				const std::wstring key = toLower(path);
+				RawHiveExtraction previous;
+				const auto found = newer.find(key);
+				const bool known = found != newer.end() ? (previous = found->second, true)
+				                                        : ExhibitStoreCurrent(drive + path, previous);
+				if (known && previous.fingerprints.sha256 == probe.fingerprints.sha256) {
+					probe.outputPath = previous.outputPath;
+					ExhibitStoreAddDuplicate(probe, method + L"; identical to the newer version");
+					++shared;
+					continue;
+				}
+				const std::wstring target = pathUnder(root, drive + path);
+				createFolders(parentFolder(target));
+				std::vector<RawHiveExtraction> reading;
+				ExtractFilesRaw(volume, { { path, target } }, nullptr, &reading, (int)i);
+				ExhibitStoreAdd(reading, method);
+				if (SUCCEEDED(reading.front().result)) { newer[key] = reading.front(); ++stored; }
+				else { ++failed; global = S_FALSE; log(2, L"🔥Shadow copy " + folder + L": " + path + L" not read", reading.front().result); }
+			}
+			RawHiveSetProgress(nullptr);
+			printProgressEnd();
+			auditRecord(L"Raw extraction through shadow copy " + folder + L" (" + std::to_wstring(stored) + L" file(s) stored, "
+			            + std::to_wstring(shared) + L" identical to the newer version, " + std::to_wstring(failed) + L" failed)",
+			            L"\\\\.\\" + drive, failed ? S_FALSE : S_OK, Footprint::VOLUME_BRUT);
+		}
+	}
+	const HRESULT written = writeLiveSnapshot("shadow_copies.json", listed, L"shadow copies of the fixed NTFS volumes, read raw");
+	return FAILED(written) ? written : global;
 }
 
 HRESULT RepairWorkingHives() {

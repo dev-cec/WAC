@@ -222,7 +222,10 @@ int main(int argc, char** argv) {
 	check(availabilityOf("powershell_history", vista) == Availability::AbsentFromThisVersion && !expectedOn("powershell_history", seven),
 	      "PSReadLine's history: absent from Vista (PowerShell 2 at most), looked for and not expected on Windows 7");
 	const std::vector<std::string> onXp = absentAmong(keys, xp);
-	check(onXp.size() == 14, "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 14 expected");
+	check(onXp.size() == 15, "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 15 expected");
+	check(availabilityOf("shadow_copies", xp) == Availability::AbsentFromThisVersion
+	      && availabilityOf("shadow_copies", vista) == Availability::Present,
+	      "shadow copies: none persistent on XP, looked for from Vista on");
 	check(absentAmong(keys, eleven).empty(), "Windows 11: an artefact held back");
 	check(absentAmong({ "mft", "hosts" }, seven).empty() && absentAmong({}, xp).empty(), "the guard lists what was not asked for");
 

@@ -160,6 +160,17 @@ bool ExhibitStoreHolds(const std::wstring& storedPath) {
 	return held.count(toLower(storedPath)) != 0;
 }
 
+bool ExhibitStoreCurrent(const std::wstring& sourcePath, RawHiveExtraction& stored) {
+	const std::wstring wanted = toLower(sourcePath);
+	for (const Exhibit& p : g_exhibits)
+		if (SUCCEEDED(p.extracted.result) && p.contentStored && p.extracted.shadowCopy.empty()
+		    && toLower(p.extracted.volumePath) == wanted) {
+			stored = p.extracted;
+			return true;
+		}
+	return false;
+}
+
 bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILETIME& modified, FILETIME& accessed) {
 	// Exhibit files by path, rebuilt when exhibits were added since.
 	static std::map<std::wstring, size_t> byFile;
@@ -195,8 +206,10 @@ std::wstring workingCopyOf(const std::wstring& stored) {
 const std::map<std::wstring, StoredExhibit>& ExhibitStoreIndex() {
 	static const std::map<std::wstring, StoredExhibit> index = [] {
 		std::map<std::wstring, StoredExhibit> built;
+		/* The volume as it is now only: a file of a shadow copy has the same
+		   source path, and is not the one the artefacts cite. */
 		for (const Exhibit& p : g_exhibits)
-			if (SUCCEEDED(p.extracted.result) && !p.extracted.volumePath.empty())
+			if (SUCCEEDED(p.extracted.result) && !p.extracted.volumePath.empty() && p.extracted.shadowCopy.empty())
 				built.emplace(toLower(p.extracted.volumePath),
 				              StoredExhibit{ p.extracted.volumePath, workingCopyOf(p.extracted.outputPath), p.contentStored,
 				                             p.extracted.fingerprints.md5, p.extracted.fingerprints.sha1,
@@ -368,6 +381,9 @@ HRESULT ExhibitStoreWriteManifest() {
 		const RawHiveFingerprints& m = e.fingerprints;
 		Json o = Json::obj();
 		o.add(L"SourcePath",  Json::str(e.volumePath));
+		/* Read through a shadow copy: the source is the file as the copy
+		   kept it, not as it is on the volume now. */
+		if (!e.shadowCopy.empty()) o.add(L"ShadowCopyId", Json::str(e.shadowCopy));
 		/* An authentic Microsoft binary is fingerprinted, not copied: no exhibit
 		   file, and the manifest says so rather than point to nothing. */
 		if (p.contentStored) o.add(L"ExhibitPath", Json::str(outputRelative(e.outputPath)));
@@ -563,6 +579,7 @@ HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check) {
 		p.method = text(L"Method");
 		p.shared = item.find(L"SharedExhibit") != nullptr;
 		p.extracted.volumePath = text(L"SourcePath");
+		p.extracted.shadowCopy = text(L"ShadowCopyId");
 		p.verdict.checked = item.find(L"SignatureVerified") != nullptr;
 		p.verdict.valid = text(L"SignatureVerified") == L"true";
 		p.verdict.label = text(L"Signature");

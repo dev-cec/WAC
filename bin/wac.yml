@@ -82,6 +82,7 @@ artefacts:
   services:                true   # services and drivers
   sessions:                true   # live
   setupapi:                true   # setupapi.dev.log: device installations, first connection of a USB key
+  shadow_copies:           true   # shadow copies, read raw without the VSS service: hives and event logs as each copy kept them
   shellbags:               true   # folders each user browsed in Explorer
   shimcache:               true   # application compatibility cache (AppCompatCache)
   shortcuts:               true   # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar

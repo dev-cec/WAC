@@ -46,6 +46,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepNtfsMetadata,          L"Métadonnées NTFS ($MFT, $UsnJrnl, $LogFile) (lecture brute NTFS)",
 	                                   L"Extracting NTFS metadata ($MFT, $UsnJrnl, $LogFile) (raw NTFS)" },
 	{ Text::StepFatMetadata,           L"Volumes FAT et exFAT (lecture brute des métadonnées)", L"FAT and exFAT volumes (raw reading of the metadata)" },
+	{ Text::StepShadowCopies,          L"Clichés instantanés (lecture brute, sans le service VSS)", L"Shadow copies (raw reading, without the VSS service)" },
 	{ Text::StepTrustSet,              L"Jeu de confiance",                              L"Trust set" },
 	{ Text::StepCopyBinaries,          L"Copie des binaires prélevés dans la copie de travail", L"Copying collected binaries to the working directory" },
 	{ Text::StepSealExhibitStore,      L"Scellement de la consigne (manifeste + SHA-256)", L"Sealing the exhibit store (manifest + SHA-256)" },
@@ -131,6 +132,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepRdpServer, L"Connexions Bureau à distance entrantes", L"Extracting INCOMING RDP CONNECTIONS" },
 	{ Text::StepThumbcache, L"Caches des miniatures et des icônes", L"Extracting THUMBNAIL AND ICON CACHES" },
 	{ Text::StepEmails, L"Courriels (PST, OST)", L"Extracting MAIL (PST, OST)" },
+	{ Text::StepShadowCopyListing, L"Clichés instantanés", L"Extracting SHADOW COPIES" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },
@@ -205,6 +207,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactRdpServer, L"Connexions Bureau à distance entrantes", L"Incoming Remote Desktop connections" },
 	{ Text::ArtefactThumbcache, L"Caches des miniatures et des icônes", L"Thumbnail and icon caches" },
 	{ Text::ArtefactEmails, L"Courriels (PST, OST)", L"Mail (PST, OST)" },
+	{ Text::ArtefactShadowCopies, L"Clichés instantanés", L"Shadow copies" },
 	{ Text::ArtefactOperatingSystem,   L"Système d'exploitation",                        L"Operating system" },
 	{ Text::ArtefactEvents,            L"Journaux d'événements",                         L"Event logs" },
 	{ Text::NotRequested,              L"non demandé (%1 : false)",                      L"not requested (%1: false)" },

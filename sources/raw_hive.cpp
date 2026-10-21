@@ -30,6 +30,7 @@
 #include "lznt1.h"
 #include "xpress.h"
 #include "lzx.h"
+#include "vss.h"
 
 namespace {
 
@@ -179,7 +180,13 @@ class NtfsVolume {
 public:
     ~NtfsVolume(){ close(); }
 
-    HRESULT open(const std::wstring& volumeLetter){
+    /*! Opens the volume, or one of its shadow copies.
+     *  @param volumeLetter the volume's letter, without the colon
+     *  @param shadowCopy -1 for the volume as it is now, or the index of a
+     *         shadow copy (vss.h, oldest first): every read then goes through
+     *         the copy, the boot sector and the $MFT included
+     *  @return S_OK, or why it could not be opened */
+    HRESULT open(const std::wstring& volumeLetter, int shadowCopy = -1){
         std::wstring path = L"\\\\.\\" + volumeLetter + L":";
         /* WHY NO_BUFFERING. A buffered volume handle goes through the cache
          * of the volume stream, which is not kept coherent with the writes
@@ -198,6 +205,19 @@ public:
             DWORD e = GetLastError();
             RVLOG(L"[raw] open %ls: error %lu (admin rights needed?)\n", path.c_str(), e);
             return HRESULT_FROM_WIN32(e);
+        }
+        if (shadowCopy >= 0){
+            std::wstring diagnostic;
+            const HRESULT listed = openShadowCopies(diagnostic);
+            if (FAILED(listed)) return listed;
+            if ((size_t)shadowCopy >= shadow_->copies().size()){
+                RVLOG(L"[raw] %ls: no shadow copy %d (%ls)\n", path.c_str(), shadowCopy, diagnostic.c_str());
+                return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+            }
+            shadowIndex_ = (size_t)shadowCopy;
+            viewedStore_ = shadow_->copies()[shadowIndex_].storeId;
+            viewedCopyId_ = guid_to_wstring(shadow_->copies()[shadowIndex_].copyId.data());
+            viewingCopy_ = true;
         }
         uint8_t vbr[512];
         if (!readBytes(0, vbr, 512)) return E_FAIL;
@@ -219,6 +239,50 @@ public:
     }
 
     void close(){ if (h_ != INVALID_HANDLE_VALUE){ CloseHandle(h_); h_ = INVALID_HANDLE_VALUE; } }
+
+    /*! Reads the volume's shadow copy catalog and stores (vss.h), raw, from
+     *  the volume as it is now.
+     *  @param diagnostic receives what the reading found, or why it stopped
+     *  @return S_OK (no copy is a valid answer), or E_FAIL on a VSS structure
+     *          that could not be read */
+    HRESULT openShadowCopies(std::wstring& diagnostic){
+        uint8_t vbr[512];
+        if (!readRaw(0, vbr, sizeof vbr) || memcmp(vbr + 3, "NTFS    ", 8) != 0){
+            diagnostic = L"no NTFS boot sector";
+            return E_FAIL;
+        }
+        // The volume's extent: its sectors, and the backup boot sector after them.
+        const uint64_t sectorSize = readLittleEndian<uint16_t>(vbr + 0x0B);
+        const uint64_t volumeSize = (readLittleEndian<uint64_t>(vbr + 0x28) + 1) * sectorSize;
+        shadow_.reset(new ShadowCopies);
+        const bool read = shadow_->open([this](uint64_t offset, uint8_t* out, size_t size){
+            return size <= UINT32_MAX && readRaw(offset, out, (uint32_t)size);
+        }, volumeSize, diagnostic);
+        return read ? S_OK : E_FAIL;
+    }
+
+    /*! Reads the shadow copy lists again (ShadowCopies::refresh), the copy
+     *  this object views found again by its store's identifier: its index
+     *  shifts when Windows deletes an older copy.
+     *  @return true for the volume itself; false if the lists could not be
+     *          read or the copy is gone */
+    bool refreshShadowCopy(){
+        if (!viewingCopy_) return true;
+        std::wstring diagnostic;
+        if (!shadow_->refresh(diagnostic)) return false;
+        const std::vector<ShadowCopyInfo>& copies = shadow_->copies();
+        for (size_t i = 0; i < copies.size(); ++i)
+            if (copies[i].storeId == viewedStore_){ shadowIndex_ = i; return true; }
+        return false;
+    }
+
+    //! The identifier of the shadow copy read ("{…}"), empty for the volume itself.
+    const std::wstring& viewedCopyId() const { return viewedCopyId_; }
+
+    //! The shadow copies openShadowCopies read; empty before it.
+    std::vector<ShadowCopyInfo> shadowCopies() const {
+        return shadow_ ? shadow_->copies() : std::vector<ShadowCopyInfo>();
+    }
 
     /*! Keeps in memory the index of each directory walked. For reading
      *  thousands of scattered files: without a cache, each System32 file re-read
@@ -1292,6 +1356,11 @@ private:
     std::map<uint64_t, std::unordered_map<std::wstring, NtfsReference>> cacheRep_;
     std::map<uint64_t, std::chrono::steady_clock::time_point> cacheListed_;   //!< when each cached directory was listed
     HANDLE   h_ = INVALID_HANDLE_VALUE;
+    std::unique_ptr<ShadowCopies> shadow_;   //!< the volume's shadow copies, once read
+    size_t   shadowIndex_ = 0;                //!< the copy read, when viewingCopy_
+    std::array<uint8_t, 16> viewedStore_{};   //!< its store's identifier, which survives a refresh
+    std::wstring viewedCopyId_;               //!< its identifier, as the manifest names it
+    bool     viewingCopy_ = false;            //!< every read goes through shadow copy shadowIndex_
     uint32_t bytesPerSector_ = 0, sectorsPerCluster_ = 0, bytesPerCluster_ = 0, bytesPerRecord_ = 0;
     uint64_t mftLcn_ = 0;
     std::vector<Run> mftRuns_;
@@ -1308,6 +1377,14 @@ private:
      *  UNBUFFERED_ALIGNMENT, of which the requested bytes are copied out.
      *  @return false on a read error or a short read */
     bool readBytes(uint64_t off, void* dst, uint32_t len){
+        if (viewingCopy_) return shadow_->read(shadowIndex_, off, static_cast<uint8_t*>(dst), len);
+        return readRaw(off, dst, len);
+    }
+
+    /*! Reads `len` bytes at offset `off` of the volume as it is now, whatever
+     *  copy this object views: what readBytes does for the volume itself,
+     *  and what the shadow copies are built on. */
+    bool readRaw(uint64_t off, void* dst, uint32_t len){
         ActivityTimer timer(g_activityTimes.diskRead);
         uint32_t sec = bytesPerSector_ ? bytesPerSector_ : UNBUFFERED_ALIGNMENT;
         uint64_t start = off - (off % sec);
@@ -1697,30 +1774,85 @@ public:
     THREADS. The --binary walk reads in a thread of its own and decompresses
     in helpers: each volume has a lock, held by a reading from its start to
     its end (VolumeLease). */
+/*! Reads a file of the volume, or of the shadow copy the volume views,
+ *  into `output` (empty: fingerprints only).
+ *
+ *  A SHADOW COPY ON A RUNNING MACHINE. Windows goes on writing while WAC
+ *  reads: a block written meanwhile has its earlier content copied to the
+ *  most recent store, by a descriptor the copy's lists did not have when
+ *  they were read (see ShadowCopies::refresh). The lists are therefore read
+ *  again before the file, then again before a second, checking reading; the
+ *  two must give the same SHA-256, or the whole is done again — at most
+ *  three times. Two readings that agree, each on fresh lists, are the copy's
+ *  content. An observer, which would see the content twice, is refused.
+ *  @param vol the volume, opened on the copy or not
+ *  @param path the file on the volume
+ *  @param output the file to write, or empty
+ *  @param label what the progress reporter shows
+ *  @param fingerprints receives the fingerprints and timestamps, or null
+ *  @param observer receives the content as read (the volume itself only)
+ *  @return the result of the reading */
+HRESULT readFileConsistently(NtfsVolume& vol, const std::wstring& path, const std::wstring& output,
+                             const std::wstring& label, RawHiveFingerprints* fingerprints, std::streambuf* observer){
+    const std::wstring name = path.substr(path.find_last_of(L'\\') + 1);
+    if (vol.viewedCopyId().empty()){
+        uint64_t index = 0;
+        uint16_t sequence = 0;
+        if (!vol.resolvePath(path, index, &sequence)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        return vol.extractData(index, sequence, output, label, fingerprints, observer, name);
+    }
+    if (observer) return E_INVALIDARG;
+    RawHiveFingerprints first, check;
+    for (int attempt = 0; attempt < 3; ++attempt){
+        uint64_t index = 0;
+        uint16_t sequence = 0;
+        if (!vol.refreshShadowCopy()) return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        if (!vol.resolvePath(path, index, &sequence)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        first = RawHiveFingerprints();
+        HRESULT hr = vol.extractData(index, sequence, output, label, &first, nullptr, name);
+        if (FAILED(hr)) return hr;
+        if (!vol.refreshShadowCopy()) return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        if (!vol.resolvePath(path, index, &sequence)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        check = RawHiveFingerprints();
+        hr = vol.extractData(index, sequence, std::wstring(), label, &check, nullptr, name);
+        if (FAILED(hr)) return hr;
+        if (check.sha256 == first.sha256){
+            if (fingerprints) *fingerprints = first;
+            return S_OK;
+        }
+        RVLOG(L"[raw] %ls in shadow copy %ls: two readings differ, read again\n", path.c_str(), vol.viewedCopyId().c_str());
+    }
+    return HRESULT_FROM_WIN32(ERROR_DATA_CHECKSUM_ERROR);   // three pairs of readings that disagree
+}
+
 struct SharedVolume {
     std::unique_ptr<NtfsVolume> volume;   //!< opened, its cache on; null if the opening failed
     HRESULT failure = S_OK;               //!< why it could not be opened: not retried
     std::mutex lock;                      //!< held by one reading at a time
 };
 std::mutex g_volumesLock;   //!< guards g_volumes itself
-std::map<wchar_t, std::unique_ptr<SharedVolume>> g_volumes;   //!< by upper-case letter
+/*! By upper-case letter and view: -1 for the volume as it is now, a shadow
+ *  copy's index otherwise — each copy is a volume of its own, with its own
+ *  cache of directories. */
+std::map<std::pair<wchar_t, int>, std::unique_ptr<SharedVolume>> g_volumes;
 
 /*! A reading's hold on a shared volume: the volume, opened on first use,
  *  and its lock for the lease's lifetime. */
 class VolumeLease {
 public:
-    //! @param letter the volume's letter ("C", "c", "C:" or "C:\…")
-    explicit VolumeLease(const std::wstring& letter){
+    /*! @param letter the volume's letter ("C", "c", "C:" or "C:\…")
+     *  @param shadowCopy -1 for the volume as it is now, or a shadow copy's index */
+    explicit VolumeLease(const std::wstring& letter, int shadowCopy = -1){
         if (letter.empty()){ result_ = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME); return; }
         const wchar_t key = (wchar_t)towupper(letter[0]);
         SharedVolume* shared = nullptr;
         {
             std::lock_guard<std::mutex> registry(g_volumesLock);
-            std::unique_ptr<SharedVolume>& slot = g_volumes[key];
+            std::unique_ptr<SharedVolume>& slot = g_volumes[{ key, shadowCopy }];
             if (!slot){
                 slot.reset(new SharedVolume);
                 std::unique_ptr<NtfsVolume> v(new NtfsVolume);
-                const HRESULT hr = v->open(std::wstring(1, key));
+                const HRESULT hr = v->open(std::wstring(1, key), shadowCopy);
                 if (FAILED(hr)) slot->failure = hr;
                 else { v->enableCache(); slot->volume = std::move(v); }
             }
@@ -1757,11 +1889,20 @@ void RawVolumesClose(){
     g_volumes.clear();
 }
 
+HRESULT RawShadowCopies(const std::wstring& volumeLetter, std::vector<ShadowCopyInfo>& copies, std::wstring& diagnostic){
+    copies.clear();
+    const VolumeLease v(volumeLetter);
+    if (FAILED(v.result())){ diagnostic = L"volume not opened"; return v.result(); }
+    const HRESULT hr = v->openShadowCopies(diagnostic);
+    copies = v->shadowCopies();
+    return hr;
+}
+
 HRESULT RawReader::list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries){
     entries.clear();
     if (absoluteFolder.size() < 3 || absoluteFolder[1] != L':' || absoluteFolder[2] != L'\\')
         return HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME);
-    const VolumeLease v(absoluteFolder);
+    const VolumeLease v(absoluteFolder, shadowCopy_);
     if (FAILED(v.result())) return v.result();
     uint64_t index = 0;
     if (!v->resolvePath(absoluteFolder.substr(2), index)) return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
@@ -1775,14 +1916,10 @@ HRESULT RawReader::read(const std::wstring& absolutePath, const std::wstring& ou
     line.result = HRESULT_FROM_WIN32(ERROR_BAD_PATHNAME);
     if (absolutePath.size() < 3 || absolutePath[1] != L':' || absolutePath[2] != L'\\')
         return line.result;
-    const VolumeLease v(absolutePath);
+    const VolumeLease v(absolutePath, shadowCopy_);
     if (FAILED(v.result())) return line.result = v.result();
-    uint64_t index = 0;
-    uint16_t sequence = 0;
-    if (!v->resolvePath(absolutePath.substr(2), index, &sequence))
-        return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    return line.result = v->extractData(index, sequence, output, std::wstring(), &line.fingerprints, observer,
-                                         absolutePath.substr(absolutePath.find_last_of(L'\\') + 1));
+    line.shadowCopy = v->viewedCopyId();
+    return line.result = readFileConsistently(*v, absolutePath.substr(2), output, std::wstring(), &line.fingerprints, observer);
 }
 
 void RawHiveSetVerbose(bool on){ g_verbose = on; }
@@ -1825,21 +1962,20 @@ void RawHiveSetProgress(RawHiveProgressFn fn){ g_progress = fn; }
 HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem,
-                        std::vector<RawHiveExtraction>* reading){
-    const VolumeLease lease(volumeLetter);
+                        std::vector<RawHiveExtraction>* reading,
+                        int shadowCopy){
+    const VolumeLease lease(volumeLetter, shadowCopy);
     const HRESULT hr = lease.result();
     if (FAILED(hr)){ if (perItem) perItem->assign(items.size(), hr); return hr; }
     NtfsVolume& vol = *lease;
     HRESULT overall = S_OK;
     for (const auto& it : items){
-        uint64_t index = 0; uint16_t sequence = 0; HRESULT h;
         RawHiveExtraction line;
         line.volumePath = volumeLetter + L":" + it.first;
         line.outputPath = it.second;
-        if (!vol.resolvePath(it.first, index, &sequence)) h = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-        else h = vol.extractData(index, sequence, it.second, it.first,
-                                 reading ? &line.fingerprints : nullptr, nullptr,
-                                 it.first.substr(it.first.find_last_of(L'\\') + 1));
+        line.shadowCopy = vol.viewedCopyId();
+        const HRESULT h = readFileConsistently(vol, it.first, it.second, it.first,
+                                               reading ? &line.fingerprints : nullptr, nullptr);
         line.result = h;
         if (perItem) perItem->push_back(h);
         // A FAILURE IS RECORDED TOO: an exhibit missing from the manifest would

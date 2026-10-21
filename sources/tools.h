@@ -120,6 +120,7 @@ struct AppliConf {
 		bool bam = true;              //!< last execution of each program per user (Background Activity Moderator)
 		bool muiCache = true;         //!< names of the programs each user launched (usrClass.dat)
 		bool amcache = true;          //!< Amcache.hve: applications, executables and drivers seen
+		bool shadowCopies = true;     //!< shadow copies read raw: the hives and event logs as each copy kept them
 		bool userAssist = true;       //!< programs each user launched from Explorer, with count and date
 		bool runKeys = true;          //!< Run and RunOnce keys of the machine and of each user
 		bool shimcache = true;        //!< application compatibility cache (AppCompatCache)

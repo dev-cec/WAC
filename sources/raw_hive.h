@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include <streambuf>
+#include "vss.h"
 
 /*! Opens the volumes once, as soon as they are detected, each with the cache
  *  of its directory indexes: every raw reading of the run then goes through
@@ -160,6 +161,7 @@ struct RawHiveExtraction {
     std::wstring outputPath;   //!< file written to the collection medium
     HRESULT      result = E_FAIL;   //!< outcome of the extraction
     RawHiveFingerprints fingerprints;     //!< empty if the extraction failed
+    std::wstring shadowCopy;   //!< the shadow copy read through ("{…}"), empty for the volume as it is now
 };
 
 /*! Extracts several files with a SINGLE opening of the volume (efficient).
@@ -169,13 +171,25 @@ struct RawHiveExtraction {
  *  @param reading (optional) receives a record per item, fingerprints included.
  *         It is the source of the exhibit store manifest: without it, an
  *         exhibit is copied with nothing to identify it.
+ *  @param shadowCopy -1 to read the volume as it is now, or the index of one
+ *         of its shadow copies (RawShadowCopies), read raw through it
  *  @return S_OK if everything succeeds, S_FALSE if at least one item fails,
  *          or an error code if the volume cannot be opened.
  */
 HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         const std::vector<std::pair<std::wstring, std::wstring>>& items,
                         std::vector<HRESULT>* perItem = nullptr,
-                        std::vector<RawHiveExtraction>* reading = nullptr);
+                        std::vector<RawHiveExtraction>* reading = nullptr,
+                        int shadowCopy = -1);
+
+/*! The shadow copies of a volume, read raw from its catalog and stores,
+ *  without the Volume Shadow Copy service (vss.h).
+ *  @param volumeLetter letter of the volume, without the colon (e.g. L"C")
+ *  @param copies receives them, oldest first: their index is the one
+ *         ExtractFilesRaw and RawReader take
+ *  @param diagnostic receives what was found, or why the reading stopped
+ *  @return S_OK (no copy is a valid answer), or the failure */
+HRESULT RawShadowCopies(const std::wstring& volumeLetter, std::vector<ShadowCopyInfo>& copies, std::wstring& diagnostic);
 
 /*! Extracts a NAMED stream of a file ("$J" of `\\$Extend\\$UsnJrnl`), with a
  *  single opening of the volume.
@@ -231,9 +245,13 @@ public:
 
 /*! Raw reader: reads files and lists directories on the NTFS volumes, through
  *  the volumes opened once for the whole run (see RawVolumesOpen). It holds
- *  nothing of its own: two readers share the same volumes and cache. */
+ *  nothing of its own but the view it reads: two readers of the same view
+ *  share the same volumes and cache. */
 class RawReader : public FileSource {
 public:
+    /*! @param shadowCopy -1 to read the volumes as they are now, or the index
+     *         of a shadow copy (RawShadowCopies) to read each volume through */
+    explicit RawReader(int shadowCopy = -1) : shadowCopy_(shadowCopy) {}
 
     /*! Reads a file by its absolute path.
      *  @param absolutePath the file, as "`X:\\…`"
@@ -251,6 +269,9 @@ public:
      *  @param entries receives its entries
      *  @return the result of the listing */
     HRESULT list(const std::wstring& absoluteFolder, std::vector<RawDirEntry>& entries) override;
+
+private:
+    int shadowCopy_;   //!< the view read: -1 for the volumes as they are now
 };
 
 /*! An attribute of a $MFT record, as written on the disk. */

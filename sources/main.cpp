@@ -49,6 +49,7 @@
 #include "srum.h"
 #include "bits_jobs.h"
 #include "fat_volumes.h"
+#include "shadow_copy_listing.h"
 #include "defender_log.h"
 #include "startup_folders.h"
 #include "zone_identifiers.h"
@@ -118,6 +119,8 @@ HRESULT checkCollectionLocation() {
 	unsigned long long need = 250ULL * 1024 * 1024;           // hives
 	if (conf.artefacts.needsEventLogs()) need += 150ULL * 1024 * 1024;   // event logs
 	if (conf.binary)     need += 1024ULL * 1024 * 1024;          // cited binaries
+	// Shadow copies: only what differs from the newer version is stored — a few changed hives and logs per copy.
+	if (conf.artefacts.shadowCopies) need += 500ULL * 1024 * 1024;
 	const HRESULT hrLieu = ExhibitStoreCheckLocation(need);
 	auditRecord(L"Check of the collection location ("
 	            + std::to_wstring(ExhibitStoreFreeSpace() / 1024 / 1024)
@@ -525,8 +528,17 @@ void extractProfileArtefacts() {
 		if (FAILED(hresult) && hresult != HRESULT_FROM_WIN32(ERROR_EMPTY)) printError(hresult);
 		else printSuccess();
 	}
-	/* The last extractions ($MFT, change journal, FAT metadata) into the
-	   working directory too: the conversion reads every collected file there,
+	/* The shadow copies, after every file of the volume as it is now: each
+	   file of a copy is compared with its current version, stored only if it
+	   differs. */
+	if (conf.artefacts.shadowCopies) {
+		printStep(Text::StepShadowCopies);
+		hresult = ExtractShadowCopiesRaw();   // S_FALSE = a copy or a file could not be read (tolerated)
+		if (FAILED(hresult)) printError(hresult);
+		else printSuccess();
+	}
+	/* The last extractions ($MFT, change journal, FAT metadata, shadow
+	   copies) into the working directory too: the conversion reads every collected file there,
 	   never in the exhibit store (backlog B-040). */
 	size_t copies = 0;
 	unsigned long long bytes = 0;
@@ -1129,6 +1141,8 @@ void convertArtefacts(bool systemAvailable) {
 	convertArtefact<BitsJobs>(conf.artefacts.bits, "bits_jobs.json", Text::ArtefactBitsJobs, L"artefacts.bits", Text::StepBitsJobs);
 	convertArtefact<FatVolumes>(conf.artefacts.fatVolumes, "fat_volumes.json", Text::ArtefactFatVolumes,
 	                            L"artefacts.fat_volumes", Text::StepFatVolumes);
+	convertArtefact<ShadowCopyListing>(conf.artefacts.shadowCopies, "shadow_copies.json", Text::ArtefactShadowCopies,
+	                                   L"artefacts.shadow_copies", Text::StepShadowCopyListing);
 	convertArtefact<SecurityHive>(conf.artefacts.security, "security.json", Text::ArtefactSecurityHive,
 	                              L"artefacts.security", Text::StepSecurityHive);
 	convertArtefact<StartupFolders>(conf.artefacts.startupFolders, "startup_folders.json",

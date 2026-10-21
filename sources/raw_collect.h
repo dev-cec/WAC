@@ -91,6 +91,17 @@ HRESULT ExtractFileArtefactsRaw();
  *          none is asked for */
 HRESULT ExtractNtfsMetadataRaw();
 
+/*! Extracts, from each shadow copy of each fixed NTFS volume, the files the
+ *  copy kept of the hives (system, Amcache, profiles) and of the event logs,
+ *  read raw through the copy (vss.h) — without the Volume Shadow Copy
+ *  service. A file identical (SHA-256) to its newer version — on the volume
+ *  as it is now, or in the next copy — is not copied again: the manifest
+ *  records it as shared with that version. The copies' list is recorded as
+ *  a live snapshot (`shadow_copies.json`) and the catalog file copied raw.
+ *  @return S_OK, S_FALSE if a file or a copy could not be read, or
+ *          ERROR_EMPTY if the artefact is not asked for */
+HRESULT ExtractShadowCopiesRaw();
+
 /*! Repairs the hives of a working copy rebuilt from an exhibit store
  *  (--convert): transaction log replay, patch as a fallback, as the collection
  *  does right after extracting them. The hives are found by name in the
