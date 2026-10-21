@@ -33,8 +33,13 @@ def describe(path):
             if value:
                 runs.append(str(value))
         serials = [f"{prefetch.get_volume_information(i).serial_number:08X}" for i in range(prefetch.number_of_volumes)]
+        # The names libscca reads, the empty ones aside: a file name section
+        # padded with zeros (a Prefetch Windows was rewriting while it was
+        # copied, measured on Vista: 642 names, 2164 strings) is split by
+        # libscca into as many empty strings, which are no file.
+        names = sum(1 for i in range(prefetch.number_of_filenames) if prefetch.get_filename(i))
         return "|".join([os.path.basename(path), str(prefetch.format_version), f"{prefetch.prefetch_hash:08X}",
-                         str(prefetch.run_count), ",".join(runs), ",".join(serials), str(prefetch.number_of_filenames)])
+                         str(prefetch.run_count), ",".join(runs), ",".join(serials), str(names)])
     finally:
         prefetch.close()
 

@@ -190,6 +190,24 @@ def skipped_unplaced(folder, section, reference):
     return True
 
 
+def chrome_wrote_search(folder, term):
+    """True when the History of "wac" collected raw holds the search term, or
+    cannot be read: the witness search goes out to google.com, and when that
+    fails Chrome writes no term at all (measured: Windows 11, 2026-10-20). A
+    witness the browser never wrote is not one WAC can miss. Opened read-only
+    and immutable, the exhibit is not altered."""
+    import sqlite3
+    history = os.path.join(folder, store_folder(folder), "Users", "wac", "AppData", "Local", "Google", "Chrome",
+                           "User Data", "Default", "History")
+    if not os.path.exists(history):
+        return True
+    try:
+        with sqlite3.connect(f"file:{urllib.parse.quote(history)}?mode=ro&immutable=1", uri=True) as db:
+            return bool(db.execute("SELECT 1 FROM keyword_search_terms WHERE term = ?", (term,)).fetchone())
+    except sqlite3.Error:
+        return True
+
+
 def witness_not_placed(folder, section):
     """True when place-file-artefacts.ps1 said the witnesses of that section
     were not placed (witness_failed=): their checks then have nothing to
@@ -1744,6 +1762,10 @@ def check_small_file_artefacts(folder):
                    f"web_client.json: {browser} visit of the witness page found", f"web_client.json: {browser} visit {url} missing")
         for l in (l for l in lines if l.startswith("websearch=")):
             browser, term = l[len("websearch="):].split("|", 1)
+            if browser == "Chrome" and not chrome_wrote_search(folder, term):
+                print(f"  ⚠️  web_client.json: Chrome search witness not placed — the History collected has no term {term} "
+                      "(the search goes out to Google): not confronted in this cycle")
+                continue
             report(any(r.get("Type") == "SearchTerm" and r.get("Browser") == browser and r.get("Term") == term for r in web),
                    f"web_client.json: {browser} search term {term} found", f"web_client.json: {browser} search term {term} missing")
         for l in (l for l in lines if l.startswith("webdownload=")):
