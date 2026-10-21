@@ -61,8 +61,16 @@ FAULTY_PATTERNS = (
     re.compile(r'\\\\\\\\(?:Device|REGISTRY|SystemRoot|\?\?)\\\\', re.I),
 )
 
+# Values Windows itself stores doubled, rendered as they are. The
+# BVTConsumer that Vista and Windows 7 ship in root\subscription has the
+# working directory "C:\\tools\\kernrate" (its MOF escaped twice): wmic
+# shows it so under Windows 7 (2026-10-21).
+GENUINE_DOUBLED = {r"C:\\tools\\kernrate"}
+
 def inconsistencies(value):
     """Returns the list of doubly escaped path patterns in the value."""
+    if value in GENUINE_DOUBLED:
+        return []
     return [m.group(0) for pattern in FAULTY_PATTERNS for m in pattern.finditer(value)]
 
 def walk(obj, path=""):
