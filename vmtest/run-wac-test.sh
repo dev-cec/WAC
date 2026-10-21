@@ -464,6 +464,16 @@ $QGA run -- powershell.exe -NoProfile -Command \
   '"windows={0}|{1}" -f [Environment]::OSVersion.Version.Build, (Get-CimInstance Win32_OperatingSystem).ProductType' \
   2>/dev/null | tr -d '\r' > "$OUTPUT/reference/windows-version.txt" \
   && echo "   + reference/windows-version.txt" || echo "   ⚠️ Windows version reference not read"
+# The shadow copies of C: Windows lists AFTER the collection: Windows deletes
+# the oldest copy on its own when their space is full (VolSnap 33; Vista,
+# measured: a copy listed before the collection was gone when WAC read the
+# catalog). check-json.py expects the copies listed before and after.
+if wants shadow_copies; then
+$QGA run -- powershell.exe -NoProfile -Command \
+  '$v = (Get-WmiObject Win32_Volume | Where-Object { $_.DriveLetter -eq "C:" }).DeviceID; Get-WmiObject Win32_ShadowCopy | Where-Object { $_.VolumeName -eq $v } | ForEach-Object { "shadowcopy_after=" + $_.ID }' \
+  2>/dev/null | tr -d '\r' > "$OUTPUT/reference/shadow-copies-after.txt" \
+  && echo "   + reference/shadow-copies-after.txt" || echo "   ⚠️ shadow copies not listed after the collection"
+fi
 if wants mounted_devices; then
 $QGA run reg.exe query 'HKLM\SYSTEM\MountedDevices' > "$OUTPUT/reference/mounted-devices.txt" 2>/dev/null \
   && echo "   + reference/mounted-devices.txt" || echo "   ⚠️ MountedDevices reference not read"

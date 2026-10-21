@@ -341,6 +341,13 @@ def load(folder, name):
         return None
     if isinstance(data, dict) and data.get("CollectionStatus") in ("NotRequested", "AbsentFromThisVersion"):
         return None
+    # The exhibits read through a shadow copy have the same source path as the
+    # volume's: kept apart, under ShadowCopyItems, so that a check looking an
+    # exhibit up by its path finds the volume's as it is now. The manifest's own
+    # integrity (seal, fingerprints, counts) reads the file whole.
+    if name.endswith("MANIFEST.json") and isinstance(data, dict) and isinstance(data.get("Items"), list):
+        data["ShadowCopyItems"] = [i for i in data["Items"] if i.get("ShadowCopyId")]
+        data["Items"] = [i for i in data["Items"] if not i.get("ShadowCopyId")]
     return data
 
 
@@ -462,6 +469,77 @@ def cross_checks(folder):
     found += guarded(check_emails, folder)
     found += guarded(check_prefetch_libscca, folder)
     found += guarded(check_thunderbird, folder)
+    found += guarded(check_shadow_copies, folder)
+    return found
+
+
+def check_shadow_copies(folder):
+    """shadow_copies.json and the files read through a copy (B-014), against
+    Windows itself: every copy Windows lists for C: (Win32_ShadowCopy) with
+    its identifier and creation time, no more, no less; and, for the copy the
+    harness made, the SHA-256 Windows computes of a few files through the
+    copy's own device — the manifest's for the same files, read raw by WAC
+    through the catalog and stores, must be the same."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        lines = [l.strip() for l in f]
+    listed = [l[len("shadowcopy="):].split("|") for l in lines if l.startswith("shadowcopy=")]
+    files = [l[len("shadowfile="):].split("|") for l in lines if l.startswith("shadowfile=")]
+    unread = [l[len("shadowfile_failed="):][:120] for l in lines if l.startswith("shadowfile_failed=")]
+    copies = load(folder, "shadow_copies.json")
+    if not listed or not isinstance(copies, list):
+        if not skipped_unplaced(folder, "shadow_copies", listed):
+            print("  ⏭️  shadow_copies.json or Windows' list of the copies absent: not confronted")
+        return 0
+    found = 0
+    # A copy deleted whose store Windows keeps for the older ones is no longer
+    # listed by Windows: WAC must say so (Deleted), and only of those.
+    # Windows deletes the oldest copy on its own when their space is full
+    # (VolSnap 33): a copy listed before the collection and gone after it may
+    # be gone when WAC read the catalog. Only those listed before and after
+    # are expected; none listed by neither is admitted.
+    after_path = os.path.join(folder, "reference", "shadow-copies-after.txt")
+    if os.path.exists(after_path):
+        with open(after_path, encoding="utf-8-sig", errors="replace") as f:
+            after = {l.strip()[len("shadowcopy_after="):].lower() for l in f if l.startswith("shadowcopy_after=")}
+        purged = [i for i, _, _ in listed if i.lower() not in after]
+        listed = [l for l in listed if l[0].lower() in after]
+    else:
+        purged = []
+    mine = {str(c.get("ShadowCopyId", "")).lower(): c for c in copies
+            if c.get("Volume", "").upper() == "C:" and not c.get("Deleted")}
+    for i in purged:
+        mine.pop(i.lower(), None)   # read before Windows purged it: not a fault
+    deleted = [c for c in copies if c.get("Volume", "").upper() == "C:" and c.get("Deleted")]
+    wrong = [f"{i}: Windows {utc}, WAC {mine.get(i.lower(), {}).get('CreationTimeUtc')}"
+             for i, _, utc in listed if str(mine.get(i.lower(), {}).get("CreationTimeUtc", ""))[:19] != utc]
+    wrong += [f"{c.get('ShadowCopyId')} said deleted, Windows lists it" for c in deleted
+              if any(i.lower() == str(c.get("ShadowCopyId", "")).lower() for i, _, _ in listed)]
+    if wrong or len(mine) != len(listed):
+        print(f"  ❌ shadow_copies.json: {len(mine)} copy(ies) of C: not deleted, Windows lists {len(listed)}; {wrong[:3]}")
+        found += 1
+    else:
+        print(f"  ✅ shadow_copies.json: the {len(listed)} shadow copy(ies) Windows lists for C:, identifier and creation time"
+              + (f"; {len(deleted)} deleted, its store kept, said so" if deleted else "")
+              + (f"; {len(purged)} purged by Windows during the cycle" if purged else ""))
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("ShadowCopyItems", []) if isinstance(manifest, dict) else []
+    differing = []
+    for copy, source, digest in files:
+        item = next((i for i in items if str(i.get("ShadowCopyId", "")).lower() == copy.lower()
+                     and str(i.get("SourcePath", "")).lower() == source.lower() and i.get("Result") == "OK"), None)
+        algorithm = "SHA256" if len(digest) == 64 else "SHA1"   # SHA-1 where certutil knows no other (Vista)
+        if not item or str(item.get(algorithm, "")).upper() != digest.upper():
+            differing.append(f"{source}: Windows {digest[:16]}…, WAC {str((item or {}).get(algorithm, 'absent'))[:16]}")
+    if not files or differing:
+        print(f"  ❌ exhibits: files of the harness's shadow copy as Windows reads them: "
+              f"{differing[:3] or unread[:2] or 'no reference'}")
+        found += 1
+    else:
+        print(f"  ✅ exhibits: {len(files)} file(s) of the harness's shadow copy read raw, "
+              f"{'SHA-256' if len(files[0][2]) == 64 else 'SHA-1'} identical to Windows' reading through the copy's device")
     return found
 
 

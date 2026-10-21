@@ -53,6 +53,11 @@
 #                -> thumbcache.json
 #   thunderbird  token, attachment name (RFC 2231 encoded), its SHA-256 and the
 #                Inbox Thunderbird wrote -> emails.json
+#   shadowcopy, shadowfile  every shadow copy Windows lists for C: (identifier,
+#                set, creation in UTC), one made here by the harness — through
+#                the VSS service, which WAC itself never calls — and the SHA-256
+#                Windows reads of a few of its files through the copy's device
+#                -> shadow_copies.json and the exhibit manifest
 #
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File place-file-artefacts.ps1
 
@@ -1697,3 +1702,48 @@ if (-not `$tb.HasExited) { `$tb | Stop-Process -Force }
         }
     }
 } } catch { WitnessFailure 'emails' $_ }
+
+# A shadow copy of C:, made through the service (the harness may, WAC never
+# does). The previous cycle's copy is deleted first: one at a time. A value
+# changed after it keeps the copy's SOFTWARE different from the volume's, so
+# that WAC stores it rather than share it. Windows then reads a few files
+# through the copy's own device: their SHA-256 is the reference of WAC's raw
+# reading of the same files.
+try { if (Wants 'shadow_copies') {
+    $marker = 'C:\wactest\shadow-copy-id.txt'
+    if (Test-Path $marker) {
+        $previous = (Get-Content $marker | Select-Object -First 1).Trim()
+        Get-WmiObject Win32_ShadowCopy | Where-Object { $_.ID -eq $previous } | ForEach-Object { $_.Delete() }
+        Remove-Item $marker
+    }
+    $key = 'HKLM:\SOFTWARE\WacTest'
+    New-Item -Force $key | Out-Null
+    $stamp = (Get-Date).ToString('yyyyMMddHHmmss')
+    Set-ItemProperty $key ShadowWitness "before-$stamp"
+    $created = (Get-WmiObject -List Win32_ShadowCopy).Create('C:\', 'ClientAccessible')
+    if ($created.ReturnValue -ne 0) { throw "Win32_ShadowCopy.Create returned $($created.ReturnValue)" }
+    Set-Content $marker $created.ShadowID
+    Set-ItemProperty $key ShadowWitness "after-$stamp"
+    $volume = (Get-WmiObject Win32_Volume | Where-Object { $_.DriveLetter -eq 'C:' }).DeviceID
+    foreach ($copy in Get-WmiObject Win32_ShadowCopy | Where-Object { $_.VolumeName -eq $volume }) {
+        $utc = [Management.ManagementDateTimeConverter]::ToDateTime($copy.InstallDate).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')
+        Write-Output "shadowcopy=$($copy.ID)|$($copy.SetID)|$utc"
+        if ($copy.ID -ne $created.ShadowID) { continue }
+        foreach ($file in 'Windows\System32\config\SOFTWARE', 'Windows\System32\config\SYSTEM',
+                          'Windows\System32\winevt\Logs\System.evtx', 'Users\wac\NTUSER.DAT') {
+            # Through cmd: called from PowerShell, certutil gave nothing for the
+            # copy's device path (Windows 11, measured). The digest is the line
+            # of hexadecimal digits, spaced or not as the version writes it:
+            # SHA-256, or SHA-1 where certutil knows no other (Vista refuses
+            # an algorithm, measured).
+            $said = @(& cmd.exe /c "certutil -hashfile `"$($copy.DeviceObject)\$file`" SHA256 2>&1")
+            $hash = $said | ForEach-Object { $_ -replace '\s', '' } | Where-Object { $_ -match '^[0-9a-fA-F]{64}$' } | Select-Object -First 1
+            if (-not $hash) {
+                $said = @(& cmd.exe /c "certutil -hashfile `"$($copy.DeviceObject)\$file`" 2>&1")
+                $hash = $said | ForEach-Object { $_ -replace '\s', '' } | Where-Object { $_ -match '^[0-9a-fA-F]{40}$' } | Select-Object -First 1
+            }
+            if ($hash) { Write-Output "shadowfile=$($copy.ID)|C:\$file|$($hash.ToUpper())" }
+            else { Write-Output ("shadowfile_failed=C:\$file|" + (($said -join ' ') -replace '\s+', ' ')) }
+        }
+    }
+} } catch { WitnessFailure 'shadow_copies' $_ }
