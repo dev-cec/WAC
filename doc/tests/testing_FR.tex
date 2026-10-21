@@ -615,6 +615,34 @@ constante (treize « Q » au lieu de douze). Sur une SAM réelle, le cycle VM
 confronte le condensat d'un compte témoin au MD4 de son mot de passe, sous
 Windows~11 (AES) et sous Windows~8.1 (RC4).
 
+\section{Clichés instantanés lus en brut : \texttt{vss\_test}}
+
+Une règle fausse dans l'application des magasins de clichés donne une copie
+dont les fichiers sont valides et faux : un bloc du volume actuel là où le
+cliché en gardait un autre. Sans argument, le test construit un volume de 64
+blocs et deux clichés dont les réponses sont fixées à la main, bloc par bloc :
+bloc gardé par le magasin ancien, relais vers le magasin récent, relais repris
+par un descripteur ultérieur, superposition d'un secteur qui ne sert que son
+propre cliché, descripteur ignoré, bloc inutilisé lu comme des zéros pour le
+cliché récent seul, catalogue donné dans le désordre, bloc recopié par Windows
+après la lecture des listes (vu après rafraîchissement, magasin ancien
+conservé), chaîne de catalogue qui boucle (refusée).
+
+\begin{lstlisting}
+cd build-windows/tests
+wine vss_test.exe
+wine vss_test.exe Z:\chemin\volume.raw   # image d'un volume : liste et SHA-256 de chaque cliché
+\end{lstlisting}
+
+Référence : 30 contrôles, aucun échec ; vu échouer sur quatre défauts
+réintroduits (superposition appliquée à tous les clichés, blocs inutilisés non
+nuls, chaîne de relais non fusionnée, magasins anciens perdus au
+rafraîchissement). Sur un volume réel de 2~Gio portant deux clichés, la liste
+et le SHA-256 du volume reconstitué de chaque cliché sont ceux de libvshadow ;
+les fichiers témoins que Windows lit par le périphérique du cliché sont les
+mêmes. Le cycle VM confronte les empreintes du manifeste à celles que Windows
+calcule à travers le cliché créé par le harnais.
+
 \section{Scripts de vérification : \texttt{verify\_exhibits\_test.sh}}
 
 Lance \fichier{verify-exhibits.sh} et \fichier{verifier-consigne.sh}, les

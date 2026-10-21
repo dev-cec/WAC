@@ -378,6 +378,7 @@ artefacts:              # one key per artefact; a missing key is true
   services:                true   # services and drivers
   sessions:                true   # live
   setupapi:                true   # setupapi.dev.log: device installations, first connection of a USB key
+  shadow_copies:           true   # shadow copies, read raw without the VSS service: hives and event logs as each copy kept them
   shellbags:               true   # folders each user browsed in Explorer
   shimcache:               true   # application compatibility cache (AppCompatCache)
   shortcuts:               true   # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
@@ -1297,6 +1298,27 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (boot sector, FAT, directories), not the files' content; with
         \opt{binary}, a program of these volumes cited by an artefact (run
         from a key, for instance) is fingerprinted and collected as on NTFS.
+  \item[\fichier{shadow\_copies.json}] shadow copies (``previous versions'',
+        restore points) of every fixed NTFS volume, \textbf{read raw} — the
+        catalog and stores of the differential area, without the VSS service
+        or its interface: WAC creates, mounts and exposes no copy. One object
+        per copy, oldest first: \champ{Volume}, \champ{ShadowCopyId} (the
+        identifier \texttt{vssadmin} shows), \champ{ShadowCopySetId},
+        \champ{StoreId}, \champ{CreationTimeUtc}, \champ{Context},
+        \champ{Attributes}, \champ{OperatingMachine}, \champ{StoredBlocks}
+        (16~KiB blocks whose earlier state the store keeps) and
+        \champ{ExhibitFolder}, the folder of the exhibit store its files go
+        to (\path|vss\<instant>_<identifier>|). For each copy, the collection
+        reads through it the hives (system, Amcache, the profiles of
+        \path|\Users|) and the \texttt{.evtx} event logs; a file identical
+        (SHA-256) to its newer version — on the volume as it is now, or in the
+        next copy — is not copied again: the manifest records it as shared
+        with that version. Every exhibit read through a copy carries
+        \champ{ShadowCopyId} in the manifest. A hive an intruder erased or
+        changed, a cleared log, are found there as they were. Windows goes on
+        writing while WAC reads: each file is read twice, the block lists read
+        again before each reading, and done again if the two readings differ.
+        Windows~XP keeps no copy.
   \item[\fichier{srum.json}] resource usage (SRUM, \path|sru\SRUDB.dat|), one
         entry per row of every table: bytes sent and received per application
         and per interface (an exfiltration shows there, with the program), CPU

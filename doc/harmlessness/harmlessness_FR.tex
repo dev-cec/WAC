@@ -275,7 +275,10 @@ répertoire courant.
 
 \begin{itemize}
   \item Créer un cliché instantané (VSS), appeler COM ou WMI : aucune de ces
-        bibliothèques n'est importée.
+        bibliothèques n'est importée. Les clichés existants sont lus en brut
+        sur le volume (catalogue et magasins de la zone de différences), par
+        le même accès en lecture seule que le reste : aucun n'est monté,
+        exposé ni demandé au service.
   \item Ouvrir une clé du registre vivant, ou le vider sur le disque
         (\texttt{RegFlushKey}).
   \item Charger un pilote, créer ou modifier un service, une tâche planifiée,

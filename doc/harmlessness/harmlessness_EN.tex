@@ -268,7 +268,9 @@ the current directory.
 
 \begin{itemize}
   \item Create a shadow copy (VSS), call COM or WMI: none of these libraries
-        is imported.
+        is imported. The existing copies are read raw on the volume (catalog
+        and stores of the differential area), through the same read-only
+        access as the rest: none is mounted, exposed or asked of the service.
   \item Open a key of the live registry, or flush it to the disk
         (\texttt{RegFlushKey}).
   \item Load a driver, create or change a service, a scheduled task, a

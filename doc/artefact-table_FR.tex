@@ -172,6 +172,9 @@
  & Windows Vista & \texttt{Windows\textbackslash{}INF\textbackslash{}setupapi.dev.log} & texte, sections & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
 \addlinespace
+\texttt{shadow\_copies} & Windows Vista & \texttt{System Volume Information\textbackslash{}\{3808876b-c176-4e48-b7ae-04046e6cc752\}, \{GUID\}\{3808876b-…\}} & catalogue et magasins VSS, blocs de 16 Kio & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP ne garde aucun cliché persistant : ses points de restauration sont des dossiers à part. Server 2003 ne catalogue aucun magasin (pas d'entrée de type 3) : ses clichés sont listés, pas lus.} \\
+\addlinespace
 \texttt{shellbags} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell et ShellNoRoam} & éléments de shell de BagMRU & oui \\
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell, et NTUSER.DAT} & éléments de shell de BagMRU & oui \\
 \addlinespace

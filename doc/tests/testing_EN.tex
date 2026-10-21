@@ -598,6 +598,32 @@ Reference: 5 checks, no failure; the first fails with the former constant
 witness account's hash with MD4 of its password, on Windows~11 (AES) and on
 Windows~8.1 (RC4).
 
+\section{Shadow copies read raw: \texttt{vss\_test}}
+
+A wrong rule in the application of the shadow copy stores gives a copy whose
+files are valid and wrong: a block of the current volume where the copy kept
+another. Without argument, the test builds a volume of 64 blocks and two copies
+whose answers are set by hand, block by block: a block the older store keeps, a
+forwarder to the newer store, a forwarder taken over by a later descriptor, an
+overlay of one sector that serves its own copy only, an ignored descriptor, an
+unused block read as zeros for the newer copy alone, a catalog given out of
+order, a block Windows copies after the lists were read (seen after a refresh,
+the older store kept), a catalog chain that loops (refused).
+
+\begin{lstlisting}
+cd build-windows/tests
+wine vss_test.exe
+wine vss_test.exe Z:\path\volume.raw   # image of a volume: list and SHA-256 of each copy
+\end{lstlisting}
+
+Reference: 30 checks, no failure; seen failing on four defects put back
+(overlay applied to every copy, unused blocks not zeroed, forwarder chain not
+merged, older stores lost by the refresh). On a real 2~GiB volume holding two
+copies, the list and the SHA-256 of each copy's rebuilt volume are
+libvshadow's; the witness files Windows reads through the copy's device are the
+same. The VM cycle confronts the manifest's fingerprints with those Windows
+computes through the copy the harness made.
+
 \section{Verification scripts: \texttt{verify\_exhibits\_test.sh}}
 
 Runs \fichier{verify-exhibits.sh} and \fichier{verifier-consigne.sh}, the

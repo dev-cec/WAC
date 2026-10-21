@@ -383,6 +383,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   services:                true   # services et pilotes
   sessions:                true   # en direct
   setupapi:                true   # setupapi.dev.log : installations de périphériques
+  shadow_copies:           true   # clichés instantanés lus en brut, sans le service VSS : ruches et journaux de chaque cliché
   shellbags:               true   # dossiers parcourus par chaque utilisateur dans l'Explorateur
   shimcache:               true   # cache de compatibilité des applications (AppCompatCache)
   shortcuts:               true   # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
@@ -1335,6 +1336,28 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         FAT, répertoires), pas le contenu des fichiers ; avec \opt{binary}, un
         programme de ces volumes cité par un artefact (lancé depuis une clé,
         par exemple) est empreinté et prélevé comme sur NTFS.
+  \item[\fichier{shadow\_copies.json}] clichés instantanés (« versions
+        précédentes », points de restauration) de chaque volume NTFS fixe,
+        \textbf{lus en brut} — catalogue et magasins de la zone de
+        différences, sans le service VSS ni son interface : WAC ne crée, ne
+        monte et n'expose aucun cliché. Un objet par cliché, du plus ancien au
+        plus récent : \champ{Volume}, \champ{ShadowCopyId} (l'identifiant
+        que montre \texttt{vssadmin}), \champ{ShadowCopySetId},
+        \champ{StoreId}, \champ{CreationTimeUtc}, \champ{Context},
+        \champ{Attributes}, \champ{OperatingMachine}, \champ{StoredBlocks}
+        (blocs de 16~Kio dont le magasin garde l'état d'avant) et
+        \champ{ExhibitFolder}, le dossier de la consigne où sont rangés ses
+        fichiers (\path|vss\<instant>_<identifiant>|). Pour chaque cliché, la
+        collecte relit à travers lui les ruches (système, Amcache, profils de
+        \path|\Users|) et les journaux \texttt{.evtx} ; un fichier identique
+        (SHA-256) à sa version plus récente — sur le volume tel qu'il est, ou
+        dans le cliché suivant — n'est pas recopié : le manifeste l'inscrit
+        comme partagé avec elle. Chaque pièce lue dans un cliché porte
+        \champ{ShadowCopyId} au manifeste. Une ruche effacée ou modifiée par
+        un intrus, un journal vidé, s'y retrouvent dans leur état d'avant.
+        Windows continue d'écrire pendant la lecture : chaque fichier est lu
+        deux fois, les listes de blocs relues avant chaque lecture, et refait
+        si les deux lectures diffèrent. Windows~XP ne garde pas de cliché.
   \item[\fichier{srum.json}] usage des ressources (SRUM, \path|sru\SRUDB.dat|),
         une entrée par ligne de chaque table : octets envoyés et reçus par
         application et par interface (une exfiltration s'y lit, avec le

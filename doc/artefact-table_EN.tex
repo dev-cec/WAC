@@ -172,6 +172,9 @@
  & Windows Vista & \texttt{Windows\textbackslash{}INF\textbackslash{}setupapi.dev.log} & text, sections & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
+\texttt{shadow\_copies} & Windows Vista & \texttt{System Volume Information\textbackslash{}\{3808876b-c176-4e48-b7ae-04046e6cc752\}, \{GUID\}\{3808876b-…\}} & VSS catalog and stores, 16 KiB blocks & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP keeps no persistent copy: its restore points are folders of their own. Server 2003 catalogs no store (no entry of type 3): its copies are listed, not read.} \\
+\addlinespace
 \texttt{shellbags} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell and ShellNoRoam} & BagMRU shell items & yes \\
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell, and NTUSER.DAT} & BagMRU shell items & yes \\
 \addlinespace
