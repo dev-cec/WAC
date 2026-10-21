@@ -57,6 +57,12 @@ struct XmlNode {
  */
 std::unique_ptr<XmlNode> xmlParse(const std::wstring& content, bool keepText = false);
 
+/*! Replaces the five predefined entities (&lt; &gt; &amp; &quot; &apos;),
+ *  the others left as they are: a faithful text is better than a guessed
+ *  substitution. The inverse of EvtxXmlEscape.
+ *  @return the text */
+std::wstring xmlDecodeEntities(const std::wstring& s);
+
 /*! Reads an XML file encoded in UTF-8 or UTF-16 and parses it.
  *  The encoding is deduced from the byte-order mark, UTF-8 by default: the
  *  scheduler writes its tasks in UTF-16LE with a BOM.

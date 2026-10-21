@@ -55,13 +55,30 @@ void MessagesInit();
 *         marks of the template
 *  @param names the name of each value (its Data's Name), by which it is
 *         matched to its template item; may be empty
+*  @param templateValues the event's values as its template instance holds
+*         them, in the template's order: taken when the names do not line up
+*         with the items and there is one per item; may be empty
 *  @return the sentence, or an empty string if it could not be rebuilt
 */
 std::wstring EventMessage(const std::wstring& providerGuid,
                               uint16_t eventId,
                               uint8_t version,
                               const std::vector<std::wstring>& values,
-                              const std::vector<std::wstring>& names);
+                              const std::vector<std::wstring>& names,
+                              const std::vector<std::wstring>& templateValues = {});
+
+/*! The message of an event that carries qualifiers — published the classic
+ *  way by a provider that has a manifest —, looked up in the provider's own
+ *  message table by its full identifier, qualifiers in the high word: what
+ *  Windows shows for it. The manifest's message for the bare identifier may
+ *  be another one (Vista's CAPI2 11, qualifiers 0xC002: "For more details
+ *  for this event…" in the manifest, the cause in the table).
+ *  @param providerGuid the provider's GUID
+ *  @param messageId qualifiers in the high word, event identifier in the low one
+ *  @param values data of the event, in order: %1, %2…
+ *  @return the sentence, or an empty string if the table has no such message */
+std::wstring QualifiedEventMessage(const std::wstring& providerGuid, uint32_t messageId,
+                                   const std::vector<std::wstring>& values);
 
 /*! --collect: extracts the resource files of the providers the collected
  *  logs cite — binary, its SystemResources twin, parameter file, localised

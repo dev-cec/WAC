@@ -59,6 +59,11 @@ struct EvtxRecord {
 	unsigned long long id = 0;   //!< record number
 	FILETIME writtenUtc = { 0, 0 };         //!< time written (UTC)
 	std::wstring xml;                     //!< event body, as XML
+	/*! The event's data as its template instance holds them, in the order of
+	 *  the provider's template (empty for a null one): the values a message's
+	 *  %N designate, the XML not showing them all. Empty when the record has
+	 *  no nested instance (a classic .evt record). */
+	std::vector<std::wstring> values;
 	/*! Found past the free-space offset of a chunk whose header declares no
 	 *  live record: an event of a cleared log, which Windows no longer shows.
 	 *  Kept, since it is the trace the clearing meant to erase, but flagged so

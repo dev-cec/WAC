@@ -476,6 +476,11 @@ std::wstring render(const std::wstring& messageTemplate, const TableMessages& pa
 	auto label = [&](uint32_t id) {
 		std::wstring t = parameters.text(id);
 		for (const TableMessages* table : own) if (t.empty()) t = table->text(id);
+		/* A table label is a message of its own: "%0" ends it without a line
+		   break (Vista's Defender: "Windows Defender%0", which came out with
+		   its "%0" inside the sentence). */
+		const size_t end = t.find(L"%0");
+		if (end != std::wstring::npos) t.erase(end);
 		// A table label ends with "\r\n": inserted into a sentence, it would cut it.
 		while (!t.empty() && (t.back() == L'\n' || t.back() == L'\r' || t.back() == L' ')) t.pop_back();
 		return t;
@@ -517,11 +522,22 @@ void MessagesInit() {
 		log(2, L"🔥SOFTWARE hive unavailable: the event messages will not be resolved");
 }
 
+std::wstring QualifiedEventMessage(const std::wstring& providerGuid, uint32_t messageId,
+                                   const std::vector<std::wstring>& values) {
+	if (!g_ready || providerGuid.empty()) return std::wstring();
+	Provider* f = load(normalizeGuid(providerGuid));
+	if (!f || !f->usable) return std::wstring();
+	const std::wstring messageTemplate = f->messages.text(messageId);
+	if (messageTemplate.empty()) return std::wstring();
+	return render(messageTemplate, f->parameters, { &f->messages }, values);
+}
+
 std::wstring EventMessage(const std::wstring& providerGuid,
                               uint16_t eventId,
                               uint8_t version,
                               const std::vector<std::wstring>& values,
-                              const std::vector<std::wstring>& names) {
+                              const std::vector<std::wstring>& names,
+                              const std::vector<std::wstring>& templateValues) {
 	if (!g_ready || providerGuid.empty()) return std::wstring();
 
 	Provider* f = load(normalizeGuid(providerGuid));
@@ -549,6 +565,15 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 		while (next < values.size() && !(*items)[i].name.empty() && names[next] == (*items)[i].name)
 			perItem[i].push_back(values[next++]);
 	aligned = aligned && next == values.size();
+	/* NAMES THAT DO NOT LINE UP: the template instance's own values, in the
+	   template's order, when there is one per item — what Windows formats.
+	   Vista's Servicing 4373 has 10 items, its XML 9 leaves under other names
+	   (the localized state, %3, is in no element): by position over the XML,
+	   "%3(%4)" gave the state and the package name, Windows the state twice. */
+	if (!aligned && templateValues.size() == items->size()) {
+		for (size_t i = 0; i < items->size(); ++i) perItem[i] = { templateValues[i] };
+		aligned = true;
+	}
 	if (!aligned) {
 		if (items->size() != values.size()) return render(messageTemplate, f->parameters, { &f->messages }, values);
 		for (size_t i = 0; i < values.size(); ++i) perItem[i] = { values[i] };

@@ -1,4 +1,5 @@
 #include "evtx.h"
+#include "xml_light.h"
 #include "tools.h"
 #include <cstring>
 #include <sstream>
@@ -89,15 +90,24 @@ public:
 	 *  @param start offset of the body within the chunk
 	 *  @param end   upper bound (end of the record)
 	 */
-	bool document(size_t start, size_t end, std::wstring& output) {
+	bool document(size_t start, size_t end, std::wstring& output, std::vector<std::wstring>* values = nullptr) {
 		if (start >= end || end > tc) return false;
 		size_t p = start;
-		return tokens(p, end, nullptr, output, 0) && !output.empty();
+		values_ = values;
+		valuesTaken_ = false;
+		if (values_) values_->clear();
+		const bool ok = tokens(p, end, nullptr, output, 0) && !output.empty();
+		values_ = nullptr;
+		return ok;
 	}
 
 private:
 	const BYTE* c;
 	size_t tc;
+	/*! The event's values, filled by the first template instance nested in
+	 *  the record's own — the one of its EventData or UserData. */
+	std::vector<std::wstring>* values_ = nullptr;
+	bool valuesTaken_ = false;
 
 	// -- names --------------------------------------------------------------
 	/*  A name is designated by an offset relative to the chunk, shared between
@@ -590,6 +600,16 @@ private:
 			if (valueOffset > tc) return false;
 		}
 
+		/* The record's own instance is at depth 0; the first one nested in it
+		   is the event's data: its values, in the order of the provider's
+		   template, are what a message's %N designate — also those the XML
+		   does not show (Vista's Servicing: a localized state, %3). */
+		if (depth > 0 && values_ && !valuesTaken_) {
+			valuesTaken_ = true;
+			for (const SubstValue& v : values)
+				// value() escapes for the XML it builds: the message wants the text itself.
+				values_->push_back(v.type == T_NULL ? std::wstring() : xmlDecodeEntities(value(v.type, v.offset, v.size, -1, depth)));
+		}
 		// The definition's fragment is decoded with these values.
 		size_t q = fragmentStart;
 		const bool ok = tokens(q, fragmentStart + fragmentSize, &values,
@@ -739,7 +759,7 @@ HRESULT EvtxReadFile(const std::wstring& path,
 			e.writtenUtc.dwLowDateTime  = (DWORD)(v & 0xFFFFFFFFULL);
 			e.writtenUtc.dwHighDateTime = (DWORD)(v >> 32);
 
-			if (decoder.document(p + 24, p + size - 4, e.xml)) {
+			if (decoder.document(p + 24, p + size - 4, e.xml, &e.values)) {
 				++b.read;
 				if (e.recovered) ++b.recovered;
 				if (!onRecord(e)) { goOn = false; break; }

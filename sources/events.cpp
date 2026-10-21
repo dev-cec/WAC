@@ -343,6 +343,7 @@ HRESULT Events::getData() {
 					return true;
 				}
 				Event ev(*root, channel, e.id, fileName);
+				ev.templateValues = e.values;
 				if (e.recovered) ev.evtRecovered = Json::boolean(true);
 				lap(buildTime);
 				/*  PLAIN-TEXT MESSAGE. Rebuilt from the provider's resources, which
@@ -350,8 +351,15 @@ HRESULT Events::getData() {
 				    extracted on demand, once per provider (see
 				    event_messages.h). */
 				std::wstring phrase;
-				if (!ev.messageProviderGuid.empty() && ev.messageEventId != 0)
-					phrase = EventMessage(ev.messageProviderGuid, ev.messageEventId, ev.messageVersion, ev.rawValues, ev.rawNames);
+				/* Qualifiers: an event published the classic way, by its full
+				   identifier — looked up so in the provider's table first. */
+				if (!ev.messageProviderGuid.empty() && ev.messageQualifiers != 0)
+					phrase = QualifiedEventMessage(ev.messageProviderGuid,
+					                               ((uint32_t)ev.messageQualifiers << 16) | ev.messageEventId,
+					                               ev.templateValues.empty() ? ev.rawValues : ev.templateValues);
+				if (phrase.empty() && !ev.messageProviderGuid.empty() && ev.messageEventId != 0)
+					phrase = EventMessage(ev.messageProviderGuid, ev.messageEventId, ev.messageVersion, ev.rawValues, ev.rawNames,
+					                      ev.templateValues);
 				/* A CLASSIC source (ReportEvent): its message files are declared in
 				   the SYSTEM hive under the log's name, and the message is keyed by
 				   the qualifiers and the identifier together. These were three

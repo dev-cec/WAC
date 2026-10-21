@@ -114,6 +114,8 @@ struct Event {
 	std::vector<std::wstring> rawValues;
 	//! The name of each of rawValues (Data's Name, a UserData leaf's element); "" for a classic event's data
 	std::vector<std::wstring> rawNames;
+	//! The event's values in its template's order (EvtxRecord::values), for a message whose names do not line up
+	std::vector<std::wstring> templateValues;
 
 	/*  Fields kept in their native form for the resolution of the message.
 	    The JSON versions are already formatted; decoding them back would be both

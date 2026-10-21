@@ -23,36 +23,6 @@ std::wstring trim(const std::wstring& s) {
 	return s.substr(start, end - start + 1);
 }
 
-//! Replaces the five predefined entities. The others are left as they are:
-//! a faithful text is better than a guessed substitution.
-std::wstring decodeEntities(const std::wstring& s) {
-	if (s.find(L'&') == std::wstring::npos) return s;   // the common case: nothing to do
-	std::wstring r;
-	r.reserve(s.size());
-	for (size_t i = 0; i < s.size(); ) {
-		if (s[i] != L'&') { r += s[i++]; continue; }
-		const size_t pv = s.find(L';', i);
-		if (pv == std::wstring::npos || pv - i > 10) { r += s[i++]; continue; }
-		const std::wstring e = s.substr(i + 1, pv - i - 1);
-		if      (e == L"lt")   r += L'<';
-		else if (e == L"gt")   r += L'>';
-		else if (e == L"amp")  r += L'&';
-		else if (e == L"quot") r += L'"';
-		else if (e == L"apos") r += L'\'';
-		else if (e.size() > 1 && e[0] == L'#') {        // numeric reference
-			try {
-				const int code = (e[1] == L'x' || e[1] == L'X')
-					? std::stoi(e.substr(2), nullptr, 16)
-					: std::stoi(e.substr(1));
-				if (code > 0 && code < 0x110000) r += (wchar_t)code;
-			}
-			catch (...) { r += L'&' + e + L';'; }        // unreadable: kept raw
-		}
-		else { r += L'&' + e + L';'; }
-		i = pv + 1;
-	}
-	return r;
-}
 
 //! Strips the namespace prefix: the task schema has only one, implicit.
 std::wstring withoutPrefix(const std::wstring& name) {
@@ -99,7 +69,7 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 				const size_t dv = pos;
 				while (pos < s.size() && s[pos] != quote) ++pos;
 				if (pos >= s.size()) return nullptr;      // unclosed quote
-				value = decodeEntities(s.substr(dv, pos - dv));
+				value = xmlDecodeEntities(s.substr(dv, pos - dv));
 				++pos;
 			}
 		}
@@ -136,7 +106,7 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 			const size_t f = s.find(L'>', pos);
 			if (f == std::wstring::npos) return nullptr;
 			pos = f + 1;
-			node->text = decodeEntities(keepText ? text : trim(text));
+			node->text = xmlDecodeEntities(keepText ? text : trim(text));
 			return node;
 		}
 		++pos;                                              // past the '<'
@@ -148,6 +118,38 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 }
 
 } // namespace
+
+//! Replaces the five predefined entities. The others are left as they are:
+//! a faithful text is better than a guessed substitution.
+std::wstring xmlDecodeEntities(const std::wstring& s) {
+	if (s.find(L'&') == std::wstring::npos) return s;   // the common case: nothing to do
+	std::wstring r;
+	r.reserve(s.size());
+	for (size_t i = 0; i < s.size(); ) {
+		if (s[i] != L'&') { r += s[i++]; continue; }
+		const size_t pv = s.find(L';', i);
+		if (pv == std::wstring::npos || pv - i > 10) { r += s[i++]; continue; }
+		const std::wstring e = s.substr(i + 1, pv - i - 1);
+		if      (e == L"lt")   r += L'<';
+		else if (e == L"gt")   r += L'>';
+		else if (e == L"amp")  r += L'&';
+		else if (e == L"quot") r += L'"';
+		else if (e == L"apos") r += L'\'';
+		else if (e.size() > 1 && e[0] == L'#') {        // numeric reference
+			try {
+				const int code = (e[1] == L'x' || e[1] == L'X')
+					? std::stoi(e.substr(2), nullptr, 16)
+					: std::stoi(e.substr(1));
+				if (code > 0 && code < 0x110000) r += (wchar_t)code;
+			}
+			catch (...) { r += L'&' + e + L';'; }        // unreadable: kept raw
+		}
+		else { r += L'&' + e + L';'; }
+		i = pv + 1;
+	}
+	return r;
+}
+
 
 const XmlNode* XmlNode::child(const std::wstring& childName) const {
 	for (const std::unique_ptr<XmlNode>& e : children)
