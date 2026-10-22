@@ -60,6 +60,7 @@
  */
 #pragma once
 
+#include <functional>
 #include <windows.h>
 #include <string>
 #include <vector>
@@ -266,6 +267,15 @@ bool ExhibitStoreHolds(const std::wstring& storedPath);
  *  @param stored receives its record
  *  @return false if the collection stored no content for that file */
 bool ExhibitStoreCurrent(const std::wstring& sourcePath, RawHiveExtraction& stored);
+
+/*! The files of a shadow copy that were not copied again, identical to a
+ *  newer version (SharedExhibit): their source path, and the working copy
+ *  of the exhibit they share. A shadow copy's conversion puts them back in
+ *  its tree, which then holds every file the copy kept.
+ *  @param copyId the copy's identifier, "{…}"
+ *  @param visit called with the source path ("X:\\…") and that working copy */
+void ExhibitStoreSharedOfShadowCopy(const std::wstring& copyId,
+                                    const std::function<void(const std::wstring& source, const std::wstring& workingCopy)>& visit);
 
 /*! Writes `exhibits\MANIFEST.json` then its seal `exhibits\MANIFEST.sha256`.
  *

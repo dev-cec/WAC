@@ -48,7 +48,7 @@ enum class Text : unsigned {
 	StepPowerShellHistory, StepSetupApi, StepRecycleBin, StepHosts, StepErrorReports, StepDefenderLogs,
 	StepDefenderDetections, StepDefenderQuarantine,
 	StepStartupFolders, StepZoneIdentifiers, StepSecurityHive, StepPersistence,
-	StepOfficeTrustRecords, StepTypedPaths, StepWordWheelQueries, StepRootCertificates, StepInternetSettingsSet, StepFirewall, StepWmiPersistence, StepSrum, StepBitsJobs, StepFatVolumes, StepInstalledPrograms, StepDefenderConfiguration, StepExplorerRecentDocs, StepMountPoints, StepKnownNetworks, StepProgramUsages, StepDevices, StepNetworkShares, StepNetworkConfiguration, StepEventLogConfiguration, StepShortcuts, StepSecurityDescriptors, StepNtfsVolumes, StepDpapiMasterKeys, StepUserShellFolders, StepWebClient, StepActivitiesCache, StepSearchIndex, StepRdpClient, StepRdpServer, StepThumbcache, StepEmails, StepShadowCopyListing,
+	StepOfficeTrustRecords, StepTypedPaths, StepWordWheelQueries, StepRootCertificates, StepInternetSettingsSet, StepFirewall, StepWmiPersistence, StepSrum, StepBitsJobs, StepFatVolumes, StepInstalledPrograms, StepDefenderConfiguration, StepExplorerRecentDocs, StepMountPoints, StepKnownNetworks, StepProgramUsages, StepDevices, StepNetworkShares, StepNetworkConfiguration, StepEventLogConfiguration, StepShortcuts, StepSecurityDescriptors, StepNtfsVolumes, StepDpapiMasterKeys, StepUserShellFolders, StepWebClient, StepActivitiesCache, StepSearchIndex, StepRdpClient, StepRdpServer, StepThumbcache, StepEmails, StepShadowCopyListing, StepShadowCopyContent,
 	// Steps: investigation log
 	StepWriteConversionLog, StepWriteInvestigationLog,
 	// Artefacts switched off by wac.yml (their name, then the message)

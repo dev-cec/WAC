@@ -81,6 +81,10 @@
 #include "trust_update.h"
 #include "trust_set.h"
 #include "config.h"
+#include "live_snapshot.h"
+#include <unordered_set>
+#include <fstream>
+#include <sstream>
 
 AppliConf conf; //!< the application's configuration, shared by every collector
 
@@ -135,6 +139,37 @@ HRESULT checkCollectionLocation() {
 	return ERROR_SUCCESS;
 }
 
+/*! Completes each shadow copy's tree in the working directory with the files
+ *  it shares with a newer version — not copied twice at collection, the
+ *  manifest pointing them to that version's exhibit (SharedExhibit).
+ *
+ *  WHY HERE, before the hives are repaired. A shared file is the RAW content
+ *  of the other version: copied after the repair, a copy's SOFTWARE took the
+ *  volume's base replayed with the volume's logs, and the copy's own logs,
+ *  stored apart, were never replayed — a Run value the copy kept was lost
+ *  (measured on Windows 11). Copied here, from the working copy just made,
+ *  each copy's hive is repaired with its own logs like any other.
+ *  @return the number of files put in the copies' trees */
+size_t shadowCopyTreesToWorking() {
+	Json listed = Json::null();
+	if (readLiveSnapshot("shadow_copies.json", listed) != ERROR_SUCCESS || listed.kind() != Json::Kind::Arr) return 0;
+	size_t placed = 0;
+	for (const auto& member : listed.members()) {
+		const Json* id = member.second.find(L"ShadowCopyId");
+		const Json* folder = member.second.find(L"ExhibitFolder");
+		if (!id || !folder) continue;
+		const std::wstring root = workingFolder() + L"\\" + folder->text();
+		ExhibitStoreSharedOfShadowCopy(id->text(), [&](const std::wstring& source, const std::wstring& working) {
+			const std::wstring target = pathUnder(root, source);
+			if (working.empty() || pathExists(target)) return;
+			createFolders(parentFolder(target));
+			if (copyFileLong(working, target, true)) ++placed;
+			else log(2, L"🔥Shadow copy " + folder->text() + L": " + source + L" not put back", GetLastError());
+		});
+	}
+	return placed;
+}
+
 /*! --convert: checks the collection before anything is read from it — the
  *  seal, then every exhibit's fingerprint —, then rebuilds the working copy
  *  from the exhibit store, as the collection made it: copies verified against
@@ -180,6 +215,9 @@ HRESULT prepareConversion() {
 		return hr;
 	}
 	conf.mountpoint = workingFolder();
+	const size_t shared = shadowCopyTreesToWorking();
+	if (shared) auditRecord(L"Shadow copies' trees completed with " + std::to_wstring(shared) + L" file(s) shared with a newer version",
+	                        workingFolder(), ERROR_SUCCESS, Footprint::USB_WRITE);
 	printSuccess();
 
 	printStep(Text::StepRepairWorkingHives);
@@ -759,6 +797,194 @@ void convertNtfsMetadata() {
 	}
 }
 
+/*! The events of the volume as it is now, by digest (Events::seen): filled
+ *  by the conversion of the logs, read by convertShadowCopies. */
+std::unordered_set<uint64_t> g_volumeEvents;
+
+/*! A JSON file of the output, read back.
+ *  @param path the file
+ *  @return its value, or null if it is absent or not JSON */
+Json readJsonFile(const std::filesystem::path& path) {
+	std::ifstream file(path, std::ios::binary);
+	if (!file) return Json::null();
+	std::stringstream buffer;
+	buffer << file.rdbuf();
+	Json value = Json::null();
+	std::wstring error;
+	if (!Json::parse(decodeText(buffer.str(), CP_UTF8), value, error)) return Json::null();
+	return value;
+}
+
+/*! What identifies a registry entry across time: the entry without its
+ *  fields that move with use alone — dates, counters, positions in a list
+ *  (UserAssist's FocusCount, an account's LogonCount, a key's KeyLastWrite,
+ *  an MRU position). Compared with them, every entry a user touched since
+ *  the copy came out "gone" (measured on Windows 7: most of the list);
+ *  without them, what is listed is gone indeed, or changed in what it says
+ *  — a Run value pointing elsewhere, a member taken out of a group.
+ *  @param entry the entry, as its artefact gives it
+ *  @return its identity, as text */
+std::wstring entryIdentity(const Json& entry) {
+	if (entry.kind() != Json::Kind::Obj) return entry.dump(0);
+	// Inside the name for a date; at its end for a counter or a position ("AccountFlags" is no counter).
+	static const wchar_t* const DATES[] = { L"Utc", L"Time", L"Date", L"LastWrite", L"LastLogon" };
+	static const wchar_t* const ENDINGS[] = { L"Count", L"Position" };
+	auto endsWith = [](const std::wstring& name, const std::wstring& end) {
+		return name.size() >= end.size() && name.compare(name.size() - end.size(), end.size(), end) == 0;
+	};
+	Json kept = Json::obj();
+	for (const auto& [name, value] : entry.members()) {
+		bool moving = false;
+		for (const wchar_t* part : DATES) moving = moving || name.find(part) != std::wstring::npos;
+		for (const wchar_t* end : ENDINGS) moving = moving || endsWith(name, end);
+		if (!moving) kept.add(name, value);
+	}
+	return kept.dump(0);
+}
+
+/*! Converts a registry artefact from the hives the configuration points to,
+ *  without its console step: a shadow copy's conversion runs a score of them
+ *  per copy, which the console does not need to list.
+ *  @tparam Collector the artefact's class
+ *  @param wanted the configuration's switch */
+template <class Collector>
+void convertQuietly(bool wanted) {
+	if (!wanted) return;
+	Collector collector;
+	if (collector.getData() == ERROR_SUCCESS) collector.toJson();
+	collector.clear();
+}
+
+/*! What the shadow copies keep and the volume no longer holds (B-014).
+ *
+ *  WHY NOT EVERYTHING. A copy converted whole repeats, nearly identical, the
+ *  thousands of entries of the volume's conversion, once per copy: huge, and
+ *  what matters drowned. What a copy brings is what was there THEN and is
+ *  gone NOW — what an intruder erases. Hence two files:
+ *    - `shadow_copy_events.json`: the events of a copy's logs that the
+ *      volume's logs no longer hold (a cleared Security log, records
+ *      overwritten by rotation), each once, with the newest copy that kept it;
+ *    - `shadow_copy_registry.json`: the entries of the registry artefacts
+ *      converted from a copy's hives that the volume's conversion does not
+ *      give (a Run value, a service, an account deleted since; a ShimCache,
+ *      Amcache or BAM entry of a tool deleted since), compared on their
+ *      identity (entryIdentity), each once, with its artefact and the newest
+ *      copy that kept it.
+ *  The copies are taken newest first. A copy's tree, in the working
+ *  directory, was completed with the files it shares with a newer version
+ *  before the hives were repaired (shadowCopyTreesToWorking). The registry
+ *  artefacts are converted into a folder apart, compared, and that folder
+ *  removed.
+ *
+ *  The copies of the system volume only: they hold the system's hives and
+ *  logs. */
+void convertShadowCopies() {
+	if (!conf.artefacts.shadowCopies) return;
+	Json listed = Json::null();
+	if (readLiveSnapshot("shadow_copies.json", listed) != ERROR_SUCCESS || listed.kind() != Json::Kind::Arr) return;
+	struct Copy { std::wstring created, id, folder; };
+	std::vector<Copy> copies;
+	for (const auto& member : listed.members()) {
+		const Json& c = member.second;
+		auto text = [&](const wchar_t* key) { const Json* v = c.find(key); return v ? v->text() : std::wstring(); };
+		if (toLower(text(L"Volume")) != toLower(conf.systemDrive.substr(0, 2)) || text(L"ExhibitFolder").empty()) continue;
+		copies.push_back({ text(L"CreationTimeUtc"), text(L"ShadowCopyId"), text(L"ExhibitFolder") });
+	}
+	if (copies.empty()) return;
+	std::sort(copies.begin(), copies.end(), [](const Copy& a, const Copy& b) { return a.created > b.created; });
+	printStep(Text::StepShadowCopyContent);
+
+	// The volume's state, put back after the copies.
+	const std::wstring mountpoint = conf.mountpoint;
+	const ORHKEY system = conf.System, software = conf.Software, controlSet = conf.CurrentControlSet;
+	const auto profiles = conf.profiles;
+	const std::wstring scratch = conf._outputDir + L"\\shadow-copy-conversion";
+
+	JsonArrayWriter events("shadow_copy_events.json");
+	Json registry = Json::arr();
+	std::set<std::wstring> kept;   // artefact and entry, each once
+	unsigned long long registryEntries = 0;
+	for (const Copy& copy : copies) {
+		const std::wstring root = workingFolder() + L"\\" + copy.folder;
+		conf.mountpoint = root;
+		conf.jsonFolder = scratch;
+		conf.System = conf.Software = conf.CurrentControlSet = nullptr;
+		conf.profiles.clear();
+		OROpenHive((root + L"\\Windows\\system32\\config\\SYSTEM").c_str(), &conf.System);
+		OROpenHive((root + L"\\Windows\\system32\\config\\SOFTWARE").c_str(), &conf.Software);
+		openCurrentControlSet();
+		loadProfileList();
+		const AppliConf::CollectedArtefacts& a = conf.artefacts;
+		convertQuietly<Runs>(a.runKeys);
+		convertQuietly<Usbstors>(a.usbstor);
+		convertQuietly<MountedDevices>(a.mountedDevices);
+		convertQuietly<Bams>(a.bam);
+		convertQuietly<Muicaches>(a.muiCache);
+		convertQuietly<Amcache>(a.amcache);
+		convertQuietly<UserAssists>(a.userAssist);
+		convertQuietly<Shimcaches>(a.shimcache);
+		convertQuietly<Shellbags>(a.shellbags);
+		convertQuietly<Mrus>(a.mru);
+		convertQuietly<MruApps>(a.mruApps);
+		convertQuietly<Persistence>(a.persistence);
+		convertQuietly<TypedPaths>(a.typedPaths);
+		convertQuietly<InstalledPrograms>(a.installedPrograms);
+		convertQuietly<KnownNetworks>(a.knownNetworks);
+		convertQuietly<Devices>(a.devices);
+		convertQuietly<ExplorerRecentDocs>(a.explorerRecentDocs);
+		convertQuietly<ProgramUsages>(a.programUsages);
+		convertQuietly<Services>(a.services);
+		convertQuietly<Users>(a.users);
+		convertQuietly<LocalGroups>(a.localGroups);
+		// Each entry of the copy the volume's conversion does not give, each once.
+		std::error_code ec;
+		for (const auto& file : std::filesystem::directory_iterator(scratch, ec)) {
+			const Json mine = readJsonFile(file.path());
+			const Json now = readJsonFile(std::filesystem::path(conf._outputDir) / file.path().filename());
+			if (mine.kind() != Json::Kind::Arr || now.kind() != Json::Kind::Arr) continue;
+			std::set<std::wstring> current;
+			for (const auto& entry : now.members()) current.insert(entryIdentity(entry.second));
+			const std::wstring artefact = file.path().filename().wstring();
+			for (const auto& entry : mine.members()) {
+				const std::wstring text = entryIdentity(entry.second);
+				if (current.count(text) || !kept.insert(artefact + L"|" + text).second) continue;
+				Json o = Json::obj();
+				o.add(L"Artefact", Json::str(artefact));
+				o.add(L"ShadowCopyId", Json::str(copy.id));
+				o.add(L"ShadowCopyCreationTimeUtc", Json::str(copy.created));
+				o.add(L"Entry", entry.second);
+				registry.push(std::move(o));
+				++registryEntries;
+			}
+		}
+		std::filesystem::remove_all(scratch, ec);
+		conf.jsonFolder.clear();
+		// The events of the copy's logs the volume — or a newer copy — no longer holds.
+		if (conf.artefacts.events) {
+			Events copyEvents;
+			copyEvents.seen = &g_volumeEvents;
+			copyEvents.sink = &events;
+			copyEvents.tags = { { L"ShadowCopyId", copy.id }, { L"ShadowCopyCreationTimeUtc", copy.created } };
+			copyEvents.getData();
+		}
+		if (conf.CurrentControlSet) ORCloseKey(conf.CurrentControlSet);
+		if (conf.System) ORCloseHive(conf.System);
+		if (conf.Software) ORCloseHive(conf.Software);
+	}
+	conf.mountpoint = mountpoint;
+	conf.System = system;
+	conf.Software = software;
+	conf.CurrentControlSet = controlSet;
+	conf.profiles = profiles;
+	const HRESULT closed = events.close();
+	const HRESULT written = writeJsonFile("shadow_copy_registry.json", registry);
+	auditRecord(L"Shadow copies: events and registry entries the volume no longer holds ("
+	            + std::to_wstring(copies.size()) + L" copy(ies), " + std::to_wstring(registryEntries) + L" registry entry(ies))",
+	            workingFolder(), FAILED(closed) ? closed : written, Footprint::HIVE_COPY);
+	if (FAILED(closed) || FAILED(written)) printError(FAILED(closed) ? closed : written);
+	else printSuccess();
+}
+
 /*! Converts the artefacts into JSON, from the working copy: registry, files,
  *  event logs. Runs under --convert only; a collection stops before it (see
  *  RunMode).
@@ -1172,6 +1398,8 @@ void convertArtefacts(bool systemAvailable) {
 		printHeading(Text::HeadingEventLogs);
 		printStep(Text::StepEvents);
 
+		// Each event met, for a shadow copy's events to be compared with (convertShadowCopies).
+		if (conf.artefacts.shadowCopies) events.seen = &g_volumeEvents;
 		hresult = events.getData();
 		/* The source is no longer the EventLog service but the .evtx files extracted
 		   by raw reading: the record must say which ones, otherwise the report
@@ -1553,7 +1781,10 @@ int wmain(int argc, wchar_t* argv[])
 	if (conf.mode != RunMode::Convert) extractProfileArtefacts();
 
 	if (conf.mode == RunMode::Collect) collectForConversion();
-	else convertArtefacts(systemAvailable);
+	else {
+		convertArtefacts(systemAvailable);
+		convertShadowCopies();
+	}
 
 	printHeading(Text::HeadingExhibitStore);
 	/************************

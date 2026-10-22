@@ -3,6 +3,7 @@
 #include "evt.h"
 #include "event_messages.h"
 #include <filesystem>
+#include <memory>
 #include "raw_hive.h"
 #include <chrono>
 #include <cwchar>
@@ -312,7 +313,10 @@ HRESULT Events::getData() {
 
 	MessagesInit();
 
-	JsonArrayWriter output("events.json");
+	// The volume's events go to events.json; a shadow copy's, to the caller's writer.
+	std::unique_ptr<JsonArrayWriter> own;
+	if (!sink) own = std::make_unique<JsonArrayWriter>("events.json");
+	JsonArrayWriter& output = sink ? *sink : *own;
 	if (!output.isOpen()) return E_FAIL;
 
 	unsigned long long unreadableLogs = 0, incomplete = 0;
@@ -350,6 +354,14 @@ HRESULT Events::getData() {
 					return true;
 				}
 				Event ev(*root, channel, e.id, fileName);
+				if (seen) {
+					const std::wstring key = channel + L"|" + std::to_wstring(e.id) + L"|"
+					                       + (ev.evtSystemTimeCreated.kind() == Json::Kind::Str ? ev.evtSystemTimeCreated.text() : std::wstring());
+					uint64_t digest = 0xCBF29CE484222325ull;   // FNV-1a, 64 bits
+					for (wchar_t c : key) { digest ^= (uint16_t)c; digest *= 0x100000001B3ull; }
+					// A shadow copy's event the volume — or a newer copy — holds already: not written again.
+					if (!seen->insert(digest).second && sink) return true;
+				}
 				// A processing error's values are not the template's (see Event::Event).
 				if (!ev.processingError) ev.templateValues = e.values;
 				if (e.recovered) ev.evtRecovered = Json::boolean(true);
@@ -400,7 +412,12 @@ HRESULT Events::getData() {
 					     + fileName + L": System section incomplete");
 					log(3, L"🔈XML : " + e.xml.substr(0, 2000));
 				}
-				output.add(ev.toJson());
+				if (sink) {
+					Json tagged = ev.toJson();
+					for (const auto& [name, value] : tags) tagged.add(name, Json::str(value));
+					output.add(std::move(tagged));
+				}
+				else output.add(ev.toJson());
 				lap(writeTime);
 				++read;
 				return true;
@@ -435,7 +452,7 @@ HRESULT Events::getData() {
 		log(2, L"⏱️Events, time per step: " + timePerStep);
 	}
 
-	const HRESULT closing = output.close();
+	const HRESULT closing = sink ? ERROR_SUCCESS : output.close();   // the caller closes its own writer
 	log(2, L"❇️Events written: " + std::to_wstring(read)
 	       + L" (" + std::to_wstring(files) + L"/"
 	       + std::to_wstring(logs.size()) + L" logs)");

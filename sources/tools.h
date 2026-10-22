@@ -87,6 +87,10 @@ struct AppliConf {
 	bool _dump = false;//!< True if dump is active
 	std::wstring name = L""; //!< name of the program, obtained from the command line
 	std::wstring _outputDir = L"output"; //!< directory to store output JSON (UTF-16: any name the command line can carry)
+	/*! Where the JSON files go instead of `_outputDir`, when not empty: a
+	 *  shadow copy's conversion writes there, apart, before its entries are
+	 *  compared with the volume's (main.cpp, convertShadowCopies). */
+	std::wstring jsonFolder;
 	std::wstring mountpoint = L""; //!< mount point path to access the snapshot made during execution
 	ORHKEY CurrentControlSet = { 0 }; //!< Reg Key to access Current Control Set Hive
 	ORHKEY System = { 0 }; //!< Reg Key to access to System Hive
@@ -1114,7 +1118,7 @@ HRESULT getRegMultiSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vec
 */
 std::wstring getVolumeLetter(std::wstring searchSerial);
 
-/*! Writes a JSON value into `_outputDir`/`name`, in UTF-8.
+/*! Writes a JSON value into `_outputDir`/`name` (or `jsonFolder`), in UTF-8.
 * Centralises the creation of the output directory, the encoding and the path,
 * so that each artefact no longer has to do it again.
 * @param name name of the file (e.g. "bams.json")
@@ -1139,7 +1143,7 @@ HRESULT writeJsonFile(const std::string& name, const Json& value);
 */
 class JsonArrayWriter {
 public:
-	/*! Opens `_outputDir`/`name` and writes the opening of the array.
+	/*! Opens `_outputDir`/`name` (or `jsonFolder`) and writes the opening of the array.
 	*  @param name name of the output file, without a path */
 	explicit JsonArrayWriter(const std::string& name);
 

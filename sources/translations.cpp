@@ -133,6 +133,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepThumbcache, L"Caches des miniatures et des icônes", L"Extracting THUMBNAIL AND ICON CACHES" },
 	{ Text::StepEmails, L"Courriels (PST, OST)", L"Extracting MAIL (PST, OST)" },
 	{ Text::StepShadowCopyListing, L"Clichés instantanés", L"Extracting SHADOW COPIES" },
+	{ Text::StepShadowCopyContent, L"Clichés instantanés : événements et entrées de registre disparus du volume", L"Shadow copies: events and registry entries the volume no longer holds" },
 
 	{ Text::StepWriteConversionLog,    L"Écriture de conversion.json",                   L"Writing conversion.json" },
 	{ Text::StepWriteInvestigationLog, L"Écriture de investigation.json",                L"Writing investigation.json" },

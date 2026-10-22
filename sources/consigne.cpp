@@ -171,6 +171,16 @@ bool ExhibitStoreCurrent(const std::wstring& sourcePath, RawHiveExtraction& stor
 	return false;
 }
 
+std::wstring workingCopyOf(const std::wstring& stored);
+
+void ExhibitStoreSharedOfShadowCopy(const std::wstring& copyId,
+                                    const std::function<void(const std::wstring& source, const std::wstring& workingCopy)>& visit) {
+	const std::wstring wanted = toLower(copyId);
+	for (const Exhibit& p : g_exhibits)
+		if (p.shared && SUCCEEDED(p.extracted.result) && toLower(p.extracted.shadowCopy) == wanted)
+			visit(p.extracted.volumePath, workingCopyOf(p.extracted.outputPath));
+}
+
 bool ExhibitSourceTimes(const std::wstring& workingCopy, FILETIME& created, FILETIME& modified, FILETIME& accessed) {
 	// Exhibit files by path, rebuilt when exhibits were added since.
 	static std::map<std::wstring, size_t> byFile;

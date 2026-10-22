@@ -1588,10 +1588,11 @@ std::wstring getVolumeLetter(std::wstring searchSerial) {
 }
 
 HRESULT writeJsonFile(const std::string& name, const Json& value) {
+	const std::wstring folder = conf.jsonFolder.empty() ? conf._outputDir : conf.jsonFolder;
 	std::error_code ec;
-	std::filesystem::create_directories(conf._outputDir, ec); // no error if present
+	std::filesystem::create_directories(folder, ec); // no error if present
 	std::ofstream f;
-	f.open(std::filesystem::path(conf._outputDir) / name);
+	f.open(std::filesystem::path(folder) / name);
 	if (!f) {
 		log(2, L"🔥Cannot open the output file: " + decodeText(name));
 		return E_FAIL;
@@ -1602,9 +1603,10 @@ HRESULT writeJsonFile(const std::string& name, const Json& value) {
 }
 
 JsonArrayWriter::JsonArrayWriter(const std::string& name) : name_(name) {
+	const std::wstring folder = conf.jsonFolder.empty() ? conf._outputDir : conf.jsonFolder;
 	std::error_code ec;
-	std::filesystem::create_directories(conf._outputDir, ec);  // no error if present
-	f_.open(std::filesystem::path(conf._outputDir) / name);
+	std::filesystem::create_directories(folder, ec);  // no error if present
+	f_.open(std::filesystem::path(folder) / name);
 	if (!f_) {
 		log(2, L"🔥Cannot open the output file: " + decodeText(name));
 		return;

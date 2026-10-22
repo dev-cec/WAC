@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_set>
 #include <utility>
 #include "tools.h"
 #include "json.h"
@@ -154,6 +155,19 @@ struct Events {
 	unsigned long long unreadable = 0;   //!< records discarded
 	unsigned long long files = 0;     //!< logs walked
 	std::wstring timePerStep;         //!< where the reading's time went, step by step (backlog B-033)
+
+	/*! The events met, by the 64-bit FNV-1a digest of their key (channel,
+	 *  record number, creation time), when set: the volume's conversion fills
+	 *  it, a shadow copy's reads it. A digest rather than the key: a machine
+	 *  holds up to a million events; on 64 bits two of them collide with a
+	 *  probability below one in ten million. */
+	std::unordered_set<uint64_t>* seen = nullptr;
+	/*! A shadow copy's logs (main.cpp, convertShadowCopies): only the events
+	 *  `seen` does not hold yet are written, into this writer instead of
+	 *  `events.json`, with `tags` added to each — the events the volume no
+	 *  longer holds, each once. */
+	JsonArrayWriter* sink = nullptr;
+	std::vector<std::pair<std::wstring, std::wstring>> tags;   //!< fields added to each event written to `sink`
 
 	/*! Reads the extracted logs and writes `events.json` as it goes.
 	*  @return ERROR_SUCCESS, S_FALSE if some records were discarded, or an error
