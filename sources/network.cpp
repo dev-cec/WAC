@@ -43,6 +43,7 @@ struct IpHelper {
 	StackTable udpStackTable = nullptr;
 	decltype(&GetIpNetTable) arpTable = nullptr;
 	decltype(&GetIpForwardTable) ipv4RouteTable = nullptr;
+	decltype(&GetAdaptersInfo) adaptersInfo = nullptr;   //!< XP's gateways and DHCP server (readInterfaces)
 	~IpHelper() { if (module) FreeLibrary(module); }
 };
 
@@ -66,10 +67,15 @@ HRESULT load(IpHelper& api) {
 	const bool adapters = resolveExport(api.module, "GetAdaptersAddresses", api.adapters);
 	/* What Windows XP and Server 2003 offer instead, IPv4 only: asked for only
 	   where the function above is missing. */
-	const bool stack = !(tcp && udp) && resolveExport(api.module, "AllocateAndGetTcpExTableFromStack", api.tcpStackTable)
+	/* The stack's tables are resolved even where GetExtendedTcpTable exists:
+	   XP SP2 and SP3 have it, without the module classes nor IPv6 that WAC
+	   asks for (Vista's), and their connections were not read at all
+	   (measured on Windows XP SP3). */
+	const bool stack = resolveExport(api.module, "AllocateAndGetTcpExTableFromStack", api.tcpStackTable)
 	                   && resolveExport(api.module, "AllocateAndGetUdpExTableFromStack", api.udpStackTable);
 	const bool arp = !(neighbours && release) && resolveExport(api.module, "GetIpNetTable", api.arpTable);
 	const bool ipv4Routes = !(routes && release) && resolveExport(api.module, "GetIpForwardTable", api.ipv4RouteTable);
+	resolveExport(api.module, "GetAdaptersInfo", api.adaptersInfo);
 	const bool any = (tcp && udp) || (neighbours && release) || (routes && release) || adapters || stack || arp || ipv4Routes;
 	return any ? ERROR_SUCCESS : HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
 }
@@ -244,6 +250,15 @@ bool readIpv4Routes(const IpHelper& api, std::vector<Route>& routes) {
 	return true;
 }
 
+/*! The rows a table holds: the count it announces, bounded by the buffer
+ *  actually read. @tparam Table the table, @tparam Row its row type */
+template <class Table, class Row>
+size_t rowsHeld(const std::vector<uint8_t>& buffer) {
+	if (buffer.size() < offsetof(Table, table)) return 0;
+	const auto* t = reinterpret_cast<const Table*>(buffer.data());
+	return std::min<size_t>(t->dwNumEntries, (buffer.size() - offsetof(Table, table)) / sizeof(Row));
+}
+
 /*! Reads the TCP and UDP tables, IPv4 and IPv6, with their owners and
  *  creation times. @return false if one of the four could not be read */
 bool readConnections(const IpHelper& api, std::vector<Connection>& connections) {
@@ -252,7 +267,7 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 	const std::vector<uint8_t> tcp4 = tcp(AF_INET), tcp6 = tcp(AF_INET6), udp4 = udp(AF_INET), udp6 = udp(AF_INET6);
 	if (!tcp4.empty()) {
 		const auto* t = reinterpret_cast<const MIB_TCPTABLE_OWNER_MODULE*>(tcp4.data());
-		for (DWORD k = 0; k < t->dwNumEntries; ++k) {
+		for (size_t k = 0, rows = rowsHeld<MIB_TCPTABLE_OWNER_MODULE, MIB_TCPROW_OWNER_MODULE>(tcp4); k < rows; ++k) {
 			const MIB_TCPROW_OWNER_MODULE& r = t->table[k];
 			connections.push_back({ L"TCP", ipv4(r.dwLocalAddr), port(r.dwLocalPort), ipv4(r.dwRemoteAddr),
 			                        port(r.dwRemotePort), tcpState(r.dwState), r.dwOwningPid, filetimeFromTicks((uint64_t)r.liCreateTimestamp.QuadPart) });
@@ -260,7 +275,7 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 	}
 	if (!tcp6.empty()) {
 		const auto* t = reinterpret_cast<const MIB_TCP6TABLE_OWNER_MODULE*>(tcp6.data());
-		for (DWORD k = 0; k < t->dwNumEntries; ++k) {
+		for (size_t k = 0, rows = rowsHeld<MIB_TCP6TABLE_OWNER_MODULE, MIB_TCP6ROW_OWNER_MODULE>(tcp6); k < rows; ++k) {
 			const MIB_TCP6ROW_OWNER_MODULE& r = t->table[k];
 			connections.push_back({ L"TCP6", Ipv6Text(r.ucLocalAddr), port(r.dwLocalPort), Ipv6Text(r.ucRemoteAddr),
 			                        port(r.dwRemotePort), tcpState(r.dwState), r.dwOwningPid, filetimeFromTicks((uint64_t)r.liCreateTimestamp.QuadPart) });
@@ -268,7 +283,7 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 	}
 	if (!udp4.empty()) {
 		const auto* t = reinterpret_cast<const MIB_UDPTABLE_OWNER_MODULE*>(udp4.data());
-		for (DWORD k = 0; k < t->dwNumEntries; ++k) {
+		for (size_t k = 0, rows = rowsHeld<MIB_UDPTABLE_OWNER_MODULE, MIB_UDPROW_OWNER_MODULE>(udp4); k < rows; ++k) {
 			const MIB_UDPROW_OWNER_MODULE& r = t->table[k];
 			connections.push_back({ L"UDP", ipv4(r.dwLocalAddr), port(r.dwLocalPort), L"", 0, L"", r.dwOwningPid,
 			                        filetimeFromTicks((uint64_t)r.liCreateTimestamp.QuadPart) });
@@ -276,7 +291,7 @@ bool readConnections(const IpHelper& api, std::vector<Connection>& connections) 
 	}
 	if (!udp6.empty()) {
 		const auto* t = reinterpret_cast<const MIB_UDP6TABLE_OWNER_MODULE*>(udp6.data());
-		for (DWORD k = 0; k < t->dwNumEntries; ++k) {
+		for (size_t k = 0, rows = rowsHeld<MIB_UDP6TABLE_OWNER_MODULE, MIB_UDP6ROW_OWNER_MODULE>(udp6); k < rows; ++k) {
 			const MIB_UDP6ROW_OWNER_MODULE& r = t->table[k];
 			connections.push_back({ L"UDP6", Ipv6Text(r.ucLocalAddr), port(r.dwLocalPort), L"", 0, L"", r.dwOwningPid,
 			                        filetimeFromTicks((uint64_t)r.liCreateTimestamp.QuadPart) });
@@ -312,6 +327,35 @@ bool readRoutes(const IpHelper& api, std::vector<Route>& routes) {
 	return true;
 }
 
+//! An address of an IP_ADDR_STRING (dotted IPv4), bounded by its array; "" for none.
+std::wstring dottedAddress(const IP_ADDR_STRING& a) {
+	const size_t length = strnlen(a.IpAddress.String, sizeof(a.IpAddress.String));
+	const std::wstring text(a.IpAddress.String, a.IpAddress.String + length);
+	return text == L"0.0.0.0" ? std::wstring() : text;
+}
+
+/*! Windows XP and Server 2003: GetAdaptersAddresses gives neither the
+ *  gateways nor the DHCP server there (its structure ends before them);
+ *  GetAdaptersInfo does, IPv4 only, by the interface's index. Asked for only
+ *  there — a later Windows is read as before —; without it, the default
+ *  route of XP named a next hop no interface had (measured on Windows XP SP1). */
+void addPreVistaGateways(const IpHelper& api, std::vector<NetworkInterface>& interfaces) {
+	if (!api.adaptersInfo) return;
+	const std::vector<uint8_t> buffer = readTable([&](void* t, ULONG* s) {
+		return api.adaptersInfo(reinterpret_cast<PIP_ADAPTER_INFO>(t), s); });
+	if (buffer.empty()) return;
+	for (auto* a = reinterpret_cast<const IP_ADAPTER_INFO*>(buffer.data()); a; a = a->Next)
+		for (NetworkInterface& i : interfaces) {
+			if (i.interfaceIndex != a->Index) continue;
+			if (i.gateways.empty())
+				for (const IP_ADDR_STRING* g = &a->GatewayList; g; g = g->Next) {
+					const std::wstring gateway = dottedAddress(*g);
+					if (!gateway.empty()) i.gateways.push_back(gateway);
+				}
+			if (i.dhcp && i.dhcpServer.empty() && a->DhcpEnabled) i.dhcpServer = dottedAddress(a->DhcpServer);
+		}
+}
+
 //! Reads the interfaces and their configuration. @return false if they could not be read
 bool readInterfaces(const IpHelper& api, std::vector<NetworkInterface>& interfaces) {
 	if (!api.adapters) return false;
@@ -331,6 +375,7 @@ bool readInterfaces(const IpHelper& api, std::vector<NetworkInterface>& interfac
 	   holds it — read past its end, it was whatever followed in the buffer,
 	   taken for a pointer: WAC32 crashed under Windows XP SP1. */
 	const auto holds = [](const IP_ADAPTER_ADDRESSES* a, size_t offset, size_t size) { return offset + size <= a->Length; };
+	bool gatewaysUnread = false;   // a structure of before Vista, without the gateways
 	for (auto* a = reinterpret_cast<const IP_ADAPTER_ADDRESSES*>(buffer.data()); a; a = a->Next) {
 		NetworkInterface i;
 		i.name = a->FriendlyName ? a->FriendlyName : L"";
@@ -341,6 +386,7 @@ bool readInterfaces(const IpHelper& api, std::vector<NetworkInterface>& interfac
 		i.addresses = addresses(a->FirstUnicastAddress);
 		if (holds(a, offsetof(IP_ADAPTER_ADDRESSES, FirstGatewayAddress), sizeof(a->FirstGatewayAddress)))
 			i.gateways = addresses(a->FirstGatewayAddress);
+		else gatewaysUnread = true;
 		i.dnsServers = addresses(a->FirstDnsServerAddress);
 		i.dnsSuffix = a->DnsSuffix ? a->DnsSuffix : L"";
 		i.dhcp = a->Dhcpv4Enabled != 0;
@@ -348,6 +394,7 @@ bool readInterfaces(const IpHelper& api, std::vector<NetworkInterface>& interfac
 			i.dhcpServer = address(a->Dhcpv4Server);
 		interfaces.push_back(std::move(i));
 	}
+	if (gatewaysUnread) addPreVistaGateways(api, interfaces);
 	return true;
 }
 
@@ -417,13 +464,17 @@ HRESULT NetworkState::getData() {
 	   both address families; else the one of Windows XP and Server 2003, which
 	   knows IPv4 only — said in TablesIpv4Only, so that the absence of an IPv6
 	   row is not read as "no IPv6 connection". */
+	/* The current functions first; where they are missing, or fail (XP SP2
+	   and SP3 have GetExtendedTcpTable without Vista's classes), the older
+	   ones, IPv4 only. */
 	const auto read = [&](const wchar_t* table, bool current, bool older, auto&& readCurrent, auto&& readOlder) {
-		if (current) { if (!readCurrent()) tablesNotRead.push_back(table); }
-		else if (!older || !readOlder()) tablesNotRead.push_back(table);
-		else tablesIpv4Only.push_back(table);
+		if (current && readCurrent()) return;
+		if (older && readOlder()) tablesIpv4Only.push_back(table);
+		else tablesNotRead.push_back(table);
 	};
 	read(L"Connections", api.tcpTable && api.udpTable, api.tcpStackTable && api.udpStackTable,
-	     [&] { return readConnections(api, connections); }, [&] { return readConnectionsFromStack(api, connections); });
+	     [&] { return readConnections(api, connections); },
+	     [&] { connections.clear(); return readConnectionsFromStack(api, connections); });   // no partial rows kept
 	read(L"Neighbours", api.neighbourTable && api.freeTable, api.arpTable != nullptr,
 	     [&] { return readNeighbours(api, neighbours); }, [&] { return readArpTable(api, neighbours); });
 	if (!readInterfaces(api, interfaces)) tablesNotRead.push_back(L"Interfaces");
