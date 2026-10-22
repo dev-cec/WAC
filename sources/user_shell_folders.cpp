@@ -20,26 +20,28 @@ std::wstring resolveUserShellFolder(const std::wstring& raw, const std::wstring&
 	return normalizeFilePath(path);
 }
 
-std::wstring redirectedDesktop(const std::wstring& sid, const std::wstring& profilePath) {
+std::wstring redirectedShellFolder(const std::wstring& sid, const std::wstring& profilePath,
+                                  const std::wstring& name, const std::wstring& defaultFolder) {
 	// Collection and conversion both ask, for each profile: read once.
 	static std::map<std::wstring, std::wstring> cache;
-	const auto known = cache.find(sid);
+	const std::wstring key = sid + L"|" + name;
+	const auto known = cache.find(key);
 	if (known != cache.end()) return known->second;
-	std::wstring desktop;
+	std::wstring folder;
 	ORHKEY root = NULL;
 	const std::wstring hive = extractedPath(profilePath) + L"\\ntuser.dat";
 	if (OROpenHive(hive.c_str(), &root) == ERROR_SUCCESS) {
 		std::wstring raw;
-		if (getRegSzValue(root, USER_SHELL_FOLDERS, L"Desktop", &raw) == ERROR_SUCCESS) {
+		if (getRegSzValue(root, USER_SHELL_FOLDERS, name.c_str(), &raw) == ERROR_SUCCESS) {
 			const std::wstring resolved = resolveUserShellFolder(raw, profilePath);
-			if (resolved.empty()) log(2, L"🔥Desktop of " + sid + L" not local, not followed: " + raw);
-			else if (toLower(resolved) != toLower(profilePath + L"\\Desktop")) desktop = resolved;
+			if (resolved.empty()) log(2, L"🔥" + name + L" of " + sid + L" not local, not followed: " + raw);
+			else if (toLower(resolved) != toLower(profilePath + L"\\" + defaultFolder)) folder = resolved;
 		}
 		ORCloseHive(root);
 	}
-	if (!desktop.empty()) log(2, L"❇️Desktop of " + sid + L" redirected to " + desktop);
-	cache.emplace(sid, desktop);
-	return desktop;
+	if (!folder.empty()) log(2, L"❇️" + name + L" of " + sid + L" redirected to " + folder);
+	cache.emplace(key, folder);
+	return folder;
 }
 
 Json UserShellFolder::toJson() const {

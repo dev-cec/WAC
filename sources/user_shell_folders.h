@@ -29,13 +29,17 @@
  *  @return the local absolute path, or "" for a share, a relative path or an unknown variable */
 std::wstring resolveUserShellFolder(const std::wstring& raw, const std::wstring& profilePath);
 
-/*! Where a profile's desktop is, when it is not `<profile>\\Desktop`.
- *  Read in the working copy of the profile's NTUSER.DAT, once per profile.
+/*! Where a profile's shell folder is, when it is not its default one —
+ *  a desktop or documents moved to OneDrive or another disk. Read in the
+ *  working copy of the profile's NTUSER.DAT, once per profile and folder.
  *  @param sid the profile's SID
  *  @param profilePath its absolute path
- *  @return the redirected desktop's local absolute path, or "" when the desktop
- *          is the default one, on a share, or the value cannot be read */
-std::wstring redirectedDesktop(const std::wstring& sid, const std::wstring& profilePath);
+ *  @param name the value of User Shell Folders: L"Desktop", L"Personal"…
+ *  @param defaultFolder the folder's default place in the profile: L"Desktop", L"Documents"…
+ *  @return the redirected folder's local absolute path, or "" when it is the
+ *          default one, on a share, or the value cannot be read */
+std::wstring redirectedShellFolder(const std::wstring& sid, const std::wstring& profilePath,
+                                  const std::wstring& name, const std::wstring& defaultFolder);
 
 /*! One value of User Shell Folders. */
 struct UserShellFolder {

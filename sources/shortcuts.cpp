@@ -95,7 +95,7 @@ std::vector<ShortcutLocation> shortcutLocations() {
 			locations.push_back({ &folder, base, sid, isInside(startup, base) ? startup : L"" });
 			// A desktop moved elsewhere (OneDrive, another disk): its shortcuts are there.
 			if (std::wstring(folder.location) == L"Desktop") {
-				const std::wstring moved = redirectedDesktop(sid, profile);
+				const std::wstring moved = redirectedShellFolder(sid, profile, L"Desktop", L"Desktop");
 				if (!moved.empty()) locations.push_back({ &folder, moved, sid, L"" });
 			}
 		}
