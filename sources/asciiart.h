@@ -1,6 +1,6 @@
 #pragma once
 #include <iostream>
 //! \file
-//! \brief Prints WAC's banner on the console. The file is encoded in UTF-8.
+//! \brief Prints WAC's banner on the console, in ASCII.
 //! Prints WAC's banner on the console.
 void asciiart();
