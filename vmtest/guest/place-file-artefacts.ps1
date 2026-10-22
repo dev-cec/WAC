@@ -2,6 +2,8 @@
 # known for the small file artefacts, and prints what check-json.py must find
 # in their JSON: one "key=value" per line.
 #
+#   psprofile    a profile for every user and one for "wac", comments only, with
+#                their SHA-256 -> powershell_profiles.json
 #   powershell   a PSReadLine history of a host "WacTest", three commands, one
 #                on two lines (backtick) -> powershell_history.json
 #   recycled     a file of the user "wac" sent to the recycle bin from that
@@ -179,6 +181,20 @@ try { if (Wants 'powershell_history') {
     [IO.File]::WriteAllText("$history\WacTest_history.txt", ($lines -join "`r`n") + "`r`n", (New-Object Text.UTF8Encoding $false))
     Write-Output "powershell=WacTest|3|whoami /all"
 } } catch { WitnessFailure 'powershell_history' $_ }
+
+# 1b. PowerShell profiles: one for every user, one for "wac" — comments only,
+#     so that nothing runs when the harness or Windows starts PowerShell.
+#     Overwritten each cycle, with the cycle's token.
+try { if (Wants 'powershell_profiles') {
+    $token = (Get-Date).ToString('yyyyMMddHHmmss')
+    $machine = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\profile.ps1"
+    $user = 'C:\Users\wac\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1'
+    New-Item -ItemType Directory -Force (Split-Path $user) | Out-Null
+    foreach ($file in $machine, $user) {
+        [IO.File]::WriteAllText($file, "# WAC witness profile $token`r`n", (New-Object Text.UTF8Encoding $false))
+        Write-Output ("psprofile=$file|" + (Get-FileHash -Algorithm SHA256 -LiteralPath $file).Hash + "|$token")
+    }
+} } catch { WitnessFailure 'powershell_profiles' $_ }
 
 # 2. A file sent to the recycle bin BY THE USER "wac". Outside an interactive
 #    session — SYSTEM, as the harness runs, or a task in batch logon — the

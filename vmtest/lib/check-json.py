@@ -473,6 +473,7 @@ def cross_checks(folder):
     found += guarded(check_prefetch_libscca, folder)
     found += guarded(check_thunderbird, folder)
     found += guarded(check_shadow_copies, folder)
+    found += guarded(check_powershell_profiles, folder)
     return found
 
 
@@ -577,6 +578,34 @@ def check_shadow_copy_content(folder, lines):
         print("  ❌ shadow_copy_registry.json or shadow_copy_events.json absent")
         found += 1
     return found
+
+
+def check_powershell_profiles(folder):
+    """powershell_profiles.json: the profiles the harness wrote — one for
+    every user in $PSHOME, one for "wac" in its documents — found with their
+    SHA-256 (Windows' Get-FileHash), their scope and their text."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        witnesses = [l.strip()[len("psprofile="):].split("|") for l in f if l.startswith("psprofile=")]
+    profiles = load(folder, "powershell_profiles.json")
+    if not witnesses or not isinstance(profiles, list):
+        if not skipped_unplaced(folder, "powershell_profiles", witnesses):
+            print("  ⏭️  powershell_profiles.json or its witnesses absent: profiles not confronted")
+        return 0
+    wrong = []
+    for file, digest, token in witnesses:
+        mine = next((p for p in profiles if str(p.get("Path", "")).lower() == file.lower()), None)
+        scope = "User" if "\\users\\" in file.lower() else "Machine"
+        if not mine or str(mine.get("Sha256", "")).upper() != digest.upper() or mine.get("Scope") != scope \
+                or token not in str(mine.get("Content", "")):
+            wrong.append(f"{file}: {mine}")
+    if wrong:
+        print(f"  ❌ powershell_profiles.json: {wrong[0][:200]}")
+        return 1
+    print(f"  ✅ powershell_profiles.json: the {len(witnesses)} witness profile(s), scope, SHA-256 and text as written")
+    return 0
 
 
 def check_embedded_signers(folder):
