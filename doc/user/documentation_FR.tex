@@ -1358,6 +1358,24 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         Windows continue d'écrire pendant la lecture : chaque fichier est lu
         deux fois, les listes de blocs relues avant chaque lecture, et refait
         si les deux lectures diffèrent. Windows~XP ne garde pas de cliché.
+  \item[\fichier{shadow\_copy\_events.json}] les événements que les
+        journaux d'un cliché gardent et que les journaux actuels n'ont plus
+        (journal vidé, enregistrements écrasés par la rotation) : même forme
+        que \fichier{events.json}, plus \champ{ShadowCopyId} et
+        \champ{ShadowCopyCreationTimeUtc}, le cliché le plus récent qui le
+        garde. Chaque événement une fois, quel que soit le nombre de clichés.
+  \item[\fichier{shadow\_copy\_registry.json}] les entrées des artefacts de
+        registre (clés Run, services, comptes et groupes, ShimCache, Amcache,
+        BAM, UserAssist, MUICache, ShellBags, MRU, périphériques USB,
+        programmes installés, réseaux connus…) convertis depuis les ruches
+        d'un cliché, que la conversion du volume ne donne pas : une valeur
+        Run, un service, un compte supprimés depuis, la trace d'un outil
+        effacé. \champ{Artefact} (le fichier JSON de l'artefact),
+        \champ{ShadowCopyId}, \champ{ShadowCopyCreationTimeUtc} et
+        \champ{Entry}, l'entrée telle que l'artefact la donne. Chaque entrée
+        une fois. Une entrée modifiée depuis y figure aussi, dans son état
+        d'alors. Le cliché entier n'est pas converti : il répéterait, presque
+        identiques, les milliers d'entrées du volume.
   \item[\fichier{srum.json}] usage des ressources (SRUM, \path|sru\SRUDB.dat|),
         une entrée par ligne de chaque table : octets envoyés et reçus par
         application et par interface (une exfiltration s'y lit, avec le

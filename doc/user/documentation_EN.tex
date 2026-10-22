@@ -1319,6 +1319,22 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         writing while WAC reads: each file is read twice, the block lists read
         again before each reading, and done again if the two readings differ.
         Windows~XP keeps no copy.
+  \item[\fichier{shadow\_copy\_events.json}] the events a copy's logs keep
+        and the current logs no longer hold (a cleared log, records
+        overwritten by rotation): the form of \fichier{events.json}, plus
+        \champ{ShadowCopyId} and \champ{ShadowCopyCreationTimeUtc}, the newest
+        copy that keeps it. Each event once, however many copies.
+  \item[\fichier{shadow\_copy\_registry.json}] the entries of the registry
+        artefacts (Run keys, services, accounts and groups, ShimCache,
+        Amcache, BAM, UserAssist, MUICache, ShellBags, MRU, USB devices,
+        installed programs, known networks…) converted from a copy's hives
+        that the volume's conversion does not give: a Run value, a service,
+        an account deleted since, the trace of an erased tool.
+        \champ{Artefact} (the artefact's JSON file), \champ{ShadowCopyId},
+        \champ{ShadowCopyCreationTimeUtc} and \champ{Entry}, the entry as the
+        artefact gives it. Each entry once. An entry changed since is there
+        too, as it was then. The copy is not converted whole: it would repeat,
+        nearly identical, the volume's thousands of entries.
   \item[\fichier{srum.json}] resource usage (SRUM, \path|sru\SRUDB.dat|), one
         entry per row of every table: bytes sent and received per application
         and per interface (an exfiltration shows there, with the program), CPU

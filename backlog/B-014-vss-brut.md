@@ -13,7 +13,7 @@ Zone de différences du volume, lue sans le service : en-tête VSS à 0x1E00 du 
 ## Sortie attendue
 - `shadow_copies.json` : un objet par cliché et par volume — volume, identifiant du cliché, du jeu, du magasin, instant de création (UTC), taille du volume, contexte et attributs nommés, machines d'origine et de service, nombre de blocs conservés.
 - **Pièces** : pour chaque cliché, les fichiers que la collecte prend sur le volume courant (ruches, journaux, artefacts de fichiers selon `wac.yml`), relus à travers la vue du cliché, rangés sous `exhibits/vss/<instant>-<identifiant>/` avec leurs trois empreintes. Un fichier identique (SHA-256) à la version courante ou à celle d'un cliché plus récent n'est pas recopié : le manifeste le dit.
-- **Conversion** : les pièces d'un cliché converties comme celles du volume courant (même JSON, sous `vss/<instant>-<identifiant>/`), pour que WAE compare les états.
+- **Conversion** (décision utilisateur du 2026-10-22 : pas de conversion complète, énorme et inexploitable) : ce que les clichés gardent et que le volume n'a plus — `shadow_copy_events.json`, les événements des journaux d'un cliché absents des journaux actuels, et `shadow_copy_registry.json`, les entrées des artefacts de registre convertis depuis les ruches d'un cliché que la conversion du volume ne donne pas ; chacun une fois, avec le cliché le plus récent qui le garde.
 - Une clé `shadow_copies` sous `artefacts:` de `wac.yml`.
 
 ## Conception
@@ -37,7 +37,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Vue cliché sous `NtfsVolume` (volumes partagés par lettre et cliché, `RawShadowCopies`, `ExtractFilesRaw` et `RawReader` par cliché)
 - [x] Extraction des cibles par cliché (ruches, profils, `.evtx`), double lecture sur listes rafraîchies, dédoublonnage par SHA-256 (pièce partagée au manifeste, `ShadowCopyId`)
 - [x] `shadow_copies.json` (relevé de collecte scellé, catalogue copié brut), clé `shadow_copies` de `wac.yml`, catalogue des artefacts par version
-- [ ] Conversion des pièces de chaque cliché
+- [ ] Conversion : événements et entrées de registre disparus du volume (`shadow_copy_events.json`, `shadow_copy_registry.json`)
 - [x] Témoin et contrôles du harnais ; documentation FR et EN
 
 ## Journal

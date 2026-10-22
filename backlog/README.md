@@ -44,12 +44,11 @@ Remplace `TODO.txt`.
 
 Décision utilisateur du 2026-10-17 : la 3.0.0 couvre les versions clientes de
 Windows XP SP1 à Windows 11, avec tous les artefacts ; les serveurs passent en
-4.0. Ordre : harnais sous Vista (fait), clichés instantanés (B-014), fichiers
+4.0. Ordre : harnais sous Vista (fait), clichés instantanés (fait), fichiers
 supprimés (B-036), la couverture MITRE ATT&CK (B-052), puis la revue (B-050) et la publication.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | en cours | P3 | fort |
 | [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à faire (après B-014) | P2 | fort |
 | [B-051](B-051-profils-powershell.md) | Profils PowerShell, une persistance hors registre (clé `powershell_profiles`) | à faire | P2 | moyen |
 | [B-053](B-053-sysmon.md) | Sysmon s'il est présent : journal (même déplacé), configuration, archives des fichiers supprimés | à faire | P1 | moyen |
