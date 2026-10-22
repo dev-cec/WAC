@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P3 | moyen |
+| fait (8a0e66d4) | P3 | moyen |
 
 ## Pourquoi
 Chaque artefact n'existe que sur certaines versions de Windows, à un emplacement et dans un format qui changent d'une version à l'autre : `.evt` puis `.evtx`, Prefetch v17 puis v30, `index.dat` puis WebCache, Chronologie sous Windows 10 seulement, SRUM et Amcache depuis 8, jump lists depuis 7, index de recherche en ESE puis en SQLite. Aujourd'hui, cette connaissance est dispersée dans le code de chaque collecteur. Demande utilisateur du 2026-10-06 : réorganiser les artefacts par version et disponibilité. Prérequis de B-035 (web côté serveur) et de B-037 (compatibilité XP) ; B-038 (versions serveur) s'appuie aussi sur elle.
@@ -47,7 +47,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Format dit par la version quand la pièce ne porte pas de signature (`undecodedOn`) : Amcache, BITS et index de recherche déclarés « format non pris en charge » sur les versions où WAC ne les décode pas — démontré sur Windows 8.1
 - [x] Démonstration sur une VM d'une autre version (Windows 8.1, build 9600) : artefacts absents déclarés, aucun en échec
 - [x] Même démonstration sous Windows 7, 8 x86 (cycles du harnais) et XP SP1 à SP3 (passages WAC32) : absents déclarés comme la table le prévoit
-- [ ] Même démonstration sous Vista (B-037, en cours) et sur les serveurs (B-038)
+- [x] Même démonstration sous Vista (cycle du harnais : 26 artefacts déclarés absents de Vista, source attendue retirée déclarée « attendue mais introuvable ») ; pas de démonstration sur les serveurs (décision utilisateur du 2026-10-22)
 - [x] Faux prérequis « Windows 10 ou ultérieur : OK » (décidé à la compilation, affiché OK sous Windows 7 et 8.1) retiré ; une version antérieure à Windows 10 est annoncée et consignée d'après la version lue
 
 ## Journal
@@ -76,3 +76,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-13 : faux prérequis retiré. L'étape « Windows 10 ou ultérieur » était décidée par une macro de compilation : elle affichait OK partout. La version vient de la machine examinée ; quand elle est antérieure à Windows 10, la console et le journal disent que le cycle de test n'éprouve WAC qu'à partir de Windows 10. Vérifié sous Windows 7 et 8.1.
 - 2026-10-16 : démonstration faite sous Windows 7 et 8 x86 (cycles du harnais sans échec) et sous XP SP1 à SP3 : sous XP, les 14 artefacts que le test de la table prévoit absents sont déclarés tels, et les formes non décodées ont été décodées une à une (B-037). La table porte aussi désormais l'emplacement des dossiers de profil selon la version (`examinedFolderLayout` : XP range `AppData\Local` sous `Local Settings\Application Data`, etc.), appliqué à la collecte et à la conversion. Son test natif tourne avec `build-windows.sh --test` (il avait été cassé sans bruit par un changement de la table). Restent Vista et les serveurs.
 - 2026-10-17 : décision utilisateur — la 3.0.0 couvre les versions clientes ; la démonstration sur les serveurs suit la 4.0 (B-038).
+- 2026-10-22 : **fiche close**, version 3.0 (décision utilisateur : pas de démonstration sur les serveurs, la fiche appartient à la 3.0). Démonstration faite sous XP SP1 à SP3, Vista, 7, 8 x86, 8.1 et 11 : les artefacts absents d'une version déclarés tels, la source attendue retirée déclarée « attendue mais introuvable » (étape 9 du harnais, verte sous Vista, 7 et 11). La table porte aussi les clichés instantanés (`shadow_copies`, absents de XP).

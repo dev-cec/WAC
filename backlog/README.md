@@ -44,19 +44,19 @@ Remplace `TODO.txt`.
 
 Décision utilisateur du 2026-10-17 : la 3.0.0 couvre les versions clientes de
 Windows XP SP1 à Windows 11, avec tous les artefacts ; les serveurs passent en
-4.0. Ordre : harnais sous Vista (B-037), clichés instantanés (B-014), fichiers
+4.0. Ordre : harnais sous Vista (fait), clichés instantanés (B-014), fichiers
 supprimés (B-036), la couverture MITRE ATT&CK (B-052), puis la revue (B-050) et la publication.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-037](B-037-compatibilite-windows-xp.md) | Collecte compatible avec toutes les versions clientes depuis XP SP1 — reste le harnais sous Vista | en cours | P3 | fort |
-| [B-039](B-039-artefacts-par-version-windows.md) | Artefacts organisés par version de Windows et par disponibilité (la partie serveurs suit la 4.0) | en cours | P3 | moyen |
 | [B-014](B-014-vss-brut.md) | Clichés instantanés lus en brut | en cours | P3 | fort |
 | [B-036](B-036-recuperation-fichiers-supprimes.md) | Récupération des fichiers supprimés par lecture brute du disque, sans trace | à faire (après B-014) | P2 | fort |
 | [B-051](B-051-profils-powershell.md) | Profils PowerShell, une persistance hors registre (clé `powershell_profiles`) | à faire | P2 | moyen |
 | [B-053](B-053-sysmon.md) | Sysmon s'il est présent : journal (même déplacé), configuration, archives des fichiers supprimés | à faire | P1 | moyen |
 | [B-052](B-052-couverture-mitre-attack.md) | Couverture MITRE ATT&CK : toutes les traces utiles à la détection prélevées ? Résultat dans la documentation | à faire (avant de clore la 3.0) | P1 | fort |
 | [B-050](B-050-revue-code-securite-avant-3.0.md) | Revue de code et revue de sécurité de tout le projet — préalable à la publication de la 3.0.0 | à faire | P1 | fort |
+| [B-054](B-054-console-windows-7.md) | Bannière illisible dans la console de Windows 7 (police par défaut) | à faire | P3 | faible |
+| [B-055](B-055-xp-dans-le-harnais.md) | Windows XP dans le harnais (pilotage au clavier, résultats relus disque éteint) | à faire | P3 | fort |
 
 ### Version 4.0 — serveurs
 
