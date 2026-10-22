@@ -54,7 +54,6 @@ supprimés (B-036), la couverture MITRE ATT&CK (B-052), puis la revue (B-050) et
 | [B-053](B-053-sysmon.md) | Sysmon s'il est présent : journal (même déplacé), configuration, archives des fichiers supprimés | à faire | P1 | moyen |
 | [B-052](B-052-couverture-mitre-attack.md) | Couverture MITRE ATT&CK : toutes les traces utiles à la détection prélevées ? Résultat dans la documentation | à faire (avant de clore la 3.0) | P1 | fort |
 | [B-050](B-050-revue-code-securite-avant-3.0.md) | Revue de code et revue de sécurité de tout le projet — préalable à la publication de la 3.0.0 | à faire | P1 | fort |
-| [B-055](B-055-xp-dans-le-harnais.md) | Windows XP dans le harnais (pilotage au clavier, résultats relus disque éteint) | à faire | P3 | fort |
 
 ### Version 4.0 — serveurs
 

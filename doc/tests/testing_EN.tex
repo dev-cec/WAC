@@ -233,6 +233,29 @@ its \texttt{taskkill}: Windows writes a registry change to the disk a minute or
 so after making it, and the BAM check looks for it in the hive read from the
 disk.
 
+\subsection*{Windows XP}
+
+XP has neither guest agent nor PowerShell: \fichier{run-wac-test-xp.sh} drives
+it by the keyboard and its serial port.
+
+\begin{lstlisting}
+./run-wac-test-xp.sh winxp-test      # XP SP1; winxpsp3-test for SP3
+\end{lstlisting}
+
+A CD image carries \fichier{WAC32.exe}, the \fichier{wac.yml} of \fichier{bin/}
+and \fichier{run-xp.cmd}, which the script types into the Run box: it
+collects, converts, says each step and its exit code on \texttt{COM1},
+deletes \fichier{WAC32.exe} and shuts the machine down. The JSON, the
+manifest and the logs are then read on the disk of the VM, off, read-only
+(\fichier{lib/read-offline.py}, dissect), and checked by
+\fichier{check-json.py}. Without PowerShell no witness is placed: the checks
+bear on the outputs' consistency and on what the version must have or not
+(IPv4-only network tables, Prefetch 17 without \path|$MFT| reference,
+\fichier{Thumbs.db} without checksum). \fichier{run-xp.cmd} spans several
+lines on purpose: it checks that \wac{} gives the console its code page
+back, without which the \fichier{cmd.exe} of before Windows~8 stops reading a
+batch file after it.
+
 \section{Checking the outputs}
 
 \begin{lstlisting}

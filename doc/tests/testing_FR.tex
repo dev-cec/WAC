@@ -242,6 +242,29 @@ son \texttt{taskkill} : Windows écrit une modification du registre sur le
 disque une minute environ après l'avoir faite, et le contrôle BAM la cherche
 dans la ruche lue sur le disque.
 
+\subsection*{Windows XP}
+
+XP n'a ni agent invité ni PowerShell : \fichier{run-wac-test-xp.sh} le pilote
+au clavier et par son port série.
+
+\begin{lstlisting}
+./run-wac-test-xp.sh winxp-test      # XP SP1 ; winxpsp3-test pour le SP3
+\end{lstlisting}
+
+Une image CD porte \fichier{WAC32.exe}, le \fichier{wac.yml} de \fichier{bin/}
+et \fichier{run-xp.cmd}, que le script tape dans la boîte « Exécuter » : il
+collecte, convertit, annonce chaque étape et son code de retour sur
+\texttt{COM1}, efface \fichier{WAC32.exe} et éteint la machine. Les JSON, le
+manifeste et les journaux sont ensuite lus sur le disque de la VM éteinte, en
+lecture seule (\fichier{lib/read-offline.py}, dissect), puis contrôlés par
+\fichier{check-json.py}. Sans PowerShell, aucun témoin n'est posé : les
+contrôles portent sur la cohérence des sorties et sur ce que la version doit
+avoir ou non (tables réseau IPv4 seules, Prefetch 17 sans référence
+\path|$MFT|, \fichier{Thumbs.db} sans somme de contrôle). \fichier{run-xp.cmd}
+tient sur plusieurs lignes à dessein : il vérifie que \wac{} rend à la console
+sa page de code, sans quoi \fichier{cmd.exe} d'avant Windows~8 cesse de lire
+un fichier de commandes après lui.
+
 \section{Contrôler les sorties}
 
 \begin{lstlisting}
