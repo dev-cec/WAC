@@ -1443,6 +1443,14 @@ void clearConsole(HANDLE console) {
  *  CommandLineToArgvW (shell32) is no longer needed for that.
  * @param argc,argv the command line (see showHelp())
  * @return 0 once the collection has run to the end, an error code otherwise */
+//! The console's output code page when WAC started (restoreConsoleCodePage).
+UINT g_consoleCodePage = 0;
+
+//! Gives the console back its output code page: registered with atexit.
+void restoreConsoleCodePage() {
+	if (g_consoleCodePage) SetConsoleOutputCP(g_consoleCodePage);
+}
+
 int wmain(int argc, wchar_t* argv[])
 {
 	HRESULT hresult;
@@ -1453,6 +1461,12 @@ int wmain(int argc, wchar_t* argv[])
 	* useful functions
 	*************************/
 	//ASCII ART
+	/* The console's code page as it was, put back when WAC ends — at exit, the
+	   option errors ending with exit(). Before Windows 8, cmd.exe stops
+	   reading a batch file once its console is in code page 65001: a script
+	   that ran WAC then had nothing after it run (Windows XP, measured). */
+	g_consoleCodePage = GetConsoleOutputCP();
+	atexit(restoreConsoleCodePage);
 	SetConsoleOutputCP(CP_UTF8); // UTF-8, so that accented characters come out right in the console
 
 	/* UNBUFFERED output.
