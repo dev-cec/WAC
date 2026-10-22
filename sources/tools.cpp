@@ -1257,6 +1257,13 @@ std::wstring toLower(std::wstring s) {
 	return s;
 }
 
+std::wstring decodeTextFile(const std::string& bytes) {
+	if (bytes.size() >= 2 && (uint8_t)bytes[0] == 0xFF && (uint8_t)bytes[1] == 0xFE)
+		return readWideZ(reinterpret_cast<const BYTE*>(bytes.data()), bytes.size(), 2);
+	const bool bom = bytes.size() >= 3 && bytes.compare(0, 3, "\xEF\xBB\xBF") == 0;
+	return decodeText(bom ? bytes.substr(3) : bytes, CP_UTF8);
+}
+
 std::wstring readWideZ(const BYTE* base, size_t limit, size_t offset) {
 	std::wstring r;
 	if (base == nullptr) return r;

@@ -11,10 +11,7 @@ std::wstring zoneName(const std::wstring& zoneId) {
 }
 
 bool parseZoneIdentifier(const std::string& content, ZoneIdentifier& zone) {
-	const bool utf16 = content.size() >= 2 && (uint8_t)content[0] == 0xFF && (uint8_t)content[1] == 0xFE;
-	const bool bom8 = content.size() >= 3 && content.compare(0, 3, "\xEF\xBB\xBF") == 0;
-	const std::wstring text = utf16 ? readWideZ(reinterpret_cast<const BYTE*>(content.data()), content.size(), 2)
-	                                : decodeText(bom8 ? content.substr(3) : content, CP_UTF8);
+	const std::wstring text = decodeTextFile(content);
 	for (const std::wstring& line : splitLines(text)) {
 		if (line.empty() || line[0] == L'[') continue;           // the [ZoneTransfer] section header
 		const size_t equal = line.find(L'=');

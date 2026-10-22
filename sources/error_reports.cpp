@@ -20,13 +20,6 @@ const std::pair<const wchar_t*, const wchar_t*> NAMED_KEYS[] = {
 	{ L"ReportIdentifier", L"ReportIdentifier" },
 };
 
-//! Decodes the file: UTF-16LE with its byte-order mark, as Windows writes it; UTF-8 otherwise.
-std::wstring decodeReport(const std::string& bytes) {
-	if (bytes.size() >= 2 && (uint8_t)bytes[0] == 0xFF && (uint8_t)bytes[1] == 0xFE)
-		return readWideZ(reinterpret_cast<const BYTE*>(bytes.data()), bytes.size(), 2);
-	return decodeText(bytes, CP_UTF8);
-}
-
 } // namespace
 
 bool parseErrorReport(const std::wstring& text, ErrorReport& report) {
@@ -101,7 +94,7 @@ HRESULT ErrorReports::getData() {
 		}
 		ErrorReport report;
 		report.file = exhibit.sourcePath;
-		if (!parseErrorReport(decodeReport(bytes), report)) {
+		if (!parseErrorReport(decodeTextFile(bytes), report)) {
 			log(2, L"🔥Error report without any value: " + exhibit.sourcePath);
 			continue;
 		}

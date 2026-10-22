@@ -73,9 +73,7 @@ HRESULT DefenderLogs::getData() {
 		FILETIME created = { 0 }, accessed = { 0 };
 		ExhibitSourceTimes(exhibit.workingFile, created, logFile.sourceModifiedUtc, accessed);
 		// UTF-16LE with its byte-order mark, as Defender writes it; UTF-8 otherwise.
-		const bool utf16 = bytes.size() >= 2 && (uint8_t)bytes[0] == 0xFF && (uint8_t)bytes[1] == 0xFE;
-		logFile.lines = parseDefenderLog(utf16 ? readWideZ(reinterpret_cast<const BYTE*>(bytes.data()), bytes.size(), 2)
-		                                       : decodeText(bytes, CP_UTF8));
+		logFile.lines = parseDefenderLog(decodeTextFile(bytes));
 		logs_.push_back(std::move(logFile));
 	}
 	return ERROR_SUCCESS;

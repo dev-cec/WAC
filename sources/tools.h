@@ -856,6 +856,14 @@ HRESULT loadSuspectTimeZone();
 *         rather than lost */
 std::wstring decodeText(const std::string& bytes, UINT codePage = 0);
 
+/*! A text file's content, as Windows and its tools write them: UTF-16LE when
+ *  it starts with that byte-order mark, UTF-8 otherwise, its byte-order mark
+ *  left out. The one decoding of the readers of text files (error reports,
+ *  Defender's logs, Zone.Identifier streams).
+ *  @param bytes the file's bytes
+ *  @return the text, up to its first null character in UTF-16 */
+std::wstring decodeTextFile(const std::string& bytes);
+
 /*! Encodes UTF-16 text into bytes — the reverse of decodeText.
 * @param text the text
 * @param codePage CP_UTF8 by default: the encoding of every file WAC writes
