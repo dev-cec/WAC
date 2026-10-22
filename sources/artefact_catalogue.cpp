@@ -180,7 +180,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		  { { XP, L"SOFTWARE and NTUSER.DAT …\\SystemCertificates\\Root, AuthRoot", L"certificate blobs", true } }, L"" },
 		{ "run_keys", XP, 0, XP,
 		  { { XP, L"SOFTWARE and NTUSER.DAT …\\CurrentVersion\\Run, RunOnce", L"registry values", true } }, L"" },
-		{ "scheduled_tasks", XP, 0, XP,
+		{ "scheduled_tasks", XP, 0, VISTA,
 		  { { XP, L"Windows\\Tasks\\*.job", L"JOB binary", true },
 		    { VISTA, L"Windows\\System32\\Tasks, SOFTWARE …\\Schedule\\TaskCache", L"XML, registry values", true } }, L"" },
 		{ "search_index", VISTA, 0, 0,

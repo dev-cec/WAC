@@ -223,6 +223,11 @@ int main(int argc, char** argv) {
 	      "PSReadLine's history: absent from Vista (PowerShell 2 at most), looked for and not expected on Windows 7");
 	const std::vector<std::string> onXp = absentAmong(keys, xp);
 	check(onXp.size() == 15, "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 15 expected");
+	/* XP's Tasks folder holds no .job on a fresh install (desktop.ini, SA.DAT
+	   only, measured): absent, they are no finding. Vista's System32\Tasks
+	   always holds Microsoft's. */
+	check(!expectedOn("scheduled_tasks", xp) && expectedOn("scheduled_tasks", vista),
+	      "scheduled tasks: not expected on XP, expected from Vista on");
 	check(availabilityOf("shadow_copies", xp) == Availability::AbsentFromThisVersion
 	      && availabilityOf("shadow_copies", vista) == Availability::Present,
 	      "shadow copies: none persistent on XP, looked for from Vista on");
