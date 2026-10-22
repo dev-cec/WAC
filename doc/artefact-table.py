@@ -107,6 +107,7 @@ PHRASES = [
     ("V3 (128-bit references)", "V3 (références de 128 bits)"), ("V4 (range tracking)", "V4 (suivi des plages)"),
     ("XML, registry values", "XML, valeurs de registre"),
     ("VSS catalog and stores, 16 KiB blocks", "catalogue et magasins VSS, blocs de 16 Kio"),
+    ("PowerShell script", "script PowerShell"),
 ]
 # Whole cells that are one word.
 WHOLE = {"files": "fichiers", "text": "texte", "observation": "observation"}
@@ -115,6 +116,8 @@ NOTES = {
         "Toujours écrit par Windows 11 (mesuré, build 26200), bien que la Chronologie n'y soit plus affichée. Éditions serveur à mesurer.",
     "Amcache.hve also on Windows 7 with update KB2952664.": "Amcache.hve aussi sous Windows 7 avec la mise à jour KB2952664.",
     "Server editions to be measured.": "Éditions serveur à mesurer.",
+    "Windows XP and Vista: only once PowerShell is installed, absent by default. A user's documents also where User Shell Folders moves them.":
+        "Windows XP et Vista : seulement une fois PowerShell installé, absent par défaut. Les documents d'un utilisateur aussi là où User Shell Folders les déplace.",
     "Windows XP keeps no persistent copy: its restore points are folders of their own. Server 2003 catalogs no store (no entry of type 3): its copies are listed, not read.":
         "Windows XP ne garde aucun cliché persistant : ses points de restauration sont des dossiers à part. Server 2003 ne catalogue aucun magasin (pas d'entrée de type 3) : ses clichés sont listés, pas lus.",
     "Before Windows 10, the adapters' hardware addresses are in no documented key of the hives: not given.":

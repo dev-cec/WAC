@@ -361,6 +361,7 @@ artefacts:              # one key per artefact; a missing key is true
   operating_system:        true   # version, installation, computer name, uptime
   persistence:             true   # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…
   powershell_history:      true   # PSReadLine: the commands typed in PowerShell, per profile
+  powershell_profiles:     true   # PowerShell profiles of the machine and of each user: scripts run at every start, a persistence
   prefetch:                true   # Prefetch: programs run, count, last eight runs, files loaded
   processes:               true   # live
   program_usage:           true   # programs each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items
@@ -1505,6 +1506,20 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         on 7, 8 and 8.1 once PowerShell~3 or later and PSReadLine were
         installed. Vista and XP stop at PowerShell~2, without a history on
         disk; their PowerShell logs are in \fichier{events.json}.
+  \item[\fichier{powershell\_profiles.json}] PowerShell profiles, the
+        scripts PowerShell runs at each start — a persistence that goes
+        through neither the registry, nor a task, nor a service. The
+        machine's, for every user (Windows PowerShell's folder in
+        \path|System32| and \path|SysWOW64|, PowerShell~6 and~7's in
+        \path|Program Files\PowerShell|), and each user's
+        (\path|Documents\WindowsPowerShell| and \path|Documents\PowerShell|,
+        where User Shell Folders puts the documents when they are moved):
+        \champ{Scope} (\texttt{Machine}, \texttt{User}), \champ{Edition},
+        \champ{Host} (\texttt{AllHosts} for \fichier{profile.ps1}, else the
+        console, the ISE, VS~Code), \champ{Path}, dates, \champ{Size},
+        \champ{Sha256} and \champ{Content}, the script's text. Looked for on
+        every version: on XP and Vista, PowerShell is there only once
+        installed.
   \item[\fichier{activities\_cache.json}] Windows Timeline
         (\fichier{ActivitiesCache.db} of each account of each profile, with
         its \texttt{-wal} log): every row of the \texttt{Activity} and

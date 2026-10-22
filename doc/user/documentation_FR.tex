@@ -366,6 +366,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   operating_system:        true   # version, installation, nom de la machine, durée de fonctionnement
   persistence:             true   # persistance du registre : IFEO, AppInit, Winlogon, LSA, COM…
   powershell_history:      true   # PSReadLine : les commandes tapées dans PowerShell
+  powershell_profiles:     true   # profils PowerShell de la machine et de chaque utilisateur : une persistance
   prefetch:                true   # Prefetch : programmes lancés, compteur, huit dernières exécutions, fichiers chargés
   processes:               true   # en direct
   program_usage:           true   # programmes lancés ou utilisés (FeatureUsage, JumplistData, compatibilité, épinglés)
@@ -1558,6 +1559,20 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         PowerShell~3 ou plus et PSReadLine y ont été installés. Vista et XP
         s'arrêtent à PowerShell~2, sans historique sur disque ; leurs
         journaux PowerShell sont dans \fichier{events.json}.
+  \item[\fichier{powershell\_profiles.json}] profils PowerShell, les scripts
+        que PowerShell exécute à chaque démarrage — une persistance qui ne
+        passe ni par le registre, ni par une tâche, ni par un service. Ceux de
+        la machine, pour tous les utilisateurs (dossier de Windows PowerShell
+        dans \path|System32| et \path|SysWOW64|, de PowerShell~6 et~7 dans
+        \path|Program Files\PowerShell|), et ceux de chaque utilisateur
+        (\path|Documents\WindowsPowerShell| et \path|Documents\PowerShell|,
+        là où User Shell Folders place les documents s'ils sont déplacés) :
+        \champ{Scope} (\texttt{Machine}, \texttt{User}), \champ{Edition},
+        \champ{Host} (\texttt{AllHosts} pour \fichier{profile.ps1}, sinon la
+        console, l'ISE, VS~Code), \champ{Path}, dates, \champ{Size},
+        \champ{Sha256} et \champ{Content}, le texte du script. Cherchés sur
+        toutes les versions : sous XP et Vista, PowerShell n'est présent qu'une
+        fois installé.
   \item[\fichier{activities\_cache.json}] Chronologie Windows
         (\fichier{ActivitiesCache.db} de chaque compte de chaque profil, avec
         son journal \texttt{-wal}) : chaque ligne des tables
