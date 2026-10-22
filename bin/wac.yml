@@ -65,6 +65,7 @@ artefacts:
   operating_system:        true   # version, installation, computer name, uptime
   persistence:             true   # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…
   powershell_history:      true   # PSReadLine: the commands typed in PowerShell, per profile
+  powershell_profiles:     true   # PowerShell profiles of the machine and of each user: scripts run at every start, a persistence
   prefetch:                true   # Prefetch: programs run, count, last eight runs, files loaded
   processes:               true   # live
   program_usage:           true   # programs each user launched or used: FeatureUsage, JumplistData, compatibility store and layers, RADAR, pinned items

@@ -45,7 +45,7 @@ enum class Text : unsigned {
 	// Steps: files and event logs
 	StepScheduledTasks, StepRecentDocuments, StepPrefetch, StepReadMft, StepWriteMft, StepUsnJournal,
 	StepJumpListsAutomatic, StepJumpListsCustom, StepEvents,
-	StepPowerShellHistory, StepSetupApi, StepRecycleBin, StepHosts, StepErrorReports, StepDefenderLogs,
+	StepPowerShellHistory, StepPowerShellProfiles, StepSetupApi, StepRecycleBin, StepHosts, StepErrorReports, StepDefenderLogs,
 	StepDefenderDetections, StepDefenderQuarantine,
 	StepStartupFolders, StepZoneIdentifiers, StepSecurityHive, StepPersistence,
 	StepOfficeTrustRecords, StepTypedPaths, StepWordWheelQueries, StepRootCertificates, StepInternetSettingsSet, StepFirewall, StepWmiPersistence, StepSrum, StepBitsJobs, StepFatVolumes, StepInstalledPrograms, StepDefenderConfiguration, StepExplorerRecentDocs, StepMountPoints, StepKnownNetworks, StepProgramUsages, StepDevices, StepNetworkShares, StepNetworkConfiguration, StepEventLogConfiguration, StepShortcuts, StepSecurityDescriptors, StepNtfsVolumes, StepDpapiMasterKeys, StepUserShellFolders, StepWebClient, StepActivitiesCache, StepSearchIndex, StepRdpClient, StepRdpServer, StepThumbcache, StepEmails, StepShadowCopyListing, StepShadowCopyContent,
@@ -58,7 +58,7 @@ enum class Text : unsigned {
 	ArtefactMruApps, ArtefactServices, ArtefactUsers, ArtefactLocalGroups, ArtefactScheduledTasks,
 	ArtefactRecentDocuments, ArtefactPrefetch, ArtefactMft, ArtefactUsnJournal,
 	ArtefactJumpListsAutomatic, ArtefactJumpListsCustom,
-	ArtefactPowerShellHistory, ArtefactSetupApi, ArtefactRecycleBin, ArtefactHosts, ArtefactErrorReports,
+	ArtefactPowerShellHistory, ArtefactPowerShellProfiles, ArtefactSetupApi, ArtefactRecycleBin, ArtefactHosts, ArtefactErrorReports,
 	ArtefactDefenderLogs, ArtefactDefenderDetections, ArtefactDefenderQuarantine, ArtefactStartupFolders, ArtefactZoneIdentifiers, ArtefactSecurityHive,
 	ArtefactPersistence, ArtefactOfficeTrustRecords, ArtefactTypedPaths, ArtefactWordWheelQueries, ArtefactRootCertificates, ArtefactInternetSettingsSet, ArtefactFirewall, ArtefactWmiPersistence, ArtefactSrum, ArtefactBitsJobs, ArtefactFatVolumes, ArtefactInstalledPrograms, ArtefactDefenderConfiguration, ArtefactExplorerRecentDocs, ArtefactMountPoints, ArtefactKnownNetworks, ArtefactProgramUsages, ArtefactDevices, ArtefactNetworkShares, ArtefactNetworkConfiguration, ArtefactEventLogConfiguration, ArtefactShortcuts, ArtefactSecurityDescriptors, ArtefactNtfsVolumes, ArtefactDpapiMasterKeys, ArtefactUserShellFolders, ArtefactWebClient, ArtefactActivitiesCache, ArtefactSearchIndex, ArtefactRdpClient, ArtefactRdpServer, ArtefactThumbcache, ArtefactEmails, ArtefactShadowCopies,
 	ArtefactOperatingSystem, ArtefactEvents,

@@ -146,6 +146,7 @@ struct AppliConf {
 		bool usnJournal = true;       //!< $UsnJrnl:$J, raw, and usn_journal.json: the change journal
 		bool logFile = true;          //!< $LogFile and $TxfLog, raw only: the NTFS and transactional NTFS journals
 		bool powershellHistory = true; //!< PSReadLine histories of every profile
+		bool powershellProfiles = true; //!< PowerShell profiles of the machine and of every user: scripts run at each start
 		bool setupApi = true;         //!< setupapi.dev.log: device installations, first USB connections
 		bool recycleBin = true;       //!< the $I of every volume's recycle bin
 		bool hosts = true;            //!< the hosts file
@@ -859,7 +860,7 @@ std::wstring decodeText(const std::string& bytes, UINT codePage = 0);
 /*! A text file's content, as Windows and its tools write them: UTF-16LE when
  *  it starts with that byte-order mark, UTF-8 otherwise, its byte-order mark
  *  left out. The one decoding of the readers of text files (error reports,
- *  Defender's logs, Zone.Identifier streams).
+ *  Defender's logs, Zone.Identifier streams, PowerShell profiles).
  *  @param bytes the file's bytes
  *  @return the text, up to its first null character in UTF-16 */
 std::wstring decodeTextFile(const std::string& bytes);

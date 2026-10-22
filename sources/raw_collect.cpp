@@ -15,6 +15,7 @@
 #include "hive_recover.h"
 #include "quickdigest5.h"
 #include "powershell_history.h"
+#include "powershell_profiles.h"
 #include "activities_cache.h"
 #include "search_index.h"
 #include "rdp_client.h"
@@ -495,6 +496,22 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.bits) addTarget(L"\\ProgramData\\Microsoft\\Network\\Downloader", {});
 	// Whatever the startup folders hold runs at logon: everything, whatever its extension.
 	if (conf.artefacts.startupFolders) addTarget(STARTUP_ALL_USERS, {});
+
+	/* PowerShell profiles: the folders of the machine's PowerShells and of
+	   each user's documents — those PowerShell 7 names after its version
+	   listed on the volume (powershell_profiles.h). Every .ps1 of these
+	   folders, a handful: the conversion keeps the profiles. */
+	if (conf.artefacts.powershellProfiles) {
+		RawReader reader;
+		auto listVolume = [&reader](const std::wstring& absolute) {
+			std::vector<std::wstring> names;
+			std::vector<RawDirEntry> entries;
+			if (SUCCEEDED(reader.list(absolute, entries)))
+				for (const RawDirEntry& e : entries) if (e.isDirectory) names.push_back(e.name);
+			return names;
+		};
+		for (const PowerShellProfileFolder& folder : powerShellProfileFolders(listVolume)) addTarget(folder.path, { L".ps1" });
+	}
 
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
 		const std::wstring profile = std::get<1>(profileEntry);   // absolute, with its letter

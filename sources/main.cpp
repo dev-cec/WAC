@@ -34,6 +34,7 @@
 #include "mft.h"
 #include "usn_journal.h"
 #include "powershell_history.h"
+#include "powershell_profiles.h"
 #include "activities_cache.h"
 #include "search_index.h"
 #include "rdp_client.h"
@@ -1347,6 +1348,9 @@ void convertArtefacts(bool systemAvailable) {
 	convertArtefact<PowerShellHistories>(conf.artefacts.powershellHistory, "powershell_history.json",
 	                                     Text::ArtefactPowerShellHistory, L"artefacts.powershell_history",
 	                                     Text::StepPowerShellHistory);
+	convertArtefact<PowerShellProfiles>(conf.artefacts.powershellProfiles, "powershell_profiles.json",
+	                                    Text::ArtefactPowerShellProfiles, L"artefacts.powershell_profiles",
+	                                    Text::StepPowerShellProfiles);
 	convertArtefact<SetupApiLogs>(conf.artefacts.setupApi, "setupapi.json", Text::ArtefactSetupApi,
 	                              L"artefacts.setupapi", Text::StepSetupApi);
 	convertArtefact<RecycleBin>(conf.artefacts.recycleBin, "recycle_bin.json", Text::ArtefactRecycleBin,
