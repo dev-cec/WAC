@@ -1,6 +1,7 @@
 #include "wevt.h"
 #include "conversions.h"
 #include <cstring>
+#include <cwchar>
 
 /*! \file
  *  \brief Parsing of MESSAGETABLE and WEVT_TEMPLATE, and substitution of the marks.
@@ -205,12 +206,20 @@ std::wstring tableText(const TableMessages* table, uint32_t id) {
 } // namespace
 
 std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, const TableMessages& messages,
-                             const SystemMessages& system, const std::wstring& value) {
+                             const SystemMessages& system, const std::wstring& value, bool vista) {
 	// Input types (wtypes of the manifest) and output types, as libfwevt numbers them.
 	const uint8_t IN_POINTER = 0x10, IN_HEX32 = 0x14, IN_HEX64 = 0x15;
 	const uint8_t OUT_HEX_FIRST = 0x10, OUT_HEX_LAST = 0x13, OUT_ERROR_CODE = 0x1D, OUT_WIN32 = 0x1E,
 	              OUT_NTSTATUS = 0x1F, OUT_HRESULT = 0x20;
-	const uint8_t IN_BINARY = 0x0E, OUT_HEX_BINARY = 0x0F, OUT_SOCKET_ADDRESS = 0x19;
+	const uint8_t IN_BINARY = 0x0E, OUT_HEX_BINARY = 0x0F, OUT_SOCKET_ADDRESS = 0x19, IN_DOUBLE = 0x0C;
+	if (item.inType == IN_DOUBLE && !map) {
+		wchar_t* end = nullptr;
+		const double number = wcstod(value.c_str(), &end);
+		if (value.empty() || !end || *end != 0) return value;
+		wchar_t formatted[64];
+		swprintf(formatted, 64, L"%.15g", number);
+		return formatted;
+	}
 	if (item.inType == IN_BINARY) {
 		// An AF_INET sockaddr, as hexadecimal text: family (2, little-endian), port and address in network order.
 		if (item.outType == OUT_SOCKET_ADDRESS && value.size() >= 16 && value.compare(0, 4, L"0200") == 0) {
@@ -259,7 +268,8 @@ std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, cons
 		const std::wstring text = tableText(system.ntStatus, code);
 		return text.empty() ? value : text;
 	}
-	if (item.outType == OUT_ERROR_CODE) return to_hex(code, 1, (true) ? HexLetters::Upper : HexLetters::Lower, true);
+	if (item.outType == OUT_ERROR_CODE)
+		return vista ? std::to_wstring(code) : to_hex(code, 1, (true) ? HexLetters::Upper : HexLetters::Lower, true);
 	if (item.inType == IN_POINTER) return value;
 	if (item.inType == IN_HEX32 || item.inType == IN_HEX64 || (item.outType >= OUT_HEX_FIRST && item.outType <= OUT_HEX_LAST)) {
 		// An input of 32 bits or less shows its own bits: a negative Int32 is not 64 bits wide.

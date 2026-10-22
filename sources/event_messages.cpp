@@ -549,7 +549,11 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 	if (messageTemplate.empty()) return std::wstring();
 
 	const std::vector<WevtItem>* items = f->metadata.items(eventId, version);
-	if (!items) return render(messageTemplate, f->parameters, { &f->messages }, values);
+	/* No value at all — a processing error's, see Event::Event: the marks
+	   stay as they are, as Windows shows them (AppModel-Runtime 219: "…
+	   process Desktop AppX %1 with %2 applicationID are %3."). */
+	if (!items || (values.empty() && templateValues.empty()))
+		return render(messageTemplate, f->parameters, { &f->messages }, values);
 
 	/* THE VALUES OF EACH ITEM, BY NAME. %N is the template's N-th item, and an
 	   array item spreads over several Data of its name (Ntfs 170 version 13:
@@ -584,11 +588,13 @@ std::wstring EventMessage(const std::wstring& providerGuid,
 	// Each value as Windows shows it, by its template item (see formatItemValue).
 	std::vector<std::wstring> shown;
 	shown.reserve(items->size());
+	// Vista's messages write a win:ErrorCode in decimal (formatItemValue).
+	const bool examinedVista = conf.examinedVersion.build >= 6000 && conf.examinedVersion.build < 7600;
 	for (size_t i = 0; i < items->size(); ++i) {
 		const WevtValueMap* map = f->metadata.valueMap((*items)[i].map);
 		std::wstring joined;
 		for (const std::wstring& v : perItem[i]) {
-			std::wstring value = formatItemValue((*items)[i], map, f->messages, systemMessages(), v);
+			std::wstring value = formatItemValue((*items)[i], map, f->messages, systemMessages(), v, examinedVista);
 			/* A map's label may itself hold marks, filled with the event's
 			   values: SMBServer 1034's "…for interface %2. Current DadState: %6." */
 			if (map && value.find(L'%') != std::wstring::npos) value = formatMessage(value, firsts);

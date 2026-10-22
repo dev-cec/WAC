@@ -150,6 +150,9 @@ struct SystemMessages {
  *      from ntdll's ("0" -> "STATUS_SUCCESS");
  *    - binary data as xs:hexBinary: "0x" before its digits; as
  *      win:SocketAddress, an IPv4 address and its port ("127.0.0.1:58241").
+ *    - a win:Double, 15 significant digits ("17.4690293241336"), where the
+ *      log's XML gives the shortest exact form ("17.469029324133604"):
+ *      Vista and Windows 11 render a record of Vista's ReadyBoost alike.
  *  A value that is no number, absent from its map or from the tables, stays
  *  as it is.
  *
@@ -158,9 +161,12 @@ struct SystemMessages {
  *  @param messages the provider's message table, where the labels are
  *  @param system the system's tables (either may be missing)
  *  @param value the value, as the log holds it (decimal, or "0x…")
+ *  @param vista the messages are Vista's, which write a win:ErrorCode in
+ *         decimal (UMDF 2105, a UInt32 status shown as win:ErrorCode:
+ *         "3221225659" under Vista, "0xC00000BB" under Windows 7, measured)
  *  @return the value to put in the message */
 std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, const TableMessages& messages,
-                             const SystemMessages& system, const std::wstring& value);
+                             const SystemMessages& system, const std::wstring& value, bool vista = false);
 
 /*! Replaces the %1 %2 … marks by the event's data.
 *

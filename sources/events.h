@@ -121,6 +121,7 @@ struct Event {
 	    The JSON versions are already formatted; decoding them back would be both
 	    useless and fragile. */
 	std::wstring messageProviderGuid;     //!< GUID of the provider
+	bool processingError = false;         //!< ProcessingErrorData: its values are the error's, the message gets none
 	uint16_t     messageEventId = 0;   //!< identifier of the event
 	uint8_t      messageVersion = 0; //!< version of the schema
 	std::wstring messageSource;      //!< provider name: a classic source's key under Services\EventLog\<log>

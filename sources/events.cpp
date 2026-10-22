@@ -204,9 +204,16 @@ Event::Event(const XmlNode& root, const std::wstring& channel,
 
 	evtEventData = eventData(root, &rawValues, &rawNames);
 	/*  Processing error: the values are the error's, not the template's; laid
-	    into the provider's message they would make a false sentence. No
-	    message, rather than a wrong one. */
-	if (root.child(L"ProcessingErrorData")) messageProviderGuid.clear();
+	    into the provider's message they would make a false sentence. The
+	    message is rendered without values, its marks left as they are — what
+	    Windows shows (AppModel-Runtime 219 under Windows 11: "…process
+	    Desktop AppX %1 with %2 applicationID are %3."; LanguagePackSetup
+	    4000 under Vista, a message without mark: "LPRemove launched."). */
+	if (root.child(L"ProcessingErrorData")) {
+		processingError = true;
+		rawValues.clear();
+		rawNames.clear();
+	}
 }
 
 Json Event::toJson() const {
@@ -343,7 +350,8 @@ HRESULT Events::getData() {
 					return true;
 				}
 				Event ev(*root, channel, e.id, fileName);
-				ev.templateValues = e.values;
+				// A processing error's values are not the template's (see Event::Event).
+				if (!ev.processingError) ev.templateValues = e.values;
 				if (e.recovered) ev.evtRecovered = Json::boolean(true);
 				lap(buildTime);
 				/*  PLAIN-TEXT MESSAGE. Rebuilt from the provider's resources, which
@@ -352,11 +360,16 @@ HRESULT Events::getData() {
 				    event_messages.h). */
 				std::wstring phrase;
 				/* Qualifiers: an event published the classic way, by its full
-				   identifier — looked up so in the provider's table first. */
+				   identifier — looked up so in the provider's table first, with
+				   the template's values (Vista's Servicing has one more than its
+				   XML). An event without any data gets none: its marks stay as
+				   they are (WPDClassInstaller 24577: "…for device %1.", where
+				   the template's null values gave "…for device .", measured on
+				   Windows 11). */
 				if (!ev.messageProviderGuid.empty() && ev.messageQualifiers != 0)
 					phrase = QualifiedEventMessage(ev.messageProviderGuid,
 					                               ((uint32_t)ev.messageQualifiers << 16) | ev.messageEventId,
-					                               ev.templateValues.empty() ? ev.rawValues : ev.templateValues);
+					                               ev.rawValues.empty() || ev.templateValues.empty() ? ev.rawValues : ev.templateValues);
 				if (phrase.empty() && !ev.messageProviderGuid.empty() && ev.messageEventId != 0)
 					phrase = EventMessage(ev.messageProviderGuid, ev.messageEventId, ev.messageVersion, ev.rawValues, ev.rawNames,
 					                      ev.templateValues);

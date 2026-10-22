@@ -2302,6 +2302,16 @@ int wmain(int argc, wchar_t** argv) {
 			      && formatItemValue(typedAs(0x0E, 0x0F), nullptr, labelTable, system, L"A57F6B1D") == L"0xA57F6B1D"
 			      && formatItemValue(typedAs(0x0E, 0x19), nullptr, labelTable, system, L"0200E3817F0000010000000000000000") == L"127.0.0.1:58241",
 			      "wevt: error codes by the system's text (Win32, HRESULT, its Win32 family, unknown, NTSTATUS), ErrorCode and integer in hexadecimal, pointer kept, binary and socket address");
+			/* As the messages show them (measured): a double with 15 significant
+			   digits (ReadyBoost 1015, Vista and Windows 11); a win:ErrorCode in
+			   decimal under Vista (UMDF 2105), in hexadecimal under Windows 7;
+			   a pointer in hexadecimal under both (UMDF 2101's %8). */
+			check(formatItemValue(typedAs(0x0C, 0x00), nullptr, labelTable, system, L"17.469029324133604") == L"17.4690293241336"
+			      && formatItemValue(typedAs(0x0C, 0x00), nullptr, labelTable, system, L"0") == L"0"
+			      && formatItemValue(typedAs(0x08, 0x1D), nullptr, labelTable, system, L"3221225659", true) == L"3221225659"
+			      && formatItemValue(typedAs(0x08, 0x1D), nullptr, labelTable, system, L"3221225659") == L"0xC00000BB"
+			      && formatItemValue(typedAs(0x10, 0x13), nullptr, labelTable, system, L"0x0", true) == L"0x0",
+			      "wevt: a double with 15 significant digits; Vista's win:ErrorCode in decimal, a pointer in hexadecimal");
 			// A bitmap: the flags set, labelled, joined by commas; 0 by the map's label of 0.
 			WevtValueMap flags;
 			flags.bitmap = true;
