@@ -3173,6 +3173,10 @@ def check_event_messages(folder):
     (EvtFormatMessage, through Get-WinEvent) for each kind of event of the
     machine — provider, identifier, version, qualifiers — on the same record.
 
+    A value holding "%N" (a URL's "%3d", a file's "%4") is formatted again
+    by Windows as a mark of the message: WAC keeps the value, and the two
+    are taken as the same when they agree around it.
+
     The dates inserted in a message are compared without Windows' direction
     marks (U+200E) and to the 100 ns (Windows writes 9 decimals, WAC 7), the
     GUIDs and hexadecimal numbers without their case (Windows 7 writes GUIDs
@@ -3211,8 +3215,19 @@ def check_event_messages(folder):
     # Vista renders a date to the millisecond (".467Z"), truncated: such a
     # reference is compared at that precision, WAC's seven digits cut to three.
     milliseconds = re.compile(r"(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3})\d*Z")
+    def windows_expanded(mine, theirs):
+        """Windows formats a value that holds "%N" again, as a mark of the
+        message: a URL's "%3d" took the third value (a GUID), a log file's
+        "%4" the fourth (Windows 11, BITS 59 and Security 4663, measured).
+        WAC keeps the value as it is; the two agree around it."""
+        # Only a "%N" inside a value — after a letter or digit —, never a mark
+        # WAC left unfilled, which stands apart.
+        if re.search(r"(?<![0-9A-Za-z])%\d", norm(mine)):
+            return False
+        parts = re.split(r"%\d+", norm(mine))
+        return len(parts) > 1 and re.fullmatch(".*?".join(re.escape(p) for p in parts), norm(theirs), re.S) is not None
     def same(mine, theirs):
-        if norm(mine) == norm(theirs):
+        if norm(mine) == norm(theirs) or windows_expanded(mine, theirs):
             return True
         return bool(re.search(r"T\d\d:\d\d:\d\d\.\d{3}Z", theirs)) and \
             milliseconds.sub(r"\1Z", norm(mine)) == milliseconds.sub(r"\1Z", norm(theirs))
