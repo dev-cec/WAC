@@ -53,6 +53,8 @@
 #                -> thumbcache.json
 #   thunderbird  token, attachment name (RFC 2231 encoded), its SHA-256 and the
 #                Inbox Thunderbird wrote -> emails.json
+#   shadowrun, shadowevent  a Run value and an event erased after the harness's
+#                copy -> shadow_copy_registry.json, shadow_copy_events.json
 #   shadowcopy, shadowfile  every shadow copy Windows lists for C: (identifier,
 #                set, creation in UTC), one made here by the harness — through
 #                the VSS service, which WAC itself never calls — and the SHA-256
@@ -148,6 +150,20 @@ $wacSid = (New-Object Security.Principal.NTAccount 'wac').Translate([Security.Pr
 # allows after the harness's taskkill. One witness at a time: those of earlier
 # cycles are removed, or each cycle would leave one more document in the
 # profile and the index.
+# 0. The shadow copies' event witness, written FIRST: the event log service
+#    keeps its writes in memory, and an event written 15 s before the copy
+#    was not in the copy's file (Windows 11, measured); the copy is made at
+#    the end of this script, minutes later. A small log, overwritten after
+#    the copy: a cleared log keeps its records in its free space, where WAC
+#    finds them (EvtRecovered), and the volume would give the witness already.
+$shadowEventToken = $null
+try { if (Wants 'shadow_copies') {
+    if (-not [Diagnostics.EventLog]::SourceExists('WacShadow')) { New-EventLog -LogName WacShadow -Source WacShadow }
+    Limit-EventLog -LogName WacShadow -MaximumSize 64KB -OverflowAction OverwriteAsNeeded
+    $shadowEventToken = 'wacshadow' + (Get-Date).ToString('yyyyMMddHHmmss')
+    Write-EventLog -LogName WacShadow -Source WacShadow -EventId 1 -Message $shadowEventToken
+} } catch { WitnessFailure 'shadow_copies' $_ }
+
 try { if (Wants 'search_index') {
     Get-ChildItem -LiteralPath C:\Users\wac\Documents -Filter 'wac-search-*.txt' -Force | Remove-Item -Force
     $searchStamp = (Get-Date).ToString('yyyyMMddHHmmss')
@@ -1720,10 +1736,23 @@ try { if (Wants 'shadow_copies') {
     New-Item -Force $key | Out-Null
     $stamp = (Get-Date).ToString('yyyyMMddHHmmss')
     Set-ItemProperty $key ShadowWitness "before-$stamp"
+    # Erased after the copy, kept by it: a Run value, and an event of a log of
+    # its own, cleared — what shadow_copy_registry.json and
+    # shadow_copy_events.json must give, and the volume's JSON no longer.
+    $run = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+    Set-ItemProperty $run WacShadowWitness "C:\wactest\shadow-$stamp.exe"
+    # Written to the hive's log before the copy. The witness event was written
+    # at the start of this script (see there).
+    Start-Sleep 15
     $created = (Get-WmiObject -List Win32_ShadowCopy).Create('C:\', 'ClientAccessible')
     if ($created.ReturnValue -ne 0) { throw "Win32_ShadowCopy.Create returned $($created.ReturnValue)" }
     Set-Content $marker $created.ShadowID
     Set-ItemProperty $key ShadowWitness "after-$stamp"
+    Remove-ItemProperty $run WacShadowWitness
+    Clear-EventLog -LogName WacShadow
+    foreach ($i in 1..3000) { Write-EventLog -LogName WacShadow -Source WacShadow -EventId 2 -Message "filler $i of the harness, overwriting the witness" }
+    Write-Output "shadowrun=$($created.ShadowID)|WacShadowWitness|C:\wactest\shadow-$stamp.exe"
+    if ($shadowEventToken) { Write-Output "shadowevent=$($created.ShadowID)|WacShadow|$shadowEventToken" }
     $volume = (Get-WmiObject Win32_Volume | Where-Object { $_.DriveLetter -eq 'C:' }).DeviceID
     foreach ($copy in Get-WmiObject Win32_ShadowCopy | Where-Object { $_.VolumeName -eq $volume }) {
         $utc = [Management.ManagementDateTimeConverter]::ToDateTime($copy.InstallDate).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')

@@ -533,6 +533,7 @@ def check_shadow_copies(folder):
         algorithm = "SHA256" if len(digest) == 64 else "SHA1"   # SHA-1 where certutil knows no other (Vista)
         if not item or str(item.get(algorithm, "")).upper() != digest.upper():
             differing.append(f"{source}: Windows {digest[:16]}…, WAC {str((item or {}).get(algorithm, 'absent'))[:16]}")
+    found += check_shadow_copy_content(folder, lines)
     if not files or differing:
         print(f"  ❌ exhibits: files of the harness's shadow copy as Windows reads them: "
               f"{differing[:3] or unread[:2] or 'no reference'}")
@@ -540,6 +541,38 @@ def check_shadow_copies(folder):
     else:
         print(f"  ✅ exhibits: {len(files)} file(s) of the harness's shadow copy read raw, "
               f"{'SHA-256' if len(files[0][2]) == 64 else 'SHA-1'} identical to Windows' reading through the copy's device")
+    return found
+
+
+def check_shadow_copy_content(folder, lines):
+    """What the harness erased after its shadow copy — a Run value, an event
+    of a log cleared — must be in shadow_copy_registry.json and
+    shadow_copy_events.json, under that copy, and no longer in run.json and
+    events.json: what a copy keeps and the volume no longer holds."""
+    found = 0
+    run = next((l[len("shadowrun="):].split("|") for l in lines if l.startswith("shadowrun=")), None)
+    event = next((l[len("shadowevent="):].split("|") for l in lines if l.startswith("shadowevent=")), None)
+    registry, events = load(folder, "shadow_copy_registry.json"), load(folder, "shadow_copy_events.json")
+    if run and isinstance(registry, list):
+        copy, name, value = run
+        kept = [r for r in registry if r.get("Artefact") == "run.json" and str(r.get("ShadowCopyId", "")).lower() == copy.lower()
+                and (r.get("Entry") or {}).get("Name") == name and (r.get("Entry") or {}).get("Value") == value]
+        now = [r for r in load(folder, "run.json") or [] if r.get("Name") == name]
+        ok = len(kept) == 1 and not now
+        print(f"  {'✅' if ok else '❌'} shadow_copy_registry.json: the Run value {name} erased after the copy, "
+              + ("kept by it and gone from run.json" if ok else f"{len(kept)} kept, {len(now)} still in run.json"))
+        found += 0 if ok else 1
+    if event and isinstance(events, list):
+        copy, channel, token = event
+        kept = [e for e in events if str(e.get("ShadowCopyId", "")).lower() == copy.lower() and token in json.dumps(e)]
+        now = [e for e in load(folder, "events.json") or [] if e.get("EvtSystemChannel") == channel and token in json.dumps(e)]
+        ok = len(kept) == 1 and not now
+        print(f"  {'✅' if ok else '❌'} shadow_copy_events.json: the event of {channel} cleared after the copy, "
+              + ("kept by it and gone from events.json" if ok else f"{len(kept)} kept, {len(now)} still in events.json"))
+        found += 0 if ok else 1
+    if (run or event) and not (isinstance(registry, list) and isinstance(events, list)):
+        print("  ❌ shadow_copy_registry.json or shadow_copy_events.json absent")
+        found += 1
     return found
 
 
@@ -4679,6 +4712,9 @@ def check_account_names(folder):
                                       "investigation.json", "conversion.json"):
             continue
         d = load(folder, os.path.basename(file))
+        # A shadow copy's entries of those same artefacts are named the same way.
+        if os.path.basename(file) == "shadow_copy_registry.json" and isinstance(d, list):
+            d = [e for e in d if e.get("Artefact") not in ("users.json", "local_groups.json")]
         if d is not None:
             walk(d)
     wrong = [f"{s}: {n!r}, Windows {expected[s]!r}" for s, n in pairs

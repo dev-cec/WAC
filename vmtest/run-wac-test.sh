@@ -791,6 +791,13 @@ if [[ $SPLIT -eq 1 ]]; then
   $QGA run --shell "del /q $VMDIR\\exhibit-reads.txt $VMDIR\\exhibit-read-audit.ps1 >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
   fetch_results split "$SPLIT_OUT"
   cp -r "$OUTPUT/reference" "$SPLIT_OUT/"
+  # The copies Windows lists after THIS collection: it may have deleted the
+  # oldest since the first one (VolSnap 33; Windows 7, measured).
+  if wants shadow_copies; then
+    $QGA run -- powershell.exe -NoProfile -Command \
+      '$v = (Get-WmiObject Win32_Volume | Where-Object { $_.DriveLetter -eq "C:" }).DeviceID; Get-WmiObject Win32_ShadowCopy | Where-Object { $_.VolumeName -eq $v } | ForEach-Object { "shadowcopy_after=" + $_.ID }' \
+      2>/dev/null | tr -d '\r' > "$SPLIT_OUT/reference/shadow-copies-after.txt" || true
+  fi
   echo "   -- checks of the converted JSON --"
   python3 "$HERE/lib/check-json.py" "$SPLIT_OUT" || echo "   ⚠️ the converted JSON fail some checks (see above)"
 
