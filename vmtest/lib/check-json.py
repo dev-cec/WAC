@@ -165,6 +165,9 @@ WINDOWS_10 = 10240
 # test machine is decoded.
 VALIDATED_SINCE_BUILD = WINDOWS_10
 
+# Windows Vista's first build: before it, the pre-Vista forms (XP) are expected.
+VISTA_BUILD = 6000
+
 # The Prefetch versions WAC decodes: 17 (XP), 23 (Vista, 7), 26 (Windows 8.1), 30 and 31.
 DECODED_PREFETCH_VERSIONS = {17, 23, 26, 30, 31}
 
@@ -635,6 +638,11 @@ def check_third_party_chains(folder):
         print("  ⏭️  no trust set recorded in the log (run without --binary?): third-party chains not checked")
         return 0
     if trust_ops[0].startswith("No usable trust set"):
+        # The XP harness prepares none: --update-trust needs the network and a
+        # Windows that downloads, which the XP VM is not (run-wac-test-xp.sh).
+        if (examined_build(folder) or VISTA_BUILD) < VISTA_BUILD:
+            print("  ⏭️  no trust set on the XP harness: third-party chains not checked")
+            return 0
         print(f"  ❌ the trust set was not usable: {trust_ops[0][:120]}")
         return 1
     # The third-party binaries are those the services, drivers, processes and
@@ -3503,6 +3511,11 @@ def check_thumbcache(folder):
     if not isinstance(entries, list):
         print("  ⏭️  thumbcache.json absent or not collected: thumbnail caches not confronted")
         return 0
+    # XP's Thumbs.db (one per folder) carries no checksum: the caches of Vista and later only.
+    entries = [e for e in entries if not str(e.get("Cache", "")).lower().endswith("thumbs.db")]
+    if not entries:
+        print("  ⏭️  thumbcache.json: Thumbs.db only (Windows XP), no checksum to confront")
+        return 0
     found = 0
     bad_header = [e for e in entries if e.get("HeaderChecksumValid") is not True]
     bad_data = [e for e in entries if e.get("DataSize") and e.get("DataChecksumValid") is not True]
@@ -3921,6 +3934,10 @@ def check_prefetch_mft_references(folder):
                                          bool(e.get("Deleted")))
     if older_version(folder) and not any(p.get("FileNames") for p in prefetchs):
         print("  ⏭️  prefetchs.json: no Prefetch decoded on this older Windows: $MFT references not cross-checked")
+        return 0
+    # Version 17 (XP) names its files without their $MFT reference.
+    if not any(f.get("MftReference") for p in prefetchs for f in p.get("FileNames") or []):
+        print("  ⏭️  prefetchs.json: no $MFT reference in these Prefetch files (version 17, Windows XP): not cross-checked")
         return 0
     same, deleted, moved, recreated, wrong = 0, 0, 0, 0, []
     for p in prefetchs:
@@ -4854,8 +4871,11 @@ def check_network(folder, boot):
         print(f"  ❌ network.json: tables not read {d['TablesNotRead']}")
         found += 1
     # The functions of Windows XP and Server 2003, IPv4 only, serve where those
-    # of Vista are missing: never on the machines of this cycle.
-    if d.get("TablesIpv4Only"):
+    # of Vista are missing: expected on XP (run-wac-test-xp.sh), never later.
+    pre_vista = (examined_build(folder) or VISTA_BUILD) < VISTA_BUILD
+    if d.get("TablesIpv4Only") and pre_vista:
+        print(f"  ✅ network.json: tables read by the pre-Vista functions, IPv4 only, as on this Windows: {d['TablesIpv4Only']}")
+    elif d.get("TablesIpv4Only"):
         print(f"  ❌ network.json: tables read by the pre-Vista functions, IPv4 only: {d['TablesIpv4Only']}")
         found += 1
     if not connections or not d.get("Interfaces") or not d.get("Routes"):
