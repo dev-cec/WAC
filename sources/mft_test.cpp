@@ -33,6 +33,7 @@
 #include "guard_page.h"
 #include "mft.h"
 #include "raw_hive.h"
+#include "test_exhibits.h"
 #include "tools.h"
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references
@@ -109,18 +110,15 @@ void againstNtfsinfo(const std::vector<uint8_t>& mft, const std::wstring& refere
 	check(lines >= 15, "reference: only " + std::to_string(lines) + " record(s)");
 }
 
-/*! The paths, rebuilt by Mft::pathOf from the $MFT registered as an exhibit. */
-void paths(const std::wstring& mftPath) {
+/*! The paths, rebuilt by Mft::pathOf from the $MFT registered as an exhibit,
+ *  placed in an output folder under the fixtures' folder. */
+void paths(const std::wstring& folder) {
 	conf.systemDrive = L"C:";
-	RawHiveExtraction line;
-	line.volumePath = L"C:\\$MFT";
-	line.outputPath = mftPath;
-	line.result = ERROR_SUCCESS;
 	// A second volume, G:, the same $MFT: the exhibit index is built once, on
 	// the first lookup, after every exhibit is registered — as in a conversion.
-	RawHiveExtraction second = line;
-	second.volumePath = L"G:\\$MFT";
-	ExhibitStoreAdd({ line, second }, L"test");
+	const std::wstring output = folder + L"\\output";
+	ExhibitStoreAdd({ placedExhibit(output, L"C:\\$MFT", folder + L"\\mft.bin"),
+	                  placedExhibit(output, L"G:\\$MFT", folder + L"\\mft.bin") }, L"test");
 	Mft mft;
 	check(mft.getData(L"C:") == ERROR_SUCCESS, "the $MFT exhibit is not loaded");
 	bool complete = false;
@@ -172,7 +170,7 @@ int wmain(int argc, wchar_t** argv) {
 	const std::vector<uint8_t> mft((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	check(mft.size() >= 16 * RECORD_SIZE, "mft.bin missing or truncated");
 	againstNtfsinfo(mft, folder + L"\\mft-reference.txt");
-	paths(folder + L"\\mft.bin");
+	paths(folder);
 	hostile(mft);
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;

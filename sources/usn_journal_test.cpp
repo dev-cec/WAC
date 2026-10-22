@@ -35,6 +35,7 @@
 #include "guard_page.h"
 #include "mft.h"
 #include "raw_hive.h"
+#include "test_exhibits.h"
 #include "tools.h"
 #include "usn_journal.h"
 
@@ -178,13 +179,9 @@ void journal(const std::wstring& folder) {
 	std::ofstream(std::filesystem::path(streamFile), std::ios::binary)
 		.write(reinterpret_cast<const char*>(stream.data()), (std::streamsize)stream.size());
 
-	RawHiveExtraction mftLine, journalLine;
-	mftLine.volumePath = L"C:\\$MFT";
-	mftLine.outputPath = folder + L"\\mft.bin";
-	mftLine.result = ERROR_SUCCESS;
-	journalLine.volumePath = L"C:\\$Extend\\$UsnJrnl:$J";
-	journalLine.outputPath = streamFile;
-	journalLine.result = ERROR_SUCCESS;
+	const std::wstring output = folder + L"\\output";
+	const RawHiveExtraction mftLine = placedExhibit(output, L"C:\\$MFT", folder + L"\\mft.bin");
+	RawHiveExtraction journalLine = placedExhibit(output, L"C:\\$Extend\\$UsnJrnl:$J", streamFile, L"C:\\$Extend\\$J");
 	journalLine.fingerprints.leadingSparseBytes = leading;
 	ExhibitStoreAdd({ mftLine, journalLine }, L"test");
 
