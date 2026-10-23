@@ -39,6 +39,8 @@
 #pragma once
 #include <windows.h>
 #include <string>
+#include <vector>
+#include "raw_hive.h"
 #include "json.h"
 
 /*! Fingerprints of a cited file, and what was done with it. */
@@ -102,6 +104,33 @@ BinarySummary BinariesSummary();
  *  @return ERROR_SUCCESS, S_FALSE if directories were unreadable,
  *          ERROR_DISK_FULL (as HRESULT) if the medium ran short */
 HRESULT BinariesCollectAll();
+
+/*! What became of a content recovered from a deleted file. */
+struct RecoveredStorage {
+    bool copied = false;       //!< stored in the exhibit store
+    std::wstring signature;    //!< an authentic executable: what authenticated it
+    std::wstring notCopied;    //!< why it was not copied, when it was not
+};
+
+/*! Stores a content recovered from a deleted file (deleted_files.h), judged
+ *  as the volume's executables are: under `binary: unverified`, an executable
+ *  — by its former name, or by its content (MZ) — whose signature holds is
+ *  fingerprinted, not copied; under `binary: all` everything is. Under
+ *  `binary: none` nothing is judged, and an executable that cannot be
+ *  cleared is copied like any other content: a deleted executable is what
+ *  the recovery looks for. Its three
+ *  fingerprints are in the manifest whatever was done, an identical content
+ *  already stored is not stored twice.
+ *  @param exhibitPath its place, "X:\$DeletedFiles\…": the source the
+ *         manifest names, distinct from any file of the volume
+ *  @param formerPath the path the file had, for its kind
+ *  @param content its bytes, holes as zeros
+ *  @param method the collection method, for the manifest
+ *  @param line receives the record, fingerprints included
+ *  @return what was done */
+RecoveredStorage BinariesStoreRecovered(const std::wstring& exhibitPath, const std::wstring& formerPath,
+                                        const std::vector<uint8_t>& content, const std::wstring& method,
+                                        RawHiveExtraction& line);
 
 /*! Stores in the exhibit store the signature catalogs that justified not
  *  collecting a file, then closes the volumes kept open. To be called once no

@@ -24,10 +24,11 @@ bool refuse(std::string& error, const YamlNode& node, const std::wstring& why) {
 //! A key or a value of the file, UTF-8, for a refusal.
 std::wstring wide(const std::string& utf8) { return decodeText(utf8, CP_UTF8); }
 
-//! A scalar setting, not a section. @return false with `error` otherwise
+//! A scalar setting, not a section nor a list. @return false with `error` otherwise
 bool scalar(const YamlNode& node, const std::string& key, std::string& error) {
-	if (!node.mapping) return true;
-	return refuse(error, node, text(Text::ConfigurationSectionNotValue, { wide(key) }));
+	if (node.mapping) return refuse(error, node, text(Text::ConfigurationSectionNotValue, { wide(key) }));
+	if (node.list) return refuse(error, node, text(Text::ConfigurationListNotValue, { wide(key) }));
+	return true;
 }
 
 //! true / false, nothing else — "yes", "on", "1" are refused: a value is written one way.
@@ -41,7 +42,8 @@ bool readBool(const YamlNode& node, const std::string& key, bool& value, std::st
 //! An integer within bounds.
 bool readInt(const YamlNode& node, const std::string& key, int low, int high, int& value, std::string& error) {
 	if (!scalar(node, key, error)) return false;
-	if (node.scalar.empty() || node.scalar.size() > 4 || node.scalar.find_first_not_of("0123456789") != std::string::npos)
+	// Nine digits at most: within an int, whatever the value.
+	if (node.scalar.empty() || node.scalar.size() > 9 || node.scalar.find_first_not_of("0123456789") != std::string::npos)
 		return refuse(error, node, text(Text::ConfigurationNumberExpected, { wide(key), wide(node.scalar) }));
 	value = std::stoi(node.scalar);
 	if (value < low || value > high)
@@ -97,16 +99,67 @@ std::vector<std::pair<std::string, bool*>> artefactSwitches(AppliConf& conf) {
 		{ "thumbcache", &a.thumbcache },
 		{ "emails", &a.emails },
 		{ "shadow_copies", &a.shadowCopies },
+		{ "deleted_files", &a.deletedFiles },
 	};
 }
 
 namespace {
 
-//! The `artefacts:` section: one switch per artefact.
+//! Largest size a deleted file's options accept, in MiB: 1 TiB per file, 16 TiB in all.
+const int DELETED_FILE_MAX_MIB = 1 << 20, DELETED_TOTAL_MAX_MIB = 1 << 24;
+
+/*! A folder of `excluded_folders`: a path on each volume, from its root —
+ *  "\\Windows\\WinSxS" —, without a drive, a "/", a ".." or a trailing "\\". */
+bool volumeFolder(const std::string& folder) {
+	if (folder.size() < 2 || folder[0] != '\\' || folder.back() == '\\') return false;
+	if (folder.find_first_of(":/*?\"<>|") != std::string::npos) return false;
+	return folder.find("\\..") == std::string::npos && folder.find("\\\\") == std::string::npos;
+}
+
+/*! The `deleted_files` entry of `artefacts:`: a switch like the others, or a
+ *  section of its options — `enabled`, `level`, `max_file_mib`,
+ *  `max_total_mib`, `excluded_folders`. A missing option keeps its default;
+ *  `excluded_folders` given replaces the default list whole. */
+bool readDeletedFiles(const YamlNode& node, AppliConf& conf, std::string& error) {
+	const std::string key = "artefacts.deleted_files";
+	if (!node.mapping) return readBool(node, key, conf.artefacts.deletedFiles, error);
+	AppliConf::DeletedFilesSettings& settings = conf.deletedFilesSettings;
+	for (const auto& [option, value] : node.children) {
+		const std::string name = key + "." + option;
+		if (option == "enabled") {
+			if (!readBool(*value, name, conf.artefacts.deletedFiles, error)) return false;
+		}
+		else if (option == "level") {
+			if (!readInt(*value, name, 1, 1, settings.level, error)) return false;
+		}
+		else if (option == "max_file_mib") {
+			if (!readInt(*value, name, 1, DELETED_FILE_MAX_MIB, settings.maxFileMib, error)) return false;
+		}
+		else if (option == "max_total_mib") {
+			if (!readInt(*value, name, 1, DELETED_TOTAL_MAX_MIB, settings.maxTotalMib, error)) return false;
+		}
+		else if (option == "excluded_folders") {
+			if (!value->list) return refuse(error, *value, text(Text::ConfigurationListExpected, { wide(name) }));
+			settings.excludedFolders.clear();
+			for (const std::string& folder : value->items) {
+				if (!volumeFolder(folder)) return refuse(error, *value, text(Text::ConfigurationVolumeFolder, { wide(name), wide(folder) }));
+				settings.excludedFolders.push_back(wide(folder));
+			}
+		}
+		else return refuse(error, *value, text(Text::ConfigurationUnknownSetting, { wide(name) }));
+	}
+	return true;
+}
+
+//! The `artefacts:` section: one switch per artefact, a section of options for deleted_files.
 bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error) {
 	if (!section.mapping) return refuse(error, section, text(Text::ConfigurationArtefactsSection));
 	const std::vector<std::pair<std::string, bool*>> switches = artefactSwitches(conf);
 	for (const auto& [key, node] : section.children) {
+		if (key == "deleted_files") {
+			if (!readDeletedFiles(*node, conf, error)) return false;
+			continue;
+		}
 		bool* found = nullptr;
 		for (const auto& [name, value] : switches) if (key == name) found = value;
 		if (!found) return refuse(error, *node, text(Text::ConfigurationUnknownArtefact, { wide(key) }));

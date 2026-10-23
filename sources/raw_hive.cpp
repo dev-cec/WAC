@@ -202,6 +202,8 @@ public:
         sectorsPerCluster_ = vbr[0x0D];
         bytesPerCluster_   = bytesPerSector_ * sectorsPerCluster_;
         mftLcn_            = readLittleEndian<uint64_t>(vbr + 0x30);
+        // The volume's extent in clusters: its sectors (the boot sector's count) by cluster.
+        clusters_ = sectorsPerCluster_ ? readLittleEndian<uint64_t>(vbr + 0x28) / sectorsPerCluster_ : 0;
         int8_t cpr = (int8_t)vbr[0x40];   // clusters/record, or 2^(-cpr) bytes
         bytesPerRecord_ = (cpr >= 0) ? (uint32_t)cpr * bytesPerCluster_
                                      : (uint32_t)(1u << (-cpr));
@@ -1337,6 +1339,8 @@ private:
     bool     viewingCopy_ = false;            //!< every read goes through shadow copy shadowIndex_
     uint32_t bytesPerSector_ = 0, sectorsPerCluster_ = 0, bytesPerCluster_ = 0, bytesPerRecord_ = 0;
     uint64_t mftLcn_ = 0;
+    uint64_t clusters_ = 0;                   //!< clusters of the volume: no cluster at or past it exists
+    std::vector<NtfsRun> bitmapRuns_;         //!< the runs of $Bitmap, read once (clusterAllocation)
     std::vector<NtfsRun> mftRuns_;
 
     /*! Alignment of an unbuffered read before the boot sector gives the
@@ -1582,6 +1586,63 @@ private:
     }
 
 public:
+    //! @return bytes per cluster
+    uint32_t clusterSize() const { return bytesPerCluster_; }
+    //! @return bytes per $MFT record
+    uint32_t recordSize() const { return bytesPerRecord_; }
+    //! @return clusters of the volume
+    uint64_t clusters() const { return clusters_; }
+
+    /*! Reads a $MFT record as it is now, its fixups applied.
+     *  @return false if unreadable, not a FILE record, or torn */
+    bool readRecord(uint64_t index, std::vector<uint8_t>& rec){ return readMftRecord(index, rec); }
+
+    /*! Whether each cluster of a range is in use, as $Bitmap says now: only
+     *  the bytes of $Bitmap covering the range are read.
+     *  @param lcn first cluster
+     *  @param count clusters; lcn + count must lie within the volume
+     *  @param inUse receives one flag per cluster
+     *  @return false if the range leaves the volume or $Bitmap is unreadable */
+    bool clusterAllocation(uint64_t lcn, uint64_t count, std::vector<bool>& inUse){
+        inUse.clear();
+        if (count == 0 || lcn >= clusters_ || count > clusters_ - lcn) return false;
+        if (bitmapRuns_.empty()){
+            const uint64_t BITMAP_RECORD = 6;      // $Bitmap's fixed record
+            std::vector<uint8_t> rec;
+            if (!readMftRecord(BITMAP_RECORD, rec)) return false;
+            const uint8_t* a = findAttr(rec, 0x80);
+            if (!a || a[8] == 0 || readLittleEndian<uint32_t>(a + 4) < 0x40) return false;
+            const uint32_t length = readLittleEndian<uint32_t>(a + 4);
+            const uint16_t runsOffset = readLittleEndian<uint16_t>(a + 0x20);
+            if (runsOffset >= length) return false;
+            bitmapRuns_ = decodeNtfsRuns(a + runsOffset, a + length);
+            if (bitmapRuns_.empty()) return false;
+        }
+        const uint64_t firstByte = lcn / 8, lastByte = (lcn + count - 1) / 8;
+        std::vector<uint8_t> bits((size_t)(lastByte - firstByte + 1));
+        for (uint64_t done = 0; done < bits.size();){
+            const uint32_t n = (uint32_t)std::min<uint64_t>(READ_BATCH, bits.size() - done);
+            if (!readVirtual(bitmapRuns_, firstByte + done, n, bits.data() + done)) return false;
+            done += n;
+        }
+        inUse.resize((size_t)count);
+        for (uint64_t k = 0; k < count; ++k){
+            const uint64_t cluster = lcn + k;
+            inUse[(size_t)k] = (bits[(size_t)(cluster / 8 - firstByte)] >> (cluster % 8)) & 1;
+        }
+        return true;
+    }
+
+    /*! Reads clusters of the volume as they are now.
+     *  @param lcn first cluster
+     *  @param count clusters; lcn + count must lie within the volume
+     *  @param out receives count × clusterSize() bytes
+     *  @return false if the range leaves the volume, or on a read error */
+    bool readClusterRange(uint64_t lcn, uint64_t count, uint8_t* out){
+        if (count == 0 || lcn >= clusters_ || count > clusters_ - lcn) return false;
+        return readClusters(lcn, count * bytesPerCluster_, out);
+    }
+
     // Lists a directory's entries (name, MFT index, type, size).
     // Public: also used by ListDirectoryRaw / ExtractDirectoryRaw.
     bool listDir(uint64_t dirIndex, std::vector<RawDirEntry>& out){
@@ -1894,6 +1955,35 @@ HRESULT RawReader::read(const std::wstring& absolutePath, const std::wstring& ou
     if (FAILED(v.result())) return line.result = v.result();
     line.shadowCopy = v->viewedCopyId();
     return line.result = readFileConsistently(*v, absolutePath.substr(2), output, std::wstring(), &line.fingerprints, observer);
+}
+
+HRESULT RawVolumeLayoutOf(const std::wstring& volumeLetter, RawVolumeLayout& layout){
+    layout = RawVolumeLayout();
+    const VolumeLease v(volumeLetter);
+    if (FAILED(v.result())) return v.result();
+    layout.clusterSize = v->clusterSize();
+    layout.recordSize = v->recordSize();
+    layout.clusters = v->clusters();
+    return layout.clusters ? S_OK : HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+}
+
+HRESULT ReadMftRecordRaw(const std::wstring& volumeLetter, uint64_t entry, std::vector<uint8_t>& record){
+    record.clear();
+    const VolumeLease v(volumeLetter);
+    if (FAILED(v.result())) return v.result();
+    return v->readRecord(entry, record) ? S_OK : HRESULT_FROM_WIN32(ERROR_FILE_CORRUPT);
+}
+
+HRESULT ReadClusterAllocationRaw(const std::wstring& volumeLetter, uint64_t lcn, uint64_t count, std::vector<bool>& inUse){
+    const VolumeLease v(volumeLetter);
+    if (FAILED(v.result())) return v.result();
+    return v->clusterAllocation(lcn, count, inUse) ? S_OK : HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+}
+
+HRESULT ReadClustersRaw(const std::wstring& volumeLetter, uint64_t lcn, uint64_t count, uint8_t* out){
+    const VolumeLease v(volumeLetter);
+    if (FAILED(v.result())) return v.result();
+    return v->readClusterRange(lcn, count, out) ? S_OK : HRESULT_FROM_WIN32(ERROR_READ_FAULT);
 }
 
 void RawHiveSetVerbose(bool on){ g_verbose = on; }

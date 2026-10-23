@@ -1188,6 +1188,53 @@ private:
 
 } // namespace
 
+RecoveredStorage BinariesStoreRecovered(const std::wstring& exhibitPath, const std::wstring& formerPath,
+                                        const std::vector<uint8_t>& content, const std::wstring& method,
+                                        RawHiveExtraction& line) {
+	RecoveredStorage outcome;
+	line = RawHiveExtraction();
+	line.volumePath = exhibitPath;
+	line.result = S_OK;
+	line.fingerprints.bytes = line.fingerprints.declaredSize = line.fingerprints.validDataLength = content.size();
+	setFileHashes(line, content);
+	// An executable by its former name, or by its content: a tool renamed .dat is still one.
+	const bool executable = worthCollecting(formerPath)
+	                     || (content.size() >= 2 && content[0] == 'M' && content[1] == 'Z');
+	VerdictMicrosoft verdict;
+	bool windowsDelta = false;
+	if (executable && conf.binary) {
+		if (!g_reader) g_reader = openReader();
+		ContentAnalysis analysis(formerPath, nullptr);
+		analysis.input()->sputn(reinterpret_cast<const char*>(content.data()), (std::streamsize)content.size());
+		analysis.finishContent();
+		analysis.conclude(line, verdict, windowsDelta);
+		noteVerdict(verdict, line, nullptr);
+	}
+	const SignatureVerdict recorded = executable && conf.binary && !windowsDelta ? recordedVerdict(verdict) : SignatureVerdict{};
+	if (cleared(verdict)) outcome.signature = recorded.label;
+	/* Not copied: an executable cleared by its signature (binary:
+	   unverified), or a medium short of room — the three fingerprints still
+	   recorded. Under binary: none nothing is judged: a deleted executable
+	   is what the recovery looks for, and one that cannot be cleared is
+	   copied. */
+	if (!conf.binaryAll && executable && cleared(verdict)) {
+		outcome.notCopied = L"authentic executable: " + recorded.label;
+		ExhibitStoreAddFingerprint(line, method + L"; " + outcome.notCopied + L"; fingerprinted, not copied", recorded);
+		return outcome;
+	}
+	if (!roomLeft()) {
+		outcome.notCopied = L"collection medium full";
+		ExhibitStoreAddFingerprint(line, method + L"; fingerprinted without a copy: collection medium full", recorded);
+		return outcome;
+	}
+	const std::wstring staged = stageFromMemory(content);
+	const HRESULT stored = recordStaged(exhibitPath, staged, staged.empty() ? HRESULT_FROM_WIN32(ERROR_WRITE_FAULT) : S_OK,
+	                                    line, method, recorded);
+	outcome.copied = SUCCEEDED(stored);
+	if (!outcome.copied) outcome.notCopied = L"not written to the collection medium";
+	return outcome;
+}
+
 HRESULT BinariesCollectAll() {
 	g_reader = openReader();
 	std::error_code ec;

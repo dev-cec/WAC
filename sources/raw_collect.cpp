@@ -785,8 +785,10 @@ HRESULT ExtractFileArtefactsRaw() {
 }
 
 HRESULT ExtractNtfsMetadataRaw() {
-	// The $MFT serves mft.json, the change journal's paths and the Zone.Identifier streams.
-	const bool mft = conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.zoneIdentifiers;
+	/* The $MFT serves mft.json, the change journal's paths, the Zone.Identifier
+	   streams, and the choice of the deleted files to recover. */
+	const bool mft = conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.zoneIdentifiers
+	              || conf.artefacts.deletedFiles;
 	if (!mft && !conf.artefacts.logFile && !conf.artefacts.securityDescriptors && !conf.artefacts.ntfsVolumes)
 		return HRESULT_FROM_WIN32(ERROR_EMPTY);
 	HRESULT global = S_OK;

@@ -94,6 +94,48 @@ struct NtfsRun {
  *          run, negative cluster) */
 std::vector<NtfsRun> decodeNtfsRuns(const uint8_t* p, const uint8_t* end);
 
+/*! THE PRIMITIVES OF A DELETED FILE'S RECOVERY (B-036). A deleted file is
+ *  reached by its $MFT record, not by a path: its record is read as it is
+ *  now, its clusters checked against $Bitmap, then read — the volume as it
+ *  is now only, never a shadow copy. Every range is bounded by the volume. */
+
+/*! The geometry of an NTFS volume. */
+struct RawVolumeLayout {
+    uint32_t clusterSize = 0;   //!< bytes per cluster
+    uint32_t recordSize = 0;    //!< bytes per $MFT record
+    uint64_t clusters = 0;      //!< clusters of the volume
+};
+
+/*! The geometry of a volume, from its boot sector.
+ *  @param volumeLetter the volume's letter, without the colon
+ *  @param layout receives it
+ *  @return S_OK, or why the volume could not be read */
+HRESULT RawVolumeLayoutOf(const std::wstring& volumeLetter, RawVolumeLayout& layout);
+
+/*! Reads a $MFT record as it is now, its fixups applied.
+ *  @param volumeLetter the volume's letter
+ *  @param entry the record's number
+ *  @param record receives its bytes (RawVolumeLayout::recordSize)
+ *  @return S_OK; ERROR_FILE_CORRUPT if it is not a FILE record or is torn */
+HRESULT ReadMftRecordRaw(const std::wstring& volumeLetter, uint64_t entry, std::vector<uint8_t>& record);
+
+/*! Whether each cluster of a range is in use now, as $Bitmap says.
+ *  @param volumeLetter the volume's letter
+ *  @param lcn first cluster
+ *  @param count clusters
+ *  @param inUse receives one flag per cluster
+ *  @return S_OK; ERROR_INVALID_DATA if the range leaves the volume or
+ *          $Bitmap could not be read */
+HRESULT ReadClusterAllocationRaw(const std::wstring& volumeLetter, uint64_t lcn, uint64_t count, std::vector<bool>& inUse);
+
+/*! Reads clusters as they are now.
+ *  @param volumeLetter the volume's letter
+ *  @param lcn first cluster
+ *  @param count clusters
+ *  @param out receives count × RawVolumeLayout::clusterSize bytes
+ *  @return S_OK; ERROR_READ_FAULT if the range leaves the volume or a read failed */
+HRESULT ReadClustersRaw(const std::wstring& volumeLetter, uint64_t lcn, uint64_t count, uint8_t* out);
+
 /*! Signature of a progress reporter.
  *  @param item  what is being extracted (path on the volume)
  *  @param done  bytes already written

@@ -138,6 +138,41 @@ int wmain(int argc, wchar_t** argv) {
 	refused("threads.yml", "threads: 9999\n", 1, "between 0 and 256");
 	refused("output.yml", "output: C:\\\\temp\n", 1, "a folder name");
 	refused("section.yml", "binary:\n  method: all\n", 1, "takes a value");
+	// deleted_files: a switch, or a section of its options (B-036).
+	{
+		AppliConf c;
+		ConfigurationFile f;
+		std::string error;
+		const AppliConf::DeletedFilesSettings defaults;
+		check(LoadConfiguration(file("deleted-switch.yml", "artefacts:\n  deleted_files: false\n"), c, f, error)
+		      && !c.artefacts.deletedFiles && c.deletedFilesSettings.maxFileMib == defaults.maxFileMib,
+		      "deleted_files: false not applied: " + error);
+		AppliConf d;
+		const std::string text = "artefacts:\n  deleted_files:\n    enabled: true\n    level: 1\n    max_file_mib: 8\n"
+		                         "    max_total_mib: 1048576\n    excluded_folders:\n      - \\Windows\\Temp\n      - \\$Extend\n";
+		check(LoadConfiguration(file("deleted-section.yml", text), d, f, error) && d.artefacts.deletedFiles
+		      && d.deletedFilesSettings.level == 1 && d.deletedFilesSettings.maxFileMib == 8
+		      && d.deletedFilesSettings.maxTotalMib == 1048576 && d.deletedFilesSettings.excludedFolders.size() == 2
+		      && d.deletedFilesSettings.excludedFolders[0] == L"\\Windows\\Temp", "deleted_files options not applied: " + error);
+		AppliConf e;
+		check(LoadConfiguration(file("deleted-partial.yml", "artefacts:\n  deleted_files:\n    max_file_mib: 16\n"), e, f, error)
+		      && e.artefacts.deletedFiles && e.deletedFilesSettings.maxFileMib == 16
+		      && e.deletedFilesSettings.maxTotalMib == defaults.maxTotalMib
+		      && e.deletedFilesSettings.excludedFolders == defaults.excludedFolders, "deleted_files: a missing option lost its default");
+		AppliConf g;
+		check(LoadConfiguration(rawFile("reference-deleted.yml", DefaultConfiguration()), g, f, error) && g.artefacts.deletedFiles
+		      && g.deletedFilesSettings.level == defaults.level && g.deletedFilesSettings.maxFileMib == defaults.maxFileMib
+		      && g.deletedFilesSettings.maxTotalMib == defaults.maxTotalMib
+		      && g.deletedFilesSettings.excludedFolders == defaults.excludedFolders, "reference file: deleted_files differs from the defaults");
+	}
+	refused("deleted-level.yml", "artefacts:\n  deleted_files:\n    level: 4\n", 3, "between 1 and 1");
+	refused("deleted-unknown.yml", "artefacts:\n  deleted_files:\n    max_size: 8\n", 3, "unknown setting \"artefacts.deleted_files.max_size\"");
+	refused("deleted-total.yml", "artefacts:\n  deleted_files:\n    max_total_mib: 99999999\n", 3, "between 1 and 16777216");
+	refused("deleted-drive.yml", "artefacts:\n  deleted_files:\n    excluded_folders:\n      - C:\\Windows\n", 3, "a folder from the volume's root");
+	refused("deleted-up.yml", "artefacts:\n  deleted_files:\n    excluded_folders:\n      - \\Windows\\..\\Users\n", 3, "a folder from the volume's root");
+	refused("deleted-scalar.yml", "artefacts:\n  deleted_files:\n    excluded_folders: \\Windows\n", 3, "a list expected");
+	refused("list.yml", "dump:\n  - true\n", 1, "takes a value, not a list");
+	refused("deleted-list.yml", "artefacts:\n  deleted_files:\n    - true\n", 2, "takes a value, not a list");
 	refused("duplicate.yml", "artefacts:\n  events: true\n  events: false\n", 3, "given twice");
 	refused("language.yml", "language: de\n", 1, "fr or en expected");
 	// In French: the words, and the values in their places ("entre 0 et 256").

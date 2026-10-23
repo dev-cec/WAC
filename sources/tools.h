@@ -188,6 +188,7 @@ struct AppliConf {
 		bool rdpServer = true;  //!< incoming RDP connections, from the collected event logs
 		bool thumbcache = true; //!< Explorer's thumbnail and icon caches: what each user had on screen
 		bool emails = true;     //!< Outlook's PST and OST: messages, recipients, attachments
+		bool deletedFiles = true;   //!< deleted files recovered by raw reading; its options: deletedFilesSettings
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
 		 *  usrClass.dat): they are a dependency, copied then. They used to be
@@ -210,6 +211,26 @@ struct AppliConf {
 		 *  @return true if one of them is switched on */
 		bool needsEventLogs() const { return events || rdpServer; }
 	} artefacts;
+	/*! The options of the deleted files' recovery (wac.yml, `artefacts:` →
+	 *  `deleted_files:`, a section where the other artefacts have a switch;
+	 *  its `enabled` is artefacts.deletedFiles). A missing option keeps its
+	 *  default. */
+	struct DeletedFilesSettings {
+		/*! How deep the recovery goes, each level including the ones below:
+		 *  1, the content of the deleted records of the $MFT. */
+		int level = 1;
+		int maxFileMib = 64;      //!< a larger deleted file is listed with its fingerprints, not copied
+		int maxTotalMib = 4096;   //!< all the recovered contents copied, at most: the most recent first
+		/*! Folders never read, as paths on each volume ("\\Windows\\WinSxS"):
+		 *  what the system deletes by the thousand, and no intruder's file.
+		 *  Not $Extend as a whole: Windows 10 and later move a file deleted
+		 *  while still open to $Extend\\$Deleted, its record named there
+		 *  once freed — measured on Windows 11, every witness of the harness. */
+		std::vector<std::wstring> excludedFolders = {
+			L"\\Windows\\WinSxS", L"\\Windows\\SoftwareDistribution", L"\\Windows\\servicing",
+			L"\\Windows\\Installer\\$PatchCache$", L"\\Windows\\System32\\catroot",
+			L"\\Windows\\System32\\catroot2", L"\\$Extend\\$RmMetadata" };
+	} deletedFilesSettings;
 	/*! The version of the examined Windows, read in its SOFTWARE hive once it
 	 *  is open (applyArtefactCatalogue); build 0 until then, or if unreadable. */
 	WindowsVersion examinedVersion;
@@ -782,8 +803,9 @@ std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc, Precision precis
 void addDate(Json& o, const std::wstring& key, const FILETIME& utc);
 
 /*! Adds a date in UTC only, under `key` as given — the form of the
- *  artefacts that count one object per file of a volume (mft.json), where a
- *  local form would double them. Nothing is written for a null date.
+ *  artefacts that count one object per file of a volume (mft.json,
+ *  deleted_files.json), where a local form would double them. Nothing is
+ *  written for a null date.
  *  @param o the object
  *  @param key the member's name
  *  @param utc the date, UTC */

@@ -35,6 +35,7 @@
 #include "usn_journal.h"
 #include "powershell_history.h"
 #include "powershell_profiles.h"
+#include "deleted_files.h"
 #include "activities_cache.h"
 #include "search_index.h"
 #include "rdp_client.h"
@@ -553,7 +554,7 @@ void extractProfileArtefacts() {
 
 	// $MFT, change journal, $LogFile: the file system's timeline.
 	if (conf.artefacts.mft || conf.artefacts.usnJournal || conf.artefacts.logFile || conf.artefacts.zoneIdentifiers
-	    || conf.artefacts.securityDescriptors || conf.artefacts.ntfsVolumes) {
+	    || conf.artefacts.securityDescriptors || conf.artefacts.ntfsVolumes || conf.artefacts.deletedFiles) {
 		printStep(Text::StepNtfsMetadata);
 		log(3, L"🔈ExtractNtfsMetadataRaw");
 		hresult = ExtractNtfsMetadataRaw();   // S_FALSE = one could not be read (tolerated)
@@ -724,6 +725,14 @@ void collectForConversion() {
 		            + std::to_wstring(b.catalogsUsed) + L" signature catalog(s) recorded)",
 		            L"every fixed NTFS volume and every FAT or exFAT volume, raw reading; authenticity verified in memory, with no API and no service",
 		            hr, Footprint::VOLUME_BRUT);
+		if (FAILED(hr)) printError(hr);
+		else printSuccess();
+	}
+	/* The deleted files, after the executables: a recovered one is judged with
+	   the catalogs that walk loaded, and an identical content stored once. */
+	if (conf.artefacts.deletedFiles) {
+		printStep(Text::StepDeletedFiles);
+		const HRESULT hr = DeletedFilesCollect();   // S_FALSE = a volume's $MFT could not be read (tolerated)
 		if (FAILED(hr)) printError(hr);
 		else printSuccess();
 	}
@@ -1351,6 +1360,8 @@ void convertArtefacts(bool systemAvailable) {
 	convertArtefact<PowerShellProfiles>(conf.artefacts.powershellProfiles, "powershell_profiles.json",
 	                                    Text::ArtefactPowerShellProfiles, L"artefacts.powershell_profiles",
 	                                    Text::StepPowerShellProfiles);
+	convertArtefact<DeletedFiles>(conf.artefacts.deletedFiles, "deleted_files.json",
+	                              Text::ArtefactDeletedFiles, L"artefacts.deleted_files", Text::StepDeletedFiles);
 	convertArtefact<SetupApiLogs>(conf.artefacts.setupApi, "setupapi.json", Text::ArtefactSetupApi,
 	                              L"artefacts.setupapi", Text::StepSetupApi);
 	convertArtefact<RecycleBin>(conf.artefacts.recycleBin, "recycle_bin.json", Text::ArtefactRecycleBin,
