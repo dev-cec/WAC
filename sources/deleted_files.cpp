@@ -16,6 +16,8 @@
 #include <cstring>
 #include <filesystem>
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <winioctl.h>
 
 namespace {
@@ -210,6 +212,73 @@ std::wstring safeFileName(const std::wstring& name) {
 
 namespace {
 
+// An index entry and the $FILE_NAME it carries as its key.
+const size_t ENTRY_KEY = 0x10;           //!< the key after the entry's header: file reference, lengths, flags
+const size_t NAME_LENGTH = 0x40, NAME_SPACE = 0x41, NAME = 0x42;   //!< in $FILE_NAME
+const size_t NODE_HEADER = 0x18;         //!< the node header in an INDX block
+const uint8_t DOS_NAME_SPACE = 2;
+const uint64_t DATE_MIN = 119600064000000000ull;   //!< 1980-01-01 as FILETIME
+const uint64_t DATE_MAX = 157469184000000000ull;   //!< 2100-01-01
+
+//! A plausible $FILE_NAME date: an entry of the slack whose dates are not is no entry.
+bool plausibleDate(uint64_t ticks) { return ticks >= DATE_MIN && ticks < DATE_MAX; }
+
+//! A name Windows could have given: no control character, none of the separators of a path.
+bool plausibleName(const std::wstring& name, uint8_t nameSpace) {
+	for (wchar_t c : name) {
+		if (c < 0x20 || c == L'/') return false;
+		if (nameSpace != 0 && wcschr(L"\\:*?\"<>|", c)) return false;   // POSIX names allow them
+	}
+	return !name.empty();
+}
+
+} // namespace
+
+std::vector<IndexSlackEntry> indexSlackEntries(const uint8_t* block, size_t size, bool inUse, uint64_t directory) {
+	std::vector<IndexSlackEntry> found;
+	if (!block || size < NODE_HEADER + 0x10 || std::memcmp(block, "INDX", 4) != 0) return found;
+	const uint8_t* node = block + NODE_HEADER;
+	const size_t nodeRoom = size - NODE_HEADER;
+	const size_t first = readLittleEndian<uint32_t>(node), used = readLittleEndian<uint32_t>(node + 4);
+	const size_t allocated = std::min<size_t>(readLittleEndian<uint32_t>(node + 8), nodeRoom);
+	/* In use: what lies beyond the used size. Released: the whole node, its
+	   former live entries included — none of them is live any more. */
+	size_t from = inUse ? used : first;
+	if (from >= allocated) return found;
+	from = (from + 7) & ~(size_t)7;                 // entries start on 8 bytes, from the node
+	for (size_t at = from; at + ENTRY_KEY + NAME <= allocated; at += 8) {
+		const uint8_t* e = node + at;
+		const uint16_t keyLength = readLittleEndian<uint16_t>(e + 10);
+		const uint8_t* key = e + ENTRY_KEY;
+		const uint8_t characters = key[NAME_LENGTH], nameSpace = key[NAME_SPACE];
+		if (characters == 0 || nameSpace > 3 || nameSpace == DOS_NAME_SPACE) continue;
+		if (keyLength != NAME + 2u * characters || at + ENTRY_KEY + keyLength > allocated) continue;
+		if (readLittleEndian<uint16_t>(e + 8) < ENTRY_KEY + keyLength) continue;    // the entry holds its key
+		if (splitNtfsReference(readLittleEndian<uint64_t>(key)).entry != directory) continue;
+		IndexSlackEntry slack;
+		const uint64_t times[4] = { readLittleEndian<uint64_t>(key + 0x08), readLittleEndian<uint64_t>(key + 0x10),
+		                            readLittleEndian<uint64_t>(key + 0x18), readLittleEndian<uint64_t>(key + 0x20) };
+		if (!std::all_of(times, times + 4, plausibleDate)) continue;
+		slack.name.assign(characters, L'\0');
+		for (size_t k = 0; k < characters; ++k) slack.name[k] = (wchar_t)readLittleEndian<uint16_t>(key + NAME + 2 * k);
+		if (!plausibleName(slack.name, nameSpace)) continue;
+		const NtfsReference file = splitNtfsReference(readLittleEndian<uint64_t>(e));
+		slack.entry = file.entry;
+		slack.sequence = file.sequence;
+		slack.nameSpace = nameSpace;
+		slack.created = filetimeFromTicks(times[0]);
+		slack.modified = filetimeFromTicks(times[1]);
+		slack.mftModified = filetimeFromTicks(times[2]);
+		slack.accessed = filetimeFromTicks(times[3]);
+		slack.size = readLittleEndian<uint64_t>(key + 0x30);
+		slack.attributes = readLittleEndian<uint32_t>(key + 0x38);
+		found.push_back(std::move(slack));
+	}
+	return found;
+}
+
+namespace {
+
 /*! A deleted file the $MFT copy lists, before its record is read again. */
 struct Candidate {
 	std::wstring volume;        //!< "C:"
@@ -233,13 +302,23 @@ bool under(const std::wstring& path, const std::wstring& folder) {
 	return path.size() == folder.size() || path[folder.size()] == L'\\';
 }
 
+/*! The folders of a volume never read: those of `excluded_folders`, and the
+ *  collection's own output when it lies on that volume.
+ *  @param volume "C:"…
+ *  @return absolute paths */
+std::vector<std::wstring> excludedFolders(const std::wstring& volume) {
+	std::vector<std::wstring> excluded;
+	for (const std::wstring& folder : conf.deletedFilesSettings.excludedFolders) excluded.push_back(volume + folder);
+	std::error_code ec;
+	excluded.push_back(std::filesystem::absolute(conf._outputDir, ec).wstring());
+	return excluded;
+}
+
 /*! The deleted files the $MFT copies list, minus the folders left out.
  *  @param candidates receives them
  *  @return S_FALSE if a volume's $MFT could not be read */
 HRESULT listCandidates(std::vector<Candidate>& candidates) {
 	HRESULT global = S_OK;
-	std::error_code ec;
-	const std::wstring output = std::filesystem::absolute(conf._outputDir, ec).wstring();
 	for (const std::wstring& volume : fixedNtfsVolumes()) {
 		Mft mft;
 		const HRESULT loaded = mft.load(volume, extractedPath(volume + L"\\$MFT"));
@@ -248,9 +327,7 @@ HRESULT listCandidates(std::vector<Candidate>& candidates) {
 			global = S_FALSE;
 			continue;
 		}
-		std::vector<std::wstring> excluded;
-		for (const std::wstring& folder : conf.deletedFilesSettings.excludedFolders) excluded.push_back(volume + folder);
-		excluded.push_back(output);   // the collection's own files, on a fixed volume
+		const std::vector<std::wstring> excluded = excludedFolders(volume);
 		const HRESULT walked = mft.forEachFile([&](const MftEntry& e, const std::wstring& path, bool complete) {
 			if (e.inUse || e.directory || !e.sizeKnown || e.size == 0) return;
 			// An incomplete path ("?\…") cannot be placed in a folder: kept.
@@ -294,6 +371,7 @@ ClusterSource rawClusters(const std::wstring& letter, const RawVolumeLayout& lay
 Json describe(const Candidate& c) {
 	Json o = Json::obj();
 	o.add(L"Volume", Json::str(c.volume));
+	o.add(L"Source", Json::str(L"MftRecord"));
 	o.add(L"Entry", Json::num(c.entry));
 	o.add(L"Sequence", Json::num(c.sequence));
 	o.add(L"Path", Json::str(c.path));
@@ -405,6 +483,76 @@ Json recoverOne(const Candidate& c, Tally& tally) {
 	return o;
 }
 
+//! A key for a name in a directory, case ignored: the directory's record and the name's hash.
+uint64_t nameKey(uint64_t directory, const std::wstring& name) {
+	uint64_t h = std::hash<std::wstring>()(toLower(name)) ^ (directory * 0x9E3779B97F4A7C15ull);
+	h ^= h >> 31;
+	return h * 0xBF58476D1CE4E5B9ull;
+}
+
+/*! Level 2: the names the slack of every directory index of a volume keeps,
+ *  that no directory holds any more and no deleted record of level 1 names.
+ *  @param volume "C:"…
+ *  @param files receives one object per name
+ *  @return how many names were added; the directories unreadable are logged */
+size_t collectIndexSlack(const std::wstring& volume, Json& files) {
+	Mft mft;
+	if (mft.load(volume, extractedPath(volume + L"\\$MFT")) != ERROR_SUCCESS) return 0;
+	const std::vector<std::wstring> excluded = excludedFolders(volume);
+	std::vector<std::pair<uint64_t, std::wstring>> directories;
+	std::unordered_set<uint64_t> live;                 // every name a directory holds now
+	std::unordered_map<uint64_t, std::wstring> deleted;   // the names of the deleted records: level 1's
+	mft.forEachFile([&](const MftEntry& e, const std::wstring& path, bool complete) {
+		if (!e.inUse) {
+			if (!e.name.empty()) deleted.emplace(e.entry, toLower(e.name));
+			return;
+		}
+		for (const MftEntry::Link& link : e.links) live.insert(nameKey(link.parentEntry, link.name));
+		if (e.directory && complete
+		    && !std::any_of(excluded.begin(), excluded.end(), [&](const std::wstring& f) { return under(path, f); }))
+			directories.emplace_back(e.entry, path);
+	});
+	const std::wstring letter = volume.substr(0, 1);
+	std::unordered_set<uint64_t> seen;                 // an entry repeated in the slack, once
+	size_t added = 0, unreadable = 0;
+	for (size_t k = 0; k < directories.size(); ++k) {
+		const uint64_t directory = directories[k].first;
+		const std::wstring& folder = directories[k].second;
+		printProgressStep(L"$I30 " + volume, (unsigned)k + 1, (unsigned)directories.size());
+		const HRESULT read = ForEachIndexBlockRaw(letter, directory, [&](const uint8_t* block, size_t size, bool inUse) {
+			for (const IndexSlackEntry& e : indexSlackEntries(block, size, inUse, directory)) {
+				if (live.count(nameKey(directory, e.name))) continue;
+				const auto former = deleted.find(e.entry);
+				if (former != deleted.end() && former->second == toLower(e.name)) continue;   // level 1 has it
+				if (!seen.insert(nameKey(directory, e.name) ^ (e.entry << 1)).second) continue;
+				Json o = Json::obj();
+				o.add(L"Volume", Json::str(volume));
+				o.add(L"Source", Json::str(L"IndexSlack"));
+				o.add(L"Entry", Json::num(e.entry));
+				o.add(L"Sequence", Json::num(e.sequence));
+				o.add(L"Path", Json::str((folder.size() > 3 ? folder : folder.substr(0, 2)) + L"\\" + e.name));
+				o.add(L"ParentEntry", Json::num(directory));
+				o.add(L"Size", Json::num(e.size));
+				addUtcDate(o, L"FileNameCreatedUtc", e.created);
+				addUtcDate(o, L"FileNameModifiedUtc", e.modified);
+				addUtcDate(o, L"FileNameMftModifiedUtc", e.mftModified);
+				addUtcDate(o, L"FileNameAccessedUtc", e.accessed);
+				// The same file under another name now — moved or renamed, not deleted.
+				bool complete = true;
+				const std::wstring now = mft.pathOf(e.entry, e.sequence, complete);
+				if (!now.empty() && complete) o.add(L"CurrentPath", Json::str(now));
+				o.add(L"State", Json::str(L"NameOnly"));
+				files.push(std::move(o));
+				++added;
+			}
+		});
+		if (FAILED(read)) ++unreadable;
+	}
+	printProgressEnd();
+	if (unreadable) log(2, L"🔥Deleted files, level 2: " + std::to_wstring(unreadable) + L" index(es) of " + volume + L" unreadable");
+	return added;
+}
+
 } // namespace
 
 HRESULT DeletedFilesCollect() {
@@ -435,11 +583,16 @@ HRESULT DeletedFilesCollect() {
 		++tally.listed;
 	}
 	printProgressEnd();
+	size_t names = 0;
+	if (conf.deletedFilesSettings.level >= 2)
+		for (const std::wstring& volume : fixedNtfsVolumes()) names += collectIndexSlack(volume, files);
 	const HRESULT written = writeLiveSnapshot("deleted_files.json", files, L"deleted files of the fixed NTFS volumes, recovered by raw reading");
 	auditRecord(L"Raw recovery of the deleted files (" + std::to_wstring(tally.listed) + L" read, "
 	            + std::to_wstring(tally.copied) + L" copied (" + std::to_wstring(tally.copiedBytes / 1024 / 1024) + L" MiB), "
 	            + std::to_wstring(tally.partial) + L" partial, " + std::to_wstring(tally.lost) + L" lost or not recoverable, "
-	            + std::to_wstring(tally.notRead) + L" not read beyond max_total_mib)",
+	            + std::to_wstring(tally.notRead) + L" not read beyond max_total_mib"
+	            + (conf.deletedFilesSettings.level >= 2 ? L"; " + std::to_wstring(names) + L" former name(s) in the slack of the directory indexes" : L"")
+	            + L")",
 	            L"$MFT copy of every fixed NTFS volume; each record read again raw, its clusters checked free in $Bitmap "
 	            L"before and after reading; nothing written to the volume",
 	            written, Footprint::VOLUME_BRUT);
@@ -504,7 +657,12 @@ HRESULT DeletedFiles::getData() {
 		if (volume && snapshotInteger(member.second, L"Entry", entry) && snapshotInteger(member.second, L"Sequence", sequence)) {
 			auto traces = byVolume.find(volume->text());
 			if (traces == byVolume.end()) traces = byVolume.emplace(volume->text(), journalTraces(volume->text())).first;
-			const auto trace = traces->second.find(((uint64_t)entry << 16) | (uint16_t)(sequence - 1));
+			/* A deleted record's sequence number is one more than the file's
+			   (NTFS raises it on freeing); an entry of the index slack carries
+			   the file's own. */
+			const Json* source = member.second.find(L"Source");
+			const bool record = !source || source->text() != L"IndexSlack";
+			const auto trace = traces->second.find(((uint64_t)entry << 16) | (uint16_t)(record ? sequence - 1 : sequence));
 			if (trace != traces->second.end()) {
 				addUtcDate(file, L"DeletedUtc", trace->second.deletedUtc);
 				const Json* path = member.second.find(L"Path");

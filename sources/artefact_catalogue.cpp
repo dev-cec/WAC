@@ -68,7 +68,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		{ "defender_configuration", VISTA, 0, 0,
 		  { { VISTA, L"SOFTWARE\\Microsoft\\Windows Defender, SOFTWARE\\Policies\\Microsoft\\Windows Defender", L"registry values", true } }, L"" },
 		{ "deleted_files", XP, 0, 0,
-		  { { XP, L"$MFT, $Bitmap", L"NTFS 3.1 file records, data runs", true } },
+		  { { XP, L"$MFT, $Bitmap, $I30", L"NTFS 3.1 file records, data runs, index blocks", true } },
 		  L"What a deleted file still holds depends on the disk: a solid-state drive that received TRIM returns zeros for the freed clusters, declared as such, never as the content." },
 		{ "devices", XP, 0, 0,
 		  { { XP, L"SYSTEM\\CurrentControlSet\\Enum\\USB, SCSI", L"registry keys", true },

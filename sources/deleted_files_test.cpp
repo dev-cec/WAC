@@ -281,6 +281,82 @@ void refused() {
 	check(parseDeletedRecord(inUse.data(), inUse.size()).inUse, "record in use not said so");
 }
 
+/*! An index entry of a directory, its key a $FILE_NAME — as NTFS writes it,
+ *  8-byte aligned. */
+std::vector<uint8_t> indexEntry(uint64_t file, uint16_t sequence, uint64_t parent, const std::wstring& name,
+                                uint8_t nameSpace = 1, uint64_t created = 133000000000000000ull, uint16_t keyLength = 0) {
+	const uint16_t key = keyLength ? keyLength : (uint16_t)(0x42 + 2 * name.size());
+	std::vector<uint8_t> e((0x10 + 0x42 + 2 * name.size() + 7) & ~(size_t)7, 0);
+	put64(e, 0, file | ((uint64_t)sequence << 48));
+	put16(e, 8, (uint16_t)e.size());
+	put16(e, 10, key);
+	put64(e, 0x10, parent | (1ull << 48));
+	for (int k = 0; k < 4; ++k) put64(e, 0x18 + 8 * k, created + k);
+	put64(e, 0x10 + 0x30, 4096);
+	e[0x10 + 0x40] = (uint8_t)name.size();
+	e[0x10 + 0x41] = nameSpace;
+	for (size_t k = 0; k < name.size(); ++k) put16(e, 0x10 + 0x42 + 2 * k, (uint16_t)name[k]);
+	return e;
+}
+
+/*! An INDX block of 4 KiB: `live` entries then the end entry, then `slack`
+ *  beyond the used size — fixups already applied. */
+std::vector<uint8_t> indexBlock(const std::vector<std::vector<uint8_t>>& live, const std::vector<std::vector<uint8_t>>& slack) {
+	std::vector<uint8_t> b(4096, 0);
+	std::memcpy(b.data(), "INDX", 4);
+	const size_t node = 0x18, first = 0x28;
+	size_t at = first;
+	for (const std::vector<uint8_t>& e : live) { std::memcpy(b.data() + node + at, e.data(), e.size()); at += e.size(); }
+	put16(b, node + at + 8, 0x10);                    // the end entry
+	put32(b, node + at + 12, 2);
+	at += 0x10;
+	put32(b, node, (uint32_t)first);
+	put32(b, node + 4, (uint32_t)at);
+	put32(b, node + 8, (uint32_t)(4096 - node));
+	for (const std::vector<uint8_t>& e : slack) { std::memcpy(b.data() + node + at, e.data(), e.size()); at += e.size(); }
+	return b;
+}
+
+void indexSlack() {
+	const uint64_t DIR = 777;
+	const std::vector<std::vector<uint8_t>> live = { indexEntry(1000, 3, DIR, L"alive.txt"), indexEntry(1001, 1, DIR, L"kept.doc") };
+	const std::vector<std::vector<uint8_t>> slack = {
+		indexEntry(1002, 4, DIR, L"wac-gone.exe"),                          // the one to find
+		indexEntry(1003, 1, 555, L"other-dir.txt"),                          // another directory's
+		indexEntry(1004, 1, DIR, L"GONE~1.EXE", 2),                          // an 8.3 alias
+		indexEntry(1005, 1, DIR, L"badkey.txt", 1, 133000000000000000ull, 0x30),
+		indexEntry(1006, 1, DIR, L"old.txt", 1, 100000000000000000ull),     // 1917
+		indexEntry(1007, 1, DIR, std::wstring(L"ctl") + L'\x01' + L".txt"),
+	};
+	const std::vector<uint8_t> b = indexBlock(live, slack);
+	const std::vector<IndexSlackEntry> found = indexSlackEntries(b.data(), b.size(), true, DIR);
+	check(found.size() == 1 && found[0].name == L"wac-gone.exe" && found[0].entry == 1002 && found[0].sequence == 4
+	      && found[0].size == 4096 && found[0].nameSpace == 1, "slack of a block in use: not exactly the one plausible entry");
+	// Released by the directory: its former live entries are gone files too.
+	const std::vector<IndexSlackEntry> released = indexSlackEntries(b.data(), b.size(), false, DIR);
+	check(released.size() == 3 && released[0].name == L"alive.txt" && released[2].name == L"wac-gone.exe",
+	      "released block: its whole node not read");
+	check(indexSlackEntries(b.data(), b.size(), true, DIR + 1).empty(), "another directory's block: entries taken");
+	std::vector<uint8_t> notIndx = b;
+	notIndx[0] = 'X';
+	check(indexSlackEntries(notIndx.data(), notIndx.size(), false, DIR).empty(), "a block without INDX read");
+}
+
+/*! Damaged index blocks against a guard page: nothing read outside, nothing absurd kept. */
+void guardedIndex(std::mt19937_64& rng) {
+	const std::vector<uint8_t> sound = indexBlock({ indexEntry(10, 1, 5, L"a.txt") }, { indexEntry(11, 2, 5, L"gone.txt") });
+	for (int n = 0; n < 4000; ++n) {
+		std::vector<uint8_t> b = sound;
+		for (int k = 1 + (int)(rng() % 8); k > 0; --k) b[0x18 + rng() % 0x200] = (uint8_t)rng();
+		if (rng() % 8 == 0) b.resize(rng() % b.size());
+		for (GuardSide side : { GuardSide::After, GuardSide::Before }) {
+			GuardedCopy copy(b, side);
+			for (const IndexSlackEntry& e : indexSlackEntries(copy.data(), copy.size(), rng() % 2 == 0, 5))
+				check(!e.name.empty() && e.nameSpace != 2, "damaged block: an implausible entry kept");
+		}
+	}
+}
+
 void names() {
 	check(safeFileName(L"rapport.docx") == L"rapport.docx", "a plain name changed");
 	check(safeFileName(L"a:b*c?.exe") == L"a_b_c_.exe", "forbidden characters kept");
@@ -321,6 +397,8 @@ int wmain() {
 	zeroedAndShort();
 	refused();
 	names();
+	indexSlack();
+	guardedIndex(rng);
 	guarded(rng);
 	std::printf("%s: %llu check(s), %llu failure(s)\n", g_failures ? "FAILED" : "all passed", g_checks, g_failures);
 	return g_failures ? 1 : 0;

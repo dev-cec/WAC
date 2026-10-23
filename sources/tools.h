@@ -217,8 +217,9 @@ struct AppliConf {
 	 *  default. */
 	struct DeletedFilesSettings {
 		/*! How deep the recovery goes, each level including the ones below:
-		 *  1, the content of the deleted records of the $MFT. */
-		int level = 1;
+		 *  1, the content of the deleted records of the $MFT; 2, the names
+		 *  the slack of the directory indexes keeps. */
+		int level = 2;
 		int maxFileMib = 64;      //!< a larger deleted file is listed with its fingerprints, not copied
 		int maxTotalMib = 4096;   //!< all the recovered contents copied, at most: the most recent first
 		/*! Folders never read, as paths on each volume ("\\Windows\\WinSxS"):

@@ -1699,6 +1699,34 @@ public:
         return true;
     }
 
+    /*! Every index block (INDX) of a directory, its fixups applied — those the
+     *  directory uses and those it released, which keep the entries of files
+     *  gone (the deleted files' recovery, level 2).
+     *  @param dirIndex the directory's record
+     *  @param visit called with each block, its size, and whether $BITMAP
+     *         marks it in use
+     *  @return false if the directory's record or index could not be read */
+    bool forEachIndexBlock(uint64_t dirIndex, const std::function<void(const uint8_t*, size_t, bool)>& visit){
+        std::vector<uint8_t> rec;
+        if (!readMftRecord(dirIndex, rec)) return false;
+        std::vector<uint8_t> extension;
+        const uint8_t* ir = findResidentAttr(rec, 0x90, extension);
+        if (!ir) return false;
+        const uint32_t valueLength = readLittleEndian<uint32_t>(ir + 0x10);
+        const uint16_t valueOffset = readLittleEndian<uint16_t>(ir + 0x14);
+        if (valueLength < 0x20 || (uint64_t)valueOffset + valueLength > readLittleEndian<uint32_t>(ir + 4)) return false;
+        const uint32_t blockSize = readLittleEndian<uint32_t>(ir + valueOffset + 8);
+        std::vector<NtfsRun> runs;
+        uint64_t realSize = 0;
+        if (!blockSize) return false;
+        if (!indexAllocation(rec, runs, realSize)) return true;     // all in $INDEX_ROOT: no block
+        std::vector<uint8_t> bits;
+        const bool bitmapRead = indexBitmap(rec, bits);
+        walkIndexBlocks(runs, realSize, blockSize, bitmapRead ? &bits : nullptr, true,
+                        [&](const uint8_t* block, bool inUse){ visit(block, blockSize, inUse); });
+        return true;
+    }
+
 private:
     /*! The runs of a directory's $INDEX_ALLOCATION "$I30", in its base record
      *  or SPLIT through $ATTRIBUTE_LIST — the same mechanism as for the
@@ -1980,6 +2008,13 @@ HRESULT ReadClusterAllocationRaw(const std::wstring& volumeLetter, uint64_t lcn,
     const VolumeLease v(volumeLetter);
     if (FAILED(v.result())) return v.result();
     return v->clusterAllocation(lcn, count, inUse) ? S_OK : HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+}
+
+HRESULT ForEachIndexBlockRaw(const std::wstring& volumeLetter, uint64_t directory,
+                             const std::function<void(const uint8_t*, size_t, bool)>& visit){
+    const VolumeLease v(volumeLetter);
+    if (FAILED(v.result())) return v.result();
+    return v->forEachIndexBlock(directory, visit) ? S_OK : HRESULT_FROM_WIN32(ERROR_FILE_CORRUPT);
 }
 
 HRESULT ReadClustersRaw(const std::wstring& volumeLetter, uint64_t lcn, uint64_t count, uint8_t* out){

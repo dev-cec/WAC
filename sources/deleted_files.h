@@ -148,6 +148,41 @@ struct Recovery {
 Recovery recoverContent(const DeletedData& data, const ClusterSource& volume,
                         const std::function<void(const uint8_t*, size_t)>& sink);
 
+/*! LEVEL 2 — THE SLACK OF THE DIRECTORY INDEXES. A directory lists its
+ *  files in index blocks (INDX) of `$I30`; an entry removed — the file
+ *  deleted, moved, renamed — leaves its bytes beyond the node's used size
+ *  until the node grows again, and a block the directory released keeps all
+ *  of its former entries. Each entry is the file's `$FILE_NAME`: its name,
+ *  its record, its four dates, its size. Most of the slack repeats live
+ *  entries the tree moved (Windows 8: 52,789 entries in the slack, 41 names
+ *  absent from every live index — B-036): only a name that no directory
+ *  holds any more is published, and no content — the name, when the file
+ *  existed, and which record it was. */
+
+/*! An entry found in the slack of an index block. */
+struct IndexSlackEntry {
+	uint64_t entry = 0;              //!< the file's record, as the entry referenced it
+	uint16_t sequence = 0;           //!< its sequence number then
+	std::wstring name;               //!< its name in the directory
+	uint8_t nameSpace = 0;           //!< 0 POSIX, 1 Win32, 3 Win32 and DOS (2, the 8.3 alias, left out)
+	FILETIME created = { 0 }, modified = { 0 }, mftModified = { 0 }, accessed = { 0 };   //!< $FILE_NAME, UTC
+	uint64_t size = 0;               //!< the content's size, as $FILE_NAME recorded it
+	uint32_t attributes = 0;         //!< the file's attributes then
+};
+
+/*! The entries an index block keeps outside its live ones: beyond the
+ *  node's used size, or anywhere in the node of a block the directory
+ *  released. Read as plausible only: an entry of THIS directory (the parent
+ *  of its $FILE_NAME), a key of the exact length of its name, a name of
+ *  valid characters, four dates between 1980 and 2100; the 8.3 aliases left
+ *  out. Every read is bounded by the block.
+ *  @param block the block, its fixups applied
+ *  @param size its size
+ *  @param inUse whether the index's $BITMAP marks it in use
+ *  @param directory the directory's record
+ *  @return the entries, in the block's order (the same may come twice) */
+std::vector<IndexSlackEntry> indexSlackEntries(const uint8_t* block, size_t size, bool inUse, uint64_t directory);
+
 /*! A file name made safe for the exhibit store: the characters Windows
  *  refuses in a name replaced by "_", at most 120 characters. */
 std::wstring safeFileName(const std::wstring& name);

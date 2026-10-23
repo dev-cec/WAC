@@ -21,6 +21,7 @@
 #include <utility>
 #include <cstdint>
 #include <memory>
+#include <functional>
 #include <streambuf>
 #include "vss.h"
 
@@ -135,6 +136,18 @@ HRESULT ReadClusterAllocationRaw(const std::wstring& volumeLetter, uint64_t lcn,
  *  @param out receives count × RawVolumeLayout::clusterSize bytes
  *  @return S_OK; ERROR_READ_FAULT if the range leaves the volume or a read failed */
 HRESULT ReadClustersRaw(const std::wstring& volumeLetter, uint64_t lcn, uint64_t count, uint8_t* out);
+
+/*! Every index block (INDX) of a directory, as it is now, its fixups
+ *  applied: those the directory uses and those it released — which keep the
+ *  entries of files gone (level 2 of the deleted files' recovery).
+ *  @param volumeLetter the volume's letter
+ *  @param directory the directory's $MFT record
+ *  @param visit called with each block, its size, and whether the index's
+ *         $BITMAP marks it in use
+ *  @return S_OK (a directory whose index fits its record has no block);
+ *          ERROR_FILE_CORRUPT if its record or index could not be read */
+HRESULT ForEachIndexBlockRaw(const std::wstring& volumeLetter, uint64_t directory,
+                             const std::function<void(const uint8_t*, size_t, bool)>& visit);
 
 /*! Signature of a progress reporter.
  *  @param item  what is being extracted (path on the volume)
