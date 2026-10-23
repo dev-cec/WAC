@@ -26,6 +26,9 @@
 \addlinespace
 \texttt{defender\_configuration} & Windows Vista & \texttt{SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows Defender, SOFTWARE\textbackslash{}Policies\textbackslash{}Microsoft\textbackslash{}Windows Defender} & registry values & yes \\
 \addlinespace
+\texttt{deleted\_files} & Windows XP & \texttt{\$MFT, \$Bitmap} & NTFS 3.1 file records, data runs & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape What a deleted file still holds depends on the disk: a solid-state drive that received TRIM returns zeros for the freed clusters, declared as such, never as the content.} \\
+\addlinespace
 \texttt{devices} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Enum\textbackslash{}USB, SCSI} & registry keys & yes \\
  & Windows Vista & \texttt{…and SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows Portable Devices, device properties with dates (Windows 8)} & registry keys & yes \\
 \addlinespace

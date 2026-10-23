@@ -331,6 +331,19 @@ artefacts:              # one key per artefact; a missing key is true
   bits:                    true   # qmgr.db: BITS jobs — URLs, destinations, notification command lines
   defender:                true   # Microsoft Defender: support logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
   defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
+  deleted_files:                  # deleted files whose content the raw reading still finds
+    enabled:               true   # false: nothing read
+    level:                 1      # 1: the content of the $MFT's deleted records
+    max_file_mib:          64     # beyond: listed with its fingerprints, not copied
+    max_total_mib:         4096   # all copied; the most recent first
+    excluded_folders:             # never read, on every volume
+      - \Windows\WinSxS
+      - \Windows\SoftwareDistribution
+      - \Windows\servicing
+      - \Windows\Installer\$PatchCache$
+      - \Windows\System32\catroot
+      - \Windows\System32\catroot2
+      - \$Extend\$RmMetadata
   devices:                 true   # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
   dpapi_master_keys:       true   # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
   emails:                  true   # Outlook (PST, OST) and Thunderbird (mbox): messages, recipients, times; bodies and attachments exported
@@ -1707,6 +1720,45 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         files included. NTFS stores with each descriptor a hash of its bytes:
         WAC recomputes it, and \champ{HashMismatch} flags a descriptor that
         does not match it.
+  \item[\fichier{deleted\_files.json}] the \textbf{content} of the deleted
+        files, where \fichier{mft.json} gives only their record: the tool, the
+        script or the archive an intruder removed stays in its clusters until
+        NTFS gives them to another file. Read raw, nothing opened nor written
+        on the examined machine. A resident content (a few hundred bytes, in
+        the record itself) is given as it is; each cluster of a non-resident
+        one is checked free in \path|$Bitmap| before and after it is read:
+        given meanwhile to another file, it becomes a hole of zeros.
+        \champ{State}: \texttt{Recovered} (the whole content),
+        \texttt{Partial} (holes listed in \champ{MissingRanges}, first byte
+        and length), \texttt{Overwritten} (nothing left), \texttt{Zeroed}
+        (clusters read back zero: a solid-state drive that received TRIM),
+        \texttt{NotRecoverable} and \champ{Reason} (compressed, encrypted by
+        EFS, runs partly in an extension record, inconsistent runs),
+        \texttt{RecordReused} (the record went to another file since the copy
+        of the \path|$MFT|), \texttt{NotRead} (not read:
+        \texttt{max\_total\_mib} reached). With the path (\champ{Path}), the record's
+        dates, the deletion's time (\champ{DeletedUtc}, read in the change
+        journal: no record carries it), \champ{RecoveredBytes} and the fingerprints
+        \champ{RecoveredSHA256}\ldots{} of the content \emph{as recovered},
+        holes included: the original file's only when the state is
+        \texttt{Recovered}. A copied content lies in the exhibit store under
+        \path|X:\$DeletedFiles\<record>-<sequence>_<name>| (\champ{Exhibit}),
+        never under its former path, where another file may be. Since
+        Windows~10, a file deleted while still open is first renamed into
+        \path|$Extend\$Deleted|: its record names it there, and
+        \champ{FormerPath} gives the path it had, read in the change journal.
+        A recovered
+        executable follows the rule of the others (\texttt{binary}): an
+        authentic one is listed with its \champ{Signature}, not copied
+        (\champ{Copied}~\texttt{false}, \champ{NotCopied}); under
+        \texttt{binary: none} nothing is judged, and it is copied. The most recent
+        first (the record's latest date, the deletion's not being in it), up
+        to \texttt{max\_total\_mib}; the \texttt{excluded\_folders} (Windows
+        updates) are not read, nor the output folder. The setting is a
+        structure under \texttt{artefacts:}; \texttt{deleted\_files: false}
+        is enough to leave it out.
+        On a BitLocker volume, the raw reading sees the volume as the system
+        decrypts it, as for the other artefacts: its free clusters too.
   \item[\fichier{usn\_journal.json}] the change journal of every fixed NTFS
         volume (\path|$UsnJrnl:$J|, \champ{Volume}; the \champ{Usn} numbers
         rise within a volume): every creation, write, rename and

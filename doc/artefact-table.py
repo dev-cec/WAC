@@ -79,6 +79,7 @@ PHRASES = [
     ("master key file, version 2", "fichier de clé maîtresse, version 2"),
     ("MRUList and strings", "MRUList et chaînes"), ("MRUListEx and shell items", "MRUListEx et éléments de shell"),
     ("MRUListEx and UTF-16 strings", "MRUListEx et chaînes UTF-16"),
+    ("NTFS 3.1 file records, data runs", "enregistrements de fichier NTFS 3.1, plages de clusters"),
     ("NTFS 3.1 file records", "enregistrements de fichier NTFS 3.1"),
     ("NTFS boot sector, journal header", "secteur de démarrage NTFS, en-tête du journal"),
     ("transactional NTFS log, raw copy", "journal NTFS transactionnel, copie brute"),
@@ -112,6 +113,8 @@ PHRASES = [
 # Whole cells that are one word.
 WHOLE = {"files": "fichiers", "text": "texte", "observation": "observation"}
 NOTES = {
+    "What a deleted file still holds depends on the disk: a solid-state drive that received TRIM returns zeros for the freed clusters, declared as such, never as the content.":
+        "Ce qu'un fichier supprimé garde dépend du disque : un SSD qui a reçu TRIM rend des zéros pour les clusters libérés, déclarés comme tels, jamais comme le contenu.",
     "Still written by Windows 11 (measured, build 26200), though the Timeline is no longer shown. Server editions to be measured.":
         "Toujours écrit par Windows 11 (mesuré, build 26200), bien que la Chronologie n'y soit plus affichée. Éditions serveur à mesurer.",
     "Amcache.hve also on Windows 7 with update KB2952664.": "Amcache.hve aussi sous Windows 7 avec la mise à jour KB2952664.",

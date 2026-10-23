@@ -130,6 +130,8 @@ python3 -m venv vmtest/tools/ese-venv && vmtest/tools/ese-venv/bin/pip install d
 \fichier{tests/offline\_registry\_test.exe} & hive reader confronted with Microsoft's \\
 \fichier{tests/system\_conversions\_test.exe} & WAC's conversions confronted with Windows' \\
 \fichier{tests/ntfs\_fixup\_test.exe} & check of NTFS records (torn records) \\
+\fichier{tests/ntfs\_runs\_test.exe} & NTFS data runs (a forged list refused) \\
+\fichier{tests/deleted\_files\_test.exe} & recovery of deleted files on a volume in memory \\
 \fichier{tests/mft\_test.exe}, \fichier{usn\_journal\_test.exe} & \fichier{\$MFT} and change journal against ntfs-3g and the compiler's structures \\
 \bottomrule
 \end{longtable}
@@ -697,6 +699,48 @@ cd build-windows/tests && wine ntfs_fixup_test.exe
 Reference: 44,610 checks, no failure. On a real volume, the VM cycle confirms
 it: \fichier{raw.log} must hold no ``torn record''.
 
+\section{NTFS data runs: \texttt{ntfs\_runs\_test}}
+
+The data runs say where a file's clusters lie; read from a deleted record,
+they are what an intruder or a damaged disk left. The harness decodes known
+lists (the Linux-NTFS documentation's examples, a run backwards, a sparse run,
+the attribute's end without a zero), refuses forged lists whole (a size field
+beyond 8~bytes, a length of zero, a truncated run, a cluster before the
+volume's start), then confronts \wac{} with an independent decoder on 128-bit
+integers for 50,000 random lists placed against a forbidden page.
+
+\begin{lstlisting}
+cd build-windows/tests && wine ntfs_runs_test.exe
+\end{lstlisting}
+
+Reference: 100,017 checks, no failure; the former decoder, which took a field
+of 15~bytes, fails 48,224 of them.
+
+\section{Deleted files: \texttt{deleted\_files\_test}}
+
+A recovery gone wrong gives a file that looks right: the bytes of whatever
+lies in its clusters now. The harness builds deleted records and a volume in
+memory whose outcome is known: a resident file, a contiguous one, a fragmented
+one with a sparse run; a cluster taken before the reading, another taken
+\emph{during} it; all taken; clusters read back zero (TRIM); a valid data
+length shorter than the size. Inconsistent lists (a run outside the volume,
+two runs on the same clusters, sizes that do not match, compression,
+encryption, runs in an extension record) are refused before any read. Every
+read asked for is checked: inside the volume, on free clusters. Then 20,000
+damaged records, against a forbidden page.
+
+\begin{lstlisting}
+cd build-windows/tests && wine deleted_files_test.exe
+\end{lstlisting}
+
+Reference: 80,025 checks, no failure; without the check of \fichier{\$Bitmap}
+after the reading, the cluster taken during the reading is published as the
+file's content and the check fails. In the VM, files of known content
+(resident, text, unsigned executable, \fichier{notepad.exe}) are written to
+the disk then deleted: \texttt{check-json.py} requires a content declared
+\texttt{Recovered} to have the SHA-256 Windows computed before the deletion,
+and the authentic executable to be listed without being copied.
+
 \section{\fichier{\$MFT} and change journal: \texttt{mft\_test}, \texttt{usn\_journal\_test}}
 
 An offset error in reading the \fichier{\$MFT} or the change journal gives
@@ -879,9 +923,11 @@ authenticode_test --catalogs <folder> --files <list>
 
 \texttt{yaml\_light\_test} (native, libyaml included, under AddressSanitizer
 and UBSan): exact readings (nested sections, quotes, comments, byte order
-mark, empty file), refusals with the right line (duplicate key, list, anchor,
-alias, tag, second document, tab, quote left open, nesting too deep), then
-3,000 texts damaged at random; seven mutations all detected.
+mark, empty file), refusals with the right line (duplicate key, list outside
+a key, list in a list, mapping in a list, anchor, alias, tag, second
+document, tab, quote left open, nesting too deep), lists of values read
+exactly (the deleted files' excluded folders), then 3,000 texts damaged at
+random; seven mutations all detected.
 \texttt{config\_test} (under wine): each setting applied, each kind of mistake
 refused with its line, and the reference file of \opt{write-config} read back
 as it describes itself; three mutations detected. In the VM, a collection

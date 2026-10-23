@@ -1,4 +1,4 @@
-# B-056 — Témoins du cliché instantané peu fiables sous Windows 7
+# B-056 — Témoins du cliché instantané peu fiables sous Windows 7 et Vista
 
 | Statut | Priorité | Effort |
 |---|---|---|
@@ -31,3 +31,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-10-22 : créée. Les cycles de B-051 sous Windows 7 n'ont échoué que sur ce témoin ; analyse ci-dessus.
+- 2026-10-23 : même symptôme sous Vista, au cycle où le harnais a remplacé l'attente de 15 s par `RegFlushKey` seul : la ruche SOFTWARE du cliché collecté, relue hors ligne, n'a pas la valeur témoin (Run : « Windows Defender » seul), ni son journal. Le cycle précédent de Vista, avec l'attente, la retrouvait. Le délai entre l'écriture et le cliché compte, pas seulement le vidage de la ruche : le harnais fait les deux en attendant la cause.
+- 2026-10-23 : avec `RegFlushKey` ET l'attente de 15 s, les deux témoins retrouvés dans les secondes collections de Vista et de Windows 7 (cycles de B-036). À confirmer sur trois cycles complets de suite avant de clore.

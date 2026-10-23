@@ -271,6 +271,11 @@ the current directory.
         is imported. The existing copies are read raw on the volume (catalog
         and stores of the differential area), through the same read-only
         access as the rest: none is mounted, exposed or asked of the service.
+  \item Recover a deleted file through a tool, or by writing to the volume: the
+        content of the deleted files is read raw (records of the \path|$MFT|,
+        \path|$Bitmap|, free clusters), through the same read-only access as
+        the rest, and copied to the collection medium only. A cluster in use is
+        not read.
   \item Open a key of the live registry, or flush it to the disk
         (\texttt{RegFlushKey}).
   \item Load a driver, create or change a service, a scheduled task, a

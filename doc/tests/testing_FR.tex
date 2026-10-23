@@ -135,6 +135,8 @@ python3 -m venv vmtest/tools/ese-venv && vmtest/tools/ese-venv/bin/pip install d
 \fichier{tests/offline\_registry\_test.exe} & lecteur de ruches confronté à celui de Microsoft \\
 \fichier{tests/system\_conversions\_test.exe} & conversions de WAC confrontées à celles de Windows \\
 \fichier{tests/ntfs\_fixup\_test.exe} & vérification des enregistrements NTFS (enregistrements déchirés) \\
+\fichier{tests/ntfs\_runs\_test.exe} & plages de clusters NTFS (liste forgée refusée) \\
+\fichier{tests/deleted\_files\_test.exe} & récupération des fichiers supprimés sur un volume en mémoire \\
 \fichier{tests/mft\_test.exe}, \fichier{usn\_journal\_test.exe} & \fichier{\$MFT} et journal des modifications confrontés à ntfs-3g et aux structures du compilateur \\
 \bottomrule
 \end{longtable}
@@ -717,6 +719,51 @@ cd build-windows/tests && wine ntfs_fixup_test.exe
 Référence : 44~610 contrôles, aucun échec. Sur un vrai volume, le cycle de la
 VM le confirme : \fichier{raw.log} ne doit contenir aucun « torn record ».
 
+\section{Plages de clusters NTFS : \texttt{ntfs\_runs\_test}}
+
+Les plages (« data runs ») disent où sont les clusters d'un fichier ; lues
+dans un enregistrement supprimé, elles sont ce qu'un intrus ou un disque abîmé
+a laissé. Le harnais décode des listes connues (exemples de la documentation
+Linux-NTFS, plage en arrière, plage creuse, fin d'attribut sans zéro), refuse
+en entier les listes forgées (champ de taille au-delà de 8~octets, longueur
+nulle, plage tronquée, cluster avant le début du volume), puis confronte
+\wac{} à un décodeur indépendant sur entiers de 128~bits pour 50~000 listes
+aléatoires placées contre une page interdite.
+
+\begin{lstlisting}
+cd build-windows/tests && wine ntfs_runs_test.exe
+\end{lstlisting}
+
+Référence : 100~017 contrôles, aucun échec ; l'ancien décodeur, qui prenait un
+champ de 15~octets, en fait échouer 48~224.
+
+\section{Fichiers supprimés : \texttt{deleted\_files\_test}}
+
+Une récupération fausse donne un fichier d'apparence juste : les octets de ce
+qui occupe ses clusters aujourd'hui. Le harnais construit des enregistrements
+supprimés et un volume en mémoire au résultat connu : fichier résident,
+contigu, fragmenté avec une plage creuse ; un cluster pris avant la lecture,
+un autre pris \emph{pendant} la lecture ; tous pris ; clusters relus à zéro
+(TRIM) ; longueur valide plus courte que la taille. Les listes incohérentes
+(plage hors du volume, deux plages sur les mêmes clusters, tailles qui ne
+concordent pas, compression, chiffrement, plages dans un enregistrement
+d'extension) sont refusées avant toute lecture. Chaque lecture demandée est
+vérifiée : dans le volume, sur des clusters libres. Puis 20~000
+enregistrements abîmés, contre une page interdite.
+
+\begin{lstlisting}
+cd build-windows/tests && wine deleted_files_test.exe
+\end{lstlisting}
+
+Référence : 80~025 contrôles, aucun échec ; sans la vérification de
+\fichier{\$Bitmap} après la lecture, le cluster pris pendant la lecture est
+publié comme contenu du fichier et le contrôle échoue. Dans la VM, des
+fichiers de contenu connu (résident, texte, exécutable non signé,
+\fichier{notepad.exe}) sont écrits sur le disque puis supprimés :
+\texttt{check-json.py} exige qu'un contenu déclaré \texttt{Recovered} ait le
+SHA-256 calculé par Windows avant la suppression, et que l'exécutable
+authentique soit relevé sans être copié.
+
 \section{\fichier{\$MFT} et journal des modifications : \texttt{mft\_test}, \texttt{usn\_journal\_test}}
 
 Un défaut de décalage dans la lecture de la \fichier{\$MFT} ou du journal
@@ -914,8 +961,10 @@ authenticode_test --catalogs <dossier> --files <liste>
 \texttt{yaml\_light\_test} (natif, libyaml compris, sous AddressSanitizer et
 UBSan) : lectures exactes (sections imbriquées, guillemets, commentaires,
 marque d'ordre des octets, fichier vide), refus avec la bonne ligne (clé en
-double, liste, ancre, alias, étiquette, second document, tabulation, guillemet
-non fermé, imbrication trop profonde), puis 3\,000 textes abîmés au hasard ;
+double, liste hors d'une clé, liste dans une liste, structure dans une liste,
+ancre, alias, étiquette, second document, tabulation, guillemet non fermé,
+imbrication trop profonde), listes de valeurs lues exactement (celle des
+dossiers écartés des fichiers supprimés), puis 3\,000 textes abîmés au hasard ;
 sept mutations toutes détectées. \texttt{config\_test} (sous wine) : chaque
 réglage appliqué, chaque sorte d'erreur refusée avec sa ligne, et le fichier
 de référence de \opt{write-config} relu tel qu'il se décrit ; trois mutations
