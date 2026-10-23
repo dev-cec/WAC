@@ -1671,50 +1671,56 @@ public:
         parseIndexNode(nodeHdr, limit, out);
         const size_t fromRoot = out.size();
 
-        // $INDEX_ALLOCATION (0xA0) — non-resident, present if the index overflows
-        const uint8_t* ia = findAttr(rec, 0xA0, false);   // "$I30"
-        // Only an index with blocks has a $BITMAP: read when $INDEX_ALLOCATION is.
+        /* $INDEX_ALLOCATION (0xA0) — non-resident, present if the index
+           overflows. A large directory keeps in $INDEX_ROOT only a leaf node
+           pointing to the index blocks: ALL its entries then come from there. */
+        std::vector<NtfsRun> runs;
+        uint64_t realSize = 0;
+        if (!idxBlockSize || !indexAllocation(rec, runs, realSize)){
+            RVLOG(L"[raw] listDir(%llu): %llu entry/entries from $INDEX_ROOT, no $INDEX_ALLOCATION\n",
+                  (unsigned long long)dirIndex, (unsigned long long)fromRoot);
+            return true;
+        }
         std::vector<uint8_t> bits;
-        auto bitmap = [&]() -> const std::vector<uint8_t>* {
-            if (indexBitmap(rec, bits)) return &bits;
-            RVLOG(L"[raw] listDir(%llu): $BITMAP unreadable, every index block read\n",
-                  (unsigned long long)dirIndex);
-            return nullptr;
-        };
-
-        /* If the attribute is not in the base record, it can be SPLIT through
-           $ATTRIBUTE_LIST — the same mechanism as for the SOFTWARE hive's $DATA.
-           Seen on a very busy `Recent` folder: the index overflowed but
-           $INDEX_ALLOCATION could not be found here, so listDir returned
-           "0 entries" on a full folder. */
-        if (!ia && idxBlockSize){
-            std::vector<NtfsRun> splitRuns;
-            uint64_t splitSize = 0;
-            if (collectRunsFromAttributeList(rec, splitRuns, splitSize, 0xA0)
-                && !splitRuns.empty()){
-                RVLOG(L"[raw] listDir(%llu): $INDEX_ALLOCATION via $ATTRIBUTE_LIST\n",
-                      (unsigned long long)dirIndex);
-                readIndexBlocks(splitRuns, splitSize, idxBlockSize, bitmap(), out);
-                return true;
-            }
-        }
-        /* A large directory keeps in $INDEX_ROOT only a leaf node pointing to
-           the index blocks: ALL its entries then come from $INDEX_ALLOCATION.
-           Hence the separate trace of both sources — without it, "0 entries"
-           does not say which of the two failed. */
-        RVLOG(L"[raw] listDir(%llu): %llu entry/entries from $INDEX_ROOT, "
-              L"$INDEX_ALLOCATION %ls (blockSize=%u)\n",
-              (unsigned long long)dirIndex, (unsigned long long)fromRoot,
-              ia ? (ia[8] != 0 ? L"non-resident" : L"RESIDENT (unexpected)") : L"absent",
-              idxBlockSize);
-        if (ia && ia[8] != 0 && idxBlockSize){
-            uint64_t realSize = readLittleEndian<uint64_t>(ia + 0x30);
-            std::vector<NtfsRun> runs = decodeNtfsRuns(ia + readLittleEndian<uint16_t>(ia + 0x20), ia + readLittleEndian<uint32_t>(ia + 0x04));
-            readIndexBlocks(runs, realSize, idxBlockSize, bitmap(), out);
-        }
+        const bool bitmapRead = indexBitmap(rec, bits);
+        if (!bitmapRead)
+            RVLOG(L"[raw] listDir(%llu): $BITMAP unreadable, every index block read\n", (unsigned long long)dirIndex);
+        // The blocks in use only: a released block keeps the entries of files gone (see indexBitmap).
+        walkIndexBlocks(runs, realSize, idxBlockSize, bitmapRead ? &bits : nullptr, false,
+                        [&](const uint8_t* block, bool inUse){
+            if (!inUse) return;
+            const uint8_t* nh = block + 0x18;      // node header after the INDX header
+            const uint8_t* lim = nh + readLittleEndian<uint32_t>(nh + 4);
+            if (lim > block + idxBlockSize) lim = block + idxBlockSize;
+            parseIndexNode(nh, lim, out);
+        });
+        RVLOG(L"[raw] listDir(%llu): %llu entry/entries from $INDEX_ROOT, %llu in all\n",
+              (unsigned long long)dirIndex, (unsigned long long)fromRoot, (unsigned long long)out.size());
         return true;
     }
 
+private:
+    /*! The runs of a directory's $INDEX_ALLOCATION "$I30", in its base record
+     *  or SPLIT through $ATTRIBUTE_LIST — the same mechanism as for the
+     *  SOFTWARE hive's $DATA. Seen on a very busy `Recent` folder: the index
+     *  overflowed but $INDEX_ALLOCATION was not in the base record, and the
+     *  folder listed "0 entries".
+     *  @param rec the directory's base record
+     *  @param runs receives the runs
+     *  @param realSize receives the attribute's size
+     *  @return false if the directory has no index blocks */
+    bool indexAllocation(const std::vector<uint8_t>& rec, std::vector<NtfsRun>& runs, uint64_t& realSize){
+        const uint8_t* ia = findAttr(rec, 0xA0, false);   // "$I30"
+        if (ia){
+            if (ia[8] == 0 || readLittleEndian<uint32_t>(ia + 4) < 0x40) return false;
+            realSize = readLittleEndian<uint64_t>(ia + 0x30);
+            runs = decodeNtfsRuns(ia + readLittleEndian<uint16_t>(ia + 0x20), ia + readLittleEndian<uint32_t>(ia + 0x04));
+            return !runs.empty();
+        }
+        return collectRunsFromAttributeList(rec, runs, realSize, 0xA0) && !runs.empty();
+    }
+
+public:
     /*! Allocation bitmap of a directory's index ($BITMAP "$I30", type 0xB0):
      *  bit n says whether index block n is in use.
      *
@@ -1753,44 +1759,40 @@ public:
         return readVirtual(runs, 0, (uint32_t)size, bits.data());
     }
 
-    /*! Walks the index blocks (INDX) described by `runs` and extracts their
-     *  entries. Shared by both ways of reaching $INDEX_ALLOCATION: from the base
-     *  record, or through $ATTRIBUTE_LIST when it is split.
-     *  @param bitmap the index's allocation bitmap (see indexBitmap); nullptr if
-     *         it could not be read, every block with a signature is then read */
-    void readIndexBlocks(const std::vector<NtfsRun>& runs, uint64_t realSize,
-                        uint32_t idxBlockSize, const std::vector<uint8_t>* bitmap,
-                        std::vector<RawDirEntry>& out){
+    /*! Walks the index blocks (INDX) described by `runs`, each read, its
+     *  INDX signature checked and its fixups applied — a torn block would mix
+     *  two versions of the directory.
+     *  @param bitmap the index's allocation bitmap (see indexBitmap); nullptr
+     *         if it could not be read: every block is then said in use
+     *  @param released true to read the blocks the bitmap marks free too;
+     *         false to leave them unread (a listing needs only the others)
+     *  @param visit called with each block and whether it is in use */
+    void walkIndexBlocks(const std::vector<NtfsRun>& runs, uint64_t realSize, uint32_t idxBlockSize,
+                         const std::vector<uint8_t>* bitmap, bool released,
+                         const std::function<void(const uint8_t*, bool)>& visit){
         if (!idxBlockSize) return;
         std::vector<uint8_t> blk(idxBlockSize);
         uint64_t blocksRead = 0, blocksWithoutIndx = 0, blocksTorn = 0, blocksFree = 0;
         for (uint64_t pos = 0; pos + idxBlockSize <= realSize; pos += idxBlockSize){
             const uint64_t block = pos / idxBlockSize;
-            if (bitmap && (block / 8 >= bitmap->size() || !((*bitmap)[block / 8] & (1u << (block % 8))))){
+            const bool inUse = !bitmap || (block / 8 < bitmap->size() && ((*bitmap)[block / 8] & (1u << (block % 8))));
+            if (!inUse){
                 ++blocksFree;
-                continue;
+                if (!released) continue;
             }
             ++blocksRead;
             if (!readVirtual(runs, pos, idxBlockSize, blk.data())){
-                RVLOG(L"[raw] index block at offset %llu unreadable\n",
-                      (unsigned long long)pos);
+                RVLOG(L"[raw] index block at offset %llu unreadable\n", (unsigned long long)pos);
                 break;
             }
             if (memcmp(blk.data(), "INDX", 4) != 0){ ++blocksWithoutIndx; continue; }
-            // A torn index block would list entries of two versions of the directory.
             if (!applyNtfsFixup(blk.data(), idxBlockSize)){ ++blocksTorn; continue; }
-            const uint8_t* nh = blk.data() + 0x18;      // node header after the INDX header
-            uint32_t used = readLittleEndian<uint32_t>(nh + 4);
-            const uint8_t* lim = nh + used;
-            if (lim > blk.data() + idxBlockSize) lim = blk.data() + idxBlockSize;
-            parseIndexNode(nh, lim, out);
+            visit(blk.data(), inUse);
         }
-        RVLOG(L"[raw] index blocks: realSize=%llu, %llu free (bitmap %ls), %llu read, "
-              L"%llu without INDX signature, %llu torn, total %llu entry(ies)\n",
-              (unsigned long long)realSize, (unsigned long long)blocksFree,
-              bitmap ? L"read" : L"UNREADABLE", (unsigned long long)blocksRead,
-              (unsigned long long)blocksWithoutIndx, (unsigned long long)blocksTorn,
-              (unsigned long long)out.size());
+        RVLOG(L"[raw] index blocks: realSize=%llu, %llu read of which %llu free (bitmap %ls), "
+              L"%llu without INDX signature, %llu torn\n",
+              (unsigned long long)realSize, (unsigned long long)blocksRead, (unsigned long long)blocksFree,
+              bitmap ? L"read" : L"UNREADABLE", (unsigned long long)blocksWithoutIndx, (unsigned long long)blocksTorn);
     }
 };
 
