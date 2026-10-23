@@ -75,7 +75,20 @@ int main() {
 
 	refused("binary: all\nbinary: none\n", 2, "duplicate key");
 	refused("artefacts:\n  events: true\n  events: false\n", 3, "duplicate nested key");
-	refused("artefacts:\n  - registry\n", 2, "a list");
+	YamlNode listed;
+	check(YamlParse("artefacts:\n  deleted_files:\n    excluded_folders:\n      - \\Windows\\WinSxS\n      - '\\$Extend'\n    level: 2\n",
+	                listed, error), "list of scalars refused: " + error);
+	const YamlNode* deleted = listed.child("artefacts") ? listed.child("artefacts")->child("deleted_files") : nullptr;
+	const YamlNode* folders = deleted ? deleted->child("excluded_folders") : nullptr;
+	check(folders && folders->list && !folders->mapping && folders->line == 3 && folders->items.size() == 2
+	      && folders->items[0] == "\\Windows\\WinSxS" && folders->items[1] == "\\$Extend", "list of scalars read wrong");
+	check(deleted && deleted->child("level") && deleted->child("level")->scalar == "2", "key after a list read wrong");
+	check(YamlParse("excluded_folders: []\n", listed, error) && listed.child("excluded_folders")
+	      && listed.child("excluded_folders")->list && listed.child("excluded_folders")->items.empty(), "empty list read wrong");
+	refused("- registry\n", 1, "a list at the top");
+	refused("artefacts:\n  - - registry\n", 2, "a list in a list");
+	refused("artefacts:\n  - registry: true\n", 2, "a mapping in a list");
+	refused("a: &x [1]\n", 1, "an anchored list");
 	refused("a: &x 1\nb: *x\n", 1, "an anchor");
 	refused("binary: !!str all\n", 1, "a tag");
 	refused("binary: all\n---\nbinary: none\n", 2, "a second document");

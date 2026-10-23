@@ -41,6 +41,7 @@ bool fail(std::string& error, size_t line, const std::string& why) {
 bool decorated(const yaml_event_t& e) {
 	if (e.type == YAML_SCALAR_EVENT) return e.data.scalar.anchor || (e.data.scalar.tag && !e.data.scalar.plain_implicit && !e.data.scalar.quoted_implicit);
 	if (e.type == YAML_MAPPING_START_EVENT) return e.data.mapping_start.anchor || e.data.mapping_start.tag;
+	if (e.type == YAML_SEQUENCE_START_EVENT) return e.data.sequence_start.anchor || e.data.sequence_start.tag;
 	return false;
 }
 
@@ -58,6 +59,7 @@ bool YamlParse(const std::string& text, YamlNode& root, std::string& error) {
 	std::string key;                             // a key read, waiting for its value
 	size_t keyLine = 0;                          // its line: the one a message about the setting names
 	bool haveKey = false;
+	YamlNode* list = nullptr;                    // the list being filled: only scalars go into it
 	size_t documents = 0;
 	for (;;) {
 		Event e;
@@ -80,8 +82,20 @@ bool YamlParse(const std::string& text, YamlNode& root, std::string& error) {
 			break;
 		case YAML_STREAM_END_EVENT:
 			return true;
-		case YAML_SEQUENCE_START_EVENT:
-			return fail(error, line, "lists are not accepted");
+		case YAML_SEQUENCE_START_EVENT: {
+			if (list) return fail(error, line, "a list holds values only");
+			if (open.empty() || !haveKey) return fail(error, line, "a list is accepted only as a key's value");
+			auto node = std::make_unique<YamlNode>();
+			node->list = true;
+			node->line = (int)keyLine + 1;
+			list = node.get();
+			open.back()->children.emplace_back(key, std::move(node));
+			haveKey = false;
+			break;
+		}
+		case YAML_SEQUENCE_END_EVENT:
+			list = nullptr;
+			break;
 		case YAML_ALIAS_EVENT:
 			return fail(error, line, "aliases are not accepted");
 		case YAML_MAPPING_START_EVENT: {
@@ -91,6 +105,7 @@ bool YamlParse(const std::string& text, YamlNode& root, std::string& error) {
 				open.push_back(&root);
 				break;
 			}
+			if (list) return fail(error, line, "a list holds values only");
 			if (!haveKey) return fail(error, line, "a mapping cannot be a key");
 			if (open.size() >= MAX_DEPTH) return fail(error, line, "nested too deep");
 			auto node = std::make_unique<YamlNode>();
@@ -107,6 +122,10 @@ bool YamlParse(const std::string& text, YamlNode& root, std::string& error) {
 			break;
 		case YAML_SCALAR_EVENT: {
 			const std::string value(reinterpret_cast<const char*>(e.event.data.scalar.value), e.event.data.scalar.length);
+			if (list) {
+				list->items.push_back(value);
+				break;
+			}
 			if (open.empty()) {
 				// A document holding a single scalar — or nothing but comments.
 				if (!value.empty()) return fail(error, line, "the file must be a mapping of settings");
