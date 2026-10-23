@@ -60,7 +60,9 @@
 #   deleted      files of known content written to the disk, then deleted —
 #                a resident one, a text of 300 KiB, an unsigned executable
 #                (WAC.exe) and a Microsoft one (notepad.exe) — with their
-#                SHA-256 and what WAC must do of them -> deleted_files.json
+#                SHA-256 and what WAC must do of them -> deleted_files.json;
+#   slack        150 of 450 files moved from a folder to another: their former
+#                names in the released index blocks of the first -> deleted_files.json (level 2)
 #   shadowcopy, shadowfile  every shadow copy Windows lists for C: (identifier,
 #                set, creation in UTC), one made here by the harness — through
 #                the VSS service, which WAC itself never calls — and the SHA-256
@@ -1848,4 +1850,22 @@ try { if (Wants 'deleted_files') {
         Write-Output "deleted=$path|$($w[1].Length)|$digest|$($w[2])|$token"
     }
     Remove-Item -Recurse -Force $buffer
+    # Level 2, the slack of the directory indexes: 450 files in a folder,
+    # the 150 in the middle of the name order moved to another. The leaf
+    # blocks they filled are released with their entries, the folder keeping
+    # its index blocks for the others: a folder emptied whole went back to an
+    # index held in its record, its blocks out of any run (Windows 11,
+    # measured). The records live on under the new folder — no deleted record
+    # names them (level 1), only the slack does.
+    $from = "$folder\slack-from"
+    $to = "$folder\slack-to"
+    New-Item -ItemType Directory -Force $from, $to | Out-Null
+    foreach ($prefix in 'a', 'm', 'z') {
+        foreach ($i in 1..150) { Set-Content "$from\$prefix-slack-$('{0:D3}' -f $i)-$token.txt" "WAC slack witness $prefix $i" }
+    }
+    foreach ($i in 1..150) {
+        $name = "m-slack-$('{0:D3}' -f $i)-$token.txt"
+        Move-Item "$from\$name" "$to\$name"
+    }
+    Write-Output "slack=$from|$to|$token|150"
 } } catch { WitnessFailure 'deleted_files' $_ }

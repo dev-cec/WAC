@@ -480,6 +480,7 @@ def cross_checks(folder):
     found += guarded(check_shadow_copies, folder)
     found += guarded(check_powershell_profiles, folder)
     found += guarded(check_deleted_files, folder)
+    found += guarded(check_deleted_index_slack, folder)
     return found
 
 
@@ -618,6 +619,53 @@ def check_powershell_profiles(folder):
         print(f"  ❌ powershell_profiles.json: {wrong[0][:200]}")
         return 1
     print(f"  ✅ powershell_profiles.json: the {len(witnesses)} witness profile(s), scope, SHA-256 and text as written")
+    return 0
+
+
+def check_deleted_index_slack(folder):
+    """deleted_files.json, level 2: the harness moved 150 files from a folder
+    to another; the first one's index blocks, released, keep their former
+    names. At least one must be listed from the slack (Source IndexSlack),
+    under its former path, its CurrentPath the new one, its record the one
+    mft.json gives that new path — read in the record, not in the index.
+    Every name the slack gives is checked: its CurrentPath, when there is one,
+    belongs to its record in mft.json."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        witness = next((l.strip()[len("slack="):].split("|") for l in f if l.startswith("slack=")), None)
+    files = load(folder, "deleted_files.json")
+    if not witness or not isinstance(files, list):
+        if not skipped_unplaced(folder, "deleted_files", witness):
+            print("  ⏭️  deleted_files.json or the slack witness absent: level 2 not confronted")
+        return 0
+    source, target, token, count = witness
+    slack = [x for x in files if x.get("Source") == "IndexSlack"]
+    if not slack and not any(x.get("Source") == "MftRecord" for x in files):
+        print("  ⏭️  deleted_files.json without level 2 (level: 1): slack not confronted")
+        return 0
+    mft = load(folder, "mft.json")
+    entry_of = {str(e.get("Path", "")).lower(): e.get("Entry") for e in mft or [] if not e.get("Deleted")}
+    wrong, mine = [], []
+    for x in slack:
+        now = str(x.get("CurrentPath", "")).lower()
+        if now and now in entry_of and entry_of[now] != x.get("Entry"):
+            wrong.append(f"{x.get('Path')}: record {x.get('Entry')}, mft.json gives {now} record {entry_of[now]}")
+        if str(x.get("Path", "")).lower().startswith(source.lower() + "\\") and token in str(x.get("Path", "")):
+            mine.append(x)
+    for x in mine:
+        name = str(x.get("Path", "")).rsplit("\\", 1)[-1]
+        if str(x.get("CurrentPath", "")).lower() != (target + "\\" + name).lower():
+            wrong.append(f"{x.get('Path')}: CurrentPath {x.get('CurrentPath')} instead of {target}\\{name}")
+    if wrong:
+        print(f"  ❌ deleted_files.json (level 2): {wrong[0][:220]}" + (f" (+{len(wrong) - 1})" if len(wrong) > 1 else ""))
+        return 1
+    if not mine:
+        print(f"  ❌ deleted_files.json (level 2): none of the {count} names moved out of {source} found in the slack")
+        return 1
+    print(f"  ✅ deleted_files.json (level 2): {len(mine)} of the {count} names moved out of {source} found in the "
+          f"slack of its index, their record and current path as mft.json gives them; {len(slack)} former name(s) in all")
     return 0
 
 
