@@ -73,6 +73,27 @@ RawReadTimes RawHiveTimes();
  *          update sequence number; false otherwise (record left as it is) */
 bool applyNtfsFixup(uint8_t* record, size_t size);
 
+/*! A run of a non-resident attribute: `count` clusters from `lcn` on. */
+struct NtfsRun {
+    int64_t lcn;      //!< first cluster on the volume; -1 for a sparse run (zeros, no cluster)
+    uint64_t count;   //!< its length in clusters
+};
+
+/*! Decodes the data runs (mapping pairs) of a non-resident attribute.
+ *
+ *  HOSTILE INPUT. A run's header gives the sizes of its two fields, each at
+ *  most 8 bytes: a forged header announcing up to 15 shifted the bytes past
+ *  the width of the integer (undefined behaviour), and a run of length zero
+ *  or a cluster before the volume's start was taken as it came. Such a list
+ *  is refused whole: half of it would describe a content that is not the
+ *  file's.
+ *  @param p the first run's header
+ *  @param end the end of the attribute: nothing at or past it is read
+ *  @return the runs, up to the terminating zero or `end`; EMPTY if the list
+ *          is malformed (field size beyond 8 bytes, length zero, truncated
+ *          run, negative cluster) */
+std::vector<NtfsRun> decodeNtfsRuns(const uint8_t* p, const uint8_t* end);
+
 /*! Signature of a progress reporter.
  *  @param item  what is being extracted (path on the volume)
  *  @param done  bytes already written

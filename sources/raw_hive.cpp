@@ -50,8 +50,6 @@ bool iequals(const std::wstring& a, const std::wstring& b){
     return true;
 }
 
-struct Run { int64_t lcn; uint64_t count; }; // lcn == -1: sparse run (zeros)
-
 /*! Where the raw reading spends its time, per activity, in performance
  *  counter ticks (see RawHiveTimes): a whole-volume reading is optimised on
  *  measurements, not guesses. */
@@ -151,30 +149,6 @@ private:
     std::streambuf* file_;
     std::streambuf* observer_;
 };
-
-// Decodes an NTFS data run list.
-std::vector<Run> decodeRuns(const uint8_t* p, const uint8_t* end){
-    std::vector<Run> runs; int64_t prev = 0;
-    while (p < end) {
-        uint8_t hdr = *p++; if (hdr == 0) break;
-        int lenSz = hdr & 0x0F, offSz = (hdr >> 4) & 0x0F;
-        if (p + lenSz + offSz > end) break;
-        uint64_t count = 0;
-        for (int i = 0; i < lenSz; ++i) count |= (uint64_t)p[i] << (8 * i);
-        p += lenSz;
-        Run r; r.count = count;
-        if (offSz == 0) { r.lcn = -1; }                 // sparse
-        else {
-            int64_t off = 0;
-            for (int i = 0; i < offSz; ++i) off |= (int64_t)p[i] << (8 * i);
-            if (p[offSz - 1] & 0x80)                     // sign extension
-                for (int i = offSz; i < 8; ++i) off |= (int64_t)0xFF << (8 * i);
-            prev += off; r.lcn = prev; p += offSz;
-        }
-        runs.push_back(r);
-    }
-    return runs;
-}
 
 class NtfsVolume {
 public:
@@ -376,7 +350,7 @@ public:
        @param streamName for $DATA, the named stream wanted ("$J"); empty for the
        unnamed one, the file's content. */
     bool collectRunsFromAttributeList(const std::vector<uint8_t>& rec,
-                                      std::vector<Run>& runs, uint64_t& realSize,
+                                      std::vector<NtfsRun>& runs, uint64_t& realSize,
                                       uint32_t wantedType = 0x80,
                                       uint32_t* compressionUnit = nullptr,
                                       uint64_t* validDataLength = nullptr,
@@ -386,7 +360,7 @@ public:
         if (!readListContent(rec, content)) return false;
 
         // VCN -> runs, to reassemble in order even if the entries are not.
-        std::vector<std::pair<uint64_t, std::vector<Run>>> fragments;
+        std::vector<std::pair<uint64_t, std::vector<NtfsRun>>> fragments;
         size_t pos = 0;
         while (pos + 0x1A <= content.size()){
             const uint32_t type = readLittleEndian<uint32_t>(content.data() + pos);
@@ -426,7 +400,7 @@ public:
                                 *compressionUnit = (readLittleEndian<uint16_t>(d + 0x0C) & 0x0001)
                                                   ? (uint32_t)1u << readLittleEndian<uint16_t>(d + 0x22) : 0;
                         }
-                        fragments.emplace_back(vcn, decodeRuns(d + readLittleEndian<uint16_t>(d + 0x20), d + readLittleEndian<uint32_t>(d + 0x04)));
+                        fragments.emplace_back(vcn, decodeNtfsRuns(d + readLittleEndian<uint16_t>(d + 0x20), d + readLittleEndian<uint32_t>(d + 0x04)));
                     }
                 }
                 else RVLOG(L"[raw] MFT fragment #%llu unreadable\n", (unsigned long long)ref);
@@ -450,7 +424,7 @@ public:
     struct WofContext {
         bool     present = false;
         uint32_t algorithm = 0;
-        std::vector<Run> runs;      //!< runs of the WofCompressedData stream
+        std::vector<NtfsRun> runs;      //!< runs of the WofCompressedData stream
         uint64_t streamSize = 0;
     };
 
@@ -510,7 +484,7 @@ public:
         }
         const uint64_t size = readLittleEndian<uint64_t>(al + 0x30);
         if (size == 0 || size > (16ULL << 20)) return false;
-        const std::vector<Run> alRuns = decodeRuns(al + readLittleEndian<uint16_t>(al + 0x20), al + readLittleEndian<uint32_t>(al + 0x04));
+        const std::vector<NtfsRun> alRuns = decodeNtfsRuns(al + readLittleEndian<uint16_t>(al + 0x20), al + readLittleEndian<uint32_t>(al + 0x04));
         content.resize((size_t)size);
         return readVirtual(alRuns, 0, (uint32_t)size, content.data());
     }
@@ -561,14 +535,14 @@ public:
         const uint8_t* stream = findNamedAttr(rec, 0x80, L"WofCompressedData");
         if (stream && stream[8] != 0){
             ctx.streamSize = readLittleEndian<uint64_t>(stream + 0x30);
-            ctx.runs = decodeRuns(stream + readLittleEndian<uint16_t>(stream + 0x20), stream + readLittleEndian<uint32_t>(stream + 0x04));
+            ctx.runs = decodeNtfsRuns(stream + readLittleEndian<uint16_t>(stream + 0x20), stream + readLittleEndian<uint32_t>(stream + 0x04));
             ctx.present = !ctx.runs.empty() && ctx.streamSize > 0;
             return ctx.present;
         }
 
         std::vector<uint8_t> content;
         if (!readListContent(rec, content)) return false;
-        std::vector<std::pair<uint64_t, std::vector<Run>>> fragments;
+        std::vector<std::pair<uint64_t, std::vector<NtfsRun>>> fragments;
         size_t pos = 0;
         while (pos + 0x1A <= content.size()){
             const uint32_t type = readLittleEndian<uint32_t>(content.data() + pos);
@@ -582,7 +556,7 @@ public:
                     const uint8_t* d = findNamedAttr(frag, 0x80, L"WofCompressedData");
                     if (d && d[8] != 0){
                         if (vcn == 0) ctx.streamSize = readLittleEndian<uint64_t>(d + 0x30);
-                        fragments.emplace_back(vcn, decodeRuns(d + readLittleEndian<uint16_t>(d + 0x20), d + readLittleEndian<uint32_t>(d + 0x04)));
+                        fragments.emplace_back(vcn, decodeNtfsRuns(d + readLittleEndian<uint16_t>(d + 0x20), d + readLittleEndian<uint32_t>(d + 0x04)));
                     }
                 }
             }
@@ -590,9 +564,9 @@ public:
         }
         if (fragments.empty() || ctx.streamSize == 0) return false;
         std::sort(fragments.begin(), fragments.end(),
-                  [](const std::pair<uint64_t, std::vector<Run>>& a,
-                     const std::pair<uint64_t, std::vector<Run>>& b){ return a.first < b.first; });
-        for (std::pair<uint64_t, std::vector<Run>>& f : fragments)
+                  [](const std::pair<uint64_t, std::vector<NtfsRun>>& a,
+                     const std::pair<uint64_t, std::vector<NtfsRun>>& b){ return a.first < b.first; });
+        for (std::pair<uint64_t, std::vector<NtfsRun>>& f : fragments)
             ctx.runs.insert(ctx.runs.end(), f.second.begin(), f.second.end());
         RVLOG(L"[raw] WOF via $ATTRIBUTE_LIST : %llu fragment(s), stream of %llu bytes\n",
               (unsigned long long)fragments.size(), (unsigned long long)ctx.streamSize);
@@ -605,10 +579,10 @@ public:
         if (a[8] == 0) return false;                 // resident: no runs
         const uint64_t size = readLittleEndian<uint64_t>(a + 0x30);
         if (size == 0 || size > (256ULL << 20)) return false;   // guard
-        const std::vector<Run> runs = decodeRuns(a + readLittleEndian<uint16_t>(a + 0x20), a + readLittleEndian<uint32_t>(a + 0x04));
+        const std::vector<NtfsRun> runs = decodeNtfsRuns(a + readLittleEndian<uint16_t>(a + 0x20), a + readLittleEndian<uint32_t>(a + 0x04));
         out.assign((size_t)size, 0);
         uint64_t written = 0;
-        for (const Run& r : runs){
+        for (const NtfsRun& r : runs){
             if (written >= size) break;
             const uint64_t n = std::min<uint64_t>(r.count * bytesPerCluster_, size - written);
             // A sparse run stays at zero; an allocated one is read whole, in large requests.
@@ -640,7 +614,7 @@ public:
         if (ctx.streamSize == 0 || ctx.streamSize > (256ULL << 20)) return false;
         data.assign((size_t)ctx.streamSize, 0);
         uint64_t read = 0;
-        for (const Run& r : ctx.runs){
+        for (const NtfsRun& r : ctx.runs){
             if (read >= ctx.streamSize) break;
             const uint64_t n = std::min<uint64_t>(r.count * bytesPerCluster_, ctx.streamSize - read);
             if (r.lcn >= 0 && !readClusters((uint64_t)r.lcn, n, data.data() + read)) return false;
@@ -839,7 +813,7 @@ public:
      *  Not telling the first case apart is the classic mistake: expanding a unit
      *  stored as is returns wrong data without any error.
      */
-    HRESULT extractCompressed(const std::vector<Run>& runs, uint64_t realSize,
+    HRESULT extractCompressed(const std::vector<NtfsRun>& runs, uint64_t realSize,
                               uint64_t validDataLength,
                               uint32_t unitInClusters, std::ostream& out,
                               const std::wstring& label, RawHiveFingerprints* emp){
@@ -847,7 +821,7 @@ public:
 
         // VCN -> LCN table: units are read by position, not by run.
         std::vector<int64_t> lcnParVcn;
-        for (const Run& r : runs){
+        for (const NtfsRun& r : runs){
             for (uint64_t k = 0; k < r.count; ++k){
                 if (lcnParVcn.size() > (1ULL << 26)) break;   // guard (256 MiB of VCN)
                 lcnParVcn.push_back(r.lcn < 0 ? -1 : (int64_t)(r.lcn + (int64_t)k));
@@ -1175,7 +1149,7 @@ public:
             readFileNameTimes(rec, index, fileName, *emp);
         }
 
-        std::vector<Run> runs;
+        std::vector<NtfsRun> runs;
         uint64_t realSize = 0;
         bool resident = false;
         const uint8_t* residentData = nullptr;
@@ -1217,7 +1191,7 @@ public:
                     compressionUnit = (uint32_t)1u << readLittleEndian<uint16_t>(a + 0x22);
                 realSize = readLittleEndian<uint64_t>(a + 0x30);
                 validDataLength = readLittleEndian<uint64_t>(a + 0x38);
-                runs = decodeRuns(a + readLittleEndian<uint16_t>(a + 0x20), a + readLittleEndian<uint32_t>(a + 0x04));
+                runs = decodeNtfsRuns(a + readLittleEndian<uint16_t>(a + 0x20), a + readLittleEndian<uint32_t>(a + 0x04));
 
             }
         }
@@ -1300,7 +1274,7 @@ public:
            record numbers are offsets in the whole stream. */
         uint64_t skipped = 0;
         bool leading = skipLeadingSparse;
-        for (const Run& r : runs){
+        for (const NtfsRun& r : runs){
             if (leading && r.lcn < 0){
                 const uint64_t length = std::min<uint64_t>(r.count * bytesPerCluster_, realSize - written);
                 written += length;
@@ -1363,7 +1337,7 @@ private:
     bool     viewingCopy_ = false;            //!< every read goes through shadow copy shadowIndex_
     uint32_t bytesPerSector_ = 0, sectorsPerCluster_ = 0, bytesPerCluster_ = 0, bytesPerRecord_ = 0;
     uint64_t mftLcn_ = 0;
-    std::vector<Run> mftRuns_;
+    std::vector<NtfsRun> mftRuns_;
 
     /*! Alignment of an unbuffered read before the boot sector gives the
      *  sector size, and of every buffer: a multiple of any sector size
@@ -1434,7 +1408,7 @@ private:
     }
 
     // Reads `len` bytes at virtual offset `fileOff` of a file described by `runs`.
-    bool readVirtual(const std::vector<Run>& runs, uint64_t fileOff, uint32_t len, uint8_t* dst){
+    bool readVirtual(const std::vector<NtfsRun>& runs, uint64_t fileOff, uint32_t len, uint8_t* dst){
         uint32_t got = 0;
         while (got < len){
             uint64_t cur   = fileOff + got;
@@ -1472,7 +1446,7 @@ private:
         if (!a || a[8] == 0){ RVLOG(L"[raw] $MFT $DATA not found / resident\n"); return false; }
         uint16_t runsOff = readLittleEndian<uint16_t>(a + 0x20);
         uint32_t attrLen = readLittleEndian<uint32_t>(a + 0x04);
-        mftRuns_ = decodeRuns(a + runsOff, a + attrLen);
+        mftRuns_ = decodeNtfsRuns(a + runsOff, a + attrLen);
         RVLOG(L"[raw] $MFT: %u runs, 1er lcn=%lld count=%llu\n", (unsigned)mftRuns_.size(),
               mftRuns_.empty()?0:(long long)mftRuns_[0].lcn, mftRuns_.empty()?0ULL:(unsigned long long)mftRuns_[0].count);
         return !mftRuns_.empty();
@@ -1653,7 +1627,7 @@ public:
            $INDEX_ALLOCATION could not be found here, so listDir returned
            "0 entries" on a full folder. */
         if (!ia && idxBlockSize){
-            std::vector<Run> splitRuns;
+            std::vector<NtfsRun> splitRuns;
             uint64_t splitSize = 0;
             if (collectRunsFromAttributeList(rec, splitRuns, splitSize, 0xA0)
                 && !splitRuns.empty()){
@@ -1674,7 +1648,7 @@ public:
               idxBlockSize);
         if (ia && ia[8] != 0 && idxBlockSize){
             uint64_t realSize = readLittleEndian<uint64_t>(ia + 0x30);
-            std::vector<Run> runs = decodeRuns(ia + readLittleEndian<uint16_t>(ia + 0x20), ia + readLittleEndian<uint32_t>(ia + 0x04));
+            std::vector<NtfsRun> runs = decodeNtfsRuns(ia + readLittleEndian<uint16_t>(ia + 0x20), ia + readLittleEndian<uint32_t>(ia + 0x04));
             readIndexBlocks(runs, realSize, idxBlockSize, bitmap(), out);
         }
         return true;
@@ -1693,7 +1667,7 @@ public:
      *  @return false if it could not be found or read */
     bool indexBitmap(const std::vector<uint8_t>& rec, std::vector<uint8_t>& bits){
         const uint64_t MAX_BITMAP = 64ULL * 1024 * 1024;   // 2^29 blocks: beyond, a forged size
-        std::vector<Run> runs;
+        std::vector<NtfsRun> runs;
         uint64_t size = 0;
         std::vector<uint8_t> extension;
         const uint8_t* b = findAttr(rec, 0xB0, false);    // "$I30"
@@ -1711,7 +1685,7 @@ public:
             }
             if (attributeLength < 0x40) return false;
             size = readLittleEndian<uint64_t>(b + 0x30);
-            runs = decodeRuns(b + readLittleEndian<uint16_t>(b + 0x20), b + attributeLength);
+            runs = decodeNtfsRuns(b + readLittleEndian<uint16_t>(b + 0x20), b + attributeLength);
         }
         if (runs.empty() || size == 0 || size > MAX_BITMAP) return false;
         bits.resize((size_t)size);
@@ -1723,7 +1697,7 @@ public:
      *  record, or through $ATTRIBUTE_LIST when it is split.
      *  @param bitmap the index's allocation bitmap (see indexBitmap); nullptr if
      *         it could not be read, every block with a signature is then read */
-    void readIndexBlocks(const std::vector<Run>& runs, uint64_t realSize,
+    void readIndexBlocks(const std::vector<NtfsRun>& runs, uint64_t realSize,
                         uint32_t idxBlockSize, const std::vector<uint8_t>* bitmap,
                         std::vector<RawDirEntry>& out){
         if (!idxBlockSize) return;
@@ -1957,6 +1931,34 @@ bool applyNtfsFixup(uint8_t* record, size_t size){
     }
     return true;
 }
+std::vector<NtfsRun> decodeNtfsRuns(const uint8_t* p, const uint8_t* end){
+    std::vector<NtfsRun> runs;
+    int64_t previous = 0;
+    while (p < end){
+        const uint8_t header = *p++;
+        if (header == 0) break;                          // the list's end
+        const int lengthSize = header & 0x0F, offsetSize = (header >> 4) & 0x0F;
+        if (lengthSize == 0 || lengthSize > 8 || offsetSize > 8 || end - p < lengthSize + offsetSize) return {};
+        uint64_t count = 0;
+        for (int i = 0; i < lengthSize; ++i) count |= (uint64_t)p[i] << (8 * i);
+        p += lengthSize;
+        if (count == 0) return {};
+        NtfsRun run{ -1, count };                        // no offset: a sparse run
+        if (offsetSize){
+            uint64_t offset = 0;
+            for (int i = 0; i < offsetSize; ++i) offset |= (uint64_t)p[i] << (8 * i);
+            if (offsetSize < 8 && (p[offsetSize - 1] & 0x80)) offset |= ~0ull << (8 * offsetSize);   // sign extension
+            p += offsetSize;
+            // Relative to the previous run's cluster, on unsigned arithmetic: no signed overflow.
+            const int64_t lcn = (int64_t)((uint64_t)previous + offset);
+            if (lcn < 0) return {};
+            previous = run.lcn = lcn;
+        }
+        runs.push_back(run);
+    }
+    return runs;
+}
+
 void RawHiveSetProgress(RawHiveProgressFn fn){ g_progress = fn; }
 
 HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,

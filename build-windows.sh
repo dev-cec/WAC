@@ -264,6 +264,12 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     "$SRC/ntfs_fixup_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/ntfs_fixup_test.exe" "${LIBS[@]}"
   echo "   -> $TESTS/ntfs_fixup_test.exe"
 
+  echo "== Build ntfs_runs_test.exe =="
+  # The check of the data runs (a forged list refused whole); runs under Wine.
+  "$CXX" "${FLAGS[@]}" -static -static-libgcc -static-libstdc++ \
+    "$SRC/ntfs_runs_test.cpp" "${TEST_OBJS[@]}" -o "$TESTS/ntfs_runs_test.exe" "${LIBS[@]}"
+  echo "   -> $TESTS/ntfs_runs_test.exe"
+
   echo "== Build offline_registry_test.exe =="
   # WAC's hive reader against Microsoft's offreg.dll, loaded dynamically: run
   # it on Windows (the test VM) with the path of that DLL.
