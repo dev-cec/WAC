@@ -1843,6 +1843,10 @@ void addDate(Json& o, const std::wstring& key, const FILETIME& utc) {
 	o.add(key,          Json::str(utcTimeToIso8601Local(utc)));
 }
 
+void addUtcDate(Json& o, const std::wstring& key, const FILETIME& utc) {
+	if (utc.dwLowDateTime || utc.dwHighDateTime) o.add(key, Json::str(timeToIso8601Utc(utc)));
+}
+
 std::vector<std::wstring> splitLines(const std::wstring& text) {
 	std::vector<std::wstring> lines;
 	size_t start = 0;

@@ -117,6 +117,14 @@ struct Mft {
 	 *          $MFT of that volume, or ERROR_INVALID_DATA if it is not one */
 	HRESULT getData(const std::wstring& volume);
 
+	/*! Loads a $MFT copy given by its file: at collection, the working copy
+	 *  of the collection's own, before any manifest is loaded (the deleted
+	 *  files' recovery).
+	 *  @param volume the volume it belongs to, "C:"…
+	 *  @param file the copy
+	 *  @return ERROR_SUCCESS, or ERROR_INVALID_DATA if it is absent or not a $MFT */
+	HRESULT load(const std::wstring& volume, const std::wstring& file);
+
 	//! @return the volume loaded, "C:"…
 	const std::wstring& volume() const { return volume_; }
 

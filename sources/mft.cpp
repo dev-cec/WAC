@@ -28,10 +28,6 @@ const uint64_t ROOT_ENTRY = 5;             //!< the root directory's record
 const unsigned MAX_PATH_DEPTH = 255;       //!< a longer parent chain is a loop, or a forged record
 
 
-//! A UTC date, not emitted when the record holds none.
-void addDate(Json& o, const wchar_t* key, const FILETIME& f) {
-	if (f.dwLowDateTime || f.dwHighDateTime) o.add(key, Json::str(timeToIso8601Utc(f)));
-}
 
 /*! The $FILE_NAME namespaces, by preference for the name shown: Win32 (1)
  *  and Win32+DOS (3) are the long name, POSIX (0) a case-sensitive one, DOS
@@ -143,14 +139,14 @@ Json MftEntry::toJson(const std::wstring& path, bool pathComplete,
 	else if (sizeKnown) o.add(L"Size", Json::num(size));
 	o.add(L"Attributes", Json::str(FileAttributes(attributes).to_wstring()));
 	if (securityId) o.add(L"SecurityId", Json::num((unsigned long long)securityId));
-	addDate(o, L"CreatedUtc", created);
-	addDate(o, L"ModifiedUtc", modified);
-	addDate(o, L"MftModifiedUtc", mftModified);
-	addDate(o, L"AccessedUtc", accessed);
-	addDate(o, L"FileNameCreatedUtc", fileNameCreated);
-	addDate(o, L"FileNameModifiedUtc", fileNameModified);
-	addDate(o, L"FileNameMftModifiedUtc", fileNameMftModified);
-	addDate(o, L"FileNameAccessedUtc", fileNameAccessed);
+	addUtcDate(o, L"CreatedUtc", created);
+	addUtcDate(o, L"ModifiedUtc", modified);
+	addUtcDate(o, L"MftModifiedUtc", mftModified);
+	addUtcDate(o, L"AccessedUtc", accessed);
+	addUtcDate(o, L"FileNameCreatedUtc", fileNameCreated);
+	addUtcDate(o, L"FileNameModifiedUtc", fileNameModified);
+	addUtcDate(o, L"FileNameMftModifiedUtc", fileNameMftModified);
+	addUtcDate(o, L"FileNameAccessedUtc", fileNameAccessed);
 	/* A file with hard links is one record under several names: each is a
 	   path an analyst may look for (System32\\crypt32.dll, not only its
 	   original under WinSxS). */
@@ -192,7 +188,11 @@ HRESULT Mft::getData(const std::wstring& volume) {
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(volume.substr(0, 2) + L"\\$MFT"));
 	if (found == index.end() || found->second.workingFile.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	file_ = found->second.workingFile;
+	return load(volume, found->second.workingFile);
+}
+
+HRESULT Mft::load(const std::wstring& volume, const std::wstring& file) {
+	file_ = file;
 	volume_ = volume.substr(0, 2);
 	// Bytes per record, from record 0 ($MFT itself): 1024 or 4096 on the volumes Windows formats.
 	{

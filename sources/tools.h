@@ -781,6 +781,14 @@ std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc, Precision precis
 * @param utc the date, UTC */
 void addDate(Json& o, const std::wstring& key, const FILETIME& utc);
 
+/*! Adds a date in UTC only, under `key` as given — the form of the
+ *  artefacts that count one object per file of a volume (mft.json), where a
+ *  local form would double them. Nothing is written for a null date.
+ *  @param o the object
+ *  @param key the member's name
+ *  @param utc the date, UTC */
+void addUtcDate(Json& o, const std::wstring& key, const FILETIME& utc);
+
 /*! Converts a UTC FILETIME to the local time of the EXAMINED machine.
 *
 * Replaces `FileTimeToLocalFileTime()`, which applies the time zone of the
