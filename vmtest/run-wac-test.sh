@@ -73,17 +73,31 @@ if [[ "$vmEpoch" =~ ^[0-9]+$ ]] && (( vmEpoch - $(date -u +%s) > 5 || $(date -u 
   $QGA run -- powershell.exe -NoProfile -Command "Set-Date ([DateTime]::Parse('$(date -u +%FT%T.%3NZ)').ToLocalTime()) | Out-Null" >/dev/null 2>&1 || true
 fi
 
-if wants mft usn_journal zone_identifiers; then
+if wants mft usn_journal zone_identifiers deleted_files; then
 echo "== 0a. Data volume == ($(date +%H:%M:%S))"
 # The second fixed disk of create-vm.sh, formatted NTFS on first use (label
-# WACDATA): the $MFT and change journal of a volume other than the system's.
+# WACDATA): the $MFT and change journal of a volume other than the system's,
+# and the deleted files' witnesses, whose records C: reuses within minutes.
+# Found through WMI, which every Windows has; formatted by the Storage
+# cmdlets from Windows 8 on, by diskpart before (Vista and 7: their disk was
+# attached, never formatted — Get-Disk does not exist there).
 DATA_STATE=$($QGA run -- powershell.exe -NoProfile -Command '
-  $v = Get-Volume -FileSystemLabel WACDATA -ErrorAction SilentlyContinue | Where-Object DriveLetter
-  if ($v) { "ready $($v.DriveLetter):" ; exit }
-  $d = Get-Disk | Where-Object { $_.PartitionStyle -eq 'RAW' } | Select-Object -First 1
-  if (-not $d) { "absent"; exit }
-  $d | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -UseMaximumSize -AssignDriveLetter |
-    Format-Volume -FileSystem NTFS -NewFileSystemLabel WACDATA -Confirm:$false | Out-Null
+  $v = Get-WmiObject Win32_Volume | Where-Object { $_.Label -eq "WACDATA" -and $_.DriveLetter } | Select-Object -First 1
+  if ($v) { "ready $($v.DriveLetter)" ; exit }
+  if (Get-Command Get-Disk -ErrorAction SilentlyContinue) {
+    $d = Get-Disk | Where-Object { $_.PartitionStyle -eq "RAW" } | Select-Object -First 1
+    if (-not $d) { "absent"; exit }
+    $d | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -UseMaximumSize -AssignDriveLetter |
+      Format-Volume -FileSystem NTFS -NewFileSystemLabel WACDATA -Confirm:$false | Out-Null
+  } else {
+    $d = Get-WmiObject Win32_DiskDrive | Where-Object { $_.Partitions -eq 0 } | Select-Object -First 1
+    if (-not $d) { "absent"; exit }
+    $script = "$env:TEMP\wacdata-diskpart.txt"
+    Set-Content $script ("select disk $($d.Index)", "online disk noerr", "attributes disk clear readonly noerr",
+                         "create partition primary", "format fs=ntfs label=WACDATA quick", "assign")
+    diskpart /s $script | Out-Null
+    Remove-Item $script
+  }
   "formatted"' 2>/dev/null | tr -d '\r' || true)
 echo "   ${DATA_STATE:-no answer} (without the disk, the second-volume checks are skipped)"
 fi
@@ -346,8 +360,11 @@ $QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
 # (working folder not empty). split goes too, rebuilt at step 7: collected here
 # (its unsigned scripts), it nested the previous cycle's stores one level deeper
 # each cycle — the long-path witness is b049, made on purpose.
-$QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\out 2>nul & rmdir /s /q \\\\?\\$VMDIR\\split 2>nul & WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
-[[ "$CODE" == "0" ]] && { $QGA run --shell "cd /d $VMDIR && WAC.exe --convert=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 >> run.log 2>&1" || CODE=$?; }
+# One hour for each run: the recovery of the deleted files read 2.6 GB at
+# 3.3 MB/s in the Vista VM (13 min), and the collection passed the agent's
+# 30 minutes (2026-10-23); 25 MB/s in the Windows 11 VM.
+$QGA run --timeout 3600 --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\out 2>nul & rmdir /s /q \\\\?\\$VMDIR\\split 2>nul & WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
+[[ "$CODE" == "0" ]] && { $QGA run --timeout 3600 --shell "cd /d $VMDIR && WAC.exe --convert=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 >> run.log 2>&1" || CODE=$?; }
 $QGA read "$VMDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
 
 if [[ -f "$OUTPUT/run.log" ]] && grep -qaiE 'terminate called|Unhandled exception|Exception non gérée' "$OUTPUT/run.log"; then
@@ -593,7 +610,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # Runs WAC in the VM. $1 name of its console log, then its arguments.
   run_wac() {
     local label="$1" code=0; shift
-    $QGA run --shell "cd /d $VMDIR && WAC.exe $* > $label.log 2>&1" || code=$?
+    $QGA run --timeout 3600 --shell "cd /d $VMDIR && WAC.exe $* > $label.log 2>&1" || code=$?
     $QGA read "$VMDIR\\$label.log" "$OUTPUT/$label.log" >/dev/null 2>&1 || true
     return $code
   }
@@ -825,7 +842,8 @@ else
 echo "== 8. Collection driven by wac.yml, without any option == ($(date +%H:%M:%S))"
 # The procedure written in wac.yml next to WAC.exe, and WAC.exe run alone: the
 # collection must follow the file — nothing converted, no binaries, some artefacts
-# switched off — and record it (investigation.json, Tool.Configuration).
+# switched off, deleted_files by its section of options — and record it
+# (investigation.json, Tool.Configuration).
 CONFIG_OUT="$OUTPUT/configured"
 cat > "$OUTPUT/wac.yml" <<YML
 # wac.yml of the test cycle
@@ -841,6 +859,9 @@ artefacts:
   sessions: false
   network: false
   jump_lists: false
+  deleted_files:
+    enabled: false
+    max_file_mib: 8
 YML
 $QGA write "$OUTPUT/wac.yml" "$VMDIR\\wac.yml" >/dev/null
 $QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\configured 2>nul & WAC.exe > configured.log 2>&1" \

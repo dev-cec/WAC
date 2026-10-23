@@ -100,17 +100,22 @@ def check_configuration(folder):
     if hashlib.sha256(content.encode("utf-8")).hexdigest().upper() != str(cfg.get("SHA256")):
         print("  ❌ recorded SHA-256 is not the one of the recorded content")
         return 1
-    settings, section = {}, ""
+    # Each setting by its full name ("artefacts.deleted_files.enabled"): the
+    # sections open by indentation, as deep as the file goes; list items are
+    # left out.
+    settings, sections = {}, []
     for line in content.splitlines():
         m = re.match(r"^(\s*)([a-z_]+):\s*([^#]*?)\s*(#.*)?$", line)
         if not m:
             continue
-        if not m.group(1) and not m.group(3):
-            section = m.group(2) + "."
-            continue
-        settings[(section if m.group(1) else "") + m.group(2)] = m.group(3)
-        if not m.group(1):
-            section = ""
+        indent = len(m.group(1))
+        while sections and sections[-1][0] >= indent:
+            sections.pop()
+        name = ".".join([k for _, k in sections] + [m.group(2)])
+        if m.group(3):
+            settings[name] = m.group(3)
+        else:
+            sections.append((indent, m.group(2)))
     manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
     items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
     paths = [str(i.get("SourcePath", "")).lower() for i in items]
@@ -474,6 +479,7 @@ def cross_checks(folder):
     found += guarded(check_thunderbird, folder)
     found += guarded(check_shadow_copies, folder)
     found += guarded(check_powershell_profiles, folder)
+    found += guarded(check_deleted_files, folder)
     return found
 
 
@@ -528,6 +534,13 @@ def check_shadow_copies(folder):
         print(f"  ✅ shadow_copies.json: the {len(listed)} shadow copy(ies) Windows lists for C:, identifier and creation time"
               + (f"; {len(deleted)} deleted, its store kept, said so" if deleted else "")
               + (f"; {len(purged)} purged by Windows during the cycle" if purged else ""))
+    # The harness's own copy purged by Windows before the collection read
+    # it (its space short: in the VM, the first collection writes its output,
+    # recovered deleted files included, on C:): nothing of it to confront.
+    harness = {c.lower() for c, _, _ in files}
+    if harness and harness <= {i.lower() for i in purged}:
+        print("  ⏭️  the harness's shadow copy purged by Windows during the cycle: its files and witnesses not confronted")
+        return found
     manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
     items = (manifest or {}).get("ShadowCopyItems", []) if isinstance(manifest, dict) else []
     differing = []
@@ -605,6 +618,113 @@ def check_powershell_profiles(folder):
         print(f"  ❌ powershell_profiles.json: {wrong[0][:200]}")
         return 1
     print(f"  ✅ powershell_profiles.json: the {len(witnesses)} witness profile(s), scope, SHA-256 and text as written")
+    return 0
+
+
+def reused_records(folder):
+    """The deleted files' records given to another file since: the record the
+    change journal gives each deleted path (its last FILE_DELETE or rename into
+    $Extend\\$Deleted), when mft.json shows it under another path — in use, or
+    deleted again (Vista: a witness's record held $FlushFS.Now, itself deleted).
+    @return {former path (lower case): record number}"""
+    usn, mft = load(folder, "usn_journal.json"), load(folder, "mft.json")
+    if not isinstance(usn, list) or not isinstance(mft, list):
+        return {}
+    by_path = {}
+    for r in usn:
+        reasons = str(r.get("Reasons", ""))
+        if "FILE_DELETE" in reasons or "RENAME_OLD_NAME" in reasons:
+            by_path[str(r.get("Path", "")).lower()] = (r.get("Volume"), r.get("FileEntry"))
+    wanted = set(by_path.values())
+    now = {(e.get("Volume"), e.get("Entry")): str(e.get("Path", "")).lower() for e in mft
+           if (e.get("Volume"), e.get("Entry")) in wanted}
+    return {path: key[1] for path, key in by_path.items() if key in now and now[key] != path}
+
+
+def check_deleted_files(folder):
+    """deleted_files.json: the files the harness wrote through to the disk,
+    then deleted, found by their former path. What must hold everywhere: a
+    content declared Recovered is the file's — its SHA-256 the one Windows
+    computed before the deletion; anything else would be a false content
+    published as true. Then each witness as the rule wants it: copied (text,
+    unsigned executable, its exhibit in the manifest with the same SHA-256),
+    or fingerprinted only (notepad.exe, authentic). A witness whose clusters
+    the disk zeroed (TRIM) or another file took is said so, not failed: what
+    the state says is then checked instead. Every file of the JSON: a Partial
+    one lists its holes, a recovered size never exceeds the file's."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        witnesses = [l.strip()[len("deleted="):].split("|") for l in f if l.startswith("deleted=")]
+    files = load(folder, "deleted_files.json")
+    if not witnesses or not isinstance(files, list):
+        if not skipped_unplaced(folder, "deleted_files", witnesses):
+            print("  ⏭️  deleted_files.json or its witnesses absent: deleted files not confronted")
+        return 0
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    stored = {str(i.get("SourcePath", "")).lower(): i for i in items}
+    judged = any("--binary" in str(i.get("Method", "")) for i in items)
+    wrong, lost, found, reused = [], [], 0, None
+    for f in files:
+        state = f.get("State")
+        if state in ("Recovered", "Partial") and int(f.get("RecoveredBytes", -1)) > int(f.get("Size", 0)):
+            wrong.append(f"{f.get('Path')}: more recovered than its size")
+        if state == "Partial" and not f.get("MissingRanges"):
+            wrong.append(f"{f.get('Path')}: Partial without its holes")
+        if f.get("Copied") and str(stored.get(str(f.get("Exhibit", "")).lower(), {}).get("SHA256", "")).upper() \
+                != str(f.get("RecoveredSHA256", "")).upper():
+            wrong.append(f"{f.get('Path')}: exhibit {f.get('Exhibit')} absent from the manifest, or another SHA-256")
+    for file, size, digest, expected, token in witnesses:
+        # By its path, or by the path it had before Windows 10 moved it to $Extend\$Deleted.
+        mine = next((x for x in files if file.lower() in (str(x.get("Path", "")).lower(),
+                                                          str(x.get("FormerPath", "")).lower())), None)
+        if not mine:
+            # Its record given to another file before the $MFT was copied —
+            # NTFS gives freed records first: on C:, the VMs without a data
+            # volume reuse them within the half hour between two collections.
+            # Said so when the change journal and mft.json show it, else a fault.
+            if reused is None:
+                reused = reused_records(folder)
+            entry = reused.get(file.lower())
+            if entry:
+                lost.append(f"{file.rsplit(chr(92), 1)[-1]} record {entry} reused since")
+            else:
+                wrong.append(f"{file}: not listed")
+            continue
+        state = mine.get("State")
+        if state == "Recovered" and str(mine.get("RecoveredSHA256", "")).upper() != digest.upper():
+            wrong.append(f"{file}: Recovered, yet SHA-256 {mine.get('RecoveredSHA256')} instead of {digest}")
+            continue
+        if state != "Recovered":
+            lost.append(f"{file.rsplit(chr(92), 1)[-1]} {state}")
+            continue
+        found += 1
+        if int(mine.get("Size", -1)) != int(size):
+            wrong.append(f"{file}: size {mine.get('Size')} instead of {size}")
+        # Authentic: listed, not copied — when the collection judged the
+        # executables (--binary); under binary: none nothing is judged, all copied.
+        if expected == "cleared" and not judged:
+            expected = "copied"
+        if expected == "copied" and not (mine.get("Copied") and mine.get("Exhibit")):
+            wrong.append(f"{file}: not copied ({mine.get('NotCopied')})")
+            continue
+        if expected == "cleared" and (mine.get("Copied") or not mine.get("Signature")):
+            wrong.append(f"{file}: authentic, yet copied or without its signature")
+    if wrong:
+        print(f"  ❌ deleted_files.json: {wrong[0][:220]}" + (f" (+{len(wrong) - 1})" if len(wrong) > 1 else ""))
+        return 1
+    if found == 0 and all("reused since" in l for l in lost):
+        print(f"  ⏭️  deleted_files.json: every witness's record reused before the collection ({', '.join(lost)}): "
+              f"nothing to confront; {len(files)} file(s) coherent")
+        return 0
+    if found == 0:
+        print(f"  ❌ deleted_files.json: no witness recovered ({', '.join(lost)})")
+        return 1
+    print(f"  ✅ deleted_files.json: {found} of {len(witnesses)} deleted witness(es) recovered with their SHA-256, "
+          f"copied or fingerprinted as the rule wants" + (f"; not recovered: {', '.join(lost)}" if lost else "")
+          + f"; {len(files)} file(s) coherent")
     return 0
 
 
@@ -1991,8 +2111,16 @@ def check_small_file_artefacts(folder):
                    f"mft.json: {present} found on the data volume {letter}",
                    f"mft.json: {present} missing from the data volume {letter}")
         if isinstance(usn, list):
-            report(any(r.get("Volume") == letter and (r.get("Name") or "").lower() == deleted.split("\\")[-1].lower()
-                       and "FILE_DELETE" in (r.get("Reasons") or "") for r in usn if isinstance(r, dict)),
+            # Deleted, or — Windows 10 and later, the file still open (Defender
+            # scanning it) — renamed into $Extend\$Deleted until its last close:
+            # the journal then holds that rename, its FILE_DELETE later.
+            name = deleted.split("\\")[-1].lower()
+            files = {r.get("FileEntry") for r in usn if isinstance(r, dict) and r.get("Volume") == letter
+                     and (r.get("Name") or "").lower() == name}
+            report(any(r.get("Volume") == letter and r.get("FileEntry") in files
+                       and ("FILE_DELETE" in (r.get("Reasons") or "")
+                            or ("RENAME_NEW_NAME" in (r.get("Reasons") or "") and "\\$Extend\\$Deleted\\" in (r.get("Path") or "")))
+                       for r in usn if isinstance(r, dict)),
                    f"usn_journal.json: the deletion of {deleted} found in {letter}'s journal",
                    f"usn_journal.json: the deletion of {deleted} missing from {letter}'s journal")
 

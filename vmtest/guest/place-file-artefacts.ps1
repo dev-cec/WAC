@@ -57,6 +57,10 @@
 #                Inbox Thunderbird wrote -> emails.json
 #   shadowrun, shadowevent  a Run value and an event erased after the harness's
 #                copy -> shadow_copy_registry.json, shadow_copy_events.json
+#   deleted      files of known content written to the disk, then deleted —
+#                a resident one, a text of 300 KiB, an unsigned executable
+#                (WAC.exe) and a Microsoft one (notepad.exe) — with their
+#                SHA-256 and what WAC must do of them -> deleted_files.json
 #   shadowcopy, shadowfile  every shadow copy Windows lists for C: (identifier,
 #                set, creation in UTC), one made here by the harness — through
 #                the VSS service, which WAC itself never calls — and the SHA-256
@@ -406,9 +410,10 @@ try { if (Wants 'office_trust_records', 'typed_paths', 'word_wheel_query', 'inte
 # 10. The data volume (a second fixed NTFS disk, label WACDATA): a file kept,
 #     a file created then deleted — the second $MFT and change journal.
 try { if (Wants 'mft', 'usn_journal') {
-    $data = Get-Volume -FileSystemLabel WACDATA -ErrorAction SilentlyContinue | Where-Object DriveLetter | Select-Object -First 1
+    # Through WMI, which Vista and 7 have (Get-Volume came with Windows 8).
+    $data = Get-WmiObject Win32_Volume | Where-Object { $_.Label -eq 'WACDATA' -and $_.DriveLetter } | Select-Object -First 1
     if ($data) {
-        $letter = "$($data.DriveLetter):"
+        $letter = $data.DriveLetter
         # A data volume has no change journal until a service asks for one: the
         # harness creates it (32 MB, as on C:), idempotent.
         fsutil usn createjournal m=0x2000000 a=0x800000 $letter | Out-Null
@@ -419,7 +424,7 @@ try { if (Wants 'mft', 'usn_journal') {
         # WAC reads the volume raw: a journal record still in Windows' cache is
         # not on the disk yet. A --only cycle collects seconds later, so the
         # cache is written now — what the minutes of a full cycle did by chance.
-        Write-VolumeCache -DriveLetter $data.DriveLetter
+        if (Get-Command Write-VolumeCache -ErrorAction SilentlyContinue) { Write-VolumeCache -DriveLetter $letter.Substring(0, 1) }
         Write-Output "datavolume=$letter|$letter\wac-volume-test.txt|$gone"
     }
 } } catch { WitnessFailure 'mft,usn_journal' $_ }
@@ -1800,3 +1805,47 @@ try { if (Wants 'shadow_copies') {
         }
     }
 } } catch { WitnessFailure 'shadow_copies' $_ }
+
+# Last. Deleted files of known content: the most recent deletions of the
+# volume, so that the bound of max_total_mib reaches them first. Written
+# through (FILE_FLAG_WRITE_THROUGH) before they are deleted: a content still
+# in the cache when its file is deleted never reaches the disk, and what the
+# clusters hold would be another's. A folder of its own, emptied first.
+# On the data volume (WACDATA) when the VM has one: on C:, Defender and
+# WAC's own output reused the witnesses' records within two minutes
+# (Windows 11, measured) — their content then out of any recovery's reach.
+try { if (Wants 'deleted_files') {
+    $token = (Get-Date).ToString('yyyyMMddHHmmss')
+    $data = Get-WmiObject Win32_Volume | Where-Object { $_.Label -eq 'WACDATA' -and $_.DriveLetter } | Select-Object -First 1
+    $folder = if ($data) { "$($data.DriveLetter)\WacDeleted" } else { 'C:\Users\wac\Documents\WacDeleted' }
+    if (Test-Path $folder) { Remove-Item -Recurse -Force $folder }
+    New-Item -ItemType Directory -Force $folder | Out-Null
+    $text = New-Object Text.StringBuilder
+    foreach ($i in 1..6000) { [void]$text.Append("WAC deleted witness $token, line $i of 6000`r`n") }
+    $witnesses = @(
+        @('deleted-resident.txt', [Text.Encoding]::ASCII.GetBytes("WAC deleted witness $token`r`n"), 'copied'),
+        @('deleted-text.txt', [Text.Encoding]::ASCII.GetBytes($text.ToString()), 'copied'),
+        @('deleted-tool.exe', [IO.File]::ReadAllBytes('C:\wactest\WAC.exe'), 'copied'),
+        @('deleted-notepad.exe', [IO.File]::ReadAllBytes("$env:SystemRoot\System32\notepad.exe"), 'cleared'))
+    # NTFS gives out the lowest free record first: a witness deleted before
+    # the next was created gave it its record (Vista: all four in record
+    # 63346, measured), and whatever was created after took them. Empty
+    # files take the low free records first, then the witnesses are
+    # created, each in a record of its own, and deleted; the buffer, deleted
+    # last, leaves the records the system takes next below the witnesses'.
+    $buffer = "$folder\buffer"
+    New-Item -ItemType Directory -Force $buffer | Out-Null
+    foreach ($i in 1..3000) { [IO.File]::WriteAllBytes("$buffer\$i", (New-Object byte[] 0)) }
+    foreach ($w in $witnesses) {
+        $stream = New-Object IO.FileStream("$folder\$($w[0])", [IO.FileMode]::Create, [IO.FileAccess]::Write, [IO.FileShare]::None, 65536, [IO.FileOptions]::WriteThrough)
+        $stream.Write($w[1], 0, $w[1].Length)
+        $stream.Close()
+    }
+    foreach ($w in $witnesses) {
+        $path = "$folder\$($w[0])"
+        $digest = -join ([Security.Cryptography.SHA256]::Create().ComputeHash($w[1]) | ForEach-Object { $_.ToString('X2') })
+        Remove-Item -Force $path
+        Write-Output "deleted=$path|$($w[1].Length)|$digest|$($w[2])|$token"
+    }
+    Remove-Item -Recurse -Force $buffer
+} } catch { WitnessFailure 'deleted_files' $_ }
