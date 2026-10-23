@@ -79,7 +79,7 @@ PHRASES = [
     ("master key file, version 2", "fichier de clé maîtresse, version 2"),
     ("MRUList and strings", "MRUList et chaînes"), ("MRUListEx and shell items", "MRUListEx et éléments de shell"),
     ("MRUListEx and UTF-16 strings", "MRUListEx et chaînes UTF-16"),
-    ("NTFS 3.1 file records, data runs", "enregistrements de fichier NTFS 3.1, plages de clusters"),
+    ("NTFS 3.1 file records, data runs, index blocks", "enregistrements de fichier NTFS 3.1, plages de clusters, blocs d'index"),
     ("NTFS 3.1 file records", "enregistrements de fichier NTFS 3.1"),
     ("NTFS boot sector, journal header", "secteur de démarrage NTFS, en-tête du journal"),
     ("transactional NTFS log, raw copy", "journal NTFS transactionnel, copie brute"),

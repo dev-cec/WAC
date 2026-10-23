@@ -26,7 +26,7 @@
 \addlinespace
 \texttt{defender\_configuration} & Windows Vista & \texttt{SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows Defender, SOFTWARE\textbackslash{}Policies\textbackslash{}Microsoft\textbackslash{}Windows Defender} & valeurs de registre & oui \\
 \addlinespace
-\texttt{deleted\_files} & Windows XP & \texttt{\$MFT, \$Bitmap} & enregistrements de fichier NTFS 3.1, plages de clusters & oui \\
+\texttt{deleted\_files} & Windows XP & \texttt{\$MFT, \$Bitmap, \$I30} & enregistrements de fichier NTFS 3.1, plages de clusters, blocs d'index & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Ce qu'un fichier supprimé garde dépend du disque : un SSD qui a reçu TRIM rend des zéros pour les clusters libérés, déclarés comme tels, jamais comme le contenu.} \\
 \addlinespace
 \texttt{devices} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Enum\textbackslash{}USB, SCSI} & clés de registre & oui \\

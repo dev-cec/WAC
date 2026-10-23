@@ -749,20 +749,29 @@ un autre pris \emph{pendant} la lecture ; tous pris ; clusters relus à zéro
 concordent pas, compression, chiffrement, plages dans un enregistrement
 d'extension) sont refusées avant toute lecture. Chaque lecture demandée est
 vérifiée : dans le volume, sur des clusters libres. Puis 20~000
-enregistrements abîmés, contre une page interdite.
+enregistrements abîmés, contre une page interdite. Niveau~2 : un bloc INDX
+construit avec des entrées vivantes et, dans sa marge, une entrée valide
+parmi des leurres (autre répertoire parent, alias 8.3, clé de mauvaise
+longueur, date de 1917, caractère de contrôle) — seule la valide sort ; un
+bloc libéré rend aussi ses anciennes entrées vivantes ; 4~000 blocs abîmés
+contre une page interdite.
 
 \begin{lstlisting}
 cd build-windows/tests && wine deleted_files_test.exe
 \end{lstlisting}
 
-Référence : 80~025 contrôles, aucun échec ; sans la vérification de
+Référence : 89~942 contrôles, aucun échec ; sans le contrôle du répertoire
+parent, le niveau~2 en fait échouer trois ; sans la vérification de
 \fichier{\$Bitmap} après la lecture, le cluster pris pendant la lecture est
 publié comme contenu du fichier et le contrôle échoue. Dans la VM, des
 fichiers de contenu connu (résident, texte, exécutable non signé,
 \fichier{notepad.exe}) sont écrits sur le disque puis supprimés :
 \texttt{check-json.py} exige qu'un contenu déclaré \texttt{Recovered} ait le
 SHA-256 calculé par Windows avant la suppression, et que l'exécutable
-authentique soit relevé sans être copié.
+authentique soit relevé sans être copié. Pour le niveau~2, 150 fichiers sont
+déplacés d'un dossier à un autre : au moins un ancien nom doit sortir de la
+marge de l'index du premier, avec l'enregistrement et le chemin actuel que
+\fichier{mft.json} donne au fichier.
 
 \section{\fichier{\$MFT} et journal des modifications : \texttt{mft\_test}, \texttt{usn\_journal\_test}}
 

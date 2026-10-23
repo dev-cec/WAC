@@ -338,7 +338,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   defender_configuration:  true   # exclusions et réglages de protection de Microsoft Defender
   deleted_files:                  # fichiers supprimés dont la lecture brute retrouve encore le contenu
     enabled:               true   # false : rien n'est lu
-    level:                 1      # 1 : contenu des enregistrements supprimés de la $MFT
+    level:                 2      # 1 : contenu des enregistrements supprimés de la $MFT ; 2 : et noms restés dans les index
     max_file_mib:          64     # au-delà : relevé avec ses empreintes, pas copié
     max_total_mib:         4096   # total copié ; les plus récents d'abord
     excluded_folders:             # jamais lus, sur chaque volume
@@ -1825,6 +1825,17 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (mises à jour de Windows) ne sont pas lus, ni le dossier de sortie.
         Le réglage est une structure sous \texttt{artefacts:} ;
         \texttt{deleted\_files: false} suffit pour l'écarter.
+        \champ{Source} dit d'où vient l'entrée : \texttt{MftRecord}, un
+        enregistrement supprimé de la \path|$MFT| (niveau~1) ;
+        \texttt{IndexSlack} (niveau~2), un nom resté dans la marge d'un bloc
+        d'index de répertoire (\path|$I30|) ou dans un bloc que le répertoire
+        a libéré : le nom, le répertoire (\champ{Path}), l'enregistrement du
+        fichier (\champ{Entry}, \champ{Sequence}), sa taille et les quatre
+        dates de son \path|$FILE_NAME| (\champ{FileNameCreatedUtc}\ldots),
+        \champ{State} \texttt{NameOnly} — aucun contenu. Seul un nom
+        qu'aucun répertoire ne porte plus est donné, et pas un nom déjà rendu
+        par le niveau~1. \champ{CurrentPath} : le même fichier existe encore
+        sous ce chemin, déplacé ou renommé et non supprimé.
         Sur un volume BitLocker, la lecture brute voit le volume déchiffré par
         le système, comme pour les autres artefacts : les clusters libres
         aussi.

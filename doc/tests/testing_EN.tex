@@ -727,19 +727,27 @@ length shorter than the size. Inconsistent lists (a run outside the volume,
 two runs on the same clusters, sizes that do not match, compression,
 encryption, runs in an extension record) are refused before any read. Every
 read asked for is checked: inside the volume, on free clusters. Then 20,000
-damaged records, against a forbidden page.
+damaged records, against a forbidden page. Level~2: an INDX block built with
+live entries and, in its slack, one valid entry among decoys (another parent
+directory, an 8.3 alias, a key of the wrong length, a date of 1917, a control
+character) — only the valid one comes out; a released block also gives its
+former live entries; 4,000 damaged blocks against a forbidden page.
 
 \begin{lstlisting}
 cd build-windows/tests && wine deleted_files_test.exe
 \end{lstlisting}
 
-Reference: 80,025 checks, no failure; without the check of \fichier{\$Bitmap}
+Reference: 89,942 checks, no failure; without the check of the parent
+directory, level~2 fails three of them; without the check of \fichier{\$Bitmap}
 after the reading, the cluster taken during the reading is published as the
 file's content and the check fails. In the VM, files of known content
 (resident, text, unsigned executable, \fichier{notepad.exe}) are written to
 the disk then deleted: \texttt{check-json.py} requires a content declared
 \texttt{Recovered} to have the SHA-256 Windows computed before the deletion,
-and the authentic executable to be listed without being copied.
+and the authentic executable to be listed without being copied. For level~2,
+150 files are moved from a folder to another: at least one former name must
+come out of the slack of the first one's index, with the record and current
+path \fichier{mft.json} gives the file.
 
 \section{\fichier{\$MFT} and change journal: \texttt{mft\_test}, \texttt{usn\_journal\_test}}
 

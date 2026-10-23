@@ -333,7 +333,7 @@ artefacts:              # one key per artefact; a missing key is true
   defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
   deleted_files:                  # deleted files whose content the raw reading still finds
     enabled:               true   # false: nothing read
-    level:                 1      # 1: the content of the $MFT's deleted records
+    level:                 2      # 1: the content of the $MFT's deleted records; 2: and the names left in the indexes
     max_file_mib:          64     # beyond: listed with its fingerprints, not copied
     max_total_mib:         4096   # all copied; the most recent first
     excluded_folders:             # never read, on every volume
@@ -1757,6 +1757,16 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         updates) are not read, nor the output folder. The setting is a
         structure under \texttt{artefacts:}; \texttt{deleted\_files: false}
         is enough to leave it out.
+        \champ{Source} says where the entry comes from: \texttt{MftRecord}, a
+        deleted record of the \path|$MFT| (level~1); \texttt{IndexSlack}
+        (level~2), a name left in the slack of a directory's index block
+        (\path|$I30|) or in a block the directory released: the name, the
+        directory (\champ{Path}), the file's record (\champ{Entry},
+        \champ{Sequence}), its size and the four dates of its
+        \path|$FILE_NAME| (\champ{FileNameCreatedUtc}\ldots), \champ{State}
+        \texttt{NameOnly} — no content. Only a name no directory holds any
+        more is given, and not one level~1 already gives. \champ{CurrentPath}:
+        the same file still exists at this path, moved or renamed, not deleted.
         On a BitLocker volume, the raw reading sees the volume as the system
         decrypts it, as for the other artefacts: its free clusters too.
   \item[\fichier{usn\_journal.json}] the change journal of every fixed NTFS
