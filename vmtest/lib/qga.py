@@ -225,7 +225,7 @@ def guest_read_text(dom, guest_path):
     data = b""
     try:
         while True:
-            r = qga(dom, {"execute": "guest-file-read", "arguments": {"handle": h, "count": 256 << 10}})
+            r = read_chunk(dom, h, len(data))
             data += base64.b64decode(r["buf-b64"])
             if r.get("eof"):
                 break
@@ -274,6 +274,18 @@ def run_direct(dom, argv, capture=True, timeout=DEFAULT_TIMEOUT):
                      f"may still be running in the VM")
         time.sleep(1)
 
+def read_chunk(dom, handle, offset):
+    """Reads up to 256 KiB of an open file of the VM, from `offset`.
+
+    The seek makes the read safe to retry: qga() retries a command virsh
+    reported as failed (a timeout) though the agent may have run it, and a
+    plain read retried returned the NEXT chunk — 256 KiB missing in the
+    middle of a 24.6 MB MANIFEST.json of Vista, which no longer parsed nor
+    matched its seal (2026-10-23).
+    @return the agent's answer: buf-b64, eof"""
+    qga(dom, {"execute": "guest-file-seek", "arguments": {"handle": handle, "offset": offset, "whence": "set"}})
+    return qga(dom, {"execute": "guest-file-read", "arguments": {"handle": handle, "count": 256 << 10}})
+
 def read_file(dom, guest_path, host_path):
     """Fetches a file from the VM, WRITTEN AS IT IS READ.
 
@@ -288,8 +300,7 @@ def read_file(dom, guest_path, host_path):
     try:
         with open(host_path, "wb") as f:
             while True:
-                r = qga(dom, {"execute": "guest-file-read",
-                              "arguments": {"handle": h, "count": 256 << 10}})
+                r = read_chunk(dom, h, total)
                 chunk = base64.b64decode(r["buf-b64"])
                 f.write(chunk)
                 total += len(chunk)
