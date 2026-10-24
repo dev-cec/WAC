@@ -108,16 +108,18 @@ void powershell() {
 
 void firewallLog() {
 	/* The header Windows 11 writes (pid added since Windows 10), a dropped
-	   inbound connection and an allowed outbound one; a line before the
-	   header, and a field without value. */
-	const std::vector<FirewallLogEntry> e = parseFirewallLog(
+	   inbound connection behind the zeros Windows leaves where it reopened
+	   the file, and an allowed outbound one; a line before the header, and a
+	   field without value. The zeros go in by length: a literal stops at them. */
+	const std::wstring text = std::wstring(
 		L"stray line\r\n"
 		L"#Version: 1.5\r\n#Software: Microsoft Windows Firewall\r\n#Time Format: Local\r\n"
 		L"#Fields: date time action protocol src-ip dst-ip src-port dst-port size tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path pid\r\n"
-		L"\r\n"
+		L"\r\n") + std::wstring(4, L'\0') +
 		L"2026-10-24 15:01:02 DROP TCP 192.168.1.20 192.168.1.10 51234 445 52 S 1234567 0 64240 - - - RECEIVE 4\r\n"
 		L"2026-10-24 15:01:03 ALLOW UDP 192.168.1.10 8.8.8.8 60000 53 0 - - - - - - - SEND 1312\r\n"
-		L"2026-02-31 00:00:00 ALLOW TCP 10.0.0.1 10.0.0.2 1 2 0 - - - - - - - SEND 1\r\n",
+		L"2026-02-31 00:00:00 ALLOW TCP 10.0.0.1 10.0.0.2 1 2 0 - - - - - - - SEND 1\r\n";
+	const std::vector<FirewallLogEntry> e = parseFirewallLog(text,
 		L"C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.log");
 	check(e.size() == 3, "firewall log: 3 lines after the header, the line before it skipped");
 	if (e.size() != 3) return;
@@ -126,8 +128,8 @@ void firewallLog() {
 		return std::wstring();
 	};
 	FILETIME expected;
-	check(iso8601UtcToFiletime(L"2026-10-24T15:01:02Z", expected) && value(e[0].timeLocal) == value(expected),
-	      "firewall log: local date and time read");
+	check(iso8601UtcToFiletime(L"2026-10-24T15:01:02Z", expected) && value(e[0].timeLocal) == value(expected) && e[0].timeAsStored.empty(),
+	      "firewall log: local date and time read, behind the zeros Windows left before them");
 	check(e[0].line == 7 && e[1].line == 8, "firewall log: lines counted from 1, the empty one included");
 	check(field(e[0], L"Action") == L"DROP" && field(e[0], L"SourceAddress") == L"192.168.1.20"
 	      && field(e[0], L"DestinationPort") == L"445" && field(e[0], L"Direction") == L"RECEIVE" && field(e[0], L"ProcessId") == L"4",
@@ -177,6 +179,18 @@ void partitionTables() {
 	forged = gpt;
 	put64(forged, 512 + 72, 1000000);
 	check(parsePartitionTable(forged.data(), forged.size()).partitions.empty(), "partition table: entries said past the bytes refused");
+	/* A USB key formatted whole in FAT32, as the harness's: its boot sector at
+	   sector 0, whose BPB bytes read as entries gave partitions at random. */
+	std::vector<uint8_t> key(512);
+	key[0] = 0xEB; key[1] = 0x58; key[2] = 0x90;
+	memcpy(key.data() + 3, "MSDOS5.0", 8);
+	memcpy(key.data() + 82, "FAT32   ", 8);
+	for (size_t i = 446; i < 510; ++i) key[i] = (uint8_t)(0x41 + i % 26);
+	key[510] = 0x55; key[511] = 0xAA;
+	t = parsePartitionTable(key.data(), key.size());
+	check(t.style == L"Volume" && t.partitions.empty() && t.diskId.empty(), "partition table: a disk formatted whole, no partition made up");
+	key[82] = 'X';
+	check(parsePartitionTable(key.data(), key.size()).style.empty(), "partition table: neither a table nor a volume, nothing");
 	check(parsePartitionTable(gpt.data(), 1100).partitions.empty() && parsePartitionTable(gpt.data(), 300).style.empty(),
 	      "partition table: an entry cut by the end of the bytes not read; fewer than a sector, no table");
 }

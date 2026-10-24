@@ -3,6 +3,7 @@
  */
 #include "firewall_log.h"
 #include "registry_common.h"
+#include <algorithm>
 #include <filesystem>
 #include <set>
 
@@ -90,6 +91,9 @@ std::vector<FirewallLogEntry> parseFirewallLog(const std::wstring& text, const s
 	for (size_t i = 0; i < lines.size(); ++i) {
 		std::wstring line = lines[i];
 		if (!line.empty() && line.back() == L'\r') line.pop_back();
+		/* Windows leaves zeros in the file where it reopened it (logging
+		   switched back on): seen before the first line's date. */
+		line.erase(std::remove(line.begin(), line.end(), L'\0'), line.end());
 		if (line.compare(0, 8, L"#Fields:") == 0) { fields = words(line.substr(8)); continue; }
 		if (line.compare(0, 13, L"#Time Format:") == 0) {
 			const std::vector<std::wstring> format = words(line.substr(13));

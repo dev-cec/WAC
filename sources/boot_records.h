@@ -55,7 +55,9 @@ struct BootPartition {
 
 /*! A disk's partition table, as its first mebibyte holds it. */
 struct PartitionTable {
-	std::wstring style;         //!< "MBR" or "GPT"; empty when neither
+	/*! "MBR", "GPT", or "Volume" for a disk formatted whole, without a table
+	 *  (its first sector is the volume's boot sector); empty when none of them */
+	std::wstring style;
 	/*! GPT: the bytes per sector its header was found at (512 or 4096); MBR:
 	 *  0, the table does not say — the collection asks the disk */
 	uint32_t sectorSize = 0;
@@ -68,7 +70,8 @@ struct PartitionTable {
  *  sector; every entry is read within `length`, never past it.
  *  @param head the disk's first bytes
  *  @param length their number
- *  @return the table; style empty when the bytes hold neither */
+ *  @return the table; style "Volume" for a disk without a table, empty when
+ *          the bytes hold neither a table nor a volume */
 PartitionTable parsePartitionTable(const uint8_t* head, size_t length);
 
 /*! Copies the boot records of every physical disk into the exhibit store

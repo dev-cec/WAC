@@ -29,6 +29,22 @@ const uint32_t MAX_GPT_ENTRIES = 1024;
 const wchar_t STORE_FOLDER[] = L"\\$BootRecords\\PhysicalDrive";
 const wchar_t SOURCE_PREFIX[] = L"\\\\.\\PhysicalDrive";
 
+/*! Whether a sector is a volume's boot sector — NTFS, exFAT, FAT12/16/32 —
+ *  by the names its BPB writes: a disk without a partition table starts so.
+ *  @param sector 512 bytes */
+bool isVolumeBootSector(const uint8_t* sector) {
+	return memcmp(sector + 3, "NTFS    ", 8) == 0 || memcmp(sector + 3, "EXFAT   ", 8) == 0
+	       || memcmp(sector + 54, "FAT", 3) == 0 || memcmp(sector + 82, "FAT32   ", 8) == 0;
+}
+
+//! The OEM name of a boot sector ("NTFS", "MSDOS5.0"), printable characters only.
+std::wstring oemName(const uint8_t* sector, size_t length) {
+	std::wstring oem;
+	for (size_t i = 3; i < 11 && i < length && sector[i] >= 0x20 && sector[i] < 0x7F; ++i) oem += (wchar_t)sector[i];
+	while (!oem.empty() && oem.back() == L' ') oem.pop_back();
+	return oem;
+}
+
 /*! A partition of a disk, as a volume of its own: the FAT reader reads
  *  from the partition's first byte, never past its end. */
 class PartitionSource : public VolumeSource {
@@ -162,6 +178,17 @@ PartitionTable parsePartitionTable(const uint8_t* head, size_t length) {
 			}
 			return t;
 		}
+	/* A partition table's entries say 0x00 or 0x80 in their boot flag. A
+	   disk formatted whole, without a table (a USB key, a memory card), starts
+	   with a volume's boot sector, which ends in 0x55AA too: its BPB, read as
+	   entries, gave partitions at random — measured on the harness's keys. */
+	for (unsigned i = 0; i < 4; ++i) {
+		const uint8_t flag = head[MBR_TABLE + i * MBR_ENTRY];
+		if (flag != 0x00 && flag != 0x80) {
+			if (isVolumeBootSector(head)) t.style = L"Volume";
+			return t;
+		}
+	}
 	t.style = L"MBR";
 	t.diskId = to_hex(readLittleEndian<uint32_t>(head + MBR_SIGNATURE), 8, HexLetters::Upper);
 	for (unsigned i = 0; i < 4; ++i) {
@@ -182,7 +209,11 @@ PartitionTable parsePartitionTable(const uint8_t* head, size_t length) {
 HRESULT ExtractBootRecordsRaw() {
 	std::error_code ec;
 	const std::wstring medium = std::filesystem::absolute(exhibitStoreFolder(), ec).root_name().wstring();
-	const long mediumDisk = medium.size() == 2 ? diskOfVolume(medium) : -1;
+	/* The medium's disk is left out — unless it is the system's: a collection
+	   written to the examined disk itself (the test harness does) would
+	   otherwise lose the very disk it examines. */
+	long mediumDisk = medium.size() == 2 ? diskOfVolume(medium) : -1;
+	if (mediumDisk >= 0 && mediumDisk == diskOfVolume(conf.systemDrive.substr(0, 2))) mediumDisk = -1;
 	HRESULT global = ERROR_EMPTY;
 	for (unsigned n = 0; n < MAX_DISKS; ++n) {
 		if ((long)n == mediumDisk) continue;   // the collection's own disk
@@ -229,6 +260,8 @@ Json diskJson(const std::wstring& disk, const std::map<std::wstring, const Store
 	o.add(L"PartitionStyle", Json::str(table.style));
 	if (table.sectorSize) o.add(L"SectorSize", Json::num((unsigned long long)table.sectorSize));
 	o.add(L"DiskId", Json::str(table.diskId));
+	// A disk formatted whole: its first sector is the volume's boot sector.
+	if (table.style == L"Volume") o.add(L"BootSectorOemId", Json::str(oemName(bytes.data(), bytes.size())));
 	Json partitions = Json::arr();
 	for (const BootPartition& p : table.partitions) {
 		Json j = Json::obj();
@@ -245,11 +278,7 @@ Json diskJson(const std::wstring& disk, const std::map<std::wstring, const Store
 		if (boot != parts.end()) {
 			j.add(L"BootSectorsSha256", Json::str(boot->second->sha256));
 			const std::vector<uint8_t> b = readCopy(boot->second->workingFile, BOOT_SECTORS * 4096);
-			// The OEM name of a FAT or NTFS boot sector ("NTFS    ", "MSDOS5.0"), printable only.
-			std::wstring oem;
-			for (size_t i = 3; i < 11 && i < b.size() && b[i] >= 0x20 && b[i] < 0x7F; ++i) oem += (wchar_t)b[i];
-			while (!oem.empty() && oem.back() == L' ') oem.pop_back();
-			j.add(L"BootSectorOemId", Json::str(oem));
+			j.add(L"BootSectorOemId", Json::str(oemName(b.data(), b.size())));
 		}
 		Json files = Json::arr();
 		for (auto it = parts.lower_bound(key + L"\\"); it != parts.end() && it->first.compare(0, key.size() + 1, key + L"\\") == 0; ++it) {
