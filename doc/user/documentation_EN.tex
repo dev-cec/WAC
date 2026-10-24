@@ -1727,7 +1727,12 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         on the examined machine. A resident content (a few hundred bytes, in
         the record itself) is given as it is; each cluster of a non-resident
         one is checked free in \path|$Bitmap| before and after it is read:
-        given meanwhile to another file, it becomes a hole of zeros.
+        given meanwhile to another file, it becomes a hole of zeros. A cluster
+        taken then given back since the deletion reads free: the runs of every
+        deleted record of the \path|$MFT| are therefore crossed, and a cluster
+        a later deleted file held becomes a hole (\champ{Reason} ``clusters
+        claimed since by a later deleted file''). An intermediate file whose
+        record was reused leaves no runs: what it wrote is not seen this way.
         \champ{State}: \texttt{Recovered} (the whole content),
         \texttt{Partial} (holes listed in \champ{MissingRanges}, first byte
         and length), \texttt{Overwritten} (nothing left), \texttt{Zeroed}

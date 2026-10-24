@@ -737,14 +737,14 @@ former live entries; 4,000 damaged blocks against a forbidden page.
 cd build-windows/tests && wine deleted_files_test.exe
 \end{lstlisting}
 
-Reference: 89,942 checks, no failure; without the check of the parent
+Reference: 91,839 checks, no failure — the clusters claimed since by a later deleted file among them (known cases, 2,000 draws against a cluster-by-cluster reckoning, a hole said so); without the check of the parent
 directory, level~2 fails three of them; without the check of \fichier{\$Bitmap}
 after the reading, the cluster taken during the reading is published as the
 file's content and the check fails. In the VM, files of known content
 (resident, text, unsigned executable, \fichier{notepad.exe}) are written to
 the disk then deleted: \texttt{check-json.py} requires a content declared
 \texttt{Recovered} to have the SHA-256 Windows computed before the deletion,
-and the authentic executable to be listed without being copied. For level~2,
+and the authentic executable to be listed without being copied; a fifth witness is written over after its deletion, by a file deleted in turn: never ``Recovered'' with another content. For level~2,
 150 files are moved from a folder to another: at least one former name must
 come out of the slack of the first one's index, with the record and current
 path \fichier{mft.json} gives the file.

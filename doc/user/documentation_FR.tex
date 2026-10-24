@@ -1794,7 +1794,14 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         contenu résident (quelques centaines d'octets, dans l'enregistrement
         même) est rendu tel quel ; chaque cluster d'un contenu non résident
         est vérifié libre dans \path|$Bitmap| avant et après sa lecture :
-        donné entre-temps à un autre fichier, il devient un trou de zéros.
+        donné entre-temps à un autre fichier, il devient un trou de zéros. Un
+        cluster pris puis rendu depuis la suppression se relit libre : les
+        plages de tous les enregistrements supprimés de la \path|$MFT| sont
+        donc croisées, et un cluster qu'un fichier supprimé plus récent a
+        tenu devient un trou (\champ{Reason} « clusters claimed since by a
+        later deleted file »). Un fichier intermédiaire dont l'enregistrement
+        a été réutilisé ne laisse pas de plages : ce qu'il a écrit ne se voit
+        pas ainsi.
         \champ{State} : \texttt{Recovered} (tout le contenu),
         \texttt{Partial} (trous listés dans \champ{MissingRanges}, octet de
         début et longueur), \texttt{Overwritten} (plus rien), \texttt{Zeroed}
