@@ -186,8 +186,9 @@ wait_registry_on_disk() {
 }
 # The artefacts read in the hives whose witnesses the harness writes in the
 # live registry: a --only cycle of one of them waits too. The witnesses of the
-# third lot (installed_programs…) were absent from their collection without it.
-REGISTRY_WITNESSES="run_keys shellbags persistence office_trust_records typed_paths word_wheel_query root_certificates internet_settings firewall installed_programs defender_configuration explorer_recent_docs mount_points program_usage network_shares rdp_client"
+# third lot (installed_programs…) were absent from their collection without it,
+# and the File value of the Sysmon log the witness moves (B-053).
+REGISTRY_WITNESSES="sysmon run_keys shellbags persistence office_trust_records typed_paths word_wheel_query root_certificates internet_settings firewall installed_programs defender_configuration explorer_recent_docs mount_points program_usage network_shares rdp_client"
 wants_registry_witness() { wants $REGISTRY_WITNESSES; }
 
 
@@ -263,6 +264,30 @@ if wants emails && [[ -f "$PST_WITNESS" ]]; then
   fi
   echo "pst=$PST_WITNESS_VM|$PST_WITNESS" > "$OUTPUT/reference/emails.txt"
 fi
+
+# The Sysmon witness (B-053): Sysmon installed with a known configuration for
+# the time of the collections, its log moved to the data volume, then removed
+# before step 8 (sysmon-witness.ps1) — Windows 10 and later only, the versions
+# Sysmon 15 runs on, and only when vmtest/tools/sysmon/bin holds it
+# (Sysinternals, not versioned).
+SYSMON_EXE=Sysmon64.exe; [[ "${BITS_SUFFIX:-}" == 32 ]] && SYSMON_EXE=Sysmon.exe
+SYSMON_PLACED=""
+if wants sysmon events && [[ -f "$HERE/tools/sysmon/bin/$SYSMON_EXE" ]] \
+   && (( $($QGA run -- powershell.exe -NoProfile -Command '[Environment]::OSVersion.Version.Build' 2>/dev/null | tr -d '\r') >= 10240 )); then
+  $QGA write "$HERE/guest/sysmon-witness.ps1" "$VMDIR\\sysmon-witness.ps1" >/dev/null
+  $QGA write "$HERE/tools/sysmon/bin/$SYSMON_EXE" "$VMDIR\\$SYSMON_EXE" >/dev/null
+  if $QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\sysmon-witness.ps1" \
+       -Action Install -Folder "$VMDIR" > "$OUTPUT/reference/sysmon.txt" 2>/dev/null; then
+    SYSMON_PLACED=1; echo "   + Sysmon witness installed (reference/sysmon.txt)"
+  else echo "   ⚠️ Sysmon witness not installed"; fi
+fi
+remove_sysmon() {
+  [[ -n "$SYSMON_PLACED" ]] || return 0
+  $QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\sysmon-witness.ps1" -Action Remove -Folder "$VMDIR" >/dev/null 2>&1 \
+    && echo "   Sysmon witness removed" || echo "   ❌ Sysmon witness NOT removed: sysmon-witness.ps1 -Action Remove in the VM"
+  $QGA run --shell "del $VMDIR\\sysmon-witness.ps1 2>nul & exit /b 0" >/dev/null 2>&1 || true
+  SYSMON_PLACED=""
+}
 
 # Witnesses of the small file artefacts, placed before both collections: a
 # PowerShell history, a file sent to the recycle bin, a hosts entry, a startup
@@ -839,6 +864,7 @@ if [[ $SPLIT -eq 1 ]]; then
   fi
 fi
 
+remove_sysmon
 if [[ -n "$ONLY" ]]; then
   echo "== 8. skipped (--only) == ($(date +%H:%M:%S))"
   $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true

@@ -475,6 +475,7 @@ def cross_checks(folder):
     found += guarded(check_rdp, folder)
     found += guarded(check_thumbcache, folder)
     found += guarded(check_emails, folder)
+    found += guarded(check_sysmon, folder)
     found += guarded(check_prefetch_libscca, folder)
     found += guarded(check_thunderbird, folder)
     found += guarded(check_shadow_copies, folder)
@@ -3717,6 +3718,78 @@ def check_prefetch_libscca(folder):
           f"run times, volume serials, number of files)" + (f", {len(unread)} unread by libscca" if unread else "")
           + ("" if ok else f": {wrong[:3]}"))
     return 0 if ok else 1
+
+
+def check_sysmon(folder):
+    """sysmon.json and events.json against Windows, on the Sysmon witness
+    (sysmon-witness.ps1): Sysmon installed with a known configuration, a file
+    deleted under its FileDelete rule, its log moved to the data volume.
+
+    Windows read live what WAC reads offline: the Rules value (its SHA-256),
+    the ConfigHash value and the configuration file's SHA-256, each archived
+    file's size and SHA-256 (Get-FileHash); Get-WinEvent read the moved log,
+    whose records of the witness's ProcessCreate must be in events.json, read
+    from that file — a log WAC looked for in winevt\\Logs only was missed."""
+    path = os.path.join(folder, "reference", "sysmon.txt")
+    if not os.path.exists(path) or os.path.getsize(path) == 0:
+        print("  ⏭️  no Sysmon witness (Windows 10 or later, vmtest/tools/sysmon/bin): Sysmon not confronted")
+        return 0
+    ref = {}
+    archives = []
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            key, _, value = line.strip().partition("=")
+            if key == "sysmon_archive":
+                archives.append(value.split("|"))
+            elif key:
+                ref[key] = value
+    entries = load(folder, "sysmon.json")
+    if not isinstance(entries, list):
+        print("  ❌ sysmon.json absent or unreadable, the witness installed")
+        return 1
+    service, driver = ref.get("sysmon_service", "|").split("|", 1)
+    mine = next((e for e in entries if e.get("Service") == service and e.get("Driver") == driver), None)
+    if mine is None:
+        print(f"  ❌ sysmon.json: no installation {service} / {driver} ({len(entries)} entry(ies))")
+        return 1
+    wrong = []
+    if str(mine.get("RulesSha256", "")).upper() != ref.get("sysmon_rules", "").upper():
+        wrong.append(f"RulesSha256 {mine.get('RulesSha256')}, Windows {ref.get('sysmon_rules')}")
+    config, config_sha, config_hash = (ref.get("sysmon_config", "") + "||").split("|")[:3]
+    if str(mine.get("ConfigFileSha256", "")).upper() != config_sha.upper():
+        wrong.append(f"ConfigFileSha256 {mine.get('ConfigFileSha256')}, Get-FileHash {config_sha}")
+    if (mine.get("Parameters") or {}).get("ConfigHash") != config_hash:
+        wrong.append(f"ConfigHash {(mine.get('Parameters') or {}).get('ConfigHash')}, Windows {config_hash}")
+    archived = {str(a.get("Path", "")).lower(): a for a in mine.get("ArchivedFiles", [])}
+    for name, size, sha in archives:
+        a = archived.get(name.lower())
+        if a is None:
+            wrong.append(f"archive {name} absent")
+        elif str(a.get("Size")) != size or str(a.get("Sha256", "")).upper() != sha.upper():
+            wrong.append(f"archive {name}: {a.get('Size')} B {a.get('Sha256')}, Windows {size} B {sha}")
+    if not archives:
+        wrong.append("no archived file in the reference: the FileDelete rule did not archive")
+    log = ref.get("sysmon_log", "")
+    ids = [int(i) for i in ref.get("sysmon_event", "").split(",") if i.strip().isdigit()]
+    events = load(folder, "events.json")
+    base = log.rsplit("\\", 1)[-1].lower()
+    found = {e.get("EvtSystemEventRecordId") for e in (events if isinstance(events, list) else [])
+             if isinstance(e, dict) and str(e.get("EvtSourceLog", "")).lower() == base
+             and str(e.get("EvtSystemEventID")) == "1"}
+    missing = [i for i in ids if i not in found]
+    if not ids:
+        wrong.append(f"no ProcessCreate of the witness in the moved log {log} (Get-WinEvent)")
+    elif missing:
+        wrong.append(f"events.json: {len(missing)} of the {len(ids)} ProcessCreate of {log} absent ({missing[:3]})")
+    if wrong:
+        print(f"  ❌ sysmon.json / events.json: {len(wrong)} difference(s) with Windows on the Sysmon witness")
+        for why in wrong[:5]:
+            print(f"        {why}")
+        return 1
+    print(f"  ✅ sysmon.json: {service} / {driver}, Rules, ConfigHash and configuration file as Windows reads them, "
+          f"{len(archives)} archived file(s) by size and SHA-256; events.json: the {len(ids)} ProcessCreate of the log "
+          f"moved to {log}")
+    return 0
 
 
 def check_emails(folder):
