@@ -37,6 +37,9 @@ PHRASES = [
     ("Internet Explorer 10 and 11, Edge Legacy:", "Internet Explorer 10 et 11, Edge Legacy :"),
     ("…and Chromium browsers, Firefox: History, places.sqlite, session files",
      "…et navigateurs Chromium, Firefox : History, places.sqlite, fichiers de session"),
+    ("SYSTEM\\CurrentControlSet\\Services\\<Sysmon driver>\\Parameters, its ArchiveDirectory",
+     "SYSTEM\\CurrentControlSet\\Services\\<pilote de Sysmon>\\Parameters, son ArchiveDirectory"),
+    ("registry keys; Rules as stored", "clés du registre ; Rules telles que stockées"),
     ("Outlook PST and OST, Thunderbird mbox, in each profile", "PST et OST d'Outlook, mbox de Thunderbird, dans chaque profil"),
     ("TerminalServices-LocalSessionManager and RemoteConnectionManager logs",
      "journaux TerminalServices-LocalSessionManager et RemoteConnectionManager"),
@@ -130,6 +133,8 @@ NOTES = {
         "Avant Vista : Documents and Settings\\All Users\\Application Data\\Microsoft\\Network\\Downloader. Les fichiers de file d'attente mesurés sous Windows 8.1 ; les versions antérieures lues comme bits_parser (ANSSI) les décrit, sans mesure.",
     "Server 2012 and 2012 R2 have no built-in Defender; quarantine copied encrypted on every version.":
         "Server 2012 et 2012 R2 n'ont pas de Defender intégré ; la quarantaine est copiée chiffrée sur toutes les versions.",
+    "Not part of Windows: present only where Sysmon was installed. Its rules' binary format is not documented: given as stored, with its fingerprint.":
+        "Absent de Windows : présent seulement là où Sysmon a été installé. Le format binaire de ses règles n'est pas documenté : donné tel que stocké, avec son empreinte.",
     "Depends on the mail program installed, not on Windows.": "Dépend du logiciel de messagerie installé, non de Windows.",
     "Windows XP: Dr Watson (drwtsn32.log, user.dmp), not collected.": "Windows XP : Dr Watson (drwtsn32.log, user.dmp), non collecté.",
     "Copied raw on every version: not converted.": "Copié brut sur toutes les versions : non converti.",

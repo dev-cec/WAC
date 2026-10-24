@@ -404,6 +404,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   shortcuts:               true   # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
   srum:                    true   # SRUDB.dat : réseau et ressources par application et utilisateur, 30 à 60 jours
   startup_folders:         true   # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
+  sysmon:                  true   # Sysmon s'il est installé : sa configuration (règles telles que stockées) et les fichiers supprimés qu'il a archivés ; son journal est dans events
   thumbcache:              true   # caches des miniatures et des icônes : ce que chacun a vu, même supprimé ; images exportées
   typed_paths:             true   # chemins tapés dans l'Explorateur
   usbstor:                 true   # périphériques de stockage USB (Enum\USBSTOR)
@@ -1691,6 +1692,26 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         HTML, pièces jointes (base64, quoted-printable, noms RFC~2231), dans
         les mêmes champs que pour Outlook, avec \champ{Offset} (position du
         message dans le fichier) au lieu de \champ{NodeId}.
+  \item[\fichier{sysmon.json}] Sysmon (Sysinternals), là où il est
+        installé : une fiche par installation, reconnue au lien entre le
+        service (\texttt{Parameters\textbackslash DriverName}) et la clé de son
+        pilote qui porte des règles — trouvée même renommée. Le service et
+        le pilote avec leur \texttt{ImagePath}, la date de dernière écriture
+        de \texttt{Parameters} (dernier changement de configuration), toutes
+        les valeurs de cette clé telles que stockées (\champ{Parameters} :
+        \texttt{Rules}, \texttt{HashingAlgorithm}, \texttt{Options},
+        \texttt{ArchiveDirectory}, \texttt{ConfigFile}, \texttt{ConfigHash}),
+        \champ{RulesSha256}. Le format binaire des règles n'est pas documenté
+        par Sysinternals : elles sont données en hexadécimal, non décodées.
+        Le dossier d'archives (\champ{ArchiveFolder}, \fichier{C:\textbackslash Sysmon}
+        par défaut) est prélevé entier : ce sont les fichiers supprimés sous
+        une règle \texttt{FileDelete}, nommés par leur empreinte — le contenu
+        même d'un outil effacé —, listés dans \champ{ArchivedFiles} avec leur
+        taille et leur SHA-256 ; le fichier de configuration XML, s'il est
+        encore là, est prélevé et son SHA-256 donné (\champ{ConfigFileSha256},
+        à comparer à \texttt{ConfigHash}). Le journal de Sysmon est converti
+        avec les autres dans \fichier{events.json}, même déplacé ; sa
+        version y est (événement 4).
   \item[\fichier{thumbcache.json}] caches des miniatures et des icônes de
         l'Explorateur, de chaque profil (\fichier{thumbcache\_*.db},
         \fichier{iconcache\_*.db}) : ce que l'utilisateur a eu sous les yeux,
@@ -1977,7 +1998,11 @@ Windows~XP et Server~2003 sont lus dans les champs que Windows rend pour une
 source classique dans un \fichier{.evtx} (identifiant et ses qualificateurs,
 niveau d'après le type d'événement, catégorie en tâche, chaînes en
 \champ{Data}, données binaires en \champ{Binary}), leur zone circulaire
-parcourue depuis l'enregistrement le plus ancien :
+parcourue depuis l'enregistrement le plus ancien. Un journal que le registre
+de la machine place hors de son dossier (valeur \texttt{File} de son canal,
+\texttt{wevtutil sl /lfn}, ou de son journal classique) — déplacé pour la
+place, ou par un intrus pour qu'on ne le cherche pas — est prélevé là où il
+est et converti avec les autres :
 
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[\champ{EvtSystem*}] la section système : fournisseur, identifiant,

@@ -672,6 +672,17 @@ image vue par « wac » dans l'Explorateur, son \texttt{System.ThumbnailCacheId}
   9 caches, toutes les sommes d'en-tête et les 777 sommes de données
   identiques ; la miniature du témoin retrouvée, exportée avec son SHA-256) &
   contrôle ajouté avec l'artefact \\
+Sysmon~15 installé le temps du cycle (Windows~11) avec une configuration
+  connue : une règle ProcessCreate d'un exécutable témoin, une règle
+  FileDelete qui archive, son journal déplacé sur le volume de données
+  (\texttt{wevtutil sl /lfn}) ; \texttt{Rules} et \texttt{ConfigHash} lus en
+  direct par Windows, archives et fichier de configuration empreints par
+  \texttt{Get-FileHash}, journal déplacé lu par \texttt{Get-WinEvent} /
+  \fichier{sysmon.json}, \fichier{events.json} (service et pilote, SHA-256 des
+  règles, \texttt{ConfigHash} et SHA-256 du fichier identiques ; chaque fichier
+  archivé par taille et SHA-256 ; le ProcessCreate du témoin lu dans le
+  journal déplacé) &
+  contrôle ajouté avec l'artefact ; Sysmon retiré après les collectes \\
 session RDP réelle de « wac » vers 127.0.0.2 avec un compte de test, fermée
   comme un utilisateur le ferait ; serveur témoin de valeurs connues ; tuiles du
   cache lues par bmc-tools (ANSSI) ; événements entrants listés par

@@ -201,6 +201,9 @@
 \addlinespace
 \texttt{startup\_folders} & Windows XP & \texttt{Start Menu\textbackslash{}Programs\textbackslash{}Startup de chaque profil et de All Users} & fichiers & oui \\
 \addlinespace
+\texttt{sysmon} & Windows 7 & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}\textless{}pilote de Sysmon\textgreater{}\textbackslash{}Parameters, son ArchiveDirectory} & clés du registre ; Rules telles que stockées & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Absent de Windows : présent seulement là où Sysmon a été installé. Le format binaire de ses règles n'est pas documenté : donné tel que stocké, avec son empreinte.} \\
+\addlinespace
 \texttt{thumbcache} & Windows XP & \texttt{Thumbs.db dans chaque dossier} & fichier composé OLE & oui \\
  & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Explorer\textbackslash{}thumbcache\_*.db} & CMMM, disposition de Vista & oui \\
  & Windows 7 & \texttt{le même dossier} & CMMM, disposition de Windows 7 & oui \\

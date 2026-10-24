@@ -201,6 +201,9 @@
 \addlinespace
 \texttt{startup\_folders} & Windows XP & \texttt{Start Menu\textbackslash{}Programs\textbackslash{}Startup of each profile and of All Users} & files & yes \\
 \addlinespace
+\texttt{sysmon} & Windows 7 & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}\textless{}Sysmon driver\textgreater{}\textbackslash{}Parameters, its ArchiveDirectory} & registry keys; Rules as stored & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Not part of Windows: present only where Sysmon was installed. Its rules' binary format is not documented: given as stored, with its fingerprint.} \\
+\addlinespace
 \texttt{thumbcache} & Windows XP & \texttt{Thumbs.db in each folder} & OLE compound file & yes \\
  & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Explorer\textbackslash{}thumbcache\_*.db} & CMMM, Vista layout & yes \\
  & Windows 7 & \texttt{the same folder} & CMMM, Windows 7 layout & yes \\

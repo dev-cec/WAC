@@ -650,6 +650,16 @@ picture seen by "wac" in Explorer, its \texttt{System.ThumbnailCacheId} given
   header checksum and the 777 data checksums identical; the witness's
   thumbnail found, exported with its SHA-256) &
   check added with the artefact \\
+Sysmon~15 installed for the cycle (Windows~11) with a known configuration: a
+  ProcessCreate rule of a witness executable, a FileDelete rule archiving, its
+  log moved to the data volume (\texttt{wevtutil sl /lfn}); \texttt{Rules} and
+  \texttt{ConfigHash} read live by Windows, archives and configuration file
+  hashed by \texttt{Get-FileHash}, the moved log read by \texttt{Get-WinEvent}
+  / \fichier{sysmon.json}, \fichier{events.json} (service and driver, SHA-256
+  of the rules, \texttt{ConfigHash} and the file's SHA-256 identical; every archived
+  file by size and SHA-256; the witness's ProcessCreate read from the moved
+  log) &
+  check added with the artefact; Sysmon removed after the collections \\
 real RDP session of "wac" to 127.0.0.2 with a test account, closed as a user
   would; witness server of known values; cache tiles read by bmc-tools (ANSSI);
   incoming events listed by \texttt{Get-WinEvent} / \fichier{rdp\_client.json},

@@ -49,7 +49,6 @@ supprimés (B-036), la couverture MITRE ATT&CK (B-052), puis la revue (B-050) et
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-053](B-053-sysmon.md) | Sysmon s'il est présent : journal (même déplacé), configuration, archives des fichiers supprimés | en cours | P1 | moyen |
 | [B-056](B-056-temoins-cliche-windows-7.md) | Témoins du cliché instantané peu fiables sous Windows 7 (libvshadow lit comme WAC) | à faire (avant B-050) | P2 | moyen |
 | [B-057](B-057-ruche-system-vista-sans-journal.md) | Ruche SYSTEM de Vista : Windows en perd la moitié chargée sans son journal, WAC ne la rejoue pas (vu une fois) | à faire (avant B-050) | P2 | moyen |
 | [B-052](B-052-couverture-mitre-attack.md) | Couverture MITRE ATT&CK : toutes les traces utiles à la détection prélevées ? Résultat dans la documentation | à faire (avant de clore la 3.0) | P1 | fort |

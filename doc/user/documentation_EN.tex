@@ -399,6 +399,7 @@ artefacts:              # one key per artefact; a missing key is true
   shortcuts:               true   # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
   srum:                    true   # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
   startup_folders:         true   # startup folders: what runs at logon
+  sysmon:                  true   # Sysmon where it runs: its configuration (rules as stored) and the deleted files it archived; its log is in events
   thumbcache:              true   # Explorer's thumbnail and icon caches: what each user saw, even deleted since; images exported
   typed_paths:             true   # paths typed in Explorer's address bar
   usbstor:                 true   # USB mass storage devices (Enum\USBSTOR)
@@ -1631,6 +1632,25 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (base64, quoted-printable, RFC~2231 names), in the same fields as for
         Outlook, with \champ{Offset} (the message's position in the file)
         instead of \champ{NodeId}.
+  \item[\fichier{sysmon.json}] Sysmon (Sysinternals), where it is
+        installed: one record per installation, told by the link between the
+        service (\texttt{Parameters\textbackslash DriverName}) and its
+        driver's key holding rules — found even renamed. The service and the
+        driver with their \texttt{ImagePath}, the last write of
+        \texttt{Parameters} (the last configuration change), every value of
+        that key as stored (\champ{Parameters}: \texttt{Rules},
+        \texttt{HashingAlgorithm}, \texttt{Options},
+        \texttt{ArchiveDirectory}, \texttt{ConfigFile}, \texttt{ConfigHash}),
+        \champ{RulesSha256}. Sysinternals does not document the rules' binary
+        format: they are given in hexadecimal, not decoded. The archive folder
+        (\champ{ArchiveFolder}, \fichier{C:\textbackslash Sysmon} by default)
+        is taken whole: the files deleted under a \texttt{FileDelete} rule,
+        named by their fingerprint — the very content of an erased tool —,
+        listed in \champ{ArchivedFiles} with their size and SHA-256; the XML
+        configuration file, if still there, is taken and its SHA-256 given
+        (\champ{ConfigFileSha256}, to compare with \texttt{ConfigHash}).
+        Sysmon's log is converted with the others into \fichier{events.json},
+        even moved; its version is there (event 4).
   \item[\fichier{thumbcache.json}] Explorer's thumbnail and icon caches of
         every profile (\fichier{thumbcache\_*.db}, \fichier{iconcache\_*.db}):
         what the user had on screen, even if the file was deleted since. For
@@ -1895,7 +1915,11 @@ the log's format: the \fichier{.evt} logs of Windows~XP and Server~2003 are
 read into the fields Windows renders for a classic source in an
 \fichier{.evtx} (identifier and its qualifiers, level from the event type,
 category as the task, strings as \champ{Data}, binary data as
-\champ{Binary}), their circular area walked from the oldest record:
+\champ{Binary}), their circular area walked from the oldest record. A log the machine's
+registry places outside its folder (the \texttt{File} value of its channel,
+\texttt{wevtutil sl /lfn}, or of its classic log) — moved for room, or by an
+intruder so that nobody looks for it — is taken where it is and converted
+with the others:
 
 \begin{description}[style=nextline,leftmargin=1.2em]
   \item[\champ{EvtSystem*}] the system section: provider, identifier, level,
