@@ -334,6 +334,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   amcache:                 true   # Amcache.hve : applications, exécutables et pilotes vus
   bam:                     true   # dernière exécution de chaque programme par utilisateur (BAM)
   bits:                    true   # qmgr.db : travaux BITS, URL, destinations, commandes de notification
+  boot_records:            true   # ce qui s'exécute avant Windows : premier Mio de chaque disque (MBR, GPT), secteurs de démarrage, fichiers de la partition EFI
   defender:                true   # Defender : journaux (MPLog, traces WPP brutes), historique des détections, quarantaine (copiée chiffrée)
   defender_configuration:  true   # exclusions et réglages de protection de Microsoft Defender
   deleted_files:                  # fichiers supprimés dont la lecture brute retrouve encore le contenu
@@ -359,9 +360,11 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   explorer_recent_docs:    true   # fichiers ouverts par chaque utilisateur (RecentDocs de l'Explorateur)
   fat_volumes:             true   # volumes FAT et exFAT, clés USB du suspect comprises : entrées, supprimées aussi
   firewall:                true   # règles et profils du pare-feu
+  firewall_log:            true   # journal du pare-feu (pfirewall.log), s'il est activé : connexions acceptées ou rejetées, adresses, ports, processus
   hosts:                   true   # le fichier hosts : noms détournés vers une adresse
   installed_programs:      true   # programmes installés (Uninstall) de la machine et de chaque utilisateur
   internet_settings:       true   # proxy des utilisateurs
+  intune_logs:             true   # journaux de l'extension Intune : scripts et applications poussés par le locataire, leur résultat
   jump_lists:              true   # listes de sauts : fichiers et lieux ouverts, par application
   known_networks:          true   # réseaux auxquels la machine s'est connectée (NetworkList)
   local_groups:            true   # membres de chaque groupe local (SAM)
@@ -1244,6 +1247,15 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         SHA-1 n'est pas le nom de sa clé.
   \item[\fichier{internet\_settings.json}] proxy et script de configuration
         automatique de chaque utilisateur.
+  \item[\fichier{intune\_logs.json}] journaux de l'extension de gestion
+        Intune (\fichier{ProgramData\textbackslash Microsoft\textbackslash IntuneManagementExtension\textbackslash Logs}),
+        sur une machine gérée par Microsoft Intune : les scripts PowerShell et
+        les applications que le locataire a poussés et exécutés en SYSTEM,
+        leur résultat, l'inscription de l'appareil. Une fiche par message
+        (format CMTrace, sur une ou plusieurs lignes) : \champ{Message},
+        \champ{Component}, \champ{Type}, \champ{Thread}, la date, écrite en
+        heure locale, en UTC et en heure locale — exacte quand le journal
+        écrit son décalage (\champ{BiasMinutes}).
   \item[\fichier{firewall.json}] règles du pare-feu (nom, action, sens, ports,
         programme ; tous les champs dans \champ{Fields}) et réglages des profils
         domaine, privé et public. Sous Windows~XP SP2 et suivants et
@@ -1251,6 +1263,16 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         autorisés et ports ouverts --- en règles de \champ{Version}
         \texttt{XP}, avec leur \champ{Profile} et leur \champ{Scope} ; XP~SP1
         n'a pas de politique de pare-feu.
+  \item[\fichier{firewall\_log.json}] journal du pare-feu
+        (\fichier{pfirewall.log} et sa rotation \fichier{.old}), là où le
+        \texttt{LogFilePath} de chaque profil le place — réglages du pare-feu et
+        stratégie de groupe — et à son emplacement par défaut : une fiche par
+        connexion acceptée ou rejetée, avec \champ{Action}, \champ{Protocol},
+        \champ{SourceAddress}, \champ{DestinationAddress}, les ports,
+        \champ{Size}, \champ{Direction} et, depuis Windows~10,
+        \champ{ProcessId} ; la date, écrite en heure locale, donnée en UTC et
+        en heure locale. C'est la seule trace des flux réseau qu'un Windows
+        garde sur son disque ; la journalisation est désactivée par défaut.
   \item[\fichier{installed\_programs.json}] programmes installés, lus dans les
         clés \texttt{Uninstall} de la machine (64 et 32~bits) et de chaque
         utilisateur, et produits Windows Installer (\champ{Scope} \texttt{MSI
@@ -1333,6 +1355,20 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{Start}, fichier, taille). Un intrus qui coupe un canal, réduit
         un journal, en ouvre l'accès ou arrête une session comme
         \texttt{EventLog-Security} y laisse sa trace ; \champ{KeyLastWrite} date la dernière modification de chacun.
+  \item[\fichier{boot\_records.json}] ce qui s'exécute avant Windows, lu en
+        brut sur chaque disque physique (le disque du support de collecte
+        excepté) : son premier mébioctet copié — code d'amorçage du MBR, table
+        de partitions, en-tête et entrées GPT, et l'espace avant la première
+        partition, où se cache le code d'un bootkit —, les 16 premiers
+        secteurs de chaque partition, et chaque fichier de la partition
+        système EFI, lue par le lecteur FAT de \wac{} (chargeurs, BCD). Une
+        fiche par disque : \champ{PartitionStyle} (\texttt{MBR} ou
+        \texttt{GPT}), \champ{DiskId}, \champ{MbrBootCodeSha256}, et chaque
+        partition en secteurs comme la table la stocke (\champ{FirstSector},
+        \champ{Sectors}), avec son type, le SHA-256 de ses premiers secteurs,
+        l'OEM de son secteur de démarrage et, pour la partition EFI, ses
+        fichiers (\champ{EfiFiles} : chemin, taille, SHA-256). Les partitions
+        logiques d'une partition étendue ne sont pas suivies.
   \item[\fichier{fat\_volumes.json}] volumes FAT12, FAT16, FAT32 et exFAT, clés
         USB et cartes du suspect comprises (le volume de la collecte excepté) :
         chaque entrée, présente ou \textbf{supprimée} (\champ{Deleted}), son

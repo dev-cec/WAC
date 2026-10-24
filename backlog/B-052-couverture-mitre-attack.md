@@ -45,7 +45,12 @@ Hors de portée d'un prélèvement sur disque : contenu réseau et DNS en vol, j
 ## Tâches
 - [x] Récupérer les données ATT&CK (version figée, empreinte notée) : Enterprise 20.0 du 2026-10-13, SHA-256 81113BA9…5352 (`vmtest/tools/attack`, non versionné)
 - [x] Rapprocher Data Components et artefacts de WAC (`doc/attack-coverage.py`)
-- [ ] Prélèvements 1 à 6 ci-dessus
+- [x] Prélèvement 1 : journal du pare-feu (clé `firewall_log`, `firewall_log.json`)
+- [x] Prélèvement 2 : secteurs et fichiers de démarrage (clé `boot_records`, `boot_records.json`)
+- [ ] Prélèvement 3 : fichiers ETW (étude)
+- [x] Prélèvement 4 : journaux Intune (clé `intune_logs`, `intune_logs.json`)
+- [ ] Prélèvement 5 : traces locales des services en nuage (étude)
+- [ ] Prélèvement 6 : Defender for Endpoint (étude)
 - [ ] Besoins d'analyse (détection sur les JSON) consignés dans `WAE/TODO.txt`
 - [x] Tableau de couverture dans les manuels FR et EN (section « Couverture de MITRE ATT&CK », produite par `doc/attack-coverage.py`) ; dans l'article : B-058
 
@@ -54,3 +59,4 @@ Hors de portée d'un prélèvement sur disque : contenu réseau et DNS en vol, j
 - 2026-10-17 : décision utilisateur — ce qui relève de l'analyse des JSON va dans WAE (`WAE/TODO.txt` pour le moment) ; ici, seulement les traces à prélever.
 - 2026-10-24 : ATT&CK 20.0 lu : depuis la 18, une technique est détectée par des stratégies faites d'analytiques, chacune nommant ses sources (composant de données, source de journal). `doc/attack-coverage.py` décide une fois chaque source de journal (un journal d'événements Windows est pris quel qu'en soit le canal, même déplacé) et chaque composant (artefacts qui en gardent la trace sur le disque) ; une source ou un composant non décidé arrête le script. 479 techniques et sous-techniques Windows : 475 avec au moins une trace prélevée, 4 dont toutes les sources sont hors du disque, 6 sans analytique Windows décidées d'après la technique. Écarts : journal du pare-feu, journaux Intune ; puis, à la demande de l'utilisateur, la liste des prélèvements à ajouter ci-dessus.
 - 2026-10-24 : tableau dans les manuels : décisions par source de journal et par composant, puis une ligne par technique (trace dans un journal, trace sur le disque, sources non prises) — la liste des artefacts par technique faisait 57 pages ; 15 pages ajoutées, 0 débordement.
+- 2026-10-24 : prélèvements 1, 2 et 4 écrits, sans test en VM (décision utilisateur) ; tests unitaires vus échouer par mutation : journal du pare-feu (en-tête `#Fields:`, « - » omis, date locale, date impossible donnée telle quelle), table de partitions (MBR, GPT derrière son MBR protecteur, partition EFI par son GUID de type, taille d'entrée et position des entrées forgées refusées, entrée coupée non lue), CMTrace (message sur plusieurs lignes, biais après l'heure, message coupé laissé). Défaut trouvé au passage : `artefact_catalogue_test` attendait 15 artefacts écartés sous XP, la clé `sysmon` (Windows 7 et suivants) en fait 16 — le test n'avait pas tourné au commit de B-053 (`build-windows.sh` sans `--test`). Tableau de couverture régénéré : plus aucune source « à ajouter ».

@@ -10,8 +10,8 @@
 \texttt{wineventlog:adfs…} & rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0 \\
 \texttt{wineventlog:…} & \texttt{events} \\
 \texttt{autoruns:registryscan…} & \texttt{persistence}, \texttt{run\_keys}, \texttt{services}, \texttt{scheduled\_tasks}, \texttt{startup\_folders} \\
-\texttt{windows firewall log…} & sur le disque, pas encore prélevé : ajouté avant la 3.0.0 \\
-\texttt{applicationlog:intune…} & sur le disque, pas encore prélevé : ajouté avant la 3.0.0 \\
+\texttt{windows firewall log…} & \texttt{firewall\_log} \\
+\texttt{applicationlog:intune…} & \texttt{intune\_logs}, \texttt{events} \\
 \texttt{applicationlog:iis…} & rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0 \\
 \texttt{applicationlog:callrecords…} & service en nuage : dans les journaux du locataire, pas sur la machine \\
 \texttt{etw…} & télémétrie vivante (ETW, appels d'API, compteurs) : jamais écrite sur le disque \\
@@ -48,9 +48,9 @@ File Modification & \texttt{mft}, \texttt{usn\_journal}, \texttt{log\_file} \\
 File Deletion & \texttt{usn\_journal}, \texttt{deleted\_files}, \texttt{recycle\_bin} \\
 File Access & \texttt{jump\_lists}, \texttt{recent\_documents}, \texttt{shortcuts}, \texttt{shellbags}, \texttt{explorer\_recent\_docs} \\
 File Metadata & \texttt{mft}, \texttt{security\_descriptors}, \texttt{zone\_identifiers} \\
-Network Connection Creation & \texttt{srum}, \texttt{network}, \texttt{rdp\_client}, \texttt{bits}, \texttt{web\_client} \\
+Network Connection Creation & \texttt{srum}, \texttt{network}, \texttt{firewall\_log}, \texttt{rdp\_client}, \texttt{bits}, \texttt{web\_client} \\
 Network Traffic Content & — \\
-Network Traffic Flow & \texttt{srum} \\
+Network Traffic Flow & \texttt{srum}, \texttt{firewall\_log} \\
 Network Share Access & \texttt{mount\_points}, \texttt{network\_shares}, \texttt{shellbags} \\
 Windows Registry Key Modification & \texttt{run\_keys}, \texttt{persistence}, \texttt{services}, \texttt{registry\_backups}, \texttt{shadow\_copies} \\
 Windows Registry Key Creation & \texttt{run\_keys}, \texttt{persistence}, \texttt{services}, \texttt{registry\_backups}, \texttt{shadow\_copies} \\
@@ -74,7 +74,7 @@ Group Enumeration & — \\
 Firewall Rule Modification & \texttt{firewall} \\
 Drive Creation & \texttt{usbstor}, \texttt{mounted\_devices}, \texttt{devices}, \texttt{setupapi}, \texttt{mount\_points} \\
 Drive Access & \texttt{mount\_points}, \texttt{shellbags}, \texttt{fat\_volumes} \\
-Drive Modification & \texttt{ntfs\_volumes} \\
+Drive Modification & \texttt{ntfs\_volumes}, \texttt{boot\_records} \\
 Volume Creation & \texttt{mounted\_devices}, \texttt{ntfs\_volumes}, \texttt{shadow\_copies} \\
 Host Status & — \\
 Named Pipe Metadata & — \\
@@ -240,7 +240,7 @@ T1087.001 & Local Account & oui & oui &  \\
 T1087.002 & Domain Account & oui & oui & NSM \\
 T1087.003 & Email Account & oui & oui &  \\
 T1090 & Proxy & oui & oui & NSM \\
-T1090.001 & Internal Proxy & oui & oui & +3.0.0 \\
+T1090.001 & Internal Proxy & oui & oui &  \\
 T1090.002 & External Proxy & oui & oui &  \\
 T1090.003 & Multi-hop Proxy & oui & oui & NSM \\
 T1090.004 & Domain Fronting & oui & oui & NSM \\
@@ -249,7 +249,7 @@ T1092 & Communication Through Removable Media & oui & oui &  \\
 T1095 & Non-Application Layer Protocol & oui & oui & NSM \\
 T1098 & Account Manipulation & oui & oui &  \\
 T1098.002 & Additional Email Delegate Permissions & oui & oui & cloud \\
-T1098.005 & Device Registration & oui & oui & +3.0.0 \\
+T1098.005 & Device Registration & oui & oui &  \\
 T1098.007 & Additional Local or Domain Groups & oui & oui &  \\
 T1102 & Web Service & oui & oui & NSM \\
 T1102.001 & Dead Drop Resolver & oui & oui & ETW \\
@@ -583,4 +583,4 @@ T1700 & AI-Enabled Exfiltration & oui & oui &  \\
 
 \noindent{\small ATT\&CK Enterprise 20.0 (2026-10-13, SHA-256 81113BA98AFA2928…) : 479 techniques et sous-techniques Windows ; 475 avec au moins une trace que WAC prélève, 4 dont toutes les sources sont hors du disque ; 6 (marquées *) n'ont pas d'analytique Windows dans ATT\&CK et sont décidées d'après la technique elle-même. \emph{Journaux} : un journal que WAC prend porte une trace de la technique ; \emph{Disque} : un artefact sur le disque en porte une, hors des journaux. Un journal d'événements n'est là que si la machine l'a tenu : WAC relève la configuration des canaux et la politique d'audit, qui le disent.}
 
-\noindent{\small Sources non prises, et pourquoi : ETW, télémétrie vivante (ETW, appels d'API, compteurs) : jamais écrite sur le disque ; NSM, capture réseau : sur le réseau, pas sur la machine ; cloud, service en nuage : dans les journaux du locataire, pas sur la machine ; EDR, télémétrie propre à un EDR : dans sa console ; firmware, micrologiciel : non lu, WAC lit le disque ; 4.0, rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0 ; +3.0.0, sur le disque, pas encore prélevé : ajouté avant la 3.0.0 ; IA, comportement d'un modèle d'IA : ATT\&CK ne lui connaît aucune trace sous Windows}
+\noindent{\small Sources non prises, et pourquoi : ETW, télémétrie vivante (ETW, appels d'API, compteurs) : jamais écrite sur le disque ; NSM, capture réseau : sur le réseau, pas sur la machine ; cloud, service en nuage : dans les journaux du locataire, pas sur la machine ; EDR, télémétrie propre à un EDR : dans sa console ; firmware, micrologiciel : non lu, WAC lit le disque ; 4.0, rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0 ; IA, comportement d'un modèle d'IA : ATT\&CK ne lui connaît aucune trace sous Windows}

@@ -329,6 +329,7 @@ artefacts:              # one key per artefact; a missing key is true
   amcache:                 true   # Amcache.hve: applications, executables and drivers seen
   bam:                     true   # last execution of each program per user (Background Activity Moderator)
   bits:                    true   # qmgr.db: BITS jobs — URLs, destinations, notification command lines
+  boot_records:            true   # what runs before Windows: each disk's first MiB (MBR, GPT), each partition's boot sectors, the EFI system partition's files
   defender:                true   # Microsoft Defender: support logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
   defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
   deleted_files:                  # deleted files whose content the raw reading still finds
@@ -354,9 +355,11 @@ artefacts:              # one key per artefact; a missing key is true
   explorer_recent_docs:    true   # files each user opened, by extension, most recent first (Explorer's RecentDocs)
   fat_volumes:             true   # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
   firewall:                true   # firewall rules and profiles
+  firewall_log:            true   # the firewall's log (pfirewall.log), when logging is on: connections allowed or dropped, addresses, ports, process
   hosts:                   true   # the hosts file: names diverted to an address
   installed_programs:      true   # installed programs (Uninstall) of the machine and of each user
   internet_settings:       true   # each user's proxy and automatic configuration script
+  intune_logs:             true   # Intune Management Extension's logs: scripts and applications the tenant pushed and ran, their outcome
   jump_lists:              true   # jump lists: files and places each user opened, per application
   known_networks:          true   # networks the machine joined: name, kind, gateway, first and last connection (NetworkList)
   local_groups:            true   # members of each local group (SAM)
@@ -1213,12 +1216,31 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         key's name.
   \item[\fichier{internet\_settings.json}] each user's proxy and automatic
         configuration script.
+  \item[\fichier{intune\_logs.json}] the Intune Management Extension's logs
+        (\fichier{ProgramData\textbackslash Microsoft\textbackslash IntuneManagementExtension\textbackslash Logs}),
+        on a machine managed by Microsoft Intune: the PowerShell scripts and
+        applications the tenant pushed and ran as SYSTEM, their outcome, the
+        device's registration. One record per message (CMTrace format, on
+        one line or several): \champ{Message}, \champ{Component},
+        \champ{Type}, \champ{Thread}, the date, written in local time, in UTC
+        and in local time — exact when the log writes its offset
+        (\champ{BiasMinutes}).
   \item[\fichier{firewall.json}] firewall rules (name, action, direction, ports,
         program; every field in \champ{Fields}) and the domain, private and
         public profile settings. On Windows~XP SP2 and later and Server~2003
         SP1, the exceptions of each profile --- allowed programs and open
         ports --- as rules of \champ{Version} \texttt{XP}, with their
         \champ{Profile} and \champ{Scope}; XP~SP1 has no firewall policy.
+  \item[\fichier{firewall\_log.json}] the firewall's log
+        (\fichier{pfirewall.log} and its \fichier{.old} rotation), where the
+        \texttt{LogFilePath} of each profile puts it — firewall settings and
+        group policy — and at its default place: one record per connection
+        allowed or dropped, with \champ{Action}, \champ{Protocol},
+        \champ{SourceAddress}, \champ{DestinationAddress}, the ports,
+        \champ{Size}, \champ{Direction} and, since Windows~10,
+        \champ{ProcessId}; the date, written in local time, given in UTC and
+        in local time. It is the only record of network flows a Windows keeps
+        on its disk; logging is off by default.
   \item[\fichier{installed\_programs.json}] installed programs, read in the
         \texttt{Uninstall} keys of the machine (64- and 32-bit) and of each user
         and Windows Installer products (\champ{Scope} \texttt{MSI product},
@@ -1297,6 +1319,19 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         its access or stops a session such as \texttt{EventLog-Security} leaves
         the trace there;
         \champ{KeyLastWrite} dates the last change of each.
+  \item[\fichier{boot\_records.json}] what runs before Windows, read raw on
+        each physical disk (the collection medium's disk excepted): its first
+        mebibyte copied — the MBR's boot code, the partition table, the GPT
+        header and entries, and the gap before the first partition, where a
+        bootkit's code hides —, the first 16 sectors of each partition, and
+        every file of the EFI system partition, read by \wac{}'s FAT reader
+        (loaders, BCD). One record per disk: \champ{PartitionStyle}
+        (\texttt{MBR} or \texttt{GPT}), \champ{DiskId},
+        \champ{MbrBootCodeSha256}, and each partition in sectors as the table
+        stores it (\champ{FirstSector}, \champ{Sectors}), with its type, the
+        SHA-256 of its first sectors, its boot sector's OEM name and, for the
+        EFI partition, its files (\champ{EfiFiles}: path, size, SHA-256). The
+        logical partitions of an extended partition are not followed.
   \item[\fichier{fat\_volumes.json}] FAT12, FAT16, FAT32 and exFAT volumes, the
         suspect's USB keys and cards included (the collection's volume
         excepted): every entry, present or \textbf{deleted} (\champ{Deleted}),

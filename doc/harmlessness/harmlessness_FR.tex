@@ -234,6 +234,12 @@ Volumes FAT et exFAT & Lus en brut par le périphérique du volume
   (\path|\\.\X:|), en lecture seule, volumes fixes comme amovibles : secteur
   de démarrage, FAT et répertoires, jamais un fichier ouvert, aucune date
   d'accès modifiée. Le volume qui reçoit la collecte n'est pas lu. \\
+Secteurs de démarrage (\opt{boot\_records}) & Lus en brut par le
+  périphérique de chaque disque physique (\path|\\.\PhysicalDriveN|), ouvert
+  en lecture seule : premier mébioctet, premiers secteurs de chaque
+  partition, fichiers de la partition système EFI par le lecteur FAT de
+  \wac{} — la partition n'est pas montée, aucune lettre ne lui est donnée.
+  Le disque du support de collecte n'est pas lu. \\
 Binaires (\opt{binary}) & Lus par la lecture directe ; signatures et
   catalogues vérifiés en mémoire. Aucun magasin de certificats ouvert, aucune
   vérification de révocation en ligne. \\

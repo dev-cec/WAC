@@ -10,8 +10,8 @@
 \texttt{wineventlog:adfs…} & server role (IIS, AD FS, domain controller): version 4.0 \\
 \texttt{wineventlog:…} & \texttt{events} \\
 \texttt{autoruns:registryscan…} & \texttt{persistence}, \texttt{run\_keys}, \texttt{services}, \texttt{scheduled\_tasks}, \texttt{startup\_folders} \\
-\texttt{windows firewall log…} & on the disk, not collected yet: added before the 3.0.0 \\
-\texttt{applicationlog:intune…} & on the disk, not collected yet: added before the 3.0.0 \\
+\texttt{windows firewall log…} & \texttt{firewall\_log} \\
+\texttt{applicationlog:intune…} & \texttt{intune\_logs}, \texttt{events} \\
 \texttt{applicationlog:iis…} & server role (IIS, AD FS, domain controller): version 4.0 \\
 \texttt{applicationlog:callrecords…} & cloud service: in the tenant's logs, not on the machine \\
 \texttt{etw…} & live telemetry (ETW, API calls, performance counters): never written to the disk \\
@@ -48,9 +48,9 @@ File Modification & \texttt{mft}, \texttt{usn\_journal}, \texttt{log\_file} \\
 File Deletion & \texttt{usn\_journal}, \texttt{deleted\_files}, \texttt{recycle\_bin} \\
 File Access & \texttt{jump\_lists}, \texttt{recent\_documents}, \texttt{shortcuts}, \texttt{shellbags}, \texttt{explorer\_recent\_docs} \\
 File Metadata & \texttt{mft}, \texttt{security\_descriptors}, \texttt{zone\_identifiers} \\
-Network Connection Creation & \texttt{srum}, \texttt{network}, \texttt{rdp\_client}, \texttt{bits}, \texttt{web\_client} \\
+Network Connection Creation & \texttt{srum}, \texttt{network}, \texttt{firewall\_log}, \texttt{rdp\_client}, \texttt{bits}, \texttt{web\_client} \\
 Network Traffic Content & — \\
-Network Traffic Flow & \texttt{srum} \\
+Network Traffic Flow & \texttt{srum}, \texttt{firewall\_log} \\
 Network Share Access & \texttt{mount\_points}, \texttt{network\_shares}, \texttt{shellbags} \\
 Windows Registry Key Modification & \texttt{run\_keys}, \texttt{persistence}, \texttt{services}, \texttt{registry\_backups}, \texttt{shadow\_copies} \\
 Windows Registry Key Creation & \texttt{run\_keys}, \texttt{persistence}, \texttt{services}, \texttt{registry\_backups}, \texttt{shadow\_copies} \\
@@ -74,7 +74,7 @@ Group Enumeration & — \\
 Firewall Rule Modification & \texttt{firewall} \\
 Drive Creation & \texttt{usbstor}, \texttt{mounted\_devices}, \texttt{devices}, \texttt{setupapi}, \texttt{mount\_points} \\
 Drive Access & \texttt{mount\_points}, \texttt{shellbags}, \texttt{fat\_volumes} \\
-Drive Modification & \texttt{ntfs\_volumes} \\
+Drive Modification & \texttt{ntfs\_volumes}, \texttt{boot\_records} \\
 Volume Creation & \texttt{mounted\_devices}, \texttt{ntfs\_volumes}, \texttt{shadow\_copies} \\
 Host Status & — \\
 Named Pipe Metadata & — \\
@@ -240,7 +240,7 @@ T1087.001 & Local Account & yes & yes &  \\
 T1087.002 & Domain Account & yes & yes & NSM \\
 T1087.003 & Email Account & yes & yes &  \\
 T1090 & Proxy & yes & yes & NSM \\
-T1090.001 & Internal Proxy & yes & yes & +3.0.0 \\
+T1090.001 & Internal Proxy & yes & yes &  \\
 T1090.002 & External Proxy & yes & yes &  \\
 T1090.003 & Multi-hop Proxy & yes & yes & NSM \\
 T1090.004 & Domain Fronting & yes & yes & NSM \\
@@ -249,7 +249,7 @@ T1092 & Communication Through Removable Media & yes & yes &  \\
 T1095 & Non-Application Layer Protocol & yes & yes & NSM \\
 T1098 & Account Manipulation & yes & yes &  \\
 T1098.002 & Additional Email Delegate Permissions & yes & yes & cloud \\
-T1098.005 & Device Registration & yes & yes & +3.0.0 \\
+T1098.005 & Device Registration & yes & yes &  \\
 T1098.007 & Additional Local or Domain Groups & yes & yes &  \\
 T1102 & Web Service & yes & yes & NSM \\
 T1102.001 & Dead Drop Resolver & yes & yes & ETW \\
@@ -583,4 +583,4 @@ T1700 & AI-Enabled Exfiltration & yes & yes &  \\
 
 \noindent{\small ATT\&CK Enterprise 20.0 (2026-10-13, SHA-256 81113BA98AFA2928…): 479 Windows techniques and sub-techniques; 475 with at least one trace WAC collects, 4 whose sources are all off the disk; 6 (marked *) have no Windows analytic in ATT\&CK and are decided from the technique itself. \emph{Logs}: a log WAC takes holds a trace of the technique; \emph{Disk}: an artefact on the disk does, beyond the logs. A Windows event log is only there if the machine kept it: WAC records the channels' configuration and the audit policy, which say so.}
 
-\noindent{\small Sources not taken, and why: ETW, live telemetry (ETW, API calls, performance counters): never written to the disk; NSM, network capture: on the wire, not on the machine; cloud, cloud service: in the tenant's logs, not on the machine; EDR, an EDR product's own telemetry: in its console; firmware, firmware: not read, WAC reads the disk; 4.0, server role (IIS, AD FS, domain controller): version 4.0; +3.0.0, on the disk, not collected yet: added before the 3.0.0; AI, an AI model's behaviour: ATT\&CK names no trace of it on Windows}
+\noindent{\small Sources not taken, and why: ETW, live telemetry (ETW, API calls, performance counters): never written to the disk; NSM, network capture: on the wire, not on the machine; cloud, cloud service: in the tenant's logs, not on the machine; EDR, an EDR product's own telemetry: in its console; firmware, firmware: not read, WAC reads the disk; 4.0, server role (IIS, AD FS, domain controller): version 4.0; AI, an AI model's behaviour: ATT\&CK names no trace of it on Windows}

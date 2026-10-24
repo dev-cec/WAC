@@ -20,6 +20,9 @@
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader\textbackslash{}qmgr.db} & ESE & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Before Vista: Documents and Settings\textbackslash{}All Users\textbackslash{}Application Data\textbackslash{}Microsoft\textbackslash{}Network\textbackslash{}Downloader. The queue files measured on Windows 8.1; the earlier versions read as bits\_parser (ANSSI) describes them, not measured.} \\
 \addlinespace
+\texttt{boot\_records} & Windows XP & \texttt{each physical disk: its first mebibyte, each partition's first 16 sectors; the EFI system partition's files} & MBR, GPT, boot sectors; FAT & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape The EFI system partition exists only on a machine started by UEFI (Windows 8 and later, some 7 and Vista).} \\
+\addlinespace
 \texttt{defender} & Windows 8 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Support\textbackslash{}MPLog-*.log} & UTF-16 text & yes \\
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Scans\textbackslash{}History\textbackslash{}Service\textbackslash{}DetectionHistory} & DetectionHistory records & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Server 2012 and 2012 R2 have no built-in Defender; quarantine copied encrypted on every version.} \\
@@ -57,6 +60,10 @@
 \texttt{firewall} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}SharedAccess\textbackslash{}Parameters\textbackslash{}FirewallPolicy (XP SP2)} & registry values, profiles and port lists & yes \\
  & Windows Vista & \texttt{…\textbackslash{}FirewallPolicy\textbackslash{}FirewallRules} & registry values, rule strings v2.x & yes \\
 \addlinespace
+\texttt{firewall\_log} & Windows XP & \texttt{Windows\textbackslash{}pfirewall.log (XP SP2), or the profile's LogFilePath} & W3C text, local time & yes \\
+ & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}LogFiles\textbackslash{}Firewall\textbackslash{}pfirewall.log, or the profile's LogFilePath} & W3C text, local time; process since Windows 10 & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Off by default: present only where the firewall's logging was switched on.} \\
+\addlinespace
 \texttt{hosts} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}drivers\textbackslash{}etc\textbackslash{}hosts} & text & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
@@ -64,6 +71,9 @@
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\
 \addlinespace
 \texttt{internet\_settings} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}CurrentVersion\textbackslash{}Internet Settings} & registry values & yes \\
+\addlinespace
+\texttt{intune\_logs} & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}IntuneManagementExtension\textbackslash{}Logs\textbackslash{}*.log} & CMTrace text, local time & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only on a machine managed by Microsoft Intune, once the management extension was installed.} \\
 \addlinespace
 \texttt{jump\_lists} & Windows 7 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Recent\textbackslash{}AutomaticDestinations, CustomDestinations} & OLE compound file, DestList version 1 & yes \\
  & Windows 10 & \texttt{the same folders} & OLE compound file, DestList version 3 and 4 & yes \\

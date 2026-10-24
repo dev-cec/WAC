@@ -228,6 +228,11 @@ FAT and exFAT volumes & Read raw through the volume device
   (\path|\\.\X:|), read only, fixed and removable volumes alike: boot sector,
   FAT and directories, never a file opened, no access date updated. The
   volume holding the collection is not read. \\
+Boot records (\opt{boot\_records}) & Read raw through the device of each
+  physical disk (\path|\\.\PhysicalDriveN|), opened read only: the first
+  mebibyte, each partition's first sectors, the EFI system partition's files
+  through \wac{}'s FAT reader — the partition is not mounted, no letter is
+  given to it. The collection medium's disk is not read. \\
 Binaries (\opt{binary}) & Read by the raw reading; signatures and catalogues
   verified in memory. No certificate store opened, no online revocation
   check. \\

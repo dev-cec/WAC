@@ -40,6 +40,15 @@ PHRASES = [
     ("SYSTEM\\CurrentControlSet\\Services\\<Sysmon driver>\\Parameters, its ArchiveDirectory",
      "SYSTEM\\CurrentControlSet\\Services\\<pilote de Sysmon>\\Parameters, son ArchiveDirectory"),
     ("registry keys; Rules as stored", "clés du registre ; Rules telles que stockées"),
+    ("each physical disk: its first mebibyte, each partition's first 16 sectors; the EFI system partition's files",
+     "chaque disque physique : son premier mébioctet, les 16 premiers secteurs de chaque partition ; les fichiers de la partition système EFI"),
+    ("MBR, GPT, boot sectors; FAT", "MBR, GPT, secteurs de démarrage ; FAT"),
+    ("Windows\\pfirewall.log (XP SP2), or the profile's LogFilePath", "Windows\\pfirewall.log (XP SP2), ou le LogFilePath du profil"),
+    ("Windows\\System32\\LogFiles\\Firewall\\pfirewall.log, or the profile's LogFilePath",
+     "Windows\\System32\\LogFiles\\Firewall\\pfirewall.log, ou le LogFilePath du profil"),
+    ("W3C text, local time; process since Windows 10", "texte W3C, heure locale ; processus depuis Windows 10"),
+    ("W3C text, local time", "texte W3C, heure locale"),
+    ("CMTrace text, local time", "texte CMTrace, heure locale"),
     ("Outlook PST and OST, Thunderbird mbox, in each profile", "PST et OST d'Outlook, mbox de Thunderbird, dans chaque profil"),
     ("TerminalServices-LocalSessionManager and RemoteConnectionManager logs",
      "journaux TerminalServices-LocalSessionManager et RemoteConnectionManager"),
@@ -135,6 +144,12 @@ NOTES = {
         "Server 2012 et 2012 R2 n'ont pas de Defender intégré ; la quarantaine est copiée chiffrée sur toutes les versions.",
     "Not part of Windows: present only where Sysmon was installed. Its rules' binary format is not documented: given as stored, with its fingerprint.":
         "Absent de Windows : présent seulement là où Sysmon a été installé. Le format binaire de ses règles n'est pas documenté : donné tel que stocké, avec son empreinte.",
+    "The EFI system partition exists only on a machine started by UEFI (Windows 8 and later, some 7 and Vista).":
+        "La partition système EFI n'existe que sur une machine démarrée en UEFI (Windows 8 et suivants, certains 7 et Vista).",
+    "Present only on a machine managed by Microsoft Intune, once the management extension was installed.":
+        "Présent seulement sur une machine gérée par Microsoft Intune, une fois l'extension de gestion installée.",
+    "Off by default: present only where the firewall's logging was switched on.":
+        "Désactivé par défaut : présent seulement là où la journalisation du pare-feu a été activée.",
     "Depends on the mail program installed, not on Windows.": "Dépend du logiciel de messagerie installé, non de Windows.",
     "Windows XP: Dr Watson (drwtsn32.log, user.dmp), not collected.": "Windows XP : Dr Watson (drwtsn32.log, user.dmp), non collecté.",
     "Copied raw on every version: not converted.": "Copié brut sur toutes les versions : non converti.",

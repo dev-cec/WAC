@@ -51,8 +51,6 @@ REASONS = {
                  "micrologiciel : non lu, WAC lit le disque"),
     "server": ("server role (IIS, AD FS, domain controller): version 4.0",
                "rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0"),
-    "gap": ("on the disk, not collected yet: added before the 3.0.0",
-            "sur le disque, pas encore prélevé : ajouté avant la 3.0.0"),
     "model": ("an AI model's behaviour: ATT&CK names no trace of it on Windows",
               "comportement d'un modèle d'IA : ATT&CK ne lui connaît aucune trace sous Windows"),
 }
@@ -77,8 +75,8 @@ LOG_SOURCES = [
     ("wineventlog:adfs", ([], "server")),
     ("wineventlog:", (["events"], None)),
     ("autoruns:registryscan", (["persistence", "run_keys", "services", "scheduled_tasks", "startup_folders"], None)),
-    ("windows firewall log", ([], "gap")),
-    ("applicationlog:intune", ([], "gap")),
+    ("windows firewall log", (["firewall_log"], None)),
+    ("applicationlog:intune", (["intune_logs", "events"], None)),
     ("applicationlog:iis", ([], "server")),
     ("applicationlog:callrecords", ([], "cloud")),
     ("etw", ([], "live")),
@@ -113,9 +111,9 @@ COMPONENTS = {
     "File Deletion": ["usn_journal", "deleted_files", "recycle_bin"],
     "File Access": ["jump_lists", "recent_documents", "shortcuts", "shellbags", "explorer_recent_docs"],
     "File Metadata": ["mft", "security_descriptors", "zone_identifiers"],
-    "Network Connection Creation": ["srum", "network", "rdp_client", "bits", "web_client"],
+    "Network Connection Creation": ["srum", "network", "firewall_log", "rdp_client", "bits", "web_client"],
     "Network Traffic Content": [],
-    "Network Traffic Flow": ["srum"],
+    "Network Traffic Flow": ["srum", "firewall_log"],
     "Network Share Access": ["mount_points", "network_shares", "shellbags"],
     "Windows Registry Key Modification": ["run_keys", "persistence", "services", "registry_backups", "shadow_copies"],
     "Windows Registry Key Creation": ["run_keys", "persistence", "services", "registry_backups", "shadow_copies"],
@@ -139,7 +137,7 @@ COMPONENTS = {
     "Firewall Rule Modification": ["firewall"],
     "Drive Creation": ["usbstor", "mounted_devices", "devices", "setupapi", "mount_points"],
     "Drive Access": ["mount_points", "shellbags", "fat_volumes"],
-    "Drive Modification": ["ntfs_volumes"],
+    "Drive Modification": ["ntfs_volumes", "boot_records"],
     "Volume Creation": ["mounted_devices", "ntfs_volumes", "shadow_copies"],
     "Host Status": [],
     "Named Pipe Metadata": [],
@@ -279,7 +277,7 @@ def main():
                 rf"\textbf{{ID}} & \textbf{{{t['technique']}}} & \textbf{{{t['logs']}}} & \textbf{{{t['disk_short']}}} & "
                 rf"\textbf{{{t['left']}}} \\", r"\midrule\endhead"]
         short = {"live": "ETW", "network": "NSM", "cloud": "cloud", "edr": "EDR", "firmware": "firmware",
-                 "server": "4.0", "gap": "+3.0.0", "model": "IA" if index else "AI"}
+                 "server": "4.0", "model": "IA" if index else "AI"}
         for tid, name, keys, reasons, analysed in rows:
             logs = t["yes"] if keys & LOG_KEYS else "—"
             disk = t["yes"] if keys - LOG_KEYS else "—"
