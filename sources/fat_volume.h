@@ -128,18 +128,40 @@ public:
 	 *  @return true if the whole content was read */
 	bool readContent(const FatEntry& e, const std::function<bool(const uint8_t*, size_t)>& sink);
 
+	//! @return bytes per cluster
+	uint32_t clusterSize() const { return clusterSize_; }
+	//! @return clusters of the data region, numbered from 2
+	uint32_t clusterCount() const { return clusterCount_; }
+	/*! Whether each of `count` clusters from `first` (2 and up) is allocated
+	 *  NOW — read again from the volume, not from the FAT loaded at open: the
+	 *  deleted files' recovery checks a cluster before and after reading it.
+	 *  FAT: its entry is not 0; exFAT: its bit of the allocation bitmap.
+	 *  @param used receives one flag per cluster
+	 *  @return false if the range leaves the volume or cannot be read */
+	bool allocation(uint32_t first, uint32_t count, std::vector<bool>& used);
+	/*! Reads `count` clusters from `first`.
+	 *  @param out receives count × clusterSize() bytes
+	 *  @return false if the range leaves the volume or cannot be read */
+	bool readClusters(uint32_t first, uint32_t count, uint8_t* out);
+
 private:
 	uint32_t next(uint32_t cluster);
 	std::vector<uint8_t> chain(uint32_t first, uint64_t knownSize, bool contiguous);
 	void fatDirectory(const std::vector<uint8_t>& data, const std::wstring& path, bool deletedParent, unsigned depth, std::vector<FatEntry>& out);
 	void exfatDirectory(const std::vector<uint8_t>& data, const std::wstring& path, bool deletedParent, unsigned depth, std::vector<FatEntry>& out);
 	void descend(const FatEntry& e, unsigned depth, std::vector<FatEntry>& out);
+	//! exFAT: locates the allocation bitmap (bitmapClusters_).
+	void findAllocationBitmap();
 
 	VolumeSource* source_ = nullptr;
 	std::wstring type_, label_;
 	uint32_t clusterSize_ = 0, clusterCount_ = 0, rootCluster_ = 0;
 	uint64_t rootOffset_ = 0, rootSize_ = 0, dataOffset_ = 0;
 	std::vector<uint8_t> fat_;      //!< the first FAT, whole
+	uint64_t fatOffset_ = 0;        //!< where the first FAT lies, in bytes
+	/*! exFAT: the offsets of the allocation bitmap's clusters, in order (its
+	 *  entry, 0x81, of the root); empty when not found */
+	std::vector<uint64_t> bitmapClusters_;
 	unsigned fatBits_ = 0;          //!< 12, 16, 32 (FAT32 and exFAT)
 	size_t visited_ = 0;            //!< directories visited, against a hostile tree
 };

@@ -260,7 +260,83 @@ bool FatVolume::open(VolumeSource& source) {
 		if (fatBits_ == 32) rootCluster_ = readLittleEndian<uint32_t>(b.data() + 44);
 	}
 	if (clusterSize_ == 0 || clusterCount_ == 0 || fatLength > FAT_MAX) return false;
-	return source.read(fatOffset, (size_t)fatLength, fat_);
+	fatOffset_ = fatOffset;
+	if (!source.read(fatOffset, (size_t)fatLength, fat_)) return false;
+	if (type_ == L"exFAT") findAllocationBitmap();
+	return true;
+}
+
+/*! exFAT: the allocation bitmap, by its entry (type 0x81) in the root — its
+ *  first cluster and size; its clusters by the FAT, or following each other
+ *  (NoFatChain). Every cluster once, within the volume. */
+void FatVolume::findAllocationBitmap() {
+	const std::vector<uint8_t> root = chain(rootCluster_, 0, false);
+	for (size_t at = 0; at + 32 <= root.size(); at += 32) {
+		if (root[at] == 0x00) break;                 // end of the directory
+		if (root[at] != 0x81) continue;
+		const uint8_t flags = root[at + 1];
+		uint32_t cluster = readLittleEndian<uint32_t>(root.data() + at + 20);
+		const uint64_t length = readLittleEndian<uint64_t>(root.data() + at + 24);
+		const uint64_t clusters = (length + clusterSize_ - 1) / clusterSize_;
+		if (length < ((uint64_t)clusterCount_ + 7) / 8 || clusters > clusterCount_) return;
+		std::set<uint32_t> seen;
+		for (uint64_t k = 0; k < clusters; ++k) {
+			if (cluster < 2 || cluster >= clusterCount_ + 2 || !seen.insert(cluster).second) { bitmapClusters_.clear(); return; }
+			bitmapClusters_.push_back(dataOffset_ + (uint64_t)(cluster - 2) * clusterSize_);
+			cluster = (flags & 0x02) ? cluster + 1 : next(cluster);
+		}
+		return;
+	}
+}
+
+bool FatVolume::allocation(uint32_t first, uint32_t count, std::vector<bool>& used) {
+	used.clear();
+	if (first < 2 || count == 0 || first - 2 >= clusterCount_ || count > clusterCount_ - (first - 2)) return false;
+	used.assign(count, false);
+	std::vector<uint8_t> bytes;
+	if (type_ == L"exFAT") {
+		// Bit n of the bitmap is cluster n + 2, the bitmap's clusters in order.
+		if (bitmapClusters_.empty()) return false;
+		const uint64_t firstBit = first - 2, lastBit = firstBit + count - 1;
+		for (uint64_t byte = firstBit / 8; byte <= lastBit / 8;) {
+			const uint64_t index = byte / clusterSize_, inCluster = byte % clusterSize_;
+			if (index >= bitmapClusters_.size()) return false;
+			const uint64_t n = std::min<uint64_t>(clusterSize_ - inCluster, lastBit / 8 - byte + 1);
+			if (!source_->read(bitmapClusters_[(size_t)index] + inCluster, (size_t)n, bytes)) return false;
+			for (uint64_t k = 0; k < n; ++k)
+				for (unsigned bit = 0; bit < 8; ++bit) {
+					const uint64_t c = (byte + k) * 8 + bit;
+					if (c >= firstBit && c <= lastBit) used[(size_t)(c - firstBit)] = (bytes[(size_t)k] >> bit) & 1;
+				}
+			byte += n;
+		}
+		return true;
+	}
+	// FAT: the entries of the range, read again; an entry not 0 is a cluster in use.
+	const uint64_t from = (uint64_t)first * fatBits_ / 8, to = ((uint64_t)first + count) * fatBits_ / 8 + 2;
+	if (!source_->read(fatOffset_ + from, (size_t)(to - from), bytes)) return false;
+	for (uint32_t k = 0; k < count; ++k) {
+		const uint64_t cluster = (uint64_t)first + k;
+		uint32_t value = 0;
+		if (fatBits_ == 12) {
+			const uint64_t at = cluster + cluster / 2 - from;
+			value = readLittleEndian<uint16_t>(bytes.data() + at);
+			value = (cluster & 1) ? value >> 4 : value & 0x0FFF;
+		}
+		else if (fatBits_ == 16) value = readLittleEndian<uint16_t>(bytes.data() + (cluster * 2 - from));
+		else value = readLittleEndian<uint32_t>(bytes.data() + (cluster * 4 - from)) & 0x0FFFFFFF;
+		used[k] = value != 0;
+	}
+	return true;
+}
+
+bool FatVolume::readClusters(uint32_t first, uint32_t count, uint8_t* out) {
+	if (first < 2 || count == 0 || first - 2 >= clusterCount_ || count > clusterCount_ - (first - 2)) return false;
+	std::vector<uint8_t> bytes;
+	const uint64_t size = (uint64_t)count * clusterSize_;
+	if (size > SIZE_MAX || !source_->read(dataOffset_ + (uint64_t)(first - 2) * clusterSize_, (size_t)size, bytes)) return false;
+	std::memcpy(out, bytes.data(), (size_t)size);
+	return true;
 }
 
 uint32_t FatVolume::next(uint32_t cluster) {
