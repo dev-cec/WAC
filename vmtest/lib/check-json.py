@@ -481,6 +481,8 @@ def cross_checks(folder):
     found += guarded(check_powershell_profiles, folder)
     found += guarded(check_deleted_files, folder)
     found += guarded(check_deleted_index_slack, folder)
+    found += guarded(check_deleted_carving, folder)
+    found += guarded(check_deleted_fat, folder)
     return found
 
 
@@ -666,6 +668,75 @@ def check_deleted_index_slack(folder):
         return 1
     print(f"  ✅ deleted_files.json (level 2): {len(mine)} of the {count} names moved out of {source} found in the "
           f"slack of its index, their record and current path as mft.json gives them; {len(slack)} former name(s) in all")
+    return 0
+
+
+def check_deleted_carving(folder):
+    """deleted_files.json, level 3: the harness wrote an executable and a PDF,
+    truncated them to nothing, then deleted them — their bytes left in the
+    free clusters only, their record naming none. Each must be carved, of its
+    format, at its exact size, with the SHA-256 Windows (or the host, for XP)
+    computed of it. Skipped when the collection did not carve (level < 3)."""
+    # The witnesses place-file-artefacts.ps1 wrote, or those of the XP
+    # harness (run-wac-test-xp.sh, computed on the host).
+    witnesses = []
+    for name in ("file-artefacts.txt", "carving.txt"):
+        path = os.path.join(folder, "reference", name)
+        if os.path.exists(path):
+            with open(path, encoding="utf-8-sig", errors="replace") as f:
+                witnesses += [l.strip()[len("carved="):].split("|") for l in f if l.startswith("carved=")]
+    files = load(folder, "deleted_files.json")
+    if not witnesses or not isinstance(files, list):
+        return 0
+    carved = [x for x in files if x.get("Source") == "Carved"]
+    if not carved:
+        print("  ⏭️  deleted_files.json without carving (level below 3): carving witnesses not confronted")
+        return 0
+    missing = []
+    for file, size, digest, kind in witnesses:
+        if not any(str(x.get("RecoveredSHA256", "")).upper() == digest.upper() and x.get("Format") == kind
+                   and int(x.get("Size", -1)) == int(size) for x in carved):
+            missing.append(f"{file.rsplit(chr(92), 1)[-1]} ({kind}, {size} bytes)")
+    if missing:
+        print(f"  ❌ deleted_files.json (level 3): not carved with its size and SHA-256: {', '.join(missing)}; "
+              f"{len(carved)} file(s) carved in all")
+        return 1
+    formats = {}
+    for x in carved:
+        formats[x.get("Format")] = formats.get(x.get("Format"), 0) + 1
+    print(f"  ✅ deleted_files.json (level 3): the {len(witnesses)} truncated witness(es) carved, format, size and SHA-256 "
+          f"as written; {len(carved)} file(s) carved in all {formats}")
+    return 0
+
+
+def check_deleted_fat(folder):
+    """deleted_files.json on the FAT32 and exFAT keys: a text the harness
+    deleted, its first cluster and size in its entry, its chain erased —
+    recovered with the SHA-256 Windows computed, its state saying the
+    contiguity it assumed (RecoveredIfContiguous), or Recovered when exFAT
+    knew the file unfragmented."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        witnesses = [l.strip()[len("fatdeleted="):].split("|") for l in f if l.startswith("fatdeleted=")]
+    files = load(folder, "deleted_files.json")
+    if not witnesses or not isinstance(files, list):
+        return 0
+    wrong = []
+    for file, size, digest in witnesses:
+        mine = next((x for x in files if x.get("Source") == "FatEntry" and str(x.get("Path", "")).lower() == file.lower()), None)
+        if not mine:
+            wrong.append(f"{file}: not listed")
+        elif mine.get("State") not in ("Recovered", "RecoveredIfContiguous") \
+                or str(mine.get("RecoveredSHA256", "")).upper() != digest.upper() or int(mine.get("Size", -1)) != int(size):
+            wrong.append(f"{file}: {mine.get('State')}, SHA-256 {mine.get('RecoveredSHA256')} instead of {digest}")
+    if wrong:
+        print(f"  ❌ deleted_files.json (FAT): {wrong[0][:220]}" + (f" (+{len(wrong) - 1})" if len(wrong) > 1 else ""))
+        return 1
+    states = sorted({x.get("State") for x in files if x.get("Source") == "FatEntry"})
+    print(f"  ✅ deleted_files.json (FAT): the {len(witnesses)} deleted witness(es) of the FAT32 and exFAT keys recovered "
+          f"with their SHA-256; states met {states}")
     return 0
 
 

@@ -217,7 +217,11 @@ if [[ -n "$ONLY" ]]; then
   done
   { echo "# wac.yml of a --only cycle: $ONLY"; echo "wac_version: $WAC_VERSION"; echo "artefacts:"
     for k in $KEYS; do
-      if [[ ",$ONLY," == *",$k,"* ]]; then echo "  $k: true"; else echo "  $k: false"; fi
+      # WAC_DELETED_LEVEL=3: the deleted files at that level (carving, level 3, is
+      # never the default: asked for knowingly).
+      if [[ "$k" == deleted_files && ",$ONLY," == *",$k,"* && -n "${WAC_DELETED_LEVEL:-}" ]]; then
+        printf '  deleted_files:\n    level: %s\n' "$WAC_DELETED_LEVEL"
+      elif [[ ",$ONLY," == *",$k,"* ]]; then echo "  $k: true"; else echo "  $k: false"; fi
     done; } > "$OUTPUT/wac-only.yml"
   [[ ",$ONLY," == *",events,"* ]] || EVENTS_OPTION=""
   $QGA write "$OUTPUT/wac-only.yml" "$VMDIR\\wac.yml" >/dev/null

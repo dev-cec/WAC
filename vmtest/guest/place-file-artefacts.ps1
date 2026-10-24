@@ -574,12 +574,43 @@ try { if (Wants 'fat_volumes') {
         [IO.File]::WriteAllText($winter, 'modified in winter, copied later')
         (Get-Item -LiteralPath $winter).LastWriteTimeUtc = (New-Object datetime 2022, 1, 10, 12, 0, 0, ([DateTimeKind]::Utc))
         Copy-Item -LiteralPath $winter -Destination (Join-Path $root 'copied-winter.txt')
+        # The deleted files' witnesses (deleted_files), created before any
+        # deletion and deleted after them all — an entry created after a
+        # deletion takes its place: a text of 20 KB to delete (level 1, its
+        # first cluster and size in its entry, its chain erased) and a PDF to
+        # truncate to nothing then delete (level 3, its bytes in the free
+        # clusters only).
+        $fatWitnesses = @()
+        if (Wants 'deleted_files') {
+            $lines = New-Object Text.StringBuilder
+            foreach ($i in 1..500) { [void]$lines.Append("WAC FAT deleted witness, $($key.FileSystem), line $i`r`n") }
+            $text = [Text.Encoding]::ASCII.GetBytes($lines.ToString())
+            [IO.File]::WriteAllBytes((Join-Path $root 'deleted-witness.txt'), $text)
+            $pdfText = "%PDF-1.4`n1 0 obj`n<< /Type /Catalog >>`nendobj`n% WAC FAT carving witness $($key.FileSystem) $(Get-Date -Format yyyyMMddHHmmss)`n"
+            $xref = $pdfText.Length
+            $pdfText += "xref`n0 2`n0000000000 65535 f `n0000000009 00000 n `ntrailer`n<< /Size 2 /Root 1 0 R >>`nstartxref`n$xref`n%%EOF`n"
+            $pdf = [Text.Encoding]::ASCII.GetBytes($pdfText)
+            [IO.File]::WriteAllBytes((Join-Path $root 'carve-witness.pdf'), $pdf)
+            $fatWitnesses = @(@('deleted-witness.txt', $text, 'fatdeleted'), @('carve-witness.pdf', $pdf, 'carved'))
+        }
         # The deletions last: no entry created after them takes their places.
         [IO.File]::WriteAllText((Join-Path $root 'deleted-file.txt'), 'deleted by the harness')
         Remove-Item -LiteralPath (Join-Path $root 'deleted-file.txt')
         New-Item -ItemType Directory -Path (Join-Path $root 'DELDIR') | Out-Null
         [IO.File]::WriteAllText((Join-Path $root 'DELDIR\inner.txt'), 'inside a deleted folder')
         Remove-Item -LiteralPath (Join-Path $root 'DELDIR') -Recurse
+        foreach ($w in $fatWitnesses) {
+            $path = Join-Path $root $w[0]
+            if ($w[2] -eq 'carved') {
+                $stream = New-Object IO.FileStream($path, [IO.FileMode]::Open, [IO.FileAccess]::Write, [IO.FileShare]::None, 4096, [IO.FileOptions]::WriteThrough)
+                $stream.SetLength(0)
+                $stream.Close()
+            }
+            Remove-Item -LiteralPath $path
+            $digest = -join ([Security.Cryptography.SHA256]::Create().ComputeHash($w[1]) | ForEach-Object { $_.ToString('X2') })
+            if ($w[2] -eq 'carved') { Write-Output "carved=$path|$($w[1].Length)|$digest|PDF" }
+            else { Write-Output "fatdeleted=$path|$($w[1].Length)|$digest" }
+        }
         Write-Output "fat=$($volume.DriveLetter):|$($key.Label)|$($key.FileSystem)"
         foreach ($f in Get-ChildItem -LiteralPath $root -Recurse -Force | Where-Object { -not $_.PSIsContainer } | Where-Object { $_.FullName -notlike '*System Volume Information*' }) {
             # The path percent-encoded (UTF-8): PowerShell 4 writes its output in
@@ -1843,6 +1874,26 @@ try { if (Wants 'deleted_files') {
         $stream.Write($w[1], 0, $w[1].Length)
         $stream.Close()
     }
+    # Level 3, carving: an executable and a PDF written now, with the others —
+    # a file written after a deletion takes the freed clusters, and two
+    # witnesses on the same clusters test neither —, truncated to nothing and
+    # deleted with them: their bytes in the free clusters only, their record
+    # naming no cluster. Contents of their own: the executable is WAC.exe with
+    # one letter of its DOS stub changed (its structure intact, its SHA-256
+    # not the level 1 witness's); the PDF is larger than a record holds
+    # (a small file is resident: no cluster to carve).
+    $exe = [IO.File]::ReadAllBytes('C:\wactest\WAC.exe')
+    $stub = [Text.Encoding]::ASCII.GetString($exe, 0, [Math]::Min(512, $exe.Length)).IndexOf('This program')
+    if ($stub -ge 0) { $exe[$stub] = [byte][char]'t' }
+    $pdfText = "%PDF-1.4`n1 0 obj`n<< /Type /Catalog >>`nendobj`n% WAC carving witness $token`n" + ('%' + ('x' * 78) + "`n") * 100
+    $xref = $pdfText.Length
+    $pdfText += "xref`n0 2`n0000000000 65535 f `n0000000009 00000 n `ntrailer`n<< /Size 2 /Root 1 0 R >>`nstartxref`n$xref`n%%EOF`n"
+    $carved = @(@('carve-witness.exe', $exe, 'PE'), @('carve-witness.pdf', [Text.Encoding]::ASCII.GetBytes($pdfText), 'PDF'))
+    foreach ($c in $carved) {
+        $stream = New-Object IO.FileStream("$folder\$($c[0])", [IO.FileMode]::Create, [IO.FileAccess]::Write, [IO.FileShare]::None, 65536, [IO.FileOptions]::WriteThrough)
+        $stream.Write($c[1], 0, $c[1].Length)
+        $stream.Close()
+    }
     # One more, overwritten after its deletion: a file that already holds a
     # record of its own (so that it takes not the witness's) is written once
     # the witness is deleted — on its freed clusters, NTFS giving those first —
@@ -1929,6 +1980,15 @@ public static class WacMove {
         $digest = -join ([Security.Cryptography.SHA256]::Create().ComputeHash($w[1]) | ForEach-Object { $_.ToString('X2') })
         Remove-Item -Force $path
         Write-Output "deleted=$path|$($w[1].Length)|$digest|$($w[2])|$token"
+    }
+    foreach ($c in $carved) {
+        $path = "$folder\$($c[0])"
+        $stream = New-Object IO.FileStream($path, [IO.FileMode]::Open, [IO.FileAccess]::Write, [IO.FileShare]::None, 4096, [IO.FileOptions]::WriteThrough)
+        $stream.SetLength(0)
+        $stream.Close()
+        Remove-Item -Force $path
+        $digest = -join ([Security.Cryptography.SHA256]::Create().ComputeHash($c[1]) | ForEach-Object { $_.ToString('X2') })
+        Write-Output "carved=$path|$($c[1].Length)|$digest|$($c[2])"
     }
     Remove-Item -Recurse -Force $buffer
     # Level 2, the slack of the directory indexes: 450 files in a folder,

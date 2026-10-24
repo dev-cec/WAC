@@ -13,12 +13,18 @@
 #      started;
 #   3. once the VM is off, the JSON and the manifest are read on its disk,
 #      read-only (dissect.ntfs, vmtest/tools/target-venv), and checked.
-# No witness is placed (no PowerShell): the checks confront what WAC gives with
-# itself and with the version's expectations; the decoders of XP's formats were
-# confronted with independent tools when they were written (B-037).
+# Few witnesses (no PowerShell): the checks confront what WAC gives with itself
+# and with the version's expectations; the decoders of XP's formats were
+# confronted with independent tools when they were written (B-037). The one
+# placed: the carving's (deleted files, level 3, set in the ISO's wac.yml) — an
+# executable and a PDF copied on the data disk W: (formatted NTFS by diskpart on
+# first use), 20 seconds for XP's lazy writer to put them on the disk (a copy
+# truncated at once never reached it), then truncated to nothing and deleted;
+# their SHA-256, computed on the host, in reference/carving.txt.
 #
 # TRACES IN THE VM. C:\wactest\xp holds the run until the next one, which
-# removes it first; WAC32.exe and wac.yml are deleted at the end of the run.
+# removes it first; WAC32.exe and wac.yml are deleted at the end of the run;
+# W: keeps only the free clusters of the witnesses, overwritten by the next.
 #
 # Usage: ./run-wac-test-xp.sh [winxp-test|winxpsp3-test]
 set -euo pipefail
@@ -44,8 +50,25 @@ mkdir -p "$OUTPUT/reference"
 echo "== 1. Transfer ISO: WAC32.exe, wac.yml, run-xp.cmd == ($(date +%H:%M:%S))"
 mkdir -p "$WORK/iso"
 cp "$ROOT/bin/WAC32.exe" "$WORK/iso/"
-# The output in C:\wactest\xp\out, beside WAC32.exe; the rest as bin/ ships it.
-sed 's/^output:.*/output: out/' "$ROOT/bin/wac.yml" > "$WORK/iso/wac.yml"
+# The output in C:\wactest\xp\out, beside WAC32.exe; the deleted files at
+# level 3, carving — never the default, asked for here to test it on the
+# oldest Windows; the rest as bin/ ships it.
+sed -e 's/^output:.*/output: out/' -e 's/^\(    level: *\)[0-9]/\13/' "$ROOT/bin/wac.yml" > "$WORK/iso/wac.yml"
+# The carving's witnesses: an executable and a PDF of known SHA-256, written
+# on the data disk (W:, formatted on first use), truncated to nothing, then
+# deleted — their bytes in the free clusters only. On W: and not C:: WAC's
+# own output, on C:, would take the freed clusters first.
+cp "$ROOT/bin/WAC32.exe" "$WORK/iso/carve-witness.exe"
+TOKEN="$(date +%Y%m%d%H%M%S)"
+printf '%%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%% WAC carving witness %s\n' "$TOKEN" > "$WORK/iso/carve-witness.pdf"
+# Larger than a $MFT record holds: a small file is resident, without a cluster to carve.
+for i in $(seq 1 100); do printf '%%%s\n' "$(head -c 78 /dev/zero | tr '\0' x)"; done >> "$WORK/iso/carve-witness.pdf"
+XREF=$(stat -c %s "$WORK/iso/carve-witness.pdf")
+printf 'xref\n0 2\n0000000000 65535 f \n0000000009 00000 n \ntrailer\n<< /Size 2 /Root 1 0 R >>\nstartxref\n%s\n%%%%EOF\n' "$XREF" >> "$WORK/iso/carve-witness.pdf"
+for f in carve-witness.exe carve-witness.pdf; do
+  kind=PE; [[ $f == *.pdf ]] && kind=PDF
+  echo "carved=W:\\$f|$(stat -c %s "$WORK/iso/$f")|$(sha256sum "$WORK/iso/$f" | cut -c1-64 | tr a-f A-F)|$kind"
+done > "$OUTPUT/reference/carving.txt"
 # CRLF: cmd.exe of XP reads a batch file line by line on its line ends. A space
 # before ">COM1": "%errorlevel%> COM1" became "0> COM1", a redirection of the
 # handle 0, and nothing reached the serial port.
@@ -56,6 +79,12 @@ printf '%s\r\n' \
   'mkdir C:\wactest\xp' \
   'copy /y "%~dp0WAC32.exe" C:\wactest\xp\ >nul' \
   'copy /y "%~dp0wac.yml" C:\wactest\xp\ >nul' \
+  'if not exist W:\ (echo select disk 1& echo create partition primary& echo assign letter=W) > %TEMP%\wacdata.txt' \
+  'if not exist W:\ (diskpart /s %TEMP%\wacdata.txt >nul & echo Y| format W: /FS:NTFS /Q /V:WACDATA >nul)' \
+  'del %TEMP%\wacdata.txt 2>nul' \
+  'for %%f in (carve-witness.exe carve-witness.pdf) do copy /y "%~dp0%%f" W:\%%f >nul' \
+  'ping -n 21 127.0.0.1 >nul' \
+  'for %%f in (carve-witness.exe carve-witness.pdf) do (type nul > W:\%%f & del W:\%%f)' \
   'cd /d C:\wactest\xp' \
   'WAC32.exe < nul > collect.log 2>&1' \
   'echo wac-xp-collected %errorlevel% >COM1' \
