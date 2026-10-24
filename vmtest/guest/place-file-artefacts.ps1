@@ -1795,17 +1795,14 @@ try { if (Wants 'shadow_copies') {
     # shadow_copy_events.json must give, and the volume's JSON no longer.
     $run = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
     Set-ItemProperty $run WacShadowWitness "C:\wactest\shadow-$stamp.exe"
-    # Written to the hive on the disk before the copy, by RegFlushKey: the copy
-    # holds what the disk holds, and Windows 7 had still not written the value
-    # 15 seconds later — neither in SOFTWARE nor in its log (read in the copy
-    # collected, 2026-10-22). The witness event was written at the start of
-    # this script (see there).
-    $flushed = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey('SOFTWARE\Microsoft\Windows\CurrentVersion\Run', $true)
-    $flushed.Flush()
-    $flushed.Close()
-    # And the 15 seconds the harness waited before: flushed alone, the value
-    # was missing from Vista's copy too (B-056) — the delay matters.
-    Start-Sleep 15
+    # A shadow copy holds the DISK, and Windows writes the registry and the
+    # event logs to it late: read by Windows itself through the copy's device
+    # (reg load of its SOFTWARE with its logs, Get-WinEvent of its .evtx),
+    # the Run value and the event were both absent from a copy made 15 s
+    # after them — RegFlushKey changing nothing — and both there 90 s after
+    # (Windows 11, 2026-10-24, B-056). 120 s, with a margin: the witness
+    # event is written at the start of this script, the value here.
+    Start-Sleep 120
     $created = (Get-WmiObject -List Win32_ShadowCopy).Create('C:\', 'ClientAccessible')
     if ($created.ReturnValue -ne 0) { throw "Win32_ShadowCopy.Create returned $($created.ReturnValue)" }
     Set-Content $marker $created.ShadowID
