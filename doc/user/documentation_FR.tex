@@ -1377,13 +1377,15 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \texttt{EventLog-Security} y laisse sa trace ; \champ{KeyLastWrite} date la dernière modification de chacun.
   \item[\fichier{boot\_records.json}] ce qui s'exécute avant Windows, lu en
         brut sur chaque disque physique (le disque du support de collecte
-        excepté) : son premier mébioctet copié — code d'amorçage du MBR, table
+        excepté, s'il ne porte pas le système) : son premier mébioctet copié — code d'amorçage du MBR, table
         de partitions, en-tête et entrées GPT, et l'espace avant la première
         partition, où se cache le code d'un bootkit —, les 16 premiers
         secteurs de chaque partition, et chaque fichier de la partition
         système EFI, lue par le lecteur FAT de \wac{} (chargeurs, BCD). Une
-        fiche par disque : \champ{PartitionStyle} (\texttt{MBR} ou
-        \texttt{GPT}), \champ{DiskId}, \champ{MbrBootCodeSha256}, et chaque
+        fiche par disque : \champ{PartitionStyle} (\texttt{MBR},
+        \texttt{GPT}, ou \texttt{Volume} pour un disque formaté en entier,
+        sans table, comme une clé USB : son premier secteur est celui du
+        volume, \champ{BootSectorOemId}), \champ{DiskId}, \champ{MbrBootCodeSha256}, et chaque
         partition en secteurs comme la table la stocke (\champ{FirstSector},
         \champ{Sectors}), avec son type, le SHA-256 de ses premiers secteurs,
         l'OEM de son secteur de démarrage et, pour la partition EFI, ses

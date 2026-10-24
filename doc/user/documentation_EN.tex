@@ -1338,13 +1338,16 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         the trace there;
         \champ{KeyLastWrite} dates the last change of each.
   \item[\fichier{boot\_records.json}] what runs before Windows, read raw on
-        each physical disk (the collection medium's disk excepted): its first
+        each physical disk (the collection medium's disk excepted, unless it
+        holds the system): its first
         mebibyte copied — the MBR's boot code, the partition table, the GPT
         header and entries, and the gap before the first partition, where a
         bootkit's code hides —, the first 16 sectors of each partition, and
         every file of the EFI system partition, read by \wac{}'s FAT reader
         (loaders, BCD). One record per disk: \champ{PartitionStyle}
-        (\texttt{MBR} or \texttt{GPT}), \champ{DiskId},
+        (\texttt{MBR}, \texttt{GPT}, or \texttt{Volume} for a disk formatted
+        whole, without a table, as a USB key: its first sector is the
+        volume's, \champ{BootSectorOemId}), \champ{DiskId},
         \champ{MbrBootCodeSha256}, and each partition in sectors as the table
         stores it (\champ{FirstSector}, \champ{Sectors}), with its type, the
         SHA-256 of its first sectors, its boot sector's OEM name and, for the
