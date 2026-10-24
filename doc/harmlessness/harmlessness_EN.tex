@@ -273,7 +273,7 @@ the current directory.
         access as the rest: none is mounted, exposed or asked of the service.
   \item Recover a deleted file through a tool, or by writing to the volume: the
         content of the deleted files is read raw (records of the \path|$MFT|,
-        \path|$Bitmap|, free clusters, directory index blocks), through the same read-only access as
+        \path|$Bitmap|, free clusters, directory index blocks, and at level~3 the whole free space; FAT and exFAT volumes through their device), through the same read-only access as
         the rest, and copied to the collection medium only. A cluster in use is
         not read.
   \item Open a key of the live registry, or flush it to the disk

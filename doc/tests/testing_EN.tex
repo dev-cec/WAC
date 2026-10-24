@@ -132,6 +132,7 @@ python3 -m venv vmtest/tools/ese-venv && vmtest/tools/ese-venv/bin/pip install d
 \fichier{tests/ntfs\_fixup\_test.exe} & check of NTFS records (torn records) \\
 \fichier{tests/ntfs\_runs\_test.exe} & NTFS data runs (a forged list refused) \\
 \fichier{tests/deleted\_files\_test.exe} & recovery of deleted files on a volume in memory \\
+\fichier{tests/carving\_test.exe} & exact size of a carved PE, ZIP, PDF \\
 \fichier{tests/mft\_test.exe}, \fichier{usn\_journal\_test.exe} & \fichier{\$MFT} and change journal against ntfs-3g and the compiler's structures \\
 \bottomrule
 \end{longtable}
@@ -748,6 +749,28 @@ and the authentic executable to be listed without being copied; a fifth witness 
 150 files are moved from a folder to another: at least one former name must
 come out of the slack of the first one's index, with the record and current
 path \fichier{mft.json} gives the file.
+
+\section{Carving: \texttt{carving\_test}}
+
+A carved file has only its bytes: cut one byte short or long, it looks like
+the file and is not. The harness builds a PE (two sections, a signature), a
+ZIP (one file, a comment) and a PDF (an xref table) of known size, and their
+forged variants (unknown machine, 200 sections, a section off its alignment,
+a signature inside the sections, a central directory elsewhere than the end
+record says, a \texttt{startxref} pointing at nothing); then 30,000 damaged
+heads against a forbidden page; then real files given as arguments, which
+must come out at their exact size.
+
+\begin{lstlisting}
+cd build-windows/tests && wine carving_test.exe 'Z:\...\WAC.exe' 'Z:\...\documentation_FR.pdf' 'Z:\...\kape.zip'
+\end{lstlisting}
+
+Reference: 96,760 checks, no failure; WAC.exe and WAC32.exe (with their COFF
+symbol table), a PDF manual, an archive of 140~MB to the byte. In the VM
+(\texttt{WAC\_DELETED\_LEVEL=3}, XP and Windows~11), an executable and a PDF
+written, truncated to nothing then deleted must be carved with the SHA-256 of
+their writing; on the FAT32 and exFAT keys, a deleted text must be read back
+with its own.
 
 \section{\fichier{\$MFT} and change journal: \texttt{mft\_test}, \texttt{usn\_journal\_test}}
 

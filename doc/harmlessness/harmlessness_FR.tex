@@ -281,7 +281,7 @@ répertoire courant.
         exposé ni demandé au service.
   \item Récupérer un fichier supprimé par un outil, ou par une écriture sur le
         volume : le contenu des fichiers supprimés est lu en brut
-        (enregistrements de la \path|$MFT|, \path|$Bitmap|, clusters libres, blocs d'index des répertoires),
+        (enregistrements de la \path|$MFT|, \path|$Bitmap|, clusters libres, blocs d'index des répertoires, et au niveau~3 tout l'espace libre ; volumes FAT et exFAT par leur périphérique),
         par le même accès en lecture seule que le reste, et copié sur le
         support de collecte seulement. Un cluster en usage n'est pas lu.
   \item Ouvrir une clé du registre vivant, ou le vider sur le disque

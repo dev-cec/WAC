@@ -339,6 +339,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   deleted_files:                  # fichiers supprimés dont la lecture brute retrouve encore le contenu
     enabled:               true   # false : rien n'est lu
     level:                 2      # 1 : contenu des enregistrements supprimés de la $MFT ; 2 : et noms restés dans les index
+                                  # 3 : et fichiers taillés dans l'espace libre (PE, ZIP, PDF) — tout l'espace libre lu
     max_file_mib:          64     # au-delà : relevé avec ses empreintes, pas copié
     max_total_mib:         4096   # total copié ; les plus récents d'abord
     excluded_folders:             # jamais lus, sur chaque volume
@@ -1843,6 +1844,26 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         qu'aucun répertoire ne porte plus est donné, et pas un nom déjà rendu
         par le niveau~1. \champ{CurrentPath} : le même fichier existe encore
         sous ce chemin, déplacé ou renommé et non supprimé.
+        \texttt{Carved} (niveau~3, \texttt{level: 3} seulement : tout
+        l'espace libre est relu, aussi longtemps qu'il faut) : un fichier
+        taillé dans les clusters libres que le niveau~1 n'a pas rendus, sans
+        nom ni date — \champ{Format} (\texttt{PE}, \texttt{ZIP} et les
+        documents Office, \texttt{PDF}), premier cluster (\champ{Lcn}),
+        \champ{Size}. Seuls ces formats, dont la structure donne la taille
+        exacte et se vérifie, sont taillés ; un fichier n'est pris que si tous
+        ses clusters sont contigus, libres et non rendus par le niveau~1 —
+        un fichier fragmenté n'est pas trouvé, jamais coupé faux. Pièce sous
+        \path|X:\$CarvedFiles\<cluster>.<ext>|.
+        \texttt{FatEntry} : une entrée supprimée d'un volume FAT ou exFAT (une
+        clé du suspect) : son premier cluster (\champ{FirstCluster}), sa
+        taille, ses dates telles que stockées (\champ{ModifiedAsStored},
+        heure locale de la machine qui l'a écrite, ou \champ{ModifiedUtc}
+        quand exFAT en donne le décalage). La chaîne de la FAT est effacée :
+        le contenu est relu comme les clusters qui suivent le premier, chacun
+        vérifié libre — \champ{State} \texttt{RecoveredIfContiguous} et
+        \champ{ContiguityAssumed}, sauf quand exFAT savait le fichier d'un
+        seul tenant (\texttt{Recovered}). Le niveau~3 taille aussi l'espace
+        libre de ces volumes.
         Sur un volume BitLocker, la lecture brute voit le volume déchiffré par
         le système, comme pour les autres artefacts : les clusters libres
         aussi.
