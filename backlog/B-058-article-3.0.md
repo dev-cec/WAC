@@ -17,7 +17,7 @@ Demande utilisateur du 2026-10-24 : un article pour la 3.0.0, écrit **après sa
 - Les clichés instantanés lus en brut, sans le service VSS : ruches et journaux tels que chaque cliché les gardait.
 - Les fichiers supprimés : $MFT, index $I30, carving (PE, ZIP, PDF), volumes FAT et exFAT — et ce qu'un SSD avec TRIM ne rend plus.
 - Sysmon (configuration, archives) et les journaux d'événements déplacés.
-- La couverture MITRE ATT&CK des traces prélevées (B-052).
+- La couverture MITRE ATT&CK des traces prélevées (B-052) : **son tableau de couverture figure dans l'article** (décision utilisateur du 2026-10-24), produit par `doc/attack-coverage.py` — dans une forme résumée si la place manque, le tableau complet restant dans les manuels.
 - Les autres artefacts ajoutés depuis la 2.0.0 (liste tirée de la table des artefacts).
 
 ## Sortie attendue

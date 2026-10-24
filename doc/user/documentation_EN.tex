@@ -2078,6 +2078,21 @@ profiles.
 
 \input{../artefact-table_EN.tex}
 
+\section{Coverage of MITRE ATT\&CK}\label{sec:attack}
+
+ATT\&CK describes, technique by technique, how to detect it: analytics, each
+naming the sources it needs — a data component (``Process Creation'') and the
+log source that carries it (``WinEventLog:Sysmon EventCode=1''). It is a list
+kept outside \wac{}, against which its coverage is measured. The tables below
+are produced from it: first what \wac{} does with each log source, then the
+artefacts that keep on the disk a trace of each data component beyond the
+logs, last, for each Windows technique, whether a log \wac{} takes or an
+artefact on the disk holds a trace of it, and the sources it does not take,
+with their reason. A trace held
+is not a detection: looking for it in the JSON files belongs to the analysis.
+
+\input{../attack-coverage_EN.tex}
+
 \section{Source expected but missing}\label{sec:expected}
 
 Conversely, some sources are on every installation of a given version, and

@@ -2165,6 +2165,22 @@ profils.
 
 \input{../artefact-table_FR.tex}
 
+\section{Couverture de MITRE ATT\&CK}\label{sec:attack}
+
+ATT\&CK décrit, technique par technique, comment la détecter : des
+analytiques, chacune nommant les sources dont elle a besoin — un composant de
+données (« Process Creation ») et la source de journal qui le porte
+(« WinEventLog:Sysmon EventCode=1 »). C'est une liste tenue hors de \wac{},
+contre laquelle sa couverture se mesure. Les tableaux ci-dessous en sont
+produits : d'abord ce que \wac{} fait de chaque source de journal, puis les
+artefacts qui gardent sur le disque la trace de chaque composant de données
+hors des journaux, enfin, pour chaque technique Windows, si un journal que
+\wac{} prend ou un artefact du disque en porte une trace, et les sources qu'il
+ne prend pas, avec leur raison. Une trace portée n'est pas une détection : la rechercher dans les
+fichiers JSON relève de l'analyse.
+
+\input{../attack-coverage_FR.tex}
+
 \section{Source attendue mais introuvable}\label{sec:attendu}
 
 À l'inverse, certaines sources sont sur toute installation d'une version
