@@ -148,6 +148,13 @@ struct Mft {
 	 *  @return ERROR_SUCCESS, or why the exhibit could not be read */
 	HRESULT forEachFile(const std::function<void(const MftEntry&, const std::wstring&, bool)>& visit) const;
 
+	/*! Walks every record of the $MFT copy as its bytes, fixups applied —
+	 *  what a reader of attributes MftEntry does not keep needs (the data
+	 *  runs of the deleted records). A torn record is left out.
+	 *  @param visit called with each record, its size and its number
+	 *  @return ERROR_SUCCESS, or why the copy could not be read */
+	HRESULT forEachRawRecord(const std::function<void(const uint8_t*, size_t, uint64_t)>& visit) const;
+
 	//! Releases the memory held by the index.
 	void clear();
 

@@ -357,6 +357,63 @@ void guardedIndex(std::mt19937_64& rng) {
 	}
 }
 
+/*! The clusters claimed since: known cases, then random runs against a
+ *  plain cluster-by-cluster reckoning. */
+void claims(std::mt19937_64& rng) {
+	ClusterClaims c;
+	c.add(100, 10, 5);      // 100..109, date 5
+	c.add(105, 10, 9);      // 105..114, date 9: later, over the end of the first
+	c.add(200, 5, 1);
+	c.finish();
+	std::vector<bool> got;
+	c.laterThan(100, 20, 6, got);
+	bool ok = true;
+	for (uint64_t k = 0; k < 20; ++k) ok = ok && got[(size_t)k] == (k >= 5 && k < 15);
+	check(ok, "claims later than 6: not exactly 105..114");
+	c.laterThan(100, 20, 4, got);
+	ok = true;
+	for (uint64_t k = 0; k < 20; ++k) ok = ok && got[(size_t)k] == (k < 15);
+	check(ok, "claims later than 4: not exactly 100..114");
+	c.laterThan(200, 5, 1, got);
+	check(std::none_of(got.begin(), got.end(), [](bool b) { return b; }), "a claim of the same date counted as later");
+	c.laterThan(200, 5, 0, got);
+	check(std::all_of(got.begin(), got.end(), [](bool b) { return b; }), "a later claim not seen");
+	for (int n = 0; n < 2000; ++n) {
+		ClusterClaims r;
+		std::vector<uint64_t> latest(512, 0);
+		for (int k = (int)(rng() % 12); k > 0; --k) {
+			const uint64_t lcn = rng() % 500, count = 1 + rng() % 40, date = 1 + rng() % 20;
+			r.add(lcn, count, date);
+			for (uint64_t x = lcn; x < std::min<uint64_t>(lcn + count, 512); ++x) latest[(size_t)x] = std::max(latest[(size_t)x], date);
+		}
+		r.finish();
+		const uint64_t from = rng() % 480, count = 1 + rng() % 30, date = rng() % 21;
+		r.laterThan(from, count, date, got);
+		ok = true;
+		for (uint64_t k = 0; k < count; ++k) ok = ok && got[(size_t)k] == (latest[(size_t)(from + k)] > date);
+		check(ok, "random claims: differ from the cluster-by-cluster reckoning");
+	}
+}
+
+/*! A cluster a later deleted file claimed: a hole, said so, never read. */
+void claimedSince() {
+	Volume v;
+	v.fill(400, 4, 7);
+	ClusterClaims c;
+	c.add(402, 1, 50);
+	c.finish();
+	ClusterSource source = v.source();
+	source.claimedSince = [&c](uint64_t lcn, uint64_t count, std::vector<bool>& claimed) { c.laterThan(lcn, count, 10, claimed); };
+	const DeletedRecord r = parseDeletedRecord(record({ nonResidentData({ 0x21, 4, 0x90, 0x01 }, 3, 4 * CLUSTER, 4 * CLUSTER, 4 * CLUSTER) }).data(), 1024);
+	std::vector<uint8_t> content;
+	const Recovery rc = recoverContent(r.data, source, [&](const uint8_t* d, size_t n) { content.insert(content.end(), d, d + n); });
+	std::vector<uint8_t> expected = v.clusters(400, 4);
+	std::memset(expected.data() + 2 * CLUSTER, 0, CLUSTER);
+	check(rc.state == RecoveryState::Partial && rc.claimedClusters == 1 && rc.reason.find("claimed") != std::string::npos
+	      && rc.missing.size() == 1 && rc.missing[0].offset == 2 * CLUSTER && content == expected,
+	      "a cluster claimed since by a later file: published as the file's");
+}
+
 void names() {
 	check(safeFileName(L"rapport.docx") == L"rapport.docx", "a plain name changed");
 	check(safeFileName(L"a:b*c?.exe") == L"a_b_c_.exe", "forbidden characters kept");
@@ -397,6 +454,8 @@ int wmain() {
 	zeroedAndShort();
 	refused();
 	names();
+	claims(rng);
+	claimedSince();
 	indexSlack();
 	guardedIndex(rng);
 	guarded(rng);

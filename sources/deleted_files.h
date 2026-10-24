@@ -100,6 +100,33 @@ DeletedRecord parseDeletedRecord(const uint8_t* record, size_t size);
  *  @return an empty string if they hold, else why not */
 std::string checkRuns(const DeletedData& data, uint32_t clusterSize, uint64_t clusters);
 
+/*! THE CLUSTERS TAKEN AND GIVEN BACK SINCE. $Bitmap says what is free now,
+ *  not what was written since the deletion: a cluster another file took
+ *  after it, then freed when that file was deleted in turn, reads free and
+ *  holds the other file's bytes. Measured on Windows 11: a deleted witness
+ *  declared Recovered whose first 128 KiB held a file written after it.
+ *  Every deleted record of the $MFT copy says which clusters its file held,
+ *  and when (the latest date it carries): a cluster a LATER deleted record
+ *  claims is no longer the earlier file's. A file whose record was reused
+ *  since leaves no runs: what it overwrote cannot be seen this way. */
+class ClusterClaims {
+public:
+	/*! A deleted record's run.
+	 *  @param lcn first cluster
+	 *  @param count clusters
+	 *  @param date the latest date of the record (FILETIME ticks) */
+	void add(uint64_t lcn, uint64_t count, uint64_t date);
+	//! To be called once every run is added, before any query.
+	void finish();
+	/*! Whether each cluster of a range is claimed by a record later than `date`.
+	 *  @param claimed receives one flag per cluster */
+	void laterThan(uint64_t lcn, uint64_t count, uint64_t date, std::vector<bool>& claimed) const;
+private:
+	struct Span { uint64_t start, end, date; };   //!< clusters [start, end) and a date
+	std::vector<Span> runs_;       //!< as added
+	std::vector<Span> latest_;     //!< disjoint, sorted: the latest date claiming each cluster
+};
+
 /*! The volume as the recovery reads it — the raw volume at collection, a
  *  volume in memory in the tests. */
 struct ClusterSource {
@@ -109,6 +136,8 @@ struct ClusterSource {
 	std::function<bool(uint64_t lcn, uint64_t count, std::vector<bool>& inUse)> allocation;
 	//! Reads clusters. @return false if unreadable
 	std::function<bool(uint64_t lcn, uint64_t count, uint8_t* out)> read;
+	//! Whether each cluster of a range was claimed since by a later deleted file (ClusterClaims); none when empty
+	std::function<void(uint64_t lcn, uint64_t count, std::vector<bool>& claimed)> claimedSince;
 };
 
 /*! What became of a deleted file's content. */
@@ -132,7 +161,8 @@ struct MissingRange {
 /*! The outcome of a recovery. */
 struct Recovery {
 	RecoveryState state = RecoveryState::NotRecoverable;
-	std::string reason;                   //!< NotRecoverable: why
+	std::string reason;                   //!< NotRecoverable: why; Partial, Overwritten: when clusters were claimed since
+	uint64_t claimedClusters = 0;         //!< clusters left out because a later deleted file claims them
 	uint64_t recoveredBytes = 0;          //!< bytes read from free clusters, or resident
 	std::vector<MissingRange> missing;    //!< Partial, Overwritten: the holes
 };
@@ -140,7 +170,8 @@ struct Recovery {
 /*! Recovers a deleted file's content, handing it to `sink` from its first
  *  byte to its last, holes as zeros — `size` bytes in all, unless it is not
  *  recoverable (nothing handed then). Each cluster is checked free before
- *  and after it is read; one in use either time is a hole.
+ *  and after it is read, and not claimed since by a later deleted file;
+ *  one that fails any of these is a hole.
  *  @param data the record's $DATA (parseDeletedRecord)
  *  @param volume the clusters
  *  @param sink receives the content, in order

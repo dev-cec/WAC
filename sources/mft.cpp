@@ -162,8 +162,7 @@ Json MftEntry::toJson(const std::wstring& path, bool pathComplete,
 	return o;
 }
 
-template <typename Visit>
-HRESULT Mft::forEachRecord(Visit visit) const {
+HRESULT Mft::forEachRawRecord(const std::function<void(const uint8_t*, size_t, uint64_t)>& visit) const {
 	std::ifstream in(std::filesystem::path(extendedPath(file_)), std::ios::binary);
 	if (!in) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	const size_t perBlock = std::max<size_t>(1, (4u << 20) / recordSize_);   // 4 MiB at a time
@@ -176,11 +175,18 @@ HRESULT Mft::forEachRecord(Visit visit) const {
 			uint8_t* record = block.data() + k * recordSize_;
 			// A torn record (interrupted write) is left out rather than decoded half old, half new.
 			if (std::memcmp(record, "FILE", 4) != 0 || !applyNtfsFixup(record, recordSize_)) continue;
-			MftEntry entry;
-			if (entry.parse(record, recordSize_, number)) visit(entry);
+			visit(record, recordSize_, number);
 		}
 	}
 	return ERROR_SUCCESS;
+}
+
+template <typename Visit>
+HRESULT Mft::forEachRecord(Visit visit) const {
+	return forEachRawRecord([&visit](const uint8_t* record, size_t size, uint64_t number) {
+		MftEntry entry;
+		if (entry.parse(record, size, number)) visit(entry);
+	});
 }
 
 HRESULT Mft::getData(const std::wstring& volume) {

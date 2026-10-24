@@ -16,6 +16,7 @@
 #include <cstring>
 #include <filesystem>
 #include <map>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <winioctl.h>
@@ -123,6 +124,46 @@ const wchar_t* recoveryStateName(RecoveryState state) {
 	return L"NotRecoverable";
 }
 
+void ClusterClaims::add(uint64_t lcn, uint64_t count, uint64_t date) {
+	if (count && lcn <= UINT64_MAX - count) runs_.push_back({ lcn, lcn + count, date });
+}
+
+void ClusterClaims::finish() {
+	// A sweep over the runs' bounds, keeping the latest date of those open.
+	std::vector<std::pair<uint64_t, int64_t>> bounds;     // (cluster, +index+1 opening / -index-1 closing)
+	bounds.reserve(runs_.size() * 2);
+	for (size_t k = 0; k < runs_.size(); ++k) {
+		bounds.emplace_back(runs_[k].start, (int64_t)k + 1);
+		bounds.emplace_back(runs_[k].end, -(int64_t)k - 1);
+	}
+	std::sort(bounds.begin(), bounds.end());
+	std::multiset<uint64_t> open;
+	latest_.clear();
+	for (size_t k = 0; k < bounds.size();) {
+		const uint64_t at = bounds[k].first;
+		for (; k < bounds.size() && bounds[k].first == at; ++k) {
+			if (bounds[k].second > 0) open.insert(runs_[(size_t)bounds[k].second - 1].date);
+			else open.erase(open.find(runs_[(size_t)(-bounds[k].second) - 1].date));
+		}
+		if (k == bounds.size() || open.empty()) continue;
+		const uint64_t date = *open.rbegin(), next = bounds[k].first;
+		if (!latest_.empty() && latest_.back().end == at && latest_.back().date == date) latest_.back().end = next;
+		else latest_.push_back({ at, next, date });
+	}
+	runs_.clear();
+	runs_.shrink_to_fit();
+}
+
+void ClusterClaims::laterThan(uint64_t lcn, uint64_t count, uint64_t date, std::vector<bool>& claimed) const {
+	claimed.assign((size_t)count, false);
+	const uint64_t end = lcn + count;
+	auto span = std::upper_bound(latest_.begin(), latest_.end(), lcn, [](uint64_t at, const Span& s) { return at < s.end; });
+	for (; span != latest_.end() && span->start < end; ++span) {
+		if (span->date <= date) continue;
+		for (uint64_t c = std::max(lcn, span->start); c < std::min(end, span->end); ++c) claimed[(size_t)(c - lcn)] = true;
+	}
+}
+
 Recovery recoverContent(const DeletedData& data, const ClusterSource& volume,
                         const std::function<void(const uint8_t*, size_t)>& sink) {
 	Recovery recovery;
@@ -144,7 +185,7 @@ Recovery recoverContent(const DeletedData& data, const ClusterSource& volume,
 	const uint64_t needed = (validEnd + clusterSize - 1) / clusterSize;
 	const uint64_t chunkClusters = std::max<uint64_t>(1, CHUNK_BYTES / clusterSize);
 	std::vector<uint8_t> buffer;
-	std::vector<bool> before, after;
+	std::vector<bool> before, after, claimed;
 	bool nonZero = false;
 	uint64_t vcn = 0;
 	for (const NtfsRun& run : data.runs) {
@@ -157,6 +198,12 @@ Recovery recoverContent(const DeletedData& data, const ClusterSource& volume,
 				const uint64_t lcn = (uint64_t)run.lcn + c;
 				// Unreadable allocation: every cluster counts as taken, a hole.
 				if (!volume.allocation(lcn, n, before)) before.assign((size_t)n, true);
+				// Claimed since by a later deleted file: taken too, not read.
+				if (volume.claimedSince) {
+					volume.claimedSince(lcn, n, claimed);
+					for (uint64_t k = 0; k < n; ++k)
+						if (claimed[(size_t)k] && !before[(size_t)k]) { before[(size_t)k] = true; ++recovery.claimedClusters; }
+				}
 				std::vector<bool> unread((size_t)n, false);
 				for (uint64_t k = 0; k < n;) {                 // the free clusters, by contiguous stretch
 					if (before[(size_t)k]) { ++k; continue; }
@@ -193,6 +240,7 @@ Recovery recoverContent(const DeletedData& data, const ClusterSource& volume,
 		sink(zeros.data(), n);
 		at += n;
 	}
+	if (recovery.claimedClusters) recovery.reason = "clusters claimed since by a later deleted file";
 	if (recovery.recoveredBytes == 0 && !recovery.missing.empty()) recovery.state = RecoveryState::Overwritten;
 	else if (recovery.recoveredBytes > 0 && !nonZero) recovery.state = RecoveryState::Zeroed;
 	else if (!recovery.missing.empty()) recovery.state = RecoveryState::Partial;
@@ -314,10 +362,39 @@ std::vector<std::wstring> excludedFolders(const std::wstring& volume) {
 	return excluded;
 }
 
-/*! The deleted files the $MFT copies list, minus the folders left out.
+/*! The latest date a record carries — its file's last change, the deletion's
+ *  being in no record: the order of the recovery, and of the claims. */
+uint64_t latestDate(const MftEntry& e) {
+	return std::max({ ticks(e.created), ticks(e.modified), ticks(e.mftModified), ticks(e.fileNameMftModified) });
+}
+
+/*! The runs every deleted record of a $MFT copy claims, dated (ClusterClaims):
+ *  those of the folders left out too — what they overwrote is as lost.
+ *  @param mft the copy, loaded
+ *  @param volume "C:"…
+ *  @param claims receives the runs, finished */
+void claimDeletedRuns(const Mft& mft, const std::wstring& volume, ClusterClaims& claims) {
+	RawVolumeLayout layout;
+	if (FAILED(RawVolumeLayoutOf(volume.substr(0, 1), layout))) return;
+	mft.forEachRawRecord([&](const uint8_t* bytes, size_t size, uint64_t number) {
+		const DeletedRecord record = parseDeletedRecord(bytes, size);
+		if (!record.fileRecord || record.inUse || !record.baseRecord || record.data.resident
+		    || !checkRuns(record.data, layout.clusterSize, layout.clusters).empty()) return;
+		MftEntry entry;
+		if (!entry.parse(bytes, size, number)) return;
+		const uint64_t date = latestDate(entry);
+		for (const NtfsRun& run : record.data.runs)
+			if (run.lcn >= 0) claims.add((uint64_t)run.lcn, run.count, date);
+	});
+	claims.finish();
+}
+
+/*! The deleted files the $MFT copies list, minus the folders left out, and
+ *  the clusters their records claim.
  *  @param candidates receives them
+ *  @param claims receives, by volume, the runs of every deleted record
  *  @return S_FALSE if a volume's $MFT could not be read */
-HRESULT listCandidates(std::vector<Candidate>& candidates) {
+HRESULT listCandidates(std::vector<Candidate>& candidates, std::map<std::wstring, ClusterClaims>& claims) {
 	HRESULT global = S_OK;
 	for (const std::wstring& volume : fixedNtfsVolumes()) {
 		Mft mft;
@@ -344,17 +421,20 @@ HRESULT listCandidates(std::vector<Candidate>& candidates) {
 			c.modified = e.modified;
 			c.mftModified = e.mftModified;
 			c.accessed = e.accessed;
-			c.latest = std::max({ ticks(e.created), ticks(e.modified), ticks(e.mftModified), ticks(e.fileNameMftModified) });
+			c.latest = latestDate(e);
 			candidates.push_back(std::move(c));
 		});
 		if (walked != ERROR_SUCCESS) global = S_FALSE;
+		claimDeletedRuns(mft, volume, claims[volume]);
 		mft.clear();
 	}
 	return global;
 }
 
-//! The volume as recoverContent reads it: raw, as it is now.
-ClusterSource rawClusters(const std::wstring& letter, const RawVolumeLayout& layout) {
+/*! The volume as recoverContent reads it: raw, as it is now, the clusters
+ *  claimed since by a deleted file later than `date` left out.
+ *  @param claims the volume's claims, or nullptr */
+ClusterSource rawClusters(const std::wstring& letter, const RawVolumeLayout& layout, const ClusterClaims* claims, uint64_t date) {
 	ClusterSource source;
 	source.clusterSize = layout.clusterSize;
 	source.clusters = layout.clusters;
@@ -364,6 +444,10 @@ ClusterSource rawClusters(const std::wstring& letter, const RawVolumeLayout& lay
 	source.read = [letter](uint64_t lcn, uint64_t count, uint8_t* out) {
 		return SUCCEEDED(ReadClustersRaw(letter, lcn, count, out));
 	};
+	if (claims)
+		source.claimedSince = [claims, date](uint64_t lcn, uint64_t count, std::vector<bool>& claimed) {
+			claims->laterThan(lcn, count, date, claimed);
+		};
 	return source;
 }
 
@@ -417,9 +501,10 @@ struct Tally {
 /*! Recovers one deleted file: its record read again, its content read, then
  *  stored, or fingerprinted only.
  *  @param c the file
+ *  @param claims the clusters its volume's deleted records claim, or nullptr
  *  @param tally the counts, the bytes copied among them
  *  @return its object for the snapshot */
-Json recoverOne(const Candidate& c, Tally& tally) {
+Json recoverOne(const Candidate& c, const ClusterClaims* claims, Tally& tally) {
 	Json o = describe(c);
 	const std::wstring letter = c.volume.substr(0, 1);
 	std::vector<uint8_t> bytes;
@@ -439,7 +524,7 @@ Json recoverOne(const Candidate& c, Tally& tally) {
 		++tally.lost;
 		return o;
 	}
-	const ClusterSource source = rawClusters(letter, layout);
+	const ClusterSource source = rawClusters(letter, layout, claims, c.latest);
 	const uint64_t maxFile = (uint64_t)conf.deletedFilesSettings.maxFileMib << 20;
 	Md5Stream md5;
 	Sha1Stream sha1;
@@ -557,7 +642,8 @@ size_t collectIndexSlack(const std::wstring& volume, Json& files) {
 
 HRESULT DeletedFilesCollect() {
 	std::vector<Candidate> candidates;
-	const HRESULT listed = listCandidates(candidates);
+	std::map<std::wstring, ClusterClaims> claims;
+	const HRESULT listed = listCandidates(candidates, claims);
 	// The most recent first: the total's bound leaves out the oldest.
 	std::stable_sort(candidates.begin(), candidates.end(), [](const Candidate& a, const Candidate& b) { return a.latest > b.latest; });
 	const uint64_t maxFile = (uint64_t)conf.deletedFilesSettings.maxFileMib << 20;
@@ -579,7 +665,8 @@ HRESULT DeletedFilesCollect() {
 			continue;
 		}
 		printProgressStep(L"$DeletedFiles", (unsigned)k + 1, (unsigned)candidates.size());
-		files.push(recoverOne(c, tally));
+		const auto volumeClaims = claims.find(c.volume);
+		files.push(recoverOne(c, volumeClaims == claims.end() ? nullptr : &volumeClaims->second, tally));
 		++tally.listed;
 	}
 	printProgressEnd();
