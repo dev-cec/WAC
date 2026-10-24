@@ -1390,7 +1390,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         changed, a cleared log, are found there as they were. Windows goes on
         writing while WAC reads: each file is read twice, the block lists read
         again before each reading, and done again if the two readings differ.
-        Windows~XP keeps no copy.
+        Windows~XP keeps no copy. A copy holds what was \emph{on the disk} at
+        its instant, and Windows writes the registry and the event logs late:
+        a value or an event written less than about a minute before the copy
+        may not be in it — Windows itself does not read them there
+        (measured: absent 15~s after, present 90~s after).
   \item[\fichier{shadow\_copy\_events.json}] the events a copy's logs keep
         and the current logs no longer hold (a cleared log, records
         overwritten by rotation): the form of \fichier{events.json}, plus

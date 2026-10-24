@@ -1432,6 +1432,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         Windows continue d'écrire pendant la lecture : chaque fichier est lu
         deux fois, les listes de blocs relues avant chaque lecture, et refait
         si les deux lectures diffèrent. Windows~XP ne garde pas de cliché.
+        Un cliché tient ce qui était \emph{sur le disque} à son instant, et
+        Windows écrit le registre et les journaux d'événements en retard : une
+        valeur ou un événement écrits moins d'une minute environ avant le
+        cliché peuvent ne pas y être — Windows lui-même ne les y lit pas
+        (mesuré : absents 15~s après, présents 90~s après).
   \item[\fichier{shadow\_copy\_events.json}] les événements que les
         journaux d'un cliché gardent et que les journaux actuels n'ont plus
         (journal vidé, enregistrements écrasés par la rotation) : même forme
