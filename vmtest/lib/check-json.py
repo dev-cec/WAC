@@ -704,7 +704,10 @@ def check_deleted_files(folder):
     if not os.path.exists(path):
         return 0
     with open(path, encoding="utf-8-sig", errors="replace") as f:
-        witnesses = [l.strip()[len("deleted="):].split("|") for l in f if l.startswith("deleted=")]
+        lines = [l.strip() for l in f]
+    witnesses = [l[len("deleted="):].split("|") for l in lines if l.startswith("deleted=")]
+    # Whether the later file covered the overwritten witness's clusters, as fsutil says.
+    overlap = next((l.rsplit("|", 1)[-1] for l in lines if l.startswith("overwrite=")), "unknown")
     files = load(folder, "deleted_files.json")
     if not witnesses or not isinstance(files, list):
         if not skipped_unplaced(folder, "deleted_files", witnesses):
@@ -714,7 +717,7 @@ def check_deleted_files(folder):
     items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
     stored = {str(i.get("SourcePath", "")).lower(): i for i in items}
     judged = any("--binary" in str(i.get("Method", "")) for i in items)
-    wrong, lost, found, reused = [], [], 0, None
+    wrong, lost, found, reused, claims_seen = [], [], 0, None, ""
     for f in files:
         state = f.get("State")
         if state in ("Recovered", "Partial") and int(f.get("RecoveredBytes", -1)) > int(f.get("Size", 0)):
@@ -745,6 +748,19 @@ def check_deleted_files(folder):
         if state == "Recovered" and str(mine.get("RecoveredSHA256", "")).upper() != digest.upper():
             wrong.append(f"{file}: Recovered, yet SHA-256 {mine.get('RecoveredSHA256')} instead of {digest}")
             continue
+        if expected == "overwritten":
+            # Written over after its deletion by a file deleted in turn: a hole
+            # where that later record claims its clusters, or its own content
+            # when the later file landed elsewhere — never another content.
+            if state in ("Partial", "Overwritten") and "claimed" in str(mine.get("Reason", "")):
+                claims_seen = f"deleted-overwritten.txt {state}, {len(mine.get('MissingRanges') or [])} hole(s) claimed since"
+            elif state == "Recovered" and overlap == "yes":
+                wrong.append(f"{file}: written over after its deletion (Windows' extents), yet Recovered whole")
+            elif state == "Recovered":
+                claims_seen = f"deleted-overwritten.txt recovered whole: the later file landed elsewhere ({overlap})"
+            else:
+                lost.append(f"deleted-overwritten.txt {state}")
+            continue
         if state != "Recovered":
             lost.append(f"{file.rsplit(chr(92), 1)[-1]} {state}")
             continue
@@ -770,8 +786,9 @@ def check_deleted_files(folder):
     if found == 0:
         print(f"  ❌ deleted_files.json: no witness recovered ({', '.join(lost)})")
         return 1
-    print(f"  ✅ deleted_files.json: {found} of {len(witnesses)} deleted witness(es) recovered with their SHA-256, "
-          f"copied or fingerprinted as the rule wants" + (f"; not recovered: {', '.join(lost)}" if lost else "")
+    print(f"  ✅ deleted_files.json: {found} of {len([w for w in witnesses if w[3] != 'overwritten'])} deleted witness(es) recovered with their SHA-256, "
+          f"copied or fingerprinted as the rule wants" + (f"; {claims_seen}" if claims_seen else "")
+          + (f"; not recovered: {', '.join(lost)}" if lost else "")
           + f"; {len(files)} file(s) coherent")
     return 0
 

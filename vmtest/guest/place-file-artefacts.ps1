@@ -1843,6 +1843,87 @@ try { if (Wants 'deleted_files') {
         $stream.Write($w[1], 0, $w[1].Length)
         $stream.Close()
     }
+    # One more, overwritten after its deletion: a file that already holds a
+    # record of its own (so that it takes not the witness's) is written once
+    # the witness is deleted — on its freed clusters, NTFS giving those first —
+    # then deleted in turn. The witness's clusters read free again: only the
+    # runs of that later deleted record say they were written since. It must
+    # never come out Recovered with another content (Windows 11, measured).
+    $over = [Text.Encoding]::ASCII.GetBytes(($text.ToString()).Replace('witness', 'OVERWRITTEN'))
+    $overPath = "$folder\deleted-overwritten.txt"
+    $later = "$folder\overwriter.bin"
+    [IO.File]::WriteAllBytes($later, (New-Object byte[] 0))
+    $stream = New-Object IO.FileStream($overPath, [IO.FileMode]::Create, [IO.FileAccess]::Write, [IO.FileShare]::None, 65536, [IO.FileOptions]::WriteThrough)
+    $stream.Write($over, 0, $over.Length)
+    $stream.Close()
+    $overDigest = -join ([Security.Cryptography.SHA256]::Create().ComputeHash($over) | ForEach-Object { $_.ToString('X2') })
+    # Its clusters, as Windows gives them (fsutil file queryextents, Windows 10
+    # and later; "Clusters :" in French, a space before the colon): the later
+    # file grows until it covers one of them.
+    function Extents([string]$file) {
+        $said = @(& fsutil file queryextents $file 2>$null)
+        foreach ($line in $said) {
+            if ($line -match 'Clusters\s*:\s*0x([0-9a-fA-F]+)\s+LCN\s*:\s*0x([0-9a-fA-F]+)') {
+                $n = [Convert]::ToInt64($Matches[1], 16); $l = [Convert]::ToInt64($Matches[2], 16)
+                ,@($l, ($l + $n))
+            }
+        }
+    }
+    $held = @(Extents $overPath)
+    Remove-Item -Force $overPath
+    # The later file, of the witness's size, written then MOVED onto the
+    # clusters the witness held (FSCTL_MOVE_FILE, the defragmenters' call):
+    # left to NTFS, it grew after its own clusters and never covered the
+    # witness's, even at 256 MB (Windows 11, measured).
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class WacMove {
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    static extern IntPtr CreateFile(string name, uint access, uint share, IntPtr sa, uint disposition, uint flags, IntPtr template);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool DeviceIoControl(IntPtr h, uint code, byte[] inBuf, uint inSize, IntPtr outBuf, uint outSize, out uint returned, IntPtr ov);
+    [DllImport("kernel32.dll")]
+    static extern bool CloseHandle(IntPtr h);
+    // Moves `clusters` clusters of a file, from its first, to `lcn` of its volume. @return the Win32 error, 0 on success
+    public static int Move(string letter, string file, long lcn, uint clusters) {
+        IntPtr volume = CreateFile(@"\\.\" + letter, 0x80000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
+        if (volume == new IntPtr(-1)) return Marshal.GetLastWin32Error();
+        IntPtr handle = CreateFile(file, 0x80, 7, IntPtr.Zero, 3, 0, IntPtr.Zero);   // FILE_READ_ATTRIBUTES
+        int error = 0;
+        if (handle == new IntPtr(-1)) error = Marshal.GetLastWin32Error();
+        else {
+            byte[] data = new byte[32];   // MOVE_FILE_DATA: handle, starting VCN, starting LCN, cluster count
+            BitConverter.GetBytes(handle.ToInt64()).CopyTo(data, 0);
+            BitConverter.GetBytes(0L).CopyTo(data, 8);
+            BitConverter.GetBytes(lcn).CopyTo(data, 16);
+            BitConverter.GetBytes(clusters).CopyTo(data, 24);
+            uint returned;
+            if (!DeviceIoControl(volume, 0x00090074, data, (uint)data.Length, IntPtr.Zero, 0, out returned, IntPtr.Zero)) error = Marshal.GetLastWin32Error();
+            CloseHandle(handle);
+        }
+        CloseHandle(volume);
+        return error;
+    }
+}
+'@
+    $filler = New-Object byte[] ($over.Length); for ($i = 0; $i -lt $filler.Length; ++$i) { $filler[$i] = 0x5A }
+    $stream = New-Object IO.FileStream($later, [IO.FileMode]::Open, [IO.FileAccess]::Write, [IO.FileShare]::None, 65536, [IO.FileOptions]::WriteThrough)
+    $stream.Write($filler, 0, $filler.Length)
+    $stream.Close()
+    $overlap = 'unknown'
+    if ($held) {
+        $count = [uint32][Math]::Min($held[0][1] - $held[0][0], [Math]::Ceiling($filler.Length / 4096))
+        $moved = [WacMove]::Move($later.Substring(0, 2), $later, $held[0][0], $count)
+        $overlap = 'no'
+        foreach ($mine in @(Extents $later)) {
+            foreach ($his in $held) { if ($mine[0] -lt $his[1] -and $his[0] -lt $mine[1]) { $overlap = 'yes' } }
+        }
+        if ($moved -ne 0) { $overlap = "no (move: error $moved)" }
+    }
+    Remove-Item -Force $later
+    Write-Output "overwrite=$overPath|$overlap"
+    Write-Output "deleted=$overPath|$($over.Length)|$overDigest|overwritten|$token"
     foreach ($w in $witnesses) {
         $path = "$folder\$($w[0])"
         $digest = -join ([Security.Cryptography.SHA256]::Create().ComputeHash($w[1]) | ForEach-Object { $_.ToString('X2') })
