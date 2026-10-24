@@ -19,6 +19,7 @@
  *  Native build (Linux): g++ -std=c++17 -g -fsanitize=address,undefined -I. artefact_catalogue.cpp
  *                        artefact_catalogue_test.cpp -o artefact_catalogue_test
  */
+#include <algorithm>
 #include "artefact_catalogue.h"
 #include <cstdio>
 #include <fstream>
@@ -222,7 +223,9 @@ int main(int argc, char** argv) {
 	check(availabilityOf("powershell_history", vista) == Availability::AbsentFromThisVersion && !expectedOn("powershell_history", seven),
 	      "PSReadLine's history: absent from Vista (PowerShell 2 at most), looked for and not expected on Windows 7");
 	const std::vector<std::string> onXp = absentAmong(keys, xp);
-	check(onXp.size() == 15, "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 15 expected");
+	// Sysmon among them: it installs on Windows 7 and later only.
+	check(onXp.size() == 16 && std::count(onXp.begin(), onXp.end(), "sysmon") == 1,
+	      "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 16 expected, Sysmon among them");
 	/* XP's Tasks folder holds no .job on a fresh install (desktop.ini, SA.DAT
 	   only, measured): absent, they are no finding. Vista's System32\Tasks
 	   always holds Microsoft's. */
