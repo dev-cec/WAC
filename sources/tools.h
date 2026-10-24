@@ -173,6 +173,10 @@ struct AppliConf {
 		bool wmi = true;               //!< WMI repository: event subscriptions (filters, consumers, bindings), read offline
 		bool srum = true;              //!< SRUDB.dat: network and resource usage per application and user, 30 to 60 days
 		bool bits = true;              //!< qmgr.db: BITS jobs, their files and notification command lines
+		bool cloudIdentity = true;     //!< Entra ID registrations of the machine and its users; token caches taken raw, encrypted (cloud_identity.h)
+		bool defenderEndpoint = true;  //!< Defender for Endpoint's local folder, raw copy only
+		bool etwLogs = true;           //!< ETW trace files Windows wrote to its disk (.etl), raw copy only
+		bool onedrive = true;          //!< OneDrive's logs and settings of each profile, raw copy only
 		bool bootRecords = true;       //!< what runs before Windows: disks' first mebibyte, partitions' boot sectors, EFI system partition (boot_records.h)
 		bool fatVolumes = true;        //!< FAT and exFAT volumes (a suspect's keys included): entries, deleted ones too
 		bool installedPrograms = true;  //!< installed programs: Uninstall keys of the machine and of each user

@@ -218,14 +218,15 @@ int main(int argc, char** argv) {
 	/* PSReadLine's history is not held back on Windows 7: PowerShell 3 and
 	   later, and PSReadLine, install there — a history that may be there is
 	   looked for. */
-	check(onSeven == std::set<std::string>{ "activities_cache", "bam", "defender", "intune_logs", "srum" },
-	      "Windows 7: " + std::to_string(onSeven.size()) + " artefacts held back, 5 expected (Timeline, BAM, Defender, Intune, SRUM)");
+	check(onSeven == std::set<std::string>{ "activities_cache", "bam", "cloud_identity", "defender", "defender_endpoint", "intune_logs", "srum" },
+	      "Windows 7: " + std::to_string(onSeven.size()) + " artefacts held back, 7 expected (Timeline, BAM, Entra ID, Defender and Defender for Endpoint, Intune, SRUM)");
 	check(availabilityOf("powershell_history", vista) == Availability::AbsentFromThisVersion && !expectedOn("powershell_history", seven),
 	      "PSReadLine's history: absent from Vista (PowerShell 2 at most), looked for and not expected on Windows 7");
 	const std::vector<std::string> onXp = absentAmong(keys, xp);
-	// Sysmon (Windows 7 and later) and Intune's extension (Windows 10 and later) among them.
-	check(onXp.size() == 17 && std::count(onXp.begin(), onXp.end(), "sysmon") == 1 && std::count(onXp.begin(), onXp.end(), "intune_logs") == 1,
-	      "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 17 expected, Sysmon and Intune among them");
+	// Sysmon and OneDrive (Windows 7 and later), ETW trace files (Vista), Intune and Entra ID (Windows 10) among them.
+	check(onXp.size() == 21 && std::count(onXp.begin(), onXp.end(), "sysmon") == 1 && std::count(onXp.begin(), onXp.end(), "intune_logs") == 1
+	      && std::count(onXp.begin(), onXp.end(), "etw_logs") == 1 && std::count(onXp.begin(), onXp.end(), "onedrive") == 1,
+	      "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 21 expected, Sysmon, OneDrive, ETW files and Intune among them");
 	/* XP's Tasks folder holds no .job on a fresh install (desktop.ini, SA.DAT
 	   only, measured): absent, they are no finding. Vista's System32\Tasks
 	   always holds Microsoft's. */

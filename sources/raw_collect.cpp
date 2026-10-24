@@ -31,7 +31,13 @@
 #include "sysmon.h"
 #include "firewall_log.h"
 #include "intune_logs.h"
+#include "cloud_identity.h"
 #include <algorithm>
+
+//! Defender for Endpoint's local folder.
+const wchar_t DEFENDER_ENDPOINT_FOLDER[] = L"\\ProgramData\\Microsoft\\Windows Defender Advanced Threat Protection";
+//! OneDrive's folder in a profile.
+const wchar_t ONEDRIVE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\OneDrive";
 
 namespace {
 
@@ -702,6 +708,35 @@ HRESULT ExtractFileArtefactsRaw() {
 				trees.push_back({ drive + L"\\", { L"Thumbs.db" }, THUMBS_DB_DEPTH, L"thumbnail databases (Thumbs.db)",
 				                  here ? output : L"" });
 			}
+	}
+	/* The ETW trace files Windows writes to its own disk — the boot sessions
+	   (LogFiles\\WMI), the diagnostics of boot and shutdown (WDI), Windows
+	   Update and setup (Logs), the telemetry's (Diagnosis\\ETLLogs) —, raw. */
+	if (conf.artefacts.etwLogs) {
+		trees.push_back({ L"\\Windows\\System32\\LogFiles\\WMI", { L".etl" }, 2, L"ETW trace files (boot sessions)" });
+		trees.push_back({ L"\\Windows\\System32\\WDI", { L".etl" }, 4, L"ETW trace files (diagnostics)" });
+		trees.push_back({ L"\\Windows\\Logs", { L".etl" }, 3, L"ETW trace files (Windows logs)" });
+		trees.push_back({ L"\\ProgramData\\Microsoft\\Diagnosis\\ETLLogs", { L".etl" }, 3, L"ETW trace files (telemetry)" });
+	}
+	/* Defender for Endpoint's local folder, where it is onboarded: its
+	   formats undocumented, taken raw — the sensor's own binaries
+	   (Platform) left out. */
+	if (conf.artefacts.defenderEndpoint)
+		trees.push_back({ DEFENDER_ENDPOINT_FOLDER, {}, 5, L"Defender for Endpoint",
+		                  std::wstring(DEFENDER_ENDPOINT_FOLDER) + L"\\Platform" });
+	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {
+		const std::wstring& profile = std::get<1>(profileEntry);
+		/* OneDrive: its logs (.odl, with the keystore that unscrambles them)
+		   and its settings, the sync database among them; SharePoint list
+		   sync's logs, the bulk and of little use, left out. */
+		if (conf.artefacts.onedrive) {
+			trees.push_back({ profile + ONEDRIVE_FOLDER + L"\\logs", {}, 3, L"OneDrive logs", profile + ONEDRIVE_FOLDER + L"\\logs\\ListSync" });
+			trees.push_back({ profile + ONEDRIVE_FOLDER + L"\\settings", {}, 3, L"OneDrive settings" });
+		}
+		// The accounts' token caches, encrypted by DPAPI as Windows keeps them.
+		if (conf.artefacts.cloudIdentity)
+			for (const wchar_t* folder : CLOUD_TOKEN_FOLDERS)
+				trees.push_back({ profile + folder, {}, 4, L"Entra ID token caches" });
 	}
 	/* Sysmon's archives: the files deleted under a FileDelete rule, kept by
 	   Sysmon under their fingerprint — taken whole, as Defender's quarantine. */

@@ -44,6 +44,7 @@
 #include "sysmon.h"
 #include "firewall_log.h"
 #include "intune_logs.h"
+#include "cloud_identity.h"
 #include "rdp_server.h"
 #include "setupapi_log.h"
 #include "recycle_bin.h"
@@ -1167,6 +1168,8 @@ void convertArtefacts(bool systemAvailable) {
 	                     L"artefacts.firewall_log", Text::StepFirewallLog);
 	convertArtefact<IntuneLogs>(conf.artefacts.intuneLogs, "intune_logs.json", Text::ArtefactIntuneLogs,
 	                     L"artefacts.intune_logs", Text::StepIntuneLogs);
+	convertArtefact<CloudIdentity>(conf.artefacts.cloudIdentity, "cloud_identity.json", Text::ArtefactCloudIdentity,
+	                     L"artefacts.cloud_identity", Text::StepCloudIdentity);
 
 	convertArtefact<InstalledPrograms>(conf.artefacts.installedPrograms, "installed_programs.json", Text::ArtefactInstalledPrograms,
 	                     L"artefacts.installed_programs", Text::StepInstalledPrograms);
