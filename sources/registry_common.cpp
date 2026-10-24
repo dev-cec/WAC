@@ -50,3 +50,12 @@ Json pairs(const NameValues& values) {
 	return list;
 }
 
+void readAllValues(ORHKEY key, std::vector<std::pair<std::wstring, Json>>& out) {
+	for (DWORD i = 0;; ++i) {
+		std::wstring name;
+		DWORD type = 0;
+		std::vector<BYTE> data;
+		if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
+		out.emplace_back(registryNameToJsonKey(name), registryValueToJson(type, data));
+	}
+}

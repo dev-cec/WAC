@@ -34,6 +34,12 @@ std::wstring valueText(DWORD type, const std::vector<BYTE>& data);
  *  @return N, or 0 if the name is not url followed by digits only */
 unsigned urlValueNumber(const std::wstring& name);
 
+/*! Every value of an open key, typed as the hive stores it, under its
+ *  PascalCase name.
+ *  @param key the key
+ *  @param out receives the values */
+void readAllValues(ORHKEY key, std::vector<std::pair<std::wstring, Json>>& out);
+
 /*! @param values Name/Value pairs
  *  @return them as a JSON array of {Name, Value} */
 Json pairs(const NameValues& values);

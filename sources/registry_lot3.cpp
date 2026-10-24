@@ -9,20 +9,6 @@
 
 namespace {
 
-/*! Every value of an open key, typed as the hive stores it, under its
- *  PascalCase name.
- *  @param key the key
- *  @param out receives the values */
-void readAllValues(ORHKEY key, std::vector<std::pair<std::wstring, Json>>& out) {
-	for (DWORD i = 0;; ++i) {
-		std::wstring name;
-		DWORD type = 0;
-		std::vector<BYTE> data;
-		if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
-		out.emplace_back(registryNameToJsonKey(name), registryValueToJson(type, data));
-	}
-}
-
 /*! Reads every program of an Uninstall key.
  *  @param root the hive's root
  *  @param path the Uninstall key under it
