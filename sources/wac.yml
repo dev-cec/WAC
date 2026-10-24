@@ -37,7 +37,8 @@ artefacts:
   defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
   deleted_files:                  # deleted files whose content the raw reading still finds: copied, with fingerprints (deleted_files.json)
     enabled:               true   # false: nothing read
-    level:                 2      # 1: the content of the $MFT's deleted records; 2: and the names left in the directory indexes
+    level:                 2      # 1: the content of the $MFT's deleted records; 2: and the names left in the directory indexes;
+                                  # 3: and the files carved from the free clusters (PE, ZIP, PDF) — the whole free space read, however long
     max_file_mib:          64     # a larger file: listed with its fingerprints, not copied
     max_total_mib:         4096   # all recovered contents copied, at most; the most recent first
     excluded_folders:             # never read, on every volume: what the system deletes by the thousand

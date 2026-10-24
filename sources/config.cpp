@@ -130,7 +130,7 @@ bool readDeletedFiles(const YamlNode& node, AppliConf& conf, std::string& error)
 			if (!readBool(*value, name, conf.artefacts.deletedFiles, error)) return false;
 		}
 		else if (option == "level") {
-			if (!readInt(*value, name, 1, 2, settings.level, error)) return false;
+			if (!readInt(*value, name, 1, 3, settings.level, error)) return false;
 		}
 		else if (option == "max_file_mib") {
 			if (!readInt(*value, name, 1, DELETED_FILE_MAX_MIB, settings.maxFileMib, error)) return false;

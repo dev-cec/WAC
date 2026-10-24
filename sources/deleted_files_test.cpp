@@ -414,6 +414,41 @@ void claimedSince() {
 	      "a cluster claimed since by a later file: published as the file's");
 }
 
+//! A PDF of `size` bytes or more, its exact length known: a cross-reference table, %%EOF, a line end.
+std::vector<uint8_t> carvablePdf(size_t padding) {
+	std::string body = "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n" + std::string(padding, ' ') + "\n";
+	const size_t xref = body.size();
+	body += "xref\n0 2\n0000000000 65535 f \n0000000009 00000 n \ntrailer\n<< /Size 2 /Root 1 0 R >>\nstartxref\n"
+	      + std::to_string(xref) + "\n%%EOF\n";
+	return std::vector<uint8_t>(body.begin(), body.end());
+}
+
+/*! Carving on a volume in memory: a file on free clusters found at its exact
+ *  size; one on clusters a deleted record claims left to level 1; one cut
+ *  by a cluster in use never carved wrong. */
+void carving() {
+	Volume v;
+	const std::vector<uint8_t> found = carvablePdf(1500), claimed = carvablePdf(700), cut = carvablePdf(3000);
+	std::memcpy(v.bytes.data() + 50 * CLUSTER, found.data(), found.size());       // clusters 50..53
+	std::memcpy(v.bytes.data() + 100 * CLUSTER, claimed.data(), claimed.size());
+	std::memcpy(v.bytes.data() + 200 * CLUSTER, cut.data(), cut.size());          // 200..206
+	v.used[203] = true;                                                             // another file's, in the middle
+	ClusterClaims claims;
+	claims.add(100, 2, 7);
+	claims.finish();
+	ClusterSource source = v.source();
+	source.claimedSince = [&claims](uint64_t lcn, uint64_t count, std::vector<bool>& out) { claims.laterThan(lcn, count, 0, out); };
+	std::vector<CarvedFile> files;
+	carveClusters(source, 1 << 20, [&](const CarvedFile& f) { files.push_back(f); });
+	check(files.size() == 1 && files[0].lcn == 50 && files[0].format == CarvedFormat::Pdf && files[0].size == found.size()
+	      && files[0].content == found, "carving: not exactly the free PDF, at its size");
+	check(!v.badRead, "carving: a cluster in use read");
+	// The bound: a PDF whose end lies beyond it is not found.
+	std::vector<CarvedFile> bounded;
+	carveClusters(source, 1024, [&](const CarvedFile& f) { bounded.push_back(f); });
+	check(bounded.empty(), "carving: a PDF beyond max_file found");
+}
+
 void names() {
 	check(safeFileName(L"rapport.docx") == L"rapport.docx", "a plain name changed");
 	check(safeFileName(L"a:b*c?.exe") == L"a_b_c_.exe", "forbidden characters kept");
@@ -456,6 +491,7 @@ int wmain() {
 	names();
 	claims(rng);
 	claimedSince();
+	carving();
 	indexSlack();
 	guardedIndex(rng);
 	guarded(rng);

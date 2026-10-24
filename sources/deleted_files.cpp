@@ -2,6 +2,8 @@
  *  \brief Deleted files recovered by raw reading (see deleted_files.h).
  */
 #include "deleted_files.h"
+#include "fat_volume.h"
+#include "fat_volumes.h"
 #include "audit.h"
 #include "binaires.h"
 #include "consigne.h"
@@ -246,6 +248,124 @@ Recovery recoverContent(const DeletedData& data, const ClusterSource& volume,
 	else if (!recovery.missing.empty()) recovery.state = RecoveryState::Partial;
 	else recovery.state = RecoveryState::Recovered;
 	return recovery;
+}
+
+namespace {
+
+//! Clusters looked at a time: their allocation and claims read once.
+const uint64_t CARVE_WINDOW = 256;
+
+/*! Whether every cluster of a range is free and unclaimed now.
+ *  @return false as soon as one is not, or the allocation is unreadable */
+bool freeAndUnclaimed(const ClusterSource& volume, uint64_t lcn, uint64_t count) {
+	if (count == 0 || lcn >= volume.clusters || count > volume.clusters - lcn) return false;
+	std::vector<bool> used, claimed;
+	for (uint64_t done = 0; done < count;) {
+		const uint64_t n = std::min<uint64_t>(CARVE_WINDOW * 16, count - done);
+		if (!volume.allocation(lcn + done, n, used)) return false;
+		if (volume.claimedSince) volume.claimedSince(lcn + done, n, claimed);
+		for (uint64_t k = 0; k < n; ++k)
+			if (used[(size_t)k] || (volume.claimedSince && claimed[(size_t)k])) return false;
+		done += n;
+	}
+	return true;
+}
+
+/*! The bytes of a run of free, unclaimed clusters from `lcn`, up to `bytes`
+ *  or to the first cluster that is not — read, then checked again.
+ *  @return what was read, a whole number of clusters; empty on a read error */
+std::vector<uint8_t> readFreeRun(const ClusterSource& volume, uint64_t lcn, uint64_t bytes) {
+	const uint64_t size = volume.clusterSize;
+	const uint64_t wanted = std::min((bytes + size - 1) / size, volume.clusters - std::min(lcn, volume.clusters));
+	uint64_t clusters = 0;
+	std::vector<bool> used, claimed;
+	while (clusters < wanted) {                        // a window at a time, up to the first cluster taken
+		const uint64_t n = std::min(CARVE_WINDOW, wanted - clusters);
+		if (!volume.allocation(lcn + clusters, n, used)) break;
+		if (volume.claimedSince) volume.claimedSince(lcn + clusters, n, claimed);
+		uint64_t k = 0;
+		while (k < n && !used[(size_t)k] && !(volume.claimedSince && claimed[(size_t)k])) ++k;
+		clusters += k;
+		if (k < n) break;
+	}
+	std::vector<uint8_t> data((size_t)(clusters * size));
+	if (clusters && !volume.read(lcn, clusters, data.data())) data.clear();
+	return data;
+}
+
+/*! The file a cluster starts, cut at its end and checked free all along.
+ *  @return its format None when nothing valid starts there */
+CarvedFile carveAt(const ClusterSource& volume, uint64_t lcn, const uint8_t* head, uint64_t maxFile) {
+	CarvedFile file;
+	const CarvedStart start = carvedStart(head, volume.clusterSize);
+	if (start.format == CarvedFormat::None) return file;
+	const uint64_t cluster = volume.clusterSize;
+	uint64_t size = start.size;
+	std::vector<uint8_t> data;
+	if (!size) {
+		// The end lies further: as far as free clusters go, within the bound.
+		const uint64_t reach = start.needed ? std::min(start.needed, maxFile) : maxFile;
+		if (start.needed > maxFile) {                      // a PE larger than the bound: its size unread
+			file.lcn = lcn;
+			file.format = start.format;
+			return file;
+		}
+		data = readFreeRun(volume, lcn, reach);
+		if (start.needed && data.size() < start.needed) return CarvedFile();
+		size = carvedEnd(start.format, data.data(), data.size());
+		if (!size) return CarvedFile();
+	}
+	file.lcn = lcn;
+	file.format = start.format;
+	file.size = size;
+	if (size > maxFile) return file;                       // listed with its size, not read
+	const uint64_t clusters = (size + cluster - 1) / cluster;
+	if (data.size() < size) {
+		if (!freeAndUnclaimed(volume, lcn, clusters)) return CarvedFile();
+		data.assign((size_t)(clusters * cluster), 0);
+		if (!volume.read(lcn, clusters, data.data())) return CarvedFile();
+	}
+	// Read so, still so: a cluster taken while it was read is another file's.
+	if (!freeAndUnclaimed(volume, lcn, clusters)) return CarvedFile();
+	data.resize((size_t)size);
+	file.content = std::move(data);
+	return file;
+}
+
+} // namespace
+
+uint64_t carveClusters(const ClusterSource& volume, uint64_t maxFile, const std::function<void(const CarvedFile&)>& found) {
+	const uint64_t cluster = volume.clusterSize;
+	uint64_t looked = 0;
+	std::vector<bool> used, claimed;
+	std::vector<uint8_t> buffer;
+	for (uint64_t lcn = 0; lcn < volume.clusters;) {
+		const uint64_t n = std::min(CARVE_WINDOW, volume.clusters - lcn);
+		if (!volume.allocation(lcn, n, used)) { lcn += n; continue; }
+		if (volume.claimedSince) volume.claimedSince(lcn, n, claimed);
+		uint64_t next = lcn + n;
+		for (uint64_t k = 0; k < n;) {
+			if (used[(size_t)k] || (volume.claimedSince && claimed[(size_t)k])) { ++k; continue; }
+			uint64_t end = k;
+			while (end < n && !used[(size_t)end] && !(volume.claimedSince && claimed[(size_t)end])) ++end;
+			buffer.assign((size_t)((end - k) * cluster), 0);
+			if (!volume.read(lcn + k, end - k, buffer.data())) { k = end; continue; }
+			bool jumped = false;
+			for (uint64_t c = k; c < end; ++c) {
+				++looked;
+				const CarvedFile file = carveAt(volume, lcn + c, buffer.data() + (c - k) * cluster, maxFile);
+				if (file.format == CarvedFormat::None) continue;
+				found(file);
+				// Past the file: what it holds (a PE inside an archive) is not another file.
+				const uint64_t past = lcn + c + std::max<uint64_t>(1, (file.size + cluster - 1) / cluster);
+				if (past > lcn + c + 1) { next = past; jumped = true; break; }
+			}
+			if (jumped) break;
+			k = end;
+		}
+		lcn = next;
+	}
+	return looked;
 }
 
 std::wstring safeFileName(const std::wstring& name) {
@@ -496,6 +616,11 @@ void addRecoveredDigests(Json& o, const std::wstring& md5, const std::wstring& s
 struct Tally {
 	size_t listed = 0, copied = 0, partial = 0, lost = 0, notRead = 0;
 	uint64_t copiedBytes = 0;
+	/*! By volume, the clusters level 1 gave as a file's content (Recovered
+	 *  or Partial): carving leaves them, not the clusters of every deleted
+	 *  record — the stale records of files gone long ago, on the same
+	 *  clusters, hid the content written since (Windows 11, measured). */
+	std::map<std::wstring, ClusterClaims> recovered;
 };
 
 /*! Recovers one deleted file: its record read again, its content read, then
@@ -541,6 +666,8 @@ Json recoverOne(const Candidate& c, const ClusterClaims* claims, Tally& tally) {
 		++tally.lost;
 		return o;
 	}
+	for (const NtfsRun& run : record.data.runs)
+		if (run.lcn >= 0) tally.recovered[c.volume].add((uint64_t)run.lcn, run.count, 1);
 	if (recovery.state == RecoveryState::Partial) ++tally.partial;
 	if (!copy) {
 		addRecoveredDigests(o, md5.hexDigest(), sha1.hexDigest(), sha256.hexDigest());
@@ -566,6 +693,234 @@ Json recoverOne(const Candidate& c, const ClusterClaims* claims, Tally& tally) {
 	if (!stored.signature.empty()) o.add(L"Signature", Json::str(stored.signature));
 	if (!stored.notCopied.empty()) o.add(L"NotCopied", Json::str(stored.notCopied));
 	return o;
+}
+
+/*! Level 3: the files carved from the free clusters of a volume that no
+ *  deleted record claims. Copied within what max_total_mib leaves.
+ *  @param volume "C:"…
+ *  @param source its clusters, the claims of its deleted files among them
+ *  @param firstCluster the number of the source's cluster 0 on the volume
+ *         (0 for NTFS; 2 for FAT, whose data region starts at cluster 2)
+ *  @param reading how the clusters are read, for the manifest
+ *  @param files receives one object per file
+ *  @param tally the counts, the bytes copied among them
+ *  @return the files found */
+size_t carveSource(const std::wstring& volume, const ClusterSource& source, uint64_t firstCluster,
+                   const std::wstring& reading, Json& files, Tally& tally) {
+	const uint64_t maxFile = (uint64_t)conf.deletedFilesSettings.maxFileMib << 20;
+	const uint64_t maxTotal = (uint64_t)conf.deletedFilesSettings.maxTotalMib << 20;
+	size_t count = 0;
+	const uint64_t looked = carveClusters(source, maxFile, [&](const CarvedFile& f) {
+		if ((++count & 63) == 1) printProgressStep(L"$Carved " + volume, (unsigned)count, 0);
+		Json o = Json::obj();
+		o.add(L"Volume", Json::str(volume));
+		o.add(L"Source", Json::str(L"Carved"));
+		o.add(L"Format", Json::str(carvedFormatName(f.format)));
+		o.add(L"Lcn", Json::num(f.lcn + firstCluster));
+		if (f.size) o.add(L"Size", Json::num(f.size));
+		if (f.content.empty()) {
+			o.add(L"State", Json::str(L"NotRead"));
+			o.add(L"Reason", Json::str(L"larger than max_file_mib"));
+			files.push(std::move(o));
+			return;
+		}
+		o.add(L"State", Json::str(L"Carved"));
+		const std::wstring exhibitPath = volume + L"\\$CarvedFiles\\" + std::to_wstring(f.lcn + firstCluster) + carvedFormatExtension(f.format);
+		if (f.content.size() > maxTotal - std::min(maxTotal, tally.copiedBytes)) {
+			// Beyond the total: its fingerprints, from the bytes already read.
+			Md5Stream md5;
+			Sha1Stream sha1;
+			Sha256Stream sha256;
+			md5.update(f.content.data(), f.content.size());
+			sha1.update(f.content.data(), f.content.size());
+			sha256.update(f.content.data(), f.content.size());
+			addRecoveredDigests(o, md5.hexDigest(), sha1.hexDigest(), sha256.hexDigest());
+			o.add(L"Copied", Json::boolean(false));
+			o.add(L"NotCopied", Json::str(L"max_total_mib reached"));
+			files.push(std::move(o));
+			return;
+		}
+		const std::wstring method = reading + L"; " + carvedFormatName(f.format) + L" carved from cluster "
+		                          + std::to_wstring(f.lcn + firstCluster) + L", cut at the end its structure gives";
+		RawHiveExtraction line;
+		const RecoveredStorage stored = BinariesStoreRecovered(exhibitPath, std::wstring(L"carved") + carvedFormatExtension(f.format),
+		                                                       f.content, method, line);
+		addRecoveredDigests(o, line.fingerprints.md5, line.fingerprints.sha1, line.fingerprints.sha256);
+		o.add(L"Copied", Json::boolean(stored.copied));
+		if (stored.copied) {
+			o.add(L"Exhibit", Json::str(exhibitPath));
+			tally.copiedBytes += f.content.size();
+		}
+		if (!stored.signature.empty()) o.add(L"Signature", Json::str(stored.signature));
+		if (!stored.notCopied.empty()) o.add(L"NotCopied", Json::str(stored.notCopied));
+		files.push(std::move(o));
+	});
+	printProgressEnd();
+	log(1, L"ℹ️Deleted files, level 3: " + std::to_wstring(count) + L" file(s) carved from " + std::to_wstring(looked)
+	       + L" free cluster(s) of " + volume);
+	return count;
+}
+
+//! Level 3 on an NTFS volume: its free clusters but those level 1 gave as a file's content.
+size_t carveVolume(const std::wstring& volume, Json& files, Tally& tally) {
+	const std::wstring letter = volume.substr(0, 1);
+	RawVolumeLayout layout;
+	if (FAILED(RawVolumeLayoutOf(letter, layout))) return 0;
+	ClusterClaims& recovered = tally.recovered[volume];
+	recovered.finish();
+	const ClusterSource source = rawClusters(letter, layout, &recovered, 0);
+	return carveSource(volume, source, 0, L"Raw NTFS reading (\\\\.\\" + volume
+	                   + L" — free clusters level 1 did not give as a file's content, checked free in $Bitmap before and after reading)",
+	                   files, tally);
+}
+
+/*! The clusters of a FAT or exFAT volume as recoverContent and carveClusters
+ *  read them: cluster n of the data region is the source's n - 2.
+ *  @param claims the claims of the volume's deleted entries, or nullptr
+ *  @param date claims later than it only; 0 for any */
+ClusterSource fatClusters(FatVolume& volume, const ClusterClaims* claims, uint64_t date) {
+	ClusterSource source;
+	source.clusterSize = volume.clusterSize();
+	source.clusters = volume.clusterCount();
+	source.allocation = [&volume](uint64_t lcn, uint64_t count, std::vector<bool>& used) {
+		return lcn + count <= UINT32_MAX && volume.allocation((uint32_t)lcn + 2, (uint32_t)count, used);
+	};
+	source.read = [&volume](uint64_t lcn, uint64_t count, uint8_t* out) {
+		return lcn + count <= UINT32_MAX && volume.readClusters((uint32_t)lcn + 2, (uint32_t)count, out);
+	};
+	if (claims)
+		source.claimedSince = [claims, date](uint64_t lcn, uint64_t count, std::vector<bool>& claimed) {
+			claims->laterThan(lcn, count, date, claimed);
+		};
+	return source;
+}
+
+//! A FAT date as stored — local time of the machine that wrote it, unless exFAT gave its offset.
+void addStoredDate(Json& o, const std::wstring& key, const FILETIME& date, bool utc) {
+	if (!date.dwLowDateTime && !date.dwHighDateTime) return;
+	if (utc) addUtcDate(o, key + L"Utc", date);
+	else o.add(key + L"AsStored", Json::str(timeToIso8601Utc(date, Precision::Second).substr(0, 19)));
+}
+
+/*! The deleted files of the FAT and exFAT volumes — a suspect's keys among
+ *  them. Level 1: a deleted entry keeps its first cluster and its size, its
+ *  chain is erased: the content is read as the clusters that follow, each
+ *  checked free, and not claimed since by a later deleted entry. Level 3:
+ *  their free clusters carved.
+ *  @param files receives one object per file
+ *  @param tally the counts, the bytes copied among them
+ *  @return the files read */
+size_t collectFatDeleted(Json& files, Tally& tally) {
+	const uint64_t maxFile = (uint64_t)conf.deletedFilesSettings.maxFileMib << 20;
+	const uint64_t maxTotal = (uint64_t)conf.deletedFilesSettings.maxTotalMib << 20;
+	size_t read = 0;
+	for (const std::wstring& mountPoint : fatVolumesToRead()) {
+		FileVolumeSource device(L"\\\\.\\" + mountPoint, 0, false);   // nothing kept: contents, not metadata
+		FatVolume volume;
+		if (!device.isOpen() || !volume.open(device)) {
+			log(2, L"🔥Deleted files: FAT volume " + mountPoint + L" unreadable");
+			continue;
+		}
+		const uint64_t cluster = volume.clusterSize();
+		std::vector<FatEntry> deleted;
+		ClusterClaims claims;
+		for (const FatEntry& e : volume.entries()) {
+			if (!e.deleted || e.directory || e.size == 0 || e.firstCluster < 2) continue;
+			deleted.push_back(e);
+			claims.add(e.firstCluster - 2, (e.size + cluster - 1) / cluster, ticks(e.modified));
+		}
+		claims.finish();
+		std::stable_sort(deleted.begin(), deleted.end(), [](const FatEntry& a, const FatEntry& b) { return ticks(a.modified) > ticks(b.modified); });
+		const std::wstring reading = L"Raw " + volume.type() + L" reading (\\\\.\\" + mountPoint + L")";
+		for (const FatEntry& e : deleted) {
+			Json o = Json::obj();
+			o.add(L"Volume", Json::str(mountPoint));
+			o.add(L"Source", Json::str(L"FatEntry"));
+			o.add(L"Path", Json::str(mountPoint + e.path));
+			if (e.nameIncomplete) o.add(L"NameIncomplete", Json::boolean(true));
+			o.add(L"FirstCluster", Json::num(e.firstCluster));
+			o.add(L"Size", Json::num(e.size));
+			addStoredDate(o, L"Created", e.created, e.createdUtc);
+			addStoredDate(o, L"Modified", e.modified, e.modifiedUtc);
+			if (e.size <= maxFile && e.size > maxTotal - std::min(maxTotal, tally.copiedBytes)) {
+				o.add(L"State", Json::str(L"NotRead"));
+				o.add(L"Reason", Json::str(L"max_total_mib reached"));
+				files.push(std::move(o));
+				continue;
+			}
+			// The chain erased: the clusters that follow the first, contiguous —
+			// exFAT says so (NoFatChain) of a file it never fragmented.
+			const uint64_t clusters = (e.size + cluster - 1) / cluster;
+			DeletedData data;
+			data.found = true;
+			data.runs = { { (int64_t)e.firstCluster - 2, clusters } };
+			data.runsDecoded = true;
+			data.lastVcn = clusters - 1;
+			data.allocatedSize = clusters * cluster;
+			data.size = data.initializedSize = e.size;
+			const ClusterSource source = fatClusters(volume, &claims, ticks(e.modified));
+			std::vector<uint8_t> content;
+			Md5Stream md5;
+			Sha1Stream sha1;
+			Sha256Stream sha256;
+			const bool copy = e.size <= maxFile;
+			const Recovery recovery = recoverContent(data, source, [&](const uint8_t* d, size_t n) {
+				if (copy) content.insert(content.end(), d, d + n);
+				else { md5.update(d, n); sha1.update(d, n); sha256.update(d, n); }
+			});
+			/* Contiguity assumed — FAT, and exFAT without NoFatChain: a file
+			   fragmented once read on, the clusters that follow are another's,
+			   and nothing tells. Not "Recovered" then, but what it is. */
+			Json state = Json::obj();
+			describeRecovery(state, recovery);
+			for (const auto& field : state.members()) {
+				if (field.first == L"State" && recovery.state == RecoveryState::Recovered && !e.contiguous)
+					o.add(L"State", Json::str(L"RecoveredIfContiguous"));
+				else o.add(field.first, field.second);
+			}
+			if (!e.contiguous && recovery.state != RecoveryState::NotRecoverable) o.add(L"ContiguityAssumed", Json::boolean(true));
+			++read;
+			if (recovery.state != RecoveryState::Recovered && recovery.state != RecoveryState::Partial) {
+				++tally.lost;
+				files.push(std::move(o));
+				continue;
+			}
+			if (recovery.state == RecoveryState::Partial) ++tally.partial;
+			tally.recovered[mountPoint].add(e.firstCluster - 2, clusters, 1);
+			if (!copy) {
+				addRecoveredDigests(o, md5.hexDigest(), sha1.hexDigest(), sha256.hexDigest());
+				o.add(L"Copied", Json::boolean(false));
+				o.add(L"NotCopied", Json::str(L"larger than max_file_mib"));
+				files.push(std::move(o));
+				continue;
+			}
+			const std::wstring name = e.path.substr(e.path.find_last_of(L'\\') + 1);
+			const std::wstring exhibitPath = mountPoint + L"\\$DeletedFiles\\" + std::to_wstring(e.firstCluster) + L"_" + safeFileName(name);
+			RawHiveExtraction line;
+			const RecoveredStorage stored = BinariesStoreRecovered(exhibitPath, mountPoint + e.path, content,
+			        reading + L"; deleted entry, first cluster " + std::to_wstring(e.firstCluster)
+			        + L", the clusters that follow checked free; deleted file " + recoveryStateName(recovery.state)
+			        + L", formerly " + mountPoint + e.path, line);
+			addRecoveredDigests(o, line.fingerprints.md5, line.fingerprints.sha1, line.fingerprints.sha256);
+			o.add(L"Copied", Json::boolean(stored.copied));
+			if (stored.copied) {
+				o.add(L"Exhibit", Json::str(exhibitPath));
+				++tally.copied;
+				tally.copiedBytes += content.size();
+			}
+			if (!stored.signature.empty()) o.add(L"Signature", Json::str(stored.signature));
+			if (!stored.notCopied.empty()) o.add(L"NotCopied", Json::str(stored.notCopied));
+			files.push(std::move(o));
+		}
+		ClusterClaims& recovered = tally.recovered[mountPoint];
+		recovered.finish();
+		if (conf.deletedFilesSettings.level >= 3)
+			carveSource(mountPoint, fatClusters(volume, &recovered, 0), 2,
+			            reading + L" — free clusters level 1 did not give as a file's content, checked free in the "
+			            + std::wstring(volume.type() == L"exFAT" ? L"allocation bitmap" : L"FAT") + L" before and after reading",
+			            files, tally);
+	}
+	return read;
 }
 
 //! A key for a name in a directory, case ignored: the directory's record and the name's hash.
@@ -650,6 +1005,9 @@ HRESULT DeletedFilesCollect() {
 	const uint64_t maxTotal = (uint64_t)conf.deletedFilesSettings.maxTotalMib << 20;
 	Json files = Json::arr();
 	Tally tally;
+	/* The FAT and exFAT volumes first: a suspect's keys, small, and what the
+	   total's bound should not leave out behind the system volume's files. */
+	const size_t fatRead = collectFatDeleted(files, tally);
 	for (size_t k = 0; k < candidates.size(); ++k) {
 		const Candidate& c = candidates[k];
 		/* A file to copy that the bound no longer allows is not read, and
@@ -670,15 +1028,19 @@ HRESULT DeletedFilesCollect() {
 		++tally.listed;
 	}
 	printProgressEnd();
-	size_t names = 0;
+	size_t names = 0, carved = 0;
 	if (conf.deletedFilesSettings.level >= 2)
 		for (const std::wstring& volume : fixedNtfsVolumes()) names += collectIndexSlack(volume, files);
+	if (conf.deletedFilesSettings.level >= 3)
+		for (const std::wstring& volume : fixedNtfsVolumes()) carved += carveVolume(volume, files, tally);
 	const HRESULT written = writeLiveSnapshot("deleted_files.json", files, L"deleted files of the fixed NTFS volumes, recovered by raw reading");
 	auditRecord(L"Raw recovery of the deleted files (" + std::to_wstring(tally.listed) + L" read, "
 	            + std::to_wstring(tally.copied) + L" copied (" + std::to_wstring(tally.copiedBytes / 1024 / 1024) + L" MiB), "
 	            + std::to_wstring(tally.partial) + L" partial, " + std::to_wstring(tally.lost) + L" lost or not recoverable, "
 	            + std::to_wstring(tally.notRead) + L" not read beyond max_total_mib"
 	            + (conf.deletedFilesSettings.level >= 2 ? L"; " + std::to_wstring(names) + L" former name(s) in the slack of the directory indexes" : L"")
+	            + (conf.deletedFilesSettings.level >= 3 ? L"; " + std::to_wstring(carved) + L" file(s) carved from the free clusters of NTFS" : L"")
+	            + L"; " + std::to_wstring(fatRead) + L" deleted file(s) of FAT and exFAT volumes read"
 	            + L")",
 	            L"$MFT copy of every fixed NTFS volume; each record read again raw, its clusters checked free in $Bitmap "
 	            L"before and after reading; nothing written to the volume",

@@ -165,7 +165,7 @@ int wmain(int argc, wchar_t** argv) {
 		      && g.deletedFilesSettings.maxTotalMib == defaults.maxTotalMib
 		      && g.deletedFilesSettings.excludedFolders == defaults.excludedFolders, "reference file: deleted_files differs from the defaults");
 	}
-	refused("deleted-level.yml", "artefacts:\n  deleted_files:\n    level: 4\n", 3, "between 1 and 2");
+	refused("deleted-level.yml", "artefacts:\n  deleted_files:\n    level: 4\n", 3, "between 1 and 3");
 	refused("deleted-unknown.yml", "artefacts:\n  deleted_files:\n    max_size: 8\n", 3, "unknown setting \"artefacts.deleted_files.max_size\"");
 	refused("deleted-total.yml", "artefacts:\n  deleted_files:\n    max_total_mib: 99999999\n", 3, "between 1 and 16777216");
 	refused("deleted-drive.yml", "artefacts:\n  deleted_files:\n    excluded_folders:\n      - C:\\Windows\n", 3, "a folder from the volume's root");

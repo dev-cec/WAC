@@ -55,6 +55,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include "carving.h"
 #include "raw_hive.h"
 #include "json.h"
 
@@ -213,6 +214,32 @@ struct IndexSlackEntry {
  *  @param directory the directory's record
  *  @return the entries, in the block's order (the same may come twice) */
 std::vector<IndexSlackEntry> indexSlackEntries(const uint8_t* block, size_t size, bool inUse, uint64_t directory);
+
+/*! LEVEL 3 — CARVING (carving.h). The free clusters level 1 did not give
+ *  as a file's content hold what is left of files whose record is gone, or
+ *  says nothing true any more: each is looked at
+ *  for the start of a PE, a ZIP or a PDF, cut at the end its structure
+ *  gives. A file is carved only if every cluster up to that end is free,
+ *  unclaimed and read so before and after — contiguous: a file NTFS
+ *  fragmented is not found, never cut wrong. */
+
+/*! A file found by carving. */
+struct CarvedFile {
+	uint64_t lcn = 0;                 //!< its first cluster
+	CarvedFormat format = CarvedFormat::None;
+	uint64_t size = 0;                //!< its exact size
+	std::vector<uint8_t> content;     //!< its bytes; empty when larger than the bound (not read)
+};
+
+/*! Walks the free clusters of a volume for files of the carved formats.
+ *  @param volume the clusters; its claimedSince, given, says which free
+ *         clusters level 1 already gave (left out)
+ *  @param maxFile the largest file read, in bytes: a PE beyond it is
+ *         reported with its size, not read; a ZIP or PDF whose end lies
+ *         beyond it is not found
+ *  @param found called with each file, in the order of the volume
+ *  @return the free clusters looked at */
+uint64_t carveClusters(const ClusterSource& volume, uint64_t maxFile, const std::function<void(const CarvedFile&)>& found);
 
 /*! A file name made safe for the exhibit store: the characters Windows
  *  refuses in a name replaced by "_", at most 120 characters. */
