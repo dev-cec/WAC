@@ -41,6 +41,7 @@
 #include "rdp_client.h"
 #include "thumbcache.h"
 #include "emails.h"
+#include "sysmon.h"
 #include "rdp_server.h"
 #include "setupapi_log.h"
 #include "recycle_bin.h"
@@ -1195,6 +1196,7 @@ void convertArtefacts(bool systemAvailable) {
 	convertArtefact<Thumbcaches>(conf.artefacts.thumbcache, "thumbcache.json", Text::ArtefactThumbcache,
 	                             L"artefacts.thumbcache", Text::StepThumbcache);
 	convertArtefact<Emails>(conf.artefacts.emails, "emails.json", Text::ArtefactEmails, L"artefacts.emails", Text::StepEmails);
+	convertArtefact<Sysmon>(conf.artefacts.sysmon, "sysmon.json", Text::ArtefactSysmon, L"artefacts.sysmon", Text::StepSysmon);
 
 	/* SYSTEM INFORMATION, offline.
 	   OUTSIDE the single-exit block above, and not inside it: even without a
@@ -1807,6 +1809,15 @@ int wmain(int argc, wchar_t* argv[])
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else printSuccess();
 
+	/* The CurrentControlSet, before the files are taken: the collection reads
+	   in it where the event logs are kept and where Sysmon keeps its archives
+	   (event_log_files.h, sysmon.h) — opened by the conversion only, it gave
+	   none of them. */
+	if (systemAvailable) {
+		const HRESULT hrControlSet = openCurrentControlSet();
+		if (hrControlSet != ERROR_SUCCESS)
+			log(2, L"🔥CurrentControlSet unavailable: moved event logs and Sysmon's archives not looked for", hrControlSet);
+	}
 	if (conf.mode != RunMode::Convert) extractProfileArtefacts();
 
 	if (conf.mode == RunMode::Collect) collectForConversion();

@@ -1,5 +1,6 @@
 #include "events.h"
 #include "evtx.h"
+#include "event_log_files.h"
 #include "evt.h"
 #include "event_messages.h"
 #include <filesystem>
@@ -253,14 +254,23 @@ struct LogFile {
 	bool classic = false;   //!< an .evt of Windows XP or Server 2003
 };
 
-/*! The logs of the working copy: the .evtx of winevt\\Logs, and the .evt of
- *  System32\\config before Vista — both read into the same XML. */
+/*! The logs of the working copy: the .evtx of winevt\\Logs, the .evt of
+ *  System32\\config before Vista — both read into the same XML —, and those
+ *  the examined registry keeps elsewhere, as the collection took them
+ *  (event_log_files.h; one not taken, an unreadable volume, is not there). */
 std::vector<LogFile> workingLogs() {
 	std::vector<LogFile> logs;
 	for (const std::filesystem::path& p : listFilesByExtension(extractedPath(L"\\Windows\\System32\\winevt\\Logs"), { L".evtx" }))
 		logs.push_back({ p, EvtxChannelFromFileName(p.filename().wstring()), false });
 	for (const std::filesystem::path& p : listFilesByExtension(extractedPath(L"\\Windows\\System32\\config"), { L".evt" }))
 		logs.push_back({ p, EvtChannelFromFile(conf.CurrentControlSet, p.filename().wstring()), true });
+	for (const MovedEventLog& moved : movedEventLogFiles()) {
+		const std::filesystem::path p = extractedPath(moved.file);
+		std::error_code ec;
+		if (!std::filesystem::is_regular_file(p, ec)) continue;
+		// Its format by its extension: XP's registry points at .evt files, Vista's and later at .evtx.
+		logs.push_back({ p, moved.channel, toLower(p.extension().wstring()) == L".evt" });
+	}
 	return logs;
 }
 

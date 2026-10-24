@@ -27,6 +27,8 @@
 #include "dpapi_master_keys.h"
 #include "web_client.h"
 #include "live_snapshot.h"
+#include "event_log_files.h"
+#include "sysmon.h"
 #include <algorithm>
 
 namespace {
@@ -416,6 +418,34 @@ HRESULT extractBrowserFiles() {
 	return result;
 }
 
+/*! Files taken one by one where the examined registry places them — the
+ *  event logs kept outside winevt\\Logs (event_log_files.h), Sysmon's
+ *  configuration file (sysmon.h): raw, one opening per volume, each exhibit
+ *  under its volume's own folder ("_volume_D\\…").
+ *  @param files absolute paths, with their letter
+ *  @param what what they are, for the investigation log
+ *  @param total incremented by the files taken
+ *  @return S_OK, S_FALSE if one could not be read */
+HRESULT extractFiles(const std::vector<std::wstring>& files, const std::wstring& what, size_t& total) {
+	std::map<std::wstring, std::vector<std::pair<std::wstring, std::wstring>>> byVolume;
+	for (const std::wstring& file : files)
+		byVolume[volumeOfPath(file)].emplace_back(pathRelativeToVolume(file), exhibitTarget(file));
+	HRESULT result = S_OK;
+	for (const auto& volume : byVolume) {
+		// ExtractFilesRaw writes into existing folders only, as for the hives.
+		for (const auto& item : volume.second) createFolders(parentFolder(item.second));
+		std::vector<RawHiveExtraction> reading;
+		const HRESULT hr = ExtractFilesRaw(volume.first, volume.second, nullptr, &reading);
+		ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volume.first
+		                        + L": — $MFT, directory indexes, $DATA attribute); no file opened by the system");
+		auditRecord(L"Raw extraction of " + what + L" (" + std::to_wstring(volume.second.size()) + L" file(s))",
+		            L"\\\\.\\" + volume.first + L":", hr, Footprint::VOLUME_BRUT);
+		if (hr != S_OK) result = S_FALSE;
+		else total += volume.second.size();
+	}
+	return result;
+}
+
 } // namespace
 
 HRESULT ExtractFileArtefactsRaw() {
@@ -662,6 +692,11 @@ HRESULT ExtractFileArtefactsRaw() {
 				                  here ? output : L"" });
 			}
 	}
+	/* Sysmon's archives: the files deleted under a FileDelete rule, kept by
+	   Sysmon under their fingerprint — taken whole, as Defender's quarantine. */
+	if (conf.artefacts.sysmon)
+		for (const SysmonInstallation& s : sysmonInstallations())
+			trees.push_back({ s.archiveFolder, {}, 2, L"Sysmon archives" });
 	for (const Tree& written : trees) {
 		Tree tree = written;
 		tree.absolute = examinedLayout(written.absolute);   // as for the targets above
@@ -719,6 +754,20 @@ HRESULT ExtractFileArtefactsRaw() {
 		log(1, L"➕Directory");
 		log(2, L"❇️" + target.path + L" : " + std::to_wstring(extractedFiles)
 		     + L" file(s) [" + diagnostic + L"]");
+	}
+	if (conf.artefacts.needsEventLogs()) {
+		std::vector<std::wstring> files;
+		for (const MovedEventLog& moved : movedEventLogFiles()) {
+			files.push_back(moved.file);
+			log(2, L"❇️Event log moved: " + moved.channel + L" → " + moved.file);
+		}
+		if (extractFiles(files, L"the event logs kept outside winevt\\Logs", total) != S_OK) global = S_FALSE;
+	}
+	if (conf.artefacts.sysmon) {
+		std::vector<std::wstring> files;
+		for (const SysmonInstallation& s : sysmonInstallations())
+			if (!s.configFile.empty()) files.push_back(s.configFile);
+		if (extractFiles(files, L"Sysmon's configuration file", total) != S_OK) global = S_FALSE;
 	}
 	/* RECYCLE BINS: the `$I` of every user folder, on every fixed NTFS volume
 	   (each has its own `\$Recycle.Bin`), and before Vista the INFO2 of

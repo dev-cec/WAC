@@ -98,6 +98,7 @@ std::vector<std::pair<std::string, bool*>> artefactSwitches(AppliConf& conf) {
 		{ "rdp_server", &a.rdpServer },
 		{ "thumbcache", &a.thumbcache },
 		{ "emails", &a.emails },
+		{ "sysmon", &a.sysmon },
 		{ "shadow_copies", &a.shadowCopies },
 		{ "deleted_files", &a.deletedFiles },
 	};

@@ -134,6 +134,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepRdpServer, L"Connexions Bureau à distance entrantes", L"Extracting INCOMING RDP CONNECTIONS" },
 	{ Text::StepThumbcache, L"Caches des miniatures et des icônes", L"Extracting THUMBNAIL AND ICON CACHES" },
 	{ Text::StepEmails, L"Courriels (PST, OST)", L"Extracting MAIL (PST, OST)" },
+	{ Text::StepSysmon, L"Sysmon : configuration et archives", L"Extracting SYSMON CONFIGURATION AND ARCHIVES" },
 	{ Text::StepShadowCopyListing, L"Clichés instantanés", L"Extracting SHADOW COPIES" },
 	{ Text::StepShadowCopyContent, L"Clichés instantanés : événements et entrées de registre disparus du volume", L"Shadow copies: events and registry entries the volume no longer holds" },
 
@@ -212,6 +213,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::ArtefactRdpServer, L"Connexions Bureau à distance entrantes", L"Incoming Remote Desktop connections" },
 	{ Text::ArtefactThumbcache, L"Caches des miniatures et des icônes", L"Thumbnail and icon caches" },
 	{ Text::ArtefactEmails, L"Courriels (PST, OST)", L"Mail (PST, OST)" },
+	{ Text::ArtefactSysmon, L"Sysmon : configuration et archives", L"Sysmon: configuration and archives" },
 	{ Text::ArtefactShadowCopies, L"Clichés instantanés", L"Shadow copies" },
 	{ Text::ArtefactOperatingSystem,   L"Système d'exploitation",                        L"Operating system" },
 	{ Text::ArtefactEvents,            L"Journaux d'événements",                         L"Event logs" },

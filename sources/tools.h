@@ -188,6 +188,7 @@ struct AppliConf {
 		bool rdpServer = true;  //!< incoming RDP connections, from the collected event logs
 		bool thumbcache = true; //!< Explorer's thumbnail and icon caches: what each user had on screen
 		bool emails = true;     //!< Outlook's PST and OST: messages, recipients, attachments
+		bool sysmon = true;     //!< Sysmon where it runs: its configuration and the files it archived (sysmon.h)
 		bool deletedFiles = true;   //!< deleted files recovered by raw reading; its options: deletedFilesSettings
 
 		/*! Whether an artefact asked for reads the users' hives (ntuser.dat,
