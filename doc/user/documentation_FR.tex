@@ -335,8 +335,10 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   bam:                     true   # dernière exécution de chaque programme par utilisateur (BAM)
   bits:                    true   # qmgr.db : travaux BITS, URL, destinations, commandes de notification
   boot_records:            true   # ce qui s'exécute avant Windows : premier Mio de chaque disque (MBR, GPT), secteurs de démarrage, fichiers de la partition EFI
+  cloud_identity:          true   # inscription Entra ID de la machine et comptes professionnels des utilisateurs ; caches de jetons copiés chiffrés
   defender:                true   # Defender : journaux (MPLog, traces WPP brutes), historique des détections, quarantaine (copiée chiffrée)
   defender_configuration:  true   # exclusions et réglages de protection de Microsoft Defender
+  defender_endpoint:       true   # dossier local de Defender for Endpoint, là où il est inscrit (sorties de Live Response, données cyber), copie brute seule
   deleted_files:                  # fichiers supprimés dont la lecture brute retrouve encore le contenu
     enabled:               true   # false : rien n'est lu
     level:                 2      # 1 : contenu des enregistrements supprimés de la $MFT ; 2 : et noms restés dans les index
@@ -355,6 +357,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   dpapi_master_keys:       true   # clés maîtresses DPAPI copiées chiffrées ; JSON : propriétaire, GUID, dates, jamais la clé
   emails:                  true   # Outlook (PST, OST) et Thunderbird (mbox) : messages, destinataires, dates ; corps et pièces jointes exportés
   error_reports:           true   # rapports d'erreurs (WER) : programmes plantés, avec leur chemin
+  etw_logs:                true   # fichiers de trace ETW que Windows garde sur son disque (.etl : sessions de démarrage, diagnostics, Windows Update), copie brute seule
   event_log_configuration: true   # état de chaque journal et session ETW de démarrage : actif, taille, rétention, accès (hors ligne)
   events:                  true   # journaux d'événements, avec leurs messages
   explorer_recent_docs:    true   # fichiers ouverts par chaque utilisateur (RecentDocs de l'Explorateur)
@@ -380,6 +383,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   network_shares:          true   # partages réseau de la machine, chemin et droits
   ntfs_volumes:            true   # $Boot et $UsnJrnl:$Max : numéro de série et géométrie, création du journal
   office_trust_records:    true   # documents Office approuvés, macros activées
+  onedrive:                true   # journaux (.odl) et réglages de OneDrive de chaque profil, base de synchronisation comprise, copie brute seule
   operating_system:        true   # version, installation, nom de la machine, durée de fonctionnement
   persistence:             true   # persistance du registre : IFEO, AppInit, Winlogon, LSA, COM…
   powershell_history:      true   # PSReadLine : les commandes tapées dans PowerShell
@@ -1256,6 +1260,22 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{Component}, \champ{Type}, \champ{Thread}, la date, écrite en
         heure locale, en UTC et en heure locale — exacte quand le journal
         écrit son décalage (\champ{BiasMinutes}).
+  \item[\fichier{cloud\_identity.json}] inscription de la machine à Entra ID
+        (\texttt{Control\textbackslash CloudDomainJoin} de SYSTEM :
+        \champ{TenantId}, \champ{UserEmail}, \champ{IdpDomain}, l'empreinte du
+        certificat de l'appareil en \champ{KeyName}, et les informations du
+        locataire, URL d'inscription MDM comprises) et comptes professionnels
+        ajoutés par chaque utilisateur (\texttt{WorkplaceJoin} de son
+        NTUSER.DAT) ; toutes les valeurs telles que stockées,
+        \champ{KeyLastWrite} datant l'inscription. Les caches de jetons des
+        comptes (\fichier{TokenBroker}, \fichier{Microsoft.AAD.BrokerPlugin})
+        sont prélevés bruts, chiffrés par DPAPI comme Windows les garde, et
+        jamais déchiffrés par \wac{}. Prélevés bruts aussi, sans conversion :
+        les fichiers de trace ETW que Windows écrit sur son disque
+        (\opt{etw\_logs}), les journaux et réglages de OneDrive
+        (\opt{onedrive}, sauf ceux de la synchronisation des listes
+        SharePoint) et le dossier local de Defender for Endpoint
+        (\opt{defender\_endpoint}, sans les binaires du capteur).
   \item[\fichier{firewall.json}] règles du pare-feu (nom, action, sens, ports,
         programme ; tous les champs dans \champ{Fields}) et réglages des profils
         domaine, privé et public. Sous Windows~XP SP2 et suivants et

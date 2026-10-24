@@ -49,6 +49,14 @@ PHRASES = [
     ("W3C text, local time; process since Windows 10", "texte W3C, heure locale ; processus depuis Windows 10"),
     ("W3C text, local time", "texte W3C, heure locale"),
     ("CMTrace text, local time", "texte CMTrace, heure locale"),
+    ("SYSTEM\\CurrentControlSet\\Control\\CloudDomainJoin, NTUSER.DAT\\…\\WorkplaceJoin; TokenBroker, AAD.BrokerPlugin of each profile",
+     "SYSTEM\\CurrentControlSet\\Control\\CloudDomainJoin, NTUSER.DAT\\…\\WorkplaceJoin ; TokenBroker, AAD.BrokerPlugin de chaque profil"),
+    ("registry keys; token caches copied encrypted", "clés du registre ; caches de jetons copiés chiffrés"),
+    ("Users\\<user>\\AppData\\Local\\Microsoft\\OneDrive\\logs and settings",
+     "Users\\<user>\\AppData\\Local\\Microsoft\\OneDrive\\logs et settings"),
+    ("ODL logs, sync database, raw copy", "journaux ODL, base de synchronisation, copie brute"),
+    ("ETL trace files, raw copy", "fichiers de trace ETL, copie brute"),
+    ("files, raw copy", "fichiers, copie brute"),
     ("Outlook PST and OST, Thunderbird mbox, in each profile", "PST et OST d'Outlook, mbox de Thunderbird, dans chaque profil"),
     ("TerminalServices-LocalSessionManager and RemoteConnectionManager logs",
      "journaux TerminalServices-LocalSessionManager et RemoteConnectionManager"),
@@ -146,6 +154,14 @@ NOTES = {
         "Absent de Windows : présent seulement là où Sysmon a été installé. Le format binaire de ses règles n'est pas documenté : donné tel que stocké, avec son empreinte.",
     "The EFI system partition exists only on a machine started by UEFI (Windows 8 and later, some 7 and Vista).":
         "La partition système EFI n'existe que sur une machine démarrée en UEFI (Windows 8 et suivants, certains 7 et Vista).",
+    "Present only on a machine joined to Entra ID or with a work account added.":
+        "Présent seulement sur une machine inscrite à Entra ID ou portant un compte professionnel.",
+    "Present only where Defender for Endpoint is onboarded; its formats are not documented: copied raw, not converted.":
+        "Présent seulement là où Defender for Endpoint est inscrit ; ses formats ne sont pas documentés : copié brut, non converti.",
+    "Copied raw: not converted (kernel events in MOF form, providers' manifests).":
+        "Copié brut : non converti (événements du noyau au format MOF, manifestes des fournisseurs).",
+    "Present only where OneDrive ran; SharePoint list sync's logs (ListSync) left out. Copied raw: not converted.":
+        "Présent seulement là où OneDrive a tourné ; journaux de la synchronisation des listes SharePoint (ListSync) écartés. Copié brut : non converti.",
     "Present only on a machine managed by Microsoft Intune, once the management extension was installed.":
         "Présent seulement sur une machine gérée par Microsoft Intune, une fois l'extension de gestion installée.",
     "Off by default: present only where the firewall's logging was switched on.":

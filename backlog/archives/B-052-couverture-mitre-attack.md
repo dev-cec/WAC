@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (avant de clore la 3.0) | P1 | fort |
+| fait (fd621278) | P1 | fort |
 
 ## Pourquoi
 Demande utilisateur du 2026-10-17 : avant de clore la 3.0, vérifier dans MITRE ATT&CK que toutes les traces utiles à la détection sont bien prélevées par WAC. ATT&CK décrit, technique par technique, les sources de données qui permettent de la détecter (Data Sources et Data Components : création de processus, modification de clé de registre, création de tâche planifiée, connexion d'ouverture de session…) ; c'est une liste indépendante de WAC, contre laquelle sa couverture se mesure sans se juger elle-même.
@@ -47,11 +47,11 @@ Hors de portée d'un prélèvement sur disque : contenu réseau et DNS en vol, j
 - [x] Rapprocher Data Components et artefacts de WAC (`doc/attack-coverage.py`)
 - [x] Prélèvement 1 : journal du pare-feu (clé `firewall_log`, `firewall_log.json`)
 - [x] Prélèvement 2 : secteurs et fichiers de démarrage (clé `boot_records`, `boot_records.json`)
-- [ ] Prélèvement 3 : fichiers ETW (étude)
+- [x] Prélèvement 3 : fichiers ETW (clé `etw_logs`, copie brute)
 - [x] Prélèvement 4 : journaux Intune (clé `intune_logs`, `intune_logs.json`)
-- [ ] Prélèvement 5 : traces locales des services en nuage (étude)
-- [ ] Prélèvement 6 : Defender for Endpoint (étude)
-- [ ] Besoins d'analyse (détection sur les JSON) consignés dans `WAE/TODO.txt`
+- [x] Prélèvement 5 : inscription Entra ID (clé `cloud_identity`, `cloud_identity.json`, caches de jetons bruts chiffrés) ; OneDrive (clé `onedrive`, copie brute)
+- [x] Prélèvement 6 : Defender for Endpoint (clé `defender_endpoint`, copie brute)
+- [x] Besoins d'analyse (détection sur les JSON) consignés dans `WAE/TODO.txt`
 - [x] Tableau de couverture dans les manuels FR et EN (section « Couverture de MITRE ATT&CK », produite par `doc/attack-coverage.py`) ; dans l'article : B-058
 
 ## Journal
@@ -60,3 +60,4 @@ Hors de portée d'un prélèvement sur disque : contenu réseau et DNS en vol, j
 - 2026-10-24 : ATT&CK 20.0 lu : depuis la 18, une technique est détectée par des stratégies faites d'analytiques, chacune nommant ses sources (composant de données, source de journal). `doc/attack-coverage.py` décide une fois chaque source de journal (un journal d'événements Windows est pris quel qu'en soit le canal, même déplacé) et chaque composant (artefacts qui en gardent la trace sur le disque) ; une source ou un composant non décidé arrête le script. 479 techniques et sous-techniques Windows : 475 avec au moins une trace prélevée, 4 dont toutes les sources sont hors du disque, 6 sans analytique Windows décidées d'après la technique. Écarts : journal du pare-feu, journaux Intune ; puis, à la demande de l'utilisateur, la liste des prélèvements à ajouter ci-dessus.
 - 2026-10-24 : tableau dans les manuels : décisions par source de journal et par composant, puis une ligne par technique (trace dans un journal, trace sur le disque, sources non prises) — la liste des artefacts par technique faisait 57 pages ; 15 pages ajoutées, 0 débordement.
 - 2026-10-24 : prélèvements 1, 2 et 4 écrits, sans test en VM (décision utilisateur) ; tests unitaires vus échouer par mutation : journal du pare-feu (en-tête `#Fields:`, « - » omis, date locale, date impossible donnée telle quelle), table de partitions (MBR, GPT derrière son MBR protecteur, partition EFI par son GUID de type, taille d'entrée et position des entrées forgées refusées, entrée coupée non lue), CMTrace (message sur plusieurs lignes, biais après l'heure, message coupé laissé). Défaut trouvé au passage : `artefact_catalogue_test` attendait 15 artefacts écartés sous XP, la clé `sysmon` (Windows 7 et suivants) en fait 16 — le test n'avait pas tourné au commit de B-053 (`build-windows.sh` sans `--test`). Tableau de couverture régénéré : plus aucune source « à ajouter ».
+- 2026-10-24 : études 3, 5 et 6, sur la VM Windows 11 : 75 Mo de `.etl` (`LogFiles\WMI`, `WDI`, `Windows\Logs`) — pris bruts, le décodage (événements noyau MOF, manifestes) n'en vaut pas la peine pour les fournisseurs que cite ATT&CK, lus en direct par les EDR ; OneDrive : 160 Mo de journaux par profil, dont 119 Mo de ListSync (synchronisation des listes SharePoint) écartés ; TokenBroker et AAD.BrokerPlugin : quelques fichiers chiffrés par DPAPI, pris tels quels comme les clés maîtresses ; Defender for Endpoint : dossier vide dans la VM non inscrite, structure connue (Cyber, DataCollection, Temp\PSScriptOutputs de Live Response, Downloads) — pris brut sans les binaires du capteur (Platform). Teams laissé : peu de valeur de détection. `readAllValues` rendue commune (registry_common). Besoins d'analyse consignés dans `WAE/TODO.txt` (non versionné). Fiche close ; le tableau dans l'article : B-058.

@@ -240,6 +240,9 @@ Secteurs de démarrage (\opt{boot\_records}) & Lus en brut par le
   partition, fichiers de la partition système EFI par le lecteur FAT de
   \wac{} — la partition n'est pas montée, aucune lettre ne lui est donnée.
   Le disque du support de collecte n'est pas lu. \\
+Caches de jetons Entra ID (\opt{cloud\_identity}) & Lus par la lecture directe
+  et prélevés tels quels, chiffrés par DPAPI : \wac{} ne les déchiffre pas et
+  ne s'en sert pas ; aucun service en nuage n'est contacté. \\
 Binaires (\opt{binary}) & Lus par la lecture directe ; signatures et
   catalogues vérifiés en mémoire. Aucun magasin de certificats ouvert, aucune
   vérification de révocation en ligne. \\

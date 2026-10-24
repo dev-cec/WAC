@@ -330,8 +330,10 @@ artefacts:              # one key per artefact; a missing key is true
   bam:                     true   # last execution of each program per user (Background Activity Moderator)
   bits:                    true   # qmgr.db: BITS jobs — URLs, destinations, notification command lines
   boot_records:            true   # what runs before Windows: each disk's first MiB (MBR, GPT), each partition's boot sectors, the EFI system partition's files
+  cloud_identity:          true   # Entra ID join of the machine and work accounts of its users; token caches copied still encrypted
   defender:                true   # Microsoft Defender: support logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
   defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
+  defender_endpoint:       true   # Defender for Endpoint's local folder, where it is onboarded (Live Response outputs, cyber data), raw copy only
   deleted_files:                  # deleted files whose content the raw reading still finds
     enabled:               true   # false: nothing read
     level:                 2      # 1: the content of the $MFT's deleted records; 2: and the names left in the indexes
@@ -350,6 +352,7 @@ artefacts:              # one key per artefact; a missing key is true
   dpapi_master_keys:       true   # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
   emails:                  true   # Outlook (PST, OST) and Thunderbird (mbox): messages, recipients, times; bodies and attachments exported
   error_reports:           true   # Windows Error Reporting: programs that crashed, with their path
+  etw_logs:                true   # ETW trace files Windows keeps on its disk (.etl: boot sessions, diagnostics, Windows Update), raw copy only
   event_log_configuration: true   # each event log and boot ETW session: enabled, size, retention, access (a disabled one is a trace)
   events:                  true   # the event logs, with their messages
   explorer_recent_docs:    true   # files each user opened, by extension, most recent first (Explorer's RecentDocs)
@@ -375,6 +378,7 @@ artefacts:              # one key per artefact; a missing key is true
   network_shares:          true   # folders the machine shares, with their path and permissions (LanmanServer)
   ntfs_volumes:            true   # $Boot and $UsnJrnl:$Max: volume serial and geometry, creation of the change journal
   office_trust_records:    true   # Office trusted documents: macros enabled by the user, and when
+  onedrive:                true   # OneDrive's logs (.odl) and settings of each profile, its sync database included, raw copy only
   operating_system:        true   # version, installation, computer name, uptime
   persistence:             true   # registry persistence beyond Run: IFEO, AppInit_DLLs, Winlogon, LSA packages, COM hijacking…
   powershell_history:      true   # PSReadLine: the commands typed in PowerShell, per profile
@@ -1225,6 +1229,20 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \champ{Type}, \champ{Thread}, the date, written in local time, in UTC
         and in local time — exact when the log writes its offset
         (\champ{BiasMinutes}).
+  \item[\fichier{cloud\_identity.json}] the machine's join to Entra ID
+        (SYSTEM's \texttt{Control\textbackslash CloudDomainJoin}:
+        \champ{TenantId}, \champ{UserEmail}, \champ{IdpDomain}, the device
+        certificate's thumbprint as \champ{KeyName}, and the tenant's
+        information, MDM enrolment URLs included) and the work accounts each
+        user added (\texttt{WorkplaceJoin} of their NTUSER.DAT); every value
+        as stored, \champ{KeyLastWrite} dating the registration. The
+        accounts' token caches (\fichier{TokenBroker},
+        \fichier{Microsoft.AAD.BrokerPlugin}) are collected raw, encrypted by
+        DPAPI as Windows keeps them, never decrypted by \wac{}. Also collected
+        raw, not converted: the ETW trace files Windows writes to its disk
+        (\opt{etw\_logs}), OneDrive's logs and settings (\opt{onedrive},
+        SharePoint list sync's excepted) and Defender for Endpoint's local
+        folder (\opt{defender\_endpoint}, without the sensor's binaries).
   \item[\fichier{firewall.json}] firewall rules (name, action, direction, ports,
         program; every field in \champ{Fields}) and the domain, private and
         public profile settings. On Windows~XP SP2 and later and Server~2003

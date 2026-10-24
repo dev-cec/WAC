@@ -23,11 +23,17 @@
 \texttt{boot\_records} & Windows XP & \texttt{each physical disk: its first mebibyte, each partition's first 16 sectors; the EFI system partition's files} & MBR, GPT, boot sectors; FAT & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape The EFI system partition exists only on a machine started by UEFI (Windows 8 and later, some 7 and Vista).} \\
 \addlinespace
+\texttt{cloud\_identity} & Windows 10 & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Control\textbackslash{}CloudDomainJoin, NTUSER.DAT\textbackslash{}…\textbackslash{}WorkplaceJoin; TokenBroker, AAD.BrokerPlugin of each profile} & registry keys; token caches copied encrypted & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only on a machine joined to Entra ID or with a work account added.} \\
+\addlinespace
 \texttt{defender} & Windows 8 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Support\textbackslash{}MPLog-*.log} & UTF-16 text & yes \\
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Scans\textbackslash{}History\textbackslash{}Service\textbackslash{}DetectionHistory} & DetectionHistory records & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Server 2012 and 2012 R2 have no built-in Defender; quarantine copied encrypted on every version.} \\
 \addlinespace
 \texttt{defender\_configuration} & Windows Vista & \texttt{SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows Defender, SOFTWARE\textbackslash{}Policies\textbackslash{}Microsoft\textbackslash{}Windows Defender} & registry values & yes \\
+\addlinespace
+\texttt{defender\_endpoint} & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender Advanced Threat Protection} & files, raw copy & no \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only where Defender for Endpoint is onboarded; its formats are not documented: copied raw, not converted.} \\
 \addlinespace
 \texttt{deleted\_files} & Windows XP & \texttt{\$MFT, \$Bitmap, \$I30, free clusters; FAT and exFAT volumes} & NTFS 3.1 file records, data runs, index blocks; FAT directory entries; PE, ZIP, PDF carved & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape What a deleted file still holds depends on the disk: a solid-state drive that received TRIM returns zeros for the freed clusters, declared as such, never as the content.} \\
@@ -43,6 +49,9 @@
 \addlinespace
 \texttt{error\_reports} & Windows Vista & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}WER, Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}WER} & Report.wer, UTF-16 text & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP: Dr Watson (drwtsn32.log, user.dmp), not collected.} \\
+\addlinespace
+\texttt{etw\_logs} & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}LogFiles\textbackslash{}WMI, Windows\textbackslash{}System32\textbackslash{}WDI, Windows\textbackslash{}Logs, ProgramData\textbackslash{}Microsoft\textbackslash{}Diagnosis\textbackslash{}ETLLogs} & ETL trace files, raw copy & no \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Copied raw: not converted (kernel events in MOF form, providers' manifests).} \\
 \addlinespace
 \texttt{event\_log\_configuration} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}EventLog} & registry keys & yes \\
  & Windows Vista & \texttt{…and SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}CurrentVersion\textbackslash{}WINEVT\textbackslash{}Channels, Control\textbackslash{}WMI\textbackslash{}Autologger} & registry keys & yes \\
@@ -117,6 +126,9 @@
 \addlinespace
 \texttt{office\_trust\_records} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Office\textbackslash{}\textless{}version\textgreater{}\textbackslash{}\textless{}program\textgreater{}\textbackslash{}Security\textbackslash{}Trusted Documents\textbackslash{}TrustRecords} & registry values & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Depends on Office (2010 and later), not on Windows.} \\
+\addlinespace
+\texttt{onedrive} & Windows 7 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}OneDrive\textbackslash{}logs and settings} & ODL logs, sync database, raw copy & no \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only where OneDrive ran; SharePoint list sync's logs (ListSync) left out. Copied raw: not converted.} \\
 \addlinespace
 \texttt{operating\_system} & Windows XP & \texttt{SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows NT\textbackslash{}CurrentVersion, SYSTEM\textbackslash{}…\textbackslash{}Control} & registry values & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape always there from Windows XP} \\

@@ -233,6 +233,9 @@ Boot records (\opt{boot\_records}) & Read raw through the device of each
   mebibyte, each partition's first sectors, the EFI system partition's files
   through \wac{}'s FAT reader — the partition is not mounted, no letter is
   given to it. The collection medium's disk is not read. \\
+Entra ID token caches (\opt{cloud\_identity}) & Read by the raw reading and
+  collected as they are, encrypted by DPAPI: \wac{} neither decrypts nor uses
+  them; no cloud service is contacted. \\
 Binaries (\opt{binary}) & Read by the raw reading; signatures and catalogues
   verified in memory. No certificate store opened, no online revocation
   check. \\

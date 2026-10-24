@@ -23,11 +23,17 @@
 \texttt{boot\_records} & Windows XP & \texttt{chaque disque physique : son premier mébioctet, les 16 premiers secteurs de chaque partition ; les fichiers de la partition système EFI} & MBR, GPT, secteurs de démarrage ; FAT & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape La partition système EFI n'existe que sur une machine démarrée en UEFI (Windows 8 et suivants, certains 7 et Vista).} \\
 \addlinespace
+\texttt{cloud\_identity} & Windows 10 & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Control\textbackslash{}CloudDomainJoin, NTUSER.DAT\textbackslash{}…\textbackslash{}WorkplaceJoin ; TokenBroker, AAD.BrokerPlugin de chaque profil} & clés du registre ; caches de jetons copiés chiffrés & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement sur une machine inscrite à Entra ID ou portant un compte professionnel.} \\
+\addlinespace
 \texttt{defender} & Windows 8 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Support\textbackslash{}MPLog-*.log} & texte UTF-16 & oui \\
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender\textbackslash{}Scans\textbackslash{}History\textbackslash{}Service\textbackslash{}DetectionHistory} & enregistrements DetectionHistory & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Server 2012 et 2012 R2 n'ont pas de Defender intégré ; la quarantaine est copiée chiffrée sur toutes les versions.} \\
 \addlinespace
 \texttt{defender\_configuration} & Windows Vista & \texttt{SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows Defender, SOFTWARE\textbackslash{}Policies\textbackslash{}Microsoft\textbackslash{}Windows Defender} & valeurs de registre & oui \\
+\addlinespace
+\texttt{defender\_endpoint} & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows Defender Advanced Threat Protection} & fichiers, copie brute & non \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement là où Defender for Endpoint est inscrit ; ses formats ne sont pas documentés : copié brut, non converti.} \\
 \addlinespace
 \texttt{deleted\_files} & Windows XP & \texttt{\$MFT, \$Bitmap, \$I30, clusters libres ; volumes FAT et exFAT} & enregistrements de fichier NTFS 3.1, data runs, index blocks; entrées de répertoire FAT; PE, ZIP, PDF carved & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Ce qu'un fichier supprimé garde dépend du disque : un SSD qui a reçu TRIM rend des zéros pour les clusters libérés, déclarés comme tels, jamais comme le contenu.} \\
@@ -43,6 +49,9 @@
 \addlinespace
 \texttt{error\_reports} & Windows Vista & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}WER, Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}WER} & Report.wer, texte UTF-16 & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP : Dr Watson (drwtsn32.log, user.dmp), non collecté.} \\
+\addlinespace
+\texttt{etw\_logs} & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}LogFiles\textbackslash{}WMI, Windows\textbackslash{}System32\textbackslash{}WDI, Windows\textbackslash{}Logs, ProgramData\textbackslash{}Microsoft\textbackslash{}Diagnosis\textbackslash{}ETLLogs} & fichiers de trace ETL, copie brute & non \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Copié brut : non converti (événements du noyau au format MOF, manifestes des fournisseurs).} \\
 \addlinespace
 \texttt{event\_log\_configuration} & Windows XP & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}EventLog} & clés de registre & oui \\
  & Windows Vista & \texttt{…et SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}CurrentVersion\textbackslash{}WINEVT\textbackslash{}Channels, Control\textbackslash{}WMI\textbackslash{}Autologger} & clés de registre & oui \\
@@ -117,6 +126,9 @@
 \addlinespace
 \texttt{office\_trust\_records} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Office\textbackslash{}\textless{}version\textgreater{}\textbackslash{}\textless{}program\textgreater{}\textbackslash{}Security\textbackslash{}Trusted Documents\textbackslash{}TrustRecords} & valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Dépend d'Office (2010 et suivants), non de Windows.} \\
+\addlinespace
+\texttt{onedrive} & Windows 7 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Local\textbackslash{}Microsoft\textbackslash{}OneDrive\textbackslash{}logs et settings} & journaux ODL, base de synchronisation, copie brute & non \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement là où OneDrive a tourné ; journaux de la synchronisation des listes SharePoint (ListSync) écartés. Copié brut : non converti.} \\
 \addlinespace
 \texttt{operating\_system} & Windows XP & \texttt{SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows NT\textbackslash{}CurrentVersion, SYSTEM\textbackslash{}…\textbackslash{}Control} & valeurs de registre & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape toujours présent depuis Windows XP} \\
