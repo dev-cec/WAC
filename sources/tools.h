@@ -166,11 +166,14 @@ struct AppliConf {
 		bool typedPaths = true;          //!< paths typed in Explorer's address bar
 		bool wordWheelQuery = true;          //!< terms searched in Explorer
 		bool rootCertificates = true;          //!< root certificates of the machine and of each user
+		bool intuneLogs = true;        //!< the Intune Management Extension's logs: scripts and applications the tenant pushed (intune_logs.h)
 		bool internetSettings = true;          //!< each user's proxy and automatic configuration script
 		bool firewall = true;          //!< firewall rules and profiles
+		bool firewallLog = true;       //!< the firewall's log, pfirewall.log: connections allowed or dropped (firewall_log.h)
 		bool wmi = true;               //!< WMI repository: event subscriptions (filters, consumers, bindings), read offline
 		bool srum = true;              //!< SRUDB.dat: network and resource usage per application and user, 30 to 60 days
 		bool bits = true;              //!< qmgr.db: BITS jobs, their files and notification command lines
+		bool bootRecords = true;       //!< what runs before Windows: disks' first mebibyte, partitions' boot sectors, EFI system partition (boot_records.h)
 		bool fatVolumes = true;        //!< FAT and exFAT volumes (a suspect's keys included): entries, deleted ones too
 		bool installedPrograms = true;  //!< installed programs: Uninstall keys of the machine and of each user
 		bool defenderConfiguration = true;  //!< Defender configuration: exclusions and protection settings (registry)

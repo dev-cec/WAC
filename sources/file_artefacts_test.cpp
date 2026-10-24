@@ -26,6 +26,9 @@
  */
 #include "powershell_history.h"
 #include "setupapi_log.h"
+#include "firewall_log.h"
+#include "boot_records.h"
+#include "intune_logs.h"
 #include "recycle_bin.h"
 #include "hosts_file.h"
 #include "reg_shimcache.h"
@@ -101,6 +104,102 @@ void powershell() {
 	check(c.size() == 3 && c[2].command == L"Invoke-WebRequest http://x/a.ps1`" && c[2].number == 3,
 	      "powershell: a last command left open is still a command");
 	check(parsePowerShellHistory(L"").empty(), "powershell: an empty file has no command");
+}
+
+void firewallLog() {
+	/* The header Windows 11 writes (pid added since Windows 10), a dropped
+	   inbound connection and an allowed outbound one; a line before the
+	   header, and a field without value. */
+	const std::vector<FirewallLogEntry> e = parseFirewallLog(
+		L"stray line\r\n"
+		L"#Version: 1.5\r\n#Software: Microsoft Windows Firewall\r\n#Time Format: Local\r\n"
+		L"#Fields: date time action protocol src-ip dst-ip src-port dst-port size tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path pid\r\n"
+		L"\r\n"
+		L"2026-10-24 15:01:02 DROP TCP 192.168.1.20 192.168.1.10 51234 445 52 S 1234567 0 64240 - - - RECEIVE 4\r\n"
+		L"2026-10-24 15:01:03 ALLOW UDP 192.168.1.10 8.8.8.8 60000 53 0 - - - - - - - SEND 1312\r\n"
+		L"2026-02-31 00:00:00 ALLOW TCP 10.0.0.1 10.0.0.2 1 2 0 - - - - - - - SEND 1\r\n",
+		L"C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.log");
+	check(e.size() == 3, "firewall log: 3 lines after the header, the line before it skipped");
+	if (e.size() != 3) return;
+	auto field = [](const FirewallLogEntry& x, const wchar_t* key) {
+		for (const auto& [k, v] : x.fields) if (k == key) return v;
+		return std::wstring();
+	};
+	FILETIME expected;
+	check(iso8601UtcToFiletime(L"2026-10-24T15:01:02Z", expected) && value(e[0].timeLocal) == value(expected),
+	      "firewall log: local date and time read");
+	check(e[0].line == 7 && e[1].line == 8, "firewall log: lines counted from 1, the empty one included");
+	check(field(e[0], L"Action") == L"DROP" && field(e[0], L"SourceAddress") == L"192.168.1.20"
+	      && field(e[0], L"DestinationPort") == L"445" && field(e[0], L"Direction") == L"RECEIVE" && field(e[0], L"ProcessId") == L"4",
+	      "firewall log: the fields named by #Fields:");
+	check(field(e[1], L"TcpFlags").empty() && e[1].fields.size() == 9, "firewall log: a \"-\" left out");
+	check(value(e[2].timeLocal) == 0 && e[2].timeAsStored == L"2026-02-31 00:00:00", "firewall log: an impossible date given as stored");
+	check(parseFirewallLog(L"2026-10-24 15:01:02 DROP TCP\r\n", L"x").empty(), "firewall log: no line without a #Fields: header");
+}
+
+void partitionTables() {
+	auto put32 = [](std::vector<uint8_t>& b, size_t at, uint32_t v) { for (int i = 0; i < 4; ++i) b[at + i] = (uint8_t)(v >> (8 * i)); };
+	auto put64 = [](std::vector<uint8_t>& b, size_t at, uint64_t v) { for (int i = 0; i < 8; ++i) b[at + i] = (uint8_t)(v >> (8 * i)); };
+	// An MBR as Windows 7 writes it: a 100 MB active NTFS partition, then the system.
+	std::vector<uint8_t> mbr(512);
+	mbr[510] = 0x55; mbr[511] = 0xAA;
+	put32(mbr, 440, 0x1A2B3C4D);
+	mbr[446] = 0x80; mbr[446 + 4] = 0x07; put32(mbr, 446 + 8, 2048); put32(mbr, 446 + 12, 204800);
+	mbr[462 + 4] = 0x07; put32(mbr, 462 + 8, 206848); put32(mbr, 462 + 12, 1000000);
+	PartitionTable t = parsePartitionTable(mbr.data(), mbr.size());
+	check(t.style == L"MBR" && t.diskId == L"1A2B3C4D" && t.sectorSize == 0 && t.partitions.size() == 2,
+	      "partition table: an MBR, its signature, its two primary partitions");
+	check(t.partitions.size() == 2 && t.partitions[0].active && !t.partitions[1].active && t.partitions[0].type == L"0x07"
+	      && t.partitions[1].firstSector == 206848 && t.partitions[1].sectors == 1000000 && t.partitions[1].index == 2,
+	      "partition table: an MBR entry's type, boot flag, first sector and length");
+	// A GPT at 512 bytes per sector: an EFI system partition and a basic data one, 128 entries of 128 bytes.
+	std::vector<uint8_t> gpt(34 * 512);
+	gpt[510] = 0x55; gpt[511] = 0xAA; gpt[446 + 4] = 0xEE;
+	memcpy(gpt.data() + 512, "EFI PART", 8);
+	for (int i = 0; i < 16; ++i) gpt[512 + 56 + i] = (uint8_t)(0x10 + i);
+	put64(gpt, 512 + 72, 2); put32(gpt, 512 + 80, 128); put32(gpt, 512 + 84, 128);
+	const uint8_t esp[16] = { 0x28, 0x73, 0x2A, 0xC1, 0x1F, 0xF8, 0xD2, 0x11, 0xBA, 0x4B, 0x00, 0xA0, 0xC9, 0x3E, 0xC9, 0x3B };
+	memcpy(gpt.data() + 1024, esp, 16); gpt[1024 + 16] = 1;
+	put64(gpt, 1024 + 32, 2048); put64(gpt, 1024 + 40, 206847);
+	const std::wstring name = L"EFI system partition";
+	for (size_t i = 0; i < name.size(); ++i) gpt[1024 + 56 + 2 * i] = (uint8_t)name[i];
+	gpt[1152] = 0xA2; gpt[1152 + 16] = 2;
+	put64(gpt, 1152 + 32, 239616); put64(gpt, 1152 + 40, 239615 + 5000000);
+	t = parsePartitionTable(gpt.data(), gpt.size());
+	check(t.style == L"GPT" && t.sectorSize == 512 && t.diskId == L"{13121110-1514-1716-1819-1A1B1C1D1E1F}" && t.partitions.size() == 2,
+	      "partition table: a GPT behind its protective MBR, its disk GUID, its used entries only");
+	check(t.partitions.size() == 2 && t.partitions[0].efiSystem && t.partitions[0].name == name && t.partitions[0].sectors == 204800
+	      && !t.partitions[1].efiSystem && t.partitions[1].index == 2 && t.partitions[1].firstSector == 239616,
+	      "partition table: the EFI system partition told by its type GUID, its name and length");
+	std::vector<uint8_t> forged = gpt;
+	put32(forged, 512 + 84, 64);
+	check(parsePartitionTable(forged.data(), forged.size()).partitions.empty(), "partition table: an entry size under 128 refused");
+	forged = gpt;
+	put64(forged, 512 + 72, 1000000);
+	check(parsePartitionTable(forged.data(), forged.size()).partitions.empty(), "partition table: entries said past the bytes refused");
+	check(parsePartitionTable(gpt.data(), 1100).partitions.empty() && parsePartitionTable(gpt.data(), 300).style.empty(),
+	      "partition table: an entry cut by the end of the bytes not read; fewer than a sector, no table");
+}
+
+void cmTraceLog() {
+	/* Two messages as the Intune Management Extension writes them, the first
+	   on two lines; one with a bias after its time; one cut short. */
+	const std::vector<IntuneLogEntry> e = parseCmTraceLog(
+		L"<![LOG[[Win32App] Downloading app\r\nsecond line]LOG]!><time=\"15:01:02.1234567\" date=\"10-24-2026\" "
+		L"component=\"IntuneManagementExtension\" context=\"\" type=\"1\" thread=\"12\" file=\"\">\r\n"
+		L"<![LOG[Script ran]LOG]!><time=\"09:00:00.000+300\" date=\"1-2-2026\" component=\"AgentExecutor\" context=\"\" type=\"3\" thread=\"7\" file=\"x.cs\">\r\n"
+		L"<![LOG[cut short", L"C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs\\IntuneManagementExtension.log");
+	check(e.size() == 2, "CMTrace: two whole messages, the one cut short left out");
+	if (e.size() != 2) return;
+	FILETIME expected;
+	check(e[0].message == L"[Win32App] Downloading app\r\nsecond line" && e[0].component == L"IntuneManagementExtension"
+	      && e[0].thread == L"12" && e[0].type == L"1" && e[0].context.empty() && e[0].line == 1,
+	      "CMTrace: a message on two lines, its attributes, its first line");
+	check(iso8601UtcToFiletime(L"2026-10-24T15:01:02.1234567Z", expected) && value(e[0].timeLocal) == value(expected) && !e[0].hasBias,
+	      "CMTrace: the local date read, month first, to the 100 ns");
+	check(e[1].line == 3 && e[1].hasBias && e[1].biasMinutes == 300 && e[1].sourceFile == L"x.cs"
+	      && iso8601UtcToFiletime(L"2026-01-02T09:00:00.000Z", expected) && value(e[1].timeLocal) == value(expected),
+	      "CMTrace: a bias after the time read apart, a one-digit month and day");
 }
 
 void setupapi() {
@@ -2069,6 +2168,9 @@ int wmain(int argc, wchar_t** argv) {
 	destListVersion();
 	powershell();
 	setupapi();
+	firewallLog();
+	partitionTables();
+	cmTraceLog();
 	recycleBin();
 	hosts();
 	errorReport();

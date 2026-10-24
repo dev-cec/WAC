@@ -42,6 +42,8 @@
 #include "thumbcache.h"
 #include "emails.h"
 #include "sysmon.h"
+#include "firewall_log.h"
+#include "intune_logs.h"
 #include "rdp_server.h"
 #include "setupapi_log.h"
 #include "recycle_bin.h"
@@ -52,6 +54,7 @@
 #include "srum.h"
 #include "bits_jobs.h"
 #include "fat_volumes.h"
+#include "boot_records.h"
 #include "shadow_copy_listing.h"
 #include "defender_log.h"
 #include "startup_folders.h"
@@ -559,6 +562,13 @@ void extractProfileArtefacts() {
 		printStep(Text::StepNtfsMetadata);
 		log(3, L"🔈ExtractNtfsMetadataRaw");
 		hresult = ExtractNtfsMetadataRaw();   // S_FALSE = one could not be read (tolerated)
+		if (FAILED(hresult)) printError(hresult);
+		else printSuccess();
+	}
+	// What runs before Windows: the disks' first sectors and the EFI system partition, read raw.
+	if (conf.artefacts.bootRecords) {
+		printStep(Text::StepBootRecords);
+		hresult = ExtractBootRecordsRaw();    // S_FALSE = a disk or a part could not be read (tolerated)
 		if (FAILED(hresult)) printError(hresult);
 		else printSuccess();
 	}
@@ -1153,6 +1163,10 @@ void convertArtefacts(bool systemAvailable) {
 	                     L"artefacts.internet_settings", Text::StepInternetSettingsSet);
 	convertArtefact<Firewall>(conf.artefacts.firewall, "firewall.json", Text::ArtefactFirewall,
 	                     L"artefacts.firewall", Text::StepFirewall);
+	convertArtefact<FirewallLog>(conf.artefacts.firewallLog, "firewall_log.json", Text::ArtefactFirewallLog,
+	                     L"artefacts.firewall_log", Text::StepFirewallLog);
+	convertArtefact<IntuneLogs>(conf.artefacts.intuneLogs, "intune_logs.json", Text::ArtefactIntuneLogs,
+	                     L"artefacts.intune_logs", Text::StepIntuneLogs);
 
 	convertArtefact<InstalledPrograms>(conf.artefacts.installedPrograms, "installed_programs.json", Text::ArtefactInstalledPrograms,
 	                     L"artefacts.installed_programs", Text::StepInstalledPrograms);
@@ -1382,6 +1396,8 @@ void convertArtefacts(bool systemAvailable) {
 	                                L"artefacts.wmi", Text::StepWmiPersistence);
 	convertArtefact<Srum>(conf.artefacts.srum, "srum.json", Text::ArtefactSrum, L"artefacts.srum", Text::StepSrum);
 	convertArtefact<BitsJobs>(conf.artefacts.bits, "bits_jobs.json", Text::ArtefactBitsJobs, L"artefacts.bits", Text::StepBitsJobs);
+	convertArtefact<BootRecords>(conf.artefacts.bootRecords, "boot_records.json", Text::ArtefactBootRecords,
+	                             L"artefacts.boot_records", Text::StepBootRecords);
 	convertArtefact<FatVolumes>(conf.artefacts.fatVolumes, "fat_volumes.json", Text::ArtefactFatVolumes,
 	                            L"artefacts.fat_volumes", Text::StepFatVolumes);
 	convertArtefact<ShadowCopyListing>(conf.artefacts.shadowCopies, "shadow_copies.json", Text::ArtefactShadowCopies,

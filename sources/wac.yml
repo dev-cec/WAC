@@ -33,6 +33,7 @@ artefacts:
   amcache:                 true   # Amcache.hve: applications, executables and drivers seen
   bam:                     true   # last execution of each program per user (Background Activity Moderator)
   bits:                    true   # qmgr.db: BITS jobs — URLs, destinations, notification command lines
+  boot_records:            true   # what runs before Windows: each disk's first MiB (MBR, GPT), each partition's boot sectors, the EFI system partition's files
   defender:                true   # Microsoft Defender: support logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
   defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
   deleted_files:                  # deleted files whose content the raw reading still finds: copied, with fingerprints (deleted_files.json)
@@ -58,9 +59,11 @@ artefacts:
   explorer_recent_docs:    true   # files each user opened, by extension, most recent first (Explorer's RecentDocs)
   fat_volumes:             true   # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
   firewall:                true   # firewall rules and profiles
+  firewall_log:            true   # the firewall's log (pfirewall.log), when logging is on: connections allowed or dropped, addresses, ports, process
   hosts:                   true   # the hosts file: names diverted to an address
   installed_programs:      true   # installed programs (Uninstall) of the machine and of each user
   internet_settings:       true   # each user's proxy and automatic configuration script
+  intune_logs:             true   # Intune Management Extension's logs: scripts and applications the tenant pushed and ran, their outcome
   jump_lists:              true   # jump lists: files and places each user opened, per application
   known_networks:          true   # networks the machine joined: name, kind, gateway, first and last connection (NetworkList)
   local_groups:            true   # members of each local group (SAM)

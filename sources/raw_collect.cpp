@@ -29,6 +29,8 @@
 #include "live_snapshot.h"
 #include "event_log_files.h"
 #include "sysmon.h"
+#include "firewall_log.h"
+#include "intune_logs.h"
 #include <algorithm>
 
 namespace {
@@ -501,6 +503,15 @@ HRESULT ExtractFileArtefactsRaw() {
 		const std::wstring location = setupApi ? formOf(*setupApi, conf.examinedVersion).location : L"Windows\\INF\\setupapi.dev.log";
 		addTarget(L"\\" + location.substr(0, location.rfind(L'\\')), { L".log" });
 	}
+	/* The firewall's logs, each with its rotation, where the examined
+	   registry puts them: their folder, filtered by their two names. */
+	if (conf.artefacts.firewallLog)
+		for (const std::wstring& file : firewallLogFiles()) {
+			const std::wstring name = file.substr(file.rfind(L'\\') + 1);
+			addTarget(file.substr(0, file.rfind(L'\\')), { name, name + L".old" });
+		}
+	// The Intune Management Extension's logs, where it is installed.
+	if (conf.artefacts.intuneLogs) addTarget(INTUNE_LOGS_FOLDER, { L".log" });
 	// hosts has no extension: the whole folder, a handful of small files.
 	if (conf.artefacts.hosts) addTarget(L"\\Windows\\System32\\drivers\\etc", {});
 	/* RegBack: the copies Windows made of the hives (task RegIdleBackup) —
