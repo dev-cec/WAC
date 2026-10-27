@@ -50,7 +50,7 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
 
 ## Tâches
 - [x] Découper le dépôt en lots de revue (ci-dessus)
-- [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 et 2 : faits, en attente de compilation)
+- [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 et 2 : faits — 1315c4da, 49d34970 ; lot 3 à relancer)
 - [ ] `/security-review` sur le code livré ; constats triés et traités
 - [x] `/code-review ultra` : écarté par l'utilisateur (2026-10-27) — la revue se fait lot par lot avec `/code-review`
 - [ ] Cycles VM verts après corrections
@@ -75,3 +75,4 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
   - (10) cible d'un `.url` prise à la deuxième ligne (« 3=19,11 » pour ceux d'Internet Explorer) → `internetShortcutUrl`, la ligne `URL=` de la section `[InternetShortcut]`.
   - tests : `shell_items_test` (vecteur de chaînes forgé), `file_artefacts_test` (`.url`) ; (5) ne déborde qu'en 32 bits, les tests tournent en 64 : la borne est vérifiée par lecture ; (2)/(8) et (7) touchent le lecteur de ruches vivant : vérifiés par les cycles VM.
 - 2026-10-27 : décision utilisateur — pas de `/code-review ultra`. Lot 3 (compression, conteneurs, binaires) lancé puis arrêté à la demande de l'utilisateur, avant tout constat : à relancer. Correctifs des lots 1 et 2 écrits, ni compilés ni testés, non commités : prochaine étape `./build-windows.sh --test`, puis les tests (`ntfs_runs_test`, `fat_test`, `shell_items_test`, `file_artefacts_test`) et un cycle Windows 11.
+- 2026-10-27 : lots 1 et 2 compilés (`--test`, sans avertissement) et testés : ntfs_runs_test 100 023, fat_test 7, shell_items_test 685, file_artefacts_test 254 contrôles, et les tests des fichiers supprimés, du carving, des clichés, de la $MFT, du journal USN et du rejeu des ruches sans échec ; chaque nouveau test vu échouer par mutation. Au passage : le vecteur de chaînes (MS-OLEPS) lisait le nombre d'éléments comme première longueur et ignorait le bourrage — corrigé avec le reste ; `parseNtfsBootSector` sorti de ntfs_volumes dans ntfs_boot_sector (portable, lié à raw_hive_test) ; `fits` dans portable_conversions.h. Commits 1315c4da (lot 1), 49d34970 (lot 2). Cycles VM à suivre.
