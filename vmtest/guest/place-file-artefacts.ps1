@@ -519,8 +519,13 @@ try { if (Wants 'bits') {
         Restart-Service BITS -Force -WarningAction SilentlyContinue
         $job = Get-BitsTransfer -AllUsers | Where-Object { $_.DisplayName -eq 'WacTestJob' } | Select-Object -First 1
     }
+    # CreationTime is BITS's UTC instant turned local with the offset in force
+    # NOW, not the one of its date: undone with that same offset, to the
+    # minute. ToUniversalTime used the date's — the job, of the summer, came
+    # out an hour early once the clocks went back (2026-10-25).
+    $offsetNow = [TimeSpan]::FromMinutes([Math]::Round(([DateTime]::Now - [DateTime]::UtcNow).TotalMinutes))
     Write-Output ("bits=" + (@($job.JobId.ToString('B').ToUpper(), $job.Description, $job.JobState,
-        $job.CreationTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
+        ($job.CreationTime - $offsetNow).ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
 } } catch { WitnessFailure 'bits' $_ }
 
 # 14. FAT32 and exFAT volumes, on the two virtual USB keys (a suspect's keys):
