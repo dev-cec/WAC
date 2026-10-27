@@ -1,6 +1,8 @@
 /*! \file
  *  \brief Checks decodeNtfsRuns: data runs decoded exactly, a forged list
- *         refused whole, and nothing read outside the attribute.
+ *         refused whole, and nothing read outside the attribute; and the
+ *         other bounds the raw reader takes from a record — a resident
+ *         attribute's value, the compression unit, the index block size.
  *
  *  WHY THIS TEST. The data runs say where a file's clusters lie. Read from a
  *  deleted record (B-036), they are what an intruder or a damaged disk left:
@@ -132,11 +134,39 @@ void guarded(std::mt19937_64& rng) {
 
 /*! Runs every check.
  * @return 0 if all passed */
+/*! A resident attribute's value bounded by the attribute; the compression
+ *  unit's exponent and the index block size bounded (B-050, lot 1: a forged
+ *  $DATA of 0x7FFFFFFF bytes in a 1 KiB record was copied from past it). */
+void attributeBounds() {
+	// A resident attribute of 0x28 bytes: header 0x18, value of 0x10 bytes at 0x18.
+	std::vector<uint8_t> a(0x28, 0);
+	auto put32 = [&](size_t at, uint32_t v) { for (int i = 0; i < 4; ++i) a[at + i] = (uint8_t)(v >> (8 * i)); };
+	put32(0, 0x80); put32(4, 0x28); put32(0x10, 0x10); a[0x14] = 0x18;
+	const uint8_t* value = nullptr;
+	uint32_t length = 0;
+	check(residentAttributeValue(a.data(), value, length) && value == a.data() + 0x18 && length == 0x10,
+	      "resident value: within its attribute, given");
+	put32(0x10, 0x7FFFFFFF);
+	check(!residentAttributeValue(a.data(), value, length), "resident value: a length past the attribute refused");
+	put32(0x10, 0x10); a[0x14] = 0x20;
+	check(!residentAttributeValue(a.data(), value, length), "resident value: an offset that ends it past the attribute refused");
+	put32(4, 0x10);
+	check(!residentAttributeValue(a.data(), value, length), "resident value: an attribute shorter than its header refused");
+	check(compressionUnitClusters(4) == 16 && compressionUnitClusters(16) == 65536 && compressionUnitClusters(17) == 0
+	      && compressionUnitClusters(40) == 0 && compressionUnitClusters(65535) == 0,
+	      "compression unit: NTFS's 16 clusters, a forged exponent refused before any shift");
+	check(plausibleIndexBlockSize(4096) && plausibleIndexBlockSize(512) && plausibleIndexBlockSize(65536)
+	      && !plausibleIndexBlockSize(0) && !plausibleIndexBlockSize(256) && !plausibleIndexBlockSize(4095)
+	      && !plausibleIndexBlockSize(131072) && !plausibleIndexBlockSize(0xFFFFFFF0u),
+	      "index block size: a power of two from 512 bytes to 64 KiB, nothing else");
+}
+
 int main() {
 	std::mt19937_64 rng(20261022);
 	known();
 	forged();
 	guarded(rng);
+	attributeBounds();
 	std::printf("%s: %llu check(s), %llu failure(s)\n", g_failures ? "FAILED" : "all passed", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

@@ -64,12 +64,11 @@ DeletedRecord parseDeletedRecord(const uint8_t* record, size_t size) {
 		if (type != DATA || a[9] != 0 || r.data.found) continue;   // the unnamed $DATA, the first one
 		DeletedData& d = r.data;
 		if (a[8] == 0) {
-			if (length < 0x18) continue;
-			const uint32_t valueLength = readLittleEndian<uint32_t>(a + 0x10);
-			const uint16_t valueOffset = readLittleEndian<uint16_t>(a + 0x14);
-			if ((uint64_t)valueOffset + valueLength > length) continue;
+			const uint8_t* value = nullptr;
+			uint32_t valueLength = 0;
+			if (!residentAttributeValue(a, value, valueLength)) continue;
 			d.found = d.resident = true;
-			d.residentBytes.assign(a + valueOffset, a + valueOffset + valueLength);
+			d.residentBytes.assign(value, value + valueLength);
 			d.size = d.initializedSize = valueLength;
 			continue;
 		}
@@ -805,8 +804,8 @@ void addStoredDate(Json& o, const std::wstring& key, const FILETIME& date, bool 
 /*! The deleted files of the FAT and exFAT volumes — a suspect's keys among
  *  them. Level 1: a deleted entry keeps its first cluster and its size, its
  *  chain is erased: the content is read as the clusters that follow, each
- *  checked free, and not claimed since by a later deleted entry. Level 3:
- *  their free clusters carved.
+ *  checked free, and not claimed since by a later deleted entry (level 3,
+ *  their carving: carveFatVolumes).
  *  @param files receives one object per file
  *  @param tally the counts, the bytes copied among them
  *  @return the files read */
@@ -845,6 +844,7 @@ size_t collectFatDeleted(Json& files, Tally& tally) {
 			if (e.size <= maxFile && e.size > maxTotal - std::min(maxTotal, tally.copiedBytes)) {
 				o.add(L"State", Json::str(L"NotRead"));
 				o.add(L"Reason", Json::str(L"max_total_mib reached"));
+				++tally.notRead;   // counted as NTFS's are: the audit's total is all of them
 				files.push(std::move(o));
 				continue;
 			}
@@ -912,15 +912,34 @@ size_t collectFatDeleted(Json& files, Tally& tally) {
 			if (!stored.notCopied.empty()) o.add(L"NotCopied", Json::str(stored.notCopied));
 			files.push(std::move(o));
 		}
-		ClusterClaims& recovered = tally.recovered[mountPoint];
-		recovered.finish();
-		if (conf.deletedFilesSettings.level >= 3)
-			carveSource(mountPoint, fatClusters(volume, &recovered, 0), 2,
-			            reading + L" — free clusters level 1 did not give as a file's content, checked free in the "
-			            + std::wstring(volume.type() == L"exFAT" ? L"allocation bitmap" : L"FAT") + L" before and after reading",
-			            files, tally);
+		tally.recovered[mountPoint].finish();
 	}
 	return read;
+}
+
+/*! Level 3 on the FAT and exFAT volumes: their free clusters carved, those
+ *  level 1 gave as a file's content left out. Run with NTFS's carving, after
+ *  every level 1 and 2: carved here at once, a key's free space took the
+ *  whole max_total_mib before the system volume's deleted files were read.
+ *  @param files receives one object per file carved
+ *  @param tally the counts, the bytes copied among them
+ *  @return the files carved */
+size_t carveFatVolumes(Json& files, Tally& tally) {
+	size_t carved = 0;
+	for (const std::wstring& mountPoint : fatVolumesToRead()) {
+		FileVolumeSource device(L"\\\\.\\" + mountPoint, 0, false);
+		FatVolume volume;
+		if (!device.isOpen() || !volume.open(device)) {
+			log(2, L"🔥Deleted files: FAT volume " + mountPoint + L" unreadable for carving");
+			continue;
+		}
+		carved += carveSource(mountPoint, fatClusters(volume, &tally.recovered[mountPoint], 0), 2,
+		            L"Raw " + volume.type() + L" reading (\\\\.\\" + mountPoint + L") — free clusters level 1 did not give "
+		            L"as a file's content, checked free in the "
+		            + std::wstring(volume.type() == L"exFAT" ? L"allocation bitmap" : L"FAT") + L" before and after reading",
+		            files, tally);
+	}
+	return carved;
 }
 
 //! A key for a name in a directory, case ignored: the directory's record and the name's hash.
@@ -1031,15 +1050,17 @@ HRESULT DeletedFilesCollect() {
 	size_t names = 0, carved = 0;
 	if (conf.deletedFilesSettings.level >= 2)
 		for (const std::wstring& volume : fixedNtfsVolumes()) names += collectIndexSlack(volume, files);
-	if (conf.deletedFilesSettings.level >= 3)
+	if (conf.deletedFilesSettings.level >= 3) {
+		carved += carveFatVolumes(files, tally);
 		for (const std::wstring& volume : fixedNtfsVolumes()) carved += carveVolume(volume, files, tally);
+	}
 	const HRESULT written = writeLiveSnapshot("deleted_files.json", files, L"deleted files of the fixed NTFS volumes, recovered by raw reading");
 	auditRecord(L"Raw recovery of the deleted files (" + std::to_wstring(tally.listed) + L" read, "
 	            + std::to_wstring(tally.copied) + L" copied (" + std::to_wstring(tally.copiedBytes / 1024 / 1024) + L" MiB), "
 	            + std::to_wstring(tally.partial) + L" partial, " + std::to_wstring(tally.lost) + L" lost or not recoverable, "
 	            + std::to_wstring(tally.notRead) + L" not read beyond max_total_mib"
 	            + (conf.deletedFilesSettings.level >= 2 ? L"; " + std::to_wstring(names) + L" former name(s) in the slack of the directory indexes" : L"")
-	            + (conf.deletedFilesSettings.level >= 3 ? L"; " + std::to_wstring(carved) + L" file(s) carved from the free clusters of NTFS" : L"")
+	            + (conf.deletedFilesSettings.level >= 3 ? L"; " + std::to_wstring(carved) + L" file(s) carved from the free clusters of NTFS, FAT and exFAT volumes" : L"")
 	            + L"; " + std::to_wstring(fatRead) + L" deleted file(s) of FAT and exFAT volumes read"
 	            + L")",
 	            L"$MFT copy of every fixed NTFS volume; each record read again raw, its clusters checked free in $Bitmap "

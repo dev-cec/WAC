@@ -79,6 +79,25 @@ void synthetic() {
 	// The first cluster ends the directory (a zero entry after FILE2): what matters is that the loop ends.
 	check(found.size() == 2 && found[0].path == L"\\LOOP" && found[1].path == L"\\LOOP\\FILE2.TXT",
 	      "a looping FAT chain ends");
+
+	/* A present file whose name's first byte is really 0xE5, stored 0x05 as
+	   FAT wants, beside a deleted one (0xE5 written over its first byte): only
+	   the second is deleted, and only it loses its first letter. */
+	std::vector<uint8_t> named = image;
+	uint8_t* entries = named.data() + 1024;
+	std::fill(entries, entries + 64, (uint8_t)0);
+	const char present[11] = { 0x05, 'B', 'C', ' ', ' ', ' ', ' ', ' ', 'T', 'X', 'T' };
+	const char removed[11] = { (char)0xE5, 'E', 'L', ' ', ' ', ' ', ' ', ' ', 'T', 'X', 'T' };
+	std::copy(present, present + 11, entries);
+	std::copy(removed, removed + 11, entries + 32);
+	MemorySource twoNames(named);
+	FatVolume e5;
+	const std::vector<FatEntry> e5found = e5.open(twoNames) ? e5.entries() : std::vector<FatEntry>();
+	check(e5found.size() == 2 && !e5found[0].deleted && !e5found[0].nameIncomplete && e5found[0].shortName.size() == 7
+	      && e5found[0].shortName[0] != L'_' && e5found[0].shortName.compare(1, 6, L"BC.TXT") == 0,
+	      "a present name starting with 0xE5 (stored 0x05) is not taken for a deleted one");
+	check(e5found.size() == 2 && e5found[1].deleted && e5found[1].nameIncomplete && e5found[1].shortName == L"_EL.TXT",
+	      "a deleted name loses its first letter, said incomplete");
 }
 
 //! Lists an image: one line per entry, "path|size|deleted|directory|modified|utc or local|name incomplete".

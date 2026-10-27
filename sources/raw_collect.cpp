@@ -742,7 +742,7 @@ HRESULT ExtractFileArtefactsRaw() {
 	   Sysmon under their fingerprint — taken whole, as Defender's quarantine. */
 	if (conf.artefacts.sysmon)
 		for (const SysmonInstallation& s : sysmonInstallations())
-			trees.push_back({ s.archiveFolder, {}, 2, L"Sysmon archives" });
+			if (!s.archiveFolder.empty()) trees.push_back({ s.archiveFolder, {}, 2, L"Sysmon archives" });
 	for (const Tree& written : trees) {
 		Tree tree = written;
 		tree.absolute = examinedLayout(written.absolute);   // as for the targets above
@@ -764,7 +764,10 @@ HRESULT ExtractFileArtefactsRaw() {
 		            hrTree, Footprint::VOLUME_BRUT);
 		log(2, L"❇️" + path + L" : " + std::to_wstring(extractedFiles) + L" file(s)");
 		total += extractedFiles;
-		if (hrTree == S_FALSE) global = S_FALSE;
+		/* A tree that failed — its volume not opened, its index unreadable —
+		   is a part of the collection missing, as a partial one is; an absent
+		   folder is S_OK, the nominal case. */
+		if (hrTree != S_OK) global = S_FALSE;
 	}
 
 	for (const Target& target : targets) {
@@ -1071,7 +1074,7 @@ HRESULT ExtractShadowCopiesRaw() {
 		/* The catalog itself, raw: what the list recorded below was read from. */
 		std::vector<RawHiveExtraction> catalog;
 		createFolders(parentFolder(exhibitTarget(drive + VSS_CATALOG)));
-		ExtractFilesRaw(volume, { { VSS_CATALOG, exhibitTarget(drive + VSS_CATALOG) } }, nullptr, &catalog);
+		if (ExtractFilesRaw(volume, { { VSS_CATALOG, exhibitTarget(drive + VSS_CATALOG) } }, nullptr, &catalog) != S_OK) global = S_FALSE;
 		ExhibitStoreAdd(catalog, L"Raw NTFS reading (\\\\.\\" + volume + L": — $MFT record, $DATA attribute); no file opened by the system");
 
 		/* NEWEST FIRST: each file is compared with its next newer version —
@@ -1106,10 +1109,12 @@ HRESULT ExtractShadowCopiesRaw() {
 				const std::wstring target = pathUnder(root, drive + path);
 				createFolders(parentFolder(target));
 				std::vector<RawHiveExtraction> reading;
-				ExtractFilesRaw(volume, { { path, target } }, nullptr, &reading, (int)i);
+				const HRESULT extracted = ExtractFilesRaw(volume, { { path, target } }, nullptr, &reading, (int)i);
 				ExhibitStoreAdd(reading, method);
-				if (SUCCEEDED(reading.front().result)) { newer[key] = reading.front(); ++stored; }
-				else { ++failed; global = S_FALSE; log(2, L"🔥Shadow copy " + folder + L": " + path + L" not read", reading.front().result); }
+				// One item asked: its record, failed or not, is the only one.
+				const HRESULT result = reading.empty() ? (FAILED(extracted) ? extracted : E_FAIL) : reading.front().result;
+				if (SUCCEEDED(result)) { newer[key] = reading.front(); ++stored; }
+				else { ++failed; global = S_FALSE; log(2, L"🔥Shadow copy " + folder + L": " + path + L" not read", result); }
 			}
 			RawHiveSetProgress(nullptr);
 			printProgressEnd();

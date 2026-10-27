@@ -95,6 +95,30 @@ struct NtfsRun {
  *          run, negative cluster) */
 std::vector<NtfsRun> decodeNtfsRuns(const uint8_t* p, const uint8_t* end);
 
+/*! The value of a RESIDENT attribute, bounded by the attribute: its offset
+ *  and length are read in the record — hostile —, and a value said to start
+ *  or end past the attribute is refused, never read (a forged $DATA of
+ *  0x7FFFFFFF bytes in a 1 KiB record used to be copied from past it).
+ *  @param attribute the attribute's header; the caller has checked that
+ *         its whole length, as its header gives it, lies in the record
+ *  @param value receives the value's first byte
+ *  @param length receives its length
+ *  @return false if the attribute is shorter than a resident header (0x18)
+ *          or its value leaves it */
+bool residentAttributeValue(const uint8_t* attribute, const uint8_t*& value, uint32_t& length);
+
+/*! The compression unit of a non-resident attribute, in clusters, from the
+ *  exponent its header gives (NTFS writes 4: 16 clusters).
+ *  @return 2^exponent, or 0 for an exponent above 16 — a forged one shifted
+ *          past the integer's width, or asked for gigabytes of buffers */
+uint32_t compressionUnitClusters(uint16_t exponent);
+
+/*! Whether the index block size an $INDEX_ROOT gives is possible: a power
+ *  of two from 512 bytes to 64 KiB (NTFS writes 4096). A forged size sized
+ *  the block buffer up to 4 GiB before any check.
+ *  @param size the size, in bytes */
+bool plausibleIndexBlockSize(uint32_t size);
+
 /*! THE PRIMITIVES OF A DELETED FILE'S RECOVERY (B-036). A deleted file is
  *  reached by its $MFT record, not by a path: its record is read as it is
  *  now, its clusters checked against $Bitmap, then read — the volume as it

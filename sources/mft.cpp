@@ -57,11 +57,7 @@ bool MftEntry::parse(const uint8_t* record, size_t recordSize, uint64_t number) 
 		// The value of a resident attribute, bounded by the attribute.
 		const uint8_t* value = nullptr;
 		uint32_t valueLength = 0;
-		if (resident && length >= 0x18) {
-			valueLength = readLittleEndian<uint32_t>(a + 0x10);
-			const uint16_t offset = readLittleEndian<uint16_t>(a + 0x14);
-			if ((uint64_t)offset + valueLength <= length) value = a + offset;
-		}
+		if (resident && !residentAttributeValue(a, value, valueLength)) value = nullptr;
 		if (type == STANDARD_INFORMATION && value && valueLength >= 0x24) {
 			created = filetimeFromTicks(readLittleEndian<uint64_t>(value));
 			modified = filetimeFromTicks(readLittleEndian<uint64_t>(value + 0x08));

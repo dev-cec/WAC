@@ -25,26 +25,7 @@
 #include <vector>
 #include <windows.h>
 #include "tools.h"
-
-/*! The boot sector of an NTFS volume, as far as it was read. */
-struct NtfsBootSector {
-	uint16_t bytesPerSector = 0;
-	uint32_t bytesPerCluster = 0;
-	uint64_t totalSectors = 0;
-	uint64_t mftCluster = 0;         //!< first cluster of the $MFT
-	uint64_t mftMirrorCluster = 0;   //!< first cluster of $MFTMirr
-	uint32_t bytesPerRecord = 0;     //!< size of a $MFT record
-	uint32_t bytesPerIndexBlock = 0; //!< size of a directory index block
-	uint64_t serialNumber = 0;       //!< the 64-bit serial; Windows shows its low 32 bits
-};
-
-/*! Decodes an NTFS boot sector.
- *  @param data the first bytes of $Boot
- *  @param size their number
- *  @param boot receives the fields
- *  @return false if the sector is shorter than 512 bytes, lacks its signatures
- *          or declares an impossible geometry: nothing is then trusted */
-bool parseNtfsBootSector(const uint8_t* data, size_t size, NtfsBootSector& boot);
+#include "ntfs_boot_sector.h"
 
 /*! The header of the change journal ($UsnJrnl:$Max). */
 struct UsnJournalHeader {

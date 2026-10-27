@@ -140,7 +140,11 @@ HRESULT FatAwareReader::read(const std::wstring& absolutePath, const std::wstrin
 	if (found == v->byPath.end() || found->second.directory) return line.result = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	const FatEntry& e = found->second;
 	std::ofstream file;
-	if (!output.empty()) file.open(std::filesystem::path(extendedPath(output)), std::ios::binary);
+	if (!output.empty()) {
+		file.open(std::filesystem::path(extendedPath(output)), std::ios::binary);
+		// Not opened, nothing would be written: the read is not a success, whatever its fingerprints.
+		if (!file.is_open()) return line.result = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
+	}
 	Md5Stream md5;
 	Sha1Stream sha1;
 	Sha256Stream sha256;
@@ -153,7 +157,11 @@ HRESULT FatAwareReader::read(const std::wstring& absolutePath, const std::wstrin
 		bytes += size;
 		return !file.is_open() || (bool)file;
 	});
-	if (!whole || (file.is_open() && !file)) return line.result = HRESULT_FROM_WIN32(ERROR_READ_FAULT);
+	if (!whole) return line.result = HRESULT_FROM_WIN32(file.is_open() && !file ? ERROR_WRITE_FAULT : ERROR_READ_FAULT);
+	if (file.is_open()) {
+		file.close();
+		if (file.fail()) return line.result = HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
+	}
 	RawHiveFingerprints& f = line.fingerprints;
 	if (hashes) { f.md5 = md5.hexDigest(); f.sha1 = sha1.hexDigest(); f.sha256 = sha256.hexDigest(); }
 	f.bytes = bytes;

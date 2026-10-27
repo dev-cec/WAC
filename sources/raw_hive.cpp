@@ -31,6 +31,7 @@
 #include "xpress.h"
 #include "lzx.h"
 #include "vss.h"
+#include "ntfs_boot_sector.h"
 
 namespace {
 
@@ -39,6 +40,9 @@ bool g_verbose = false;
 #define RVLOG(...) do{ if(g_verbose) fwprintf(stderr, __VA_ARGS__); }while(0)
 
 RawHiveProgressFn g_progress = nullptr;      // progress reporter, optional
+
+//! The largest $MFT record accepted: 1 KiB or 4 KiB in practice.
+const uint32_t MAX_RECORD_SIZE = 65536;
 
 // --- little-endian integer reads ------------------------------------------
 
@@ -198,16 +202,23 @@ public:
         if (memcmp(vbr + 3, "NTFS    ", 8) != 0){
             RVLOG(L"[raw] NTFS signature absent\n"); return E_FAIL;
         }
-        bytesPerSector_    = readLittleEndian<uint16_t>(vbr + 0x0B);
-        sectorsPerCluster_ = vbr[0x0D];
-        bytesPerCluster_   = bytesPerSector_ * sectorsPerCluster_;
-        mftLcn_            = readLittleEndian<uint64_t>(vbr + 0x30);
+        /* The geometry as parseNtfsBootSector reads it — the one reading of a
+           boot sector: the sectors per cluster as a power of two above 0x80
+           (clusters of 128 KiB to 2 MiB, Windows 10 1709 and later), the
+           record's size by its sign, every shift bounded. Read here byte by
+           byte, a 2 MiB cluster was taken for 124 928 bytes and every read of
+           the volume landed elsewhere. */
+        NtfsBootSector boot;
+        if (!parseNtfsBootSector(vbr, sizeof vbr, boot) || boot.bytesPerRecord < 256 || boot.bytesPerRecord > MAX_RECORD_SIZE){
+            RVLOG(L"[raw] boot sector refused: impossible geometry\n"); return E_FAIL;
+        }
+        bytesPerSector_    = boot.bytesPerSector;
+        bytesPerCluster_   = boot.bytesPerCluster;
+        sectorsPerCluster_ = bytesPerCluster_ / bytesPerSector_;
+        mftLcn_            = boot.mftCluster;
         // The volume's extent in clusters: its sectors (the boot sector's count) by cluster.
-        clusters_ = sectorsPerCluster_ ? readLittleEndian<uint64_t>(vbr + 0x28) / sectorsPerCluster_ : 0;
-        int8_t cpr = (int8_t)vbr[0x40];   // clusters/record, or 2^(-cpr) bytes
-        bytesPerRecord_ = (cpr >= 0) ? (uint32_t)cpr * bytesPerCluster_
-                                     : (uint32_t)(1u << (-cpr));
-        if (!bytesPerSector_ || !bytesPerCluster_ || !bytesPerRecord_) return E_FAIL;
+        clusters_          = boot.totalSectors / sectorsPerCluster_;
+        bytesPerRecord_    = boot.bytesPerRecord;
         RVLOG(L"[raw] bps=%u spc=%u bpc=%u bpr=%u mftLcn=%llu\n",
               bytesPerSector_, sectorsPerCluster_, bytesPerCluster_,
               bytesPerRecord_, (unsigned long long)mftLcn_);
@@ -400,7 +411,7 @@ public:
                             if (validDataLength) *validDataLength = readLittleEndian<uint64_t>(d + 0x38);
                             if (compressionUnit)
                                 *compressionUnit = (readLittleEndian<uint16_t>(d + 0x0C) & 0x0001)
-                                                  ? (uint32_t)1u << readLittleEndian<uint16_t>(d + 0x22) : 0;
+                                                  ? compressionUnitClusters(readLittleEndian<uint16_t>(d + 0x22)) : 0;
                         }
                         fragments.emplace_back(vcn, decodeNtfsRuns(d + readLittleEndian<uint16_t>(d + 0x20), d + readLittleEndian<uint32_t>(d + 0x04)));
                     }
@@ -478,10 +489,10 @@ public:
         const uint8_t* al = findAttr(rec, 0x20, false);
         if (!al) return false;
         if (al[8] == 0){
-            const uint32_t vlen = readLittleEndian<uint32_t>(al + 0x10);
-            const uint16_t voff = readLittleEndian<uint16_t>(al + 0x14);
-            if (voff + (size_t)vlen > rec.size()) return false;
-            content.assign(al + voff, al + voff + vlen);
+            const uint8_t* value = nullptr;
+            uint32_t vlen = 0;
+            if (!residentAttributeValue(al, value, vlen)) return false;
+            content.assign(value, value + vlen);
             return true;
         }
         const uint64_t size = readLittleEndian<uint64_t>(al + 0x30);
@@ -527,8 +538,9 @@ public:
             }
         }
         if (!rp || rp[8] != 0) return false;
-        const uint8_t* reparseContent = rp + readLittleEndian<uint16_t>(rp + 0x14);
-        if (readLittleEndian<uint32_t>(rp + 0x10) < 24) return false;
+        const uint8_t* reparseContent = nullptr;
+        uint32_t reparseLength = 0;
+        if (!residentAttributeValue(rp, reparseContent, reparseLength) || reparseLength < 24) return false;
         if (readLittleEndian<uint32_t>(reparseContent) != 0x80000017u) return false;     // not WOF
         if (readLittleEndian<uint32_t>(reparseContent + 12) != 2) return false;          // provider not handled
         ctx.algorithm = readLittleEndian<uint32_t>(reparseContent + 20);
@@ -775,8 +787,11 @@ public:
                 product = algorithm == 1
                         ? LzxInflate(data.data() + start, packedSize, chunk.data(), expected)
                         : XpressHuffmanInflate(data.data() + start, packedSize, chunk.data(), expected);
-                if (product == 0){
-                    RVLOG(L"[raw] WOF: chunk %zu unreadable\n", i);
+                /* A chunk gives exactly its size, or the stream is damaged: one
+                   written short shifted every later chunk, a content wrong
+                   from there on and still recorded as the file's. */
+                if (product != expected){
+                    RVLOG(L"[raw] WOF: chunk %zu unreadable (%zu bytes of %zu)\n", i, product, expected);
                     return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
                 }
             }
@@ -1002,11 +1017,9 @@ public:
                 if (t == 0xFFFFFFFF) break;
                 const uint32_t len = readLittleEndian<uint32_t>(p + 4);
                 if (len < 0x18 || p + len > end) break;
-                if (t == type && p[8] == 0){
-                    const uint32_t vlen = readLittleEndian<uint32_t>(p + 0x10);
-                    const uint16_t voff = readLittleEndian<uint16_t>(p + 0x14);
-                    if ((uint64_t)voff + vlen <= len) visit(p + voff, vlen);
-                }
+                const uint8_t* value = nullptr;
+                uint32_t vlen = 0;
+                if (t == type && p[8] == 0 && residentAttributeValue(p, value, vlen)) visit(value, vlen);
                 p += len;
             }
         };
@@ -1179,9 +1192,11 @@ public:
         if (!a) a = findResidentAttr(rec, 0x80, extension, streamName.c_str());
         if (a){
             if (a[8] == 0){                       // resident: the data is inside the record
+                if (!residentAttributeValue(a, residentData, residentLen)){
+                    RVLOG(L"[raw] resident $DATA leaves its attribute\n");
+                    return HRESULT_FROM_WIN32(ERROR_FILE_CORRUPT);
+                }
                 resident = true;
-                residentLen  = readLittleEndian<uint32_t>(a + 0x10);
-                residentData = a + readLittleEndian<uint16_t>(a + 0x14);
             }
             else {
                 /*  NTFS COMPRESSION. Windows 11 turns it on for
@@ -1189,8 +1204,10 @@ public:
                     unusable (400 out of 404 measured on a Windows 11 VM). The attribute
                     declares the compression unit size as a power of two of clusters;
                     the format's details are in lznt1.h. */
-                if (readLittleEndian<uint16_t>(a + 0x0C) & 0x0001)
-                    compressionUnit = (uint32_t)1u << readLittleEndian<uint16_t>(a + 0x22);
+                if (readLittleEndian<uint16_t>(a + 0x0C) & 0x0001){
+                    compressionUnit = compressionUnitClusters(readLittleEndian<uint16_t>(a + 0x22));
+                    if (!compressionUnit){ RVLOG(L"[raw] compression unit refused\n"); return HRESULT_FROM_WIN32(ERROR_FILE_CORRUPT); }
+                }
                 realSize = readLittleEndian<uint64_t>(a + 0x30);
                 validDataLength = readLittleEndian<uint64_t>(a + 0x38);
                 runs = decodeNtfsRuns(a + readLittleEndian<uint16_t>(a + 0x20), a + readLittleEndian<uint32_t>(a + 0x04));
@@ -1219,6 +1236,19 @@ public:
         std::ostream copiedAndObserved(&tee);
         std::ostream& out = !outFile.empty() ? (observer ? copiedAndObserved : static_cast<std::ostream&>(file))
                           : observer ? observedOutput : nullOutput;
+        /* Every content written is checked before its result is given: a
+           collection medium that fills up, a write refused, used to leave a
+           short exhibit whose fingerprints — of the bytes READ — were
+           recorded as the file's. */
+        auto checkOutput = [&](HRESULT result) -> HRESULT {
+            if (FAILED(result)) return result;
+            out.flush();
+            bool ok = (bool)out;
+            if (file.is_open()){ file.close(); ok = ok && !file.fail(); }
+            if (ok) return result;
+            RVLOG(L"[raw] write to the output failed\n");
+            return HRESULT_FROM_WIN32(ERROR_WRITE_FAULT);
+        };
 
         if (resident){
             out.write((const char*)residentData, residentLen);
@@ -1230,7 +1260,7 @@ public:
                 emp->declaredSize = residentLen;
                 emp->resident = true;
             }
-            return S_OK;
+            return checkOutput(S_OK);
         }
 
         /*  EXTRACTING A COMPRESSED STREAM. The file is cut into independent
@@ -1246,7 +1276,7 @@ public:
         if (streamName.empty()){
             WofContext wof;
             if (resolveWof(rec, wof) && wof.present){
-                const HRESULT h = extractWof(wof, realSize, out, label, emp);
+                const HRESULT h = checkOutput(extractWof(wof, realSize, out, label, emp));
                 if (SUCCEEDED(h)) return h;
                 // Unsupported algorithm or damaged stream: a file of zeros is not written.
                 RVLOG(L"[raw] WOF : extraction impossible\n");
@@ -1255,9 +1285,8 @@ public:
         }
 
         if (compressionUnit > 1){
-            const HRESULT h = extractCompressed(runs, realSize, validDataLength,
-                                                compressionUnit, out, label, emp);
-            return h;
+            return checkOutput(extractCompressed(runs, realSize, validDataLength,
+                                              compressionUnit, out, label, emp));
         }
 
         const uint64_t batchClusters = std::max<uint64_t>(1, READ_BATCH / bytesPerCluster_);
@@ -1319,7 +1348,7 @@ public:
             emp->leadingSparseBytes = skipped;
         }
         RVLOG(L"[raw] extracted %llu bytes\n", (unsigned long long)(written - skipped));
-        return (written == realSize) ? S_OK : S_FALSE;
+        return checkOutput((written == realSize) ? S_OK : S_FALSE);
     }
 
 private:
@@ -1655,14 +1684,18 @@ public:
         std::vector<uint8_t> extension;
         const uint8_t* ir = findResidentAttr(rec, 0x90, extension);   // "$I30"
         if (!ir){ RVLOG(L"[raw] listDir(%llu): resident $INDEX_ROOT absent\n", (unsigned long long)dirIndex); return false; }
-        uint32_t irValLen = readLittleEndian<uint32_t>(ir + 0x10); uint16_t irValOff = readLittleEndian<uint16_t>(ir + 0x14);
+        const uint8_t* val = nullptr;
+        uint32_t irValLen = 0;
         // The value must hold the index root header (0x10) and the node header (0x10).
-        if (irValLen < 0x20 || (uint64_t)irValOff + irValLen > readLittleEndian<uint32_t>(ir + 4)){
+        if (!residentAttributeValue(ir, val, irValLen) || irValLen < 0x20){
             RVLOG(L"[raw] listDir(%llu): $INDEX_ROOT inconsistent\n", (unsigned long long)dirIndex);
             return false;
         }
-        const uint8_t* val = ir + irValOff;
         uint32_t idxBlockSize = readLittleEndian<uint32_t>(val + 8);
+        if (idxBlockSize && !plausibleIndexBlockSize(idxBlockSize)){
+            RVLOG(L"[raw] listDir(%llu): index block size refused\n", (unsigned long long)dirIndex);
+            idxBlockSize = 0;   // the root's entries only
+        }
         const uint8_t* nodeHdr = val + 0x10;
         uint32_t usedSize = readLittleEndian<uint32_t>(nodeHdr + 4);
         const uint8_t* irEnd = val + irValLen;
@@ -1712,13 +1745,13 @@ public:
         std::vector<uint8_t> extension;
         const uint8_t* ir = findResidentAttr(rec, 0x90, extension);
         if (!ir) return false;
-        const uint32_t valueLength = readLittleEndian<uint32_t>(ir + 0x10);
-        const uint16_t valueOffset = readLittleEndian<uint16_t>(ir + 0x14);
-        if (valueLength < 0x20 || (uint64_t)valueOffset + valueLength > readLittleEndian<uint32_t>(ir + 4)) return false;
-        const uint32_t blockSize = readLittleEndian<uint32_t>(ir + valueOffset + 8);
+        const uint8_t* value = nullptr;
+        uint32_t valueLength = 0;
+        if (!residentAttributeValue(ir, value, valueLength) || valueLength < 0x20) return false;
+        const uint32_t blockSize = readLittleEndian<uint32_t>(value + 8);
         std::vector<NtfsRun> runs;
         uint64_t realSize = 0;
-        if (!blockSize) return false;
+        if (!plausibleIndexBlockSize(blockSize)) return false;
         if (!indexAllocation(rec, runs, realSize)) return true;     // all in $INDEX_ROOT: no block
         std::vector<uint8_t> bits;
         const bool bitmapRead = indexBitmap(rec, bits);
@@ -1772,10 +1805,10 @@ public:
         if (b){
             const uint32_t attributeLength = readLittleEndian<uint32_t>(b + 4);
             if (b[8] == 0){
-                const uint32_t vlen = readLittleEndian<uint32_t>(b + 0x10);
-                const uint16_t voff = readLittleEndian<uint16_t>(b + 0x14);
-                if ((uint64_t)voff + vlen > attributeLength) return false;
-                bits.assign(b + voff, b + voff + vlen);
+                const uint8_t* value = nullptr;
+                uint32_t vlen = 0;
+                if (!residentAttributeValue(b, value, vlen)) return false;
+                bits.assign(value, value + vlen);
                 return true;
             }
             if (attributeLength < 0x40) return false;
@@ -1798,7 +1831,7 @@ public:
     void walkIndexBlocks(const std::vector<NtfsRun>& runs, uint64_t realSize, uint32_t idxBlockSize,
                          const std::vector<uint8_t>* bitmap, bool released,
                          const std::function<void(const uint8_t*, bool)>& visit){
-        if (!idxBlockSize) return;
+        if (!plausibleIndexBlockSize(idxBlockSize)) return;
         std::vector<uint8_t> blk(idxBlockSize);
         uint64_t blocksRead = 0, blocksWithoutIndx = 0, blocksTorn = 0, blocksFree = 0;
         for (uint64_t pos = 0; pos + idxBlockSize <= realSize; pos += idxBlockSize){
@@ -2058,6 +2091,24 @@ bool applyNtfsFixup(uint8_t* record, size_t size){
     }
     return true;
 }
+bool residentAttributeValue(const uint8_t* attribute, const uint8_t*& value, uint32_t& length){
+    const uint32_t attributeLength = readLittleEndian<uint32_t>(attribute + 4);
+    if (attributeLength < 0x18) return false;
+    length = readLittleEndian<uint32_t>(attribute + 0x10);
+    const uint16_t offset = readLittleEndian<uint16_t>(attribute + 0x14);
+    if ((uint64_t)offset + length > attributeLength) return false;
+    value = attribute + offset;
+    return true;
+}
+
+uint32_t compressionUnitClusters(uint16_t exponent){
+    return exponent <= 16 ? 1u << exponent : 0;
+}
+
+bool plausibleIndexBlockSize(uint32_t size){
+    return size >= 512 && size <= 65536 && (size & (size - 1)) == 0;
+}
+
 std::vector<NtfsRun> decodeNtfsRuns(const uint8_t* p, const uint8_t* end){
     std::vector<NtfsRun> runs;
     int64_t previous = 0;
@@ -2095,7 +2146,22 @@ HRESULT ExtractFilesRaw(const std::wstring& volumeLetter,
                         int shadowCopy){
     const VolumeLease lease(volumeLetter, shadowCopy);
     const HRESULT hr = lease.result();
-    if (FAILED(hr)){ if (perItem) perItem->assign(items.size(), hr); return hr; }
+    if (FAILED(hr)){
+        if (perItem) perItem->assign(items.size(), hr);
+        /* The volume not opened: each item recorded as failed all the same —
+           a hive of an unreadable volume missing from the manifest read as
+           never looked for, and a caller reading the first record read past
+           an empty list. */
+        if (reading)
+            for (const auto& it : items){
+                RawHiveExtraction line;
+                line.volumePath = volumeLetter + L":" + it.first;
+                line.outputPath = it.second;
+                line.result = hr;
+                reading->push_back(std::move(line));
+            }
+        return hr;
+    }
     NtfsVolume& vol = *lease;
     HRESULT overall = S_OK;
     for (const auto& it : items){
@@ -2325,7 +2391,9 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
                 vol, e.mftIndex, base + L"\\" + e.name,
                 outBase + L"\\" + e.name, extensions, extracted, depthLeft - 1,
                 volumeLetter, reading, skipped);
-            if (h == S_FALSE) global = S_FALSE;
+            // A subfolder that failed (its index unreadable) is a part not
+            // copied: said so, not taken for an empty folder.
+            if (h != S_OK) global = S_FALSE;
             continue;
         }
         if (!extensionMatches(e.name, extensions)) continue;

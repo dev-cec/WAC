@@ -438,7 +438,11 @@ void FatVolume::fatDirectory(const std::vector<uint8_t>& data, const std::wstrin
 		uint8_t name[11];
 		memcpy(name, e, 11);
 		const bool deleted = name[0] == DELETED || deletedParent;
-		if (name[0] == 0x05) name[0] = DELETED;                         // a real 0xE5 first character
+		/* A real 0xE5 first character, which FAT stores as 0x05: restored
+		   in the name, and NOT taken for the deletion mark below — a present
+		   file was shown "_name" and its name said incomplete. */
+		const bool realE5 = name[0] == 0x05;
+		if (realE5) name[0] = DELETED;
 		if ((e[11] & ATTR_VOLUME) && !(e[11] & ATTR_DIRECTORY)) {
 			if (path.empty() && name[0] != DELETED) label_ = shortName(name, 0);
 			parts.clear();
@@ -464,7 +468,7 @@ void FatVolume::fatDirectory(const std::vector<uint8_t>& data, const std::wstrin
 		// A deleted name whose last part found does not end it lost its next parts to a newer entry.
 		const bool truncated = bound && !parts.front().ends;
 		parts.clear();
-		if (name[0] == DELETED) { name[0] = '_'; entry.nameIncomplete = longName.empty(); }
+		if (name[0] == DELETED && !realE5) { name[0] = '_'; entry.nameIncomplete = longName.empty(); }
 		if (truncated) entry.nameIncomplete = true;
 		entry.shortName = shortName(name, e[12]);
 		entry.path = path + L"\\" + (longName.empty() ? entry.shortName : longName);
