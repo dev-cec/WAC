@@ -183,16 +183,18 @@ DECODED_PREFETCH_VERSIONS = {17, 23, 26, 30, 31}
 # one is the table's own test (artefact_catalogue_test.cpp).
 # PSReadLine's history is looked for from Windows 7 (PowerShell 3 and later
 # install there): absent from none of these lists, its witness is confronted.
+# Entra ID's join and Intune's extension (cloud_identity, intune_logs) exist
+# from Windows 10 on, as the artefact table says: absent before (B-052).
 OLDER_VERSION_STATUSES = {
     9200: ("Windows 8",
-           {"activities_cache.json", "bams.json"},
+           {"activities_cache.json", "bams.json", "cloud_identity.json", "intune_logs.json"},
            set()),
     9600: ("Windows 8.1",
-           {"activities_cache.json", "bams.json"},
+           {"activities_cache.json", "bams.json", "cloud_identity.json", "intune_logs.json"},
            set()),
     7601: ("Windows 7",
-           {"activities_cache.json", "bams.json", "defender_detections.json", "defender_log.json",
-            "defender_quarantine.json", "srum.json"},
+           {"activities_cache.json", "bams.json", "cloud_identity.json", "defender_detections.json", "defender_log.json",
+            "defender_quarantine.json", "intune_logs.json", "srum.json"},
            set()),
 }
 
