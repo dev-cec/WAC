@@ -98,7 +98,9 @@ try {
         $pristine = "$scratch\pristine-$hive"
         if ($Keep) {
             New-Item -ItemType Directory -Force $pristine | Out-Null
-            Get-ChildItem -LiteralPath $scratch -File | Where-Object { $_.Name -like "?$hive*" } | Copy-Item -Destination $pristine
+            # Not -File: Vista's PowerShell 2 knows no such parameter, and the
+            # whole reference stopped there (B-057, 2026-10-27).
+            Get-ChildItem -LiteralPath $scratch | Where-Object { -not $_.PSIsContainer -and $_.Name -like "?$hive*" } | Copy-Item -Destination $pristine
         }
         $windows = HiveDigest "$scratch\W$hive" 'WACREFWINDOWS'
         $wac = HiveDigest "$scratch\M$hive" 'WACREFWAC'
