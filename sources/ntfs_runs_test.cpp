@@ -23,6 +23,7 @@
 #include <vector>
 #include "guard_page.h"
 #include "raw_hive.h"
+#include "lznt1.h"
 #include "tools.h"
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
@@ -161,12 +162,38 @@ void attributeBounds() {
 	      "index block size: a power of two from 512 bytes to 64 KiB, nothing else");
 }
 
+/*! LZNT1: a chunk that gives fewer than 4096 bytes, with another after it,
+ *  is completed with zeros; a chunk whose decoding stops early (a corrupt
+ *  tuple) is left at its declared end (B-050, lot 3: the next chunk landed
+ *  early, or was read from inside the corrupt one). */
+void lznt1Chunks() {
+	// Chunk 1, compressed: one literal "A" (flags 0x00, then 'A'); chunk 2, stored: "B"; then the end.
+	const std::vector<uint8_t> shortThenStored = { 0x01, 0xB0, 0x00, 'A', 0x00, 0x30, 'B', 0x00, 0x00 };
+	std::vector<uint8_t> out(8192, 0xEE);
+	size_t n = Lznt1Inflate(shortThenStored.data(), shortThenStored.size(), out.data(), out.size());
+	bool zeros = true;
+	for (size_t i = 1; i < 4096; ++i) zeros = zeros && out[i] == 0;
+	check(n == 4097 && out[0] == 'A' && zeros && out[4096] == 'B',
+	      "LZNT1: a short chunk completed with zeros, the next one at 4096");
+	// Chunk 1, compressed, 4 bytes: flags 0x01, a back-reference before the start (corrupt), one byte more; chunk 2: "C".
+	const std::vector<uint8_t> corruptThenStored = { 0x03, 0xB0, 0x01, 0xFF, 0xFF, 0x41, 0x00, 0x30, 'C', 0x00, 0x00 };
+	std::fill(out.begin(), out.end(), 0xEE);
+	n = Lznt1Inflate(corruptThenStored.data(), corruptThenStored.size(), out.data(), out.size());
+	check(n == 4097 && out[0] == 0 && out[4096] == 'C',
+	      "LZNT1: after a corrupt chunk, the next one read from that chunk's declared end");
+	// The last chunk short: not completed.
+	const std::vector<uint8_t> single = { 0x01, 0xB0, 0x00, 'A', 0x00, 0x00 };
+	n = Lznt1Inflate(single.data(), single.size(), out.data(), out.size());
+	check(n == 1 && out[0] == 'A', "LZNT1: the last chunk keeps its own length");
+}
+
 int main() {
 	std::mt19937_64 rng(20261022);
 	known();
 	forged();
 	guarded(rng);
 	attributeBounds();
+	lznt1Chunks();
 	std::printf("%s: %llu check(s), %llu failure(s)\n", g_failures ? "FAILED" : "all passed", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

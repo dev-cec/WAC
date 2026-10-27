@@ -78,7 +78,8 @@ bool PeResource::load(std::vector<uint8_t> bytes) {
 
 	if (file_[0] != 'M' || file_[1] != 'Z') { error_ = L"MZ signature absent"; return false; }
 	const uint32_t offsetPe = readLittleEndian<uint32_t>(file_, 0x3C);
-	if (offsetPe + 24 > file_.size()) { error_ = L"PE header outside the file"; return false; }
+	// No addition in 32 bits: e_lfanew = 0xFFFFFFF0 wrapped to 8 and passed the check.
+	if (!fits(file_.size(), offsetPe, 24)) { error_ = L"PE header outside the file"; return false; }
 	if (std::memcmp(file_.data() + offsetPe, "PE\0\0", 4) != 0) {
 		error_ = L"PE signature absent"; return false;
 	}

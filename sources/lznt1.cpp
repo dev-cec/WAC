@@ -94,18 +94,36 @@ size_t Lznt1Inflate(const uint8_t* compressed, size_t compressedSize,
 		if (header == 0) break;                 // end of stream
 
 		const size_t size = (size_t)(header & 0x0fff) + 1;
+		const size_t chunkEnd = (size < compressedSize - pos) ? pos + size : compressedSize;
+		const size_t chunkStart = written;
 
 		if (header & 0x8000) {
 			written += decompressChunk(compressed, compressedSize, pos, size,
 			                          output + written, outputSize - written);
+			/* The next chunk starts where this one's header says it ends,
+			   whatever the decoding stopped at: a corrupt tuple left the
+			   position inside the chunk, its remaining bytes were read as the
+			   next header, and everything after was garbage. */
+			pos = chunkEnd;
 		}
 		else {
 			// Chunk stored as is: compression had gained nothing.
-			const size_t n = (size < compressedSize - pos) ? size : (compressedSize - pos);
+			const size_t n = chunkEnd - pos;
 			const size_t m = (n < outputSize - written) ? n : (outputSize - written);
 			std::memcpy(output + written, compressed + pos, m);
 			pos    += n;
 			written += m;
+		}
+		/* Each chunk stands for CHUNK_SIZE bytes but the last: one that gave
+		   fewer, with another after it, is completed with zeros, as Windows
+		   and ntfs-3g do — taken short, every later chunk landed early. */
+		const bool more = pos + 1 < compressedSize && (compressed[pos] | compressed[pos + 1]) != 0;
+		if (more) {
+			const size_t full = (chunkStart + CHUNK_SIZE < outputSize) ? chunkStart + CHUNK_SIZE : outputSize;
+			if (written < full) {
+				std::memset(output + written, 0, full - written);
+				written = full;
+			}
 		}
 		// A chunk yields at most 4096 bytes; beyond that, the stream is inconsistent.
 		if (written > outputSize) return outputSize;

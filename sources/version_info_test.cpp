@@ -60,7 +60,21 @@ std::string narrow(const std::wstring& w) {
 } // namespace
 
 int main(int argc, char** argv) {
-	if (argc != 3) { std::printf("usage: version_info_test <reference> <folder>\n"); return 2; }
+	/* A forged e_lfanew near 2^32: e_lfanew + 24, computed in 32 bits, wrapped
+	   to a small number, passed the bound and the "PE" signature was read
+	   4 GiB away (B-050, lot 3). Refused, nothing read out of the file. */
+	{
+		std::vector<uint8_t> forged(0x100, 0);
+		forged[0] = 'M'; forged[1] = 'Z';
+		forged[0x3C] = 0xF0; forged[0x3D] = 0xFF; forged[0x3E] = 0xFF; forged[0x3F] = 0xFF;
+		PeResource pe;
+		check(!pe.load(forged), "a PE whose e_lfanew wraps past 2^32 refused");
+	}
+	if (argc != 3) {
+		std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
+		std::printf("usage: version_info_test <reference> <folder>\n");
+		return g_failures ? 1 : 2;
+	}
 	std::ifstream reference(argv[1]);
 	std::mt19937_64 rng(20260926);
 	size_t files = 0, localised = 0;

@@ -29,6 +29,8 @@ const std::wstring TRUSTED_ROOTS_URL = L"http://ctldl.windowsupdate.com/msdownlo
 const size_t CABINET_MAX = 16 * 1024 * 1024;   //!< a trust list cabinet is ~100 KiB
 const size_t CERTIFICATE_MAX = 64 * 1024;      //!< a root certificate is ~1.5 KiB
 const char MANIFEST[] = "trust-manifest.json";
+//! The previous manifest, set aside while a new set is written (writeSet).
+const char INTERRUPTED_MANIFEST[] = "trust-manifest.json.interrupted";
 /*! Microsoft's blocklist of vulnerable drivers: the XML of the policy
  *  Windows enforces (HVCI, Smart App Control), in a ZIP. */
 const std::wstring DRIVER_BLOCKLIST_URL = L"https://aka.ms/VulnerableDriverBlockList";
@@ -569,6 +571,8 @@ bool folderAccepted(const std::filesystem::path& folder, std::string& reason) {
 	if (!std::filesystem::exists(folder, ec)) return true;
 	if (!std::filesystem::is_directory(folder, ec)) { reason = "not a folder"; return false; }
 	if (std::filesystem::exists(folder / MANIFEST, ec)) return true;
+	// A previous set whose writing was interrupted (writeSet): still ours.
+	if (std::filesystem::exists(folder / INTERRUPTED_MANIFEST, ec)) return true;
 	if (std::filesystem::directory_iterator(folder, ec) == std::filesystem::directory_iterator()) return !ec;
 	reason = "not empty, and not a previous trust set";
 	return false;
@@ -581,14 +585,19 @@ bool writeFile(const std::filesystem::path& path, const std::vector<uint8_t>& co
 	return (bool)out;
 }
 
-/*! Writes the set: manifest removed first, stale roots removed, files
- *  written, manifest last (see trust_update.h).
+/*! Writes the set: manifest set aside first, stale roots removed, files
+ *  written, manifest last (see trust_update.h). Set aside, not removed: a
+ *  set without its manifest is not taken for one by a collection, and yet
+ *  the folder stays recognised as ours — a write that failed half-way (disk
+ *  full) used to leave a folder every later --update-trust refused.
  *  @return false with `reason` at the first failure */
 bool writeSet(const std::filesystem::path& folder, const std::vector<SetFile>& files, const Json& m,
               std::string& reason) {
 	std::error_code ec;
-	std::filesystem::remove(folder / MANIFEST, ec);
-	if (ec) { reason = "previous manifest not removed"; return false; }
+	if (std::filesystem::exists(folder / MANIFEST, ec)) {
+		std::filesystem::rename(folder / MANIFEST, folder / INTERRUPTED_MANIFEST, ec);
+		if (ec) { reason = "previous manifest not set aside"; return false; }
+	}
 	std::filesystem::create_directories(folder / "roots", ec);
 	if (!ec) std::filesystem::create_directories(folder / "sources", ec);
 	if (!ec) std::filesystem::create_directories(folder / "crl", ec);
@@ -608,6 +617,7 @@ bool writeSet(const std::filesystem::path& folder, const std::vector<SetFile>& f
 		reason = "manifest not written";
 		return false;
 	}
+	std::filesystem::remove(folder / INTERRUPTED_MANIFEST, ec);   // the set is whole again
 	return true;
 }
 

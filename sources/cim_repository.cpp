@@ -375,7 +375,7 @@ void CimRepository::collectKeys(uint32_t logical, unsigned depth, std::vector<bo
 	if (o > PAGE) return;
 	const size_t text = o;
 	auto part = [&](size_t n, std::string& out) {
-		if (n > parts) return false;
+		if (n >= parts) return false;   // the table's last word is the data's length, not a part
 		const size_t at = text + readLittleEndian<uint16_t>(page.data() + partTable + 2 * n);
 		if (at >= PAGE) return false;
 		const uint8_t* end = static_cast<const uint8_t*>(memchr(page.data() + at, 0, PAGE - at));

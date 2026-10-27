@@ -125,13 +125,20 @@ namespace {
 class Collector : public std::streambuf {
 public:
 	std::vector<uint8_t> bytes;
+	/*! True once a content went past CATALOGUE_MAX: the bytes are then not
+	 *  the content — what came after the bound was dropped, and later small
+	 *  chunks were still taken, leaving gaps. Said, never used as the file. */
+	bool overflowed = false;
 protected:
 	int overflow(int c) override {
-		if (c != traits_type::eof()) bytes.push_back((uint8_t)c);
+		if (c == traits_type::eof()) return traits_type::not_eof(c);
+		if (bytes.size() < CATALOGUE_MAX) bytes.push_back((uint8_t)c);
+		else overflowed = true;
 		return traits_type::not_eof(c);
 	}
 	std::streamsize xsputn(const char* s, std::streamsize n) override {
-		if (bytes.size() + (size_t)n <= CATALOGUE_MAX) bytes.insert(bytes.end(), s, s + n);
+		if (!overflowed && bytes.size() + (size_t)n <= CATALOGUE_MAX) bytes.insert(bytes.end(), s, s + n);
+		else overflowed = true;
 		return n;
 	}
 };
@@ -796,13 +803,16 @@ const BinaryFingerprint& FingerprintFile(const std::wstring& rawPath) {
 	if (!g_reader) g_reader = openReader();
 	BinaryFingerprint e;
 	e.path = path;
-	/* --convert: an executable the collection authenticated as Microsoft was
-	   fingerprinted, not copied — its fingerprints and verdict are the
-	   manifest's (ExhibitStoreAddFingerprint). */
+	/* --convert: the verdict is the COLLECTION's, as the manifest records it
+	   — an executable authenticated and fingerprinted without a copy, and
+	   one copied after its signature was checked. Judged again here, a
+	   copied binary was judged at the conversion's time against the analyst's
+	   trust set: a certificate expired, or revoked, since — or a root the key
+	   lacked — and the JSON contradicted the manifest. */
 	if (conf.mode == RunMode::Convert) {
 		const std::map<std::wstring, StoredExhibit>& index = ExhibitStoreIndex();
 		const auto stored = index.find(key);
-		if (stored != index.end() && !stored->second.contentStored) {
+		if (stored != index.end() && (!stored->second.contentStored || stored->second.signatureChecked)) {
 			e.md5 = stored->second.md5;
 			e.sha1 = stored->second.sha1;
 			e.sha256 = stored->second.sha256;
@@ -1103,9 +1113,12 @@ public:
 				++links;
 				return;
 			}
-			// The first name could not be recorded: this one is read on its own.
+			// The first name could not be recorded: this one is read on its own —
+			// into a staging file under --binary-all, as any file read in
+			// stream: without one it was recorded as a write fault, not copied.
 			item.link = false;
-			item.result = readAndAuthenticate(item.path, item.line, item.verdict, conf.binaryAll, &item.windowsDelta);
+			if (conf.binaryAll) item.staged = newStagingFile();
+			item.result = readAndAuthenticate(item.path, item.line, item.verdict, conf.binaryAll, &item.windowsDelta, item.staged);
 		}
 		if (FAILED(item.result)) {
 			if (!item.staged.empty()) std::filesystem::remove(item.staged, ec);
@@ -1144,7 +1157,15 @@ public:
 				reread.fingerprints.authenticodeSha256 = item.line.fingerprints.authenticodeSha256;
 				reread.fingerprints.peTimeDateStamp = item.line.fingerprints.peTimeDateStamp;
 				reread.fingerprints.peSizeOfImage = item.line.fingerprints.peSizeOfImage;
-				if (FAILED(g_reader->read(item.path, std::wstring(), reread))) return;
+				const HRESULT again = g_reader->read(item.path, std::wstring(), reread);
+				/* Not read again: recorded all the same, with what the first
+				   read found — gone from the manifest, the file read as never
+				   looked at. */
+				if (FAILED(again)) {
+					ExhibitStoreAddFingerprint(item.line, item.method + L"; " + nature + L"; its file fingerprints not read again (0x"
+					                           + to_hex((unsigned long)again) + L"): Authenticode digests only", recorded);
+					return;
+				}
 				item.line = std::move(reread);
 			}
 			const std::wstring fingerprintMethod = item.method + L"; " + nature
@@ -1208,6 +1229,10 @@ RecoveredStorage BinariesStoreRecovered(const std::wstring& exhibitPath, const s
 		analysis.input()->sputn(reinterpret_cast<const char*>(content.data()), (std::streamsize)content.size());
 		analysis.finishContent();
 		analysis.conclude(line, verdict, windowsDelta);
+		/* The blocklists, as on every other path: a vulnerable driver loaded
+		   then deleted (BYOVD) has a chain that holds — cleared by it alone,
+		   the recovery's most telling exhibit was fingerprinted, not copied. */
+		checkVulnerableDriver(formerPath, line, verdict, &content);
 		noteVerdict(verdict, line, nullptr);
 	}
 	const SignatureVerdict recorded = executable && conf.binary && !windowsDelta ? recordedVerdict(verdict) : SignatureVerdict{};
@@ -1327,23 +1352,32 @@ HRESULT BinariesCollectAll() {
 					item->link = true;
 					ready.emplace(item->order, std::move(item));
 				}
-				else if (e.size <= IN_MEMORY_MAX) {
-					// Read into memory, analysed by a worker.
-					PhaseTimer timer(g_times.reading);
-					item->package = packageFileOf(path);
-					Collector content;
-					content.bytes.reserve((size_t)e.size);
-					item->line.fingerprints.computeHashes = false;
-					item->result = g_reader->read(path, std::wstring(), item->line, &content);
-					item->content = std::move(content.bytes);
-					if (SUCCEEDED(item->result)) {
-						readOnce.insert(item->record);
-						item->inMemory = true;
-						pool.submit(std::move(item));
-					}
-					else ready.emplace(item->order, std::move(item));
-				}
 				else {
+					/* Into memory when the directory index says it is small —
+					   its size there may be stale or forged: a content found
+					   larger than the bound, collected with gaps, is read again
+					   in stream like any large file. */
+					bool inMemory = false;
+					if (e.size <= IN_MEMORY_MAX) {
+						PhaseTimer timer(g_times.reading);
+						item->package = packageFileOf(path);
+						Collector content;
+						content.bytes.reserve((size_t)e.size);
+						item->line.fingerprints.computeHashes = false;
+						item->result = g_reader->read(path, std::wstring(), item->line, &content);
+						if (!content.overflowed) {
+							inMemory = true;
+							item->content = std::move(content.bytes);
+							if (SUCCEEDED(item->result)) {
+								readOnce.insert(item->record);
+								item->inMemory = true;
+								pool.submit(std::move(item));
+							}
+							else ready.emplace(item->order, std::move(item));
+						}
+						else item->line = RawHiveExtraction{};
+					}
+					if (inMemory) { recordAvailable(true); continue; }
 					// A large file: read and analysed in stream, by this thread.
 					PhaseTimer timer(g_times.reading);
 					if (conf.binaryAll) item->staged = newStagingFile();

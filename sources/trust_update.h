@@ -36,9 +36,11 @@
  *  refused, not believed.
  *
  *  WRITTEN IN AN ORDER THAT SAYS WHETHER IT IS COMPLETE: the manifest goes
- *  last and is removed first. A set without its manifest — interrupted
- *  download, full medium — is treated as absent: the current rules apply,
- *  every third-party binary is collected.
+ *  last and is set aside first (trust-manifest.json.interrupted). A set
+ *  without its manifest — interrupted download, full medium — is treated as
+ *  absent: the current rules apply, every third-party binary is collected;
+ *  the folder stays recognised as a set, and the next --update-trust
+ *  completes it.
  */
 #pragma once
 

@@ -224,7 +224,7 @@ const std::map<std::wstring, StoredExhibit>& ExhibitStoreIndex() {
 				              StoredExhibit{ p.extracted.volumePath, workingCopyOf(p.extracted.outputPath), p.contentStored,
 				                             p.extracted.fingerprints.md5, p.extracted.fingerprints.sha1,
 				                             p.extracted.fingerprints.sha256, p.extracted.fingerprints.authenticodeSha256,
-				                             p.verdict.label, p.extracted.fingerprints.leadingSparseBytes });
+				                             p.verdict.label, p.extracted.fingerprints.leadingSparseBytes, p.verdict.checked });
 		return built;
 	}();
 	return index;

@@ -277,8 +277,14 @@ std::string certKey(const Certificate& c) {
 	return std::string((const char*)h, 32);
 }
 
+bool isAuthority(const Certificate& c);
+
 /*! Chains `leaf` to an embedded Microsoft root, through the certificates
- *  supplied with the signature. At most 6 levels. */
+ *  supplied with the signature. At most 6 levels. Each intermediate must be
+ *  an authority (basic constraints, cA), as build() requires of a third
+ *  party's: without it, the holder of ANY end-entity certificate under a
+ *  Microsoft root could issue one named "Microsoft Windows" and have its
+ *  binaries cleared. */
 bool attach(const Certificate& leaf, const std::vector<Certificate>& pool) {
 	const Certificate* current = &leaf;
 	std::vector<std::string> walked;
@@ -309,7 +315,7 @@ bool attach(const Certificate& leaf, const std::vector<Certificate>& pool) {
 			if (&c == current || !sameBytes(current->issuer, c.subject)) continue;
 			if (signedBy(*current, c)) { next = &c; break; }
 		}
-		if (!next) return false;
+		if (!next || !isAuthority(*next)) return false;
 		current = next;
 	}
 	return false;
