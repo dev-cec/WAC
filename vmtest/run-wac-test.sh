@@ -536,9 +536,19 @@ fi
 if full_cycle; then
   $QGA write "$HERE/guest/hive-recovery-reference.ps1" "$VMDIR\\hive-recovery-reference.ps1" >/dev/null \
   && $QGA run --timeout 900 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\hive-recovery-reference.ps1" \
-       -Collection "$VMDIR\\out" 2>/dev/null | tr -d '\r' > "$OUTPUT/reference/hive-recovery.txt" \
+       -Collection "$VMDIR\\out" -Keep "$VMDIR\\hive-kept" 2>/dev/null | tr -d '\r' > "$OUTPUT/reference/hive-recovery.txt" \
   && [[ -s "$OUTPUT/reference/hive-recovery.txt" ]] \
   && echo "   + reference/hive-recovery.txt" || echo "   ⚠️ hive recovery reference not read"
+  # A hive whose two loads differ, kept as collected and as WAC replayed it
+  # (B-057): brought back, then removed from the VM.
+  for kept in $(sed -n 's/^hive_kept=//p' "$OUTPUT/reference/hive-recovery.txt"); do
+    mkdir -p "$OUTPUT/hive-kept"
+    for f in "W$kept" "W$kept.LOG1" "W$kept.LOG2" "M$kept"; do
+      $QGA read "$VMDIR\\hive-kept\\$f" "$OUTPUT/hive-kept/$f" >/dev/null 2>&1 || true
+    done
+    echo "   ⚠️ $kept: Windows' load and WAC's differ — files kept in hive-kept/ (B-057)"
+  done
+  $QGA run --shell "if exist $VMDIR\\hive-kept rmdir /s /q $VMDIR\\hive-kept & exit /b 0" >/dev/null 2>&1 || true
   $QGA run --shell "del /q $VMDIR\\hive-recovery-reference.ps1 >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
 fi
 

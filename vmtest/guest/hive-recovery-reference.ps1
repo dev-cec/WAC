@@ -14,9 +14,15 @@
 # the working folder is written. Prints one line per hive:
 #   hive=<name>|windows=<keys>,<values>,<sha256>|wac=<keys>,<values>,<sha256>
 #
+# -Keep: when the two differ, the files of that hive — as collected, with its
+# logs, and as WAC replayed it — are copied there BEFORE reg load, which
+# rewrites a hive it loads (measured: Windows 11 reorganised a Vista SYSTEM of
+# 11.2 MB into 8 MB): the case that happened once on Vista (B-057) can then
+# be studied on its own files. One line "hive_kept=<name>" per hive kept.
+#
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File hive-recovery-reference.ps1
-#          -Collection C:\wactest\out [-Hives SOFTWARE,SYSTEM]
-param([Parameter(Mandatory = $true)][string]$Collection, [string[]]$Hives = @('SOFTWARE', 'SYSTEM'))
+#          -Collection C:\wactest\out [-Hives SOFTWARE,SYSTEM] [-Keep C:\wactest\hive-kept]
+param([Parameter(Mandatory = $true)][string]$Collection, [string[]]$Hives = @('SOFTWARE', 'SYSTEM'), [string]$Keep)
 $ErrorActionPreference = 'Stop'
 
 Add-Type -TypeDefinition @'
@@ -88,7 +94,20 @@ try {
             if (Test-Path -LiteralPath "$collected$suffix") { Copy-Item -LiteralPath "$collected$suffix" -Destination "$scratch\W$hive$suffix" -Force }
         }
         Copy-Item -LiteralPath $replayed -Destination "$scratch\M$hive" -Force
-        Write-Output ("hive=$hive|windows=" + (HiveDigest "$scratch\W$hive" 'WACREFWINDOWS') + '|wac=' + (HiveDigest "$scratch\M$hive" 'WACREFWAC'))
+        # Untouched copies, kept only if the two loads differ.
+        $pristine = "$scratch\pristine-$hive"
+        if ($Keep) {
+            New-Item -ItemType Directory -Force $pristine | Out-Null
+            Get-ChildItem -LiteralPath $scratch -File | Where-Object { $_.Name -like "?$hive*" } | Copy-Item -Destination $pristine
+        }
+        $windows = HiveDigest "$scratch\W$hive" 'WACREFWINDOWS'
+        $wac = HiveDigest "$scratch\M$hive" 'WACREFWAC'
+        Write-Output ("hive=$hive|windows=$windows|wac=$wac")
+        if ($Keep -and $windows -ne $wac) {
+            New-Item -ItemType Directory -Force $Keep | Out-Null
+            Copy-Item -Path "$pristine\*" -Destination $Keep -Force
+            Write-Output "hive_kept=$hive"
+        }
     }
 }
 finally { Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue }
