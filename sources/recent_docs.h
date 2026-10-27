@@ -40,6 +40,14 @@
 #include "quickdigest5.h"
 
 /*! One recent document: a .lnk shortcut, and the file it points to. */
+/*! The target of an Internet shortcut (.url): the URL= line of its
+ *  [InternetShortcut] section, wherever that section lies — Internet Explorer
+ *  and the shell often write a [{000214A0-…}] section and Prop3 before it:
+ *  the second line of the file, taken for the URL, gave "3=19,11".
+ *  @param text the file, as bytes
+ *  @return the URL as written (still %-encoded), "" if the section has none */
+std::string internetShortcutUrl(const std::string& text);
+
 struct RecentDoc {
 public:
 	// Holds unique_ptr (through IdList): movable type, not copyable.

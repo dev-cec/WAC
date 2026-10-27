@@ -2,6 +2,7 @@
  *  \brief Reading of every Amcache table (see reg_amcache.h).
  */
 #include "reg_amcache.h"
+#include "registry_common.h"
 
 namespace {
 
@@ -227,13 +228,8 @@ HRESULT Amcache::readHive() {
 		ORCloseHive(hive);
 		return hr;
 	}
-	DWORD nTables = 0;
-	ORQueryInfoKey(root, nullptr, nullptr, &nTables, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-	wchar_t name[MAX_VALUE_NAME];
-	for (DWORD t = 0; t < nTables; ++t) {
-		DWORD length = MAX_VALUE_NAME;
-		if (OREnumKey(root, t, name, &length, nullptr, nullptr, nullptr) != ERROR_SUCCESS) continue;
-		const std::wstring table(name, length);
+	for (const Subkey& tableSub : subkeysOf(root)) {
+		const std::wstring& table = tableSub.name;
 		// The inventory tables, and File and Programs of Windows 8 and 8.1;
 		// Root also holds a few bookkeeping keys.
 		const bool windows8 = table == L"File" || table == L"Programs";
@@ -243,14 +239,11 @@ HRESULT Amcache::readHive() {
 			log(2, L"🔥OROpenKey: Amcache " + table, ERROR_BADDB);
 			continue;
 		}
-		DWORD nEntries = 0;
-		ORQueryInfoKey(tableKey, nullptr, nullptr, &nEntries, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-		log(2, L"❇️Amcache " + table + L": " + std::to_wstring(nEntries) + L" entry(ies)");
-		for (DWORD i = 0; i < nEntries; ++i) {
-			printProgressStep(L"Amcache " + table, i + 1, nEntries);
-			length = MAX_VALUE_NAME;
-			if (OREnumKey(tableKey, i, name, &length, nullptr, nullptr, nullptr) != ERROR_SUCCESS) continue;
-			const std::wstring entryName(name, length);
+		const std::vector<Subkey> tableEntries = subkeysOf(tableKey);
+		log(2, L"❇️Amcache " + table + L": " + std::to_wstring(tableEntries.size()) + L" entry(ies)");
+		for (size_t i = 0; i < tableEntries.size(); ++i) {
+			printProgressStep(L"Amcache " + table, (unsigned)i + 1, (unsigned)tableEntries.size());
+			const std::wstring& entryName = tableEntries[i].name;
 			ORHKEY entryKey = nullptr;
 			if (OROpenKey(tableKey, entryName.c_str(), &entryKey) != ERROR_SUCCESS) {
 				log(2, L"🔥OROpenKey: Amcache " + table + L"\\" + entryName, ERROR_BADDB);
@@ -268,13 +261,8 @@ HRESULT Amcache::readHive() {
 }
 
 void Amcache::readVolumeFiles(ORHKEY volumeKey, const std::wstring& volume) {
-	DWORD nFiles = 0;
-	ORQueryInfoKey(volumeKey, nullptr, nullptr, &nFiles, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-	wchar_t name[MAX_VALUE_NAME];
-	for (DWORD i = 0; i < nFiles; ++i) {
-		DWORD length = MAX_VALUE_NAME;
-		if (OREnumKey(volumeKey, i, name, &length, nullptr, nullptr, nullptr) != ERROR_SUCCESS) continue;
-		const std::wstring fileName(name, length);
+	for (const Subkey& fileSub : subkeysOf(volumeKey)) {
+		const std::wstring& fileName = fileSub.name;
 		ORHKEY fileKey = nullptr;
 		if (OROpenKey(volumeKey, fileName.c_str(), &fileKey) != ERROR_SUCCESS) {
 			log(2, L"🔥OROpenKey: Amcache File\\" + volume + L"\\" + fileName, ERROR_BADDB);

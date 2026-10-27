@@ -2,6 +2,7 @@
  *  \brief The SECURITY hive (see security_hive.h).
  */
 #include "security_hive.h"
+#include "registry_common.h"
 #include <cstring>
 #include <cstdint>
 
@@ -98,12 +99,10 @@ HRESULT SecurityHive::getData() {
 	// LSA secrets: the subkeys of Policy\Secrets, their names and the dates of their values.
 	ORHKEY secrets = NULL;
 	if (OROpenKey(root, L"Policy\\Secrets", &secrets) == ERROR_SUCCESS) {
-		wchar_t name[256];
-		for (DWORD i = 0;; ++i) {
-			DWORD length = (DWORD)(sizeof(name) / sizeof(name[0]));
+		for (const Subkey& sub : subkeysOf(secrets)) {
 			LsaSecret secret;
-			if (OREnumKey(secrets, i, name, &length, NULL, NULL, &secret.keyLastWriteUtc) != ERROR_SUCCESS) break;
-			secret.name.assign(name, length);
+			secret.name = sub.name;
+			secret.keyLastWriteUtc = sub.lastWriteUtc;
 			const std::wstring path = L"Policy\\Secrets\\" + secret.name;
 			// The (default) value of CupdTime and OupdTime: a FILETIME.
 			getRegFiletimeValue(root, (path + L"\\CupdTime").c_str(), L"", &secret.currentSetUtc);
@@ -141,12 +140,10 @@ HRESULT SecurityHive::getData() {
 	// logon-right bitmask held by that account.
 	ORHKEY accounts = NULL;
 	if (OROpenKey(root, L"Policy\\Accounts", &accounts) == ERROR_SUCCESS) {
-		wchar_t sidName[256];
-		for (DWORD i = 0;; ++i) {
-			DWORD length = (DWORD)(sizeof(sidName) / sizeof(sidName[0]));
+		for (const Subkey& sub : subkeysOf(accounts)) {
 			AccountRight right;
-			if (OREnumKey(accounts, i, sidName, &length, NULL, NULL, &right.keyLastWriteUtc) != ERROR_SUCCESS) break;
-			right.sid.assign(sidName, length);
+			right.sid = sub.name;
+			right.keyLastWriteUtc = sub.lastWriteUtc;
 			const std::wstring path = L"Policy\\Accounts\\" + right.sid;
 
 			// Privilgs: PrivilegeCount (DWORD), Control (DWORD), then

@@ -2,6 +2,7 @@
  *  \brief Reading of the OpenSaveMRU keys (see reg_mru.h).
  */
 #include "reg_mru.h"
+#include "registry_common.h"
 
 Json Mru::toJson() const {
 	log(3, L"🔈Mru toJson");
@@ -32,8 +33,6 @@ HRESULT Mrus::getData(int _level) {
 	ORHKEY hKey = NULL;
 	ORHKEY hSubKey=NULL;
 	ORHKEY Offhive=NULL;
-	DWORD nSubkeys=0, nValues=0, bufferSize = 0;
-	WCHAR valueName[MAX_VALUE_NAME] = L"";
 	std::wstring hive = L"";
 	level = _level;
 	//HKEY_USERS
@@ -57,25 +56,14 @@ HRESULT Mrus::getData(int _level) {
 				continue;
 			}
 
-			log(3, L"🔈ORQueryInfoKey hKey");
-			hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, NULL);
-			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥ORQueryInfoKey hKey", hresult);
-				nSubkeys = 0;
-			}
-
-			for (int i = 1; i < (int)nSubkeys; i++) {   // index 0 is "*", every extension at once: skipped
-				bufferSize = MAX_KEY_NAME;
-				log(3, L"🔈OREnumKey hKey");
-				hresult = OREnumKey(hKey, i, valueName, &bufferSize, NULL, NULL, NULL);
-				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥OREnumKey hkey", hresult);
-					continue;
-				}
-				log(3, L"🔈OROpenKey hkey\\" + std::wstring(valueName));
+			// "*" holds every extension at once: skipped, each extension is read on its own.
+			for (const Subkey& sub : subkeysOf(hKey)) {
+				if (sub.name == L"*") continue;
+				const wchar_t* valueName = sub.name.c_str();
+				log(3, L"🔈OROpenKey hkey\\" + sub.name);
 				hresult = OROpenKey(hKey, valueName, &hSubKey);
 				if (hresult != ERROR_SUCCESS) {
-					log(2, L"🔥OROpenKey hkey\\" + std::wstring(valueName), hresult);
+					log(2, L"🔥OROpenKey hkey\\" + sub.name, hresult);
 					continue;
 				}
 				hresult = parse(hSubKey, std::get<0>(profileEntry), keyname, &mrus, 1, false, valueName);
@@ -133,7 +121,7 @@ HRESULT Mrus::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::vec
 		              ++nWalked, 0, L"mru");
 		Mru mru;
 		mru.id = id;
-		log(2, L"❇️Mru id" + id);
+		log(2, L"❇️Mru id " + std::to_wstring(id));
 		mru.lastWriteTimeUtc = lastWriteTimeUtc;
 		mru.extension = extension;
 		mru.level = level;

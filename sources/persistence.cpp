@@ -2,6 +2,7 @@
  *  \brief Registry persistence beyond the Run keys (see persistence.h).
  */
 #include "persistence.h"
+#include "registry_common.h"
 
 namespace {
 
@@ -119,15 +120,9 @@ void apply(ORHKEY root, const Rule& rule, const std::wstring& hive, const std::w
 	const std::wstring parent = key.substr(0, star - 1), rest = key.substr(star + 1);   // "…\\" "*" "\\…"
 	ORHKEY parentKey = NULL;
 	if (OROpenKey(root, parent.c_str(), &parentKey) != ERROR_SUCCESS) return;
-	std::vector<std::wstring> subkeys;
-	wchar_t name[512];
-	for (DWORD i = 0;; ++i) {
-		DWORD length = (DWORD)(sizeof(name) / sizeof(name[0]));
-		if (OREnumKey(parentKey, i, name, &length, NULL, NULL, NULL) != ERROR_SUCCESS) break;
-		subkeys.emplace_back(name, length);
-	}
+	const std::vector<Subkey> children = subkeysOf(parentKey);
 	ORCloseKey(parentKey);
-	for (const std::wstring& sub : subkeys) readKey(root, parent + L"\\" + sub + rest, rule, hive, sid, out);
+	for (const Subkey& sub : children) readKey(root, parent + L"\\" + sub.name + rest, rule, hive, sid, out);
 }
 
 //! Applies the rules of one kind of user hive to every profile's.

@@ -2,6 +2,7 @@
  *  \brief Reading of the Enum\\USBSTOR key (see reg_usbstors.h).
  */
 #include "reg_usbstors.h"
+#include "registry_common.h"
 
 Usbstor::Usbstor(ORHKEY hKey_usb, const std::wstring& device, const std::wstring& instance)
 	: deviceId(device), instanceId(instance) {
@@ -101,34 +102,18 @@ HRESULT Usbstors::getData() {
 	/* Two levels: the device ("Disk&Ven_...&Prod_...&Rev_..."), then its
 	   instances (serial number). Their NAMES identify the device: they are
 	   passed to Usbstor. Every key opened here is closed here. */
-	// A key name holds up to MAX_KEY_NAME characters, plus the terminating zero.
-	wchar_t device[MAX_KEY_NAME + 1] = L"", instance[MAX_KEY_NAME + 1] = L"";
-	DWORD devices = 0;
-	if (ORQueryInfoKey(usbstor, NULL, NULL, &devices, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
-		log(2, L"🔥ORQueryInfoKey Enum\\USBSTOR: progress shown without a total");
-	for (DWORD i = 0; ; ++i) {
-		DWORD length = MAX_KEY_NAME + 1;
-		hresult = OREnumKey(usbstor, i, device, &length, NULL, NULL, NULL);
-		if (hresult == ERROR_NO_MORE_ITEMS) break;
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥OREnumKey Enum\\USBSTOR " + std::to_wstring(i), hresult);
-			continue;
-		}
-		printProgressStep(L"Usbstor", (unsigned)i + 1, (unsigned)devices);
+	const std::vector<Subkey> devices = subkeysOf(usbstor);
+	for (size_t i = 0; i < devices.size(); ++i) {
+		const wchar_t* device = devices[i].name.c_str();
+		printProgressStep(L"Usbstor", (unsigned)i + 1, (unsigned)devices.size());
 		ORHKEY deviceKey = NULL;
 		log(3, L"🔈OROpenKey Enum\\USBSTOR\\" + std::wstring(device));
 		if ((hresult = OROpenKey(usbstor, device, &deviceKey)) != ERROR_SUCCESS) {
 			log(2, L"🔥OROpenKey Enum\\USBSTOR\\" + std::wstring(device), hresult);
 			continue;
 		}
-		for (DWORD j = 0; ; ++j) {
-			length = MAX_KEY_NAME + 1;
-			hresult = OREnumKey(deviceKey, j, instance, &length, NULL, NULL, NULL);
-			if (hresult == ERROR_NO_MORE_ITEMS) break;
-			if (hresult != ERROR_SUCCESS) {
-				log(2, L"🔥OREnumKey Enum\\USBSTOR\\" + std::wstring(device) + L" " + std::to_wstring(j), hresult);
-				continue;
-			}
+		for (const Subkey& instanceSub : subkeysOf(deviceKey)) {
+			const wchar_t* instance = instanceSub.name.c_str();
 			ORHKEY instanceKey = NULL;
 			log(3, L"🔈OROpenKey Enum\\USBSTOR\\" + std::wstring(device) + L"\\" + instance);
 			if ((hresult = OROpenKey(deviceKey, instance, &instanceKey)) != ERROR_SUCCESS) {

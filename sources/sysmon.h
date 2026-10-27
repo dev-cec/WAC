@@ -51,7 +51,7 @@ struct SysmonInstallation {
 	FILETIME parametersLastWriteUtc = { 0 };   //!< last write of the driver's Parameters: the last configuration change
 	std::vector<std::pair<std::wstring, Json>> parameters; //!< every value of the driver's Parameters, as stored (Rules in hexadecimal)
 	std::wstring rulesSha256;   //!< SHA-256 of Rules, uppercase hexadecimal
-	std::wstring archiveFolder; //!< the archive folder, absolute ("C:\\Sysmon")
+	std::wstring archiveFolder; //!< the archive folder, absolute ("C:\\Sysmon"); empty if the value names none
 	std::wstring configFile;    //!< ConfigFile, absolute; empty if absent or not a local path
 };
 

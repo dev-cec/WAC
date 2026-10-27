@@ -2,6 +2,7 @@
  *  \brief Offline names of the SIDs (see account_names.h).
  */
 #include "account_names.h"
+#include "registry_common.h"
 #include "tools.h"
 #include "users.h"
 #include "sha.h"
@@ -59,15 +60,8 @@ unsigned addSamIndex(ORHKEY hSam, const std::wstring& path, const std::wstring& 
 	ORHKEY names = NULL;
 	if (OROpenKey(hSam, path.c_str(), &names) != ERROR_SUCCESS) return 0;
 	unsigned added = 0;
-	wchar_t name[MAX_KEY_NAME + 1] = L"";
-	for (DWORD i = 0; ; ++i) {
-		DWORD length = MAX_KEY_NAME + 1;
-		const HRESULT hresult = OREnumKey(names, i, name, &length, NULL, NULL, NULL);
-		if (hresult == ERROR_NO_MORE_ITEMS) break;
-		if (hresult != ERROR_SUCCESS) {
-			log(2, L"🔥OREnumKey " + path + L" " + std::to_wstring(i), hresult);
-			continue;
-		}
+	for (const Subkey& sub : subkeysOf(names)) {
+		const wchar_t* name = sub.name.c_str();
 		DWORD rid = 0, size = 0;
 		if (ORGetValue(names, name, nullptr, &rid, nullptr, &size) == ERROR_SUCCESS
 		    && g_names.emplace(upper(domainSid + L"-" + std::to_wstring(rid)), name).second)
@@ -106,14 +100,8 @@ void addServiceNames() {
 		return;
 	}
 	unsigned count = 0;
-	wchar_t name[MAX_KEY_NAME + 1] = L"";
-	for (DWORD i = 0; ; ++i) {
-		DWORD length = MAX_KEY_NAME + 1;
-		const HRESULT hresult = OREnumKey(services, i, name, &length, NULL, NULL, NULL);
-		if (hresult == ERROR_NO_MORE_ITEMS) break;
-		if (hresult != ERROR_SUCCESS) continue;
-		if (g_names.emplace(upper(serviceSid(name)), std::wstring(L"NT SERVICE\\") + name).second) ++count;
-	}
+	for (const Subkey& sub : subkeysOf(services))
+		if (g_names.emplace(upper(serviceSid(sub.name)), L"NT SERVICE\\" + sub.name).second) ++count;
 	ORCloseKey(services);
 	log(2, L"❇️Service SIDs named: " + std::to_wstring(count));
 }

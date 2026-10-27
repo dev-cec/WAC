@@ -99,6 +99,7 @@ HRESULT Shimcaches::getData() {
 	std::vector<BYTE> value;
 	log(3, L"🔈getRegBinaryValue AppCompatCache");
 	hresult = getRegBinaryValue(hKey, nullptr, L"AppCompatCache", value);
+	ORCloseKey(hKey);   // the value is copied: the key, which holds its hive, is not kept
 	if (hresult != ERROR_SUCCESS) {
 		log(2, L"🔥getRegBinaryValue AppCompatCache", hresult );
 		return hresult;

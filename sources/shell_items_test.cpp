@@ -137,9 +137,40 @@ void truncations(const std::vector<BYTE>& item) {
 
 } // namespace
 
+/*! Vector<VT_LPWSTR> (0x101F): each string advances by its own length.
+ *  Computed on 32 bits, 4 + size × 2 wrapped to 0 for a forged size: the
+ *  position stood still and the loop pushed the same string four billion
+ *  times (B-050, lot 2). */
+void lpwstrVector() {
+	auto put32 = [](std::vector<uint8_t>& b, uint32_t v) { for (int i = 0; i < 4; ++i) b.push_back((uint8_t)(v >> (8 * i))); };
+	// A UnicodeString's characters, its terminator, then padding to a multiple of 4 (MS-OLEPS).
+	auto wide = [](std::vector<uint8_t>& b, const wchar_t* t) {
+		for (; *t; ++t) { b.push_back((uint8_t)*t); b.push_back(0); }
+		b.push_back(0); b.push_back(0);
+		while (b.size() % 4) b.push_back(0);
+	};
+	std::vector<uint8_t> good;
+	put32(good, 2);
+	put32(good, 3); wide(good, L"ab");
+	put32(good, 2); wide(good, L"c");
+	unsigned int pos = 0;
+	bool undecoded = false;
+	const Json v = getValue(good.data(), &pos, 0x101F, 0, (unsigned)good.size(), &undecoded);
+	check(v.kind() == Json::Kind::Arr && v.size() == 2 && v.members()[0].second.text() == L"ab" && v.members()[1].second.text() == L"c" && pos == good.size(),
+	      L"Vector<VT_LPWSTR>: two strings after the count, padding skipped, the position after them");
+	std::vector<uint8_t> forged;
+	put32(forged, 0xFFFFFFFFu);
+	put32(forged, 0x7FFFFFFEu); wide(forged, L"ab");
+	pos = 0;
+	const Json f = getValue(forged.data(), &pos, 0x101F, 0, (unsigned)forged.size(), &undecoded);
+	check(f.kind() == Json::Kind::Arr && f.size() == 0 && pos <= forged.size(),
+	      L"Vector<VT_LPWSTR>: a size whose advance wrapped on 32 bits stops the reading at once");
+}
+
 /*! Runs the checks.
  * @return 0 if every one passed */
 int wmain() {
+	lpwstrVector();
 	// The VM's witness: folder "winterdir" of wac-archive.zip, entry dated
 	// 10 January 2022 13:00 (vmtest/guest/place-file-artefacts.ps1, section 16).
 	const std::vector<BYTE> folder = fromHex(

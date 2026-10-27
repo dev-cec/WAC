@@ -26,13 +26,14 @@ namespace {
 */
 std::wstring readStringData(LPBYTE buffer, size_t size, size_t offset, size_t* next) {
 	*next = offset;
-	if (offset + 2 > size) {
+	// No addition that can wrap: the offset is computed from the file's own fields.
+	if (!fits(size, offset, 2)) {
 		log(2, L"🔥StringData outside the buffer at offset " + std::to_wstring(offset));
 		return L"";
 	}
 	const unsigned short nbCar = *reinterpret_cast<unsigned short*>(buffer + offset);
 	const size_t bytes = (size_t)nbCar * sizeof(wchar_t);
-	if (offset + 2 + bytes > size) {
+	if (!fits(size, offset + 2, bytes)) {
 		log(2, L"🔥StringData declares " + std::to_wstring(nbCar)
 		     + L" characters, beyond the buffer");
 		return L"";
@@ -41,7 +42,28 @@ std::wstring readStringData(LPBYTE buffer, size_t size, size_t offset, size_t* n
 	return std::wstring((wchar_t*)(buffer + offset + 2), nbCar);
 }
 
+//! An Internet shortcut is a few lines of INI text: a larger file is not one.
+const uintmax_t URL_FILE_MAX = 1024 * 1024;
+
 } // namespace
+
+std::string internetShortcutUrl(const std::string& text) {
+	bool inSection = false;
+	size_t start = 0;
+	while (start < text.size()) {
+		size_t end = text.find('\n', start);
+		if (end == std::string::npos) end = text.size();
+		std::string line = text.substr(start, end - start);
+		start = end + 1;
+		while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) line.pop_back();
+		if (!line.empty() && line[0] == '[') {
+			inSection = _stricmp(line.c_str(), "[InternetShortcut]") == 0;
+			continue;
+		}
+		if (inSection && line.size() >= 4 && _strnicmp(line.c_str(), "URL=", 4) == 0) return line.substr(4);
+	}
+	return "";
+}
 
 void RecentDoc::parseLNK(LPBYTE buffer, size_t size) {
 	/* Every field of a shortcut is read at an offset the file itself declares.
@@ -363,19 +385,11 @@ RecentDoc::RecentDoc(std::filesystem::path _path, std::wstring _sid) {
 		}
 	}
 	if (_path.extension() == ".url" || _path.extension() == ".URL") {
-		std::ifstream file(_path);
-		std::string line;
-		if (file.is_open()) {
-			getline(file, line); //skip first line
-			getline(file, line);
-			// strip the leading "URL=" (a shorter line would throw std::out_of_range)
-			line = line.size() >= 4 ? line.substr(4) : std::string();
+		std::string text;
+		if (readWholeFile(_path, URL_FILE_MAX, text)) {
 			log(3, L"🔈decodeURIComponent line");
-			line = decodeURIComponent(line);
 			// Decoded %xx escapes are UTF-8 bytes, not ANSI.
-			log(3, L"🔈decodeText (UTF-8) line");
-			target = decodeText(line, CP_UTF8);
-			file.close();
+			target = decodeText(decodeURIComponent(internetShortcutUrl(text)), CP_UTF8);
 		}
 	}
 

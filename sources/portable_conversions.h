@@ -15,6 +15,17 @@
 #include <type_traits>
 #include <vector>
 
+/*! True if `length` bytes starting at `offset` lie inside a structure of `size`
+ *  bytes. Written so that no addition can wrap around — the form every bound
+ *  check on data read from a file takes.
+ *  @param size size of the structure (or buffer)
+ *  @param offset position of the field
+ *  @param length size of the field
+ *  @return true if the field is entirely inside */
+inline bool fits(size_t size, size_t offset, size_t length) {
+	return offset <= size && length <= size - offset;
+}
+
 /*! An unsigned integer stored little-endian, as every on-disk Windows format
  *  holds them, read without alignment requirement. The ONE reader for new
  *  code and the old alike: the thirteen per-module copies (rd16, rd32, rd64,

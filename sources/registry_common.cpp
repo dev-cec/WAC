@@ -9,16 +9,39 @@ FILETIME lastWrite(ORHKEY key) {
 	return f;
 }
 
+std::vector<Subkey> subkeysOf(ORHKEY key) {
+	std::vector<Subkey> found;
+	DWORD count = 0;
+	const DWORD queried = ORQueryInfoKey(key, NULL, NULL, &count, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+	if (queried != ERROR_SUCCESS) {
+		log(2, L"🔥ORQueryInfoKey: subkeys not counted", queried);
+		return found;
+	}
+	std::vector<wchar_t> name(256);
+	for (DWORD i = 0; i < count; ++i) {
+		Subkey s;
+		DWORD length = (DWORD)name.size();
+		DWORD read = OREnumKey(key, i, name.data(), &length, NULL, NULL, &s.lastWriteUtc);
+		if (read == ERROR_MORE_DATA) {             // length now holds what the name needs
+			name.resize((size_t)length + 1);
+			length = (DWORD)name.size();
+			read = OREnumKey(key, i, name.data(), &length, NULL, NULL, &s.lastWriteUtc);
+		}
+		if (read != ERROR_SUCCESS) {
+			log(2, L"🔥OREnumKey: subkey " + std::to_wstring(i) + L" of " + std::to_wstring(count) + L" unreadable, skipped", read);
+			continue;
+		}
+		s.name.assign(name.data(), length);
+		found.push_back(std::move(s));
+	}
+	return found;
+}
+
 std::vector<std::wstring> subkeys(ORHKEY root, const std::wstring& path) {
 	std::vector<std::wstring> names;
 	ORHKEY key = NULL;
 	if (OROpenKey(root, path.c_str(), &key) != ERROR_SUCCESS) return names;
-	wchar_t name[512];
-	for (DWORD i = 0;; ++i) {
-		DWORD length = (DWORD)(sizeof(name) / sizeof(name[0]));
-		if (OREnumKey(key, i, name, &length, NULL, NULL, NULL) != ERROR_SUCCESS) break;
-		names.emplace_back(name, length);
-	}
+	for (Subkey& s : subkeysOf(key)) names.push_back(std::move(s.name));
 	ORCloseKey(key);
 	return names;
 }

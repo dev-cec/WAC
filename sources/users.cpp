@@ -2,6 +2,7 @@
  *  \brief Offline reading of the local accounts in the SAM hive (see users.h).
  */
 #include "users.h"
+#include "registry_common.h"
 
 namespace {
 
@@ -52,11 +53,12 @@ std::wstring readStringV(const BYTE* data, DWORD size, size_t entry) {
 	memcpy(&relativeOffset, data + entry,     sizeof(DWORD));
 	memcpy(&length,      data + entry + 4, sizeof(DWORD));
 	if (length == 0 || length > size) return L"";
-	const size_t start = V_BASE + relativeOffset;
-	if (start + length > size) {
+	// Bounded without an addition that can wrap: WAC32's size_t is 32 bits.
+	if (V_BASE > size || !fits(size - V_BASE, relativeOffset, length)) {
 		log(2, L"🔥SAM V value inconsistent: entry outside the buffer");
 		return L"";
 	}
+	const size_t start = V_BASE + relativeOffset;
 	return std::wstring((PCWSTR)(data + start), length / sizeof(wchar_t));
 }
 
@@ -299,24 +301,10 @@ HRESULT Users::getData() {
 	if (hashedBootKey.empty())
 		log(2, L"🔥SAM hashed boot key unavailable: accounts emitted without their hashes");
 
-	DWORD nSubKeys = 0;
-	log(3, L"🔈ORQueryInfoKey SAM\\Domains\\Account\\Users");
-	hresult = ORQueryInfoKey(hUsers, NULL, NULL, &nSubKeys, NULL, NULL, NULL,
-	                         NULL, NULL, NULL, NULL);
-	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥ORQueryInfoKey SAM\\Domains\\Account\\Users", hresult);
-		ORCloseKey(hUsers);
-		ORCloseHive(hSam);
-		return hresult;
-	}
-
-	WCHAR keyName[MAX_KEY_NAME] = L"";
-	for (DWORD i = 0; i < nSubKeys; ++i) {
-		printProgressStep(L"User", i + 1, nSubKeys);
-		DWORD size = MAX_KEY_NAME;
-		log(3, L"🔈OREnumKey Users " + std::to_wstring(i));
-		if (OREnumKey(hUsers, i, keyName, &size, NULL, NULL, NULL) != ERROR_SUCCESS)
-			continue;
+	const std::vector<Subkey> accounts = subkeysOf(hUsers);
+	for (size_t i = 0; i < accounts.size(); ++i) {
+		printProgressStep(L"User", (unsigned)i + 1, (unsigned)accounts.size());
+		const wchar_t* keyName = accounts[i].name.c_str();
 		/* The `Names` subkey is not an account but a name -> RID index: it is
 		   ignored, the RIDs being already carried by the `F` value. */
 		if (toLower(keyName) == L"names") continue;

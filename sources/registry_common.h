@@ -19,9 +19,28 @@ using NameValues = std::vector<std::pair<std::wstring, std::wstring>>;
  *  @return its last write time, or a null FILETIME */
 FILETIME lastWrite(ORHKEY key);
 
+/*! One subkey, as its parent lists it. */
+struct Subkey {
+	std::wstring name;
+	FILETIME lastWriteUtc = { 0 };   //!< its last write
+};
+
+/*! THE enumeration of a key's subkeys, every walk of WAC through it.
+ *  Their number is asked first: a subkey that cannot be read (a damaged
+ *  cell) is logged and skipped, not taken for the list's end — a loop that
+ *  stopped at the first error dropped every later sibling (Uninstall
+ *  programs, LSA secrets…) without a word; and a name longer than a fixed
+ *  buffer is read whole (ERROR_MORE_DATA): one that did not fit left the
+ *  previous name in the buffer, a service read twice and the long-named
+ *  one hidden.
+ *  @param key an open key
+ *  @return its subkeys, in the hive's order; empty if it has none or its
+ *          count cannot be read */
+std::vector<Subkey> subkeysOf(ORHKEY key);
+
 /*! @param root an open key
  *  @param path a key under it
- *  @return the names of the subkeys of `path`, empty if it cannot be opened */
+ *  @return the names of the subkeys of `path` (subkeysOf), empty if it cannot be opened */
 std::vector<std::wstring> subkeys(ORHKEY root, const std::wstring& path);
 
 /*! @param type,data a registry value

@@ -187,8 +187,9 @@ std::vector<uint8_t> field(const std::vector<uint8_t>& v, size_t entry) {
 	uint32_t off = 0, len = 0;
 	memcpy(&off, v.data() + entry, 4);
 	memcpy(&len, v.data() + entry + 4, 4);
+	// Bounded without an addition that can wrap: WAC32's size_t is 32 bits.
+	if (len == 0 || V_BASE > v.size() || !fits(v.size() - V_BASE, off, len)) return {};
 	const size_t start = V_BASE + off;
-	if (len == 0 || start + len > v.size()) return {};
 	return std::vector<uint8_t>(v.begin() + start, v.begin() + start + len);
 }
 

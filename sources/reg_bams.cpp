@@ -2,6 +2,7 @@
  *  \brief Reading of the Background Activity Monitor keys (see reg_bams.h).
  */
 #include "reg_bams.h"
+#include "registry_common.h"
 #include <cstring>
 
 Bam::Bam(const std::vector<BYTE>& data, std::wstring valueName, std::wstring psid) {
@@ -46,12 +47,7 @@ HRESULT Bams::getData() {
 		std::vector<std::wstring> sids;
 		ORHKEY settings = NULL;
 		if (OROpenKey(conf.CurrentControlSet, (L"Services\\" + key + L"\\UserSettings").c_str(), &settings) == ERROR_SUCCESS) {
-			wchar_t name[MAX_VALUE_NAME];
-			for (DWORD i = 0;; ++i) {
-				DWORD length = MAX_VALUE_NAME;
-				if (OREnumKey(settings, i, name, &length, nullptr, nullptr, nullptr) != ERROR_SUCCESS) break;
-				sids.emplace_back(name, length);
-			}
+			for (Subkey& sub : subkeysOf(settings)) sids.push_back(std::move(sub.name));
 			ORCloseKey(settings);
 		}
 		for (const std::wstring& sid : sids) {

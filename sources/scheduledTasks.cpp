@@ -2,6 +2,7 @@
  *  \brief Offline reading of the scheduled tasks (see scheduledTasks.h).
  */
 #include "scheduledTasks.h"
+#include "registry_common.h"
 #include "xml_light.h"
 #include <filesystem>
 #include <map>
@@ -65,18 +66,10 @@ void walkTree(ORHKEY key, const std::wstring& path,
 	if (getRegSzValue(key, L"", L"Id", &id) == ERROR_SUCCESS && !id.empty())
 		idByPath.emplace(toLower(path), id);
 
-	DWORD nSubKeys = 0;
-	if (ORQueryInfoKey(key, NULL, NULL, &nSubKeys, NULL, NULL, NULL,
-	                   NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
-		return;
-
-	for (DWORD i = 0; i < nSubKeys; ++i) {
-		WCHAR name[MAX_KEY_NAME] = L"";
-		DWORD size = MAX_KEY_NAME;
-		if (OREnumKey(key, i, name, &size, NULL, NULL, NULL) != ERROR_SUCCESS) continue;
+	for (const Subkey& sub : subkeysOf(key)) {
 		ORHKEY subKey = NULL;
-		if (OROpenKey(key, name, &subKey) != ERROR_SUCCESS) continue;
-		walkTree(subKey, path + L"\\" + name, idByPath, depthLeft - 1);
+		if (OROpenKey(key, sub.name.c_str(), &subKey) != ERROR_SUCCESS) continue;
+		walkTree(subKey, path + L"\\" + sub.name, idByPath, depthLeft - 1);
 		ORCloseKey(subKey);
 	}
 }

@@ -111,7 +111,7 @@ HRESULT Shellbags::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std
 		Shellbag shellbag;
 		shellbag.id = id;
 		shellbag.mruPosition = mruPosition++;   // MRUListEx lists the most recent first
-		log(2, L"❇️Shellbag id : " + id);
+		log(2, L"❇️Shellbag id : " + std::to_wstring(id));
 		shellbag.lastWriteTimeUtc = lastWriteTimeUtc;
 		shellbag.Parent = Parent;
 		shellbag.level = level;

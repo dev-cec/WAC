@@ -113,7 +113,7 @@ HRESULT MruApps::parse(ORHKEY hKey, std::wstring sid, std::wstring source, std::
 		              ++nWalked, 0, L"mru");
 		MruApp mruApp;
 		mruApp.id = id;
-		log(2, L"❇️MruApp id" + id);
+		log(2, L"❇️MruApp id " + std::to_wstring(id));
 		mruApp.lastWriteTimeUtc = lastWriteTimeUtc;
 		mruApp.level = level;
 		mruApp.sid = sid;

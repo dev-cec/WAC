@@ -2,6 +2,7 @@
  *  \brief Implementation of the local groups reading (see local_groups.h).
  */
 #include "local_groups.h"
+#include "registry_common.h"
 
 #include <cstring>
 #include "users.h"     // openSam
@@ -28,8 +29,9 @@ DWORD header(const std::vector<BYTE>& c, size_t i) {
 //! A UTF-16 string of the C value, from its (offset, length) header fields.
 std::wstring cString(const std::vector<BYTE>& c, size_t offsetField, size_t lengthField) {
 	const size_t offset = header(c, offsetField), length = header(c, lengthField);
+	// Bounded without an addition that can wrap: WAC32's size_t is 32 bits.
+	if (length == 0 || C_DATA > c.size() || !fits(c.size() - C_DATA, offset, length)) return L"";
 	const size_t start = C_DATA + offset;
-	if (length == 0 || start + length > c.size()) return L"";
 	return std::wstring((PCWSTR)(c.data() + start), length / sizeof(wchar_t));
 }
 
@@ -41,8 +43,8 @@ std::wstring cString(const std::vector<BYTE>& c, size_t offsetField, size_t leng
 void readMembers(const std::vector<BYTE>& c, std::vector<std::wstring>& out) {
 	const size_t offset = header(c, C_MEMBERS_OFFSET), length = header(c, C_MEMBERS_LENGTH);
 	const DWORD count = header(c, C_MEMBERS_COUNT);
+	if (length == 0 || C_DATA > c.size() || !fits(c.size() - C_DATA, offset, length)) return;
 	const size_t start = C_DATA + offset;
-	if (length == 0 || start + length > c.size()) return;
 	size_t at = start;
 	const size_t end = start + length;
 	for (DWORD i = 0; i < count; ++i) {
@@ -69,17 +71,9 @@ void readAliases(ORHKEY hSam, const std::wstring& domain, const std::wstring& sc
 	const std::wstring path = base + L"Domains\\" + domain + L"\\Aliases";
 	ORHKEY aliases = NULL;
 	if (OROpenKey(hSam, path.c_str(), &aliases) != ERROR_SUCCESS) return;
-	DWORD count = 0;
-	if (ORQueryInfoKey(aliases, NULL, NULL, &count, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS) {
-		ORCloseKey(aliases);
-		return;
-	}
-	WCHAR name[MAX_KEY_NAME] = L"";
-	for (DWORD i = 0; i < count; ++i) {
-		DWORD size = MAX_KEY_NAME;
-		if (OREnumKey(aliases, i, name, &size, NULL, NULL, NULL) != ERROR_SUCCESS) continue;
+	for (const Subkey& sub : subkeysOf(aliases)) {
 		// "Members" and "Names" are indexes under Aliases, not groups.
-		const std::wstring keyName = name;
+		const std::wstring& keyName = sub.name;
 		if (toLower(keyName) == L"members" || toLower(keyName) == L"names") continue;
 		ORHKEY alias = NULL;
 		if (OROpenKey(aliases, keyName.c_str(), &alias) != ERROR_SUCCESS) continue;

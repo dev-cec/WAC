@@ -185,7 +185,7 @@ std::vector<ReadEntry> readString(const std::filesystem::path& log,
     while (off + ENTRY_HEADER <= d.size()){
         if (std::memcmp(d.data() + off, "HvLE", 4) != 0) break;
         const uint32_t size = readLittleEndian<uint32_t>(d.data() + off + 4);
-        if (size < LOG_HEADER || off + size > d.size()) break;
+        if (size < LOG_HEADER || !fits(d.size(), off, size)) break;   // no addition that can wrap (WAC32)
 
         if (broken){ ++*leftover; off += size; continue; }
 

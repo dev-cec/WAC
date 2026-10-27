@@ -95,6 +95,7 @@ HRESULT MountedDevices::getData() {
 	hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubkeys, NULL, NULL, &nValues, NULL, NULL, NULL, &lastWriteTimeUtc);
 	if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
 		log(2, L"🔥ORQueryInfoKey System\\MountedDevices", hresult);
+		ORCloseKey(hKey);
 		return hresult;
 	};
 
@@ -114,6 +115,7 @@ HRESULT MountedDevices::getData() {
 		mounteddevices.push_back(MountedDevice(hKey, szSubValue));
 
 	}
+	ORCloseKey(hKey);   // each device read its value: the key, which holds its hive, is not kept
 	return ERROR_SUCCESS;
 }
 

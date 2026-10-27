@@ -216,6 +216,15 @@ void cmTraceLog() {
 	      "CMTrace: a bias after the time read apart, a one-digit month and day");
 }
 
+void internetShortcut() {
+	// As Internet Explorer writes it: a property section, then [InternetShortcut].
+	check(internetShortcutUrl("[{000214A0-0000-0000-C000-000000000046}]\r\nProp3=19,11\r\n[InternetShortcut]\r\nIDList=\r\nURL=https://example.com/a%20b\r\n")
+	      == "https://example.com/a%20b", "url: the URL= of [InternetShortcut], wherever the section lies");
+	check(internetShortcutUrl("[InternetShortcut]\nURL=http://x/\n") == "http://x/", "url: the plain form, LF line ends");
+	check(internetShortcutUrl("[Other]\r\nURL=http://not-this/\r\n").empty() && internetShortcutUrl("").empty(),
+	      "url: a URL= outside [InternetShortcut], or none, gives nothing");
+}
+
 void setupapi() {
 	const std::vector<SetupApiSection> s = parseSetupApiLog(
 		L"[Device Install Log]\r\n"
@@ -2185,6 +2194,7 @@ int wmain(int argc, wchar_t** argv) {
 	firewallLog();
 	partitionTables();
 	cmTraceLog();
+	internetShortcut();
 	recycleBin();
 	hosts();
 	errorReport();

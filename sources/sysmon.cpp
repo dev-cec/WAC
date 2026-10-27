@@ -18,11 +18,15 @@ const wchar_t* const DEFAULT_ARCHIVE_DIRECTORY = L"\\Sysmon\\";
 /*! The absolute path of an ArchiveDirectory: a folder at the root of the
  *  system volume, as Sysmon writes it ("\\Sysmon\\", "Sysmon"), or a path
  *  with its letter.
- *  @return without its trailing separator */
+ *  @return without its trailing separator; EMPTY when the value names no
+ *          folder (empty, separators only, or a drive's root): read as "\\",
+ *          an empty value sent the collection walking the whole system
+ *          volume and every file was listed as archived */
 std::wstring archiveFolderOf(std::wstring value) {
 	while (!value.empty() && (value.back() == L'\\' || value.back() == L'/')) value.pop_back();
+	if (value.empty() || (value.size() == 2 && value[1] == L':')) return L"";
 	if (value.size() >= 2 && value[1] == L':') return value;
-	if (value.empty() || value[0] != L'\\') value = L"\\" + value;
+	if (value[0] != L'\\') value = L"\\" + value;
 	return conf.systemDrive.substr(0, 2) + value;
 }
 
@@ -117,7 +121,8 @@ HRESULT Sysmon::getData() {
 		SysmonEntry e;
 		// The working copy, as the collection took it: the exhibit store is not read again.
 		std::error_code ec;
-		const std::filesystem::path folder = extractedPath(s.archiveFolder);
+		// No folder named: nothing archived to list (archiveFolderOf).
+		const std::filesystem::path folder = s.archiveFolder.empty() ? std::filesystem::path() : std::filesystem::path(extractedPath(s.archiveFolder));
 		for (std::filesystem::recursive_directory_iterator it(folder, ec), end; !ec && it != end; it.increment(ec)) {
 			if (!it->is_regular_file(ec)) continue;
 			SysmonArchivedFile f;

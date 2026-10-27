@@ -6,6 +6,15 @@
 #include <exception>
 #include <map>
 
+namespace {
+
+//! The most elements a property vector is read for: a larger count is corrupted data or a misread type.
+const unsigned int MAX_VECTOR_ELEMENTS = 65536;
+//! The fixed part of a 0xBEEF0004 extension block: its dates and identifier, read whole.
+const size_t BEEF0004_FIXED_PART = 18;
+
+} // namespace
+
 
 /********************************************************************************************************************
 * FLAGS
@@ -544,12 +553,24 @@ static Json readScalar(LPBYTE buffer, unsigned int* pos, unsigned short valueTyp
 	}
 	if (valueType == 0x101F) {                     // Vector<VT_LPWSTR>
 		Json arr = Json::arr();
-		unsigned int elementCount = *reinterpret_cast<unsigned int*>(buffer + *pos);
-		for (unsigned int x = 0; x < elementCount && fits(inputSize, (size_t)*pos + 4, 4); x++) {
-			unsigned int size = *reinterpret_cast<unsigned int*>(buffer + *pos + 4);
-			arr.push(Json::str(readWideZ(buffer, inputSize, (size_t)*pos + 8)));
-			*pos += 4 + size * 2;
+		/* MS-OLEPS: the element count on 4 bytes, then each UnicodeString —
+		   its length in characters (terminator included) on 4 bytes, the
+		   characters, padding to a multiple of 4. Each advances by its own
+		   length, computed wide: 4 + size × 2 on 32 bits wrapped to 0 for a
+		   forged size, the position stood still and the same string was
+		   pushed four billion times; and the count was taken for the first
+		   length, every element read 4 bytes early. The count is capped as
+		   the generic vectors' is. */
+		const unsigned int elementCount = *reinterpret_cast<unsigned int*>(buffer + *pos);
+		size_t at = (size_t)*pos + 4;
+		for (unsigned int x = 0; x < elementCount && x < MAX_VECTOR_ELEMENTS && fits(inputSize, at, 4); x++) {
+			const size_t size = *reinterpret_cast<unsigned int*>(buffer + at);
+			const size_t next = at + 4 + ((size * 2 + 3) & ~(size_t)3);
+			if (next > inputSize) break;
+			arr.push(Json::str(readWideZ(buffer, (size_t)at + 4 + size * 2, at + 4)));
+			at = next;
 		}
+		*pos = (unsigned int)at;
 		return arr;
 	}
 	if (valueType == 0x1011) {                     // Vector<VT_UI1>
@@ -755,8 +776,7 @@ Json getValue(LPBYTE buffer, unsigned int* pos, unsigned short valueType, unsign
 
 	/* A nonsensical count comes from corrupted data or a misidentified type: the
 	   bytes are returned instead of iterating millions of times. */
-	const unsigned int MAX_ELEMENTS = 65536;
-	if (elementCount > MAX_ELEMENTS) {
+	if (elementCount > MAX_VECTOR_ELEMENTS) {
 		log(2, L"🔥vector: nonsensical count " + std::to_wstring(elementCount));
 		if (typeNotDecoded) *typeNotDecoded = true;
 		Json o = Json::obj();
@@ -1616,7 +1636,7 @@ void getExtensionBlock(LPBYTE buffer, std::vector<std::unique_ptr<IExtensionBloc
 	static const std::map<unsigned int, size_t> FIXED_PART = {
 		{ 0xBeef0000, 40 },   // two GUIDs at 8 and 24
 		{ 0xBeef0003, 24 },   // GUID at 8
-		{ 0xBeef0004, 18 },   // dates and identifier, up to 18
+		{ 0xBeef0004, BEEF0004_FIXED_PART },   // dates and identifier
 		{ 0xBeef000e, 32 },   // GUID at 16
 		{ 0xBeef0019, 40 },   // two GUIDs at 8 and 24
 		{ 0xBeef0025, 28 },   // two FILETIMEs at 12 and 20
@@ -2735,7 +2755,8 @@ UsersFilesFolder::UsersFilesFolder(LPBYTE buffer, int _level) {
 	// The block's offset and size come from the item: both must stay inside it.
 	const unsigned short blockSize = ((size_t)extensionOffset + 2 <= size)
 	                                 ? *reinterpret_cast<unsigned short*>(buffer + extensionOffset) : 0;
-	if (extensionOffset >= 4 && blockSize >= 8 && blockSize <= size - extensionOffset) {
+	// At least the block's fixed part (18 bytes), as getExtensionBlock requires: Beef0004 reads it whole.
+	if (extensionOffset >= 4 && blockSize >= BEEF0004_FIXED_PART && blockSize <= size - extensionOffset) {
 		log(3, L"🔈Beef0004");
 		extensionBlock = std::make_unique<Beef0004>(buffer + extensionOffset, level + 1, nullptr, false); // The block follows
 	}

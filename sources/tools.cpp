@@ -10,6 +10,7 @@
 #include <array>
 #include <map>
 #include "sha.h"
+#include "registry_common.h"
 #include <cwctype>
 #include <windows.h>
 #include <stdio.h>
@@ -698,22 +699,8 @@ HRESULT loadProfileList() {
 		return hresult;
 	}
 
-	DWORD nSubKeys = 0;
-	log(3, L"🔈ORQueryInfoKey ProfileList");
-	hresult = ORQueryInfoKey(hKey, NULL, NULL, &nSubKeys, NULL, NULL, NULL,
-	                         NULL, NULL, NULL, NULL);
-	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥ORQueryInfoKey ProfileList", hresult);
-		ORCloseKey(hKey);
-		return hresult;
-	}
-
-	for (DWORD i = 0; i < nSubKeys; ++i) {
-		WCHAR sid[MAX_KEY_NAME] = L"";
-		DWORD size = MAX_KEY_NAME;
-		log(3, L"🔈OREnumKey ProfileList " + std::to_wstring(i));
-		if (OREnumKey(hKey, i, sid, &size, NULL, NULL, NULL) != ERROR_SUCCESS)
-			continue;
+	for (const Subkey& profile : subkeysOf(hKey)) {
+		const wchar_t* sid = profile.name.c_str();
 
 		std::wstring path;
 		if (getRegSzValue(hKey, sid, L"ProfileImagePath", &path) != ERROR_SUCCESS)

@@ -1,4 +1,5 @@
 #include "services.h"
+#include "registry_common.h"
 #include "live_snapshot.h"
 #include <algorithm>
 
@@ -213,32 +214,17 @@ HRESULT Services::getData() {
 		return hresult;
 	}
 
-	DWORD nSubKeys = 0;
-	log(3, L"🔈ORQueryInfoKey CurrentControlSet\\Services");
-	hresult = ORQueryInfoKey(hServices, NULL, NULL, &nSubKeys, NULL, NULL, NULL,
-	                         NULL, NULL, NULL, NULL);
-	if (hresult != ERROR_SUCCESS) {
-		log(2, L"🔥ORQueryInfoKey CurrentControlSet\\Services", hresult);
-		ORCloseKey(hServices);
-		return hresult;
-	}
+	const std::vector<Subkey> serviceKeys = subkeysOf(hServices);
 
 	// Current state read BEFORE the walk: one single solicitation of the SCM.
 	std::map<std::wstring, ServiceState> states;
 	// The states observed live, read back from the snapshot (snapshotServiceStates).
 	const bool statesAvailable = (readSnapshotStates(states) == ERROR_SUCCESS);
 
-	services.reserve(nSubKeys);
-	WCHAR keyName[MAX_KEY_NAME] = L"";
-	for (DWORD i = 0; i < nSubKeys; ++i) {
-		printProgressStep(L"Service", i + 1, nSubKeys);
-		DWORD size = MAX_KEY_NAME;
-		log(3, L"🔈OREnumKey Services " + std::to_wstring(i));
-		hresult = OREnumKey(hServices, i, keyName, &size, NULL, NULL, NULL);
-		if (hresult != ERROR_SUCCESS && hresult != ERROR_MORE_DATA) {
-			log(2, L"🔥OREnumKey Services " + std::to_wstring(i), hresult);
-			continue;
-		}
+	services.reserve(serviceKeys.size());
+	for (size_t i = 0; i < serviceKeys.size(); ++i) {
+		printProgressStep(L"Service", (unsigned)i + 1, (unsigned)serviceKeys.size());
+		const wchar_t* keyName = serviceKeys[i].name.c_str();
 
 		ORHKEY hService = NULL;
 		log(3, L"🔈OROpenKey Services\\" + std::wstring(keyName));
