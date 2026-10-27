@@ -2305,10 +2305,13 @@ def check_small_file_artefacts(folder):
         guid, stub = reference["activesetup"].split("|", 1)
         report(bool(find("Active Setup StubPath", guid, stub)), "persistence.json: Active Setup StubPath witness found",
                "persistence.json: Active Setup witness missing")
-        sid, clsid, dll = reference["comhijack"].split("|", 2)
-        com = [p for p in find("COM InprocServer32 (user)", clsid, dll) if p.get("SID") == sid]
-        report(bool(com), f"persistence.json: COM hijack of {clsid} in the user's classes found",
-               "persistence.json: COM hijack witness missing")
+        # Written in the user's hive, after the machine's witnesses: absent when
+        # that hive was not loaded, a failure the witness line already reports.
+        if "comhijack" in reference:
+            sid, clsid, dll = reference["comhijack"].split("|", 2)
+            com = [p for p in find("COM InprocServer32 (user)", clsid, dll) if p.get("SID") == sid]
+            report(bool(com), f"persistence.json: COM hijack of {clsid} in the user's classes found",
+                   "persistence.json: COM hijack witness missing")
         exefile = [p.get("Value") for p in persistence if p.get("Mechanism") == "File type open command"
                    and "exefile" in (p.get("Key") or "").lower()]
         report(exefile == [reference.get("exefile")], f"persistence.json: the open command of exefile as Windows reads it ({reference.get('exefile')})",
@@ -2466,13 +2469,20 @@ def check_small_file_artefacts(folder):
             if not any(p.split("|")[0].endswith("eleted-file.txt") or p.endswith("ELETE~1.TXT") for p in deleted) \
                     or not any(p.split("|")[0].endswith("nner.txt") for p in deleted):
                 wrong.append(f"{letter}: the deleted file or folder not found among {len(deleted)} deleted entries")
-        for file, size, modified in files:
+        systems = {letter.lower(): system for letter, label, system in volumes}
+        for file, size, modified, *local in files:
             e = present.get(file.lower())
-            got = (e or {}).get("ModifiedUtc", "")[:19]
+            # FAT stores local time, which Windows turns into UTC with the offset of
+            # the day it reads it, WAC with the offset of the date: across a change
+            # of time, compared as stored. exFAT records its offset: compared in UTC.
+            if local and systems.get(file[:2].lower(), "").startswith("FAT"):
+                got, expected = ((e or {}).get("ModifiedAsStored") or (e or {}).get("Modified", ""))[:19], local[0]
+            else:
+                got, expected = (e or {}).get("ModifiedUtc", "")[:19], modified
             # FAT keeps two seconds: a write at an odd second is rounded up.
-            close = got and abs((instant(got + "Z") - instant(modified + "Z")).total_seconds()) <= 2
+            close = got and abs((instant(got + "Z") - instant(expected + "Z")).total_seconds()) <= 2
             if e is None or e.get("Size") != int(size) or not close:
-                wrong.append(f"{file}: {None if e is None else (e.get('Size'), got)} for ({size}, {modified})")
+                wrong.append(f"{file}: {None if e is None else (e.get('Size'), got)} for ({size}, {expected})")
         # The winter file copied in summer: its UTC date exact, the copy said (FAT).
         for letter, label, system in volumes:
             copy = present.get((letter + "\\copied-winter.txt").lower())

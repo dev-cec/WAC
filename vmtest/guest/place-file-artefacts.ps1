@@ -359,16 +359,18 @@ try { if (Wants 'persistence') {
     New-Item -Force $setup | Out-Null
     New-ItemProperty -Force -Path $setup -Name 'StubPath' -Value 'C:\wactest\wac-stub.exe /once' | Out-Null
     Write-Output "activesetup={0000FACE-0000-4AC0-8000-000000000001}|C:\wactest\wac-stub.exe /once"
-    $com = "Registry::HKEY_USERS\$($wacSid)_Classes\CLSID\{0000FACE-0000-4AC0-8000-000000000002}\InprocServer32"
-    New-Item -Force $com | Out-Null
-    Set-ItemProperty -Path $com -Name '(default)' -Value 'C:\wactest\wac-com.dll'
-    Write-Output "comhijack=$wacSid|{0000FACE-0000-4AC0-8000-000000000002}|C:\wactest\wac-com.dll"
     # What Windows set itself, read live, to compare.
     Write-Output ("userinit=" + (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon').Userinit)
     Write-Output ("exefile=" + (Get-ItemProperty 'HKLM:\SOFTWARE\Classes\exefile\shell\open\command').'(default)')
     Write-Output ("lsa_security=" + ((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa').'Security Packages' -join '|'))
     $monitors = Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Control\Print\Monitors' | ForEach-Object { $_.PSChildName + '=' + $_.GetValue('Driver') } | Sort-Object
     Write-Output ("monitors=" + ($monitors -join '|'))
+    # Last: in the user's hive, absent when it is not loaded, and its failure
+    # must not lose the machine's references above.
+    $com = "Registry::HKEY_USERS\$($wacSid)_Classes\CLSID\{0000FACE-0000-4AC0-8000-000000000002}\InprocServer32"
+    New-Item -Force $com | Out-Null
+    Set-ItemProperty -Path $com -Name '(default)' -Value 'C:\wactest\wac-com.dll'
+    Write-Output "comhijack=$wacSid|{0000FACE-0000-4AC0-8000-000000000002}|C:\wactest\wac-com.dll"
 } } catch { WitnessFailure 'persistence' $_ }
 
 # 9. Second-lot registry witnesses, in the hive of the user "wac" (loaded: the
@@ -579,6 +581,10 @@ try { if (Wants 'fat_volumes') {
         [IO.File]::WriteAllText($winter, 'modified in winter, copied later')
         (Get-Item -LiteralPath $winter).LastWriteTimeUtc = (New-Object datetime 2022, 1, 10, 12, 0, 0, ([DateTimeKind]::Utc))
         Copy-Item -LiteralPath $winter -Destination (Join-Path $root 'copied-winter.txt')
+        # Its creation dates the copy, whose offset WAC applies: recreated within
+        # 15 s of the key being emptied, the file is given back by tunneling the
+        # creation of an earlier cycle — a summer one, an hour off in winter.
+        (Get-Item -LiteralPath (Join-Path $root 'copied-winter.txt')).CreationTime = Get-Date
         # The deleted files' witnesses (deleted_files), created before any
         # deletion and deleted after them all — an entry created after a
         # deletion takes its place: a text of 20 KB to delete (level 1, its
@@ -620,7 +626,10 @@ try { if (Wants 'fat_volumes') {
         foreach ($f in Get-ChildItem -LiteralPath $root -Recurse -Force | Where-Object { -not $_.PSIsContainer } | Where-Object { $_.FullName -notlike '*System Volume Information*' }) {
             # The path percent-encoded (UTF-8): PowerShell 4 writes its output in
             # the console's code page, where the long name's accents are lost.
-            Write-Output ("fatfile=" + (@([uri]::EscapeDataString($f.FullName), $f.Length, $f.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
+            # Its local time too: on FAT, as stored, while Windows turns it into
+            # UTC with the offset of the day it reads it, not of the date.
+            Write-Output ("fatfile=" + (@([uri]::EscapeDataString($f.FullName), $f.Length, $f.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ss'),
+                $f.LastWriteTime.ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
         }
     }
 } } catch { WitnessFailure 'fat_volumes' $_ }
