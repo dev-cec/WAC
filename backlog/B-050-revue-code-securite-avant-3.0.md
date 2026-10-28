@@ -50,7 +50,7 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
 
 ## Tâches
 - [x] Découper le dépôt en lots de revue (ci-dessus)
-- [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 à 3 : faits — 1315c4da, 49d34970, dac5efc5 ; lot 4 : fait — 171993b3 ; lot 5 : fait — 6430ba17)
+- [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 à 3 : faits — 1315c4da, 49d34970, dac5efc5 ; lot 4 : fait — 171993b3 ; lot 5 : fait — 6430ba17 ; lot 6 : fait — 45a9a96f ; lot 7 : fait — 2ab95fb9)
 - [ ] `/security-review` sur le code livré ; constats triés et traités
 - [x] `/code-review ultra` : écarté par l'utilisateur (2026-10-27) — la revue se fait lot par lot avec `/code-review`
 - [ ] Cycles VM verts après corrections
@@ -136,5 +136,19 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
   - écarté : `network` — « lignes partielles gardées avec Connections dans TablesNotRead » : les lignes sont effacées avant le repli sur les tables de la pile, qui ne pousse rien s'il échoue ; le seul cas restant (ni fonction actuelle complète, ni repli) n'existe pas après Vista, où le repli est toujours résolu.
   - Tests écrits : `lsaText` (sans NUL, tampon nul), JSON sur un support plein (`Z:\\dev\\full` sous Wine), OperatingSystem.json sans instantané de l'horloge, MD5 d'un fichier absent (et RFC 1321 « abc »), `output: ..` refusé (config_test).
   - Documentation FR/EN : règle de `--output` ; manuels compilés, 0 débordement.
-  - À faire après le cycle du lot 5 : compiler, tests, mutations, commit.
-- 2026-10-28 : lot 7 (scripts et compilation) : `/code-review high` lancé pendant le cycle du lot 5.
+  - Compilé (`--test`, sans avertissement) ; tests : file_artefacts_test 280, config_test 64, consigne_test (une ruche propre ne donne rien à rejouer : son contrôle « copie de travail rejouée » échoue sur les trois ruches disponibles, faute de journaux à appliquer — limite de la donnée, pas du correctif), et les autres sans échec. Six mutants pris ; celui du support plein n'était PAS pris au premier essai — la garde du test (`exists(Z:\\dev\\full)`) est fausse sous Wine, le test ne tournait pas : garde corrigée (`Z:\\dev`), mutant pris ensuite. Restauré, recompilé, `bin` identique à `build-windows`. Commit 45a9a96f.
+- 2026-10-28 : cycle Windows 11 du lot 5 : 547 ✅, 0 ❌.
+- 2026-10-28 : lot 7 (scripts et compilation), `/code-review high` : 10 constats vérifiés, tous retenus :
+  - (1) `build-windows.sh` : `objdump -p | grep -q` sous `pipefail` — objdump (6 Mo) tué par SIGPIPE au premier résultat, code 141 : les contrôles d'imports interdits, de bibliothèques réseau et de lancement de processus passaient exactement quand l'import était présent (reproduit : GetProcAddress non vu par l'ancienne forme, vu par la nouvelle) → en-têtes lus une fois puis cherchés ;
+  - (2)(3) scripts de vérification : manifeste illisible, sans `Items` ou dont `Items` n'est pas une liste → « 0 pièce vérifiée », code 0 → refusés ;
+  - (4) `.ps1` : chemin `\\?\` toujours, que .NET n'accepte qu'à partir de 4.6.2, et une pièce illisible comptée « différente » → chemin étendu au-delà de 259 caractères seulement, pièce illisible dite telle ;
+  - (5) `.ps1` : sceau ou manifeste absent annoncé « manifeste modifié » → dit absent ;
+  - (6) `build-windows.sh` : un raw_hive_test.exe d'une compilation `--test` antérieure entrait dans bin/ et SHA256SUMS → seulement celui de cette compilation ;
+  - (7) `bump-version.sh` : WAC.rc relevé laissé tel quel si la compilation échouait, une relance sautait un numéro → restauré (testé sur une copie, mutant pris), compilation avec `--test` ;
+  - (8) `bump-version.sh` : échec de doxygen ou de la documentation silencieux, PDF de l'ancienne version mis dans l'index → arrêt, message ;
+  - (9) le sceau à côté du manifeste ne protège pas d'une réécriture des deux → WAC affiche le sceau en fin de collecte, à reporter au procès-verbal ; `--seal` / `-Seal` le lui opposent ;
+  - (10) `verifier-consigne.*` copies de `verify-exhibits.*` aux identifiants français → le même script, messages choisis par `--language` / `-Language`.
+  - Tests : verify_exhibits_test.sh 33 (manifeste sans liste, `Items` objet, sceau relevé accepté en majuscules et minuscules, manifeste réécrit et rescellé refusé) — 9 échecs sur les anciens scripts, mutant de la comparaison au sceau relevé pris ; consigne_test (sceau rendu pour la console, mutant pris). Le `.ps1` n'a pas de PowerShell ici : éprouvé par l'étape 7 du cycle VM.
+  - Documentation FR/EN (manuel, tests, README) : sceau relevé, `--seal`, `-Output` pour les deux scripts PowerShell ; manuels compilés, 0 débordement. Commit 2ab95fb9.
+  - Hors revue : `Doxygen/` a été déplacé dans `build-windows/Doxygen/` le 28/10 à 23 h 17, par aucune commande de la session ; non touché, signalé à l'utilisateur (bump-version.sh y cherche encore Doxygen/Doxyfile).
+- 2026-10-29 : cycle Windows 11 des lots 6 et 7 lancé.
