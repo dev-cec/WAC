@@ -2229,6 +2229,20 @@ def check_small_file_artefacts(folder):
             url, digest = (l[len("webhta="):].split("|", 1) + [""])[:2]
             entry = next((r for r in web if r.get("Type") == "CacheEntry" and r.get("Url") == url), {})
             cached = exhibits.get((entry.get("CachedFile") or "").lower(), {})
+            # WinINet may scavenge its cache between two collections of one cycle
+            # (Windows 11, 2026-10-28: deleted 26 min before the second): the
+            # entry stays in the WebCache, the file is gone and its deletion is in
+            # the volume's journal — nothing left for WAC to collect.
+            name = ntpath.basename(entry.get("CachedFile") or "")
+            usn = load(folder, "usn_journal.json") if entry and not cached else None
+            mft = load(folder, "mft.json") if isinstance(usn, list) else None
+            if isinstance(mft, list) \
+                    and not any(not r.get("Deleted") and (r.get("Path") or "").lower() == entry["CachedFile"].lower()
+                                for r in mft) \
+                    and any(r.get("Name") == name and "FILE_DELETE" in (r.get("Reasons") or "") for r in usn):
+                print(f"  ⚠️  web_client.json: HTA {url}: Windows deleted its cached copy {name} before this collection "
+                      "(FILE_DELETE in the USN journal) — the WebCache entry is found, the copy cannot be confronted")
+                continue
             report(entry and cached.get("SHA256") == digest,
                    f"web_client.json: the HTA run by mshta.exe found in the WebCache, its cached copy {ntpath.basename(entry.get('CachedFile', ''))} collected, same SHA-256",
                    f"web_client.json: HTA {url}: entry {entry.get('CachedFile') if entry else 'missing'}, exhibit {cached.get('SHA256')}")
