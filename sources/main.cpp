@@ -658,14 +658,22 @@ void sealExhibitStore() {
 		size_t exhibits = 0, failures = 0;
 		unsigned long long bytes = 0;
 		ExhibitStoreSummary(&exhibits, &failures, &bytes);
-		const HRESULT hrManifest = ExhibitStoreWriteManifest();
+		std::wstring seal;
+		const HRESULT hrManifest = ExhibitStoreWriteManifest(&seal);
 		auditRecord(L"Sealing of the exhibit store (" + std::to_wstring(exhibits)
 		            + L" exhibit(s), " + std::to_wstring(failures) + L" failure(s), "
-		            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
+		            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)" + (seal.empty() ? L"" : L", seal " + seal),
 		            exhibitStoreFolder() + L"\\MANIFEST.json (+ .sha256)",
 		            hrManifest, Footprint::USB_WRITE);
 		if (FAILED(hrManifest)) printError(hrManifest);
-		else printSuccess();
+		else {
+			printSuccess();
+			/* On the screen, to be written down: the seal beside the manifest
+			   only proves the manifest unchanged since it was sealed — whoever
+			   rewrites one rewrites the other. The value noted at the
+			   collection is what the verification scripts take (--seal). */
+			writeConsole(text(Text::ManifestSeal, { seal }) + L"\n");
+		}
 	}
 }
 

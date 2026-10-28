@@ -6,9 +6,8 @@
 # Usage: bash sources/verify_exhibits_test.sh
 # Exit code: 0 if every check passes, 1 otherwise.
 #
-# The two scripts differ only by their messages: every case runs on both and
-# checks the exit code and the counters, so that one cannot drift from the
-# other unnoticed.
+# verifier-consigne.sh is verify-exhibits.sh with French messages: every case
+# runs through both, checking the exit code and the counters.
 
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -48,12 +47,13 @@ PYTHON
 }
 
 # $1: case name; $2: folder; $3: expected exit code; $4: expected number of
-# verified exhibits; $5: expected number of mismatches ("" for a refused seal).
+# verified exhibits; $5: expected number of mismatches ("" for a refused seal);
+# $6: an option given before the folder (--seal=…), optional.
 expect() {
-    local name="$1" dir="$2" code="$3" ok="$4" ko="$5" script out got
+    local name="$1" dir="$2" code="$3" ok="$4" ko="$5" option="${6:-}" script out got
     for script in "${SCRIPTS[@]}"; do
         checks=$((checks + 1))
-        out="$(bash "$script" "$dir" 2>&1)"; got=$?
+        out="$(bash "$script" ${option:+"$option"} "$dir" 2>&1)"; got=$?
         local verdict=""
         [ "$got" -eq "$code" ] || verdict="exit code $got, expected $code"
         if [ -n "$ko" ] && [ -z "$verdict" ]; then
@@ -72,7 +72,7 @@ make_collection "$WORK/intact"
 expect "intact collection accepted" "$WORK/intact" 0 2 0
 out="$(bash "${SCRIPTS[0]}" "$WORK/intact")"
 checks=$((checks + 1))
-printf '%s\n' "$out" | grep -q '^1 binarie(s) authenticated' \
+printf '%s\n' "$out" | grep -q '^1 binary(ies) authenticated' \
     || { failures=$((failures + 1)); echo "FAIL fingerprint-only binary not counted: $out"; }
 
 make_collection "$WORK/lowercase" 'items[0]["SHA256"] = items[0]["SHA256"].lower()'
@@ -113,6 +113,20 @@ sha256sum "$WORK/broken/exhibits/MANIFEST.json" | sed 's| .*|  MANIFEST.json|' >
 expect "sealed but unreadable manifest refused" "$WORK/broken" 1 0 1
 
 expect "absent collection refused" "$WORK/none" 1 "" ""
+
+# A sealed manifest without its list of exhibits: refused, never read as an
+# empty collection verified.
+make_collection "$WORK/noitems" 'items = None'
+expect "sealed manifest without Items refused" "$WORK/noitems" 1 0 1
+make_collection "$WORK/itemsobject" 'items = {"a": items[0]}'
+expect "sealed manifest whose Items is no list refused" "$WORK/itemsobject" 1 0 1
+
+# The seal written down at the collection: the same accepted, another refused —
+# a manifest and MANIFEST.sha256 rewritten together are caught by it alone.
+noted="$(head -c 64 "$WORK/intact/exhibits/MANIFEST.sha256")"
+expect "the seal written down accepted" "$WORK/intact" 0 2 0 "--seal=$noted"
+expect "the seal written down, lower case, accepted" "$WORK/intact" 0 2 0 "--seal=$(printf '%s' "$noted" | tr 'A-F' 'a-f')"
+expect "a manifest rewritten and resealed, against the seal written down, refused" "$WORK/lowercase" 1 "" "" "--seal=$noted"
 
 if [ "$failures" -eq 0 ]; then
     echo "all passed: $checks check(s), 0 failure(s)"

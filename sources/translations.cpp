@@ -50,6 +50,8 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepTrustSet,              L"Jeu de confiance",                              L"Trust set" },
 	{ Text::StepCopyBinaries,          L"Copie des binaires prélevés dans la copie de travail", L"Copying collected binaries to the working directory" },
 	{ Text::StepSealExhibitStore,      L"Scellement de la consigne (manifeste + SHA-256)", L"Sealing the exhibit store (manifest + SHA-256)" },
+	{ Text::ManifestSeal,              L"   Sceau du manifeste (SHA-256), à reporter au procès-verbal : %1",
+	                                   L"   Seal of the manifest (SHA-256), to write down in the report: %1" },
 	{ Text::StepEventResources,        L"Fichiers de ressources des fournisseurs cités par les journaux",
 	                                   L"Extracting the resource files of the providers the logs cite" },
 	{ Text::StepAllExecutables,        L"Lecture de chaque exécutable, prélèvement des non authentifiés (lecture brute NTFS)",

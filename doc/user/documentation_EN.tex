@@ -970,13 +970,23 @@ $ sha256sum -c MANIFEST.sha256
 MANIFEST.json: OK
 \end{lstlisting}
 
+\textbf{The seal written down.} \fichier{MANIFEST.sha256} proves only that
+the manifest is unchanged since it was sealed: whoever rewrites the manifest
+can rewrite its seal. \wac{} therefore prints the seal on the screen at the
+end of the collection (``Seal of the manifest (SHA-256), to write down in
+the report''): written down in the report, it is the one copy out of
+reach of the collection, and the scripts below hold the manifest against it
+(\texttt{-{}-seal} / \texttt{-Seal}).
+
 \subsection{Each exhibit}
 
 Two scripts, delivered with \fichier{WAC.exe} in \fichier{bin}, check the
 seal, then the SHA-256 of every exhibit: \fichier{verify-exhibits.ps1} on
-Windows, \fichier{verify-exhibits.sh} on Linux. Their French counterparts,
-\fichier{verifier-consigne.ps1} and \fichier{verifier-consigne.sh}, make the
-same checks with French messages. The PowerShell scripts need PowerShell~4 or
+Windows, \fichier{verify-exhibits.sh} on Linux. \fichier{verifier-consigne.ps1}
+and \fichier{verifier-consigne.sh} run the same scripts with French
+messages. A manifest without its list of exhibits is refused, never taken
+for an empty collection; an exhibit that cannot be read is counted apart from
+one that differs. The PowerShell scripts need PowerShell~4 or
 later (Windows~8.1 onwards): on an older PowerShell they say so and stop
 (code~2) rather than read wrongly.
 
@@ -988,10 +998,10 @@ document of the collection cannot run there. The script needs only
 the fingerprints are computed by \fichier{sha256sum}, not by \wac{}:
 
 \begin{lstlisting}
-$ bash verify-exhibits.sh /media/usb/output
+$ bash verify-exhibits.sh --seal=CEB489A1...8A5B67 /media/usb/output
 Seal verified (CEB489A143AE29EB9E3BC836F3D565B744F036AE1F3A72A3447408F31F8A5B67)
 1617 exhibit(s) verified, 0 mismatch(es)
-0 binarie(s) authenticated and fingerprinted only (no copy to verify)
+0 binary(ies) authenticated and fingerprinted only (no copy to verify)
 \end{lstlisting}
 
 The manifest comes from the examined machine: both scripts refuse an exhibit
@@ -1001,7 +1011,7 @@ path that leaves the collection (\texttt{..}, absolute path, and for the
 \textbf{From Windows:}
 
 \begin{lstlisting}
-PS> powershell -ExecutionPolicy Bypass -File verify-exhibits.ps1 -Output E:\output
+PS> powershell -ExecutionPolicy Bypass -File verify-exhibits.ps1 -Output E:\output -Seal CEB489A1...8A5B67
 Seal verified (CEB489A143AE29EB9E3BC836F3D565B744F036AE1F3A72A3447408F31F8A5B67)
 1617 exhibit(s) verified, 0 mismatch(es)
 \end{lstlisting}

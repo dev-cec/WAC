@@ -35,7 +35,7 @@ enum class Text : unsigned {
 	StepRunningMachine, StepSessions, StepProcesses, StepNetworkState, StepServiceStates, StepSystemClock,
 	// Steps: raw extraction
 	StepSystemHives, StepUserHives, StepFileArtefacts, StepNtfsMetadata, StepFatMetadata, StepShadowCopies, StepTrustSet,
-	StepCopyBinaries, StepSealExhibitStore, StepEventResources, StepAllExecutables,
+	StepCopyBinaries, StepSealExhibitStore, ManifestSeal, StepEventResources, StepAllExecutables,
 	StepOpenSystemHive, StepOpenSoftwareHive, StepUserProfiles,
 	// Steps: registry
 	StepWriteLiveState, StepOpenControlSet, StepSuspectTimeZone,

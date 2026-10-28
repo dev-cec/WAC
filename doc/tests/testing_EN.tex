@@ -656,11 +656,14 @@ Runs \fichier{verify-exhibits.sh} and \fichier{verifier-consigne.sh}, the
 Linux scripts delivered with \fichier{WAC.exe}, on forged collections whose
 verdict is known: an intact collection (a path with a space, a fingerprint in
 lower case, a fingerprint-only binary) is accepted; an altered, missing or
-unfingerprinted exhibit, a modified manifest and an unreadable one are refused.
+unfingerprinted exhibit, a modified manifest, an unreadable one and a sealed
+one without its list of exhibits (or with no list) are refused. The seal
+written down at the collection (\texttt{-{}-seal}) accepts the collection it
+sealed, in either case, and refuses a manifest rewritten and resealed.
 A manifest that names a file of the investigation machine — by \texttt{..}, by
 an absolute path or by a symbolic link — is refused without the file being
-read. Both scripts run every case, with the same exit code and counters
-expected: one cannot drift from the other unnoticed. Linux only, no data
+read. \fichier{verifier-consigne.sh} being the same script in French, every
+case runs through both, with the same exit code and counters expected. Linux only, no data
 needed.
 
 \begin{lstlisting}

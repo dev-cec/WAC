@@ -283,11 +283,14 @@ void ExhibitStoreSharedOfShadowCopy(const std::wstring& copyId,
  *  To be called once every extraction is over. The seal is written AFTER the
  *  manifest and carries its SHA-256 fingerprint.
  *
+ *  @param sealValue receives that fingerprint, for the console: written down
+ *         by the investigator, it is the one copy of the seal a rewritten
+ *         manifest and MANIFEST.sha256 cannot follow (optional)
  *  @return ERROR_SUCCESS, or E_FAIL if either file could not be written — in
  *          which case the exhibit store cannot be identified, and that must be
  *          known.
  */
-HRESULT ExhibitStoreWriteManifest();
+HRESULT ExhibitStoreWriteManifest(std::wstring* sealValue = nullptr);
 
 /*! Number of exhibits in the manifest, and total size.
  *  Used for the end-of-collection summary and the investigation log. */

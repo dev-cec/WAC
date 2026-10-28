@@ -13,6 +13,13 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 RC="$HERE/sources/WAC.rc"
 case "${1:-}" in --major|--minor|--bugfix) ;; *) echo "usage: $0 --major | --minor | --bugfix" >&2; exit 2 ;; esac
 
+# WAC.rc back as it was if the build fails: left raised, a second run raised it
+# again, and a version number was skipped.
+BACKUP="$(mktemp)"
+cp "$RC" "$BACKUP"
+BUILT=0
+trap 'if [[ $BUILT == 0 ]]; then cp "$BACKUP" "$RC"; echo "WAC.rc restored: the version is unchanged" >&2; fi; rm -f "$BACKUP"' EXIT
+
 python3 - "$RC" "$1" <<'PY'
 import re, sys
 path, part = sys.argv[1], sys.argv[2]
@@ -36,7 +43,8 @@ except OSError as e:
     sys.exit(f"WAC.rc not updated: {e}")
 PY
 
-"$HERE/build-windows.sh"
+"$HERE/build-windows.sh" --test   # the tests too: bin/ holds no test of an older build
+BUILT=1
 git -C "$HERE" add "$RC"
 VERSION=$("$HERE/wac-version.sh")
 # The documents that state the version: the README badge, and the information
@@ -54,13 +62,17 @@ sed -i -E "s#^(\\\\wac\{\} & version) [0-9]+\.[0-9]+\.[0-9]+ #\1 $VERSION #" "$H
 sed -i -E "s#^wac_version: [0-9]+\.[0-9]+\.[0-9]+ #wac_version: $VERSION #" "$HERE"/doc/user/documentation_{FR,EN}.tex "$HERE/README.md"
 # Rebuilt as the editor builds them (LuaLaTeX), their artefacts removed after.
 if command -v lualatex >/dev/null && command -v latexmk >/dev/null; then
-  "$HERE/doc/build-docs.sh" "${DOCS[@]}" || echo "some document did not build cleanly (see above)"
+  # A failed build would stage PDFs that still state the old version.
+  "$HERE/doc/build-docs.sh" "${DOCS[@]}" \
+    || { echo "some document did not build: nothing of the documents staged — fix it, then run this again from doc/build-docs.sh" >&2; exit 1; }
 fi
 git -C "$HERE" add "$HERE/README.md" "${DOCS[@]}" "${DOCS[@]/%.tex/.pdf}"
 # The code documentation (doc/html), its version read from WAC.rc too (Doxyfile: $(WAC_VERSION)).
 if command -v doxygen >/dev/null; then
-  ( cd "$HERE/Doxygen" && WAC_VERSION="$VERSION" doxygen Doxyfile >/dev/null 2>&1 ) && git -C "$HERE" add -A "$HERE/doc/html" \
-    && echo "Code documentation regenerated (doc/html)"
+  ( cd "$HERE/Doxygen" && WAC_VERSION="$VERSION" doxygen Doxyfile >/dev/null ) \
+    || { echo "doxygen failed: doc/html not regenerated (its errors above)" >&2; exit 1; }
+  git -C "$HERE" add -A "$HERE/doc/html"
+  echo "Code documentation regenerated (doc/html)"
 else
   echo "doxygen absent: doc/html not regenerated"
 fi

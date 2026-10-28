@@ -675,12 +675,15 @@ Lance \fichier{verify-exhibits.sh} et \fichier{verifier-consigne.sh}, les
 scripts Linux livrés avec \fichier{WAC.exe}, sur des collectes forgées dont le
 verdict est connu : une collecte intacte (un chemin avec une espace, une
 empreinte en minuscules, un binaire à empreinte seule) est acceptée ; une pièce
-altérée, absente ou sans empreinte, un manifeste modifié ou illisible sont
-refusés. Un manifeste qui désigne un fichier de la machine d'investigation —
+altérée, absente ou sans empreinte, un manifeste modifié ou illisible, et un
+manifeste scellé sans sa liste de pièces (ou dont la liste n'en est pas une)
+sont refusés. Le sceau relevé à la collecte (\texttt{-{}-seal}) accepte la
+collecte qu'il a scellée, quelle que soit sa casse, et refuse un manifeste
+réécrit puis rescellé. Un manifeste qui désigne un fichier de la machine d'investigation —
 par \texttt{..}, par un chemin absolu ou par un lien symbolique — est refusé
-sans que le fichier soit lu. Les deux scripts passent chaque cas, avec le même
-code de retour et les mêmes compteurs attendus : l'un ne peut pas dériver de
-l'autre sans que cela se voie. Linux seulement, aucune donnée nécessaire.
+sans que le fichier soit lu. \fichier{verifier-consigne.sh} étant le même
+script en français, chaque cas passe par les deux, avec le même code de retour
+et les mêmes compteurs attendus. Linux seulement, aucune donnée nécessaire.
 
 \begin{lstlisting}
 bash sources/verify_exhibits_test.sh

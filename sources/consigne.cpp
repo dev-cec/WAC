@@ -328,7 +328,7 @@ HRESULT ExhibitStoreToWorking(size_t* copies, unsigned long long* bytes) {
 	return global;
 }
 
-HRESULT ExhibitStoreWriteManifest() {
+HRESULT ExhibitStoreWriteManifest(std::wstring* sealValue) {
 	std::error_code ec;
 	const std::filesystem::path exhibitStore = exhibitStoreFolder();
 	std::filesystem::create_directories(exhibitStore, ec);
@@ -536,6 +536,7 @@ HRESULT ExhibitStoreWriteManifest() {
 	     + std::to_wstring(failed) + L" failure(s), "
 	     + std::to_wstring(total / 1024 / 1024) + L" MiB");
 	log(2, L"❇️Manifest seal (SHA-256): " + fingerprint);
+	if (sealValue) *sealValue = fingerprint;
 	return ERROR_SUCCESS;
 }
 

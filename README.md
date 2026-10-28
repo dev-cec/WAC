@@ -165,7 +165,7 @@ what it is and, where it matters, why it is trustworthy.
 French messages: `verifier-consigne.ps1|.sh`) and `SHA256SUMS` to check them
 all. Copy `WAC.exe` and `wac.yml` to the collection key; `build-windows.sh`
 refreshes the folder at every build. Verify a collection preferably from a
-Linux investigation machine (`bash verify-exhibits.sh /media/usb/output`): a
+Linux investigation machine (`bash verify-exhibits.sh --seal=<the seal WAC printed, written down> /media/usb/output`): a
 Windows program of the collection cannot run there.
 
 To minimize disk traces, this standalone tool should be run **as administrator** from a USB stick using the command:

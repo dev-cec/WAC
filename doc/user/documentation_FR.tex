@@ -982,14 +982,24 @@ $ sha256sum -c MANIFEST.sha256
 MANIFEST.json: OK
 \end{lstlisting}
 
+\textbf{Le sceau relevé.} \fichier{MANIFEST.sha256} prouve seulement que le
+manifeste n'a pas changé depuis son scellement : qui réécrit le manifeste peut
+réécrire son sceau. \wac{} affiche donc le sceau à l'écran en fin de collecte
+(\og Sceau du manifeste (SHA-256), à reporter au procès-verbal\fg{}) : reporté
+au procès-verbal, c'est la seule copie hors d'atteinte de la collecte, et les
+scripts ci-dessous lui opposent le manifeste (\texttt{-{}-seal} /
+\texttt{-Seal}).
+
 \subsection{Chaque pièce}
 
 Deux scripts, livrés avec \fichier{WAC.exe} dans \fichier{bin},
 vérifient le sceau puis le SHA-256 de chaque pièce :
 \fichier{verifier-consigne.ps1} sous Windows, \fichier{verifier-consigne.sh}
-sous Linux. Leurs équivalents anglais, \fichier{verify-exhibits.ps1} et
-\fichier{verify-exhibits.sh}, font les mêmes contrôles avec des messages en
-anglais. Les scripts PowerShell demandent PowerShell~4 ou plus (Windows~8.1
+sous Linux ; ils lancent \fichier{verify-exhibits.ps1} et
+\fichier{verify-exhibits.sh}, les mêmes contrôles, avec des messages en
+français. Un manifeste sans sa liste de pièces est refusé, jamais pris pour
+une collecte vide ; une pièce illisible est comptée à part d'une pièce
+différente. Les scripts PowerShell demandent PowerShell~4 ou plus (Windows~8.1
 et suivants) : sous un PowerShell plus ancien, ils le disent et s'arrêtent
 (code~2) plutôt que de lire de travers.
 
@@ -1002,7 +1012,7 @@ lit le JSON) ; les empreintes sont calculées par \fichier{sha256sum}, non par
 \wac{} :
 
 \begin{lstlisting}
-$ bash verifier-consigne.sh /media/usb/output
+$ bash verifier-consigne.sh --seal=DCFF53FA...2C3E32 /media/usb/output
 Sceau conforme (DCFF53FAE709EC2E351FFFD02EC6EAD9945602265CF3363D0D928B0B452C3E32)
 3360 piece(s) conforme(s), 0 differente(s)
 0 binaire(s) authentifie(s), empreinte seule (pas de copie a verifier)
@@ -1016,16 +1026,16 @@ lire.
 \textbf{Depuis Windows :}
 
 \begin{lstlisting}
-PS> powershell -ExecutionPolicy Bypass -File verifier-consigne.ps1 -Sortie E:\output
+PS> powershell -ExecutionPolicy Bypass -File verifier-consigne.ps1 -Output E:\output -Seal DCFF53FA...2C3E32
 Sceau conforme (DCFF53FAE709EC2E351FFFD02EC6EAD9945602265CF3363D0D928B0B452C3E32)
 3360 piece(s) conforme(s), 0 differente(s)
 \end{lstlisting}
 
 Leur code de retour vaut~0 si tout est conforme, 1~sinon.
 
-\lstinputlisting[language={},caption={}]{../../sources/scripts/verifier-consigne.sh}
+\lstinputlisting[language={},caption={}]{../../sources/scripts/verify-exhibits.sh}
 
-\lstinputlisting[language={},caption={}]{../../sources/scripts/verifier-consigne.ps1}
+\lstinputlisting[language={},caption={}]{../../sources/scripts/verify-exhibits.ps1}
 
 \section{Le journal d'investigation}
 

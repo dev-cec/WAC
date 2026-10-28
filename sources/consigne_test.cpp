@@ -163,7 +163,8 @@ int wmain(int argc, wchar_t** argv){
 	         + std::to_string(changes) + " file(s))");
 
 	// --- 6. manifest and seal ---------------------------------------------
-	const HRESULT hrManifest = ExhibitStoreWriteManifest();
+	std::wstring sealShown;
+	const HRESULT hrManifest = ExhibitStoreWriteManifest(&sealShown);
 	check(hrManifest == ERROR_SUCCESS, "manifest and seal written");
 	const std::filesystem::path manifest = std::filesystem::path(exhibitStoreFolder()) / L"MANIFEST.json";
 	const std::filesystem::path seal     = std::filesystem::path(exhibitStoreFolder()) / L"MANIFEST.sha256";
@@ -178,6 +179,7 @@ int wmain(int argc, wchar_t** argv){
 	const std::string att = narrow(expected);
 	check(line.compare(0, att.size(), att) == 0,
 	         "the seal carries the manifest's fingerprint");
+	check(!sealShown.empty() && sealShown == expected, "the seal given for the console is the manifest's fingerprint");
 
 	// The manifest must NOT have been copied into the working directory.
 	check(!std::filesystem::exists(

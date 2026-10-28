@@ -196,7 +196,9 @@ else
 fi
 
 # --- raw_hive test exe (optional) -------------------------------------------
+TESTS_BUILT=0
 if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
+  TESTS_BUILT=1
   echo "== Build raw_hive_test.exe =="
   # raw_hive's dependencies: the fingerprints (sha, quickdigest5), the NTFS
   # decompression (lznt1, xpress), the shadow copies (vss) and the boot sector
@@ -300,7 +302,11 @@ fi
 for EXE in "$BUILD/WAC.exe" ${WAC32:+"$WAC32"}; do
   echo
   echo "Executable: $EXE"
-  "$OBJDUMP" -p "$EXE" | grep -qiE 'libstdc|libgcc|winpthread' \
+  # Its headers read ONCE, then searched: piped into `grep -q`, objdump (6 MB of
+  # output) was killed by SIGPIPE at the first match, and under pipefail the
+  # pipeline failed — every check below passed exactly when it should not.
+  HEADERS="$("$OBJDUMP" -p "$EXE")"
+  grep -qiE 'libstdc|libgcc|winpthread' <<<"$HEADERS" \
     && echo "WARNING: MinGW runtime dependency detected!" \
     || echo "Static C++ runtime: self-contained exe (Windows system DLLs only)."
 
@@ -309,9 +315,9 @@ for EXE in "$BUILD/WAC.exe" ${WAC32:+"$WAC32"}; do
   # the output depend on the machine running WAC. The SIDs are named offline
   # from the hives (sources/account_names.cpp). A build that imports them fails.
   FORBIDDEN='LookupAccountSid|LookupAccountName|LsaLookupSids|LsaLookupNames'
-  if "$OBJDUMP" -p "$EXE" | grep -qE "\\b($FORBIDDEN)"; then
+  if grep -qE "\\b($FORBIDDEN)" <<<"$HEADERS"; then
     echo "ERROR: $(basename "$EXE") imports a name-resolution function that queries the domain:"
-    "$OBJDUMP" -p "$EXE" | grep -E "\\b($FORBIDDEN)"
+    grep -E "\\b($FORBIDDEN)" <<<"$HEADERS"
     exit 1
   fi
   echo "No network name resolution imported ($FORBIDDEN)."
@@ -323,9 +329,9 @@ for EXE in "$BUILD/WAC.exe" ${WAC32:+"$WAC32"}; do
   # network state (artefacts.network) reads the TCP/IP stack's tables through
   # iphlpapi, loaded dynamically too, and only when that artefact is asked for.
   NETWORK='winhttp\.dll|wininet\.dll|ws2_32\.dll|wsock32\.dll|iphlpapi\.dll'
-  if "$OBJDUMP" -p "$EXE" | grep -iE "DLL Name: ($NETWORK)" >/dev/null; then
+  if grep -qiE "DLL Name: ($NETWORK)" <<<"$HEADERS"; then
     echo "ERROR: $(basename "$EXE") imports a network library statically:"
-    "$OBJDUMP" -p "$EXE" | grep -iE "DLL Name: ($NETWORK)"
+    grep -iE "DLL Name: ($NETWORK)" <<<"$HEADERS"
     exit 1
   fi
   echo "No network library imported."
@@ -335,9 +341,9 @@ for EXE in "$BUILD/WAC.exe" ${WAC32:+"$WAC32"}; do
   # The screen used to be cleared by system("cls"), a cmd.exe each run, which
   # the compared footprint measure showed (backlog B-027).
   SPAWN='system|_wsystem|_w?spawn[lv]p?e?|_w?exec[lv]p?e?|_w?popen|CreateProcess[AW]?|CreateProcessAsUser[AW]|CreateProcessWithLogonW|CreateProcessWithTokenW|ShellExecute[AW]|ShellExecuteEx[AW]|WinExec'
-  if "$OBJDUMP" -p "$EXE" | grep -qE "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$"; then
+  if grep -qE "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$" <<<"$HEADERS"; then
     echo "ERROR: $(basename "$EXE") imports a function that starts a process:"
-    "$OBJDUMP" -p "$EXE" | grep -E "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$"
+    grep -E "^\s+[0-9a-f]+\s+[0-9]+\s+($SPAWN)\s*$" <<<"$HEADERS"
     exit 1
   fi
   echo "No process-starting function imported."
@@ -355,9 +361,12 @@ done
 BIN="$ROOT/bin"
 VERIFICATION_SCRIPTS=(verify-exhibits.ps1 verifier-consigne.ps1 verify-exhibits.sh verifier-consigne.sh)
 mkdir -p "$BIN"
-for f in WAC.exe WAC32.exe raw_hive_test.exe; do
+for f in WAC.exe WAC32.exe; do
   [[ -f "$BUILD/$f" ]] && cp "$BUILD/$f" "$BIN/"
 done
+# raw_hive_test.exe of THIS build only: the one of an earlier --test run stays in
+# build-windows/ and would enter bin/ and SHA256SUMS as if built from these sources.
+if [[ $TESTS_BUILT == 1 ]]; then cp "$BUILD/raw_hive_test.exe" "$BIN/"; else rm -f "$BIN/raw_hive_test.exe"; fi
 # The reference configuration with the executable's version in place of its
 # placeholder, as --write-config writes it: a wac.yml of another version is refused.
 VERSION="$("$ROOT/wac-version.sh")"
