@@ -50,7 +50,7 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
 
 ## Tâches
 - [x] Découper le dépôt en lots de revue (ci-dessus)
-- [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 à 3 : faits — 1315c4da, 49d34970, dac5efc5 ; lot 4 : corrigé, en attente de compilation)
+- [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 à 3 : faits — 1315c4da, 49d34970, dac5efc5 ; lot 4 : fait — 171993b3)
 - [ ] `/security-review` sur le code livré ; constats triés et traités
 - [x] `/code-review ultra` : écarté par l'utilisateur (2026-10-27) — la revue se fait lot par lot avec `/code-review`
 - [ ] Cycles VM verts après corrections
@@ -103,4 +103,5 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
   - (8) `web_client` : dates Firefox multipliées sans contrôle (débordement signé) et expiration des cookies en millisecondes rejetée → `firefoxTime(count, unit)` borné, millisecondes reconnues ;
   - (9) commentaires faux sur le rejeu des journaux ESE (`ese_database.h`, `srum.h`, `web_client.h`) et phrase tronquée → réécrits ;
   - (10) duplication : quatre lecteurs d'entier de cellule ESE → `eseCellInteger` ; rejeu puis ouverture répétés dans quatre artefacts → `OpenRecoveredEseDatabase` ; calcul d'URL de portée en double → `scopeUrl`.
-  - À faire après le cycle en cours : compiler, tests (eseCellInteger, firefoxTime, dossier SQLite, profil sans History), mutations, commit.
+  - Compilé (`--test`, sans avertissement) ; tests passés (ese_test 32, file_artefacts_test 259, carving, deleted_files, ntfs_runs, ntfs_fixup, shell_items, config, hive_recover, activities_cache, cim, vss, fat…). Nouveaux contrôles : entiers de cellule ESE (vide, 1/4/8 octets, 9 octets, compressée), `firefoxTime` (ms, s, débordement), cookie Firefox à expiration en millisecondes, dossier de copies SQLite laissé par un passage interrompu, profil Chrome sans `History` converti par `getData`. Cinq mutants pris : borne de 8 octets, borne de débordement, seuil des millisecondes, vidage du dossier de copies, profil exigeant `History`. Restauré, recompilé, `bin` identique à `build-windows`. Commit 171993b3.
+- 2026-10-28 : cycle Windows 11 du lot 3 (lancé à 18 h 00, session `wac` ouverte) : 551 ✅, 1 ❌. L'échec : la copie en cache de l'HTA absente de la seconde collecte (`--collect` puis `--convert`) — Windows l'a effacée à 18 h 13, 26 min avant (`FILE_DELETE` au journal USN, plus d'enregistrement vivant dans la MFT), l'entrée du WebCache restant. Pas un défaut de WAC ; le contrôle signale désormais ce cas par un avertissement (harnais, 4cd465fb), la collecte principale l'ayant confrontée (✅).
