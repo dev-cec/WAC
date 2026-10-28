@@ -2118,9 +2118,15 @@ def check_small_file_artefacts(folder):
         manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
         if traces and isinstance(manifest, dict):
             copied = {(i.get("SourcePath") or "").lower() for i in manifest.get("Items", []) if i.get("Result") == "OK"}
-            report(traces <= copied,
-                   f"exhibits: the {len(traces)} Defender WPP trace(s) Windows lists, copied raw",
-                   f"exhibits: Defender WPP traces not copied: {sorted(traces - copied)[:3]}")
+            # Defender rotates its traces, deleting the older ones: one listed by the
+            # harness then deleted before the collection is recovered among the
+            # deleted files ($DeletedFiles\<entry>-<sequence>_<name>), not lost.
+            recovered = {re.sub(r"^(\d+-\d+_)+", "", p.rsplit("\\", 1)[-1]) for p in copied if "\\$deletedfiles\\" in p}
+            missing = {t for t in traces - copied if t.rsplit("\\", 1)[-1] not in recovered}
+            report(not missing,
+                   f"exhibits: the {len(traces)} Defender WPP trace(s) Windows lists, copied raw"
+                   f" ({len(traces - copied)} deleted by Defender since, recovered)",
+                   f"exhibits: Defender WPP traces not copied: {sorted(missing)[:3]}")
 
     # DPAPI master keys (B-032): the key files Windows lists, each with its
     # header's GUID = its name; the key each Preferred names, and its expiry.

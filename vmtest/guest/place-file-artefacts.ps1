@@ -623,13 +623,16 @@ try { if (Wants 'fat_volumes') {
             else { Write-Output "fatdeleted=$path|$($w[1].Length)|$digest" }
         }
         Write-Output "fat=$($volume.DriveLetter):|$($key.Label)|$($key.FileSystem)"
+        $offsetNow = [TimeSpan]::FromMinutes([Math]::Round(([DateTime]::Now - [DateTime]::UtcNow).TotalMinutes))
         foreach ($f in Get-ChildItem -LiteralPath $root -Recurse -Force | Where-Object { -not $_.PSIsContainer } | Where-Object { $_.FullName -notlike '*System Volume Information*' }) {
             # The path percent-encoded (UTF-8): PowerShell 4 writes its output in
             # the console's code page, where the long name's accents are lost.
-            # Its local time too: on FAT, as stored, while Windows turns it into
-            # UTC with the offset of the day it reads it, not of the date.
+            # Its local time too, as stored on FAT: Windows turned it into UTC
+            # with the offset of the day it reads it, which gives it back.
+            # Not LastWriteTime: .NET converts with the rule of the date (+2
+            # for a summer one), not with the offset FAT was read with.
             Write-Output ("fatfile=" + (@([uri]::EscapeDataString($f.FullName), $f.Length, $f.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ss'),
-                $f.LastWriteTime.ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
+                ($f.LastWriteTimeUtc + $offsetNow).ToString('yyyy-MM-ddTHH:mm:ss')) -join '|'))
         }
     }
 } } catch { WitnessFailure 'fat_volumes' $_ }
