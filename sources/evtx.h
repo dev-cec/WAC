@@ -79,9 +79,9 @@ struct EvtxSummary {
 	unsigned long long read = 0;           //!< decoded records
 	unsigned long long recovered = 0;      //!< of which read past the live area (see EvtxRecord::recovered)
 	unsigned long long unreadable = 0;    //!< discarded records
-	unsigned long long chunksIgnores = 0; //!< damaged chunks skipped (no signature)
+	unsigned long long chunksSkipped = 0; //!< damaged chunks skipped (no signature)
 	bool headerValid = false;            //!< "ElfFile\0" signature found
-	bool sale = false;                    //!< log marked "dirty"
+	bool dirty = false;                    //!< log marked "dirty"
 	std::wstring diagnostic;              //!< sentence for the audit log
 };
 

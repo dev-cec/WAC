@@ -300,8 +300,8 @@ const WevtValueMap* WevtMetadata::valueMap(uint32_t offset) const {
 
 size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
                                  const std::wstring& providerGuid) {
-	parIdEtVersion_.clear();
-	parId_.clear();
+	messageByIdVersion_.clear();
+	messageById_.clear();
 	templateByIdVersion_.clear();
 	templateById_.clear();
 	templates_.clear();
@@ -317,7 +317,7 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 		const std::wstring guid = guid_to_wstring(d.data() + e);   // e + 20 <= size, checked above
 		const uint32_t offset = readLittleEndian<uint32_t>(d, e + 16);
 		if (!providerGuid.empty() && normalizeGuid(guid) != normalizeGuid(providerGuid)) continue;
-		if (offset + 20 > d.size()) continue;
+		if (!fits(d.size(), offset, 20)) continue;   // in size_t: an offset near 2^32 wrapped the sum
 		if (std::memcmp(d.data() + offset, "WEVT", 4) != 0) continue;
 
 		const uint32_t nDescriptors = readLittleEndian<uint32_t>(d, offset + 12);
@@ -334,7 +334,7 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 			const size_t dd = offset + 20 + (size_t)k * 8;
 			if (dd + 4 > d.size()) break;
 			const uint32_t block = readLittleEndian<uint32_t>(d, dd);
-			if (block + 16 > d.size()) continue;
+			if (!fits(d.size(), block, 16)) continue;
 			if (std::memcmp(d.data() + block, "MAPS", 4) == 0) { readMaps(d, block, valueMaps_); continue; }
 			if (std::memcmp(d.data() + block, "EVNT", 4) != 0) continue;
 
@@ -352,19 +352,19 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 			    four bytes further, false message identifiers or none — 81 of 175
 			    events kept, and the messages of most manifest providers lost
 			    (B-023). The declared size only bounds the descriptors. */
-			const size_t pas = 48;
-			if (blockSize < 16 || (blockSize - 16) / pas < nEvents) continue;   // the block cannot hold its descriptors
+			const size_t DESCRIPTOR_SIZE = 48;
+			if (blockSize < 16 || (blockSize - 16) / DESCRIPTOR_SIZE < nEvents) continue;   // the block cannot hold its descriptors
 
 			for (uint32_t n = 0; n < nEvents; ++n) {
-				const size_t ev = block + 16 + (size_t)n * pas;
-				if (ev + pas > d.size()) break;
+				const size_t ev = block + 16 + (size_t)n * DESCRIPTOR_SIZE;
+				if (ev + DESCRIPTOR_SIZE > d.size()) break;
 				const uint16_t id      = readLittleEndian<uint16_t>(d, ev);
 				const uint8_t  version = d[ev + 2];
 				const uint32_t message = readLittleEndian<uint32_t>(d, ev + 16);
 				// 0 and 0xFFFFFFFF both mark "no message".
 				if (message == 0 || message == 0xFFFFFFFFu) continue;
-				parIdEtVersion_.emplace(((uint32_t)id << 8) | version, message);
-				parId_.emplace(id, message);
+				messageByIdVersion_.emplace(((uint32_t)id << 8) | version, message);
+				messageById_.emplace(id, message);
 				const uint32_t templateOffset = readLittleEndian<uint32_t>(d, ev + 20);   // 0: no template
 				if (templateOffset != 0 && readTemplate(d, templateOffset, templates_)) {
 					templateByIdVersion_.emplace(((uint32_t)id << 8) | version, templateOffset);
@@ -374,16 +374,16 @@ size_t WevtMetadata::analyse(const std::vector<uint8_t>& d,
 		}
 		if (!providerGuid.empty()) break;   // provider found
 	}
-	return parIdEtVersion_.size();
+	return messageByIdVersion_.size();
 }
 
 uint32_t WevtMetadata::messageId(uint16_t eventId,
                                              uint8_t version) const {
 	const std::map<uint32_t, uint32_t>::const_iterator it =
-		parIdEtVersion_.find(((uint32_t)eventId << 8) | version);
-	if (it != parIdEtVersion_.end()) return it->second;
-	const std::map<uint16_t, uint32_t>::const_iterator it2 = parId_.find(eventId);
-	return (it2 != parId_.end()) ? it2->second : 0;
+		messageByIdVersion_.find(((uint32_t)eventId << 8) | version);
+	if (it != messageByIdVersion_.end()) return it->second;
+	const std::map<uint16_t, uint32_t>::const_iterator it2 = messageById_.find(eventId);
+	return (it2 != messageById_.end()) ? it2->second : 0;
 }
 
 // ---------------------------------------------------------------------------

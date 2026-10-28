@@ -1767,7 +1767,8 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         workstation. The content is decrypted in memory only, for its
         fingerprint.
   \item[\fichier{hosts.json}] entries of the \fichier{hosts} file: address and
-        names, line number; an untouched Windows has none.
+        names, line number; an untouched Windows has none. A file past 16~MiB is
+        not read (logged): it stays in the exhibit store.
 \end{description}
 
 \subsection{Files and browsing}
@@ -1909,7 +1910,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         with its DestList entry (last access, machine name, tracking
         identifiers with their date and hardware address, pin status, number of
         openings \champ{InteractionCount}, rank \champ{MruPosition} — 0 for the
-        most recent —, name of the known folder targeted).
+        most recent —, name of the known folder targeted); in the custom ones,
+        their categories in order (\champ{Categories}: a custom one and its
+        name, a known one — frequent or recent —, the tasks).
   \item[\fichier{shellbags.json}] folders browsed in Explorer, as a rebuilt
         tree; for each folder, its rank among its siblings
         (\champ{MruPosition}, 0 for the most recent), the write time of the key
@@ -1938,7 +1941,8 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\path|$R|) are in \fichier{mft.json}. On Windows~XP and Server~2003,
         from \fichier{INFO2} of \path|RECYCLER\<SID>|, one entry per record,
         with the copy's name in the bin (\champ{RecycledName},
-        \texttt{Dc<n>.<ext>}); the size is the space the file occupied.
+        \texttt{D<drive><n>.<ext>}, \texttt{Dc1.txt} for a file of C:); the
+        size is the space the file occupied.
 \end{description}
 
 \subsection{Devices}

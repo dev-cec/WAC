@@ -1836,7 +1836,8 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         ni sur le poste d'analyse. Le contenu n'est déchiffré qu'en mémoire,
         pour son empreinte.
   \item[\fichier{hosts.json}] entrées du fichier \fichier{hosts} : adresse et
-        noms, numéro de ligne ; un Windows intact n'en a aucune.
+        noms, numéro de ligne ; un Windows intact n'en a aucune. Un fichier de plus
+        de 16~Mio n'est pas lu (journalisé) : il reste dans la consigne.
 \end{description}
 
 \subsection{Fichiers et navigation}
@@ -1991,7 +1992,10 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (dernier accès, nom de la machine, identifiants de suivi avec leur date
         et leur adresse matérielle, épinglage, nombre d'ouvertures
         \champ{InteractionCount}, rang \champ{MruPosition} — 0 pour le plus
-        récent —, nom du dossier connu visé).
+        récent —, nom du dossier connu visé) ; pour les listes personnalisées,
+        leurs catégories dans l'ordre (\champ{Categories} : une catégorie
+        propre et son nom, une catégorie connue — fréquents ou récents —, les
+        tâches).
   \item[\fichier{shellbags.json}] dossiers parcourus dans l'Explorateur,
         arborescence reconstituée ; pour chaque dossier, son rang parmi ses
         voisins (\champ{MruPosition}, 0 pour le plus récent), la date d'écriture
@@ -2020,7 +2024,8 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (\path|$R|) figurent dans \fichier{mft.json}. Sous Windows~XP et
         Server~2003, d'après \fichier{INFO2} de \path|RECYCLER\<SID>|, une
         entrée par enregistrement, avec le nom de la copie dans la corbeille
-        (\champ{RecycledName}, \texttt{Dc<n>.<ext>}) ; la taille est l'espace
+        (\champ{RecycledName}, \texttt{D<lecteur><n>.<ext>}, \texttt{Dc1.txt}
+        pour un fichier de C:) ; la taille est l'espace
         qu'occupait le fichier.
 \end{description}
 

@@ -87,7 +87,7 @@
 \texttt{jump\_lists} & Windows 7 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Recent\textbackslash{}AutomaticDestinations, CustomDestinations} & OLE compound file, DestList version 1 & yes \\
  & Windows 10 & \texttt{the same folders} & OLE compound file, DestList version 3 and 4 & yes \\
  & Windows 11 & \texttt{the same folders} & OLE compound file, DestList version 6 & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape DestList version 6 measured on build 26200; the custom lists (CustomDestinations) carry no version.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape DestList version 6 measured on build 26200; the custom lists (CustomDestinations) carry version 2 in their header, any other is not read.} \\
 \addlinespace
 \texttt{known\_networks} & Windows Vista & \texttt{SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows NT\textbackslash{}CurrentVersion\textbackslash{}NetworkList} & registry keys, SYSTEMTIME dates & yes \\
 \addlinespace

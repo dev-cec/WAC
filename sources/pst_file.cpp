@@ -12,6 +12,10 @@
 namespace {
 
 const int MAX_DEPTH = 16;                 //!< deeper than any real tree: a cycle, or a forged page
+/* The depth alone did not bound the work: a page listing itself 20 times (169
+   on 4 KiB pages) was walked 20^16 times. Every walk keeps the pages and
+   internal blocks it entered: one met twice is a forged tree, refused. Leaf
+   data blocks are left out, the block tree may share them. */
 const size_t HEADER_SIZE = 564;           //!< the Unicode header, up to its last field read
 const uint16_t VERSION_UNICODE = 23;      //!< PST of Outlook 2003 and later, 512-byte pages
 const uint16_t VERSION_4K = 36;           //!< OST of Outlook 2013 and later, 4 KiB pages, compressed blocks
@@ -137,9 +141,9 @@ bool PstFile::findInTree(uint64_t pageOffset, uint64_t key, bool blockTree, std:
 	return false;
 }
 
-bool PstFile::walkNodeTree(uint64_t pageOffset, std::vector<PstNode>& nodes, int depth) {
+bool PstFile::walkNodeTree(uint64_t pageOffset, std::vector<PstNode>& nodes, std::set<uint64_t>& visited, int depth) {
 	std::vector<uint8_t> page;
-	if (depth > MAX_DEPTH || !readAt(pageOffset, pageSize_, page)) return false;
+	if (depth > MAX_DEPTH || !visited.insert(pageOffset).second || !readAt(pageOffset, pageSize_, page)) return false;
 	const PageLayout l = layoutOf(pageSize_);
 	if (page[l.type] != PAGE_NODE_TREE) return false;
 	const size_t count = l.wideCount ? readLittleEndian<uint16_t>(page.data() + l.count) : page[l.count];
@@ -149,7 +153,7 @@ bool PstFile::walkNodeTree(uint64_t pageOffset, std::vector<PstNode>& nodes, int
 	for (size_t i = 0; i < count; ++i) {
 		const uint8_t* e = page.data() + i * size;
 		if (level > 0) {
-			whole = walkNodeTree(readLittleEndian<uint64_t>(e + 16), nodes, depth + 1) && whole;
+			whole = walkNodeTree(readLittleEndian<uint64_t>(e + 16), nodes, visited, depth + 1) && whole;
 			continue;
 		}
 		PstNode n;
@@ -163,7 +167,8 @@ bool PstFile::walkNodeTree(uint64_t pageOffset, std::vector<PstNode>& nodes, int
 }
 
 bool PstFile::allNodes(std::vector<PstNode>& nodes) {
-	return walkNodeTree(nodeTreeRoot_, nodes, 0);
+	std::set<uint64_t> visited;
+	return walkNodeTree(nodeTreeRoot_, nodes, visited, 0);
 }
 
 bool PstFile::block(uint64_t bid, std::vector<uint8_t>& data) {
@@ -195,9 +200,9 @@ bool PstFile::block(uint64_t bid, std::vector<uint8_t>& data) {
 	return true;
 }
 
-bool PstFile::dataTree(uint64_t bid, std::vector<std::vector<uint8_t>>& blocks, int depth) {
+bool PstFile::dataTree(uint64_t bid, std::vector<std::vector<uint8_t>>& blocks, std::set<uint64_t>& visited, int depth) {
 	std::vector<uint8_t> d;
-	if (depth > MAX_DEPTH || !block(bid, d)) return false;
+	if (depth > MAX_DEPTH || ((bid & BID_INTERNAL) && !visited.insert(bid).second) || !block(bid, d)) return false;
 	if (!(bid & BID_INTERNAL)) { blocks.push_back(std::move(d)); return true; }
 	// XBLOCK (level 1: data blocks) or XXBLOCK (level 2: XBLOCKs): type, level, count, total size, the identifiers.
 	if (d.size() < 8 || d[0] != 0x01 || (d[1] != 1 && d[1] != 2)) return false;
@@ -210,19 +215,21 @@ bool PstFile::dataTree(uint64_t bid, std::vector<std::vector<uint8_t>>& blocks, 
 			if (!block(child, leaf)) return false;
 			blocks.push_back(std::move(leaf));
 		}
-		else if (!dataTree(child, blocks, depth + 1)) return false;
+		else if (!dataTree(child, blocks, visited, depth + 1)) return false;
 	}
 	return true;
 }
 
 bool PstFile::dataBlocks(uint64_t bid, std::vector<std::vector<uint8_t>>& blocks) {
 	blocks.clear();
-	return bid != 0 && dataTree(bid, blocks, 0);
+	std::set<uint64_t> visited;
+	// An XBLOCK may declare no child: no block is no data, never a front() to read.
+	return bid != 0 && dataTree(bid, blocks, visited, 0) && !blocks.empty();
 }
 
-bool PstFile::subnodeTree(uint64_t bid, std::map<uint32_t, PstSubnode>& subnodes, int depth) {
+bool PstFile::subnodeTree(uint64_t bid, std::map<uint32_t, PstSubnode>& subnodes, std::set<uint64_t>& visited, int depth) {
 	std::vector<uint8_t> d;
-	if (depth > MAX_DEPTH || !block(bid, d)) return false;
+	if (depth > MAX_DEPTH || !visited.insert(bid).second || !block(bid, d)) return false;
 	// SLBLOCK (level 0: the subnodes) or SIBLOCK (level 1: SLBLOCKs): type, level, count, padding.
 	if (d.size() < 8 || d[0] != 0x02 || d[1] > 1) return false;
 	const size_t count = readLittleEndian<uint16_t>(d.data() + 2);
@@ -231,7 +238,7 @@ bool PstFile::subnodeTree(uint64_t bid, std::map<uint32_t, PstSubnode>& subnodes
 	bool whole = true;
 	for (size_t i = 0; i < count; ++i) {
 		const uint8_t* e = d.data() + 8 + i * size;
-		if (d[1] == 1) { whole = subnodeTree(readLittleEndian<uint64_t>(e + 8), subnodes, depth + 1) && whole; continue; }
+		if (d[1] == 1) { whole = subnodeTree(readLittleEndian<uint64_t>(e + 8), subnodes, visited, depth + 1) && whole; continue; }
 		PstSubnode s;
 		s.dataBid = readLittleEndian<uint64_t>(e + 8);
 		s.subnodeBid = readLittleEndian<uint64_t>(e + 16);
@@ -242,7 +249,8 @@ bool PstFile::subnodeTree(uint64_t bid, std::map<uint32_t, PstSubnode>& subnodes
 
 bool PstFile::subnodes(uint64_t bid, std::map<uint32_t, PstSubnode>& subnodes) {
 	subnodes.clear();
-	return bid == 0 || subnodeTree(bid, subnodes, 0);
+	std::set<uint64_t> visited;
+	return bid == 0 || subnodeTree(bid, subnodes, visited, 0);
 }
 
 bool PstFile::heapItem(const std::vector<std::vector<uint8_t>>& heap, uint32_t hid, std::vector<uint8_t>& item) {
@@ -365,7 +373,8 @@ bool PstFile::tableRows(uint64_t dataBid, uint64_t subnodeBid, std::vector<PstPr
 			const uint8_t* desc = info.data() + 22 + c * 8;
 			const uint32_t tag = readLittleEndian<uint32_t>(desc);
 			const size_t offset = readLittleEndian<uint16_t>(desc + 4), size = desc[6], bit = desc[7];
-			if (!(row[existence + bit / 8] & (0x80 >> (bit % 8))) || offset + size > rowSize) continue;
+			// The bit is the descriptor's, up to 255: bounded by the row, not by the column count.
+			if (offset + size > rowSize || existence + bit / 8 >= rowSize || !(row[existence + bit / 8] & (0x80 >> (bit % 8)))) continue;
 			PstValue v;
 			v.type = (uint16_t)(tag & 0xFFFF);
 			const size_t fixed = fixedSize(v.type);

@@ -46,6 +46,7 @@
 #pragma once
 
 #include "binaires.h"
+#include <optional>
 #include <string>
 #include <vector>
 #include <windows.h>
@@ -84,7 +85,7 @@ struct ScheduledTask {
 	std::wstring state;                //!< "Enabled" / "Disabled"
 	bool         enabled = true;       //!< the same, as a boolean
 	FILETIME     lastRunTimeUtc = { 0 };   //!< last run, UTC, as DynamicInfo stores it
-	LONG         lastTaskResult = 0;       //!< value the last run returned
+	std::optional<LONG> lastTaskResult;    //!< value the last run returned; none without a history (TaskCache, .job) — a 0 would read "succeeded"
 	std::wstring registrationDate;         //!< the XML's Date, as written
 	std::wstring sourceXml;                //!< path of the source XML, for traceability
 	std::wstring sourceJob;                //!< Windows XP: path of the source .job, for traceability

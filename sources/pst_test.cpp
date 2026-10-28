@@ -18,6 +18,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <cstring>
 #include <map>
 #include <set>
 #include <sstream>
@@ -65,6 +66,67 @@ std::vector<std::string> fieldsOf(const PstMessage& m) {
 	         body.empty() ? "" : sha256Of(reinterpret_cast<const uint8_t*>(body.data()), body.size()) };
 }
 
+
+/*! A PST forged here, page by page: the three defects a hostile mailbox
+ *  reached. A node-tree page whose children are all itself (walked 20^16
+ *  times before), an XBLOCK declaring no child (an empty list then read by
+ *  front()), and a table whose column names an existence bit past its row
+ *  bitmap (read in the next row). Each case is answered, not crashed on.
+ *  @param folder where the file is written */
+void forgedFile(const std::wstring& folder) {
+	std::vector<uint8_t> f(2240, 0);
+	auto put16 = [&](size_t at, uint16_t v) { writeLittleEndian<uint16_t>(f.data() + at, v); };
+	auto put32 = [&](size_t at, uint32_t v) { writeLittleEndian<uint32_t>(f.data() + at, v); };
+	auto put64 = [&](size_t at, uint64_t v) { writeLittleEndian<uint64_t>(f.data() + at, v); };
+	std::memcpy(f.data(), "!BDN", 4);
+	f[8] = 'S'; f[9] = 'M';
+	put16(10, 23);                       // Unicode PST, 512-byte pages, no encryption (byte 513)
+	put64(224, 1024);                    // node tree root
+	put64(240, 1536);                    // block tree root
+	// Node tree: an index page (level 1) of 20 entries, each child the page itself.
+	for (size_t i = 0; i < 20; ++i) { put64(1024 + i * 24, i + 1); put64(1024 + i * 24 + 16, 1024); }
+	f[1024 + 488] = 20; f[1024 + 490] = 24; f[1024 + 491] = 1; f[1024 + 496] = 0x81;
+	// Block tree, a leaf: the heap (bid 4, 84 bytes at 2048), the empty XBLOCK (bid 6, 8 bytes at 2176).
+	put64(1536, 4); put64(1536 + 8, 2048); put16(1536 + 16, 84);
+	put64(1560, 6); put64(1560 + 8, 2176); put16(1560 + 16, 8);
+	f[1536 + 488] = 2; f[1536 + 490] = 24; f[1536 + 491] = 0; f[1536 + 496] = 0x80;
+	// The heap of a table: header, TCINFO, BTH header, its one record, a matrix of two rows; the page map.
+	const size_t h = 2048;
+	put16(h, 70); f[h + 2] = 0xEC; f[h + 3] = 0x7C; put32(h + 4, 0x20);
+	f[h + 8] = 0x7C; f[h + 9] = 1;                         // TCINFO: one column
+	put16(h + 8 + 6, 4); put16(h + 8 + 8, 8);              // existence bitmap at 4, rows of 8 bytes
+	put32(h + 8 + 10, 0x40); put32(h + 8 + 14, 0x80);      // row index, row matrix
+	put32(h + 8 + 22, 0x30010003);                         // PT_LONG 0x3001: at 0, 4 bytes, bit 40
+	put16(h + 8 + 26, 0); f[h + 8 + 28] = 4; f[h + 8 + 29] = 40;
+	f[h + 38] = 0xB5; f[h + 39] = 4; f[h + 40] = 4; f[h + 41] = 0; put32(h + 42, 0x60);
+	put32(h + 46, 1); put32(h + 50, 0);                    // row id 1 -> row 0
+	put32(h + 54, 0x11223344);                             // row 0: its value, no existence bit set
+	for (size_t i = 62; i < 70; ++i) f[h + i] = 0xFF;      // row 1: every bit set
+	put16(h + 70, 4); put16(h + 72, 0);
+	const uint16_t starts[] = { 8, 38, 46, 54, 70 };
+	for (size_t i = 0; i < 5; ++i) put16(h + 74 + 2 * i, starts[i]);
+	put16(h + 128 - 16, 84); put64(h + 128 - 8, 4);         // its trailer: size, bid
+	// The XBLOCK: type 1, level 1, no child; its trailer.
+	f[2176] = 0x01; f[2177] = 0x01;
+	put16(2176 + 64 - 16, 8); put64(2176 + 64 - 8, 6);
+	const std::wstring path = folder + L"\\forged.pst";
+	std::ofstream(std::filesystem::path(path), std::ios::binary).write(reinterpret_cast<const char*>(f.data()), (std::streamsize)f.size());
+
+	{   // the file closed before it is removed
+		PstFile file;
+		std::wstring why;
+		check(file.open(path, why), "forged: opened");
+		std::vector<PstNode> nodes;
+		check(!file.allNodes(nodes), "forged: a node-tree page that is its own child refused, not walked 20^16 times");
+		PstProperties properties;
+		std::vector<PstProperties> rows;
+		check(!file.properties(6, 0, properties) && !file.tableRows(6, 0, rows), "forged: an XBLOCK without child gives no data, nothing read past it");
+		check(file.tableRows(4, 0, rows) && rows.size() == 1 && rows[0].find(0x3001) == rows[0].end(),
+		      "forged: an existence bit past the row's bitmap not read in the next row");
+	}
+	std::error_code ec;
+	std::filesystem::remove(std::filesystem::path(path), ec);
+}
 } // namespace
 
 int wmain(int argc, wchar_t** argv) {
@@ -72,6 +134,7 @@ int wmain(int argc, wchar_t** argv) {
 	const std::wstring folder = argv[1];
 	std::ifstream in(std::filesystem::path(folder + L"\\pst-reference.txt"), std::ios::binary);
 	if (!in) { std::printf("no pst-reference.txt in the folder\n"); return 2; }
+	forgedFile(folder);
 	std::map<std::string, std::vector<std::vector<std::string>>> reference;   // file -> its lines
 	std::map<std::string, size_t> pyUnreadable;
 	for (std::string line; std::getline(in, line);) {

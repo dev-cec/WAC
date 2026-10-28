@@ -105,7 +105,7 @@ public:
 	uint32_t messageId(uint16_t eventId, uint8_t version) const;
 
 	//! Number of events described.
-	size_t size() const { return parIdEtVersion_.size(); }
+	size_t size() const { return messageByIdVersion_.size(); }
 
 	/*! The items of an event's template, in the order of its data — the
 	 *  version tried first, then the identifier alone, as messageId.
@@ -117,8 +117,8 @@ public:
 	const WevtValueMap* valueMap(uint32_t offset) const;
 
 private:
-	std::map<uint32_t, uint32_t> parIdEtVersion_;   //!< (id << 8 | version) -> message
-	std::map<uint16_t, uint32_t> parId_;            //!< id -> message (first version seen)
+	std::map<uint32_t, uint32_t> messageByIdVersion_;   //!< (id << 8 | version) -> message
+	std::map<uint16_t, uint32_t> messageById_;            //!< id -> message (first version seen)
 	std::map<uint32_t, uint32_t> templateByIdVersion_;   //!< (id << 8 | version) -> template offset
 	std::map<uint16_t, uint32_t> templateById_;          //!< id -> template offset (first version seen)
 	std::map<uint32_t, std::vector<WevtItem>> templates_;   //!< template offset -> its items

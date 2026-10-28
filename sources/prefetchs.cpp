@@ -445,12 +445,12 @@ HRESULT Prefetch::parse(LPBYTE buffer, size_t size) {
 		for (int k = 0; k < kept; ++k) {
 			LPBYTE m = data + start + (size_t)k * METRIC_SIZE;
 			const unsigned int nameOffset = *reinterpret_cast<unsigned int*>(m + 12);
-			const unsigned int nbCar = *reinterpret_cast<unsigned int*>(m + 16);
+			const unsigned int characters = *reinterpret_cast<unsigned int*>(m + 16);
 			// Bounds: both fields come from the examined file.
 			if (nameOffset >= (unsigned int)filename_size) continue;
-			if (nbCar == 0 || nbCar > 32768) continue;
-			if (nameOffset + (nbCar + 1) * sizeof(wchar_t) > (size_t)filename_size) continue;
-			std::wstring name((const wchar_t*)(data + filename_offset + nameOffset), nbCar);
+			if (characters == 0 || characters > 32768) continue;
+			if (nameOffset + (characters + 1) * sizeof(wchar_t) > (size_t)filename_size) continue;
+			std::wstring name((const wchar_t*)(data + filename_offset + nameOffset), characters);
 			while (!name.empty() && name.back() == L'\0') name.pop_back();
 			if (name.empty()) continue;
 			metrics.emplace(name, MFTInformation(m + 24));

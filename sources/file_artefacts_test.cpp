@@ -51,6 +51,7 @@
 #include "reg_amcache.h"
 #include "events.h"
 #include "evt.h"
+#include "evtx.h"
 #include "scheduledTasks.h"
 #include "reg_userassists.h"
 #include "xml_light.h"
@@ -58,6 +59,8 @@
 #include "emails.h"
 #include "mbox_mail.h"
 #include "wevt.h"
+#include "ie_index_dat.h"
+#include "jumplist_custom.h"
 #include "conversions.h"
 #include "prefetchs.h"
 #include "conversions.h"
@@ -296,6 +299,20 @@ void hosts() {
 	check(e.size() == 2 && e[0].address == L"127.0.0.1" && e[0].names.size() == 2 && e[0].names[1] == L"av.vendor.com"
 	      && e[0].line == 4, "hosts: address, names separated by tabs and spaces, the comment cut");
 	check(e.size() == 2 && e[1].address == L"10.1.2.3" && e[1].line == 5, "hosts: leading blanks");
+	/* A file past the bound is read whole or not at all: cut at 16 MiB, the
+	   redirections a padded file hides at its end were lost without a word. */
+	const std::filesystem::path root = std::filesystem::temp_directory_path() / L"wac-hosts-test";
+	std::error_code ec;
+	std::filesystem::remove_all(root, ec);
+	const std::wstring mountpoint = conf.mountpoint;
+	conf.mountpoint = (root / L"mount").wstring();
+	const std::filesystem::path file = extractedPath(conf.systemDrive + L"\\Windows\\System32\\drivers\\etc\\hosts");
+	std::filesystem::create_directories(file.parent_path(), ec);
+	std::ofstream(file, std::ios::binary) << std::string(16 * 1024 * 1024, ' ') << "\r\n6.6.6.6 bank.invalid\r\n";
+	HostsFile padded;
+	check(padded.getData() == HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE), "hosts: a file past 16 MiB reported, not read cut short");
+	conf.mountpoint = mountpoint;
+	std::filesystem::remove_all(root, ec);
 }
 
 void errorReport() {
@@ -310,6 +327,9 @@ void errorReport() {
 	check(r.values.size() == 8, "error report: every value kept");
 	ErrorReport bad;
 	check(!parseErrorReport(L"not a report\r\n", bad), "error report: no Key=Value refused");
+	ErrorReport huge;
+	check(parseErrorReport(L"EventTime=99999999999999999999\r\n", huge) && value(huge.eventTimeUtc) == 0,
+	      "error report: an EventTime of 20 digits past 2^64 gives no date, not an exception");
 	ErrorReport date;
 	parseErrorReport(L"EventTime=12x4\r\n", date);
 	check(value(date.eventTimeUtc) == 0, "error report: a non-numeric EventTime is not a date");
@@ -1579,6 +1599,109 @@ void prefetchVersion17() {
 	      "Prefetch 17: run count, last run, volume and files as libscca reads them, no $MFT reference");
 }
 
+/*! The light XML reader: a CDATA section's text kept as written, a
+ *  character reference past U+FFFF as its surrogate pair — it was cut to 16
+ *  bits, and the CDATA's "&lt;" decoded into a '<'. */
+void xmlCdataAndAstralReference() {
+	const std::unique_ptr<XmlNode> root = xmlParse(L"<a><![CDATA[&lt;x]]> &amp; &#x1F600;</a>", true);
+	check(root && root->text == L"&lt;x & \xD83D\xDE00", "xml: CDATA kept as written, entities decoded outside it");
+	check(xmlDecodeEntities(L"&#128512;") == L"\xD83D\xDE00", "xml: a decimal reference past U+FFFF as a surrogate pair");
+}
+
+/*! An index.dat built here: an old URL record declaring four blocks, a LEAK
+ *  written inside it, at its second block. The walk of the blocks stepped
+ *  over the URL's declared size and never saw the LEAK. */
+void ieIndexRecordInsideAnOlder() {
+	std::vector<uint8_t> d(0x4000 + 4 * 128, 0);
+	std::memcpy(d.data(), "Client UrlCache MMF Ver 5.2", 28);
+	std::memcpy(d.data() + 0x4000, "URL ", 4);
+	writeLittleEndian<uint32_t>(d.data() + 0x4004, 4);
+	std::memcpy(d.data() + 0x4080, "LEAK", 4);
+	writeLittleEndian<uint32_t>(d.data() + 0x4084, 1);
+	IeIndexFile file;
+	bool leak = false;
+	check(parseIeIndexDat(d.data(), d.size(), file), "index.dat: built file read");
+	for (const IeIndexRecord& r : file.records) leak = leak || (r.kind == L"LEAK" && r.offset == 0x4080);
+	check(leak, "index.dat: a record written inside an older one's declared blocks walked, not stepped over");
+}
+
+/*! A WEVT_TEMPLATE forged with offsets near 2^32: summed in 32 bits, the
+ *  provider's offset + 20 and the block's + 16 wrapped to a few bytes, passed
+ *  the bound and sent memcmp 4 GiB past the resource. Both are refused. */
+void wevtOffsetsNear4GiB() {
+	std::vector<uint8_t> d(64, 0);
+	std::memcpy(d.data(), "CRIM", 4);
+	writeLittleEndian<uint32_t>(d.data() + 12, 1);             // one provider
+	writeLittleEndian<uint32_t>(d.data() + 32, 0xFFFFFFF0u);   // its offset
+	WevtMetadata meta;
+	check(meta.analyse(d, L"") == 0, "wevt: a provider offset near 2^32 refused, nothing read past the resource");
+	writeLittleEndian<uint32_t>(d.data() + 32, 36);
+	std::memcpy(d.data() + 36, "WEVT", 4);
+	writeLittleEndian<uint32_t>(d.data() + 48, 1);             // one descriptor
+	writeLittleEndian<uint32_t>(d.data() + 56, 0xFFFFFFF8u);   // its block
+	check(meta.analyse(d, L"") == 0, "wevt: a descriptor block near 2^32 refused, nothing read past the resource");
+}
+
+/*! A .customDestinations-ms built here: the header (version 2, three
+ *  categories), then a custom category "Pinned" of one entry, a known one
+ *  (recent), the tasks; each closed by its footer. The word at 0 is the
+ *  version: read as a kind, every file was "User tasks". */
+void customDestinationCategoriesRead() {
+	std::vector<uint8_t> f;
+	auto u32 = [&](uint32_t v) { for (int i = 0; i < 4; ++i) f.push_back((uint8_t)(v >> (8 * i))); };
+	auto footer = [&]() { u32(0xBABFFBABu); };
+	u32(2); u32(3); u32(0);
+	u32(0); f.push_back(6); f.push_back(0);
+	for (char ch : std::string("Pinned")) { f.push_back((uint8_t)ch); f.push_back(0); }
+	u32(1);
+	for (int i = 0; i < 40; ++i) f.push_back(0x4C);            // its shortcut, not parsed here
+	footer();
+	u32(1); u32(2); footer();
+	u32(2); u32(0); footer();
+	const std::vector<CustomCategoryHeader> c = customDestinationCategories(f.data(), f.size());
+	check(c.size() == 3 && c[0].kind == 0 && c[0].name == L"Pinned" && c[0].entries == 1
+	      && c[1].kind == 1 && c[1].knownId == 2 && c[2].kind == 2 && c[2].entries == 0,
+	      "custom jump list: the categories walked from the header — custom and its name, known (recent), tasks");
+	check(c.size() == 3 && c[1].toJson().find(L"KnownCategory") && c[1].toJson().find(L"KnownCategory")->text() == L"Recent"
+	      && !c[1].toJson().find(L"Entries"), "custom jump list: a known category named, no entry count");
+	f[0] = 3;
+	check(customDestinationCategories(f.data(), f.size()).empty(), "custom jump list: another version not read as categories");
+	check(customDestinationCategories(f.data(), 10).empty(), "custom jump list: a header cut short gives none");
+}
+
+/*! An .evtx forged here: one record, an element <E> whose content is a CDATA
+ *  section "ab". Its token is the type, a length in characters, the UTF-16
+ *  text; read with a name's layout (length at 6, text at 8), the text came
+ *  from the wrong place. */
+void evtxCdata() {
+	const std::filesystem::path file = std::filesystem::temp_directory_path() / L"wac-cdata.evtx";
+	std::vector<uint8_t> f(4096 + 65536, 0);
+	std::memcpy(f.data(), "ElfFile", 8);
+	writeLittleEndian<uint16_t>(f.data() + 42, 1);
+	uint8_t* c = f.data() + 4096;
+	std::memcpy(c, "ElfChnk", 8);
+	writeLittleEndian<uint32_t>(c + 48, 577);                  // the live records end
+	writeLittleEndian<uint32_t>(c + 512, 0x2a2a);              // the record: signature, size, id
+	writeLittleEndian<uint32_t>(c + 516, 65);
+	writeLittleEndian<uint64_t>(c + 520, 1);
+	const uint8_t document[] = {
+		0x0F, 0x01, 0x01, 0x00,                                // fragment header
+		0x01, 0xFF, 0xFF, 25, 0, 0, 0, 0x27, 0x02, 0, 0,       // <E: dependency, size, name at 551 (in place)
+		0, 0, 0, 0, 0, 0, 1, 0, 'E', 0, 0, 0,                  // the name: 1 character, "E", terminator
+		0x02,                                                  // >
+		0x07, 2, 0, 'a', 0, 'b', 0,                            // CDATA: 2 characters, "ab"
+		0x04, 0x00 };                                          // </E>, end of the document
+	std::memcpy(c + 536, document, sizeof document);
+	writeLittleEndian<uint32_t>(c + 573, 65);                  // the size, again at the end
+	std::ofstream(file, std::ios::binary).write(reinterpret_cast<const char*>(f.data()), (std::streamsize)f.size());
+	std::vector<std::wstring> xml;
+	check(EvtxReadFile(file.wstring(), [&](const EvtxRecord& e) { xml.push_back(e.xml); return true; }) == ERROR_SUCCESS
+	      && xml.size() == 1 && xml[0] == L"<E>ab</E>",
+	      "evtx: a CDATA section's text read after its length, not with a name's layout");
+	std::error_code ec;
+	std::filesystem::remove(file, ec);
+}
+
 /*! A classic .evt log built here: a header of 0x30 bytes and a circular
  *  area of 0x100, its oldest record at 0xF0 reaching the end and going on
  *  after the header, a second record, then the end-of-file record. Both are
@@ -1724,6 +1847,12 @@ void recycleBinInfo2() {
 	      && files[0].originalPath == L"C:\\wac-recycle.txt" && files[0].recycledName == L"Dc1.txt" && files[0].size == 4096
 	      && timeToIso8601Utc(files[0].deletedUtc).compare(0, 23, L"2026-10-16T04:26:17.343") == 0,
 	      "INFO2: the XP record read — path, Dc copy, size, deletion");
+	writeLittleEndian<uint32_t>(r + 264, 3);                       // D:
+	files.clear();
+	check(parseInfo2(info2, L"D:\\RECYCLER\\S-1-5-21-1-2-3-500\\INFO2", L"S-1-5-21-1-2-3-500", files) && files.size() == 1
+	      && files[0].recycledName == L"Dd1.txt",
+	      "INFO2: a file deleted from D: kept as Dd<n>, the drive's letter, not Dc");
+	writeLittleEndian<uint32_t>(r + 264, 2);
 	std::vector<uint8_t> cut(info2.begin(), info2.end() - 1);
 	files.clear();
 	check(parseInfo2(cut, L"x", L"s", files) && files.empty(), "INFO2: a record cut short read past the file");
@@ -1760,6 +1889,8 @@ void jobFile() {
 	      ".job: program, author, status, trigger of the XP task, no last run");
 	ScheduledTask cut;
 	check(!parseJobFile(std::vector<uint8_t>(job.begin(), job.begin() + 0x60), cut), ".job: a file cut in its strings read");
+	check(ScheduledTask().toJson().find(L"LastTaskResult") == nullptr && t.toJson().find(L"LastTaskResult") != nullptr,
+	      "tasks: no LastTaskResult without a history to read it from, never a 0 that reads \"succeeded\"");
 }
 
 /*! The firewall exceptions of Windows XP SP3, as the test VM's Standard
@@ -2250,6 +2381,11 @@ int wmain(int argc, wchar_t** argv) {
 	shimcacheWindowsXp();
 	prefetchVersion17();
 	classicEventLog();
+	evtxCdata();
+	wevtOffsetsNear4GiB();
+	ieIndexRecordInsideAnOlder();
+	xmlCdataAndAstralReference();
+	customDestinationCategoriesRead();
 	userAssistXp();
 	setupApiXp();
 	recycleBinInfo2();

@@ -36,6 +36,9 @@
 #include "tools.h"
 #include "json.h"
 #include "xml_light.h"
+#include "evtx.h"
+#include <filesystem>
+#include <functional>
 
 /*! One event, as it appears in a log.
  *
@@ -149,6 +152,29 @@ struct Event {
  *  @param sources receives the (log, source) pairs
  *  @return ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND if no log was extracted */
 HRESULT EventProvidersCited(std::set<std::wstring>& guids, std::set<std::pair<std::wstring, std::wstring>>& sources);
+
+/*! One event log of the working copy: its file, its channel, its format. */
+struct EventLogFile {
+	std::filesystem::path path;   //!< the working copy
+	std::wstring channel;         //!< its channel, or its classic log's name
+	bool classic = false;         //!< an .evt of Windows XP or Server 2003
+};
+
+/*! The logs of the working copy: the .evtx of winevt\\Logs, the .evt of
+ *  System32\\config before Vista — both read into the same XML —, and those
+ *  the examined registry keeps elsewhere, as the collection took them
+ *  (event_log_files.h; one not taken, an unreadable volume, is not there).
+ *  The one list every reader of the logs walks: one of its own missed the
+ *  moved logs.
+ *  @return the logs found */
+std::vector<EventLogFile> workingEventLogs();
+
+/*! Reads one log, whatever its format.
+ *  @param log the log
+ *  @param onRecord called for each record; false stops the reading
+ *  @param summary receives the count and the diagnosis (optional)
+ *  @return as EvtxReadFile / EvtReadFile */
+HRESULT readEventLog(const EventLogFile& log, const std::function<bool(const EvtxRecord&)>& onRecord, EvtxSummary* summary = nullptr);
 
 struct Events {
 	unsigned long long read = 0;          //!< records written

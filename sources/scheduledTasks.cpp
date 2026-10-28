@@ -257,7 +257,7 @@ Json ScheduledTask::toJson() const {
 	o.add(L"State",              Json::str(state));
 	o.add(L"LastRun",            Json::str(utcTimeToIso8601Local(lastRunTimeUtc)));
 	o.add(L"LastRunUtc",         Json::str(timeToIso8601Utc(lastRunTimeUtc)));
-	o.add(L"LastTaskResult",     Json::num((long long)lastTaskResult));
+	if (lastTaskResult) o.add(L"LastTaskResult", Json::num((long long)*lastTaskResult));
 	o.add(L"RegistrationDate",   Json::str(registrationDate));
 	o.add(L"SourceXml",          Json::str(sourceXml));   // traceability of the source
 	o.add(L"SourceJob",          Json::str(sourceJob));

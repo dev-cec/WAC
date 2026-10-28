@@ -4,14 +4,14 @@
 #include "hosts_file.h"
 #include "consigne.h"
 #include <filesystem>
-#include <fstream>
+#include "whole_file.h"
 
 namespace {
 
 //! The file, relative to the system volume.
 const wchar_t HOSTS_PATH[] = L"\\Windows\\System32\\drivers\\etc\\hosts";
 
-//! A hosts file is a few kilobytes; one of several megabytes is read up to this.
+//! A hosts file is a few kilobytes, a blocking list a few megabytes: none beyond this is read.
 const size_t HOSTS_MAX = 16 * 1024 * 1024;
 
 bool blank(wchar_t c) { return c == L' ' || c == L'\t'; }
@@ -58,12 +58,17 @@ HRESULT HostsFile::getData() {
 	const std::filesystem::path file = extractedPath(conf.systemDrive + HOSTS_PATH);
 	std::error_code ec;
 	if (!std::filesystem::exists(file, ec)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-	std::ifstream in(file, std::ios::binary);
-	std::string bytes(HOSTS_MAX, '\0');
-	in.read(&bytes[0], (std::streamsize)bytes.size());
-	bytes.resize((size_t)in.gcount());
 	path_ = conf.systemDrive + HOSTS_PATH;
-	ExhibitSourceTimes(file.wstring(), createdUtc_, modifiedUtc_, accessedUtc_);
+	/* Read whole or not at all: cut at the bound, the lines past it — those a
+	   padded file hides at its end, and Windows' resolver still reads — were
+	   lost without a word. The file itself stays in the exhibits. */
+	std::string bytes;
+	if (!readWholeFile(file, HOSTS_MAX, bytes)) {
+		log(2, L"🔥hosts unreadable or larger than 16 MiB, not read: " + path_);
+		return HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
+	}
+	if (!ExhibitSourceTimes(file.wstring(), createdUtc_, modifiedUtc_, accessedUtc_))
+		log(2, L"🔥Source timestamps not recorded: " + path_);
 	// Windows reads it as ANSI; a UTF-8 byte-order mark is skipped, as its resolver does.
 	const bool bom = bytes.size() >= 3 && bytes.compare(0, 3, "\xEF\xBB\xBF") == 0;
 	entries_ = parseHostsFile(bom ? decodeText(bytes.substr(3), CP_UTF8) : decodeText(bytes));

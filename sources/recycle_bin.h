@@ -45,7 +45,7 @@ struct RecycledFile {
 	uint64_t size = 0;               //!< size of the deleted file, bytes
 	FILETIME deletedUtc = { 0 };     //!< instant of the deletion, UTC
 	std::wstring originalPath;       //!< where the file was before being deleted
-	std::wstring recycledName;       //!< INFO2 (Windows XP): the copy's name in the bin, Dc<n><extension>
+	std::wstring recycledName;       //!< INFO2 (Windows XP): the copy's name in the bin, D<drive letter><n><extension>
 	//! @return the deleted file as a JSON object
 	Json toJson() const;
 };

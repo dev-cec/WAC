@@ -46,6 +46,23 @@ std::wstring recordString(const uint8_t* record, size_t length, uint32_t offset)
 	return decodeText(std::string(reinterpret_cast<const char*>(record + offset), end - offset));
 }
 
+/*! The length of the record at `at`: its declared blocks, bounded by the
+ *  file and by the next record that begins inside them.
+ *  @param data,size the file
+ *  @param at the record's offset, its signature checked
+ *  @return its length in bytes, never zero: the walk always moves on */
+size_t recordLength(const uint8_t* data, size_t size, size_t at) {
+	const uint32_t blocks = readLittleEndian<uint32_t>(data + at + 4);
+	// The record's declared size, bounded by the file: what lies beyond is not its.
+	size_t length = blocks && blocks <= (size - at) / BLOCK ? blocks * BLOCK : size - at;
+	/* …and by the next record: a record deleted then partly overwritten by a
+	   newer one (recovered from the blocks) ends where that one begins — its
+	   declared tail is the other's bytes, valid-looking and not its. */
+	for (size_t next = at + BLOCK; next < at + length; next += BLOCK)
+		if (!kindAt(data, size, next).empty()) return next - at;
+	return length;
+}
+
 /*! Decodes the record at `at`.
  *  @param data,size the file
  *  @param at the record's offset, its signature checked
@@ -54,14 +71,7 @@ std::wstring recordString(const uint8_t* record, size_t length, uint32_t offset)
 bool readRecord(const uint8_t* data, size_t size, size_t at, IeIndexRecord& record) {
 	record.kind = kindAt(data, size, at);
 	record.offset = (uint32_t)at;
-	const uint32_t blocks = readLittleEndian<uint32_t>(data + at + 4);
-	// The record's declared size, bounded by the file: what lies beyond is not its.
-	size_t length = blocks && blocks <= (size - at) / BLOCK ? blocks * BLOCK : size - at;
-	/* …and by the next record: a record deleted then partly overwritten by a
-	   newer one (recovered from the blocks) ends where that one begins — its
-	   declared tail is the other's bytes, valid-looking and not its. */
-	for (size_t next = at + BLOCK; next < at + length; next += BLOCK)
-		if (!kindAt(data, size, next).empty()) { length = next - at; break; }
+	const size_t length = recordLength(data, size, at);
 	const uint8_t* r = data + at;
 	if (record.kind == L"URL") {
 		if (length < URL_MINIMUM) return false;
@@ -132,7 +142,6 @@ bool parseIeIndexDat(const uint8_t* data, size_t size, IeIndexFile& file) {
 	std::vector<IeIndexRecord> recovered;
 	for (size_t at = BLOCKS_START; at + 8 <= size;) {
 		const std::wstring kind = kindAt(data, size, at);
-		const uint32_t blocks = kind.empty() ? 0 : readLittleEndian<uint32_t>(data + at + 4);
 		if (!kind.empty() && !named.count(at)) {
 			IeIndexRecord record;
 			if (readRecord(data, size, at, record)) {
@@ -140,7 +149,9 @@ bool parseIeIndexDat(const uint8_t* data, size_t size, IeIndexFile& file) {
 				(record.recovered ? recovered : file.records).push_back(std::move(record));
 			}
 		}
-		at += blocks && blocks <= (size - at) / BLOCK ? blocks * BLOCK : BLOCK;
+		/* Past the record as readRecord bounds it: stepping over its DECLARED
+		   size skipped the newer records written inside it. */
+		at += kind.empty() ? BLOCK : recordLength(data, size, at);
 	}
 	for (IeIndexRecord& r : recovered) file.records.push_back(std::move(r));
 	return true;

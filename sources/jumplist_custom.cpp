@@ -3,19 +3,73 @@
  */
 #include "jumplist_custom.h"
 #include "consigne.h"
+#include <algorithm>
 
 //! The largest jump list read: a series of shortcuts, a few hundred KiB at most.
 const uintmax_t JUMPLIST_MAX = 256ull * 1024 * 1024;
+
+namespace {
+const uint32_t CUSTOM_DESTINATIONS_VERSION = 2;
+const uint32_t CATEGORY_CUSTOM = 0, CATEGORY_KNOWN = 1, CATEGORY_TASKS = 2;
+const uint32_t CATEGORIES_MAX = 1000;                  //!< far beyond a real list: a forged count
+} // namespace
+
+std::vector<CustomCategoryHeader> customDestinationCategories(const uint8_t* data, size_t size) {
+	std::vector<CustomCategoryHeader> categories;
+	// Header: version, category count, a reserved word.
+	if (!fits(size, 0, 12) || readLittleEndian<uint32_t>(data) != CUSTOM_DESTINATIONS_VERSION) return categories;
+	const uint32_t count = readLittleEndian<uint32_t>(data + 4);
+	const uint8_t footer[4] = { 0xAB, 0xFB, 0xBF, 0xBA };   // 0xBABFFBAB little-endian: closes every category, and the file
+	size_t at = 12;
+	for (uint32_t i = 0; i < count && i < CATEGORIES_MAX && fits(size, at, 4); ++i) {
+		CustomCategoryHeader c;
+		c.kind = readLittleEndian<uint32_t>(data + at);
+		at += 4;
+		if (c.kind == CATEGORY_CUSTOM) {
+			// Its name: a count of UTF-16 characters, the characters; then its entry count.
+			if (!fits(size, at, 2)) break;
+			const size_t bytes = 2ULL * readLittleEndian<uint16_t>(data + at);
+			if (!fits(size, at + 2, bytes + 4)) break;
+			c.name = std::wstring(reinterpret_cast<const wchar_t*>(data + at + 2), bytes / 2);
+			c.entries = readLittleEndian<uint32_t>(data + at + 2 + bytes);
+			at += 2 + bytes + 4;
+		}
+		else if (c.kind == CATEGORY_KNOWN || c.kind == CATEGORY_TASKS) {
+			if (!fits(size, at, 4)) break;
+			(c.kind == CATEGORY_KNOWN ? c.knownId : c.entries) = readLittleEndian<uint32_t>(data + at);
+			at += 4;
+		}
+		else break;   // no such kind: the walk lost its place
+		categories.push_back(std::move(c));
+		// Its shortcuts are not measured here: the category ends at its footer.
+		const uint8_t* end = std::search(data + at, data + size, footer, footer + 4);
+		if (end == data + size) break;
+		at = (size_t)(end - data) + 4;
+	}
+	return categories;
+}
+
+Json CustomCategoryHeader::toJson() const {
+	Json o = Json::obj();
+	if (kind == CATEGORY_CUSTOM) {
+		o.add(L"Kind", Json::str(L"Custom"));
+		o.add(L"Name", Json::str(name));
+	}
+	else if (kind == CATEGORY_KNOWN) {
+		o.add(L"Kind", Json::str(L"Known"));
+		o.add(L"KnownCategory", knownId == 1 ? Json::str(L"Frequent") : knownId == 2 ? Json::str(L"Recent") : Json::num(knownId));
+	}
+	else o.add(L"Kind", Json::str(L"Tasks"));
+	if (kind != CATEGORY_KNOWN) o.add(L"Entries", Json::num(entries));
+	return o;
+}
 
 CustomDestinationCategory::CustomDestinationCategory(LPBYTE buffer, size_t buffersize, std::wstring _path, std::wstring _sid) {
 	/* The shortcuts are found by their header: the size 0x4C then the
 	   ShellLink CLSID, 20 bytes in all. The walk used to run while
 	   `x < buffersize - pos - 23`, an UNSIGNED difference: on a file of 25 or
-	   26 bytes it wrapped around and the scan went on far past the buffer. The
-	   entry count at 4 was read without checking the file held it. */
+	   26 bytes it wrapped around and the scan went on far past the buffer. */
 	const size_t pos = 4;
-	if (buffersize < pos + 4) return;
-	nbentries = *reinterpret_cast<unsigned int*>(buffer + 4);
 	const size_t LNK_HEADER = 4 + 16;   // HeaderSize, then LinkCLSID
 	for (size_t x = pos; fits(buffersize, x, LNK_HEADER); x++) {
 		const unsigned int s = *reinterpret_cast<unsigned int*>(buffer + x); // = 0x4C = 76 for a LNK
@@ -69,28 +123,14 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		std::wstring baseName = _path.stem(); // file name without its extension
 		log(3, L"🔈from_appId application");
 		application = from_appId(baseName);
-		// The first word needs 4 bytes: an empty or truncated file has none.
-		typeInt = (size >= 4) ? *reinterpret_cast<unsigned int*>(buffer) : 0xFFFFFFFFu;
-		switch (typeInt) {
-		case 0: {
-			log(2, L"🔥"+ pathOriginal + L" : Custom category", ERROR_UNSUPPORTED_TYPE);
-			type = L"Custom category";
-			break;
-		}
-		case 1: {
-			log(2, L"🔥" + pathOriginal + L" : Known category",ERROR_UNSUPPORTED_TYPE );
-			type = L"Known category";
-			break;
-		}
-		case 2: {
-			type = L"User tasks";
-			break;
-		}
-		default:break;
-		}
+		/* The word at 0 is the format's version (2), not a category's kind: read
+		   as one, every file was "User tasks". The kinds are those of the
+		   categories, walked from the header. */
+		categories = customDestinationCategories(buffer, size);
+		if (categories.empty()) log(2, L"🔥" + pathOriginal + L" : no category read", ERROR_UNSUPPORTED_TYPE);
 
-		// Check of the file's size, to look for a LNK file
-		if ((size > 24) && (typeInt == 2)) {
+		// The shortcuts, found by their header whatever their category.
+		if (size > 24) {
 			log(3, L"🔈CustomDestinationCategory");
 			category = std::make_unique<CustomDestinationCategory>(buffer, size, path, _sid);
 		}
@@ -107,7 +147,9 @@ Json CustomDestination::toJson() {
 	addUser(o, Sid);
 	o.add(L"Application", Json::str(application));
 	o.add(L"Path",        Json::str(pathOriginal));
-	o.add(L"Type",        Json::str(type));
+	Json list = Json::arr();
+	for (const CustomCategoryHeader& c : categories) list.push(c.toJson());
+	o.add(L"Categories",  std::move(list));
 	o.add(L"Created",     Json::str(utcTimeToIso8601Local(createdUtc)));
 	o.add(L"CreatedUtc",  Json::str(timeToIso8601Utc(createdUtc)));
 	o.add(L"Modified",    Json::str(utcTimeToIso8601Local(modifiedUtc)));

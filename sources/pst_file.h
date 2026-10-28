@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <fstream>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -126,10 +127,10 @@ private:
 
 	bool readAt(uint64_t offset, size_t size, std::vector<uint8_t>& bytes);
 	bool findInTree(uint64_t pageOffset, uint64_t key, bool blockTree, std::vector<uint8_t>& entry, int depth);
-	bool walkNodeTree(uint64_t pageOffset, std::vector<PstNode>& nodes, int depth);
+	bool walkNodeTree(uint64_t pageOffset, std::vector<PstNode>& nodes, std::set<uint64_t>& visited, int depth);
 	bool block(uint64_t bid, std::vector<uint8_t>& data);
-	bool dataTree(uint64_t bid, std::vector<std::vector<uint8_t>>& blocks, int depth);
-	bool subnodeTree(uint64_t bid, std::map<uint32_t, PstSubnode>& subnodes, int depth);
+	bool dataTree(uint64_t bid, std::vector<std::vector<uint8_t>>& blocks, std::set<uint64_t>& visited, int depth);
+	bool subnodeTree(uint64_t bid, std::map<uint32_t, PstSubnode>& subnodes, std::set<uint64_t>& visited, int depth);
 	bool heapItem(const std::vector<std::vector<uint8_t>>& heap, uint32_t hid, std::vector<uint8_t>& item);
 	bool hnidValue(const std::vector<std::vector<uint8_t>>& heap, const std::map<uint32_t, PstSubnode>& subnodes,
 	               uint32_t hnid, std::vector<uint8_t>& value);

@@ -33,11 +33,29 @@
 #include "idList.h"
 #include "recent_docs.h"
 
-/*! One category of a custom jump list, as the application names it. */
+/*! A category as the file declares it, in its order: a custom one named by
+ *  the application, a known one (Windows' frequent or recent list), or the
+ *  application's tasks. */
+struct CustomCategoryHeader {
+	uint32_t kind = 0;      //!< 0 custom, 1 known, 2 tasks, as the file numbers it
+	std::wstring name;      //!< a custom category's name, in the application's own words
+	uint32_t knownId = 0;   //!< a known category: 1 frequent, 2 recent
+	uint32_t entries = 0;   //!< the entries a custom or tasks category declares
+	/*! @return its JSON object: kind, then what names or counts it */
+	Json toJson() const;
+};
+
+/*! The categories of a .customDestinations-ms file, walked from its header
+ *  (version 2, category count) from one category footer (0xBABFFBAB) to the
+ *  next: the shortcuts between them are not parsed here.
+ *  @param data the file's bytes
+ *  @param size their count
+ *  @return the categories read, in order; the walk stops at the first that does
+ *          not hold — an unknown version gives none */
+std::vector<CustomCategoryHeader> customDestinationCategories(const uint8_t* data, size_t size);
+
+/*! The shortcuts of a custom jump list, all categories together. */
 struct CustomDestinationCategory {
-	unsigned short int nameSize = 0; //!< length of the category's name, as declared
-	std::wstring name = L"";    //!< name of the category, in the application's own words
-	unsigned int nbentries = 0; //!< number of entries the category declares
 	std::vector<RecentDoc> recentDocs; //!< its entries, each a complete shortcut
 
 	//! Builds an empty category.
@@ -72,8 +90,7 @@ struct CustomDestination {
 	std::wstring application = L"";//!< the application, resolved from the AppID when known
 	std::wstring path = L"";       //!< path of the file in the working directory
 	std::wstring pathOriginal = L"";//!< path it was read from on the examined volume
-	unsigned int typeInt = 0;//!< kind of list, as the file numbers it
-	std::wstring type = L"";	//!< that kind spelled out
+	std::vector<CustomCategoryHeader> categories; //!< the categories, as the file declares them
 	/*! Category of the jump list, absent if the file carries no shortcut.
 	*
 	* WHY A `unique_ptr`. The pointer was raw, and was released only by

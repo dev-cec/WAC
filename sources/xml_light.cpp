@@ -77,10 +77,14 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 	}
 	if (empty) return node;                                // <tag ... />
 
-	// --- content: text and children, up to the closing tag
-	std::wstring text;
+	/* --- content: text and children, up to the closing tag. The entities are
+	   decoded run by run, as the text is met: a CDATA section's text is kept
+	   as written — its "&lt;" is four characters, not a '<'. */
+	std::wstring text, run;
 	while (pos < s.size()) {
-		if (s[pos] != L'<') { text += s[pos++]; continue; }
+		if (s[pos] != L'<') { run += s[pos++]; continue; }
+		text += xmlDecodeEntities(run);
+		run.clear();
 
 		// comment, CDATA or instruction: skipped (the CDATA keeps its text)
 		if (s.compare(pos, 4, L"<!--") == 0) {
@@ -106,7 +110,7 @@ std::unique_ptr<XmlNode> readElement(const std::wstring& s, size_t& pos, unsigne
 			const size_t f = s.find(L'>', pos);
 			if (f == std::wstring::npos) return nullptr;
 			pos = f + 1;
-			node->text = xmlDecodeEntities(keepText ? text : trim(text));
+			node->text = keepText ? text : trim(text);
 			return node;
 		}
 		++pos;                                              // past the '<'
@@ -140,7 +144,12 @@ std::wstring xmlDecodeEntities(const std::wstring& s) {
 				const int code = (e[1] == L'x' || e[1] == L'X')
 					? std::stoi(e.substr(2), nullptr, 16)
 					: std::stoi(e.substr(1));
-				if (code > 0 && code < 0x110000) r += (wchar_t)code;
+				// Past U+FFFF, a surrogate pair: the wchar_t of Windows holds 16 bits.
+				if (code > 0xFFFF && code < 0x110000) {
+					r += (wchar_t)(0xD800 + ((code - 0x10000) >> 10));
+					r += (wchar_t)(0xDC00 + ((code - 0x10000) & 0x3FF));
+				}
+				else if (code > 0 && code < 0x110000) r += (wchar_t)code;
 			}
 			catch (...) { r += L'&' + e + L';'; }        // unreadable: kept raw
 		}

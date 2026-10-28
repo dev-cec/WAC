@@ -3,6 +3,8 @@
  */
 #include "error_reports.h"
 #include "consigne.h"
+#include <cerrno>
+#include <cwchar>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -32,8 +34,10 @@ bool parseErrorReport(const std::wstring& text, ErrorReport& report) {
 		if (key == L"EventTime") {
 			// A FILETIME in decimal; anything else is not a date and is left in `values` only.
 			if (!value.empty() && value.size() <= 20 && value.find_first_not_of(L"0123456789") == std::wstring::npos) {
-				const unsigned long long t = std::stoull(value);
-				report.eventTimeUtc = filetimeFromTicks(t);
+				// 20 digits can pass 2^64: std::stoull threw then, and nothing caught it.
+				errno = 0;
+				const unsigned long long t = std::wcstoull(value.c_str(), nullptr, 10);
+				if (errno != ERANGE) report.eventTimeUtc = filetimeFromTicks(t);
 			}
 		}
 		// Sig[n].Name / Sig[n].Value, n below 100.

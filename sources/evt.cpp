@@ -127,7 +127,7 @@ HRESULT EvtReadFile(const std::wstring& path, const std::wstring& channel,
 	}
 	s.headerValid = true;
 	const uint32_t flags = readLittleEndian<uint32_t>(file.data() + 0x24);
-	s.sale = (flags & 0x1) != 0;   // ELF_LOGFILE_HEADER_DIRTY: written while the log was open
+	s.dirty = (flags & 0x1) != 0;   // ELF_LOGFILE_HEADER_DIRTY: written while the log was open
 	const Circle circle{ file };
 	size_t at = readLittleEndian<uint32_t>(file.data() + 0x10);
 	if (at < HEADER_SIZE || at >= file.size()) {
@@ -159,7 +159,7 @@ HRESULT EvtReadFile(const std::wstring& path, const std::wstring& channel,
 		at = circle.advance(at, length);
 		walked += length;
 	}
-	s.diagnostic = std::to_wstring(s.read) + L" record(s)" + (s.sale ? L", log dirty" : L"") + L"; " + stop;
+	s.diagnostic = std::to_wstring(s.read) + L" record(s)" + (s.dirty ? L", log dirty" : L"") + L"; " + stop;
 	return s.unreadable ? S_FALSE : ERROR_SUCCESS;
 }
 

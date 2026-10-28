@@ -5,7 +5,6 @@
 #include "events.h"
 #include "evtx.h"
 #include "xml_light.h"
-#include <cwctype>
 #include <filesystem>
 #include <map>
 #include <memory>
@@ -30,15 +29,10 @@ const std::vector<std::pair<const wchar_t*, std::vector<std::wstring>>> NORMALIS
 	{ L"SessionId",     { L"SessionID", L"SessionId", L"Session" } },
 };
 
-std::wstring lower(std::wstring text) {
-	for (wchar_t& c : text) c = (wchar_t)towlower(c);
-	return text;
-}
-
 } // namespace
 
 bool isIncomingRdpEvent(const std::wstring& channel, unsigned eventId, const std::wstring& logonType) {
-	const auto log = RDP_EVENTS.find(lower(channel));
+	const auto log = RDP_EVENTS.find(toLower(channel));
 	if (log == RDP_EVENTS.end() || !log->second.count(eventId)) return false;
 	// Security's logon events: only those of a remote interactive logon (type 10).
 	if (log->first == L"security" && (eventId == 4624 || eventId == 4625 || eventId == 4634)) return logonType == L"10";
@@ -47,15 +41,13 @@ bool isIncomingRdpEvent(const std::wstring& channel, unsigned eventId, const std
 
 HRESULT RdpServer::getData() {
 	log(0, L"ℹ️Incoming RDP connections :");
-	// The logs' working copies: the exhibit store is not read (backlog B-040).
-	const std::vector<std::filesystem::path> logs =
-		listFilesByExtension(extractedPath(L"\\Windows\\System32\\winevt\\Logs"), { L".evtx" });
-	for (const std::filesystem::path& file : logs) {
-		const std::wstring fileName = file.filename().wstring();
-		const std::wstring channel = EvtxChannelFromFileName(fileName);
-		if (!RDP_EVENTS.count(lower(channel))) continue;
+	// The logs' working copies, those the registry moved included: the exhibit store is not read (backlog B-040).
+	for (const EventLogFile& file : workingEventLogs()) {
+		const std::wstring fileName = file.path.filename().wstring();
+		const std::wstring& channel = file.channel;
+		if (!RDP_EVENTS.count(toLower(channel))) continue;
 		size_t kept = 0;
-		const HRESULT hr = EvtxReadFile(file.wstring(), [&](const EvtxRecord& e) {
+		const HRESULT hr = readEventLog(file, [&](const EvtxRecord& e) {
 			const std::unique_ptr<XmlNode> root = xmlParse(e.xml, true);
 			if (!root) return true;
 			Event ev(*root, channel, e.id, fileName);

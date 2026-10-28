@@ -116,9 +116,9 @@ private:
 	 */
 	std::wstring name(size_t offset) const {
 		if (offset + 8 > tc) return L"";
-		const uint16_t nbCar = readLittleEndian<uint16_t>(c, tc, offset + 6);
-		if (offset + 8 + 2ULL * nbCar > tc) return L"";
-		return std::wstring(reinterpret_cast<const wchar_t*>(c + offset + 8), nbCar);
+		const uint16_t characters = readLittleEndian<uint16_t>(c, tc, offset + 6);
+		if (offset + 8 + 2ULL * characters > tc) return L"";
+		return std::wstring(reinterpret_cast<const wchar_t*>(c + offset + 8), characters);
 	}
 	//! Size taken by a name structure (terminator included).
 	size_t nameSize(size_t offset) const {
@@ -277,16 +277,16 @@ private:
 		}
 
 		// Fixed-size types.
-		size_t pas = 0;
+		size_t elementSize = 0;
 		switch (base) {
-		case T_INT8: case T_UINT8:                       pas = 1;  break;
-		case T_INT16: case T_UINT16:                     pas = 2;  break;
+		case T_INT8: case T_UINT8:                       elementSize = 1;  break;
+		case T_INT16: case T_UINT16:                     elementSize = 2;  break;
 		case T_INT32: case T_UINT32: case T_REAL32:
-		case T_BOOL: case T_HEX32:                       pas = 4;  break;
+		case T_BOOL: case T_HEX32:                       elementSize = 4;  break;
 		case T_INT64: case T_UINT64: case T_REAL64:
-		case T_FILETIME: case T_HEX64:                   pas = 8;  break;
-		case T_GUID: case T_SYSTIME:                     pas = 16; break;
-		case T_SIZE: pas = (size % 8 == 0) ? 8 : 4;              break;
+		case T_FILETIME: case T_HEX64:                   elementSize = 8;  break;
+		case T_GUID: case T_SYSTIME:                     elementSize = 16; break;
+		case T_SIZE: elementSize = (size % 8 == 0) ? 8 : 4;              break;
 		case T_SID: {
 			// Variable length: derived from the number of sub-authorities.
 			size_t p = off;
@@ -304,13 +304,13 @@ private:
 			r.push_back(value(base, off, size, -1, depth));
 			return r;
 		}
-		for (size_t p = off; p + pas <= off + size; p += pas)
-			r.push_back(value(base, p, pas, -1, depth));
+		for (size_t p = off; p + elementSize <= off + size; p += elementSize)
+			r.push_back(value(base, p, elementSize, -1, depth));
 		return r;
 	}
 
 	//! Number of elements of an array-typed substitution value.
-	size_t cardinalite(const SubstValue& v, unsigned depth) {
+	size_t elementCount(const SubstValue& v, unsigned depth) {
 		if (!(v.type & T_ARRAY)) return 1;
 		return array(v.type & 0x7f, v.offset, v.size, depth).size();
 	}
@@ -355,9 +355,13 @@ private:
 				break;
 			}
 			case JET_CDATA: {
-				const uint16_t nbCar = readLittleEndian<uint16_t>(c, tc, p + 1);
-				output += EvtxXmlEscape(name(p));   // same encoding: length + UTF-16
-				p += 3 + 2ULL * nbCar;
+				/* The token, a length in characters, the UTF-16 text: not a name's
+				   layout (length at 6, text at 8), which gave its text from the
+				   wrong place. */
+				const size_t bytes = 2ULL * readLittleEndian<uint16_t>(c, tc, p + 1);
+				if (p + 3 + bytes > end) return false;
+				output += EvtxXmlEscape(std::wstring(reinterpret_cast<const wchar_t*>(c + p + 3), bytes / 2));
+				p += 3 + bytes;
 				break;
 			}
 			case TOKEN_CHAR_REF:
@@ -372,8 +376,8 @@ private:
 			}
 			case TOKEN_PI_TARGET: p += 5; break;
 			case TOKEN_PI_DATA: {
-				const uint16_t nbCar = readLittleEndian<uint16_t>(c, tc, p + 1);
-				p += 3 + 2ULL * nbCar;
+				const uint16_t characters = readLittleEndian<uint16_t>(c, tc, p + 1);
+				p += 3 + 2ULL * characters;
 				break;
 			}
 			default:
@@ -390,8 +394,8 @@ private:
 	bool textValue(size_t& p, size_t end, std::wstring& output, unsigned depth) {
 		const uint8_t type = readLittleEndian<uint8_t>(c, tc, p + 1);
 		if (type == T_STRING) {
-			const uint16_t nbCar = readLittleEndian<uint16_t>(c, tc, p + 2);
-			const size_t bytes = 2ULL * nbCar;
+			const uint16_t characters = readLittleEndian<uint16_t>(c, tc, p + 2);
+			const size_t bytes = 2ULL * characters;
 			if (p + 4 + bytes > end) return false;
 			output += value(T_STRING, p + 4, bytes, -1, depth);
 			p += 4 + bytes;
@@ -497,7 +501,7 @@ private:
 				}
 
 				if (id < subs->size() && ((*subs)[id].type & T_ARRAY)) {
-					const size_t n = cardinalite((*subs)[id], depth);
+					const size_t n = elementCount((*subs)[id], depth);
 					for (size_t i = 0; i < n; ++i)
 						output += L"<" + elementName + attributes + L">"
 						        + value((*subs)[id].type, (*subs)[id].offset,
@@ -709,15 +713,15 @@ HRESULT EvtxReadFile(const std::wstring& path,
 	}
 	b.headerValid = true;
 	const uint16_t flags = readLittleEndian<uint16_t>(header.data(), header.size(), 120);
-	b.sale = (flags & 0x0001) != 0;
-	const uint16_t nDeclaredChunks = readLittleEndian<uint16_t>(header.data(), header.size(), 42);
+	b.dirty = (flags & 0x0001) != 0;
+	const uint16_t declaredChunks = readLittleEndian<uint16_t>(header.data(), header.size(), 42);
 
 	/*  Chunks are walked to the end of the file, not just up to the announced
 	 *  count: a log closed abruptly often holds more, and those chunks carry the
 	 *  most recent events — precisely the ones the investigation wants. */
 	std::vector<BYTE> chunk(CHUNK_SIZE);
 	bool goOn = true;
-	unsigned long long chunksIgnores = 0;
+	unsigned long long chunksSkipped = 0;
 	while (goOn) {
 		if (!ReadFile(h, chunk.data(), (DWORD)chunk.size(), &read, nullptr) || read == 0) break;
 		if (read < CHUNK_HEADER_SIZE) break;
@@ -731,7 +735,7 @@ HRESULT EvtxReadFile(const std::wstring& path,
 			 *  something without the signature is reported. */
 			bool empty = true;
 			for (size_t i = 0; i < read && empty; ++i) if (chunk[i]) empty = false;
-			if (!empty) ++chunksIgnores;
+			if (!empty) ++chunksSkipped;
 			continue;
 		}
 		++b.chunks;
@@ -791,14 +795,14 @@ HRESULT EvtxReadFile(const std::wstring& path,
 
 	std::wostringstream diag;
 	diag << b.chunks << L" chunk(s)";
-	if (nDeclaredChunks != b.chunks) diag << L" (" << nDeclaredChunks << L" declared)";
+	if (declaredChunks != b.chunks) diag << L" (" << declaredChunks << L" declared)";
 	diag << L", " << b.read << L" record(s)";
 	if (b.recovered) diag << L" (" << b.recovered << L" recovered past the live area)";
 	if (b.unreadable) diag << L", " << b.unreadable << L" unreadable";
-	if (chunksIgnores) diag << L", " << chunksIgnores << L" damaged chunk(s)";
-	if (b.sale) diag << L", log not closed cleanly";
+	if (chunksSkipped) diag << L", " << chunksSkipped << L" damaged chunk(s)";
+	if (b.dirty) diag << L", log not closed cleanly";
 	b.diagnostic = diag.str();
-	b.chunksIgnores = chunksIgnores;
+	b.chunksSkipped = chunksSkipped;
 
-	return (b.unreadable || chunksIgnores) ? S_FALSE : ERROR_SUCCESS;
+	return (b.unreadable || chunksSkipped) ? S_FALSE : ERROR_SUCCESS;
 }

@@ -90,11 +90,15 @@ bool parseInfo2(const std::vector<uint8_t>& bytes, const std::wstring& indexFile
 		if (f.originalPath.empty()) f.originalPath = decodeText(std::string((const char*)r, strnlen((const char*)r, INFO2_ANSI_PATH)));
 		f.deletedUtc = filetimeFromTicks(readLittleEndian<uint64_t>(r + INFO2_DELETED));
 		f.size = readLittleEndian<uint32_t>(r + INFO2_SIZE);
-		// The copy: "Dc", the record's number, the original's extension.
+		/* The copy: "D", the letter of the drive it was deleted from (0 for A:),
+		   the record's number, the original's extension — "Dd5.txt" for D:,
+		   not the "Dc" of C: alone. A drive number past Z: names no copy. */
+		const uint32_t drive = readLittleEndian<uint32_t>(r + INFO2_DRIVE);
 		const size_t dot = f.originalPath.find_last_of(L'.');
 		const size_t slash = f.originalPath.find_last_of(L'\\');
 		const std::wstring extension = dot != std::wstring::npos && (slash == std::wstring::npos || dot > slash) ? f.originalPath.substr(dot) : L"";
-		f.recycledName = L"Dc" + std::to_wstring(readLittleEndian<uint32_t>(r + INFO2_NUMBER)) + extension;
+		if (drive < 26)
+			f.recycledName = L"D" + std::wstring(1, (wchar_t)(L'a' + drive)) + std::to_wstring(readLittleEndian<uint32_t>(r + INFO2_NUMBER)) + extension;
 		files.push_back(std::move(f));
 	}
 	return true;
