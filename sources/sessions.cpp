@@ -4,6 +4,13 @@
 #include "sessions.h"
 #include "live_snapshot.h"
 
+/* An LSA_UNICODE_STRING is a length and a buffer, not a NUL-terminated text:
+   read up to the NUL, it went past Length into LSA's memory, and a null
+   Buffer (an empty field) crashed the collection. */
+std::wstring lsaText(const LSA_UNICODE_STRING& text) {
+	return text.Buffer ? std::wstring(text.Buffer, text.Length / sizeof(WCHAR)) : std::wstring();
+}
+
 Session::Session(LUID* id) {
 	/* `LsaGetLogonSessionData` ALLOCATES the structure itself and overwrites the
 	   pointer: the `new SECURITY_LOGON_SESSION_DATA()` that used to be here was
@@ -37,11 +44,11 @@ Session::Session(LUID* id) {
 		   system's boot time — impossible. */
 		temp = data->LogonTime;
 		memcpy(&startTimeUtc, &temp, sizeof(startTimeUtc));
-		logonName = std::wstring(data->UserName.Buffer).data();
-		logonDomainName = std::wstring(data->LogonDomain.Buffer).data();
+		logonName = lsaText(data->UserName);
+		logonDomainName = lsaText(data->LogonDomain);
 		logonType = data->LogonType;
 		logonTypeName = logon_type(logonType);
-		authenticationPackage = std::wstring(data->AuthenticationPackage.Buffer).data();
+		authenticationPackage = lsaText(data->AuthenticationPackage);
 
 		// Converted HERE, while LSA's structure is still valid (see sessions.h).
 		if (data->Sid) {
@@ -103,7 +110,7 @@ HRESULT Sessions::getData() {
 		printProgressStep(L"Session", i + 1, nbSessions);
 		sessions.push_back(Session(&pointer[i]));
 	}
-	LsaFreeReturnBuffer(&pointer);
+	LsaFreeReturnBuffer(pointer);   // the array LSA allocated, not the variable holding it
 	return ERROR_SUCCESS;
 }
 

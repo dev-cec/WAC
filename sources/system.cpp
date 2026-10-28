@@ -132,14 +132,14 @@ HRESULT SystemInfo::getData() {
 		                  L"Hostname", &computerName) != ERROR_SUCCESS)
 			getRegSzValue(conf.CurrentControlSet, L"Services\\Tcpip\\Parameters",
 			              L"NV Hostname", &computerName);
-		if (computerName.empty()) computerName = netbiosName;
+		// No DNS name read: none given — the NetBIOS name has its own field.
 
 		log(3, L"🔈getRegSzValue Tcpip Domain");
 		if (getRegSzValue(conf.CurrentControlSet, L"Services\\Tcpip\\Parameters",
 		                  L"Domain", &domainName) != ERROR_SUCCESS || domainName.empty())
 			getRegSzValue(conf.CurrentControlSet, L"Services\\Tcpip\\Parameters",
 			              L"NV Domain", &domainName);
-		if (domainName.empty()) domainName = L"WORKGROUP";
+		// No domain read: none given, never a "WORKGROUP" that reads as the hive's.
 
 		std::wstring archiBrute;
 		log(3, L"🔈getRegSzValue PROCESSOR_ARCHITECTURE");
@@ -242,6 +242,7 @@ HRESULT SystemInfo::getData() {
 	*******************************************************************/
 	Json clock = Json::null();
 	if (readLiveSnapshot("system-clock.json", clock) == ERROR_SUCCESS) {
+		clockRead = true;
 		long long collection = 0, boot = 0, correction = 0, uptime = 0, kernel = 0;
 		if (snapshotInteger(clock, L"CollectionTime100ns", collection) && collection > 0)
 			collectionTimeUtc = filetimeFromTicks(collection);
@@ -336,14 +337,17 @@ HRESULT SystemInfo::toJson() {
 	addIfSet(o, L"LocalDateTimeUtc",  timeToIso8601Utc(collectionTimeUtc));
 	addIfSet(o, L"LastBootUpTime",    utcTimeToIso8601Local(lastBootUpTimeUtc));
 	addIfSet(o, L"LastBootUpTimeUtc", timeToIso8601Utc(lastBootUpTimeUtc));
-	o.add(L"UptimeSeconds",     Json::num(uptimeSeconds));
-	// The source goes along with the value: an estimate must not read as a
-	// measurement.
-	o.add(L"BootTimeSource",    Json::str(bootFromKernel
-		? L"kernel (SystemTimeOfDayInformation: BootTime - BootTimeBias), "
-		  L"the time the clock showed at boot"
-		: L"estimated: current time minus GetTickCount64; ignores the clock adjustments "
-		  L"made since the boot"));
+	/* The source goes along with the value: an estimate must not read as a
+	   measurement. Neither without the clock's snapshot: a 0 and a source
+	   would claim a measurement never made. */
+	if (clockRead) {
+		o.add(L"UptimeSeconds",     Json::num(uptimeSeconds));
+		o.add(L"BootTimeSource",    Json::str(bootFromKernel
+			? L"kernel (SystemTimeOfDayInformation: BootTime - BootTimeBias), "
+			  L"the time the clock showed at boot"
+			: L"estimated: current time minus GetTickCount64; ignores the clock adjustments "
+			  L"made since the boot"));
+	}
 	/* In milliseconds, sign included: emitted only if there was a correction.
 	   Positive: the clock was moved forward since the boot. */
 	if (bootFromKernel && clockCorrection100ns != 0)

@@ -931,6 +931,14 @@ HRESULT loadSuspectAnsiCodePage();
 */
 std::wstring toLower(std::wstring s);
 
+/*! Whether a value names the output folder as WAC accepts it: one folder of
+ *  the current directory — the collection key —, by its name. A separator, a
+ *  drive (`C:case`, relative to C:'s current directory) or `..` would put
+ *  the collection anywhere, the examined volume included.
+ *  @param name the value of --output, or of `output:` in wac.yml
+ *  @return true for a plain folder name */
+bool isOutputFolderName(const std::wstring& name);
+
 /*! Splits a text file into its lines, "\r\n" or "\n", the end-of-line
 * characters removed; line n of the file is element n - 1.
 * @param text the text

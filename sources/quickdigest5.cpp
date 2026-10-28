@@ -200,10 +200,13 @@ std::vector<uint8_t> QuickDigest5::digestFile(const std::filesystem::path& filep
             if (bytesRead > 0)
                 QuickDigest5.update(buffer.data(), (size_t)bytesRead);
         }
-
+        // WAC: a read stopped before the end is no digest of the file.
+        if (!file.eof() || file.bad()) return {};
         QuickDigest5.finalize();
+        return QuickDigest5.digest;
     }
-    return QuickDigest5.digest;
+    // WAC: a file not opened has no digest — the 16 zero bytes read as one.
+    return {};
 }
 
 void Md5Stream::update(const uint8_t* data, size_t length) {

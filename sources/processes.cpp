@@ -108,8 +108,10 @@ HRESULT Process::ListProcessModules() {
 	// and exit if unsuccessful
 	log(3, L"🔈Module32First");
 	if (!Module32First(hModuleSnap, &me32)) {
-		log(2, L"🔥Module32First", GetLastError());
-		processModulesAccess = getErrorMessage(GetLastError());
+		// Taken once: log() opens its file, which sets another error.
+		const DWORD error = GetLastError();
+		log(2, L"🔥Module32First", error);
+		processModulesAccess = getErrorMessage(error);
 		CloseHandle(hModuleSnap);
 		return ERROR_INVALID_HANDLE;
 	}

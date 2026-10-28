@@ -154,7 +154,8 @@ public:
      * @brief Computes the MD5 hash of a file.
      * 
      * @param filepath The path to the file to hash.
-     * @return A vector of bytes representing the MD5 hash.
+     * @return A vector of bytes representing the MD5 hash; empty (WAC) if the
+     *         file could not be opened or read to its end.
      */
     // WAC: a std::filesystem::path (was std::string), so that a path outside
     // the process's ANSI code page stays openable — it is kept in UTF-16.
@@ -172,7 +173,8 @@ public:
      * @brief Computes the MD5 hash of a file and returns it as a hex string.
      * 
      * @param filepath The path to the file to hash.
-     * @return A string representing the MD5 hash in hexadecimal format.
+     * @return A string representing the MD5 hash in hexadecimal format; empty
+     *         (WAC) if the file could not be read.
      */
     static std::wstring fileToHash(const std::filesystem::path& filepath);   // WAC: see digestFile
 

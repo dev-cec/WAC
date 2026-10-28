@@ -1630,7 +1630,7 @@ int wmain(int argc, wchar_t* argv[])
 					showHelp();
 					exit(1);
 				}
-				if (conf._outputDir.find(L"\\") != std::wstring::npos) {
+				if (!isOutputFolderName(conf._outputDir)) {
 					printError(text(Text::InvalidOutputCharacter, { arg }));
 					log(3, L"🔈showHelp");
 					showHelp();
@@ -1767,7 +1767,16 @@ int wmain(int argc, wchar_t* argv[])
 
 	if (conf.mode != RunMode::Convert) {
 		hresult = extractSystemHives();
-		if (FAILED(hresult)) return hresult;
+		if (FAILED(hresult)) {
+			/* The live state is already in the store (observeLiveState): stopping
+			   here left it without manifest, seal or investigation log — refused
+			   by --convert, and nothing to say what was done on the machine. */
+			sealExhibitStore();
+			RawVolumesClose();
+			const HRESULT written = auditWrite();
+			if (written != ERROR_SUCCESS) printError(written);
+			return hresult;
+		}
 	}
 
 	/* The SYSTEM and SOFTWARE hives are opened ON the first pass: SOFTWARE gives

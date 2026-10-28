@@ -501,6 +501,12 @@ HRESULT ExhibitStoreWriteManifest() {
 		}
 		f << encodeText(root.dump(0));
 		f.close();
+		/* Checked once written too: a key filled during the write left a
+		   truncated manifest, sealed as it was and reported written. */
+		if (!f) {
+			log(2, L"🔥Exhibit manifest not written whole: " + path.wstring());
+			return E_FAIL;
+		}
 	}
 
 	/*  SEAL. A manifest cannot carry its own fingerprint: it is written beside
@@ -520,6 +526,10 @@ HRESULT ExhibitStoreWriteManifest() {
 		// without knowing anything about WAC.
 		f << encodeText(fingerprint + L"  MANIFEST.json\n");
 		f.close();
+		if (!f) {
+			log(2, L"🔥Manifest seal not written whole: " + seal.wstring());
+			return E_FAIL;
+		}
 	}
 
 	log(2, L"❇️Exhibit manifest: " + std::to_wstring(count) + L" exhibit(s), "

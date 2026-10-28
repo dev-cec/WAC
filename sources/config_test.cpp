@@ -137,6 +137,9 @@ int wmain(int argc, wchar_t** argv) {
 	refused("binary.yml", "binary: everything\n", 1, "none, unverified or all");
 	refused("threads.yml", "threads: 9999\n", 1, "between 0 and 256");
 	refused("output.yml", "output: C:\\\\temp\n", 1, "a folder name");
+	// A drive without separator (relative to its current directory) and the parent folder: anywhere but the key.
+	refused("output-drive.yml", "output: C:case\n", 1, "a folder name");
+	refused("output-parent.yml", "output: ..\n", 1, "a folder name");
 	refused("section.yml", "binary:\n  method: all\n", 1, "takes a value");
 	// deleted_files: a switch, or a section of its options (B-036).
 	{

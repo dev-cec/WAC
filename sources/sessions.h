@@ -30,6 +30,12 @@
 
 
 
+
+/*! The text of an LSA_UNICODE_STRING, bounded by its Length.
+ *  @param text the string, as LSA returns it
+ *  @return its text; empty for a null buffer */
+std::wstring lsaText(const LSA_UNICODE_STRING& text);
+
 /*! One logon session open on the machine. */
 struct Session {
 

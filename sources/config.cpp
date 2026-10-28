@@ -208,7 +208,7 @@ bool applySettings(const YamlNode& root, AppliConf& conf, std::string& error) {
 		else if (key == "output") {
 			if (!scalar(*node, key, error)) return false;
 			// As for --output: a folder of the current directory, by its name.
-			if (node->scalar.empty() || node->scalar.find_first_of("\\/:") != std::string::npos)
+			if (!isOutputFolderName(decodeText(node->scalar, CP_UTF8)))
 				return refuse(error, *node, text(Text::ConfigurationOutputValue));
 			conf._outputDir = decodeText(node->scalar, CP_UTF8);
 		}

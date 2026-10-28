@@ -87,6 +87,7 @@ struct SystemInfo {
 	 *  resuming from suspension); a large gap signals a modified clock — and
 	 *  therefore timestamps to be interpreted with care. */
 	long long clockCorrection100ns = 0;
+	bool clockRead = false;                    //!< system-clock.json read: the uptime and its source known
 	bool bootFromKernel = false;               //!< true: time read in the kernel, otherwise estimated
 
 	// --- settings that decide how the other artefacts read (B-031) ---

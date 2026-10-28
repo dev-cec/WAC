@@ -95,7 +95,8 @@ HRESULT repairHives(const std::vector<std::wstring>& hives,
 		else md5Before = QuickDigest5::fileToHash(r);
 
 		log(1, L"➕Hive");
-		log(2, L"❇️MD5 of the raw copy (before any write): " + md5Before);
+		if (md5Before.empty()) log(2, L"🔥MD5 of the raw copy not computed, the copy unreadable: " + r);
+		else log(2, L"❇️MD5 of the raw copy (before any write): " + md5Before);
 
 		/* REPLAY FIRST. The transaction logs hold the pages changed since the
 		   hive's last full write: applying them gives the machine's real state,

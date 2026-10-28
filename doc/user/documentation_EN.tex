@@ -498,7 +498,9 @@ artefacts:              # one key per artefact; a missing key is true
   \fichier{investigation.json} says so. \\
 -{}-dump & Adds the raw hexadecimal value of shellbag and \fichier{.lnk} shortcut
   items, for later decoding. \\
--{}-output=folder & Output folder, relative to the current directory. Default:
+-{}-output=folder & Output folder, relative to the current directory: a name,
+  without \texttt{\textbackslash}, \texttt{/} nor \texttt{:}, other than
+  \texttt{..} --- the collection never leaves the key. Default:
   \fichier{output}. \\
 -{}-language=fr|en & Language of the console: steps, help, error messages.
   French by default; \texttt{language:} in \fichier{wac.yml} sets it too. The

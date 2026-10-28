@@ -1239,6 +1239,10 @@ bool isMuiReference(const std::wstring& value) {
 	    && value[virgule + 1] == L'-';
 }
 
+bool isOutputFolderName(const std::wstring& name) {
+	return !name.empty() && name != L"." && name != L".." && name.find_first_of(L"\\/:") == std::wstring::npos;
+}
+
 std::wstring toLower(std::wstring s) {
 	for (wchar_t& c : s) c = (wchar_t)towlower(c);
 	return s;
@@ -1593,6 +1597,11 @@ HRESULT writeJsonFile(const std::string& name, const Json& value) {
 	}
 	f << encodeText(value.dump(0));
 	f.close();
+	// A full medium during the write: a truncated file, not one reported written.
+	if (!f) {
+		log(2, L"🔥Output file not written whole: " + decodeText(name));
+		return E_FAIL;
+	}
 	return ERROR_SUCCESS;
 }
 

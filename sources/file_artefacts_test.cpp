@@ -59,6 +59,9 @@
 #include "emails.h"
 #include "mbox_mail.h"
 #include "wevt.h"
+#include "sessions.h"
+#include "system.h"
+#include "quickdigest5.h"
 #include "ie_index_dat.h"
 #include "jumplist_custom.h"
 #include "conversions.h"
@@ -1599,6 +1602,63 @@ void prefetchVersion17() {
 	      "Prefetch 17: run count, last run, volume and files as libscca reads them, no $MFT reference");
 }
 
+/*! The MD5 of a file that cannot be read: none, where 32 zeros were given —
+ *  logged as the raw hive's identity before its replay. */
+void md5OfUnreadableFile() {
+	const std::filesystem::path missing = std::filesystem::temp_directory_path() / L"wac-no-such-file.bin";
+	check(QuickDigest5::fileToHash(missing).empty() && QuickDigest5::digestFile(missing).empty(),
+	      "md5: a file not opened has no digest, not 32 zeros");
+	const std::filesystem::path file = std::filesystem::temp_directory_path() / L"wac-md5.bin";
+	std::ofstream(file, std::ios::binary) << "abc";
+	check(QuickDigest5::fileToHash(file) == L"900150983CD24FB0D6963F7D28E17F72", "md5: a file read whole, RFC 1321's abc");
+	std::error_code ec;
+	std::filesystem::remove(file, ec);
+}
+
+/*! OperatingSystem.json without the clock's snapshot: no uptime 0 with its
+ *  source, which would claim a measurement never made. */
+void systemWithoutClock() {
+	const std::filesystem::path root = std::filesystem::temp_directory_path() / L"wac-system-test";
+	std::error_code ec;
+	std::filesystem::remove_all(root, ec);
+	const std::wstring outputDir = conf._outputDir, jsonFolder = conf.jsonFolder;
+	conf._outputDir = root.wstring();
+	conf.jsonFolder.clear();
+	SystemInfo system;
+	std::string json;
+	check(system.toJson() == ERROR_SUCCESS && readWholeFile(root / L"OperatingSystem.json", 1 << 20, json)
+	      && json.find("UptimeSeconds") == std::string::npos && json.find("BootTimeSource") == std::string::npos,
+	      "system: no clock snapshot, no uptime nor boot-time source");
+	conf._outputDir = outputDir;
+	conf.jsonFolder = jsonFolder;
+	std::filesystem::remove_all(root, ec);
+}
+
+/*! LSA's strings: a length and a buffer. Read up to a NUL, a buffer without
+ *  one went past its Length; a null buffer crashed the collection. */
+void lsaStrings() {
+	wchar_t text[] = { L'w', L'a', L'c', L'X', L'Y' };   // no terminating NUL
+	LSA_UNICODE_STRING s{ 3 * sizeof(WCHAR), sizeof text, text };
+	check(lsaText(s) == L"wac", "sessions: an LSA string read up to its Length, not to a NUL");
+	LSA_UNICODE_STRING empty{ 0, 0, nullptr };
+	check(lsaText(empty).empty(), "sessions: a null buffer gives an empty text");
+}
+
+/*! A JSON file written on a full medium: Wine maps Linux's /dev/full to
+ *  Z:\\dev\\full, where every write fails for want of room. The file used to
+ *  be reported written, truncated. Run where Z:\\dev is Linux's /dev (Wine's
+ *  root on Z:) — the device itself is no file to Wine's exists(). */
+void jsonOnFullMedium() {
+	std::error_code ec;
+	if (!std::filesystem::is_directory(L"Z:\\dev", ec)) return;
+	const std::wstring jsonFolder = conf.jsonFolder;
+	conf.jsonFolder = L"Z:\\dev";
+	Json big = Json::arr();
+	for (int i = 0; i < 20000; ++i) big.push(Json::str(L"a value that fills the stream's buffer"));
+	check(writeJsonFile("full", big) == E_FAIL, "json: a file the medium could not hold reported, not written");
+	conf.jsonFolder = jsonFolder;
+}
+
 /*! The light XML reader: a CDATA section's text kept as written, a
  *  character reference past U+FFFF as its surrogate pair — it was cut to 16
  *  bits, and the CDATA's "&lt;" decoded into a '<'. */
@@ -2385,6 +2445,10 @@ int wmain(int argc, wchar_t** argv) {
 	wevtOffsetsNear4GiB();
 	ieIndexRecordInsideAnOlder();
 	xmlCdataAndAstralReference();
+	jsonOnFullMedium();
+	lsaStrings();
+	systemWithoutClock();
+	md5OfUnreadableFile();
 	customDestinationCategoriesRead();
 	userAssistXp();
 	setupApiXp();
