@@ -122,3 +122,18 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
   - Documentation FR/EN : `Categories`, `RecycledName` selon le lecteur, hosts au-delà de 16 Mio, version 2 des listes personnalisées ; manuels compilés, 0 débordement.
   - Compilé (`--test`, sans avertissement) ; tests : file_artefacts_test 274, pst_test 1804 (PST forgé compris), mft_test 281, usn_journal_test 27, ie_index_dat_test 22 (identique à pymsiecf), et les autres sans échec. Quinze mutants pris (dix par un contrôle nommé ; `stoull`, décalage et bloc WEVT, XBLOCK vide par un arrêt du test ; page cyclique par un test qui ne finit plus). Restauré, recompilé, `bin` identique à `build-windows`. Commit 6430ba17.
 - 2026-10-28 : cycle Windows 11 du lot 4 : 546 ✅, 1 ❌ — un défaut de WAC, pas du bruit : dans la seconde collecte, un nom de `$Extend\$Deleted` retrouvé dans un index (ancienne version d'un fichier de Firefox, enregistrement libéré) recevait `CurrentPath`, le chemin du fichier vivant qui a pris son nom (autre enregistrement). `Mft::livePathOf` ne nomme qu'un enregistrement en usage ; test dans mft_test (enregistrement libéré, mutant pris). Commit cad7ed13. Cycle Windows 11 du lot 5 lancé.
+- 2026-10-28 : lot 6 (cœur) : `/code-review high` lancé pendant le cycle du lot 5.
+- 2026-10-28 : lot 6 (cœur), `/code-review high` sur 37 fichiers : 10 constats vérifiés dans le code, 9 retenus, 1 écarté :
+  - (1) `sessions` : `LsaFreeReturnBuffer(&pointer)` libérait l'adresse de la variable locale, pas le tableau rendu par LSA → `LsaFreeReturnBuffer(pointer)` (sans test unitaire : LSA vivant) ;
+  - (2) `main` : `--output` ne refusait que `\` — `C:case` (relatif au répertoire courant de C:) et `..` mettaient la collecte hors de la clé, sur le volume examiné ; `wac.yml` acceptait `..` aussi → `isOutputFolderName`, une seule règle pour les deux ;
+  - (3) `main` : un échec de l'extraction brute quittait sans manifeste, sceau ni journal d'investigation, l'état vivant déjà dans la consigne → scellement, fermeture des volumes et journal avant de sortir (sans test unitaire : `wmain`) ;
+  - (4) `sessions` : UserName, LogonDomain, AuthenticationPackage lus jusqu'au NUL, au-delà de Length, et un Buffer nul plantait → `lsaText`, borné par Length ;
+  - (5) `consigne`, `tools` : manifeste, sceau et JSON non vérifiés après l'écriture — support plein : fichier tronqué, scellé et annoncé écrit → flux vérifié après `close()` ;
+  - (6) `system` : `DomainName` inventé à « WORKGROUP », `ComputerName` rempli du nom NetBIOS (règle 1) → rien n'est donné sans lecture (sans test unitaire : il faudrait une ruche sans ces valeurs) ;
+  - (7) `system` : `UptimeSeconds` 0 et `BootTimeSource` émis sans l'instantané de l'horloge → émis seulement s'il a été lu ;
+  - (8) `quickdigest5` : un fichier illisible avait pour MD5 32 zéros, journalisés comme l'identité de la ruche brute → aucune empreinte, journalisé ;
+  - (9) `processes` : GetLastError relu après `log()`, qui ouvre son fichier → lu une fois (sans test unitaire : processus vivant) ;
+  - écarté : `network` — « lignes partielles gardées avec Connections dans TablesNotRead » : les lignes sont effacées avant le repli sur les tables de la pile, qui ne pousse rien s'il échoue ; le seul cas restant (ni fonction actuelle complète, ni repli) n'existe pas après Vista, où le repli est toujours résolu.
+  - Tests écrits : `lsaText` (sans NUL, tampon nul), JSON sur un support plein (`Z:\\dev\\full` sous Wine), OperatingSystem.json sans instantané de l'horloge, MD5 d'un fichier absent (et RFC 1321 « abc »), `output: ..` refusé (config_test).
+  - Documentation FR/EN : règle de `--output` ; manuels compilés, 0 débordement.
+  - À faire après le cycle du lot 5 : compiler, tests, mutations, commit.
