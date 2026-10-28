@@ -98,3 +98,34 @@ WAC_VM=win7-test  ./run-wac-test.sh --only=mft       # a few minutes, one artefa
 
 `doc/build-docs.sh` builds the manuals (LuaLaTeX); French and English are kept
 in step, and the build must report no `Overfull` box.
+
+## Managing the backlog (`backlog/`)
+
+The work is tracked in `backlog/`, in French; `backlog/README.md` holds the
+rules, the table of open items and the definition of "done". In short:
+
+- **One fiche per item**, `B-NNN-subject.md`: why, the source, the expected
+  output, the **independent reference** that will prove it right, the
+  acceptance criteria, the tasks, and a **dated journal** of decisions and
+  results.
+- **Statuses**: `à faire` → `en cours` → `à valider` (written, built, unit
+  tests green, VM cycle to pass) → `à commiter` → `fait`; `à décider` when a
+  choice of principle comes first. Priorities P1 (expected of any
+  collection), P2 (useful), P3 (later).
+- **Keep the fiche up to date at every step** — status, ticked tasks, a
+  journal line with the date, the commit, the result measured — so that the
+  work can resume from the fiche alone after an interruption.
+- **Done** means the whole definition of `backlog/README.md` is met: build
+  without warning, unit tests green and the new one seen failing by
+  mutation, a full VM cycle green with a witness of known value for every new
+  artefact, harmlessness check green, French AND English documentation up to
+  date, one commit per subject.
+- A finished item **leaves the open table**: its fiche moves to
+  `backlog/archives/` with the status `fait (<commit>)`. A fiche is never
+  deleted: `archives/` is the history of the project.
+- The fiches and the documentation cite results, never an unversioned
+  `vmtest/results/<date>/` folder.
+- Commits on `master`, one subject each, prefixed `feat :`, `fix :`,
+  `docs :`, `test :` or `refactor :`; the fiche and the documentation are
+  committed by path (`git commit -- <paths>`), since `build-windows.sh` stages
+  `bin/`. No push without an explicit request.
