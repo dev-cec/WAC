@@ -269,6 +269,12 @@ HRESULT Mft::load(const std::wstring& volume, const std::wstring& file) {
 	return ERROR_SUCCESS;
 }
 
+std::wstring Mft::livePathOf(uint64_t entry, uint16_t sequence, bool& complete) const {
+	complete = false;
+	if (entry >= nodes_.size() || !nodes_[(size_t)entry].inUse) return std::wstring();
+	return pathOf(entry, sequence, complete);
+}
+
 std::wstring Mft::pathOf(uint64_t entry, uint16_t sequence, bool& complete) const {
 	complete = true;
 	std::vector<std::wstring> parts;

@@ -110,6 +110,19 @@ void againstNtfsinfo(const std::vector<uint8_t>& mft, const std::wstring& refere
 	check(lines >= 15, "reference: only " + std::to_string(lines) + " record(s)");
 }
 
+/*! A copy of mft.bin whose record 64 (file1.bin) is marked not in use.
+ *  @param folder the fixtures' folder
+ *  @return the copy's path */
+std::wstring freedCopy(const std::wstring& folder) {
+	std::ifstream in(std::filesystem::path(folder + L"\\mft.bin"), std::ios::binary);
+	std::vector<char> bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	const size_t flags = 64 * 1024 + 22;   // the record's flags, bit 0: in use
+	if (bytes.size() > flags) bytes[flags] &= ~1;
+	const std::wstring freed = folder + L"\\mft-freed.bin";
+	std::ofstream(std::filesystem::path(freed), std::ios::binary).write(bytes.data(), (std::streamsize)bytes.size());
+	return freed;
+}
+
 /*! The paths, rebuilt by Mft::pathOf from the $MFT registered as an exhibit,
  *  placed in an output folder under the fixtures' folder. */
 void paths(const std::wstring& folder) {
@@ -118,7 +131,8 @@ void paths(const std::wstring& folder) {
 	// the first lookup, after every exhibit is registered — as in a conversion.
 	const std::wstring output = folder + L"\\output";
 	ExhibitStoreAdd({ placedExhibit(output, L"C:\\$MFT", folder + L"\\mft.bin"),
-	                  placedExhibit(output, L"G:\\$MFT", folder + L"\\mft.bin") }, L"test");
+	                  placedExhibit(output, L"G:\\$MFT", folder + L"\\mft.bin"),
+	                  placedExhibit(output, L"F:\\$MFT", freedCopy(folder)) }, L"test");
 	Mft mft;
 	check(mft.getData(L"C:") == ERROR_SUCCESS, "the $MFT exhibit is not loaded");
 	bool complete = false;
@@ -137,6 +151,18 @@ void paths(const std::wstring& folder) {
 	check(other.pathOf(64, 1, complete) == L"G:\\file1.bin" && complete, "path on the second volume");
 	Mft absent;
 	check(absent.getData(L"H:") != ERROR_SUCCESS, "a volume without a $MFT exhibit is read");
+}
+
+/*! A freed record: the same $MFT, file1.bin's record (64) marked not in use
+ *  — its flags, outside the update sequence's places. Its last path is still
+ *  given, for what referenced it; but it is no file's path NOW. */
+void freedRecord() {
+	Mft mft;
+	bool complete = false;
+	check(mft.getData(L"F:") == ERROR_SUCCESS && mft.pathOf(64, 1, complete) == L"F:\\file1.bin",
+	      "freed record: its last path still given");
+	check(mft.livePathOf(64, 1, complete).empty() && !complete, "freed record: no current path, its name may be another file's now");
+	check(mft.livePathOf(67, 0, complete) == L"F:\\r\u00e9sum\u00e9.txt" && complete, "a record in use: its current path");
 }
 
 /*! Every record, damaged at random, against a guard page on both sides. */
@@ -171,6 +197,7 @@ int wmain(int argc, wchar_t** argv) {
 	check(mft.size() >= 16 * RECORD_SIZE, "mft.bin missing or truncated");
 	againstNtfsinfo(mft, folder + L"\\mft-reference.txt");
 	paths(folder);
+	freedRecord();
 	hostile(mft);
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;

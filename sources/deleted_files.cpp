@@ -996,9 +996,11 @@ size_t collectIndexSlack(const std::wstring& volume, Json& files) {
 				addUtcDate(o, L"FileNameModifiedUtc", e.modified);
 				addUtcDate(o, L"FileNameMftModifiedUtc", e.mftModified);
 				addUtcDate(o, L"FileNameAccessedUtc", e.accessed);
-				// The same file under another name now — moved or renamed, not deleted.
+				/* The same file under another name now — moved or renamed, not
+				   deleted. Its record in use: a freed one has a last name only,
+				   which a new file may hold since. */
 				bool complete = true;
-				const std::wstring now = mft.pathOf(e.entry, e.sequence, complete);
+				const std::wstring now = mft.livePathOf(e.entry, e.sequence, complete);
 				if (!now.empty() && complete) o.add(L"CurrentPath", Json::str(now));
 				o.add(L"State", Json::str(L"NameOnly"));
 				files.push(std::move(o));

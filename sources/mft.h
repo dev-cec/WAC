@@ -142,6 +142,15 @@ struct Mft {
 	 *  @return "C:\…", or empty if the record itself cannot be named */
 	std::wstring pathOf(uint64_t entry, uint16_t sequence, bool& complete) const;
 
+	/*! The path a file has NOW: as pathOf, for a record in use only. pathOf
+	 *  names a deleted record too, by its last name — a name another file may
+	 *  hold since (Firefox replaces its files by renaming a new one over them).
+	 *  @param entry record number of the file
+	 *  @param sequence its sequence number in the reference; 0 to accept any
+	 *  @param complete receives false if the path is not whole
+	 *  @return "C:\…", or empty if the record is free, reused or cannot be named */
+	std::wstring livePathOf(uint64_t entry, uint16_t sequence, bool& complete) const;
+
 	/*! Walks every file and directory of the $MFT, each completed with what
 	 *  its extension records carry, with its path.
 	 *  @param visit called with each record, its path and whether the path is complete
