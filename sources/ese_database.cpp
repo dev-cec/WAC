@@ -12,6 +12,7 @@ namespace {
 
 const size_t HEADER_SMALL = 40, HEADER_LARGE = 80;   //!< page header: 40 bytes, 80 above 8 KiB
 const uint32_t PAGE_LEAF = 0x02, PAGE_NEW_RECORD_FORMAT = 0x800;
+const size_t PAGE_NEXT = 20, PAGE_TREE = 24;           //!< header: the next page of its level, the tree it belongs to (FDP object id)
 const uint16_t TAG_COMPRESSED_KEY = 0x04;             //!< the key starts with a prefix of the page's
 const uint32_t CATALOG_ROOT = 4;                       //!< MSysObjects' root page
 const unsigned DEPTH_MAX = 64;
@@ -56,12 +57,16 @@ const std::vector<uint8_t>* firstValue(const EseRecord& record, uint32_t id) {
 	return nullptr;
 }
 
+//! The little-endian integer of a value's first `bytes` bytes at most.
+uint64_t littleEndianPrefix(const std::vector<uint8_t>& v, size_t bytes) {
+	uint64_t n = 0;
+	for (size_t i = 0; i < v.size() && i < bytes; ++i) n |= (uint64_t)v[i] << (8 * i);
+	return n;
+}
+
 //! A little-endian integer of 1, 2 or 4 bytes.
 uint32_t smallInteger(const std::vector<uint8_t>* v) {
-	if (!v) return 0;
-	uint32_t n = 0;
-	for (size_t i = 0; i < v->size() && i < 4; ++i) n |= (uint32_t)(*v)[i] << (8 * i);
-	return n;
+	return v ? (uint32_t)littleEndianPrefix(*v, 4) : 0;
 }
 
 /*! Splits a multi-valued tagged value: two values (the first's size in a
@@ -193,6 +198,13 @@ bool decompressSevenBit(std::vector<uint8_t>& value) {
 	return true;
 }
 
+std::optional<uint64_t> eseCellInteger(const EseCell& cell) {
+	if (cell.values.empty() || cell.compressionScheme >= 0) return std::nullopt;
+	const std::vector<uint8_t>& v = cell.values.front();
+	if (v.empty() || v.size() > 8) return std::nullopt;
+	return littleEndianPrefix(v, 8);
+}
+
 Json eseCellToJson(const EseColumn& column, const EseCell& cell) {
 	if (cell.compressionScheme >= 0 || cell.longValueMissing) {
 		Json o = Json::obj();
@@ -249,9 +261,10 @@ EseRecord parseEseRecord(const std::vector<uint8_t>& data, const std::vector<Ese
 // ------------------------------------------------------------ database
 
 HRESULT EseDatabase::open(const std::wstring& path) {
-	std::error_code ec;
-	fileSize_ = std::filesystem::file_size(path, ec);
-	if (ec) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	// Its size by its extended path too: a working copy past MAX_PATH was "not found".
+	uint64_t size = 0;
+	if (!fileSizeOf(path, size)) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	fileSize_ = size;
 	file_.open(std::filesystem::path(extendedPath(path)), std::ios::binary);
 	uint8_t header[240] = {};
 	file_.read(reinterpret_cast<char*>(header), sizeof header);
@@ -364,12 +377,17 @@ void EseDatabase::leaves(uint32_t root, std::vector<Entry>& out) {
 	std::vector<bool> visited(pageCount_, false);
 	uint32_t lastLeaf = 0;
 	walk(root, 0, visited, out, lastLeaf);
-	// A database copied live may have leaves a branch does not reach yet: the
-	// last leaf's successors, as ESE chains them.
+	/* A database copied live may have leaves a branch does not reach yet: the
+	   last leaf's successors, as ESE chains them — only while they belong to
+	   this tree. A pointer to a page freed then reused by another table gave
+	   that table's records, decoded with this one's columns. */
 	std::vector<uint8_t> page;
+	if (!readPage(root, page)) return;
+	const uint32_t tree = readLittleEndian<uint32_t>(page.data() + PAGE_TREE);
 	while (lastLeaf && readPage(lastLeaf, page)) {
-		const uint32_t next = readLittleEndian<uint32_t>(page.data() + 20);
+		const uint32_t next = readLittleEndian<uint32_t>(page.data() + PAGE_NEXT);
 		if (next == 0 || next >= visited.size() || visited[next]) break;
+		if (!readPage(next, page) || readLittleEndian<uint32_t>(page.data() + PAGE_TREE) != tree) break;
 		const uint32_t before = lastLeaf;
 		walk(next, 0, visited, out, lastLeaf);
 		if (lastLeaf == before) break;

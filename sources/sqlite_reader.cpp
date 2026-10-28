@@ -91,6 +91,10 @@ HRESULT SqliteDatabase::open(const std::wstring& file) {
 	const std::filesystem::path source(file);
 	copyFolder_ = (std::filesystem::path(workingFolder()) / L"sqlite-copies"
 	               / std::to_wstring(++g_copies)).wstring();
+	/* The folders are numbered from 1 at each run: one left by an interrupted
+	   run is emptied first — its copy was kept (no overwrite), and its -wal
+	   replayed into another database copied beside it. */
+	if (!removeFolderTree(copyFolder_)) return HRESULT_FROM_WIN32(ERROR_CANNOT_MAKE);
 	std::error_code ec;
 	std::filesystem::create_directories(copyFolder_, ec);
 	if (ec) return HRESULT_FROM_WIN32(ERROR_CANNOT_MAKE);
@@ -103,7 +107,8 @@ HRESULT SqliteDatabase::open(const std::wstring& file) {
 	// The logs go along, under the names SQLite looks for beside the copy.
 	for (const wchar_t* suffix : { L"-wal", L"-journal" }) {
 		const std::filesystem::path journal = source.wstring() + suffix;
-		if (pathExists(journal.wstring())) copyFileLong(journal.wstring(), copy.wstring() + suffix, false);
+		if (pathExists(journal.wstring()) && !copyFileLong(journal.wstring(), copy.wstring() + suffix, false))
+			log(2, L"🔥SQLite: copy of " + journal.wstring() + L" failed, its latest changes are not read");
 	}
 	const int opened = sqlite3_open_v2(encodeText(copy.wstring()).c_str(), &db_, SQLITE_OPEN_READWRITE, nullptr);
 	if (opened != SQLITE_OK) {

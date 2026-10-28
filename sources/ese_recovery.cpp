@@ -4,6 +4,7 @@
  */
 #include "ese_recovery.h"
 #include "audit.h"
+#include "long_path.h"
 #include "system_library.h"
 #include "tools.h"
 #include <esent.h>
@@ -53,7 +54,7 @@ bool loadEngine(Engine& engine) {
  *  @return the base name, empty if there is no checkpoint */
 std::wstring logBaseName(const std::filesystem::path& folder) {
 	std::error_code ec;
-	for (const std::filesystem::directory_entry& e : std::filesystem::directory_iterator(folder, ec))
+	for (const std::filesystem::directory_entry& e : std::filesystem::directory_iterator(std::filesystem::path(extendedPath(folder.wstring())), ec))
 		if (e.is_regular_file(ec) && toLower(e.path().extension().wstring()) == L".chk")
 			return e.path().stem().wstring();
 	return L"";
@@ -65,7 +66,7 @@ std::wstring logBaseName(const std::filesystem::path& folder) {
  *  @param state receives the state
  *  @return false if the header cannot be read */
 bool readHeader(const std::filesystem::path& database, uint32_t& pageSize, uint32_t& state) {
-	std::ifstream in(database, std::ios::binary);
+	std::ifstream in(std::filesystem::path(extendedPath(database.wstring())), std::ios::binary);
 	std::vector<uint8_t> header(HEADER_PAGE_SIZE + 4);
 	if (!in.read(reinterpret_cast<char*>(header.data()), (std::streamsize)header.size())) return false;
 	pageSize = readLittleEndian<uint32_t>(header, HEADER_PAGE_SIZE);
@@ -79,9 +80,8 @@ EseReplay replay(const std::wstring& workingDatabase, const std::wstring& origin
 	const std::filesystem::path database(workingDatabase);
 	const std::filesystem::path folder = database.parent_path();
 	r.baseName = logBaseName(folder);
-	std::error_code ec;
 	const std::filesystem::path current = folder / (r.baseName + L".log");
-	if (r.baseName.empty() || !std::filesystem::exists(current, ec)) {
+	if (r.baseName.empty() || !pathExists(current.wstring())) {
 		r.detail = L"no checkpoint and current log beside the copy: nothing to replay";
 		return r;
 	}
@@ -99,10 +99,23 @@ EseReplay replay(const std::wstring& workingDatabase, const std::wstring& origin
 		r.detail = L"esent.dll or one of its functions not available";
 		return r;
 	}
+	uint64_t logSize = 0;
+	if (!fileSizeOf(current.wstring(), logSize)) {
+		r.detail = L"size of the current log unreadable: not replayed";
+		return r;
+	}
+	/* The engine rewrites the copy's pages as it goes: stopped partway (a log
+	   missing or damaged, written by a newer engine), it would leave a state
+	   the database never had, read as if collected. The copy as collected is
+	   kept aside, and put back when the replay is not applied. */
+	const std::wstring asCollected = workingDatabase + L".as-collected";
+	if (!copyFileLong(workingDatabase, asCollected, true)) {
+		r.detail = L"copy of the database before its replay failed: not replayed";
+		return r;
+	}
 	r.attempted = true;
 	// The engine wants its folders with their trailing separator.
 	const std::wstring path = folder.wstring() + L"\\";
-	const uintmax_t logSize = std::filesystem::file_size(current, ec);
 	JET_INSTANCE instance = 0;
 	JET_ERR err = engine.setParameter(nullptr, 0, JET_paramDatabasePageSize, pageSize, nullptr);
 	if (err >= 0) err = engine.setParameter(nullptr, 0, JET_paramDisablePerfmon, 1, nullptr);
@@ -140,8 +153,13 @@ EseReplay replay(const std::wstring& workingDatabase, const std::wstring& origin
 		r.applied = true;
 		r.detail = L"logs " + r.baseName + L"*.log replayed by esent.dll into the copy, now clean";
 	}
-	else r.detail = L"replay not applied (JET error " + std::to_wstring(err) + L", state "
-	              + std::to_wstring(after) + L"): the copy is read as collected";
+	else {
+		const bool restored = copyFileLong(asCollected, workingDatabase, true);
+		r.detail = L"replay not applied (JET error " + std::to_wstring(err) + L", state " + std::to_wstring(after) + L"): "
+		         + (restored ? L"the copy is read as collected" : L"the copy as collected could not be put back, read as the engine left it");
+	}
+	if (!DeleteFileW(extendedPath(asCollected).c_str()))
+		log(2, L"🔥" + asCollected + L": not deleted after the replay");
 	return r;
 }
 
@@ -164,4 +182,11 @@ EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstr
 		            r.applied ? ERROR_SUCCESS : E_FAIL, Footprint::ESE_REPLAY);
 	done[key] = r;
 	return r;
+}
+
+HRESULT OpenRecoveredEseDatabase(EseDatabase& database, const std::wstring& workingDatabase, const std::wstring& originalDatabase) {
+	const EseReplay replayed = ReplayEseLogsOnce(workingDatabase, originalDatabase);
+	if (replayed.attempted && !replayed.applied)
+		log(1, L"⚠️" + originalDatabase + L": transaction logs not replayed, its latest changes may be missing — " + replayed.detail);
+	return database.open(workingDatabase);
 }

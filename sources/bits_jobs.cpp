@@ -277,10 +277,8 @@ HRESULT BitsJobs::getData() {
 	const auto found = index.find(toLower(conf.systemDrive.substr(0, 2)) + DATABASE);
 	if (found == index.end() || found->second.workingFile.empty()) return readQueueFiles();
 	// Its latest changes are in its edb*.log, collected with it: replayed into the copy first (B-046).
-	const EseReplay replayed = ReplayEseLogsOnce(found->second.workingFile, found->second.sourcePath);
-	if (replayed.attempted && !replayed.applied) log(1, L"⚠️BITS database logs not replayed: " + replayed.detail);
 	EseDatabase database;
-	const HRESULT opened = database.open(found->second.workingFile);
+	const HRESULT opened = OpenRecoveredEseDatabase(database, found->second.workingFile, found->second.sourcePath);
 	if (opened != ERROR_SUCCESS) return opened;
 	// Each row: its GUID (column 1) and its blob (column 256).
 	auto rows = [&](const wchar_t* name, auto&& visit) {

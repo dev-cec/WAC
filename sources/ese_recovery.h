@@ -23,12 +23,16 @@
  *  folder (system, log and temporary paths), and the restore map sends the
  *  database the logs name — its path on the examined machine — to the copy; a
  *  database the map does not name is treated as missing, never opened. The
+ *  copy as collected is kept aside during the replay (`.as-collected`) and
+ *  put back if the replay is not applied: the engine rewrites pages as it
+ *  goes, and one stopped partway left a state the database never had. The
  *  exhibit store is not read. The engine's events (Application log) and its
  *  performance counters are switched off.
  */
 #pragma once
 
 #include <string>
+#include "ese_database.h"
 #include <windows.h>
 
 /*! The outcome of one replay. */
@@ -47,3 +51,12 @@ struct EseReplay {
  *         logs name it (the exhibit's source path)
  *  @return the outcome; the copy is left as it was when nothing is applied */
 EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstring& originalDatabase);
+
+/*! Opens the working copy of an ESE database once its logs are replayed into
+ *  it (ReplayEseLogsOnce): every ESE artefact goes through here, none reads a
+ *  database without its latest changes unsaid. A replay not applied is logged.
+ *  @param database receives the opened database
+ *  @param workingDatabase the copy, in the working directory
+ *  @param originalDatabase its path on the examined machine
+ *  @return the result of EseDatabase::open */
+HRESULT OpenRecoveredEseDatabase(EseDatabase& database, const std::wstring& workingDatabase, const std::wstring& originalDatabase);

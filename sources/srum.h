@@ -17,9 +17,10 @@
  *  (ConnectStartTime, EndTime…) stay numbers. Rows are written as they are
  *  read: a database of sixty days holds hundreds of thousands.
  *
- *  THE DATABASE IS COPIED LIVE (dirty shutdown): the last hour, still in the
- *  service's transaction logs SRU*.log, is not in it; the logs are in the
- *  exhibit store, for a replay (esentutl /r) on a copy. Said in the log.
+ *  THE DATABASE IS COPIED LIVE (dirty shutdown): the last hour is still in
+ *  the service's transaction logs SRU*.log, collected with it and replayed
+ *  into the working copy before it is read (ese_recovery.h); a replay not
+ *  applied is said in the log.
  */
 #pragma once
 
@@ -48,7 +49,7 @@ class Srum {
 public:
 	HRESULT getData();          //!< @return ERROR_SUCCESS, or why SRUDB.dat cannot be read
 	HRESULT toJson();           //!< @return the result of the write
-	void clear();               //!< releases the database
+	void clear();               //!< releases the identities read; the database closes with the object
 private:
 	EseDatabase database_;
 	std::map<int32_t, std::pair<unsigned, std::wstring>> identities_;   //!< IdIndex → (IdType, text)

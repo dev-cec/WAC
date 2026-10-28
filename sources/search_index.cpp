@@ -32,6 +32,26 @@ const uint8_t SEARCH_TEXT_BYTES = 1;  //!< one byte per character, the high one 
 //! Deepest scope chain followed when rebuilding a URL: a loop stops there.
 const int SCOPE_DEPTH_MAX = 256;
 
+//! The crawler's scope tree: each scope's parent and its part of the URL ("Users/").
+using ScopeTree = std::map<int64_t, std::pair<int64_t, std::wstring>>;
+
+/*! A scope's URL, its ancestors' parts first, the same for the SQLite and the
+ *  ESE index.
+ *  @param scopes the tree
+ *  @param scope the scope
+ *  @return the URL; what was found up to a missing parent or SCOPE_DEPTH_MAX */
+std::wstring scopeUrl(const ScopeTree& scopes, int64_t scope) {
+	std::wstring text;
+	for (int depth = 0; depth < SCOPE_DEPTH_MAX; ++depth) {
+		const auto s = scopes.find(scope);
+		if (s == scopes.end()) break;
+		text = s->second.second + text;
+		if (s->second.first == scope) break;
+		scope = s->second.first;
+	}
+	return text;
+}
+
 /*! UTF-16 text in a blob: the strings it holds, separated by their NULs.
  *  @param bytes the blob
  *  @param strings receives the strings, empty ones left out
@@ -190,9 +210,13 @@ HRESULT readSearchPropertyStore(const std::wstring& file, const std::wstring& pa
 		log(2, L"🔥Search index: property names unreadable in " + path);
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	}
-	// The table's key is (WorkId, ColumnId): a scan gives each item's rows together.
+	/* Each item's rows taken together, grouped on WorkId: ordered explicitly.
+	   A plain scan follows the table's storage — insertion order for a rowid
+	   table —, and an item indexed again later had its rows split into
+	   several items, its path in one and its dates in another. */
 	int64_t currentWorkId = -1;
-	const HRESULT hrQuery = db.query("SELECT WorkId, ColumnId, Value FROM SystemIndex_1_PropertyStore", [&](const SqliteRow& row) {
+	const HRESULT hrQuery = db.query("SELECT WorkId, ColumnId, Value FROM SystemIndex_1_PropertyStore ORDER BY WorkId, ColumnId",
+	                                 [&](const SqliteRow& row) {
 		const int64_t workId = row.integer(0);
 		if (workId != currentWorkId) {
 			currentWorkId = workId;
@@ -224,33 +248,21 @@ HRESULT readSearchGather(const std::wstring& file, const std::wstring& path, std
 	SqliteDatabase db;
 	const HRESULT hr = db.open(file);
 	if (hr != ERROR_SUCCESS) return hr;
-	// The scope tree: each scope's parent and its part of the URL ("Users/").
-	std::map<int64_t, std::pair<int64_t, std::wstring>> scopes;
+	ScopeTree scopes;
 	if (db.query("SELECT Scope, Parent, Name FROM SystemIndex_GthrPth", [&](const SqliteRow& row) {
 		scopes[row.integer(0)] = { row.integer(1), row.text(2) };
 	}) != ERROR_SUCCESS) log(2, L"🔥Search index: scope tree unreadable in " + path);
-	auto url = [&](int64_t scope) {
-		std::wstring text;
-		for (int depth = 0; depth < SCOPE_DEPTH_MAX; ++depth) {
-			const auto s = scopes.find(scope);
-			if (s == scopes.end()) break;
-			text = s->second.second + text;
-			if (s->second.first == scope) break;
-			scope = s->second.first;
-		}
-		return text;
-	};
 	const HRESULT hrQuery = db.query("SELECT * FROM SystemIndex_Gthr", [&](const SqliteRow& row) {
 		SearchIndexItem item;
 		item.path = path;
 		item.table = L"Gather";
-		std::wstring scopeUrl, name;
+		std::wstring url, name;
 		for (int c = 0; c < row.columnCount(); ++c) {
 			const std::wstring column = row.name(c);
-			if (column == L"ScopeID") scopeUrl = url(row.integer(c));
+			if (column == L"ScopeID") url = scopeUrl(scopes, row.integer(c));
 			if (column == L"FileName") name = row.text(c);
 		}
-		item.fields.add(L"Url", Json::str(scopeUrl + name));
+		item.fields.add(L"Url", Json::str(url + name));
 		for (int c = 0; c < row.columnCount(); ++c) {
 			const std::wstring column = registryNameToJsonKey(row.name(c));
 			switch (row.type(c)) {
@@ -272,10 +284,8 @@ HRESULT readSearchGather(const std::wstring& file, const std::wstring& path, std
 
 HRESULT readSearchEdb(const std::wstring& file, const std::wstring& path, std::vector<SearchIndexItem>& items) {
 	// What the indexer wrote since its last checkpoint is in edb*.log, collected with it.
-	const EseReplay replayed = ReplayEseLogsOnce(file, path);
-	if (replayed.attempted && !replayed.applied) log(1, L"⚠️Search index logs not replayed: " + replayed.detail);
 	EseDatabase db;
-	const HRESULT opened = db.open(file);
+	const HRESULT opened = OpenRecoveredEseDatabase(db, file, path);
 	if (opened != ERROR_SUCCESS) return opened;
 	// Windows 7 names its property store otherwise (see search_index.h).
 	const EseTable* store = db.table(L"SystemIndex_PropertyStore");
@@ -324,7 +334,7 @@ void readEseGather(EseDatabase& db, const std::wstring& path, std::vector<Search
 	const bool vista = std::any_of(gather->columns.begin(), gather->columns.end(),
 	                               [](const EseColumn& c) { return c.name == L"FileName1"; });
 	// The scope tree: each scope's parent and its part of the URL; on Vista, each path's folder.
-	std::map<int64_t, std::pair<int64_t, std::wstring>> scopes;
+	ScopeTree scopes;
 	std::map<int64_t, std::wstring> folders;
 	if (tree)
 		for (const EseRecord& r : db.records(*tree)) {
@@ -333,34 +343,24 @@ void readEseGather(EseDatabase& db, const std::wstring& path, std::vector<Search
 			for (const EseCell& cell : r) {
 				const EseColumn* column = columnOf(*tree, cell.columnId);
 				if (!column || cell.values.empty()) continue;
-				const Json value = eseCellToJson(*column, cell);
-				if (column->name == L"Scope" || column->name == L"LookupMD5") scope = std::stoll(value.text());
-				else if (column->name == L"Parent") parent = std::stoll(value.text());
-				else if (column->name == L"Name" || column->name == L"LookupValue") name = value.text();
+				const std::optional<uint64_t> number = eseCellInteger(cell);
+				if (column->name == L"Scope" || column->name == L"LookupMD5") { if (number) scope = (int64_t)*number; }
+				else if (column->name == L"Parent") { if (number) parent = (int64_t)*number; }
+				else if (column->name == L"Name" || column->name == L"LookupValue") name = eseCellToJson(*column, cell).text();
 			}
 			if (vista && scope != -1) folders[scope] = name;
 			else if (scope >= 0) scopes[scope] = { parent, name };
 		}
-	auto url = [&](int64_t scope) {
-		std::wstring text;
-		for (int depth = 0; depth < SCOPE_DEPTH_MAX; ++depth) {
-			const auto s = scopes.find(scope);
-			if (s == scopes.end()) break;
-			text = s->second.second + text;
-			if (s->second.first == scope) break;
-			scope = s->second.first;
-		}
-		return text;
-	};
 	for (const EseRecord& r : db.records(*gather)) {
 		SearchIndexItem item;
 		item.path = path;
 		item.table = L"Gather";
-		std::wstring scopeUrl, name, folder;
+		std::wstring url, name, folder;
 		for (const EseCell& cell : r) {
 			const EseColumn* column = columnOf(*gather, cell.columnId);
 			if (!column || cell.values.empty()) continue;
-			if (column->name == L"ScopeID") scopeUrl = url(std::stoll(eseCellToJson(*column, cell).text()));
+			const std::optional<uint64_t> number = eseCellInteger(cell);
+			if (column->name == L"ScopeID" && number) url = scopeUrl(scopes, (int64_t)*number);
 			if (column->name == L"FileName") name = eseCellToJson(*column, cell).text();
 			// Vista's FileName1 is binary: UTF-16, null-terminated, bounded by the cell.
 			if (column->name == L"FileName1" && cell.values.size() == 1) {
@@ -372,12 +372,12 @@ void readEseGather(EseDatabase& db, const std::wstring& path, std::vector<Search
 				}
 			}
 			if (vista && column->name == L"PathId") {
-				const auto f = folders.find(std::stoll(eseCellToJson(*column, cell).text()));
+				const auto f = number ? folders.find((int64_t)*number) : folders.end();
 				if (f != folders.end()) folder = f->second;
 			}
 		}
 		// Vista gives a path, the later versions a URL: each under its own name.
-		if (!vista) item.fields.add(L"Url", Json::str(scopeUrl + name));
+		if (!vista) item.fields.add(L"Url", Json::str(url + name));
 		else if (!folder.empty() && !name.empty()) item.fields.add(L"ItemPath", Json::str(folder + name));
 		for (const EseCell& cell : r) {
 			const EseColumn* column = columnOf(*gather, cell.columnId);

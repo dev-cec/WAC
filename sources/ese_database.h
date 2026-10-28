@@ -2,10 +2,11 @@
  *  \brief Reader of ESE databases (Extensible Storage Engine, "JET Blue"):
  *         SRUDB.dat, qmgr.db, and the other databases Windows keeps this way.
  *
- *  WHY OUR OWN. ESENT's API opens a database for writing, replays its logs
- *  and may rewrite its pages — on a copy, it still takes a dependency on the
- *  DLL of the analysis workstation. The format is read here, page by page,
- *  from the copy in the exhibit store.
+ *  WHY OUR OWN. ESENT's API opens a database for writing and may rewrite its
+ *  pages, and its reading would depend on the DLL of the analysis
+ *  workstation. The format is read here, page by page, from the working copy;
+ *  esent.dll only replays the transaction logs into that copy beforehand
+ *  (ese_recovery.h), never reads it.
  *
  *  THE FORMAT, as described by J. Metz (libesedb) and Fox-IT (dissect.esedb),
  *  checked on the test VM against dissect.esedb on the same files:
@@ -26,15 +27,19 @@
  *
  *  COMPRESSED VALUES: 7-bit text (ASCII or UTF-16), met in the Windows.edb
  *  of Windows 8.1, is unpacked; XPRESS, met in neither SRUDB.dat, qmgr.db
- *  nor that Windows.edb, is said so, with its scheme, rather than guessed. Records whose tagged columns are in the pre-Vista format.
+ *  nor that Windows.edb, is said so, with its scheme, rather than guessed.
+ *  Records whose tagged columns are in the pre-Vista format give their fixed
+ *  and variable columns only.
  *
  *  A DATABASE COPIED LIVE is in "dirty shutdown" state: what the service
  *  changed since its last checkpoint may be only in its transaction logs,
- *  which are collected alongside, for a replay by the analyst (esentutl /r).
+ *  which are collected alongside and replayed into the working copy before
+ *  it is read (ese_recovery.h); a replay not applied is said in the log.
  */
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <fstream>
 #include <map>
 #include <string>
@@ -77,6 +82,13 @@ using EseRecord = std::vector<EseCell>;
  *  @param column the cell's column
  *  @param cell the cell */
 Json eseCellToJson(const EseColumn& column, const EseCell& cell);
+
+/*! The integer a cell holds: its first value, 1 to 8 bytes little-endian,
+ *  unsigned as stored. Every reader of an identifier or a date goes through
+ *  it: parsed from its JSON text, a compressed cell or an unexpected type
+ *  threw, and the whole conversion stopped.
+ *  @return none if the cell holds no such value (empty, compressed, wider) */
+std::optional<uint64_t> eseCellInteger(const EseCell& cell);
 
 /*! Unpacks a value compressed on 7 bits (schemes 1 and 2): after a header
  *  byte — the scheme in its high 5 bits, in its low 3 the data bits of the

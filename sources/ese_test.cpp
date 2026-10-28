@@ -85,6 +85,25 @@ void records() {
 	check(cellOf(partial, 128) && !cellOf(partial, 256), "record: a tagged value beyond the record read");
 }
 
+/*! The integer of a cell: what every identifier and date reader of the ESE
+ *  artefacts goes through. A cell holding no integer gives none — parsed from
+ *  its JSON text, it threw and stopped the whole conversion. */
+void cellIntegers() {
+	EseCell cell;
+	check(!eseCellInteger(cell), "cell integer: none from an empty cell");
+	cell.values = { { 0x2A } };
+	check(eseCellInteger(cell) == std::optional<uint64_t>(42), "cell integer: one byte");
+	cell.values = { { 0x01, 0x02, 0x03, 0x04 } };
+	check(eseCellInteger(cell) == std::optional<uint64_t>(0x04030201), "cell integer: four bytes, little-endian");
+	cell.values = { { 1, 2, 3, 4, 5, 6, 7, 0x80 } };
+	check(eseCellInteger(cell) == std::optional<uint64_t>(0x8007060504030201ULL), "cell integer: eight bytes, little-endian");
+	cell.values = { std::vector<uint8_t>(9, 1) };
+	check(!eseCellInteger(cell), "cell integer: none from nine bytes");
+	cell.values = { { 0x2A } };
+	cell.compressionScheme = 3;
+	check(!eseCellInteger(cell), "cell integer: none from a compressed value");
+}
+
 /*! 7-bit compressed values, as the Windows.edb of Windows 8.1 holds them
  *  (record 83 and 128 of its property store), each confronted with
  *  dissect.esedb. */
@@ -343,6 +362,7 @@ void dump(const std::wstring& path) {
 
 int wmain(int argc, wchar_t** argv) {
 	records();
+	cellIntegers();
 	sevenBit();
 	artefacts();
 	if (argc > 1) dump(argv[1]);

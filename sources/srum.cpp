@@ -15,14 +15,6 @@ const wchar_t IDENTITIES[] = L"SruDbIdMapTable";
 const uint32_t ID_TYPE = 1, ID_INDEX = 2, ID_BLOB = 256;   //!< SruDbIdMapTable's columns
 const unsigned ID_TYPE_SID = 3;
 
-//! The first value of a cell as a little-endian integer (at most 4 bytes).
-int32_t integerOf(const EseCell& cell) {
-	uint32_t n = 0;
-	const std::vector<uint8_t>& v = cell.values.front();
-	for (size_t i = 0; i < v.size() && i < 4; ++i) n |= (uint32_t)v[i] << (8 * i);
-	return (int32_t)n;
-}
-
 } // namespace
 
 std::wstring srumProviderName(const std::wstring& table) {
@@ -58,9 +50,7 @@ HRESULT Srum::getData() {
 	const auto found = index.find(toLower(conf.systemDrive.substr(0, 2)) + DATABASE);
 	if (found == index.end() || found->second.workingFile.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 	// The last hour is in SRU*.log, collected with the database: replayed into the copy first (B-046).
-	const EseReplay replayed = ReplayEseLogsOnce(found->second.workingFile, found->second.sourcePath);
-	if (replayed.attempted && !replayed.applied) log(1, L"⚠️SRUM logs not replayed: " + replayed.detail);
-	const HRESULT opened = database_.open(found->second.workingFile);
+	const HRESULT opened = OpenRecoveredEseDatabase(database_, found->second.workingFile, found->second.sourcePath);
 	if (opened != ERROR_SUCCESS) return opened;
 	if (database_.dirtyShutdown())
 		log(1, L"⚠️SRUDB.dat copied live (dirty shutdown): the last hour is in SRU*.log, in the exhibit store, not in srum.json");
@@ -74,8 +64,8 @@ HRESULT Srum::getData() {
 				else if (c.columnId == ID_BLOB) blob = &c;
 			}
 			if (!type || !id || !blob) continue;
-			const unsigned t = (unsigned)integerOf(*type);
-			identities_[integerOf(*id)] = { t, srumIdentity(t, blob->values.front()) };
+			const unsigned t = (unsigned)eseCellInteger(*type).value_or(0);
+			identities_[(int32_t)eseCellInteger(*id).value_or(0)] = { t, srumIdentity(t, blob->values.front()) };
 		}
 	}
 	return ERROR_SUCCESS;
@@ -132,7 +122,7 @@ HRESULT Srum::toJson() {
 					addSrumValue(row, c, cell);
 					// The identities behind AppId and UserId.
 					const auto identity = (c.name == L"AppId" || c.name == L"UserId") && !cell.values.empty()
-					                      ? identities_.find(integerOf(cell)) : identities_.end();
+					                      ? identities_.find((int32_t)eseCellInteger(cell).value_or(0)) : identities_.end();
 					if (identity == identities_.end()) continue;
 					if (c.name == L"AppId") row.add(L"App", Json::str(identity->second.second));
 					else if (identity->second.first == ID_TYPE_SID) {
@@ -144,7 +134,7 @@ HRESULT Srum::toJson() {
 			if (table.name == IDENTITIES)
 				for (const EseCell& cell : r)
 					if (cell.columnId == ID_INDEX && !cell.values.empty()) {
-						const auto identity = identities_.find(integerOf(cell));
+						const auto identity = identities_.find((int32_t)eseCellInteger(cell).value_or(0));
 						if (identity != identities_.end()) row.add(L"Identity", Json::str(identity->second.second));
 					}
 			out.add(row);

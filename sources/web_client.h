@@ -59,7 +59,8 @@
  *  `History` in summer on the test VM. It is converted with the offset in
  *  force at its date (suspectLocalToUtc), never read as UTC. The database is
  *  copied live, in "dirty" state: what WinINet wrote since its last
- *  checkpoint is only in its logs, collected beside it (esentutl /r).
+ *  checkpoint is only in its logs, collected beside it and replayed into the
+ *  working copy before it is read (ese_recovery.h).
  *
  *  THE CACHED FILES. A Content entry names the file WinINet stored: the
  *  container's directory, one of its 8-character subfolders (the
@@ -130,10 +131,15 @@ extern const wchar_t IE_LOCAL_FOLDER[];
  *  cookie, container.dat). */
 extern const std::vector<std::wstring> WININET_LOCAL_FOLDERS;
 
-/*! A Firefox time — microseconds since 1970-01-01 UTC — as a FILETIME.
- *  @param microseconds the value; 0 or negative for none
- *  @return the FILETIME, null for none */
-FILETIME firefoxTime(int64_t microseconds);
+//! The units Firefox counts its times in, in microseconds.
+const int64_t FIREFOX_MICROSECONDS = 1, FIREFOX_MILLISECONDS = 1000, FIREFOX_SECONDS = 1000000;
+
+/*! A Firefox time — a count of units since 1970-01-01 UTC — as a FILETIME.
+ *  @param count the value; 0 or negative for none
+ *  @param unit its unit, in microseconds (FIREFOX_MILLISECONDS…): checked
+ *         before the scaling, a forged value overflowed it
+ *  @return the FILETIME, null for none or out of range */
+FILETIME firefoxTime(int64_t count, int64_t unit = FIREFOX_MICROSECONDS);
 
 /*! The name of a Firefox visit type (nsINavHistoryService): link, typed,
  *  bookmark, embed, redirect_permanent, redirect_temporary, download,

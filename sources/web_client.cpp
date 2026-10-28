@@ -238,7 +238,7 @@ void readFirefoxDownloads(SqliteDatabase& db, const WebClientRecord& base, std::
 			auto number = [](const Json* v) { return (long long)std::wcstoll(v->text().c_str(), nullptr, 10); };
 			if (const Json* state = meta.find(L"state")) r.fields.add(L"State", Json::num(number(state)));
 			if (const Json* end = meta.find(L"endTime"))
-				addDate(r.fields, L"End", firefoxTime(number(end) * 1000));   // milliseconds there
+				addDate(r.fields, L"End", firefoxTime(number(end), FIREFOX_MILLISECONDS));
 			if (const Json* size = meta.find(L"fileSize")) r.fields.add(L"ReceivedBytes", Json::num(number(size)));
 			if (const Json* deleted = meta.find(L"deleted"); deleted && deleted->text() == L"true")
 				r.fields.add(L"Deleted", Json::boolean(true));
@@ -328,11 +328,7 @@ std::wstring cellText(const EseRecord& record, const EseTable& table, const wcha
 int64_t cellInteger(const EseRecord& record, const EseTable& table, const wchar_t* name) {
 	const EseColumn* column = nullptr;
 	const EseCell* cell = cellOf(record, table, name, &column);
-	if (!cell || cell->values.empty() || cell->compressionScheme >= 0) return 0;
-	const std::vector<uint8_t>& v = cell->values.front();
-	if (v.size() >= 8) return (int64_t)readLittleEndian<uint64_t>(v.data());
-	if (v.size() >= 4) return (int64_t)readLittleEndian<uint32_t>(v.data());
-	return 0;
+	return cell ? (int64_t)eseCellInteger(*cell).value_or(0) : 0;
 }
 
 //! @return a FILETIME column, null if absent or zero
@@ -398,7 +394,7 @@ HRESULT readFirefoxLogins(const std::wstring& text, const WebClientRecord& base,
 	}
 	auto fieldText = [](const Json& o, const wchar_t* key) { const Json* v = o.find(key); return v ? v->text() : std::wstring(); };
 	auto milliseconds = [&](const Json& o, const wchar_t* key) {
-		return firefoxTime((int64_t)std::wcstoll(fieldText(o, key).c_str(), nullptr, 10) * 1000); };
+		return firefoxTime((int64_t)std::wcstoll(fieldText(o, key).c_str(), nullptr, 10), FIREFOX_MILLISECONDS); };
 	for (const auto& member : root.find(L"logins")->members()) {
 		const Json& login = member.second;
 		WebClientRecord r = startRecord(base, L"SavedLogin");
@@ -425,7 +421,11 @@ HRESULT readFirefoxCookies(const std::wstring& file, const WebClientRecord& base
 		r.fields.add(L"Name", Json::str(row.text(1)));
 		r.fields.add(L"Path", Json::str(row.text(2)));
 		addDate(r.fields, L"Created", firefoxTime(row.integer(3)));
-		addDate(r.fields, L"Expires", firefoxTime(row.integer(4) * 1000000));   // seconds there
+		/* Seconds in older versions, milliseconds in recent ones: a count past 10^11
+		   (the year 5138 in seconds, 1973 in milliseconds) is in milliseconds.
+		   Read as seconds, every recent expiry was out of range, and dropped. */
+		const int64_t expiry = row.integer(4);
+		addDate(r.fields, L"Expires", firefoxTime(expiry, expiry > 100000000000LL ? FIREFOX_MILLISECONDS : FIREFOX_SECONDS));
 		addDate(r.fields, L"LastAccess", firefoxTime(row.integer(5)));
 		r.fields.add(L"Secure", Json::boolean(row.integer(6) != 0));
 		r.fields.add(L"HttpOnly", Json::boolean(row.integer(7) != 0));
@@ -611,8 +611,10 @@ bool splitWebCacheUrl(const std::wstring& url, std::wstring& user, std::wstring&
 }
 
 HRESULT readWebCache(const std::wstring& file, const WebClientRecord& base, std::vector<WebClientRecord>& records) {
+	/* Its latest entries may still be in its transaction logs, collected
+	   with it: replayed into the copy first (B-046). */
 	EseDatabase db;
-	const HRESULT opened = db.open(file);
+	const HRESULT opened = OpenRecoveredEseDatabase(db, file, base.source);
 	if (opened != ERROR_SUCCESS) return opened;
 	const EseTable* containers = db.table(L"Containers");
 	if (!containers) return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
@@ -666,9 +668,9 @@ HRESULT readWebCache(const std::wstring& file, const WebClientRecord& base, std:
 	return ERROR_SUCCESS;
 }
 
-FILETIME firefoxTime(int64_t microseconds) {
-	if (microseconds <= 0) return FILETIME{ 0, 0 };
-	return chromiumTime((int64_t)((uint64_t)microseconds + MICROSECONDS_1601_TO_1970));
+FILETIME firefoxTime(int64_t count, int64_t unit) {
+	if (count <= 0 || unit <= 0 || count > (INT64_MAX - (int64_t)MICROSECONDS_1601_TO_1970) / unit) return FILETIME{ 0, 0 };
+	return chromiumTime(count * unit + (int64_t)MICROSECONDS_1601_TO_1970);
 }
 
 std::wstring firefoxVisitType(int64_t type) {
@@ -878,8 +880,8 @@ void firefoxTab(const Json& tab, const WebClientRecord& base, const std::wstring
 		if (url) r.fields.add(L"Url", Json::str(url->text()));
 		if (title) r.fields.add(L"Title", Json::str(title->text()));
 		r.fields.add(L"Shown", Json::boolean(index == shown));
-		addDate(r.fields, L"TabLastAccessed", firefoxTime(jsonInteger(tab, L"lastAccessed") * 1000));
-		addDate(r.fields, L"Closed", firefoxTime(closedMs * 1000));
+		addDate(r.fields, L"TabLastAccessed", firefoxTime(jsonInteger(tab, L"lastAccessed"), FIREFOX_MILLISECONDS));
+		addDate(r.fields, L"Closed", firefoxTime(closedMs, FIREFOX_MILLISECONDS));
 		records.push_back(std::move(r));
 		++index;
 	}
@@ -934,7 +936,7 @@ HRESULT readFirefoxFavicons(const std::wstring& file, const WebClientRecord& bas
 		WebClientRecord r = startRecord(base, L"Favicon");
 		r.fields.add(L"PageUrl", Json::str(row.text(0)));
 		r.fields.add(L"IconUrl", Json::str(row.text(1)));
-		addDate(r.fields, L"Expires", firefoxTime(row.integer(2) * 1000));
+		addDate(r.fields, L"Expires", firefoxTime(row.integer(2), FIREFOX_MILLISECONDS));
 		records.push_back(std::move(r));
 	});
 	return ERROR_SUCCESS;
@@ -951,15 +953,23 @@ HRESULT WebClient::getData() {
 			for (const std::filesystem::directory_entry& e : std::filesystem::directory_iterator(root, ec))
 				if (e.is_directory(ec)) folders.push_back(e.path());
 			for (const std::filesystem::path& folder : folders) {
-				const std::filesystem::path history = folder / L"History";
-				if (!std::filesystem::is_regular_file(history, ec)) continue;
+				/* A profile as the collection tells it (Preferences or History): one
+				   whose History was deleted keeps its logins, cookies, favicons and
+				   sessions — the traces that outlive a cleared history. */
+				std::vector<std::wstring> names;
+				for (const std::filesystem::directory_entry& e : std::filesystem::directory_iterator(folder, ec))
+					names.push_back(e.path().filename().wstring());
+				if (!isChromiumProfile(names)) continue;
 				WebClientRecord base;
 				base.browser = CHROMIUM_ROOTS[i].browser;
 				base.browserProfile = folder == root ? L"" : folder.filename().wstring();
 				base.sid = std::get<0>(profileEntry);
-				base.source = originalPath(history.wstring());
-				if (readChromiumHistory(history.wstring(), base, records_) != ERROR_SUCCESS)
-					log(2, L"🔥History not read: " + base.source);
+				const std::filesystem::path history = folder / L"History";
+				if (std::filesystem::is_regular_file(history, ec)) {
+					base.source = originalPath(history.wstring());
+					if (readChromiumHistory(history.wstring(), base, records_) != ERROR_SUCCESS)
+						log(2, L"🔥History not read: " + base.source);
+				}
 				const std::filesystem::path logins = folder / L"Login Data";
 				if (std::filesystem::is_regular_file(logins, ec)) {
 					base.source = originalPath(logins.wstring());
@@ -984,7 +994,7 @@ HRESULT WebClient::getData() {
 				}
 				const HRESULT sessions = readChromiumSessions((folder / L"Sessions").wstring(), base, records_);
 				if (FAILED(sessions) && sessions != HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND))   // no Sessions folder: no session kept
-					log(2, L"🔥Sessions not read: " + base.source);
+					log(2, L"🔥Sessions not read: " + originalPath((folder / L"Sessions").wstring()));
 			}
 		}
 	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) { readTypedUrls(root, sid, records_); });
@@ -1011,11 +1021,6 @@ HRESULT WebClient::getData() {
 		base.browser = L"WebCache";
 		base.sid = std::get<0>(profileEntry);
 		base.source = originalPath(cache.wstring());
-		/* Its latest entries may still be in its transaction logs, collected
-		   with it: replayed into the copy first (B-046). */
-		const EseReplay replayed = ReplayEseLogsOnce(cache.wstring(), base.source);
-		if (replayed.attempted && !replayed.applied)
-			log(1, L"⚠️WebCache logs not replayed: its latest entries may be missing — " + base.source);
 		if (readWebCache(cache.wstring(), base, records_) != ERROR_SUCCESS) log(2, L"🔥WebCache not read: " + base.source);
 	}
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) {

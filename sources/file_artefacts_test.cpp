@@ -837,6 +837,25 @@ void sqliteReader() {
 	      "sqlite: the private copy deleted when closed");
 	sqlite3_close(writer);   // only now: closing it checkpoints the log into the database
 
+	/* A run interrupted leaves its private copies: the folders are numbered
+	   from 1 again at the next run. Left as they were, the stale copy was
+	   kept (no overwrite: "copy failed") and a stale -wal was replayed into
+	   the database copied beside it. */
+	const std::filesystem::path copies = std::filesystem::path(conf._outputDir) / L"working" / L"sqlite-copies";
+	for (int n = 1; n <= 64; ++n) {
+		std::filesystem::create_directories(copies / std::to_wstring(n), ec);
+		std::ofstream(copies / std::to_wstring(n) / L"History") << "stale copy of an interrupted run";
+		std::ofstream(copies / std::to_wstring(n) / L"History-wal") << "stale log of another database";
+	}
+	{
+		SqliteDatabase reader;
+		int rows = -1;
+		check(!std::filesystem::exists(db.wstring() + L"-wal") && reader.open(db.wstring()) == ERROR_SUCCESS
+		      && reader.query("SELECT count(*) FROM urls", [&](const SqliteRow& r) { rows = (int)r.integer(0); }) == ERROR_SUCCESS
+		      && rows == 2,
+		      "sqlite: a copy folder left by an interrupted run emptied first, its stale copy and log not used");
+	}
+
 	std::ofstream(root / L"exhibit" / L"notadb") << "this is not an SQLite database, only text";
 	SqliteDatabase notDatabase;
 	check(notDatabase.open((root / L"exhibit" / L"notadb").wstring()) == HRESULT_FROM_WIN32(ERROR_INVALID_DATA),
@@ -940,6 +959,11 @@ void firefoxHistory() {
 	      && firefoxVisitType(10) == L"10", "firefox: visit types, an unknown one as its number");
 	check(value(firefoxTime(1700000000000000LL)) == 133444736000000000ULL && value(firefoxTime(0)) == 0,
 	      "firefox: microseconds since 1970 made a FILETIME");
+	check(value(firefoxTime(1700000000000LL, FIREFOX_MILLISECONDS)) == 133444736000000000ULL
+	      && value(firefoxTime(1700000000LL, FIREFOX_SECONDS)) == 133444736000000000ULL,
+	      "firefox: milliseconds and seconds since 1970, the same instant");
+	check(value(firefoxTime(INT64_MAX, FIREFOX_MILLISECONDS)) == 0 && value(firefoxTime(10000000000000LL, FIREFOX_SECONDS)) == 0,
+	      "firefox: a count that would overflow once scaled gives no date");
 	check(fileUriToPath(L"file:///C:/Users/wac/T%C3%A9l%C3%A9chargements/m%20k.zip") == L"C:\\Users\\wac\\T\u00e9l\u00e9chargements\\m k.zip"
 	      && fileUriToPath(L"https://x.invalid/a") == L"https://x.invalid/a", "firefox: a file URI made a path, UTF-8 decoded");
 
@@ -1025,7 +1049,8 @@ void loginsAndCookies() {
 	make(L"cookies.sqlite",
 		"CREATE TABLE moz_cookies(id INTEGER PRIMARY KEY, name TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, lastAccessed INTEGER,"
 		" creationTime INTEGER, isSecure INTEGER, isHttpOnly INTEGER);"
-		"INSERT INTO moz_cookies VALUES(1, 'sess', 'secret-token', '.forum.invalid', '/', 1800000000, 1700000300000000, 1700000000000000, 0, 1);");
+		"INSERT INTO moz_cookies VALUES(1, 'sess', 'secret-token', '.forum.invalid', '/', 1800000000, 1700000300000000, 1700000000000000, 0, 1);"
+		"INSERT INTO moz_cookies VALUES(2, 'sessms', 'secret-token', '.forum.invalid', '/', 1800000000000, 1700000300000000, 1700000000000000, 0, 1);");
 	WebClientRecord base;
 	base.browser = L"Edge";
 	std::vector<WebClientRecord> records;
@@ -1045,7 +1070,7 @@ void loginsAndCookies() {
 	                        L"\"formSubmitURL\":\"https://bank.invalid\",\"encryptedUsername\":\"MDoEEPgAAA\",\"encryptedPassword\":\"MDoEEPgBBB\","
 	                        L"\"timeCreated\":1700000000000,\"timeLastUsed\":1700000100000,\"timePasswordChanged\":1700000000000,\"timesUsed\":2}]}",
 	                        base, records) == ERROR_SUCCESS
-	      && readFirefoxCookies((root / L"cookies.sqlite").wstring(), base, records) == ERROR_SUCCESS && records.size() == 2,
+	      && readFirefoxCookies((root / L"cookies.sqlite").wstring(), base, records) == ERROR_SUCCESS && records.size() == 3,
 	      "logins: Firefox's saved login and cookie read");
 	const WebClientRecord* firefoxLogin = findRecord(records, L"SavedLogin", L"Origin", L"https://bank.invalid");
 	check(field(firefoxLogin, L"TimesUsed") == L"2" && field(firefoxLogin, L"LastUsedUtc") == timeToIso8601Utc(firefoxTime(1700000100000000LL))
@@ -1054,6 +1079,9 @@ void loginsAndCookies() {
 	const WebClientRecord* firefoxCookie = findRecord(records, L"Cookie", L"Name", L"sess");
 	check(field(firefoxCookie, L"ExpiresUtc") == timeToIso8601Utc(firefoxTime(1800000000000000LL)) && field(firefoxCookie, L"HttpOnly") == L"true",
 	      "logins: Firefox's cookie: its expiry in seconds converted");
+	const WebClientRecord* firefoxCookieMs = findRecord(records, L"Cookie", L"Name", L"sessms");
+	check(field(firefoxCookieMs, L"ExpiresUtc") == timeToIso8601Utc(firefoxTime(1800000000000000LL)),
+	      "logins: Firefox's cookie: its expiry in milliseconds (recent versions) converted, not dropped");
 	check(readFirefoxLogins(L"not json", base, records) == HRESULT_FROM_WIN32(ERROR_INVALID_DATA), "logins: a logins.json that is no JSON refused");
 	// No secret in any record: neither the passwords nor the cookie values.
 	bool clean = true;
@@ -1067,6 +1095,46 @@ void loginsAndCookies() {
 		    || text.find(L"MDoEEPg") != std::wstring::npos) clean = false;
 	}
 	check(clean, "logins: no password and no cookie value in the JSON");
+	std::filesystem::remove_all(root, ec);
+}
+
+/*! A Chrome profile whose History was deleted, as the collection takes it
+ *  (Preferences, Login Data): the conversion used to skip any profile without
+ *  a History, losing the logins and cookies that outlive a cleared history. */
+void chromiumProfileWithoutHistory() {
+	const std::filesystem::path root = std::filesystem::temp_directory_path() / L"wac-profile-test";
+	std::error_code ec;
+	std::filesystem::remove_all(root, ec);
+	const std::wstring mountpoint = conf.mountpoint, outputDir = conf._outputDir, jsonFolder = conf.jsonFolder;
+	const std::vector<std::tuple<std::wstring, std::wstring>> profiles = conf.profiles;
+	conf.mountpoint = (root / L"mount").wstring();
+	conf._outputDir = (root / L"output").wstring();
+	conf.jsonFolder.clear();
+	conf.profiles = { { L"S-1-5-21-1-2-3-1001", L"C:\\Users\\alice" } };
+	const std::filesystem::path folder = std::filesystem::path(extractedPath(L"C:\\Users\\alice\\AppData\\Local\\Google\\Chrome\\User Data")) / L"Default";
+	std::filesystem::create_directories(folder, ec);
+	std::ofstream(folder / L"Preferences") << "{}";
+	sqlite3* w = nullptr;
+	sqlite3_open_v2(encodeText((folder / L"Login Data").wstring()).c_str(), &w, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+	sqlite3_exec(w,
+		"CREATE TABLE logins(origin_url TEXT, action_url TEXT, username_element TEXT, username_value TEXT, password_element TEXT,"
+		" password_value BLOB, signon_realm TEXT, date_created INTEGER, blacklisted_by_user INTEGER, times_used INTEGER,"
+		" date_last_used INTEGER, date_password_modified INTEGER);"
+		"INSERT INTO logins VALUES('https://mail.invalid/', '', 'u', 'alice', 'p', x'00', 'https://mail.invalid/', 13370000000000000, 0, 1, 0, 0);",
+		nullptr, nullptr, nullptr);
+	sqlite3_close(w);
+	WebClient web;
+	std::string json;
+	check(web.getData() == ERROR_SUCCESS && web.toJson() == ERROR_SUCCESS
+	      && readWholeFile(root / L"output" / L"web_client.json", 1 << 20, json)
+	      && json.find("\"SavedLogin\"") != std::string::npos && json.find("\"alice\"") != std::string::npos
+	      && json.find("\"Default\"") != std::string::npos,
+	      "web client: a Chrome profile without History converted, its saved login read");
+	web.clear();
+	conf.mountpoint = mountpoint;
+	conf._outputDir = outputDir;
+	conf.jsonFolder = jsonFolder;
+	conf.profiles = profiles;
 	std::filesystem::remove_all(root, ec);
 }
 
@@ -2225,6 +2293,7 @@ int wmain(int argc, wchar_t** argv) {
 	      && urlValueNumber(L"MRUList") == 0, "typed urls: url<N> numbered, anything else refused");
 	firefoxHistory();
 	loginsAndCookies();
+	chromiumProfileWithoutHistory();
 	{
 		std::wstring user, page;
 		check(splitWebCacheUrl(L"Visited: wac@https://x.invalid/a@b", user, page) && user == L"wac" && page == L"https://x.invalid/a@b"
