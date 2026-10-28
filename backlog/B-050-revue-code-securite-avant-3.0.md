@@ -137,3 +137,4 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
   - Tests écrits : `lsaText` (sans NUL, tampon nul), JSON sur un support plein (`Z:\\dev\\full` sous Wine), OperatingSystem.json sans instantané de l'horloge, MD5 d'un fichier absent (et RFC 1321 « abc »), `output: ..` refusé (config_test).
   - Documentation FR/EN : règle de `--output` ; manuels compilés, 0 débordement.
   - À faire après le cycle du lot 5 : compiler, tests, mutations, commit.
+- 2026-10-28 : lot 7 (scripts et compilation) : `/code-review high` lancé pendant le cycle du lot 5.
