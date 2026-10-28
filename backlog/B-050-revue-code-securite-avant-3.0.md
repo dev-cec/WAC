@@ -50,7 +50,7 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
 
 ## Tâches
 - [x] Découper le dépôt en lots de revue (ci-dessus)
-- [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 à 3 : faits — 1315c4da, 49d34970, dac5efc5 ; lot 4 : fait — 171993b3)
+- [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 à 3 : faits — 1315c4da, 49d34970, dac5efc5 ; lot 4 : fait — 171993b3 ; lot 5 : fait — 6430ba17)
 - [ ] `/security-review` sur le code livré ; constats triés et traités
 - [x] `/code-review ultra` : écarté par l'utilisateur (2026-10-27) — la revue se fait lot par lot avec `/code-review`
 - [ ] Cycles VM verts après corrections
@@ -120,4 +120,5 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
   - secondaires : `ie_index_dat` — le parcours des blocs sautait la taille déclarée, et les enregistrements plus récents écrits dedans → `recordLength` partagé avec `readRecord` ; `rdp_server` — sa propre liste de journaux ignorait ceux que le registre déplace, et un `lower()` doublait `toLower` → `workingEventLogs`/`readEventLog` publics dans events.h, utilisés par les deux ; `xml_light` — référence au-delà de U+FFFF coupée à 16 bits, entités décodées dans un CDATA → paire de substitution, décodage par segment hors CDATA ; nommage — `parIdEtVersion_`, `parId_`, `pas`, `cardinalite`, `chunksIgnores`, `sale`, `nbCar`, `nbentries` renommés ou retirés.
   - Tests écrits : PST forgé dans `pst_test` (page enfant d'elle-même, XBLOCK vide, bit hors ligne), EVTX forgé (CDATA), WEVT à décalages proches de 2^32, catégories de customDestinations, index.dat (LEAK dans un URL plus ancien), XML (CDATA, U+1F600), EventTime de 20 chiffres, INFO2 du lecteur D:, LastTaskResult sans historique, hosts de plus de 16 Mio. `rdp_server` sans test unitaire (il faudrait des ruches) : la liste partagée est celle que le témoin du journal Sysmon déplacé vérifie en VM.
   - Documentation FR/EN : `Categories`, `RecycledName` selon le lecteur, hosts au-delà de 16 Mio, version 2 des listes personnalisées ; manuels compilés, 0 débordement.
-  - À faire après le cycle du lot 4 : compiler, tests, mutations, commit.
+  - Compilé (`--test`, sans avertissement) ; tests : file_artefacts_test 274, pst_test 1804 (PST forgé compris), mft_test 281, usn_journal_test 27, ie_index_dat_test 22 (identique à pymsiecf), et les autres sans échec. Quinze mutants pris (dix par un contrôle nommé ; `stoull`, décalage et bloc WEVT, XBLOCK vide par un arrêt du test ; page cyclique par un test qui ne finit plus). Restauré, recompilé, `bin` identique à `build-windows`. Commit 6430ba17.
+- 2026-10-28 : cycle Windows 11 du lot 4 : 546 ✅, 1 ❌ — un défaut de WAC, pas du bruit : dans la seconde collecte, un nom de `$Extend\$Deleted` retrouvé dans un index (ancienne version d'un fichier de Firefox, enregistrement libéré) recevait `CurrentPath`, le chemin du fichier vivant qui a pris son nom (autre enregistrement). `Mft::livePathOf` ne nomme qu'un enregistrement en usage ; test dans mft_test (enregistrement libéré, mutant pris). Commit cad7ed13. Cycle Windows 11 du lot 5 lancé.
