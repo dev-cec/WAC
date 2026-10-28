@@ -188,7 +188,8 @@ PY
   [[ -n "$XP_KEY" ]] || { echo "No product key: the medium carries no \"CD Key.txt\"; give XP_KEY=XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" >&2; exit 1; }
   echo "== 1. Answer floppy (WINNT.SIF) =="
   # No AutoPlay: a medium changed under the machine would open a window that takes the keyboard from the prompt.
-  # "wac"/"wac": the same throw-away account as the other test machines (see guest/autounattend.xml).
+  # "wac"/"wac": the same throw-away account as the other test machines (see guest/autounattend.xml);
+  # its password never expires: expired after 42 days, it stops the automatic logon.
   cat > "$TMP/WINNT.SIF" <<SIF
 [Data]
 AutoPartition=1
@@ -226,7 +227,8 @@ JoinWorkgroup=WORKGROUP
 InstallDefaultComponents=Yes
 [GuiRunOnce]
 Command0="reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer /v NoDriveTypeAutoRun /t REG_DWORD /d 255 /f"
-Command1="cmd /c echo WAC-XP-READY > COM1"
+Command1="net accounts /maxpwage:unlimited"
+Command2="cmd /c echo WAC-XP-READY > COM1"
 SIF
   sed -i 's/$/\r/' "$TMP/WINNT.SIF"
   rm -f "$FLOPPY"; mkfs.fat -C "$FLOPPY" 1440 >/dev/null

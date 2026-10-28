@@ -104,6 +104,11 @@
           <Description>Demarre le service guest-agent</Description>
           <CommandLine>cmd /c sc config QEMU-GA start= auto &amp; net start QEMU-GA</CommandLine>
         </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>4</Order>
+          <Description>Mots de passe sans expiration : au bout de 42 jours, celui de wac expire et l'autologon echoue</Description>
+          <CommandLine>net accounts /maxpwage:unlimited</CommandLine>
+        </SynchronousCommand>
       </FirstLogonCommands>
       <AutoLogon>
         <Enabled>true</Enabled>
