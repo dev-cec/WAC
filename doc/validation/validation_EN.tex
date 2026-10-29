@@ -201,7 +201,10 @@ reopened for writing; all the work is done on a second copy.
   \item the working copy is checked by its SHA-256 against what was read from
     the volume, not against a re-read of the exhibit store;
   \item the manifest identifying the exhibits is sealed by a second file
-    carrying its fingerprint: a retouched manifest is detected;
+    carrying its fingerprint: a retouched manifest is detected. Whoever
+    rewrites the manifest can rewrite its seal too: \wac{} therefore prints
+    the seal at the end of the collection, to be written down in the report,
+    the one copy such a rewrite does not reach;
   \item a failed extraction is recorded too: an exhibit missing from the
     manifest would read as never looked for;
   \item the dates of a file artefact (Prefetch, shortcut, jump list) are the
@@ -217,8 +220,17 @@ A third party can check the exhibit store without \wac{}, with the scripts
 \fichier{verifier-consigne.ps1} (French messages), shipped with the user
 documentation, and their Linux counterparts \fichier{verify-exhibits.sh} and
 \fichier{verifier-consigne.sh}, which compute the fingerprints with
-\fichier{sha256sum}, not with \wac{}. All check the seal, then the fingerprint
-of every exhibit; an authenticated binary read but not copied (``fingerprint
+\fichier{sha256sum}, not with \wac{}; the French ones are the same scripts,
+started with French messages. All check the seal, and hold it against the
+value written down at the collection when it is given (\texttt{-Seal},
+\texttt{--seal=}), then the fingerprint of every exhibit. A missing manifest
+or seal is said absent, not modified; a manifest that is no JSON, or without
+its list of exhibits, is refused, never taken for an empty collection; an
+exhibit that cannot be read is said so, apart from the mismatches. The
+\fichier{.ps1} runs from PowerShell~4 (Windows~8.1) on: it reads a manifest of
+tens of megabytes, which \texttt{ConvertFrom-Json} of PowerShell~4 refused,
+and paths longer than 259~characters, which .NET refuses before version
+4.6.2. An authenticated binary read but not copied (``fingerprint
 only'') is counted apart, having no file. The manifest coming from the examined
 machine, an exhibit path that leaves the collection (\texttt{..}, absolute
 path, symbolic link for the \fichier{.sh}) is refused without being read: the
@@ -227,7 +239,8 @@ workstation designated by
 \texttt{exhibits\textbackslash..\textbackslash..\textbackslash..}, provided
 its fingerprint was in the manifest — a defect caught by a counter-test in the
 test machine. \texttt{verify\_exhibits\_test.sh} checks the two \fichier{.sh}
-on forged collections (23~checks).
+on forged collections (33~checks); the \fichier{.ps1} is run in each test
+machine on its own collection.
 
 \section{Authenticity of binaries}
 

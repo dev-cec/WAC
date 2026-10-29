@@ -273,11 +273,15 @@ Jeton du processus & Lecture des privilèges de \wac{} lui-même, pour vérifier
 \end{longtable}
 
 \begin{attention}
-\wac{} écrit là où le désigne \opt{output}. Lancé depuis un dossier du disque
-examiné, ou avec un \opt{output} qui y pointe, il y écrirait ses résultats :
-fichiers créés, enregistrements du \path|$MFT| et du journal USN, blocs
-écrasés. \textbf{Lancez-le depuis le support de collecte}, qui doit être le
-répertoire courant.
+\wac{} écrit dans le dossier \opt{output} du répertoire courant.
+\opt{output} (et \texttt{output:} de \fichier{wac.yml}) n'est qu'un nom de
+dossier : sans séparateur, sans lecteur (\texttt{C:case}), autre que
+\texttt{..} ; tout le reste est refusé avant toute collecte, pour qu'il ne
+puisse pas désigner le volume examiné. Lancé depuis un dossier du disque
+examiné, en revanche, il y écrirait ses résultats : fichiers créés,
+enregistrements du \path|$MFT| et du journal USN, blocs écrasés.
+\textbf{Lancez-le depuis le support de collecte}, qui doit être le répertoire
+courant.
 \end{attention}
 
 \section{Ce que WAC ne fait jamais}
@@ -471,9 +475,10 @@ défaut à signaler.
 \chapter{Limites}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[Dossier de sortie] \wac{} ne vérifie pas que \opt{output} désigne un
-        autre volume que ceux qu'il examine : c'est à l'opérateur de le lancer
-        depuis le support de collecte.
+  \item[Dossier de sortie] \opt{output} ne peut pas quitter le répertoire
+        courant, mais \wac{} ne vérifie pas que celui-ci est sur un autre
+        volume que ceux qu'il examine : c'est à l'opérateur de le lancer depuis
+        le support de collecte.
   \item[Surveillance] Un EDR ou une politique d'audit peut journaliser
         l'ouverture du volume en lecture brute, l'énumération des processus et
         des sessions. Ces journaux sont écrits par la machine, non par \wac{} ;

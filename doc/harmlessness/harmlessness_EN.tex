@@ -265,11 +265,14 @@ Writing the results & To the \opt{output} folder only, relative to the current
 \end{longtable}
 
 \begin{attention}
-\wac{} writes where \opt{output} points. Started from a folder of the examined
-disk, or with an \opt{output} that points there, it would write its results
-there: files created, records of the \path|$MFT| and of the USN journal,
-blocks overwritten. \textbf{Start it from the collection medium}, which must be
-the current directory.
+\wac{} writes to the \opt{output} folder of the current directory.
+\opt{output} (and \texttt{output:} in \fichier{wac.yml}) is a folder name
+only: no separator, no drive (\texttt{C:case}), not \texttt{..}; anything
+else is refused before any collection, so that it cannot point at the examined
+volume. Started from a folder of the examined disk, however, it would write its
+results there: files created, records of the \path|$MFT| and of the USN
+journal, blocks overwritten. \textbf{Start it from the collection medium},
+which must be the current directory.
 \end{attention}
 
 \section{What WAC never does}
@@ -458,9 +461,10 @@ report.
 \chapter{Limits}
 
 \begin{description}[style=nextline,leftmargin=1.2em]
-  \item[Output folder] \wac{} does not check that \opt{output} designates a
-        volume other than those it examines: it is up to the operator to start
-        it from the collection medium.
+  \item[Output folder] \opt{output} cannot leave the current directory, but
+        \wac{} does not check that the current directory is on a volume other
+        than those it examines: it is up to the operator to start it from the
+        collection medium.
   \item[Monitoring] An EDR or an audit policy may log the raw opening of the
         volume, the enumeration of processes and sessions. These logs are
         written by the machine, not by \wac{}; they are expected.

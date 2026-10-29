@@ -206,7 +206,10 @@ rouverte en écriture ; tout le travail se fait sur une seconde copie.
   \item la copie de travail est vérifiée par son SHA-256 contre ce qui a été
     lu sur le volume, et non contre une relecture de la consigne ;
   \item le manifeste qui identifie les pièces est scellé par un second fichier
-    portant son empreinte : un manifeste retouché se détecte ;
+    portant son empreinte : un manifeste retouché se détecte. Qui réécrit le
+    manifeste peut réécrire son sceau : \wac{} affiche donc le sceau en fin de
+    collecte, à reporter au procès-verbal, seule copie qu'une telle réécriture
+    n'atteint pas ;
   \item un échec d'extraction est consigné lui aussi : une pièce absente du
     manifeste se lirait comme jamais cherchée ;
   \item les dates d'un artefact fichier (Prefetch, raccourci, liste de sauts)
@@ -223,8 +226,17 @@ Un tiers peut vérifier la consigne sans \wac{}, avec les scripts
 \fichier{verifier-consigne.ps1} (messages en français), livrés avec la
 documentation utilisateur, et leurs équivalents Linux
 \fichier{verify-exhibits.sh} et \fichier{verifier-consigne.sh}, qui calculent
-les empreintes par \fichier{sha256sum} et non par \wac{}. Tous contrôlent le
-sceau puis l'empreinte de chaque pièce ; un binaire authentifié lu mais non
+les empreintes par \fichier{sha256sum} et non par \wac{} ; les scripts
+français sont les mêmes, lancés avec les messages en français. Tous contrôlent
+le sceau, et l'opposent à la valeur relevée à la collecte quand elle est
+donnée (\texttt{-Seal}, \texttt{--seal=}), puis l'empreinte de chaque pièce.
+Un manifeste ou un sceau manquant est dit absent, non modifié ; un manifeste
+qui n'est pas du JSON, ou sans sa liste de pièces, est refusé, jamais pris
+pour une collecte vide ; une pièce illisible est dite telle, à part des
+différences. Le \fichier{.ps1} fonctionne à partir de PowerShell~4
+(Windows~8.1) : il lit un manifeste de plusieurs dizaines de mégaoctets, que
+\texttt{ConvertFrom-Json} de PowerShell~4 refusait, et des chemins de plus de
+259~caractères, que .NET refuse avant sa version 4.6.2. Un binaire authentifié lu mais non
 copié (« empreinte seule ») est compté à part, faute de fichier. Le manifeste
 venant de la machine examinée, un chemin de pièce qui sort de la collecte
 (\texttt{..}, chemin absolu, lien symbolique pour les \fichier{.sh}) est
@@ -233,7 +245,8 @@ comme vérifié un fichier du poste d'analyse désigné par
 \texttt{exhibits\textbackslash..\textbackslash..\textbackslash..}, pourvu
 que son empreinte figure au manifeste — défaut pris par une contre-épreuve
 dans la machine de test. \texttt{verify\_exhibits\_test.sh} vérifie les deux
-\fichier{.sh} sur des collectes forgées (23~contrôles).
+\fichier{.sh} sur des collectes forgées (33~contrôles) ; le \fichier{.ps1}
+est lancé dans chaque machine de test sur sa propre collecte.
 
 \section{Authenticité des binaires}
 
