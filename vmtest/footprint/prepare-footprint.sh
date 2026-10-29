@@ -23,7 +23,8 @@
 #   virt-clone --connect qemu:///session --original win11-test \
 #     --name win11-footprint --file ~/vms/win11-footprint.qcow2 --skip-copy=sde
 # then its network interface removed (virsh edit) and the key
-# ~/vms/wac-footprint-key.qcow2 (qemu-img create -f qcow2 … 4G) attached as a
+# ~/vms/wac-footprint-key.qcow2 (qemu-img create -f qcow2 … 32G: the 3.0.0 kit
+# writes 8.5 GB, deleted files included) attached as a
 # USB disk, serial WACFOOT0001.
 #
 # Usage: ./prepare-footprint.sh <Sysmon.zip> — the archive of
@@ -58,7 +59,15 @@ $QGA run -- powershell.exe -NoProfile -Command '
   if ($s.Status -ne "Valid" -or $s.SignerCertificate.Subject -notmatch "O=Microsoft Corporation") { "   signature refused: $($s.Status) $($s.SignerCertificate.Subject)"; exit 1 }
   "   signature: $($s.Status), $($s.SignerCertificate.Subject)"
   "   version: " + (Get-Item C:\footprint-setup\Sysmon64.exe).VersionInfo.FileVersion
-  & C:\footprint-setup\Sysmon64.exe -accepteula -i C:\footprint-setup\sysmon-config.xml 2>&1 | Select-String -Pattern "installed|started|error" | ForEach-Object { "   " + $_.Line.Trim() }
+  # Sysmon writes its banner on stderr: under "Stop", PowerShell takes that
+  # line for an error and ends the script. Its exit code and the service say
+  # whether it is installed.
+  $ErrorActionPreference = "Continue"
+  $out = & C:\footprint-setup\Sysmon64.exe -accepteula -i C:\footprint-setup\sysmon-config.xml 2>&1 | ForEach-Object { "$_" }
+  $code = $LASTEXITCODE
+  $ErrorActionPreference = "Stop"
+  $out | Select-String -Pattern "installed|started|error" | ForEach-Object { "   " + $_.Line.Trim() }
+  if ($code -ne 0 -or -not (Get-Service Sysmon64 -ErrorAction SilentlyContinue)) { "   Sysmon not installed (exit $code)"; exit 1 }
   & wevtutil.exe sl Microsoft-Windows-Sysmon/Operational /ms:1073741824
   Remove-Item -Recurse -Force C:\footprint-setup'
 
