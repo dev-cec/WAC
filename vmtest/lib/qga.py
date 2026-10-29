@@ -21,18 +21,31 @@ CONN = "qemu:///session"
 # Transient agent errors (service busy or restarting): retried.
 TRANSIENT = ("not responding", "not available", "not connected", "Broken pipe")
 
-def qga(dom, cmd, attempts=6, fatal=True):
+def send(dom, cmd):
+    """Sends one qemu-agent-command, once.
+    @return (True, its 'return' field) or (False, virsh's error)"""
+    out = subprocess.run(
+        ["virsh", "-c", CONN, "qemu-agent-command", dom, json.dumps(cmd)],
+        capture_output=True, text=True)
+    if out.returncode == 0:
+        return True, json.loads(out.stdout).get("return")
+    return False, out.stderr.strip()
+
+def qga(dom, cmd, attempts=6, fatal=True, before=None):
     """Sends a qemu-agent-command and returns its 'return' field.
     Retries with a backoff on the agent's transient unavailability.
-    fatal=False: a refusal by the agent returns None instead of exiting."""
+    fatal=False: a refusal by the agent returns None instead of exiting.
+    before: a command sent first, and again at every attempt — what makes
+    cmd safe to retry (see read_chunk)."""
     last = ""
     for n in range(attempts):
-        out = subprocess.run(
-            ["virsh", "-c", CONN, "qemu-agent-command", dom, json.dumps(cmd)],
-            capture_output=True, text=True)
-        if out.returncode == 0:
-            return json.loads(out.stdout).get("return")
-        last = out.stderr.strip()
+        for c in ([before] if before else []) + [cmd]:
+            ok, value = send(dom, c)
+            if not ok:
+                break
+        else:
+            return value
+        last = value
         if not any(t in last for t in TRANSIENT):
             if not fatal:
                 return None
@@ -281,10 +294,12 @@ def read_chunk(dom, handle, offset):
     reported as failed (a timeout) though the agent may have run it, and a
     plain read retried returned the NEXT chunk — 256 KiB missing in the
     middle of a 24.6 MB MANIFEST.json of Vista, which no longer parsed nor
-    matched its seal (2026-10-23).
+    matched its seal (2026-10-23). The seek is sent again with each retry of
+    the read: sent once before it, the retried read still returned the next
+    chunk, written in place of this one (2026-10-29, same size, same symptom).
     @return the agent's answer: buf-b64, eof"""
-    qga(dom, {"execute": "guest-file-seek", "arguments": {"handle": handle, "offset": offset, "whence": "set"}})
-    return qga(dom, {"execute": "guest-file-read", "arguments": {"handle": handle, "count": 256 << 10}})
+    return qga(dom, {"execute": "guest-file-read", "arguments": {"handle": handle, "count": 256 << 10}},
+               before={"execute": "guest-file-seek", "arguments": {"handle": handle, "offset": offset, "whence": "set"}})
 
 def read_file(dom, guest_path, host_path):
     """Fetches a file from the VM, WRITTEN AS IT IS READ.

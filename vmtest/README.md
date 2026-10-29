@@ -107,6 +107,15 @@ report said "collection probably incomplete" — which was true — but WAC had
 finished. The collection log (`run.log`, which ends with `END, Time elapsed`)
 settles it. Timeout raised to 30 min; to revisit if the collection gets longer.
 
+**A fetched file can be wrong at the right size.** virsh may report a read as
+failed although the agent did it; the retried read then returned the next
+chunk, written in place of the one asked — a Vista `MANIFEST.json` no longer
+JSON nor matching its seal. Each read now goes with its seek, sent again on
+every retry; `lib/qga_test.py` checks it against a fake agent that loses
+answers. A fetch interrupted with the harness also leaves its file open in the
+VM until the agent restarts: the harness says so when `split` cannot be
+removed — restart the VM.
+
 **Microsoft authenticity is confronted with Windows.** `sources/authenticode_test.cpp`
 verifies the catalogs of a folder, then gives a verdict per file; built for
 Windows, it runs in the VM on the binaries collected by a collection, and its

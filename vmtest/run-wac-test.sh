@@ -656,6 +656,11 @@ if [[ $SPLIT -eq 1 ]]; then
   json_count() { $QGA run --shell "dir /b $VMDIR\\split\\*.json 2>nul" 2>/dev/null | grep -c '\.json' || true; }
 
   $QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\split 2>nul & echo." >/dev/null
+  # A fetch interrupted with the harness leaves its file open in qemu-ga until
+  # the agent restarts: rmdir fails silently, and the collection below refuses
+  # the folder (working folder not empty) — every Vista cycle of 2026-10-29.
+  $QGA run --shell "if exist $VMDIR\\split (exit /b 1) else (exit /b 0)" >/dev/null 2>&1 \
+    || echo "   ⚠️ split not removed: a file of it is held open in the VM (an interrupted fetch?) — restart the VM"
   if full_cycle; then
   # A copy of a signed Store package with one untouched, one modified and one
   # intruding script: the package verification must tell them apart.

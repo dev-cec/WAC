@@ -109,6 +109,16 @@ derniers JSON : le rapport disait « collecte probablement incomplète » — ce
 qui se termine par `END, Time elapsed`) tranche entre les deux. Timeout porté à
 30 min ; il faudra le revoir si la collecte s'allonge encore.
 
+**Un fichier rapatrié peut être faux à la bonne taille.** virsh peut signaler en
+échec une lecture que l'agent a faite ; la lecture relancée rendait alors le
+morceau suivant, écrit à la place de celui demandé — un `MANIFEST.json` de Vista
+qui n'était plus du JSON ni conforme à son sceau. Chaque lecture part désormais
+avec son positionnement, renvoyé à chaque relance ; `lib/qga_test.py` le
+vérifie contre un faux agent qui perd des réponses. Un rapatriement interrompu
+avec le harnais laisse aussi son fichier ouvert dans la VM jusqu'au redémarrage
+de l'agent : le harnais le dit quand `split` ne peut être supprimé — redémarrer
+la VM.
+
 **L'authenticité Microsoft se confronte à Windows.** `sources/authenticode_test.cpp`
 vérifie les catalogues d'un dossier puis rend un verdict par fichier ; compilé
 pour Windows, il tourne dans la VM sur les binaires prélevés par une collecte,
