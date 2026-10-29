@@ -5011,10 +5011,18 @@ def check_utc_sources(folder):
         print("  ❌ userassists.json empty: the test profile holds UserAssist entries")
         found += 1
     elif isinstance(pf, list):
-        runs = {}
+        # The Prefetch keeps the last eight runs: a program run more often has
+        # lost the older ones, and a UserAssist date before the oldest kept
+        # run has nothing to be confronted with (any gap to a later run is
+        # chance, and one in eight falls near a multiple of 30 min). Per
+        # Prefetch file: one program can have several (one per path hash).
+        runs, horizon = {}, {}
         for p in pf:
-            for r in p.get("RunsUtc") or []:
-                runs.setdefault((p.get("Filename") or "").upper(), []).append(instant(r))
+            name = (p.get("Filename") or "").upper()
+            kept = [instant(r) for r in p.get("RunsUtc") or []]
+            runs.setdefault(name, []).extend(kept)
+            if kept and (p.get("RunCount") or 0) > len(kept):
+                horizon[name] = max(horizon.get(name, min(kept)), min(kept))
         agree, shifted = 0, []
         for u in ua:
             name = ntpath.basename(u.get("Name") or "").upper()
@@ -5022,6 +5030,8 @@ def check_utc_sources(folder):
             if not name.endswith(".EXE") or name not in runs or not last:
                 continue
             t = instant(last)
+            if name in horizon and (horizon[name] - t).total_seconds() > 120:
+                continue
             gap = min((abs((t - r).total_seconds()) for r in runs[name]))
             if gap <= 120:
                 agree += 1
