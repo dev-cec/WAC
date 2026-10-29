@@ -106,6 +106,15 @@ std::wstring workingFolder();
 */
 HRESULT ExhibitStoreCheckLocation(unsigned long long estimatedNeed);
 
+/*! Checks, before a conversion rebuilds the working copy, that the medium
+*  holds it: as many bytes as the exhibit store's contents.
+*  WHY. A copy short of space fails file after file, and was reported as a
+*  working copy "not matching" its store — invalid data —, the store being
+*  sound (measured: a 7 GiB collection converted on a full disk).
+*  @param freeBytes free bytes on the medium (ExhibitStoreFreeSpace); 0, unknown: not checked
+*  @return ERROR_SUCCESS, or ERROR_DISK_FULL with the figures logged */
+HRESULT ExhibitStoreCheckWorkingSpace(unsigned long long freeBytes);
+
 /*! Free bytes on the volume holding the output folder.
 *  @return 0 if the information could not be obtained */
 unsigned long long ExhibitStoreFreeSpace();

@@ -127,6 +127,16 @@ HRESULT ExhibitStoreCheckLocation(unsigned long long estimatedNeed) {
 	return ERROR_SUCCESS;
 }
 
+HRESULT ExhibitStoreCheckWorkingSpace(unsigned long long freeBytes) {
+	if (freeBytes == 0) return ERROR_SUCCESS;   // measurement failed: do not block on it
+	unsigned long long need = 0;
+	ExhibitStoreSummary(nullptr, nullptr, &need);
+	if (freeBytes >= need) return ERROR_SUCCESS;
+	log(2, L"🔥Not enough space for the working copy: " + std::to_wstring(freeBytes / 1024 / 1024)
+	       + L" MiB free for " + std::to_wstring(need / 1024 / 1024) + L" MiB of exhibits", ERROR_DISK_FULL);
+	return HRESULT_FROM_WIN32(ERROR_DISK_FULL);
+}
+
 void ExhibitStoreAdd(const std::vector<RawHiveExtraction>& reading,
                      const std::wstring& method, const SignatureVerdict& verdict) {
 	for (const RawHiveExtraction& e : reading) {
@@ -636,11 +646,16 @@ HRESULT ExhibitStoreLoad(ExhibitStoreCheck& check) {
 			date(L"SourceModifiedUtc", p.extracted.fingerprints.modifiedUtc);
 			date(L"SourceMftModifiedUtc", p.extracted.fingerprints.mftModifiedUtc);
 			date(L"SourceAccessedUtc", p.extracted.fingerprints.accedeUtc);
+			auto count = [&](const wchar_t* key, uint64_t& out) {
+				const std::wstring digits = text(key);
+				wchar_t* end = nullptr;
+				const unsigned long long value = digits.empty() ? 0 : wcstoull(digits.c_str(), &end, 10);
+				if (end && *end == L'\0') out = value;
+			};
+			// Its size: what its working copy takes (ExhibitStoreCheckWorkingSpace).
+			count(L"Bytes", p.extracted.fingerprints.bytes);
 			// Where the copy of the change journal starts in its stream (see ExtractStreamRaw).
-			const std::wstring leading = text(L"LeadingSparseBytes");
-			wchar_t* end = nullptr;
-			const unsigned long long offset = leading.empty() ? 0 : wcstoull(leading.c_str(), &end, 10);
-			if (end && *end == L'\0') p.extracted.fingerprints.leadingSparseBytes = offset;
+			count(L"LeadingSparseBytes", p.extracted.fingerprints.leadingSparseBytes);
 		}
 		g_exhibits.push_back(std::move(p));
 	}

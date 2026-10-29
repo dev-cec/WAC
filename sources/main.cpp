@@ -132,6 +132,8 @@ HRESULT checkCollectionLocation() {
 	if (conf.binary)     need += 1024ULL * 1024 * 1024;          // cited binaries
 	// Shadow copies: only what differs from the newer version is stored — a few changed hives and logs per copy.
 	if (conf.artefacts.shadowCopies) need += 500ULL * 1024 * 1024;
+	// Deleted files: their budget, which a used volume fills (4 GiB copied by default, measured on Windows 11).
+	if (conf.artefacts.deletedFiles) need += (unsigned long long)conf.deletedFilesSettings.maxTotalMib * 1024 * 1024;
 	const HRESULT hrLieu = ExhibitStoreCheckLocation(need);
 	auditRecord(L"Check of the collection location ("
 	            + std::to_wstring(ExhibitStoreFreeSpace() / 1024 / 1024)
@@ -206,6 +208,12 @@ HRESULT prepareConversion() {
 	if (!removeFolderTree(workingFolder())) {
 		hr = HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
 		auditRecord(L"Deletion of the previous working copy", workingFolder(), hr, Footprint::USB_WRITE);
+		printError(hr);
+		return hr;
+	}
+	hr = ExhibitStoreCheckWorkingSpace(ExhibitStoreFreeSpace());
+	if (FAILED(hr)) {
+		auditRecord(L"Check of the space for the working copy", conf._outputDir, hr, Footprint::USB_WRITE);
 		printError(hr);
 		return hr;
 	}

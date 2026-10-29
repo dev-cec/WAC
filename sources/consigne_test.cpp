@@ -200,6 +200,16 @@ int wmain(int argc, wchar_t** argv){
 	         "the seal carries the manifest's fingerprint");
 	check(!sealShown.empty() && sealShown == expected, "the seal given for the console is the manifest's fingerprint");
 
+	// A conversion reloads the store from its manifest, then checks the medium holds the working copy.
+	ExhibitStoreCheck reloaded;
+	check(ExhibitStoreLoad(reloaded) == ERROR_SUCCESS, "the store reloaded from its manifest, as a conversion does");
+	unsigned long long storeBytes = 0;
+	ExhibitStoreSummary(nullptr, nullptr, &storeBytes);
+	check(storeBytes > 0, "the reloaded manifest gives the exhibits' size (" + std::to_string(storeBytes) + " bytes)");
+	check(ExhibitStoreCheckWorkingSpace(storeBytes - 1) == HRESULT_FROM_WIN32(ERROR_DISK_FULL),
+	      "one byte short of the store's size: the working copy refused as not fitting, not as invalid data");
+	check(ExhibitStoreCheckWorkingSpace(storeBytes) == ERROR_SUCCESS, "the store's size free: the working copy fits");
+
 	// The manifest must NOT have been copied into the working directory.
 	check(!std::filesystem::exists(
 	             std::filesystem::path(workingFolder()) / L"MANIFEST.json", ec),
