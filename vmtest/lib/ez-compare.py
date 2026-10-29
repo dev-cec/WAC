@@ -789,7 +789,7 @@ SRUM_TABLES = {  # SrumECmd's CSV -> SRUM's table
     "EnergyUsage": "{FEE4E14F-02A9-4550-B5CE-5FA2DA202E37}",
     "NetworkConnections": "{DD6636C4-8929-4683-974E-22C046A43763}",
     "NetworkUsages": "{973F5D5C-1D90-4944-BE8E-24B94231A174}",
-    "PushNotifications": "{D10CA2FE-6FCF-4F6D-848E-B2E99266FA89}PN",
+    "PushNotifications": "{D10CA2FE-6FCF-4F6D-848E-B2E99266FA86}",
     "vfuprov": "{7ACBBAA3-D029-4BE4-9A7A-0885927F1D8F}",
 }
 SRUM_COLUMNS = {  # SrumECmd's column -> WAC's key, where the names differ
