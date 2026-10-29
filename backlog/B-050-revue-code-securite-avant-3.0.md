@@ -51,7 +51,7 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
 ## Tâches
 - [x] Découper le dépôt en lots de revue (ci-dessus)
 - [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 à 3 : faits — 1315c4da, 49d34970, dac5efc5 ; lot 4 : fait — 171993b3 ; lot 5 : fait — 6430ba17 ; lot 6 : fait — 45a9a96f ; lot 7 : fait — 2ab95fb9)
-- [ ] `/security-review` sur le code livré ; constats triés et traités
+- [x] `/security-review` sur le code livré ; constats triés et traités (2026-10-29 : un candidat, écarté après filtrage — voir le journal)
 - [x] `/code-review ultra` : écarté par l'utilisateur (2026-10-27) — la revue se fait lot par lot avec `/code-review`
 - [ ] Cycles VM verts après corrections
 - [ ] Mise à jour des documents (validation, innocuité) si une correction change une opération
@@ -151,4 +151,6 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
   - Tests : verify_exhibits_test.sh 33 (manifeste sans liste, `Items` objet, sceau relevé accepté en majuscules et minuscules, manifeste réécrit et rescellé refusé) — 9 échecs sur les anciens scripts, mutant de la comparaison au sceau relevé pris ; consigne_test (sceau rendu pour la console, mutant pris). Le `.ps1` n'a pas de PowerShell ici : éprouvé par l'étape 7 du cycle VM.
   - Documentation FR/EN (manuel, tests, README) : sceau relevé, `--seal`, `-Output` pour les deux scripts PowerShell ; manuels compilés, 0 débordement. Commit 2ab95fb9.
   - Hors revue : `Doxygen/` a été déplacé dans `build-windows/Doxygen/` le 28/10 à 23 h 17, par aucune commande de la session ; non touché, signalé à l'utilisateur (bump-version.sh y cherche encore Doxygen/Doxyfile).
-- 2026-10-29 : cycle Windows 11 des lots 6 et 7 lancé.
+- 2026-10-29 : cycle Windows 11 des lots 6 et 7 : 547 ✅, 1 ❌ ; étape 7 : `verify-exhibits.ps1` 30 657 pièces conformes, 0 différente (le `.ps1` réécrit éprouvé sous Windows).
+  - Le ❌ (UserAssist « décalé d'un fuseau » contre le Prefetch, CMD.EXE à 59 423 s) est un défaut du harnais : la dernière exécution de UserAssist (05:44) précède les huit que garde le Prefetch (1 567 exécutions, la plus ancienne gardée à 22:14) ; l'écart à une exécution postérieure est un hasard, et un sur huit tombe près d'un multiple de 30 min. Corrigé (harnais) : un programme dont un fichier Prefetch a perdu des exécutions n'est pas confronté avant la plus ancienne gardée par ce fichier ; rejoué sur la collecte, plus de ❌ (aucun programme confrontable sur cette VM, ⏭️) ; cas forgé : décalage d'une heure sur un Prefetch complet pris, exécution à 30 s acceptée. Cycle Windows 11 vert pour les lots 6 et 7 ; reste un cycle 8.1.
+- 2026-10-29 : `/security-review` sur la branche. Un candidat : `verify-exhibits.ps1`, chemin ordinaire sous 260 caractères qui perd points et espaces finaux (une pièce `x.` vérifiée sur `x`). Écarté au filtrage (confiance 2/10) : WAC écrit ses pièces par le même chemin ordinaire, la clé porte donc `x` et le vérificateur lit ce qui a été écrit ; résidu théorique entre 248 et 259 caractères. Aucun constat retenu.
