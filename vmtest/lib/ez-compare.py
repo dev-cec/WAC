@@ -1005,9 +1005,9 @@ def kape_category(path):
     if re.search(r"\.(dll|exe|sys|mui|cpl|ax|ocx|drv|efi|scr|com)$", p):
         return "binaries (event message providers, services, drivers)"
     if re.search(r"\.(js|ps1|psm1|psd1|vbs|vbe|wsf|bat|cmd|hta)$", p):
-        return "scripts (--binary)"
+        return "scripts"
     if re.search(r"\.(cat|p7x)$", p):
-        return "signature catalogs and package signatures (--binary)"
+        return "signature catalogs and package signatures"
     return "other"
 
 
