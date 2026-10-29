@@ -54,7 +54,7 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
 - [x] `/security-review` sur le code livré ; constats triés et traités (2026-10-29 : un candidat, écarté après filtrage — voir le journal)
 - [x] `/code-review ultra` : écarté par l'utilisateur (2026-10-27) — la revue se fait lot par lot avec `/code-review`
 - [ ] Cycles VM verts après corrections
-- [ ] Mise à jour des documents (validation, innocuité) si une correction change une opération
+- [x] Mise à jour des documents (validation, innocuité) si une correction change une opération (754a59a5 : sceau relevé, règle de `--output`, vérificateur PowerShell 4)
 
 ## Journal
 - 2026-10-15 : fiche créée à la demande de l'utilisateur : revue de code de l'ensemble du projet avant de publier la 3.0.0, gros chantier ; idéalement une revue de sécurité avec le greffon adapté (`/security-review`).
@@ -163,3 +163,4 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
   - Expérience (outil jetable `bitmap_probe`, hors dépôt, effacé de la VM) : un fichier de 8 Mio écrit puis supprimé, 40 Mio écrits ensuite, cinq tours ; `$Bitmap` lu brut et `FSCTL_GET_VOLUME_BITMAP` concordent toujours, et NTFS ne redonne pas tout de suite les clusters libérés. L'hypothèse d'un `$Bitmap` brut en retard est écartée ; celle du cache (données jamais écrites) aussi : les témoins sont écrits en `WriteThrough`. Reste la limite documentée (`ClusterClaims`) : un fichier a pris les clusters puis les a rendus, et son enregistrement a été réutilisé depuis — sur C:, où la VM 8.1 posait ses témoins faute de volume de données.
   - La VM `win81-test`, créée avant que `create-vm.sh` ajoute le disque de données, n'en avait pas : disque de 2 Go ajouté comme le fait le script (sdf, `win81-test-data.qcow2`) ; les témoins vont désormais sur WACDATA, comme sous Windows 11. Quatrième cycle 8.1 lancé.
   - Quatrième cycle 8.1 : **462 ✅, 0 ❌** ; `verify-exhibits.ps1` 7 850 pièces conformes ; les 4 témoins supprimés retrouvés sur H: avec leur SHA-256. Cycle Windows 11 relancé pour éprouver le `.ps1` réécrit (CreateFileW, JavaScriptSerializer) sous PowerShell 5.1.
+- 2026-10-29 : cycle Windows 11 (`.ps1` réécrit) : 546 ✅, 1 ❌ ; `verify-exhibits.ps1` 33 994 pièces conformes sous PowerShell 5.1. Le ❌ (« aucune lecture de la consigne enregistrée ») vient du harnais : le retrait de la règle d'audit produit un événement 4907 par pièce (22 174), qui a rempli le journal Security (20 Mo, circulaire) avant le relevé des lectures. Corrigé (d484f039) : lectures relevées avant le retrait. Documents de validation, d'innocuité et manuel mis à jour (754a59a5). Reste : un cycle Windows 11 final, après les cinq cycles Vista de B-057.
