@@ -1002,8 +1002,12 @@ def kape_category(path):
     for needle, name in rules:
         if needle in p:
             return name
-    if re.search(r"\.(dll|exe|sys|mui|cpl|ax|ocx|drv)$", p):
+    if re.search(r"\.(dll|exe|sys|mui|cpl|ax|ocx|drv|efi|scr|com)$", p):
         return "binaries (event message providers, services, drivers)"
+    if re.search(r"\.(js|ps1|psm1|psd1|vbs|vbe|wsf|bat|cmd|hta)$", p):
+        return "scripts (--binary)"
+    if re.search(r"\.(cat|p7x)$", p):
+        return "signature catalogs and package signatures (--binary)"
     return "other"
 
 
@@ -1020,7 +1024,8 @@ def compare_kape(folder):
         # longer exists, or no file: kept by its place in the store, never
         # paired with the live file KAPE copied at the same path. Two of them
         # can share one exhibit (identical content): its source told apart.
-        wac = {(i["ExhibitPath"] + "|" + i["SourcePath"] if i["ExhibitPath"].lower().startswith(("exhibits\\$deletedfiles\\", "exhibits\\$bootrecords\\"))
+        # A binary authenticated without a copy has no exhibit, hence no ExhibitPath.
+        wac = {(i["ExhibitPath"] + "|" + i["SourcePath"] if i.get("ExhibitPath", "").lower().startswith(("exhibits\\$deletedfiles\\", "exhibits\\$bootrecords\\"))
                 else i["SourcePath"]).lower(): i for i in json.load(f)["Items"]}
     common = set(kape) & set(wac)
     differ = sorted(k for k in common if (kape[k].get("SourceFileSha1") or "").upper() != (wac[k].get("SHA1") or "").upper())
