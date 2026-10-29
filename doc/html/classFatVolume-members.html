@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -102,9 +102,13 @@ $(document).ready(function(){initNavTree('classFatVolume.html',''); initResizabl
 
 <p>This is the complete list of members for <a class="el" href="classFatVolume.html">FatVolume</a>, including all inherited members.</p>
 <table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="classFatVolume.html#a7fa6234c0663dbc506091ef62ff45c80">entries</a>()</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"></td></tr>
-  <tr class="odd"><td class="entry"><a class="el" href="classFatVolume.html#afeaf03b3c6eaa72725d9ef5bc1cc6e2f">label</a>() const</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="classFatVolume.html#a17ce8253a4e10be4f64b7a28c3d6acb6">open</a>(VolumeSource &amp;source)</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classFatVolume.html#a07083b668e810440677201cf7100080a">allocation</a>(uint32_t first, uint32_t count, std::vector&lt; bool &gt; &amp;used)</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"></td></tr>
+  <tr class="odd"><td class="entry"><a class="el" href="classFatVolume.html#ae724879a554174e31a737f73da418009">clusterCount</a>() const</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classFatVolume.html#af38ec9d73998bc88f300e6ad5459b610">clusterSize</a>() const</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr class="odd"><td class="entry"><a class="el" href="classFatVolume.html#a7fa6234c0663dbc506091ef62ff45c80">entries</a>()</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classFatVolume.html#afeaf03b3c6eaa72725d9ef5bc1cc6e2f">label</a>() const</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr class="odd"><td class="entry"><a class="el" href="classFatVolume.html#a17ce8253a4e10be4f64b7a28c3d6acb6">open</a>(VolumeSource &amp;source)</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classFatVolume.html#a2ea84827e0d0a964473ff0d8a51fb310">readClusters</a>(uint32_t first, uint32_t count, uint8_t *out)</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"></td></tr>
   <tr class="odd"><td class="entry"><a class="el" href="classFatVolume.html#a87fa68b78a3e8a2f7bbfc35a3421f80d">readContent</a>(const FatEntry &amp;e, const std::function&lt; bool(const uint8_t *, size_t)&gt; &amp;sink)</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classFatVolume.html#a4cc9ede2fdaf33e31bedf16f38bae810">type</a>() const</td><td class="entry"><a class="el" href="classFatVolume.html">FatVolume</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
 </table></div><!-- contents -->

@@ -9,7 +9,7 @@ var searchData=
   ['version_6',['version',['../classPstFile.html#a5b083072e1904d71b381f19384f4ae51',1,'PstFile']]],
   ['volume_7',['volume',['../structMft.html#ae216c0b46af9e2ad4544e5495968db5f',1,'Mft']]],
   ['volumecopybytes_8',['volumecopybytes',['../fat__volume_8h.html#a42a98b04d878ade0e1b123e5e5c5e97f',1,'volumeCopyBytes(const FileVolumeSource &amp;source):&#160;fat_volume.cpp'],['../fat__volume_8cpp.html#a42a98b04d878ade0e1b123e5e5c5e97f',1,'volumeCopyBytes(const FileVolumeSource &amp;source):&#160;fat_volume.cpp']]],
-  ['volumeinfo_9',['volumeinfo',['../structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c',1,'VolumeInfo::VolumeInfo()'],['../structVolumeInfo.html#abacd86de131829b57825cddc90602c37',1,'VolumeInfo::VolumeInfo(LPBYTE data, int index, size_t limit)']]],
+  ['volumeinfo_9',['volumeinfo',['../structVolumeInfo.html#a99d7451b1e666040acd79d87d173d20c',1,'VolumeInfo::VolumeInfo()'],['../structVolumeInfo.html#ad7f4f7a7d6116fe92e0a90cb56ddf6d7',1,'VolumeInfo::VolumeInfo(LPBYTE data, int index, size_t entrySize, size_t limit)']]],
   ['volumeofpath_10',['volumeofpath',['../tools_8cpp.html#a7bc73c77c8a53c18c6a5457fbb42c13e',1,'volumeOfPath(const std::wstring &amp;absolute):&#160;tools.cpp'],['../tools_8h.html#a7bc73c77c8a53c18c6a5457fbb42c13e',1,'volumeOfPath(const std::wstring &amp;absolute):&#160;tools.cpp']]],
   ['volumeshellitem_11',['VolumeShellItem',['../structVolumeShellItem.html#a185182beca6702eabfa8f4d737510481',1,'VolumeShellItem']]],
   ['vulnerabledrivers_12',['VulnerableDrivers',['../classVulnerableDrivers.html#a26039157609112b7266a5e74c9b86edf',1,'VulnerableDrivers']]],

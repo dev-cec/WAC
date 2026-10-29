@@ -6,5 +6,6 @@ var structDestFileDirectory =
     [ "destfiles", "structDestFileDirectory.html#afd18c616f5ba9ac128cb93eee92ff323", null ],
     [ "formatVersion", "structDestFileDirectory.html#a6d2b275608f9462291612eb034521027", null ],
     [ "numberOfEntries", "structDestFileDirectory.html#a269efd98d7c418d2fdede6af62c5a422", null ],
-    [ "numberPinnedEntries", "structDestFileDirectory.html#a23fef3f089255d2f37d3ee8ee70e3761", null ]
+    [ "numberPinnedEntries", "structDestFileDirectory.html#a23fef3f089255d2f37d3ee8ee70e3761", null ],
+    [ "unsupportedFormat", "structDestFileDirectory.html#a398b3c5311744d060e93e9bcf990d5d3", null ]
 ];

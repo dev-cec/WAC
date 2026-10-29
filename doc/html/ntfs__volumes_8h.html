@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -111,13 +111,12 @@ $(document).ready(function(){initNavTree('ntfs__volumes_8h.html',''); initResiza
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;windows.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="ntfs__boot__sector_8h_source.html">ntfs_boot_sector.h</a>&quot;</code><br />
 </div>
 <p><a href="ntfs__volumes_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNtfsBootSector.html">NtfsBootSector</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUsnJournalHeader.html">UsnJournalHeader</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNtfsVolumeInfo.html">NtfsVolumeInfo</a></td></tr>
@@ -127,8 +126,6 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a25562909577420f6546930efb9c20426" id="r_a25562909577420f6546930efb9c20426"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ntfs__volumes_8h.html#a25562909577420f6546930efb9c20426">parseNtfsBootSector</a> (const uint8_t *data, size_t size, <a class="el" href="structNtfsBootSector.html">NtfsBootSector</a> &amp;boot)</td></tr>
-<tr class="separator:a25562909577420f6546930efb9c20426"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32eca02f27284cd2dd479a52cb9bab4f" id="r_a32eca02f27284cd2dd479a52cb9bab4f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ntfs__volumes_8h.html#a32eca02f27284cd2dd479a52cb9bab4f">parseUsnJournalHeader</a> (const uint8_t *data, size_t size, <a class="el" href="structUsnJournalHeader.html">UsnJournalHeader</a> &amp;header)</td></tr>
 <tr class="separator:a32eca02f27284cd2dd479a52cb9bab4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -140,49 +137,6 @@ Functions</h2></td></tr>
 </ul>
 <p>Both are read raw, from the copies in the exhibit store; $Boot's first sector is checked by its own signatures ("NTFS    ", 0x55AA) before any field is trusted. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a25562909577420f6546930efb9c20426" name="a25562909577420f6546930efb9c20426"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a25562909577420f6546930efb9c20426">&#9670;&#160;</a></span>parseNtfsBootSector()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool parseNtfsBootSector </td>
-          <td>(</td>
-          <td class="paramtype">const uint8_t *&#160;</td>
-          <td class="paramname"><em>data</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>size</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structNtfsBootSector.html">NtfsBootSector</a> &amp;&#160;</td>
-          <td class="paramname"><em>boot</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Decodes an NTFS boot sector. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">data</td><td>the first bytes of $Boot </td></tr>
-    <tr><td class="paramname">size</td><td>their number </td></tr>
-    <tr><td class="paramname">boot</td><td>receives the fields </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>false if the sector is shorter than 512 bytes, lacks its signatures or declares an impossible geometry: nothing is then trusted </dd></dl>
-
-</div>
-</div>
 <a id="a32eca02f27284cd2dd479a52cb9bab4f" name="a32eca02f27284cd2dd479a52cb9bab4f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a32eca02f27284cd2dd479a52cb9bab4f">&#9670;&#160;</a></span>parseUsnJournalHeader()</h2>
 

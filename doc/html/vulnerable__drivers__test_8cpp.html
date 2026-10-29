@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -120,7 +120,7 @@ Functions</h2></td></tr>
 <li>narrowed by the signer's certificate name, by the WHQL manufacturer;</li>
 <li>narrowed by files: original name (not the name on disk), product, version bounds; a binary whose version resource is absent does not match a file rule, one not read for it does.</li>
 </ul>
-<p>Usage: vulnerable_drivers_test Native build (Linux): g++ -std=c++17 -g -fsanitize=address,undefined -I. <a class="el" href="authenticode_8cpp.html" title="Authenticode digests, PKCS#7 verification and catalog index.">authenticode.cpp</a> <a class="el" href="rsa_8cpp.html" title="RSA PKCS#1 v1.5 signature verification, in memory.">rsa.cpp</a> <a class="el" href="sha_8cpp.html" title="SHA-1, SHA-256, SHA-384 and SHA-512, computed incrementally.">sha.cpp</a> <a class="el" href="quickdigest5_8cpp.html" title="Implementation of QuickDigest5 (third-party, GPL-3.0) and of WAC&#39;s Md5Stream.">quickdigest5.cpp</a> <a class="el" href="version__info_8cpp.html" title="The version resource of a PE (see version_info.h).">version_info.cpp</a> <a class="el" href="vulnerable__drivers__test_8cpp.html" title="Checks each rule of VulnerableDrivers, one at a time.">vulnerable_drivers_test.cpp</a> -o vulnerable_drivers_test </p>
+<p>Usage: vulnerable_drivers_test Build (MinGW, run under Wine; <a class="el" href="long__path_8h.html" title="Paths longer than MAX_PATH: the extended form, and the operations on folders and files that hold with...">long_path.h</a> needs windows.h, the native build no longer compiles): x86_64-w64-mingw32-g++ -std=c++17 -DUNICODE -D_UNICODE -include ../third_party/compat-include/wac_mingw_compat.h -I../third_party/compat-include -I. <a class="el" href="authenticode_8cpp.html" title="Authenticode digests, PKCS#7 verification and catalog index.">authenticode.cpp</a> <a class="el" href="rsa_8cpp.html" title="RSA PKCS#1 v1.5 signature verification, in memory.">rsa.cpp</a> <a class="el" href="sha_8cpp.html" title="SHA-1, SHA-256, SHA-384 and SHA-512, computed incrementally.">sha.cpp</a> <a class="el" href="quickdigest5_8cpp.html" title="Implementation of QuickDigest5 (third-party, GPL-3.0) and of WAC&#39;s Md5Stream.">quickdigest5.cpp</a> <a class="el" href="version__info_8cpp.html" title="The version resource of a PE (see version_info.h).">version_info.cpp</a> <a class="el" href="vulnerable__drivers__test_8cpp.html" title="Checks each rule of VulnerableDrivers, one at a time.">vulnerable_drivers_test.cpp</a> -static -o vulnerable_drivers_test.exe </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="ae66f6b31b5ad750f1fe042a706a4e3d4" name="ae66f6b31b5ad750f1fe042a706a4e3d4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae66f6b31b5ad750f1fe042a706a4e3d4">&#9670;&#160;</a></span>main()</h2>

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -110,14 +110,20 @@ $(document).ready(function(){initNavTree('structMft.html',''); initResizable(); 
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ab3d0b15bb632a628d5c61aa7d8ddd0e5" id="r_ab3d0b15bb632a628d5c61aa7d8ddd0e5"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#ab3d0b15bb632a628d5c61aa7d8ddd0e5">getData</a> (const std::wstring &amp;<a class="el" href="structMft.html#ae216c0b46af9e2ad4544e5495968db5f">volume</a>)</td></tr>
 <tr class="separator:ab3d0b15bb632a628d5c61aa7d8ddd0e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d8f2dfde5fd9aebb473d47cd1334a29" id="r_a7d8f2dfde5fd9aebb473d47cd1334a29"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#a7d8f2dfde5fd9aebb473d47cd1334a29">load</a> (const std::wstring &amp;<a class="el" href="structMft.html#ae216c0b46af9e2ad4544e5495968db5f">volume</a>, const std::wstring &amp;file)</td></tr>
+<tr class="separator:a7d8f2dfde5fd9aebb473d47cd1334a29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae216c0b46af9e2ad4544e5495968db5f" id="r_ae216c0b46af9e2ad4544e5495968db5f"><td class="memItemLeft" align="right" valign="top">const std::wstring &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#ae216c0b46af9e2ad4544e5495968db5f">volume</a> () const</td></tr>
 <tr class="separator:ae216c0b46af9e2ad4544e5495968db5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89cec7e2d422d26f8cee8fbde1fed430" id="r_a89cec7e2d422d26f8cee8fbde1fed430"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#a89cec7e2d422d26f8cee8fbde1fed430">toJson</a> (<a class="el" href="classJsonArrayWriter.html">JsonArrayWriter</a> &amp;out) const</td></tr>
 <tr class="separator:a89cec7e2d422d26f8cee8fbde1fed430"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36655d090014146eac295d2d852eb410" id="r_a36655d090014146eac295d2d852eb410"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#a36655d090014146eac295d2d852eb410">pathOf</a> (uint64_t entry, uint16_t sequence, bool &amp;complete) const</td></tr>
 <tr class="separator:a36655d090014146eac295d2d852eb410"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a152ae0a93396be9b083fca713b78650e" id="r_a152ae0a93396be9b083fca713b78650e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#a152ae0a93396be9b083fca713b78650e">livePathOf</a> (uint64_t entry, uint16_t sequence, bool &amp;complete) const</td></tr>
+<tr class="separator:a152ae0a93396be9b083fca713b78650e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a553a7e68ee4115c11bdc4886c7397a2c" id="r_a553a7e68ee4115c11bdc4886c7397a2c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#a553a7e68ee4115c11bdc4886c7397a2c">forEachFile</a> (const std::function&lt; void(const <a class="el" href="structMftEntry.html">MftEntry</a> &amp;, const std::wstring &amp;, bool)&gt; &amp;visit) const</td></tr>
 <tr class="separator:a553a7e68ee4115c11bdc4886c7397a2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e267da03beba5c7af642c3831d03805" id="r_a2e267da03beba5c7af642c3831d03805"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#a2e267da03beba5c7af642c3831d03805">forEachRawRecord</a> (const std::function&lt; void(const uint8_t *, size_t, uint64_t)&gt; &amp;visit) const</td></tr>
+<tr class="separator:a2e267da03beba5c7af642c3831d03805"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea06d7530832453217b838d41444f614" id="r_aea06d7530832453217b838d41444f614"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html#aea06d7530832453217b838d41444f614">clear</a> ()</td></tr>
 <tr class="memdesc:aea06d7530832453217b838d41444f614"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases the memory held by the index.  <br /></td></tr>
 <tr class="separator:aea06d7530832453217b838d41444f614"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -169,6 +175,31 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a2e267da03beba5c7af642c3831d03805" name="a2e267da03beba5c7af642c3831d03805"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e267da03beba5c7af642c3831d03805">&#9670;&#160;</a></span>forEachRawRecord()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT Mft::forEachRawRecord </td>
+          <td>(</td>
+          <td class="paramtype">const std::function&lt; void(const uint8_t *, size_t, uint64_t)&gt; &amp;&#160;</td>
+          <td class="paramname"><em>visit</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Walks every record of the $MFT copy as its bytes, fixups applied — what a reader of attributes <a class="el" href="structMftEntry.html">MftEntry</a> does not keep needs (the data runs of the deleted records). A torn record is left out. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">visit</td><td>called with each record, its size and its number </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why the copy could not be read </dd></dl>
+
+</div>
+</div>
 <a id="ab3d0b15bb632a628d5c61aa7d8ddd0e5" name="ab3d0b15bb632a628d5c61aa7d8ddd0e5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab3d0b15bb632a628d5c61aa7d8ddd0e5">&#9670;&#160;</a></span>getData()</h2>
 
@@ -191,6 +222,85 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, ERROR_FILE_NOT_FOUND if the collection holds no $MFT of that volume, or ERROR_INVALID_DATA if it is not one </dd></dl>
+
+</div>
+</div>
+<a id="a152ae0a93396be9b083fca713b78650e" name="a152ae0a93396be9b083fca713b78650e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a152ae0a93396be9b083fca713b78650e">&#9670;&#160;</a></span>livePathOf()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Mft::livePathOf </td>
+          <td>(</td>
+          <td class="paramtype">uint64_t&#160;</td>
+          <td class="paramname"><em>entry</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>sequence</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &amp;&#160;</td>
+          <td class="paramname"><em>complete</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The path a file has NOW: as pathOf, for a record in use only. pathOf names a deleted record too, by its last name — a name another file may hold since (Firefox replaces its files by renaming a new one over them). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">entry</td><td>record number of the file </td></tr>
+    <tr><td class="paramname">sequence</td><td>its sequence number in the reference; 0 to accept any </td></tr>
+    <tr><td class="paramname">complete</td><td>receives false if the path is not whole </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>"C:\…", or empty if the record is free, reused or cannot be named </dd></dl>
+
+</div>
+</div>
+<a id="a7d8f2dfde5fd9aebb473d47cd1334a29" name="a7d8f2dfde5fd9aebb473d47cd1334a29"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d8f2dfde5fd9aebb473d47cd1334a29">&#9670;&#160;</a></span>load()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT Mft::load </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volume</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>file</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Loads a $MFT copy given by its file: at collection, the working copy of the collection's own, before any manifest is loaded (the deleted files' recovery). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volume</td><td>the volume it belongs to, "C:"… </td></tr>
+    <tr><td class="paramname">file</td><td>the copy </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_INVALID_DATA if it is absent or not a $MFT </dd></dl>
 
 </div>
 </div>

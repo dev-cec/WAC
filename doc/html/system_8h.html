@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -124,6 +124,8 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:af57edfcfb2674e79de21bd33c8805a42" id="r_af57edfcfb2674e79de21bd33c8805a42"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="system_8h.html#af57edfcfb2674e79de21bd33c8805a42">snapshotSystemClock</a> ()</td></tr>
 <tr class="separator:af57edfcfb2674e79de21bd33c8805a42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c363f8317721b3ec5163806fe3034fb" id="r_a8c363f8317721b3ec5163806fe3034fb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structWindowsVersion.html">WindowsVersion</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="system_8h.html#a8c363f8317721b3ec5163806fe3034fb">readExaminedVersion</a> ()</td></tr>
+<tr class="separator:a8c363f8317721b3ec5163806fe3034fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>System information of the examined machine. </p>
@@ -138,6 +140,24 @@ Functions</h2></td></tr>
 <p>WHAT IS STILL MEASURED LIVE, AND WHY THAT IS LEGITIMATE <code>LocalDateTime</code> and <code>LastBootUpTime</code> do not describe the installation but the INSTANT of the collection: no hive can provide them, and reading them leaves no trace (<code>GetSystemTime</code>, <code>GetTickCount64</code>).</p>
 <p>THE <code>ProductName</code> TRAP (fixed here). Under Windows 11, <code>ProductName</code> still holds "Windows 10 …": Microsoft never updated it. The only reliable discriminant is <code>CurrentBuild</code> &gt;= 22000. Without that correction, the report would name the wrong OS — that is, an error of fact in a piece of evidence. <code>ProductNameRaw</code> keeps the hive's raw value so that the correction stays verifiable. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a8c363f8317721b3ec5163806fe3034fb" name="a8c363f8317721b3ec5163806fe3034fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c363f8317721b3ec5163806fe3034fb">&#9670;&#160;</a></span>readExaminedVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structWindowsVersion.html">WindowsVersion</a> readExaminedVersion </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The version of the examined Windows, read in its SOFTWARE hive (<code>conf.Software</code>, the copied hive: never the collecting machine's own): <code>CurrentBuildNumber</code>, and <code>InstallationType</code> — "Server", "Server Core" —, which Vista introduced; before it, a server says so in its <code>ProductName</code>. </p><dl class="section return"><dt>Returns</dt><dd>the version; build 0 if the hive is not open or does not say </dd></dl>
+
+</div>
+</div>
 <a id="af57edfcfb2674e79de21bd33c8805a42" name="af57edfcfb2674e79de21bd33c8805a42"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af57edfcfb2674e79de21bd33c8805a42">&#9670;&#160;</a></span>snapshotSystemClock()</h2>
 

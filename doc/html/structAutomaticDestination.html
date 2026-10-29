@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -138,6 +138,12 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ab9f64a818e4bfb12581b2408cf913d23" id="r_ab9f64a818e4bfb12581b2408cf913d23"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#ab9f64a818e4bfb12581b2408cf913d23">application</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:ab9f64a818e4bfb12581b2408cf913d23"><td class="mdescLeft">&#160;</td><td class="mdescRight">the application, resolved from the AppID when known  <br /></td></tr>
 <tr class="separator:ab9f64a818e4bfb12581b2408cf913d23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1aa0de0fa0b13a95a43dec463d3a6d7c" id="r_a1aa0de0fa0b13a95a43dec463d3a6d7c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#a1aa0de0fa0b13a95a43dec463d3a6d7c">destListVersion</a> = 0</td></tr>
+<tr class="memdesc:a1aa0de0fa0b13a95a43dec463d3a6d7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">version of the DestList, as its header states it; 0 if there is none  <br /></td></tr>
+<tr class="separator:a1aa0de0fa0b13a95a43dec463d3a6d7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af426a16f67242abeb764a265b1d4c051" id="r_af426a16f67242abeb764a265b1d4c051"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#af426a16f67242abeb764a265b1d4c051">destListUnsupported</a> = false</td></tr>
+<tr class="memdesc:af426a16f67242abeb764a265b1d4c051"><td class="mdescLeft">&#160;</td><td class="mdescRight">that version has no decoder (pieceFormat): the shortcuts are read, without their DestList entry  <br /></td></tr>
+<tr class="separator:af426a16f67242abeb764a265b1d4c051"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf146dff12607de34518ef2d43227c1d" id="r_adf146dff12607de34518ef2d43227c1d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structoleParser.html">oleParser</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination.html#adf146dff12607de34518ef2d43227c1d">ole</a></td></tr>
 <tr class="memdesc:adf146dff12607de34518ef2d43227c1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">reader of the OLE compound document the file is  <br /></td></tr>
 <tr class="separator:adf146dff12607de34518ef2d43227c1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -311,6 +317,38 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>creation of the jump list FILE, UTC (the local time is derived at output) </p>
+
+</div>
+</div>
+<a id="af426a16f67242abeb764a265b1d4c051" name="af426a16f67242abeb764a265b1d4c051"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af426a16f67242abeb764a265b1d4c051">&#9670;&#160;</a></span>destListUnsupported</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AutomaticDestination::destListUnsupported = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>that version has no decoder (pieceFormat): the shortcuts are read, without their DestList entry </p>
+
+</div>
+</div>
+<a id="a1aa0de0fa0b13a95a43dec463d3a6d7c" name="a1aa0de0fa0b13a95a43dec463d3a6d7c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1aa0de0fa0b13a95a43dec463d3a6d7c">&#9670;&#160;</a></span>destListVersion</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int AutomaticDestination::destListVersion = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>version of the DestList, as its header states it; 0 if there is none </p>
 
 </div>
 </div>

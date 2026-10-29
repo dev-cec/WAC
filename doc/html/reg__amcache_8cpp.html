@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -96,6 +96,8 @@ $(document).ready(function(){initNavTree('reg__amcache_8cpp.html',''); initResiz
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">reg_amcache.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -103,9 +105,53 @@ $(document).ready(function(){initNavTree('reg__amcache_8cpp.html',''); initResiz
 <p>Reading of every <a class="el" href="structAmcache.html">Amcache</a> table (see <a class="el" href="reg__amcache_8h.html" title="Amcache: the inventory Windows keeps of the applications, binaries, drivers, devices and shortcuts th...">reg_amcache.h</a>).  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="reg__amcache_8h_source.html">reg_amcache.h</a>&quot;</code><br />
-</div><a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<code>#include &quot;<a class="el" href="registry__common_8h_source.html">registry_common.h</a>&quot;</code><br />
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ac7e8272ea4cdce2f970eff660f7bf36d" id="r_ac7e8272ea4cdce2f970eff660f7bf36d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="reg__amcache_8cpp.html#ac7e8272ea4cdce2f970eff660f7bf36d">decodeRecentFileCache</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, std::vector&lt; std::wstring &gt; &amp;paths)</td></tr>
+<tr class="separator:ac7e8272ea4cdce2f970eff660f7bf36d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Reading of every <a class="el" href="structAmcache.html">Amcache</a> table (see <a class="el" href="reg__amcache_8h.html" title="Amcache: the inventory Windows keeps of the applications, binaries, drivers, devices and shortcuts th...">reg_amcache.h</a>). </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="ac7e8272ea4cdce2f970eff660f7bf36d" name="ac7e8272ea4cdce2f970eff660f7bf36d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7e8272ea4cdce2f970eff660f7bf36d">&#9670;&#160;</a></span>decodeRecentFileCache()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool decodeRecentFileCache </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>paths</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decodes RecentFileCache.bcf (see the file's header). Every count is bounded by the file's size: a cut or forged entry ends the reading, the paths before it kept. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>the file </td></tr>
+    <tr><td class="paramname">paths</td><td>receives the paths, in the file's order </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the signature is not there </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

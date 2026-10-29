@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -119,15 +119,15 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a279b72d04f530520e4986b24b7bbfe11" id="r_a279b72d04f530520e4986b24b7bbfe11"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxSummary.html#a279b72d04f530520e4986b24b7bbfe11">unreadable</a> = 0</td></tr>
 <tr class="memdesc:a279b72d04f530520e4986b24b7bbfe11"><td class="mdescLeft">&#160;</td><td class="mdescRight">discarded records  <br /></td></tr>
 <tr class="separator:a279b72d04f530520e4986b24b7bbfe11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31b6a625228249108e4f7f7d9b3d4d72" id="r_a31b6a625228249108e4f7f7d9b3d4d72"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxSummary.html#a31b6a625228249108e4f7f7d9b3d4d72">chunksIgnores</a> = 0</td></tr>
-<tr class="memdesc:a31b6a625228249108e4f7f7d9b3d4d72"><td class="mdescLeft">&#160;</td><td class="mdescRight">damaged chunks skipped (no signature)  <br /></td></tr>
-<tr class="separator:a31b6a625228249108e4f7f7d9b3d4d72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64807eb96b4413f33b0bdaf581142cf7" id="r_a64807eb96b4413f33b0bdaf581142cf7"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxSummary.html#a64807eb96b4413f33b0bdaf581142cf7">chunksSkipped</a> = 0</td></tr>
+<tr class="memdesc:a64807eb96b4413f33b0bdaf581142cf7"><td class="mdescLeft">&#160;</td><td class="mdescRight">damaged chunks skipped (no signature)  <br /></td></tr>
+<tr class="separator:a64807eb96b4413f33b0bdaf581142cf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb2f72fe736c44b5af6571b4c0da0044" id="r_afb2f72fe736c44b5af6571b4c0da0044"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxSummary.html#afb2f72fe736c44b5af6571b4c0da0044">headerValid</a> = false</td></tr>
 <tr class="memdesc:afb2f72fe736c44b5af6571b4c0da0044"><td class="mdescLeft">&#160;</td><td class="mdescRight">"ElfFile\0" signature found  <br /></td></tr>
 <tr class="separator:afb2f72fe736c44b5af6571b4c0da0044"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a336852d4ffe2080749e739e091caae60" id="r_a336852d4ffe2080749e739e091caae60"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxSummary.html#a336852d4ffe2080749e739e091caae60">sale</a> = false</td></tr>
-<tr class="memdesc:a336852d4ffe2080749e739e091caae60"><td class="mdescLeft">&#160;</td><td class="mdescRight">log marked "dirty"  <br /></td></tr>
-<tr class="separator:a336852d4ffe2080749e739e091caae60"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4901023942f24af9d1cc39085869453" id="r_ac4901023942f24af9d1cc39085869453"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxSummary.html#ac4901023942f24af9d1cc39085869453">dirty</a> = false</td></tr>
+<tr class="memdesc:ac4901023942f24af9d1cc39085869453"><td class="mdescLeft">&#160;</td><td class="mdescRight">log marked "dirty"  <br /></td></tr>
+<tr class="separator:ac4901023942f24af9d1cc39085869453"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40ce38e07788b6236d64cdeac87ff231" id="r_a40ce38e07788b6236d64cdeac87ff231"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxSummary.html#a40ce38e07788b6236d64cdeac87ff231">diagnostic</a></td></tr>
 <tr class="memdesc:a40ce38e07788b6236d64cdeac87ff231"><td class="mdescLeft">&#160;</td><td class="mdescRight">sentence for the audit log  <br /></td></tr>
 <tr class="separator:a40ce38e07788b6236d64cdeac87ff231"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -151,14 +151,14 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a31b6a625228249108e4f7f7d9b3d4d72" name="a31b6a625228249108e4f7f7d9b3d4d72"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a31b6a625228249108e4f7f7d9b3d4d72">&#9670;&#160;</a></span>chunksIgnores</h2>
+<a id="a64807eb96b4413f33b0bdaf581142cf7" name="a64807eb96b4413f33b0bdaf581142cf7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64807eb96b4413f33b0bdaf581142cf7">&#9670;&#160;</a></span>chunksSkipped</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">unsigned long long EvtxSummary::chunksIgnores = 0</td>
+          <td class="memname">unsigned long long EvtxSummary::chunksSkipped = 0</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -180,6 +180,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>sentence for the audit log </p>
+
+</div>
+</div>
+<a id="ac4901023942f24af9d1cc39085869453" name="ac4901023942f24af9d1cc39085869453"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac4901023942f24af9d1cc39085869453">&#9670;&#160;</a></span>dirty</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool EvtxSummary::dirty = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>log marked "dirty" </p>
 
 </div>
 </div>
@@ -228,22 +244,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>of which read past the live area (see <a class="el" href="structEvtxRecord.html#af7175d834f1246f129f2fc0f909e82bc">EvtxRecord::recovered</a>) </p>
-
-</div>
-</div>
-<a id="a336852d4ffe2080749e739e091caae60" name="a336852d4ffe2080749e739e091caae60"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a336852d4ffe2080749e739e091caae60">&#9670;&#160;</a></span>sale</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool EvtxSummary::sale = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>log marked "dirty" </p>
 
 </div>
 </div>

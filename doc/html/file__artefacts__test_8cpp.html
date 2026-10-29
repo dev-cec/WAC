@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,8 +107,12 @@ $(document).ready(function(){initNavTree('file__artefacts__test_8cpp.html',''); 
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="powershell__history_8h_source.html">powershell_history.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="setupapi__log_8h_source.html">setupapi_log.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="firewall__log_8h_source.html">firewall_log.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="boot__records_8h_source.html">boot_records.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="intune__logs_8h_source.html">intune_logs.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="recycle__bin_8h_source.html">recycle_bin.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hosts__file_8h_source.html">hosts_file.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="reg__shimcache_8h_source.html">reg_shimcache.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="error__reports_8h_source.html">error_reports.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="defender__history_8h_source.html">defender_history.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="defender__log_8h_source.html">defender_log.h</a>&quot;</code><br />
@@ -125,9 +129,22 @@ $(document).ready(function(){initNavTree('file__artefacts__test_8cpp.html',''); 
 <code>#include &quot;<a class="el" href="rdp__client_8h_source.html">rdp_client.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rdp__server_8h_source.html">rdp_server.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="thumbcache_8h_source.html">thumbcache.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="reg__amcache_8h_source.html">reg_amcache.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="events_8h_source.html">events.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="evt_8h_source.html">evt.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="evtx_8h_source.html">evtx.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="scheduledTasks_8h_source.html">scheduledTasks.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="reg__userassists_8h_source.html">reg_userassists.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="xml__light_8h_source.html">xml_light.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="oleparser_8h_source.html">oleparser.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="emails_8h_source.html">emails.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="mbox__mail_8h_source.html">mbox_mail.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="wevt_8h_source.html">wevt.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="sessions_8h_source.html">sessions.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="system_8h_source.html">system.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="quickdigest5_8h_source.html">quickdigest5.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="ie__index__dat_8h_source.html">ie_index_dat.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="jumplist__custom_8h_source.html">jumplist_custom.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="prefetchs_8h_source.html">prefetchs.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="registry__common_8h_source.html">registry_common.h</a>&quot;</code><br />
@@ -138,11 +155,62 @@ $(document).ready(function(){initNavTree('file__artefacts__test_8cpp.html',''); 
 <code>#include &quot;<a class="el" href="guard__page_8h_source.html">guard_page.h</a>&quot;</code><br />
 <code>#include &lt;cstdio&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
+<code>#include &lt;cwchar&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:accd1e08d01d2949549aaaca77cec644b" id="r_accd1e08d01d2949549aaaca77cec644b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#accd1e08d01d2949549aaaca77cec644b">wmain</a> ()</td></tr>
-<tr class="separator:accd1e08d01d2949549aaaca77cec644b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a081c87dcf13272be7e3407c8549e1283" id="r_a081c87dcf13272be7e3407c8549e1283"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a081c87dcf13272be7e3407c8549e1283">destListVersion</a> ()</td></tr>
+<tr class="separator:a081c87dcf13272be7e3407c8549e1283"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0801750970b6138fa7c9319329bba5d" id="r_af0801750970b6138fa7c9319329bba5d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; BYTE &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#af0801750970b6138fa7c9319329bba5d">windows7Cache</a> (bool wide, bool lyingOffset)</td></tr>
+<tr class="separator:af0801750970b6138fa7c9319329bba5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa66dfe591c9096af85d7bbbc5cc41187" id="r_aa66dfe591c9096af85d7bbbc5cc41187"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#aa66dfe591c9096af85d7bbbc5cc41187">shimcacheWindows7</a> ()</td></tr>
+<tr class="separator:aa66dfe591c9096af85d7bbbc5cc41187"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6caed6219d1ac9287939d06e6f920202" id="r_a6caed6219d1ac9287939d06e6f920202"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a6caed6219d1ac9287939d06e6f920202">shimcacheVista</a> ()</td></tr>
+<tr class="separator:a6caed6219d1ac9287939d06e6f920202"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1083ae02ce2c5a38e0da612f58bf0402" id="r_a1083ae02ce2c5a38e0da612f58bf0402"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a1083ae02ce2c5a38e0da612f58bf0402">shimcacheWindows8</a> ()</td></tr>
+<tr class="separator:a1083ae02ce2c5a38e0da612f58bf0402"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cdc42fe7105762291c2017758d4b923" id="r_a6cdc42fe7105762291c2017758d4b923"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a6cdc42fe7105762291c2017758d4b923">prefetchVersion17</a> ()</td></tr>
+<tr class="separator:a6cdc42fe7105762291c2017758d4b923"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa01e3db857a9a5d7ad7b5d140f07824e" id="r_aa01e3db857a9a5d7ad7b5d140f07824e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#aa01e3db857a9a5d7ad7b5d140f07824e">md5OfUnreadableFile</a> ()</td></tr>
+<tr class="separator:aa01e3db857a9a5d7ad7b5d140f07824e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee208001e7c35e2e563e64bcc437e178" id="r_aee208001e7c35e2e563e64bcc437e178"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#aee208001e7c35e2e563e64bcc437e178">systemWithoutClock</a> ()</td></tr>
+<tr class="separator:aee208001e7c35e2e563e64bcc437e178"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a385d55aab7f083e8bc1c9c9645ac4dfd" id="r_a385d55aab7f083e8bc1c9c9645ac4dfd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a385d55aab7f083e8bc1c9c9645ac4dfd">lsaStrings</a> ()</td></tr>
+<tr class="separator:a385d55aab7f083e8bc1c9c9645ac4dfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16bdfcbd1b0389617feb2075d7edd597" id="r_a16bdfcbd1b0389617feb2075d7edd597"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a16bdfcbd1b0389617feb2075d7edd597">jsonOnFullMedium</a> ()</td></tr>
+<tr class="separator:a16bdfcbd1b0389617feb2075d7edd597"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5011b05a97343c2885c6e1b3961b7bf8" id="r_a5011b05a97343c2885c6e1b3961b7bf8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a5011b05a97343c2885c6e1b3961b7bf8">xmlCdataAndAstralReference</a> ()</td></tr>
+<tr class="separator:a5011b05a97343c2885c6e1b3961b7bf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ed45d9ad1bbc17912d6b3d021a5c444" id="r_a7ed45d9ad1bbc17912d6b3d021a5c444"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a7ed45d9ad1bbc17912d6b3d021a5c444">ieIndexRecordInsideAnOlder</a> ()</td></tr>
+<tr class="separator:a7ed45d9ad1bbc17912d6b3d021a5c444"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a693428a5e6237e4eb83b0cec2dee4d86" id="r_a693428a5e6237e4eb83b0cec2dee4d86"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a693428a5e6237e4eb83b0cec2dee4d86">wevtOffsetsNear4GiB</a> ()</td></tr>
+<tr class="separator:a693428a5e6237e4eb83b0cec2dee4d86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85ffaa75af2e411fff21de5434b5ee7c" id="r_a85ffaa75af2e411fff21de5434b5ee7c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a85ffaa75af2e411fff21de5434b5ee7c">customDestinationCategoriesRead</a> ()</td></tr>
+<tr class="separator:a85ffaa75af2e411fff21de5434b5ee7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13e78fb321db282bdfdce18a9696370a" id="r_a13e78fb321db282bdfdce18a9696370a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a13e78fb321db282bdfdce18a9696370a">evtxCdata</a> ()</td></tr>
+<tr class="separator:a13e78fb321db282bdfdce18a9696370a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fda42823601b9728dafa30464426e25" id="r_a2fda42823601b9728dafa30464426e25"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a2fda42823601b9728dafa30464426e25">classicEventLog</a> ()</td></tr>
+<tr class="separator:a2fda42823601b9728dafa30464426e25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b76874bebb5585d8758df75c39fc4a1" id="r_a1b76874bebb5585d8758df75c39fc4a1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a1b76874bebb5585d8758df75c39fc4a1">userAssistXp</a> ()</td></tr>
+<tr class="separator:a1b76874bebb5585d8758df75c39fc4a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab761ad1952ef0cff86f3de9936286159" id="r_ab761ad1952ef0cff86f3de9936286159"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#ab761ad1952ef0cff86f3de9936286159">shimcacheWindowsXp</a> ()</td></tr>
+<tr class="separator:ab761ad1952ef0cff86f3de9936286159"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56582f626185325d3f07f4890392edf3" id="r_a56582f626185325d3f07f4890392edf3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a56582f626185325d3f07f4890392edf3">setupApiXp</a> ()</td></tr>
+<tr class="separator:a56582f626185325d3f07f4890392edf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4249df5c51ef8e51103ce7f64f3bf9c1" id="r_a4249df5c51ef8e51103ce7f64f3bf9c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a4249df5c51ef8e51103ce7f64f3bf9c1">recycleBinInfo2</a> ()</td></tr>
+<tr class="separator:a4249df5c51ef8e51103ce7f64f3bf9c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a300afe9b9c0c75a2194a1be7c6a3b519" id="r_a300afe9b9c0c75a2194a1be7c6a3b519"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a300afe9b9c0c75a2194a1be7c6a3b519">jobFile</a> ()</td></tr>
+<tr class="separator:a300afe9b9c0c75a2194a1be7c6a3b519"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a6186c7319aaf1e0fec0e89a2567daf" id="r_a8a6186c7319aaf1e0fec0e89a2567daf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a8a6186c7319aaf1e0fec0e89a2567daf">firewallXp</a> ()</td></tr>
+<tr class="separator:a8a6186c7319aaf1e0fec0e89a2567daf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6df2099a397beee00d0910d85098bc47" id="r_a6df2099a397beee00d0910d85098bc47"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a6df2099a397beee00d0910d85098bc47">thumbsDb</a> ()</td></tr>
+<tr class="separator:a6df2099a397beee00d0910d85098bc47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62d13e769c926ddf9efa56a09b2030ba" id="r_a62d13e769c926ddf9efa56a09b2030ba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a62d13e769c926ddf9efa56a09b2030ba">rdpBmcCache</a> ()</td></tr>
+<tr class="separator:a62d13e769c926ddf9efa56a09b2030ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4aa4f3e58553676b7523e41c629c1b67" id="r_a4aa4f3e58553676b7523e41c629c1b67"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a4aa4f3e58553676b7523e41c629c1b67">dumpBmcCache</a> (const wchar_t *path, const wchar_t *folder)</td></tr>
+<tr class="separator:a4aa4f3e58553676b7523e41c629c1b67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3a67a95d5205c37194aa17a9e4255e3" id="r_aa3a67a95d5205c37194aa17a9e4255e3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#aa3a67a95d5205c37194aa17a9e4255e3">wmain</a> (int argc, wchar_t **argv)</td></tr>
+<tr class="separator:aa3a67a95d5205c37194aa17a9e4255e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -152,11 +220,471 @@ Variables</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Checks the decoders of the small file artefacts on inputs whose result is known: PowerShell history, setupapi.dev.log, recycle bin <code>$I</code>, hosts, Report.wer, Defender's MPLog, DetectionHistory and quarantine, Zone.Identifier, and the registry values of the second lot (TrustRecords, firewall rules, certificate Blob), the NTFS security descriptors of $Secure:$SDS, the NTFS boot sector and change journal header, and the volume serial of a shortcut, the DPAPI master key header and Preferred, the paths of <a class="el" href="structUser.html">User</a> Shell Folders, and the reading of an SQLite database on a private copy, its write-ahead log replayed, a Chromium History and Firefox's places and form history. </p>
+<p>Usage (runs under wine): file_artefacts_test.exe — every check; file_artefacts_test.exe &ndash;bmc &lt;bcache22.bmc&gt; [folder] — the tiles WAC decodes in a bitmap cache of the test VM, for bmc-tools to be confronted with, and written as images in the folder if one is given.</p>
 <p>WHY THIS TEST. These formats are text or a few bytes, and a decoder that misses a case still gives valid JSON: a multi-line command cut in two, a section without its end, a <code>$I</code> path read past the file. Each case is written here from the format's description, with what must come out, and the hostile ones — a <code>$I</code> truncated, a length that lies — must be refused or bounded, never read beyond the bytes given.</p>
 <p>Usage (runs under wine): file_artefacts_test.exe </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="accd1e08d01d2949549aaaca77cec644b" name="accd1e08d01d2949549aaaca77cec644b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#accd1e08d01d2949549aaaca77cec644b">&#9670;&#160;</a></span>wmain()</h2>
+<a id="a2fda42823601b9728dafa30464426e25" name="a2fda42823601b9728dafa30464426e25"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2fda42823601b9728dafa30464426e25">&#9670;&#160;</a></span>classicEventLog()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void classicEventLog </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A classic .evt log built here: a header of 0x30 bytes and a circular area of 0x100, its oldest record at 0xF0 reaching the end and going on after the header, a second record, then the end-of-file record. Both are read, in order, as the XML of a classic source; a forged length ends the walk without a read past the file. </p>
+
+</div>
+</div>
+<a id="a85ffaa75af2e411fff21de5434b5ee7c" name="a85ffaa75af2e411fff21de5434b5ee7c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a85ffaa75af2e411fff21de5434b5ee7c">&#9670;&#160;</a></span>customDestinationCategoriesRead()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void customDestinationCategoriesRead </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A .customDestinations-ms built here: the header (version 2, three categories), then a custom category "Pinned" of one entry, a known one (recent), the tasks; each closed by its footer. The word at 0 is the version: read as a kind, every file was "User tasks". </p>
+
+</div>
+</div>
+<a id="a081c87dcf13272be7e3407c8549e1283" name="a081c87dcf13272be7e3407c8549e1283"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a081c87dcf13272be7e3407c8549e1283">&#9670;&#160;</a></span>destListVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void destListVersion </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A DestList of a version without decoder, presented to the decoder: 5 and 7, which nobody has seen, with one entry announced — declared unsupported, no entry read; 6, the version of Windows 11, is read. </p>
+
+</div>
+</div>
+<a id="a4aa4f3e58553676b7523e41c629c1b67" name="a4aa4f3e58553676b7523e41c629c1b67"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4aa4f3e58553676b7523e41c629c1b67">&#9670;&#160;</a></span>dumpBmcCache()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int dumpBmcCache </td>
+          <td>(</td>
+          <td class="paramtype">const wchar_t *&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const wchar_t *&#160;</td>
+          <td class="paramname"><em>folder</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The tiles of a <code>.bmc</code> bitmap cache as WAC decodes them, one line each — index|width|height|SHA-256 of the BGRA pixels, rows from the top — for a confrontation with bmc-tools on a file of the test VM. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>the cache </td></tr>
+    <tr><td class="paramname">folder</td><td>where to write each tile as tile_&lt;NNNN&gt;.bmp, to look at it; nullptr for none </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 if the file has the layout </dd></dl>
+
+</div>
+</div>
+<a id="a13e78fb321db282bdfdce18a9696370a" name="a13e78fb321db282bdfdce18a9696370a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13e78fb321db282bdfdce18a9696370a">&#9670;&#160;</a></span>evtxCdata()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void evtxCdata </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>An .evtx forged here: one record, an element &lt;E&gt; whose content is a CDATA section "ab". Its token is the type, a length in characters, the UTF-16 text; read with a name's layout (length at 6, text at 8), the text came from the wrong place. </p>
+
+</div>
+</div>
+<a id="a8a6186c7319aaf1e0fec0e89a2567daf" name="a8a6186c7319aaf1e0fec0e89a2567daf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8a6186c7319aaf1e0fec0e89a2567daf">&#9670;&#160;</a></span>firewallXp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void firewallXp </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The firewall exceptions of Windows XP SP3, as the test VM's Standard profile holds them: an application whose path has its own colon, one whose state is written in lower case, a port; and a value of another layout, left out. </p>
+
+</div>
+</div>
+<a id="a7ed45d9ad1bbc17912d6b3d021a5c444" name="a7ed45d9ad1bbc17912d6b3d021a5c444"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ed45d9ad1bbc17912d6b3d021a5c444">&#9670;&#160;</a></span>ieIndexRecordInsideAnOlder()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ieIndexRecordInsideAnOlder </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>An index.dat built here: an old URL record declaring four blocks, a LEAK written inside it, at its second block. The walk of the blocks stepped over the URL's declared size and never saw the LEAK. </p>
+
+</div>
+</div>
+<a id="a300afe9b9c0c75a2194a1be7c6a3b519" name="a300afe9b9c0c75a2194a1be7c6a3b519"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a300afe9b9c0c75a2194a1be7c6a3b519">&#9670;&#160;</a></span>jobFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void jobFile </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A .job of Windows XP: the task the XP VM's schtasks created (notepad.exe, once on 2026-10-16 at 23:59, never run), read as a task; cut short, it is refused. </p>
+
+</div>
+</div>
+<a id="a16bdfcbd1b0389617feb2075d7edd597" name="a16bdfcbd1b0389617feb2075d7edd597"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a16bdfcbd1b0389617feb2075d7edd597">&#9670;&#160;</a></span>jsonOnFullMedium()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void jsonOnFullMedium </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A JSON file written on a full medium: Wine maps Linux's /dev/full to Z:\dev\full, where every write fails for want of room. The file used to be reported written, truncated. <a class="el" href="structRun.html">Run</a> where Z:\dev is Linux's /dev (Wine's root on Z:) — the device itself is no file to Wine's exists(). </p>
+
+</div>
+</div>
+<a id="a385d55aab7f083e8bc1c9c9645ac4dfd" name="a385d55aab7f083e8bc1c9c9645ac4dfd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a385d55aab7f083e8bc1c9c9645ac4dfd">&#9670;&#160;</a></span>lsaStrings()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void lsaStrings </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>LSA's strings: a length and a buffer. Read up to a NUL, a buffer without one went past its Length; a null buffer crashed the collection. </p>
+
+</div>
+</div>
+<a id="aa01e3db857a9a5d7ad7b5d140f07824e" name="aa01e3db857a9a5d7ad7b5d140f07824e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa01e3db857a9a5d7ad7b5d140f07824e">&#9670;&#160;</a></span>md5OfUnreadableFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void md5OfUnreadableFile </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The MD5 of a file that cannot be read: none, where 32 zeros were given — logged as the raw hive's identity before its replay. </p>
+
+</div>
+</div>
+<a id="a6cdc42fe7105762291c2017758d4b923" name="a6cdc42fe7105762291c2017758d4b923"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6cdc42fe7105762291c2017758d4b923">&#9670;&#160;</a></span>prefetchVersion17()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void prefetchVersion17 </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A <a class="el" href="structPrefetch.html">Prefetch</a> of version 17, as Windows XP wrote it on the test VM (SPOOLSV.EXE, 780 bytes): its run count, its last run, its volume and its two files as libscca reads them. </p>
+
+</div>
+</div>
+<a id="a62d13e769c926ddf9efa56a09b2030ba" name="a62d13e769c926ddf9efa56a09b2030ba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a62d13e769c926ddf9efa56a09b2030ba">&#9670;&#160;</a></span>rdpBmcCache()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void rdpBmcCache </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a4249df5c51ef8e51103ce7f64f3bf9c1" name="a4249df5c51ef8e51103ce7f64f3bf9c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4249df5c51ef8e51103ce7f64f3bf9c1">&#9670;&#160;</a></span>recycleBinInfo2()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void recycleBinInfo2 </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>INFO2 of Windows XP: the header and the record of the XP VM's bin (C:\wac-recycle.txt, sent to the bin from Explorer), rebuilt with the values measured; then a record cut short, which is not read. </p>
+
+</div>
+</div>
+<a id="a56582f626185325d3f07f4890392edf3" name="a56582f626185325d3f07f4890392edf3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a56582f626185325d3f07f4890392edf3">&#9670;&#160;</a></span>setupApiXp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void setupApiXp </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Windows XP's setupapi.log: lines of the XP VM's log, a class install and a device install, each its section with its start, its operation, the device's instance and the outcome #I121 states. </p>
+
+</div>
+</div>
+<a id="a6caed6219d1ac9287939d06e6f920202" name="a6caed6219d1ac9287939d06e6f920202"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6caed6219d1ac9287939d06e6f920202">&#9670;&#160;</a></span>shimcacheVista()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void shimcacheVista </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>ShimCache of Vista (0xBADC0FFE): three real entries of the Vista VM's value (SP2 x86), their paths moved next to them — as Windows stores them, the first entry's last. Paths and dates as dissect.target reads them. Server 2003 writes the same magic: its form, not measured, stays undecoded — the examined version tells them apart. </p>
+
+</div>
+</div>
+<a id="aa66dfe591c9096af85d7bbbc5cc41187" name="aa66dfe591c9096af85d7bbbc5cc41187"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa66dfe591c9096af85d7bbbc5cc41187">&#9670;&#160;</a></span>shimcacheWindows7()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void shimcacheWindows7 </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1083ae02ce2c5a38e0da612f58bf0402" name="a1083ae02ce2c5a38e0da612f58bf0402"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1083ae02ce2c5a38e0da612f58bf0402">&#9670;&#160;</a></span>shimcacheWindows8()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void shimcacheWindows8 </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>ShimCache of Windows 8 ("00ts" entries): the header and first entry of the Windows 8 VM's value, as Windows wrote them — the layout of Windows 8.1 under another tag, its package size 0. </p>
+
+</div>
+</div>
+<a id="ab761ad1952ef0cff86f3de9936286159" name="ab761ad1952ef0cff86f3de9936286159"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab761ad1952ef0cff86f3de9936286159">&#9670;&#160;</a></span>shimcacheWindowsXp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void shimcacheWindowsXp </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>ShimCache of Windows XP (0xDEADBEEF): a value built around the first entry of the XP VM's cache (services.exe, as Windows wrote it), stored second, and a made-up entry stored first; the LRU table puts them the other way round, which the cache positions must follow. </p>
+
+</div>
+</div>
+<a id="aee208001e7c35e2e563e64bcc437e178" name="aee208001e7c35e2e563e64bcc437e178"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee208001e7c35e2e563e64bcc437e178">&#9670;&#160;</a></span>systemWithoutClock()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void systemWithoutClock </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>OperatingSystem.json without the clock's snapshot: no uptime 0 with its source, which would claim a measurement never made. </p>
+
+</div>
+</div>
+<a id="a6df2099a397beee00d0910d85098bc47" name="a6df2099a397beee00d0910d85098bc47"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6df2099a397beee00d0910d85098bc47">&#9670;&#160;</a></span>thumbsDb()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void thumbsDb </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A Thumbs.db of Windows XP: the one the XP VM wrote for C:\wacthumb shown as thumbnails (two JPEG images), its catalogue and both thumbnails as olefile reads them; cut short, it is not read. </p>
+
+</div>
+</div>
+<a id="a1b76874bebb5585d8758df75c39fc4a1" name="a1b76874bebb5585d8758df75c39fc4a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b76874bebb5585d8758df75c39fc4a1">&#9670;&#160;</a></span>userAssistXp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void userAssistXp </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p><a class="el" href="structUserAssist.html">UserAssist</a> of Windows XP: the value Explorer wrote on the XP VM for Notepad, started twice from the <a class="el" href="structRun.html">Run</a> box — a counter of 7 from its base of 5, the last run after it; no focus fields given. </p>
+
+</div>
+</div>
+<a id="a693428a5e6237e4eb83b0cec2dee4d86" name="a693428a5e6237e4eb83b0cec2dee4d86"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a693428a5e6237e4eb83b0cec2dee4d86">&#9670;&#160;</a></span>wevtOffsetsNear4GiB()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void wevtOffsetsNear4GiB </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A WEVT_TEMPLATE forged with offsets near 2^32: summed in 32 bits, the provider's offset + 20 and the block's + 16 wrapped to a few bytes, passed the bound and sent memcmp 4 GiB past the resource. Both are refused. </p>
+
+</div>
+</div>
+<a id="af0801750970b6138fa7c9319329bba5d" name="af0801750970b6138fa7c9319329bba5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af0801750970b6138fa7c9319329bba5d">&#9670;&#160;</a></span>windows7Cache()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; BYTE &gt; windows7Cache </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>wide</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>lyingOffset</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>ShimCache of Windows 7 (0xBADC0FEE), 64-bit and 32-bit layouts, as the format lays them out: two entries, their paths stored after the table. </p>
+
+</div>
+</div>
+<a id="aa3a67a95d5205c37194aa17a9e4255e3" name="aa3a67a95d5205c37194aa17a9e4255e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3a67a95d5205c37194aa17a9e4255e3">&#9670;&#160;</a></span>wmain()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -164,11 +692,40 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">int wmain </td>
           <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>argc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">wchar_t **&#160;</td>
+          <td class="paramname"><em>argv</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a5011b05a97343c2885c6e1b3961b7bf8" name="a5011b05a97343c2885c6e1b3961b7bf8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5011b05a97343c2885c6e1b3961b7bf8">&#9670;&#160;</a></span>xmlCdataAndAstralReference()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void xmlCdataAndAstralReference </td>
+          <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>The light XML reader: a CDATA section's text kept as written, a character reference past U+FFFF as its surrogate pair — it was cut to 16 bits, and the CDATA's "&amp;lt;" decoded into a '&lt;'. </p>
 
 </div>
 </div>

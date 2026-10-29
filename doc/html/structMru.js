@@ -5,6 +5,7 @@ var structMru =
     [ "id", "structMru.html#af746689a9e8341c4b48f5b00909a6bfa", null ],
     [ "lastWriteTimeUtc", "structMru.html#a007169e2fd0ba8eca5f9ab72aea9c9cb", null ],
     [ "level", "structMru.html#a2c9849f72a0a743f53f36007716bbc8e", null ],
+    [ "path", "structMru.html#a3887ab662566572dafb21b32abef7e19", null ],
     [ "shellitems", "structMru.html#af11fae5cbf279f3e6650adf66ab7969e", null ],
     [ "sid", "structMru.html#a999b39c93359008e952e8ffc18430784", null ],
     [ "source", "structMru.html#aae2bf8e58487b59f5a79c73c2e294fa6", null ]

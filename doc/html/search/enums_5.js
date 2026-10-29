@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['precision_0',['Precision',['../tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2',1,'tools.h']]]
+  ['kind_0',['Kind',['../classJson.html#a82938661c4953d873b5c8a204337fd57',1,'Json']]]
 ];

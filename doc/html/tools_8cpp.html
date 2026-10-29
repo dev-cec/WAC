@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -114,6 +114,7 @@ $(document).ready(function(){initNavTree('tools_8cpp.html',''); initResizable();
 <code>#include &lt;array&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
 <code>#include &quot;<a class="el" href="sha_8h_source.html">sha.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="registry__common_8h_source.html">registry_common.h</a>&quot;</code><br />
 <code>#include &lt;cwctype&gt;</code><br />
 <code>#include &lt;windows.h&gt;</code><br />
 <code>#include &lt;stdio.h&gt;</code><br />
@@ -133,10 +134,12 @@ Functions</h2></td></tr>
 <tr class="separator:a43ffd3f6c8483d179ef4102a6063b715"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2919887747c3c908764bd070515c5739" id="r_a2919887747c3c908764bd070515c5739"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a2919887747c3c908764bd070515c5739">printStep</a> (const std::wstring &amp;label)</td></tr>
 <tr class="separator:a2919887747c3c908764bd070515c5739"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a834fe153c5b69d79b01ac2fecc6d8332" id="r_a834fe153c5b69d79b01ac2fecc6d8332"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a834fe153c5b69d79b01ac2fecc6d8332">printStep</a> (<a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> step)</td></tr>
-<tr class="separator:a834fe153c5b69d79b01ac2fecc6d8332"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab84bfd709d879f46a95139ec7b4eb2e9" id="r_ab84bfd709d879f46a95139ec7b4eb2e9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ab84bfd709d879f46a95139ec7b4eb2e9">printStep</a> (<a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> step, const std::wstring &amp;qualifier)</td></tr>
+<tr class="separator:ab84bfd709d879f46a95139ec7b4eb2e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9585ff7f4186121c89af8f37c851f447" id="r_a9585ff7f4186121c89af8f37c851f447"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a9585ff7f4186121c89af8f37c851f447">printHeading</a> (<a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> heading)</td></tr>
 <tr class="separator:a9585ff7f4186121c89af8f37c851f447"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82614215d28c43d496a1774e7226c6d5" id="r_a82614215d28c43d496a1774e7226c6d5"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a82614215d28c43d496a1774e7226c6d5">consoleWidth</a> ()</td></tr>
+<tr class="separator:a82614215d28c43d496a1774e7226c6d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e7953ce8f23d049d09538c6a4d97d2e" id="r_a6e7953ce8f23d049d09538c6a4d97d2e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a6e7953ce8f23d049d09538c6a4d97d2e">printProgress</a> (const std::wstring &amp;label, unsigned long long done, unsigned long long total, const std::wstring &amp;unit)</td></tr>
 <tr class="separator:a6e7953ce8f23d049d09538c6a4d97d2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa58517b7d74263e87094ca227705a8b5" id="r_aa58517b7d74263e87094ca227705a8b5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#aa58517b7d74263e87094ca227705a8b5">printProgressEnd</a> ()</td></tr>
@@ -144,8 +147,8 @@ Functions</h2></td></tr>
 <tr class="memitem:abfb8057ef624b69b47bf30c6db4e3875" id="r_abfb8057ef624b69b47bf30c6db4e3875"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#abfb8057ef624b69b47bf30c6db4e3875">printSuccess</a> ()</td></tr>
 <tr class="memdesc:abfb8057ef624b69b47bf30c6db4e3875"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints the word OK in green on the console.  <br /></td></tr>
 <tr class="separator:abfb8057ef624b69b47bf30c6db4e3875"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42061cb7c685519b28f791343b0fe259" id="r_a42061cb7c685519b28f791343b0fe259"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a42061cb7c685519b28f791343b0fe259">stepTimes</a> (double minimum)</td></tr>
-<tr class="separator:a42061cb7c685519b28f791343b0fe259"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fd368bea158e9a02d8954a0f8890b40" id="r_a5fd368bea158e9a02d8954a0f8890b40"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a5fd368bea158e9a02d8954a0f8890b40">stepTimes</a> ()</td></tr>
+<tr class="separator:a5fd368bea158e9a02d8954a0f8890b40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f7dd5d6efe1ef759d852fb9224d79d4" id="r_a0f7dd5d6efe1ef759d852fb9224d79d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a0f7dd5d6efe1ef759d852fb9224d79d4">printProgressStep</a> (const std::wstring &amp;artefact, unsigned long long done, unsigned long long total)</td></tr>
 <tr class="separator:a0f7dd5d6efe1ef759d852fb9224d79d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52b8e5827ab36d1d9f31335c0ec301fd" id="r_a52b8e5827ab36d1d9f31335c0ec301fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a52b8e5827ab36d1d9f31335c0ec301fd">printError</a> (std::wstring errorText)</td></tr>
@@ -162,6 +165,8 @@ Functions</h2></td></tr>
 <tr class="separator:aa2fb1cf5cd8710778ba5bad978bba540"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4c0694f9ff1125a48aa8c09d96d18dc" id="r_ac4c0694f9ff1125a48aa8c09d96d18dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac4c0694f9ff1125a48aa8c09d96d18dc">dump</a> (LPBYTE buffer, int start, int end)</td></tr>
 <tr class="separator:ac4c0694f9ff1125a48aa8c09d96d18dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8f51da208220c95315e110deaf4fd2f" id="r_ae8f51da208220c95315e110deaf4fd2f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ae8f51da208220c95315e110deaf4fd2f">registryTypeName</a> (DWORD type)</td></tr>
+<tr class="separator:ae8f51da208220c95315e110deaf4fd2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a69d31408a297a94c2ccd3606150fc579" id="r_a69d31408a297a94c2ccd3606150fc579"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a69d31408a297a94c2ccd3606150fc579">registryValueToJson</a> (DWORD type, const std::vector&lt; BYTE &gt; &amp;data)</td></tr>
 <tr class="separator:a69d31408a297a94c2ccd3606150fc579"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac91636166174cb25d773a96fadc75ea7" id="r_ac91636166174cb25d773a96fadc75ea7"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac91636166174cb25d773a96fadc75ea7">registryNameToJsonKey</a> (const std::wstring &amp;valueName)</td></tr>
@@ -200,6 +205,8 @@ Functions</h2></td></tr>
 <tr class="separator:a6fd34bcba1b2bdbd97aaa2e9aca5914e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a90966443464069ccf60bbe78afac2f20" id="r_a90966443464069ccf60bbe78afac2f20"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a90966443464069ccf60bbe78afac2f20">extractedPath</a> (const std::wstring &amp;absolute)</td></tr>
 <tr class="separator:a90966443464069ccf60bbe78afac2f20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a715bd1a56f88c05bff887e1bfd9323df" id="r_a715bd1a56f88c05bff887e1bfd9323df"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a715bd1a56f88c05bff887e1bfd9323df">examinedLayout</a> (const std::wstring &amp;path)</td></tr>
+<tr class="separator:a715bd1a56f88c05bff887e1bfd9323df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f90a1bf8bcd8b34e8d93ac04dafac44" id="r_a7f90a1bf8bcd8b34e8d93ac04dafac44"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a7f90a1bf8bcd8b34e8d93ac04dafac44">originalPath</a> (const std::wstring &amp;extracted)</td></tr>
 <tr class="separator:a7f90a1bf8bcd8b34e8d93ac04dafac44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64af952b26c2e734b7998bd37173b3dc" id="r_a64af952b26c2e734b7998bd37173b3dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a64af952b26c2e734b7998bd37173b3dc">loadSystemDrive</a> ()</td></tr>
@@ -228,8 +235,12 @@ Functions</h2></td></tr>
 <tr class="separator:a39f06ea897c5d9cfa9c5db5deb82bab0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b4cfa2b19dd3138efd1cdca232d614e" id="r_a2b4cfa2b19dd3138efd1cdca232d614e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a2b4cfa2b19dd3138efd1cdca232d614e">isMuiReference</a> (const std::wstring &amp;value)</td></tr>
 <tr class="separator:a2b4cfa2b19dd3138efd1cdca232d614e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab46321ecb3e6f33f6a4351d808fca517" id="r_ab46321ecb3e6f33f6a4351d808fca517"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ab46321ecb3e6f33f6a4351d808fca517">isOutputFolderName</a> (const std::wstring &amp;name)</td></tr>
+<tr class="separator:ab46321ecb3e6f33f6a4351d808fca517"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91174db2a2f6918c424af0beb323d74e" id="r_a91174db2a2f6918c424af0beb323d74e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a91174db2a2f6918c424af0beb323d74e">toLower</a> (std::wstring s)</td></tr>
 <tr class="separator:a91174db2a2f6918c424af0beb323d74e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae80bb623d22e7dbfaec467e00ff9f19e" id="r_ae80bb623d22e7dbfaec467e00ff9f19e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ae80bb623d22e7dbfaec467e00ff9f19e">decodeTextFile</a> (const std::string &amp;bytes)</td></tr>
+<tr class="separator:ae80bb623d22e7dbfaec467e00ff9f19e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89f4afef123fee0f163c1d61fef8a85d" id="r_a89f4afef123fee0f163c1d61fef8a85d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a89f4afef123fee0f163c1d61fef8a85d">readWideZ</a> (const BYTE *base, size_t limit, size_t offset)</td></tr>
 <tr class="separator:a89f4afef123fee0f163c1d61fef8a85d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac08f59986f0127204704ab062824b053" id="r_ac08f59986f0127204704ab062824b053"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ac08f59986f0127204704ab062824b053">readNarrowZ</a> (const BYTE *base, size_t limit, size_t offset)</td></tr>
@@ -250,6 +261,8 @@ Functions</h2></td></tr>
 <tr class="separator:aa8619636828618c660a45dcf3ab5f420"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abd322e3fdf0537c46e848383d5a1e92f" id="r_abd322e3fdf0537c46e848383d5a1e92f"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#abd322e3fdf0537c46e848383d5a1e92f">readMruListEx</a> (ORHKEY key, std::vector&lt; unsigned int &gt; &amp;ids)</td></tr>
 <tr class="separator:abd322e3fdf0537c46e848383d5a1e92f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb0e99dd94b9ae85c8fa821c31efc8cb" id="r_acb0e99dd94b9ae85c8fa821c31efc8cb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#acb0e99dd94b9ae85c8fa821c31efc8cb">readMruList</a> (ORHKEY key, std::vector&lt; std::wstring &gt; &amp;names)</td></tr>
+<tr class="separator:acb0e99dd94b9ae85c8fa821c31efc8cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55c27e3c9e64135544b0a0f9311d3630" id="r_a55c27e3c9e64135544b0a0f9311d3630"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a55c27e3c9e64135544b0a0f9311d3630">getRegboolValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, bool *value)</td></tr>
 <tr class="separator:a55c27e3c9e64135544b0a0f9311d3630"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa71d2e8dd326f686a3685b082d498baf" id="r_aa71d2e8dd326f686a3685b082d498baf"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#aa71d2e8dd326f686a3685b082d498baf">getRegFiletimeValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIME *filetime)</td></tr>
@@ -272,10 +285,28 @@ Functions</h2></td></tr>
 <tr class="separator:a0c6b8b7a0b0376c0bf1886a07334c105"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae015dab0338f7763e473365f24e90784" id="r_ae015dab0338f7763e473365f24e90784"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ae015dab0338f7763e473365f24e90784">writeNotRequested</a> (const std::string &amp;name, const std::wstring &amp;artefact, const std::wstring &amp;key)</td></tr>
 <tr class="separator:ae015dab0338f7763e473365f24e90784"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb11982b540b1d16b7c8472356bbb6b4" id="r_afb11982b540b1d16b7c8472356bbb6b4"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#afb11982b540b1d16b7c8472356bbb6b4">writeAbsentFromVersion</a> (const std::string &amp;name, const std::wstring &amp;artefact, const std::wstring &amp;key)</td></tr>
+<tr class="separator:afb11982b540b1d16b7c8472356bbb6b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b6c3a95cb425bc203b4abc6cc378cc8" id="r_a0b6c3a95cb425bc203b4abc6cc378cc8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a0b6c3a95cb425bc203b4abc6cc378cc8">processElevated</a> (bool &amp;elevated)</td></tr>
+<tr class="separator:a0b6c3a95cb425bc203b4abc6cc378cc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b9593ceb0de01fb209a559d612c726b" id="r_a2b9593ceb0de01fb209a559d612c726b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a2b9593ceb0de01fb209a559d612c726b">sourceNotFound</a> (HRESULT result)</td></tr>
+<tr class="separator:a2b9593ceb0de01fb209a559d612c726b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfde28c55f5b8ae21d60671f3e1aa56a" id="r_abfde28c55f5b8ae21d60671f3e1aa56a"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#abfde28c55f5b8ae21d60671f3e1aa56a">catalogueKey</a> (const std::wstring &amp;key)</td></tr>
+<tr class="separator:abfde28c55f5b8ae21d60671f3e1aa56a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcf24cabb9037d5a612002d9afa19675" id="r_afcf24cabb9037d5a612002d9afa19675"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#afcf24cabb9037d5a612002d9afa19675">writeExpectedButMissing</a> (const std::string &amp;name, const std::wstring &amp;artefact, const std::wstring &amp;key, HRESULT result)</td></tr>
+<tr class="separator:afcf24cabb9037d5a612002d9afa19675"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bf602921c25aac42031158e7f7c9775" id="r_a5bf602921c25aac42031158e7f7c9775"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a5bf602921c25aac42031158e7f7c9775">addUnsupportedFormat</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::string &amp;key, unsigned signature)</td></tr>
+<tr class="separator:a5bf602921c25aac42031158e7f7c9775"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b63295ad3b609909e67187474841e90" id="r_a8b63295ad3b609909e67187474841e90"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a8b63295ad3b609909e67187474841e90">writeUnsupportedFormat</a> (const std::string &amp;name, const std::wstring &amp;artefact, const std::string &amp;key, unsigned signature)</td></tr>
+<tr class="separator:a8b63295ad3b609909e67187474841e90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add0ab36c67a1fd3e97464fd62dfbadf2" id="r_add0ab36c67a1fd3e97464fd62dfbadf2"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#add0ab36c67a1fd3e97464fd62dfbadf2">writeUndecodedOnVersion</a> (const std::string &amp;name, const std::wstring &amp;artefact, const std::wstring &amp;key)</td></tr>
+<tr class="separator:add0ab36c67a1fd3e97464fd62dfbadf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc796ef7b3c37280836660e1376c2594" id="r_abc796ef7b3c37280836660e1376c2594"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::filesystem::path &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#abc796ef7b3c37280836660e1376c2594">listFilesByExtension</a> (const std::filesystem::path &amp;directory, const std::vector&lt; std::wstring &gt; &amp;extensions)</td></tr>
 <tr class="separator:abc796ef7b3c37280836660e1376c2594"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14a494c66a3bc423ab60073dbcfd759a" id="r_a14a494c66a3bc423ab60073dbcfd759a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a14a494c66a3bc423ab60073dbcfd759a">addDate</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;key, const FILETIME &amp;utc)</td></tr>
 <tr class="separator:a14a494c66a3bc423ab60073dbcfd759a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8ef84e34cbf1dc51f28bb5466ab1fc4" id="r_ad8ef84e34cbf1dc51f28bb5466ab1fc4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#ad8ef84e34cbf1dc51f28bb5466ab1fc4">addUtcDate</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;key, const FILETIME &amp;utc)</td></tr>
+<tr class="separator:ad8ef84e34cbf1dc51f28bb5466ab1fc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a45f9fd820885488926e162c9f91a8ec8" id="r_a45f9fd820885488926e162c9f91a8ec8"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#a45f9fd820885488926e162c9f91a8ec8">splitLines</a> (const std::wstring &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>)</td></tr>
 <tr class="separator:a45f9fd820885488926e162c9f91a8ec8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc28213e9ba8015eed6ba27ed5021775" id="r_acc28213e9ba8015eed6ba27ed5021775"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tools_8cpp.html#acc28213e9ba8015eed6ba27ed5021775">forEachProfileHive</a> (const std::wstring &amp;relativeHive, const std::function&lt; void(ORHKEY root, const std::wstring &amp;sid)&gt; &amp;visit)</td></tr>
@@ -324,6 +355,90 @@ Variables</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">o</td><td>the object </td></tr>
     <tr><td class="paramname">key</td><td>the name of the local form; the UTC form is <code>key</code> + "Utc" </td></tr>
+    <tr><td class="paramname">utc</td><td>the date, UTC </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a5bf602921c25aac42031158e7f7c9775" name="a5bf602921c25aac42031158e7f7c9775"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bf602921c25aac42031158e7f7c9775">&#9670;&#160;</a></span>addUnsupportedFormat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addUnsupportedFormat </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>o</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>signature</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Marks the JSON of ONE PIECE that WAC collected and has no decoder for (pieceFormat, <a class="el" href="artefact__catalogue_8h.html" title="THE table of the artefacts by version of Windows: where each one exists, where it lies and in which f...">artefact_catalogue.h</a>): <code>DecodingStatus</code> "UnsupportedFormat", the signature met (<code>FormatSignature</code>) and, when the table knows the form, its name (<code>FormatName</code>). The piece is in the exhibit store, to be decoded by another tool: nothing was converted, and the entry says so instead of being left out. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>the piece's JSON, already carrying its path </td></tr>
+    <tr><td class="paramname">key</td><td>the key of the artefact table, e.g. "prefetch" </td></tr>
+    <tr><td class="paramname">signature</td><td>the internal version or magic number read on the piece </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad8ef84e34cbf1dc51f28bb5466ab1fc4" name="ad8ef84e34cbf1dc51f28bb5466ab1fc4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad8ef84e34cbf1dc51f28bb5466ab1fc4">&#9670;&#160;</a></span>addUtcDate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addUtcDate </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>o</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const FILETIME &amp;&#160;</td>
+          <td class="paramname"><em>utc</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds a date in UTC only, under <code>key</code> as given — the form of the artefacts that count one object per file of a volume (mft.json, deleted_files.json), where a local form would double them. Nothing is written for a null date. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>the object </td></tr>
+    <tr><td class="paramname">key</td><td>the member's name </td></tr>
     <tr><td class="paramname">utc</td><td>the date, UTC </td></tr>
   </table>
   </dd>
@@ -382,6 +497,48 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>"true" or "false" </dd></dl>
+
+</div>
+</div>
+<a id="abfde28c55f5b8ae21d60671f3e1aa56a" name="abfde28c55f5b8ae21d60671f3e1aa56a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abfde28c55f5b8ae21d60671f3e1aa56a">&#9670;&#160;</a></span>catalogueKey()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string catalogueKey </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>key</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The key of the artefact table for a configuration key: L"artefacts.srum" gives "srum". </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>the configuration key </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a82614215d28c43d496a1774e7226c6d5" name="a82614215d28c43d496a1774e7226c6d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a82614215d28c43d496a1774e7226c6d5">&#9670;&#160;</a></span>consoleWidth()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t consoleWidth </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The width of the console window, in characters: a line written to its last column wraps, and a rewritten progress line or its erasure then leaves a blank line behind (a console of 96 columns, measured; 80 by default in the older console). </p><dl class="section return"><dt>Returns</dt><dd>the width, or 80 when it cannot be read </dd></dl>
 
 </div>
 </div>
@@ -445,6 +602,31 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the text; bytes invalid for the code page are widened one by one rather than lost </dd></dl>
+
+</div>
+</div>
+<a id="ae80bb623d22e7dbfaec467e00ff9f19e" name="ae80bb623d22e7dbfaec467e00ff9f19e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae80bb623d22e7dbfaec467e00ff9f19e">&#9670;&#160;</a></span>decodeTextFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring decodeTextFile </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A text file's content, as Windows and its tools write them: UTF-16LE when it starts with that byte-order mark, UTF-8 otherwise, its byte-order mark left out. The one decoding of the readers of text files (error reports, Defender's logs, Zone.Identifier streams, PowerShell profiles). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>the file's bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the text, up to its first null character in UTF-16 </dd></dl>
 
 </div>
 </div>
@@ -650,6 +832,31 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, ERROR_NO_MORE_ITEMS past the last value, or a registry error </dd></dl>
+
+</div>
+</div>
+<a id="a715bd1a56f88c05bff887e1bfd9323df" name="a715bd1a56f88c05bff887e1bfd9323df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a715bd1a56f88c05bff887e1bfd9323df">&#9670;&#160;</a></span>examinedLayout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring examinedLayout </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A path written as Windows Vista and later lay out their folders, as it lies on the examined Windows (examinedFolderLayout, <a class="el" href="artefact__catalogue_8h.html" title="THE table of the artefacts by version of Windows: where each one exists, where it lies and in which f...">artefact_catalogue.h</a>): <code>Local Settings\\Application Data</code>, <code>Recent</code>, <code>My Documents</code>, <code>All <a class="el" href="structUsers.html">Users</a></code> on Windows XP. Applied where every path passes — the targets of the collection and <code>extractedPath</code> — so that no collector writes the layout of XP itself. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>absolute, with its letter or relative to the system volume </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the path on the examined Windows; unchanged from Vista on </dd></dl>
 
 </div>
 </div>
@@ -1213,6 +1420,31 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>false if the text is not such a date (filetime untouched) </dd></dl>
+
+</div>
+</div>
+<a id="ab46321ecb3e6f33f6a4351d808fca517" name="ab46321ecb3e6f33f6a4351d808fca517"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab46321ecb3e6f33f6a4351d808fca517">&#9670;&#160;</a></span>isOutputFolderName()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool isOutputFolderName </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Whether a value names the output folder as WAC accepts it: one folder of the current directory — the collection key —, by its name. A separator, a drive (<code>C:case</code>, relative to C:'s current directory) or <code>..</code> would put the collection anywhere, the examined volume included. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>the value of &ndash;output, or of <code>output:</code> in wac.yml </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true for a plain folder name </dd></dl>
 
 </div>
 </div>
@@ -1872,8 +2104,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a834fe153c5b69d79b01ac2fecc6d8332" name="a834fe153c5b69d79b01ac2fecc6d8332"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a834fe153c5b69d79b01ac2fecc6d8332">&#9670;&#160;</a></span>printStep() <span class="overload">[2/2]</span></h2>
+<a id="ab84bfd709d879f46a95139ec7b4eb2e9" name="ab84bfd709d879f46a95139ec7b4eb2e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab84bfd709d879f46a95139ec7b4eb2e9">&#9670;&#160;</a></span>printStep() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1882,14 +2114,25 @@ Variables</h2></td></tr>
           <td class="memname">void printStep </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a>&#160;</td>
-          <td class="paramname"><em>step</em></td><td>)</td>
+          <td class="paramname"><em>step</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>qualifier</em> = <code>L&quot;&quot;</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Prints the label of a step, in the console's language, as " - label : ". </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Prints the label of a step, in the console's language, as " - label : ". The log keeps its English label (time per step, investigation.json). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">step</td><td>the step </td></tr>
+    <tr><td class="paramname">qualifier</td><td>what the step bears on, after the label (" (C:)"); none by default </td></tr>
   </table>
   </dd>
 </dl>
@@ -1912,6 +2155,67 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Prints the word OK in green on the console. </p>
+
+</div>
+</div>
+<a id="a0b6c3a95cb425bc203b4abc6cc378cc8" name="a0b6c3a95cb425bc203b4abc6cc378cc8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b6c3a95cb425bc203b4abc6cc378cc8">&#9670;&#160;</a></span>processElevated()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT processElevated </td>
+          <td>(</td>
+          <td class="paramtype">bool &amp;&#160;</td>
+          <td class="paramname"><em>elevated</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Whether WAC runs with administrator rights. From Windows Vista on, the token says whether it is elevated; Windows XP and Server 2003 have no elevation — the question is refused there ("the parameter is incorrect", which stopped WAC at its first check) —, and the answer is whether the token belongs to the Administrators group. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">elevated</td><td>receives the answer </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why the token could not be read </dd></dl>
+
+</div>
+</div>
+<a id="acb0e99dd94b9ae85c8fa821c31efc8cb" name="acb0e99dd94b9ae85c8fa821c31efc8cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb0e99dd94b9ae85c8fa821c31efc8cb">&#9670;&#160;</a></span>readMruList()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT readMruList </td>
+          <td>(</td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>names</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the MRUList value of a key, the form of Windows XP: a string whose characters name its values, most recent first ("ba": b, then a). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>the key holding MRUList </td></tr>
+    <tr><td class="paramname">names</td><td>receives the value names, in that order </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the error of the read </dd></dl>
 
 </div>
 </div>
@@ -2062,6 +2366,31 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the JSON key </dd></dl>
+
+</div>
+</div>
+<a id="ae8f51da208220c95315e110deaf4fd2f" name="ae8f51da208220c95315e110deaf4fd2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae8f51da208220c95315e110deaf4fd2f">&#9670;&#160;</a></span>registryTypeName()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring registryTypeName </td>
+          <td>(</td>
+          <td class="paramtype">DWORD&#160;</td>
+          <td class="paramname"><em>type</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A registry value's type as its name ("REG_SZ", "REG_DWORD"…), or its number in hexadecimal for a type without one. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">type</td><td>the value's registry type </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>its name </dd></dl>
 
 </div>
 </div>
@@ -2241,6 +2570,30 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a2b9593ceb0de01fb209a559d612c726b" name="a2b9593ceb0de01fb209a559d612c726b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b9593ceb0de01fb209a559d612c726b">&#9670;&#160;</a></span>sourceNotFound()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool sourceNotFound </td>
+          <td>(</td>
+          <td class="paramtype">HRESULT&#160;</td>
+          <td class="paramname"><em>result</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Whether a result says the source itself was not there — file or folder —, whichever way the collector returned it (a Win32 code or its HRESULT). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">result</td><td>the collector's result </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a45f9fd820885488926e162c9f91a8ec8" name="a45f9fd820885488926e162c9f91a8ec8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a45f9fd820885488926e162c9f91a8ec8">&#9670;&#160;</a></span>splitLines()</h2>
 
@@ -2266,8 +2619,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a42061cb7c685519b28f791343b0fe259" name="a42061cb7c685519b28f791343b0fe259"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a42061cb7c685519b28f791343b0fe259">&#9670;&#160;</a></span>stepTimes()</h2>
+<a id="a5fd368bea158e9a02d8954a0f8890b40" name="a5fd368bea158e9a02d8954a0f8890b40"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5fd368bea158e9a02d8954a0f8890b40">&#9670;&#160;</a></span>stepTimes()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -2275,19 +2628,12 @@ Variables</h2></td></tr>
         <tr>
           <td class="memname">std::wstring stepTimes </td>
           <td>(</td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>minimum</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The steps printed so far and their time, from printStep to their OK or their error (backlog B-033): where a collection's time goes, artefact by artefact. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">minimum</td><td>the shortest step given, in seconds </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>"label 12.3 s; label 4.0 s…", in the order of the run </dd></dl>
+<p>The steps printed so far and their time, from printStep to their OK or their error (backlog B-033): where a collection's time goes, artefact by artefact. </p><dl class="section return"><dt>Returns</dt><dd>"label 12.31 s; label 0.04 s…", every step, in the order of the run </dd></dl>
 
 </div>
 </div>
@@ -2596,6 +2942,49 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="afb11982b540b1d16b7c8472356bbb6b4" name="afb11982b540b1d16b7c8472356bbb6b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb11982b540b1d16b7c8472356bbb6b4">&#9670;&#160;</a></span>writeAbsentFromVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeAbsentFromVersion </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>artefact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Writes an artefact that the examined version of Windows does not have (<a class="el" href="artefact__catalogue_8h.html" title="THE table of the artefacts by version of Windows: where each one exists, where it lies and in which f...">artefact_catalogue.h</a>): nothing to collect there, and nothing to conclude from the absence of data — neither a failure nor "no trace". </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>name of the file </td></tr>
+    <tr><td class="paramname">artefact</td><td>label of the artefact </td></tr>
+    <tr><td class="paramname">key</td><td>the configuration key, e.g. L"artefacts.srum" </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if the file could be written </dd></dl>
+
+</div>
+</div>
 <a id="a43ffd3f6c8483d179ef4102a6063b715" name="a43ffd3f6c8483d179ef4102a6063b715"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a43ffd3f6c8483d179ef4102a6063b715">&#9670;&#160;</a></span>writeConsole()</h2>
 
@@ -2617,6 +3006,57 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="afcf24cabb9037d5a612002d9afa19675" name="afcf24cabb9037d5a612002d9afa19675"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afcf24cabb9037d5a612002d9afa19675">&#9670;&#160;</a></span>writeExpectedButMissing()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeExpectedButMissing </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>artefact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">HRESULT&#160;</td>
+          <td class="paramname"><em>result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Writes an artefact whose source was not found where the examined version of Windows always has one (expectedOn, <a class="el" href="artefact__catalogue_8h.html" title="THE table of the artefacts by version of Windows: where each one exists, where it lies and in which f...">artefact_catalogue.h</a>): "expected
+ but missing". The absence is itself a finding — a file erased, a service switched off —, neither a failed reading nor an absence of activity, and the file says where the source should have been. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>name of the file </td></tr>
+    <tr><td class="paramname">artefact</td><td>label of the artefact </td></tr>
+    <tr><td class="paramname">key</td><td>the configuration key, e.g. L"artefacts.srum" </td></tr>
+    <tr><td class="paramname">result</td><td>the collector's result, a "not found" </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if the file could be written </dd></dl>
 
 </div>
 </div>
@@ -2645,7 +3085,7 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Writes a JSON value into <code>_outputDir</code>/<code>name</code>, in UTF-8. Centralises the creation of the output directory, the encoding and the path, so that each artefact no longer has to do it again. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Writes a JSON value into <code>_outputDir</code>/<code>name</code> (or <code>jsonFolder</code>), in UTF-8. Centralises the creation of the output directory, the encoding and the path, so that each artefact no longer has to do it again. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">name</td><td>name of the file (e.g. "bams.json") </td></tr>
     <tr><td class="paramname">value</td><td>the root JSON value (usually a <a class="el" href="classJson.html#a02b566a598465cf01e42007be3704233">Json::arr()</a>) </td></tr>
@@ -2737,6 +3177,99 @@ Variables</h2></td></tr>
     <tr><td class="paramname">name</td><td>name of the file (e.g. "prefetchs.json") </td></tr>
     <tr><td class="paramname">artefact</td><td>label of the artefact </td></tr>
     <tr><td class="paramname">key</td><td>the configuration key, e.g. L"artefacts.prefetch" </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if the file could be written </dd></dl>
+
+</div>
+</div>
+<a id="add0ab36c67a1fd3e97464fd62dfbadf2" name="add0ab36c67a1fd3e97464fd62dfbadf2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#add0ab36c67a1fd3e97464fd62dfbadf2">&#9670;&#160;</a></span>writeUndecodedOnVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeUndecodedOnVersion </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>artefact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>key</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Writes an artefact whose form on the examined version of Windows is one WAC has no decoder for (undecodedOn, <a class="el" href="artefact__catalogue_8h.html" title="THE table of the artefacts by version of Windows: where each one exists, where it lies and in which f...">artefact_catalogue.h</a>): the format is told by the version, the piece carrying no signature. <code>CollectionStatus</code> "UnsupportedFormat", with the version, the format and where the source lies; the exhibit store holds it. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>name of the file </td></tr>
+    <tr><td class="paramname">artefact</td><td>label of the artefact </td></tr>
+    <tr><td class="paramname">key</td><td>the configuration key, e.g. L"artefacts.amcache" </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if the file could be written </dd></dl>
+
+</div>
+</div>
+<a id="a8b63295ad3b609909e67187474841e90" name="a8b63295ad3b609909e67187474841e90"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b63295ad3b609909e67187474841e90">&#9670;&#160;</a></span>writeUnsupportedFormat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT writeUnsupportedFormat </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>artefact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>signature</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Writes an artefact whose single source is in a format WAC has no decoder for — a ShimCache value of Windows 7 —: <code>CollectionStatus</code> "UnsupportedFormat", with the signature met. Neither an empty list nor a failed reading. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>name of the file </td></tr>
+    <tr><td class="paramname">artefact</td><td>label of the artefact </td></tr>
+    <tr><td class="paramname">key</td><td>the key of the artefact table, e.g. "shimcache" </td></tr>
+    <tr><td class="paramname">signature</td><td>the internal version or magic number read on the source </td></tr>
   </table>
   </dd>
 </dl>

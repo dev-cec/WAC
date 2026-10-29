@@ -1,5 +1,6 @@
 var main_8cpp =
 [
+    [ "applyArtefactCatalogue", "main_8cpp.html#a9608061026fdc57178c24546b4396b82", null ],
     [ "checkCollectionLocation", "main_8cpp.html#a6fa7f1d05238966f7cd1751cf2a70d8a", null ],
     [ "checkElevation", "main_8cpp.html#adf0c2410a6a37c230e8d9aa2b2dbbd83", null ],
     [ "clearConsole", "main_8cpp.html#a2dd60886620db621029aa7487053c6e2", null ],
@@ -9,15 +10,25 @@ var main_8cpp =
     [ "convertArtefact", "main_8cpp.html#ab1c9f0135d4c94f0e81bd30b2a7c82c8", null ],
     [ "convertArtefacts", "main_8cpp.html#a177385e8857c5db1f20026a012c0c4ec", null ],
     [ "convertNtfsMetadata", "main_8cpp.html#a523d1e43e5b8b1d64df50286f9b4c5e1", null ],
+    [ "convertQuietly", "main_8cpp.html#a77935dd9c527137a0547e653510b4b89", null ],
+    [ "convertShadowCopies", "main_8cpp.html#a339cf3c7654893f6b1e3291630837a59", null ],
+    [ "entryIdentity", "main_8cpp.html#aa66dc169b97efdf98bb785ec20e080a1", null ],
     [ "extractProfileArtefacts", "main_8cpp.html#ac198b6a7ba23e0f645b02ef4b42dc4d8", null ],
     [ "extractSystemHives", "main_8cpp.html#abe4ba75075919666d6f8b6acd549c133", null ],
     [ "loadTrustSet", "main_8cpp.html#a106329315ad98d43b1cd41255eec62e2", null ],
     [ "observeLiveState", "main_8cpp.html#a116d5d86f6d30fc1417bccf78e7535c9", null ],
     [ "openCurrentControlSet", "main_8cpp.html#aef028ea33fa0be434388e3fcc062b0fc", null ],
     [ "prepareConversion", "main_8cpp.html#a3e4df6ca58374098de76031e0f5de8c0", null ],
+    [ "readJsonFile", "main_8cpp.html#a4b3bc6873ee8f0bfacfe85a2297d0e0b", null ],
+    [ "reportUnread", "main_8cpp.html#a28002ee20501e507122ae92d8c9e2432", null ],
     [ "requested", "main_8cpp.html#a67bbc3b881262c0cf72741a0266efcbb", null ],
+    [ "restoreConsoleCodePage", "main_8cpp.html#af95d413610788be237442141636e1d42", null ],
     [ "sealExhibitStore", "main_8cpp.html#ae7ed5c323d3bb4779eebecfb18a1ff68", null ],
+    [ "shadowCopyTreesToWorking", "main_8cpp.html#ad4634e4f56368b7fa5cd9b8b75a96f5f", null ],
     [ "showHelp", "main_8cpp.html#aec315d77f5c38417289a0e311d2a9d31", null ],
     [ "wmain", "main_8cpp.html#ae1325efcce4a4b1b4ea52247f0a0a0c1", null ],
-    [ "conf", "main_8cpp.html#a0696b00a72abe9d549204f9b105514bc", null ]
+    [ "conf", "main_8cpp.html#a0696b00a72abe9d549204f9b105514bc", null ],
+    [ "g_consoleCodePage", "main_8cpp.html#a7469ddfe4b7e187a905b6ea5d3bf4067", null ],
+    [ "g_volumeEvents", "main_8cpp.html#afc439e9282300da7a0823f2e5cf62b9b", null ],
+    [ "VALIDATED_SINCE_BUILD", "main_8cpp.html#a3127912484cc30a93f48b898f0774c55", null ]
 ];

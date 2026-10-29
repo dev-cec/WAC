@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -194,6 +194,9 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a2552f53a3a8dd307872dd737f4f8d9f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac573bb7051da162b9ba045a7bfe42a0e" id="r_ac573bb7051da162b9ba045a7bfe42a0e"><td class="memItemLeft" align="right" valign="top">long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#ac573bb7051da162b9ba045a7bfe42a0e">clockCorrection100ns</a> = 0</td></tr>
 <tr class="separator:ac573bb7051da162b9ba045a7bfe42a0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab205048a88922cda4821435d5b86ab30" id="r_ab205048a88922cda4821435d5b86ab30"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#ab205048a88922cda4821435d5b86ab30">clockRead</a> = false</td></tr>
+<tr class="memdesc:ab205048a88922cda4821435d5b86ab30"><td class="mdescLeft">&#160;</td><td class="mdescRight">system-clock.json read: the uptime and its source known  <br /></td></tr>
+<tr class="separator:ab205048a88922cda4821435d5b86ab30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a82bb467bddb2ae052806fa6f631fc0d8" id="r_a82bb467bddb2ae052806fa6f631fc0d8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSystemInfo.html#a82bb467bddb2ae052806fa6f631fc0d8">bootFromKernel</a> = false</td></tr>
 <tr class="memdesc:a82bb467bddb2ae052806fa6f631fc0d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">true: time read in the kernel, otherwise estimated  <br /></td></tr>
 <tr class="separator:a82bb467bddb2ae052806fa6f631fc0d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -327,6 +330,22 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Total of the clock corrections applied since the boot, in 100 ns units (the kernel's BootTimeBias). Positive: the clock was moved forward. A gap of a few seconds is the ordinary adjustment (NTP synchronisation, a VM resuming from suspension); a large gap signals a modified clock — and therefore timestamps to be interpreted with care. </p>
+
+</div>
+</div>
+<a id="ab205048a88922cda4821435d5b86ab30" name="ab205048a88922cda4821435d5b86ab30"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab205048a88922cda4821435d5b86ab30">&#9670;&#160;</a></span>clockRead</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool SystemInfo::clockRead = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>system-clock.json read: the uptime and its source known </p>
 
 </div>
 </div>

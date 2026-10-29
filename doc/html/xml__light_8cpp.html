@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -113,6 +113,8 @@ $(document).ready(function(){initNavTree('xml__light_8cpp.html',''); initResizab
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ae6cbcd7e64e6bdf252d4239a5b94ef50" id="r_ae6cbcd7e64e6bdf252d4239a5b94ef50"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8cpp.html#ae6cbcd7e64e6bdf252d4239a5b94ef50">xmlDecodeEntities</a> (const std::wstring &amp;s)</td></tr>
+<tr class="separator:ae6cbcd7e64e6bdf252d4239a5b94ef50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f6e645fab01047c254d16bed908e494" id="r_a0f6e645fab01047c254d16bed908e494"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structXmlNode.html">XmlNode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8cpp.html#a0f6e645fab01047c254d16bed908e494">xmlParse</a> (const std::wstring &amp;content, bool keepText)</td></tr>
 <tr class="separator:a0f6e645fab01047c254d16bed908e494"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c8b880642b0a4d5c6ffb0e937f30a81" id="r_a2c8b880642b0a4d5c6ffb0e937f30a81"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structXmlNode.html">XmlNode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8cpp.html#a2c8b880642b0a4d5c6ffb0e937f30a81">xmlReadFile</a> (const std::wstring &amp;path)</td></tr>
@@ -121,6 +123,25 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implementation of the minimal XML reader (see <a class="el" href="xml__light_8h.html" title="Minimal XML reader, with no dependency.">xml_light.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="ae6cbcd7e64e6bdf252d4239a5b94ef50" name="ae6cbcd7e64e6bdf252d4239a5b94ef50"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6cbcd7e64e6bdf252d4239a5b94ef50">&#9670;&#160;</a></span>xmlDecodeEntities()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring xmlDecodeEntities </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>s</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Replaces the five predefined entities. The others are left as they are: a faithful text is better than a guessed substitution. </p>
+
+</div>
+</div>
 <a id="a0f6e645fab01047c254d16bed908e494" name="a0f6e645fab01047c254d16bed908e494"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0f6e645fab01047c254d16bed908e494">&#9670;&#160;</a></span>xmlParse()</h2>
 

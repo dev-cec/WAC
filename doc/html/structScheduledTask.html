@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -143,15 +143,21 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a47dd4c9ec9b5445e6be00b23125f7cc0" id="r_a47dd4c9ec9b5445e6be00b23125f7cc0"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#a47dd4c9ec9b5445e6be00b23125f7cc0">lastRunTimeUtc</a> = { 0 }</td></tr>
 <tr class="memdesc:a47dd4c9ec9b5445e6be00b23125f7cc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">last run, UTC, as DynamicInfo stores it  <br /></td></tr>
 <tr class="separator:a47dd4c9ec9b5445e6be00b23125f7cc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed45346c6c1f6295171607e797b87eef" id="r_aed45346c6c1f6295171607e797b87eef"><td class="memItemLeft" align="right" valign="top">LONG&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#aed45346c6c1f6295171607e797b87eef">lastTaskResult</a> = 0</td></tr>
-<tr class="memdesc:aed45346c6c1f6295171607e797b87eef"><td class="mdescLeft">&#160;</td><td class="mdescRight">value the last run returned  <br /></td></tr>
-<tr class="separator:aed45346c6c1f6295171607e797b87eef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a837339193b357633061aeb518d500f2c" id="r_a837339193b357633061aeb518d500f2c"><td class="memItemLeft" align="right" valign="top">std::optional&lt; LONG &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#a837339193b357633061aeb518d500f2c">lastTaskResult</a></td></tr>
+<tr class="memdesc:a837339193b357633061aeb518d500f2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">value the last run returned; none without a history (TaskCache, .job) — a 0 would read "succeeded"  <br /></td></tr>
+<tr class="separator:a837339193b357633061aeb518d500f2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad856049ffc53b4f7562b0a9101d8a822" id="r_ad856049ffc53b4f7562b0a9101d8a822"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#ad856049ffc53b4f7562b0a9101d8a822">registrationDate</a></td></tr>
 <tr class="memdesc:ad856049ffc53b4f7562b0a9101d8a822"><td class="mdescLeft">&#160;</td><td class="mdescRight">the XML's Date, as written  <br /></td></tr>
 <tr class="separator:ad856049ffc53b4f7562b0a9101d8a822"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af1769c7ed3551736dcdee2ba1f16d950" id="r_af1769c7ed3551736dcdee2ba1f16d950"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#af1769c7ed3551736dcdee2ba1f16d950">sourceXml</a></td></tr>
 <tr class="memdesc:af1769c7ed3551736dcdee2ba1f16d950"><td class="mdescLeft">&#160;</td><td class="mdescRight">path of the source XML, for traceability  <br /></td></tr>
 <tr class="separator:af1769c7ed3551736dcdee2ba1f16d950"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a552c7bc52f6292db4b1e0aed5e231115" id="r_a552c7bc52f6292db4b1e0aed5e231115"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#a552c7bc52f6292db4b1e0aed5e231115">sourceJob</a></td></tr>
+<tr class="memdesc:a552c7bc52f6292db4b1e0aed5e231115"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows XP: path of the source .job, for traceability.  <br /></td></tr>
+<tr class="separator:a552c7bc52f6292db4b1e0aed5e231115"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c7a715a81af95a7f4c81255c121e597" id="r_a4c7a715a81af95a7f4c81255c121e597"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#a4c7a715a81af95a7f4c81255c121e597">jobStatus</a></td></tr>
+<tr class="memdesc:a4c7a715a81af95a7f4c81255c121e597"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows XP: the scheduler's status in the .job (HasNotRun, Ready…)  <br /></td></tr>
+<tr class="separator:a4c7a715a81af95a7f4c81255c121e597"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a37706844c969e4e8bf0108f8955d07ae" id="r_a37706844c969e4e8bf0108f8955d07ae"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structAction.html">Action</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTask.html#a37706844c969e4e8bf0108f8955d07ae">actions</a></td></tr>
 <tr class="memdesc:a37706844c969e4e8bf0108f8955d07ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">what the task runs  <br /></td></tr>
 <tr class="separator:a37706844c969e4e8bf0108f8955d07ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -264,6 +270,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a4c7a715a81af95a7f4c81255c121e597" name="a4c7a715a81af95a7f4c81255c121e597"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c7a715a81af95a7f4c81255c121e597">&#9670;&#160;</a></span>jobStatus</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring ScheduledTask::jobStatus</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Windows XP: the scheduler's status in the .job (HasNotRun, Ready…) </p>
+
+</div>
+</div>
 <a id="a47dd4c9ec9b5445e6be00b23125f7cc0" name="a47dd4c9ec9b5445e6be00b23125f7cc0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a47dd4c9ec9b5445e6be00b23125f7cc0">&#9670;&#160;</a></span>lastRunTimeUtc</h2>
 
@@ -280,19 +302,19 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aed45346c6c1f6295171607e797b87eef" name="aed45346c6c1f6295171607e797b87eef"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aed45346c6c1f6295171607e797b87eef">&#9670;&#160;</a></span>lastTaskResult</h2>
+<a id="a837339193b357633061aeb518d500f2c" name="a837339193b357633061aeb518d500f2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a837339193b357633061aeb518d500f2c">&#9670;&#160;</a></span>lastTaskResult</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">LONG ScheduledTask::lastTaskResult = 0</td>
+          <td class="memname">std::optional&lt;LONG&gt; ScheduledTask::lastTaskResult</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>value the last run returned </p>
+<p>value the last run returned; none without a history (TaskCache, .job) — a 0 would read "succeeded" </p>
 
 </div>
 </div>
@@ -373,6 +395,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>SID, when that UserId is one. </p>
+
+</div>
+</div>
+<a id="a552c7bc52f6292db4b1e0aed5e231115" name="a552c7bc52f6292db4b1e0aed5e231115"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a552c7bc52f6292db4b1e0aed5e231115">&#9670;&#160;</a></span>sourceJob</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring ScheduledTask::sourceJob</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Windows XP: path of the source .job, for traceability. </p>
 
 </div>
 </div>

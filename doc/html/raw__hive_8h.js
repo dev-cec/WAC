@@ -1,6 +1,8 @@
 var raw__hive_8h =
 [
     [ "RawReadTimes", "structRawReadTimes.html", "structRawReadTimes" ],
+    [ "NtfsRun", "structNtfsRun.html", "structNtfsRun" ],
+    [ "RawVolumeLayout", "structRawVolumeLayout.html", "structRawVolumeLayout" ],
     [ "RawHiveFingerprints", "structRawHiveFingerprints.html", "structRawHiveFingerprints" ],
     [ "RawHiveExtraction", "structRawHiveExtraction.html", "structRawHiveExtraction" ],
     [ "FileSource", "classFileSource.html", "classFileSource" ],
@@ -9,17 +11,27 @@ var raw__hive_8h =
     [ "RawDirEntry", "structRawDirEntry.html", "structRawDirEntry" ],
     [ "RawHiveProgressFn", "raw__hive_8h.html#a8077cabec9441f4ac6617ed5bbe50d02", null ],
     [ "applyNtfsFixup", "raw__hive_8h.html#ab0f5ca400aaa1626345f2f1bf4b7f5fa", null ],
+    [ "compressionUnitClusters", "raw__hive_8h.html#a2e13db94d9db864e9ff3ce0f4fdd795c", null ],
+    [ "decodeNtfsRuns", "raw__hive_8h.html#a2636245f44d64fd5cf35397d21c583dc", null ],
     [ "ExtractDirectoryRaw", "raw__hive_8h.html#a8d83fd6d25b9df001deec0679103027a", null ],
     [ "ExtractDirectoryTreeRaw", "raw__hive_8h.html#a0c2b3ea90ce0efcd5ff5e220002d2399", null ],
     [ "ExtractFileRaw", "raw__hive_8h.html#aff3f1529d81703425b03fe383f20d88d", null ],
-    [ "ExtractFilesRaw", "raw__hive_8h.html#a05a06ee1bac073498c6c086ac1f6c925", null ],
+    [ "ExtractFilesRaw", "raw__hive_8h.html#a3df0c6f516ff52c33ddb6de8b0490ab8", null ],
     [ "ExtractStreamRaw", "raw__hive_8h.html#a79a9fccb4a4b062049187aede1ca5636", null ],
     [ "ExtractWofStreamRaw", "raw__hive_8h.html#a24ea0d8ea40d581e472dbbaf14af682d", null ],
+    [ "ForEachIndexBlockRaw", "raw__hive_8h.html#aad6446910d29fbde129c5738972501a7", null ],
     [ "ListAttributesRaw", "raw__hive_8h.html#a80f45d2b127d66b0a056a29cf3b80523", null ],
     [ "ListDirectoryRaw", "raw__hive_8h.html#a4bc3af8df20ef0f72d1b33dfacc078cd", null ],
+    [ "plausibleIndexBlockSize", "raw__hive_8h.html#a503bdc1d9343f0f011c4f21220f5f20b", null ],
     [ "RawHiveSetProgress", "raw__hive_8h.html#a7c6fcb004a257a7b9bfb351d435286b7", null ],
     [ "RawHiveSetVerbose", "raw__hive_8h.html#a4f20293fac920e310bfb3c0342a01348", null ],
     [ "RawHiveTimes", "raw__hive_8h.html#a76c0a8bbc2520c48d139b83d02f303e0", null ],
+    [ "RawShadowCopies", "raw__hive_8h.html#afea775718172fe47e490367c6f9cd6e8", null ],
+    [ "RawVolumeLayoutOf", "raw__hive_8h.html#a374154744e29b354d93a9f728afe8389", null ],
     [ "RawVolumesClose", "raw__hive_8h.html#acc8af4f01e18e78112f44f8c57b3954c", null ],
-    [ "RawVolumesOpen", "raw__hive_8h.html#a4da849a36c8a99b102f3f15b6d131d34", null ]
+    [ "RawVolumesOpen", "raw__hive_8h.html#a4da849a36c8a99b102f3f15b6d131d34", null ],
+    [ "ReadClusterAllocationRaw", "raw__hive_8h.html#a0a0b368f93e2a8cc3dc7d6b7bed973eb", null ],
+    [ "ReadClustersRaw", "raw__hive_8h.html#a259d851e37ae69f231ca9ab5da52f7fb", null ],
+    [ "ReadMftRecordRaw", "raw__hive_8h.html#a184e69b73e9a6ebaa55bb3b8df9308db", null ],
+    [ "residentAttributeValue", "raw__hive_8h.html#ac775e0840700d18e5aa6df7cdd50b351", null ]
 ];

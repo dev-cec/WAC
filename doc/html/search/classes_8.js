@@ -7,9 +7,12 @@ var searchData=
   ['iextensionblock_4',['IExtensionBlock',['../structIExtensionBlock.html',1,'']]],
   ['impl_5',['Impl',['../structThirdPartyRoots_1_1Impl.html',1,'ThirdPartyRoots']]],
   ['indexcatalogues_6',['IndexCatalogues',['../classIndexCatalogues.html',1,'']]],
-  ['installedprogram_7',['InstalledProgram',['../structInstalledProgram.html',1,'']]],
-  ['installedprograms_8',['InstalledPrograms',['../classInstalledPrograms.html',1,'']]],
-  ['internetsettings_9',['InternetSettings',['../structInternetSettings.html',1,'']]],
-  ['internetsettingsset_10',['InternetSettingsSet',['../classInternetSettingsSet.html',1,'']]],
-  ['ishellitem_11',['IShellItem',['../structIShellItem.html',1,'']]]
+  ['indexslackentry_7',['IndexSlackEntry',['../structIndexSlackEntry.html',1,'']]],
+  ['installedprogram_8',['InstalledProgram',['../structInstalledProgram.html',1,'']]],
+  ['installedprograms_9',['InstalledPrograms',['../classInstalledPrograms.html',1,'']]],
+  ['internetsettings_10',['InternetSettings',['../structInternetSettings.html',1,'']]],
+  ['internetsettingsset_11',['InternetSettingsSet',['../classInternetSettingsSet.html',1,'']]],
+  ['intunelogentry_12',['IntuneLogEntry',['../structIntuneLogEntry.html',1,'']]],
+  ['intunelogs_13',['IntuneLogs',['../classIntuneLogs.html',1,'']]],
+  ['ishellitem_14',['IShellItem',['../structIShellItem.html',1,'']]]
 ];

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('scheduledTasks_8h.html',''); initResiz
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">scheduledTasks.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -105,6 +106,7 @@ $(document).ready(function(){initNavTree('scheduledTasks_8h.html',''); initResiz
 <p>Scheduled tasks, read OFFLINE: what the machine runs on its own.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="binaires_8h_source.html">binaires.h</a>&quot;</code><br />
+<code>#include &lt;optional&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;windows.h&gt;</code><br />
@@ -125,6 +127,11 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTasks.html">ScheduledTasks</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a366145e27e5e0090ac750c6313e88178" id="r_a366145e27e5e0090ac750c6313e88178"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduledTasks_8h.html#a366145e27e5e0090ac750c6313e88178">parseJobFile</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, <a class="el" href="structScheduledTask.html">ScheduledTask</a> &amp;task)</td></tr>
+<tr class="separator:a366145e27e5e0090ac750c6313e88178"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Scheduled tasks, read OFFLINE: what the machine runs on its own. </p>
@@ -137,8 +144,46 @@ Classes</h2></td></tr>
 <li>definition: one XML file per task under <code>\\Windows\\System32\\Tasks\\</code>, extracted raw; the directory tree gives the task's path;</li>
 <li>history: the binary value <code>DynamicInfo</code> under <code>SOFTWARE\\…\\CurrentVersion\\Schedule\\TaskCache\\Tasks\\{GUID}</code>, tied to the task by <code>TaskCache\\Tree\\&lt;path&gt;\\Id</code>.</li>
 </ul>
-<p>WHAT IS LOST, AND WHY THAT IS ACCEPTABLE <code>NextRun</code> and <code>NumberOfMissedRuns</code> are not stored: the scheduler computes them at run time. They are PROJECTIONS, not traces of past activity: they have no probative value. The fields are therefore NOT emitted at all — an empty key in the JSON would read as a failed read, whereas the data simply does not exist offline. <code>State</code> is now only "enabled / disabled" (read from the XML): the "running" state is volatile by nature. </p>
-</div></div><!-- contents -->
+<p>WHAT IS LOST, AND WHY THAT IS ACCEPTABLE <code>NextRun</code> and <code>NumberOfMissedRuns</code> are not stored: the scheduler computes them at run time. They are PROJECTIONS, not traces of past activity: they have no probative value. The fields are therefore NOT emitted at all — an empty key in the JSON would read as a failed read, whereas the data simply does not exist offline. <code>State</code> is now only "enabled / disabled" (read from the XML): the "running" state is volatile by nature.</p>
+<p>WINDOWS XP AND SERVER 2003: one binary <code>.job</code> file per task under <code>\\Windows\\Tasks</code> (MS-TSCH 2.4, measured on the XP VM): a fixed part of 68 bytes — versions, UUID, priority, maximum run time, exit code of the last run, status, flags, last run (SYSTEMTIME, local time) — then the running-instance count, five counted UTF-16 strings (application, parameters, working directory, author, comment), user data, reserved data and the triggers, 48 bytes each. The task is given in the same form as a Vista one: its program an Exec action, its triggers named as in the XML (TimeTrigger, CalendarTrigger, IdleTrigger, BootTrigger, LogonTrigger), the scheduler's status as <code>JobStatus</code>. No account is stored in the file. </p>
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a366145e27e5e0090ac750c6313e88178" name="a366145e27e5e0090ac750c6313e88178"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a366145e27e5e0090ac750c6313e88178">&#9670;&#160;</a></span>parseJobFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool parseJobFile </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structScheduledTask.html">ScheduledTask</a> &amp;&#160;</td>
+          <td class="paramname"><em>task</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads a .job file of Windows XP and Server 2003 into a task (see the file's header). Every count and offset is bounded by the file's size. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>the file </td></tr>
+    <tr><td class="paramname">task</td><td>receives its program, author, comment, status, last run and triggers </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the file is shorter than its fixed part or its strings </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

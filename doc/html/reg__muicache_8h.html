@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -127,7 +127,7 @@ Classes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>MUICache: executables run through the shell, and their display name. </p>
 <p>WHAT IT SHOWS. When the shell displays an application's name, it caches the name read from the binary's resources, keyed by the binary's path. An entry therefore means the executable was PRESENT and shown by the shell — it is a weaker execution indicator than BAM or <a class="el" href="structPrefetch.html">Prefetch</a>, but it survives the deletion of the binary, and it carries the name the program gave itself, which a renamed executable contradicts.</p>
-<p>WHERE IT IS READ. In each user's UsrClass.dat (<code>Local Settings\Software\Microsoft\Windows\Shell\MuiCache</code>), so the entries are attributed to the user whose hive holds them. The keys carry no timestamp of their own: only the key's last write time bounds the cache. </p>
+<p>WHERE IT IS READ. In each user's UsrClass.dat (<code>Local Settings\Software\Microsoft\Windows\Shell\MuiCache</code>), and on Windows XP and Server 2003 in NTUSER.DAT (<code>Software\Microsoft\Windows\ShellNoRoam\MUICache</code>, the same values, with a binary LangID beside them), so the entries are attributed to the user whose hive holds them. The keys carry no timestamp of their own: only the key's last write time bounds the cache. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

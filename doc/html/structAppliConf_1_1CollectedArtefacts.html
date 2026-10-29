@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -136,6 +136,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aeddcfea018a2026748880369c795402e" id="r_aeddcfea018a2026748880369c795402e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aeddcfea018a2026748880369c795402e">amcache</a> = true</td></tr>
 <tr class="memdesc:aeddcfea018a2026748880369c795402e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Amcache.hve: applications, executables and drivers seen.  <br /></td></tr>
 <tr class="separator:aeddcfea018a2026748880369c795402e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6977067f9099b2fa1a0a973512807781" id="r_a6977067f9099b2fa1a0a973512807781"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a6977067f9099b2fa1a0a973512807781">shadowCopies</a> = true</td></tr>
+<tr class="memdesc:a6977067f9099b2fa1a0a973512807781"><td class="mdescLeft">&#160;</td><td class="mdescRight">shadow copies read raw: the hives and event logs as each copy kept them  <br /></td></tr>
+<tr class="separator:a6977067f9099b2fa1a0a973512807781"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adba5a81cdf460c4b918c872b59c748ea" id="r_adba5a81cdf460c4b918c872b59c748ea"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#adba5a81cdf460c4b918c872b59c748ea">userAssist</a> = true</td></tr>
 <tr class="memdesc:adba5a81cdf460c4b918c872b59c748ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">programs each user launched from Explorer, with count and date  <br /></td></tr>
 <tr class="separator:adba5a81cdf460c4b918c872b59c748ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -195,6 +198,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a2a48c5a6504727896bdea146d555499a" id="r_a2a48c5a6504727896bdea146d555499a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a2a48c5a6504727896bdea146d555499a">powershellHistory</a> = true</td></tr>
 <tr class="memdesc:a2a48c5a6504727896bdea146d555499a"><td class="mdescLeft">&#160;</td><td class="mdescRight">PSReadLine histories of every profile.  <br /></td></tr>
 <tr class="separator:a2a48c5a6504727896bdea146d555499a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af18f9845cb45d3c0559370e0bc277eaf" id="r_af18f9845cb45d3c0559370e0bc277eaf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af18f9845cb45d3c0559370e0bc277eaf">powershellProfiles</a> = true</td></tr>
+<tr class="memdesc:af18f9845cb45d3c0559370e0bc277eaf"><td class="mdescLeft">&#160;</td><td class="mdescRight">PowerShell profiles of the machine and of every user: scripts run at each start.  <br /></td></tr>
+<tr class="separator:af18f9845cb45d3c0559370e0bc277eaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af67bb713cccdd38cbf9fa413254b2ebc" id="r_af67bb713cccdd38cbf9fa413254b2ebc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af67bb713cccdd38cbf9fa413254b2ebc">setupApi</a> = true</td></tr>
 <tr class="memdesc:af67bb713cccdd38cbf9fa413254b2ebc"><td class="mdescLeft">&#160;</td><td class="mdescRight">setupapi.dev.log: device installations, first USB connections  <br /></td></tr>
 <tr class="separator:af67bb713cccdd38cbf9fa413254b2ebc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -252,12 +258,18 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aaa6ac16966efdded651c6fae9a8c0f44" id="r_aaa6ac16966efdded651c6fae9a8c0f44"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aaa6ac16966efdded651c6fae9a8c0f44">rootCertificates</a> = true</td></tr>
 <tr class="memdesc:aaa6ac16966efdded651c6fae9a8c0f44"><td class="mdescLeft">&#160;</td><td class="mdescRight">root certificates of the machine and of each user  <br /></td></tr>
 <tr class="separator:aaa6ac16966efdded651c6fae9a8c0f44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3937c6e3f8f21ef42a4261fe1fce43f9" id="r_a3937c6e3f8f21ef42a4261fe1fce43f9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a3937c6e3f8f21ef42a4261fe1fce43f9">intuneLogs</a> = true</td></tr>
+<tr class="memdesc:a3937c6e3f8f21ef42a4261fe1fce43f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">the Intune Management Extension's logs: scripts and applications the tenant pushed (<a class="el" href="intune__logs_8h.html" title="The Intune Management Extension&#39;s logs (backlog B-052).">intune_logs.h</a>)  <br /></td></tr>
+<tr class="separator:a3937c6e3f8f21ef42a4261fe1fce43f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a018c4bbece62b343ebab18df8cba7b64" id="r_a018c4bbece62b343ebab18df8cba7b64"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a018c4bbece62b343ebab18df8cba7b64">internetSettings</a> = true</td></tr>
 <tr class="memdesc:a018c4bbece62b343ebab18df8cba7b64"><td class="mdescLeft">&#160;</td><td class="mdescRight">each user's proxy and automatic configuration script  <br /></td></tr>
 <tr class="separator:a018c4bbece62b343ebab18df8cba7b64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06d49848b263bb6dcf0e7eb1fe16c6da" id="r_a06d49848b263bb6dcf0e7eb1fe16c6da"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a06d49848b263bb6dcf0e7eb1fe16c6da">firewall</a> = true</td></tr>
 <tr class="memdesc:a06d49848b263bb6dcf0e7eb1fe16c6da"><td class="mdescLeft">&#160;</td><td class="mdescRight">firewall rules and profiles  <br /></td></tr>
 <tr class="separator:a06d49848b263bb6dcf0e7eb1fe16c6da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a228a992b4571573ba20ea07f140a0489" id="r_a228a992b4571573ba20ea07f140a0489"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a228a992b4571573ba20ea07f140a0489">firewallLog</a> = true</td></tr>
+<tr class="memdesc:a228a992b4571573ba20ea07f140a0489"><td class="mdescLeft">&#160;</td><td class="mdescRight">the firewall's log, pfirewall.log: connections allowed or dropped (<a class="el" href="firewall__log_8h.html" title="The Windows Firewall&#39;s log, pfirewall.log (backlog B-052).">firewall_log.h</a>)  <br /></td></tr>
+<tr class="separator:a228a992b4571573ba20ea07f140a0489"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49fdf483775308ef4f5de3bb667062b3" id="r_a49fdf483775308ef4f5de3bb667062b3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a49fdf483775308ef4f5de3bb667062b3">wmi</a> = true</td></tr>
 <tr class="memdesc:a49fdf483775308ef4f5de3bb667062b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">WMI repository: event subscriptions (filters, consumers, bindings), read offline.  <br /></td></tr>
 <tr class="separator:a49fdf483775308ef4f5de3bb667062b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -267,6 +279,21 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:af534a1eb2e769d8bccc7187cd29bb882" id="r_af534a1eb2e769d8bccc7187cd29bb882"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af534a1eb2e769d8bccc7187cd29bb882">bits</a> = true</td></tr>
 <tr class="memdesc:af534a1eb2e769d8bccc7187cd29bb882"><td class="mdescLeft">&#160;</td><td class="mdescRight">qmgr.db: BITS jobs, their files and notification command lines  <br /></td></tr>
 <tr class="separator:af534a1eb2e769d8bccc7187cd29bb882"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5474163b30d59ec291b3dfcbd2935e0b" id="r_a5474163b30d59ec291b3dfcbd2935e0b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a5474163b30d59ec291b3dfcbd2935e0b">cloudIdentity</a> = true</td></tr>
+<tr class="memdesc:a5474163b30d59ec291b3dfcbd2935e0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Entra ID registrations of the machine and its users; token caches taken raw, encrypted (<a class="el" href="cloud__identity_8h.html" title="The machine&#39;s and its users&#39; registration with Microsoft Entra ID (backlog B-052).">cloud_identity.h</a>)  <br /></td></tr>
+<tr class="separator:a5474163b30d59ec291b3dfcbd2935e0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae84603f88dc0720994719642d9817bf5" id="r_ae84603f88dc0720994719642d9817bf5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ae84603f88dc0720994719642d9817bf5">defenderEndpoint</a> = true</td></tr>
+<tr class="memdesc:ae84603f88dc0720994719642d9817bf5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defender for Endpoint's local folder, raw copy only.  <br /></td></tr>
+<tr class="separator:ae84603f88dc0720994719642d9817bf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad8974ee025211bed065c2f32d57ea3b" id="r_aad8974ee025211bed065c2f32d57ea3b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#aad8974ee025211bed065c2f32d57ea3b">etwLogs</a> = true</td></tr>
+<tr class="memdesc:aad8974ee025211bed065c2f32d57ea3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">ETW trace files Windows wrote to its disk (.etl), raw copy only.  <br /></td></tr>
+<tr class="separator:aad8974ee025211bed065c2f32d57ea3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4666ac38f52b5bfecbf411dd9b6fa563" id="r_a4666ac38f52b5bfecbf411dd9b6fa563"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a4666ac38f52b5bfecbf411dd9b6fa563">onedrive</a> = true</td></tr>
+<tr class="memdesc:a4666ac38f52b5bfecbf411dd9b6fa563"><td class="mdescLeft">&#160;</td><td class="mdescRight">OneDrive's logs and settings of each profile, raw copy only.  <br /></td></tr>
+<tr class="separator:a4666ac38f52b5bfecbf411dd9b6fa563"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af28781678aff08619d878e5eb190ecce" id="r_af28781678aff08619d878e5eb190ecce"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af28781678aff08619d878e5eb190ecce">bootRecords</a> = true</td></tr>
+<tr class="memdesc:af28781678aff08619d878e5eb190ecce"><td class="mdescLeft">&#160;</td><td class="mdescRight">what runs before Windows: disks' first mebibyte, partitions' boot sectors, EFI system partition (<a class="el" href="boot__records_8h.html" title="THE BOOT RECORDS: what runs before Windows — each disk&#39;s first mebibyte, each partition&#39;s boot sector...">boot_records.h</a>)  <br /></td></tr>
+<tr class="separator:af28781678aff08619d878e5eb190ecce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af267ce1f9722a2f5f456c79c942b947d" id="r_af267ce1f9722a2f5f456c79c942b947d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#af267ce1f9722a2f5f456c79c942b947d">fatVolumes</a> = true</td></tr>
 <tr class="memdesc:af267ce1f9722a2f5f456c79c942b947d"><td class="mdescLeft">&#160;</td><td class="mdescRight">FAT and exFAT volumes (a suspect's keys included): entries, deleted ones too.  <br /></td></tr>
 <tr class="separator:af267ce1f9722a2f5f456c79c942b947d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -318,6 +345,12 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ac22fa2226996ba1bc1e18318b446062c" id="r_ac22fa2226996ba1bc1e18318b446062c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#ac22fa2226996ba1bc1e18318b446062c">emails</a> = true</td></tr>
 <tr class="memdesc:ac22fa2226996ba1bc1e18318b446062c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Outlook's PST and OST: messages, recipients, attachments.  <br /></td></tr>
 <tr class="separator:ac22fa2226996ba1bc1e18318b446062c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4983ad2707c62195fc5cf920e90a964e" id="r_a4983ad2707c62195fc5cf920e90a964e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a4983ad2707c62195fc5cf920e90a964e">sysmon</a> = true</td></tr>
+<tr class="memdesc:a4983ad2707c62195fc5cf920e90a964e"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classSysmon.html" title="The installations of Sysmon (sysmon.json).">Sysmon</a> where it runs: its configuration and the files it archived (<a class="el" href="sysmon_8h.html" title="SYSMON, where it runs: its configuration, read in the examined SYSTEM hive, and the files it archived...">sysmon.h</a>)  <br /></td></tr>
+<tr class="separator:a4983ad2707c62195fc5cf920e90a964e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2dd2a78ddf7d37dcf51094b7866d2249" id="r_a2dd2a78ddf7d37dcf51094b7866d2249"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAppliConf_1_1CollectedArtefacts.html#a2dd2a78ddf7d37dcf51094b7866d2249">deletedFiles</a> = true</td></tr>
+<tr class="memdesc:a2dd2a78ddf7d37dcf51094b7866d2249"><td class="mdescLeft">&#160;</td><td class="mdescRight">deleted files recovered by raw reading; its options: deletedFilesSettings  <br /></td></tr>
+<tr class="separator:a2dd2a78ddf7d37dcf51094b7866d2249"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The artefacts to collect, one switch each (wac.yml, section <code>artefacts:</code>), all on by default: a key missing from the file is on. No artefact is collected without its key. The hives, the event logs and the $MFT are not artefacts but DEPENDENCIES, copied when an artefact asked for reads them (needsUserHives, rdp_server and the logs…). </p>
@@ -439,6 +472,38 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="af28781678aff08619d878e5eb190ecce" name="af28781678aff08619d878e5eb190ecce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af28781678aff08619d878e5eb190ecce">&#9670;&#160;</a></span>bootRecords</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::bootRecords = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>what runs before Windows: disks' first mebibyte, partitions' boot sectors, EFI system partition (<a class="el" href="boot__records_8h.html" title="THE BOOT RECORDS: what runs before Windows — each disk&#39;s first mebibyte, each partition&#39;s boot sector...">boot_records.h</a>) </p>
+
+</div>
+</div>
+<a id="a5474163b30d59ec291b3dfcbd2935e0b" name="a5474163b30d59ec291b3dfcbd2935e0b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5474163b30d59ec291b3dfcbd2935e0b">&#9670;&#160;</a></span>cloudIdentity</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::cloudIdentity = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Entra ID registrations of the machine and its users; token caches taken raw, encrypted (<a class="el" href="cloud__identity_8h.html" title="The machine&#39;s and its users&#39; registration with Microsoft Entra ID (backlog B-052).">cloud_identity.h</a>) </p>
+
+</div>
+</div>
 <a id="a0bfe696388652390725f346fcc16490b" name="a0bfe696388652390725f346fcc16490b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0bfe696388652390725f346fcc16490b">&#9670;&#160;</a></span>defender</h2>
 
@@ -468,6 +533,38 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Defender configuration: exclusions and protection settings (registry) </p>
+
+</div>
+</div>
+<a id="ae84603f88dc0720994719642d9817bf5" name="ae84603f88dc0720994719642d9817bf5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae84603f88dc0720994719642d9817bf5">&#9670;&#160;</a></span>defenderEndpoint</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::defenderEndpoint = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Defender for Endpoint's local folder, raw copy only. </p>
+
+</div>
+</div>
+<a id="a2dd2a78ddf7d37dcf51094b7866d2249" name="a2dd2a78ddf7d37dcf51094b7866d2249"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2dd2a78ddf7d37dcf51094b7866d2249">&#9670;&#160;</a></span>deletedFiles</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::deletedFiles = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>deleted files recovered by raw reading; its options: deletedFilesSettings </p>
 
 </div>
 </div>
@@ -532,6 +629,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Windows Error Reporting: Report.wer of the machine and of each profile. </p>
+
+</div>
+</div>
+<a id="aad8974ee025211bed065c2f32d57ea3b" name="aad8974ee025211bed065c2f32d57ea3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad8974ee025211bed065c2f32d57ea3b">&#9670;&#160;</a></span>etwLogs</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::etwLogs = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ETW trace files Windows wrote to its disk (.etl), raw copy only. </p>
 
 </div>
 </div>
@@ -615,6 +728,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a228a992b4571573ba20ea07f140a0489" name="a228a992b4571573ba20ea07f140a0489"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a228a992b4571573ba20ea07f140a0489">&#9670;&#160;</a></span>firewallLog</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::firewallLog = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the firewall's log, pfirewall.log: connections allowed or dropped (<a class="el" href="firewall__log_8h.html" title="The Windows Firewall&#39;s log, pfirewall.log (backlog B-052).">firewall_log.h</a>) </p>
+
+</div>
+</div>
 <a id="aa2d65c03096c89153018baca7b9bd22d" name="aa2d65c03096c89153018baca7b9bd22d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa2d65c03096c89153018baca7b9bd22d">&#9670;&#160;</a></span>hosts</h2>
 
@@ -660,6 +789,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>each user's proxy and automatic configuration script </p>
+
+</div>
+</div>
+<a id="a3937c6e3f8f21ef42a4261fe1fce43f9" name="a3937c6e3f8f21ef42a4261fe1fce43f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3937c6e3f8f21ef42a4261fe1fce43f9">&#9670;&#160;</a></span>intuneLogs</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::intuneLogs = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the Intune Management Extension's logs: scripts and applications the tenant pushed (<a class="el" href="intune__logs_8h.html" title="The Intune Management Extension&#39;s logs (backlog B-052).">intune_logs.h</a>) </p>
 
 </div>
 </div>
@@ -901,6 +1046,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a4666ac38f52b5bfecbf411dd9b6fa563" name="a4666ac38f52b5bfecbf411dd9b6fa563"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4666ac38f52b5bfecbf411dd9b6fa563">&#9670;&#160;</a></span>onedrive</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::onedrive = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>OneDrive's logs and settings of each profile, raw copy only. </p>
+
+</div>
+</div>
 <a id="ab77ef0acfc7e5c81557a859a6713e1af" name="ab77ef0acfc7e5c81557a859a6713e1af"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab77ef0acfc7e5c81557a859a6713e1af">&#9670;&#160;</a></span>operatingSystem</h2>
 
@@ -946,6 +1107,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>PSReadLine histories of every profile. </p>
+
+</div>
+</div>
+<a id="af18f9845cb45d3c0559370e0bc277eaf" name="af18f9845cb45d3c0559370e0bc277eaf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af18f9845cb45d3c0559370e0bc277eaf">&#9670;&#160;</a></span>powershellProfiles</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::powershellProfiles = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>PowerShell profiles of the machine and of every user: scripts run at each start. </p>
 
 </div>
 </div>
@@ -1215,6 +1392,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a6977067f9099b2fa1a0a973512807781" name="a6977067f9099b2fa1a0a973512807781"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6977067f9099b2fa1a0a973512807781">&#9670;&#160;</a></span>shadowCopies</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::shadowCopies = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>shadow copies read raw: the hives and event logs as each copy kept them </p>
+
+</div>
+</div>
 <a id="a442ba35c1a81757aa252614f44b34273" name="a442ba35c1a81757aa252614f44b34273"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a442ba35c1a81757aa252614f44b34273">&#9670;&#160;</a></span>shellbags</h2>
 
@@ -1292,6 +1485,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>startup folders of all users and of each profile </p>
+
+</div>
+</div>
+<a id="a4983ad2707c62195fc5cf920e90a964e" name="a4983ad2707c62195fc5cf920e90a964e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4983ad2707c62195fc5cf920e90a964e">&#9670;&#160;</a></span>sysmon</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AppliConf::CollectedArtefacts::sysmon = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classSysmon.html" title="The installations of Sysmon (sysmon.json).">Sysmon</a> where it runs: its configuration and the files it archived (<a class="el" href="sysmon_8h.html" title="SYSMON, where it runs: its configuration, read in the examined SYSTEM hive, and the files it archived...">sysmon.h</a>) </p>
 
 </div>
 </div>

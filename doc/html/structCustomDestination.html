@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -133,12 +133,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a96c0aa32da5e3ecc8d71daae8822b70b" id="r_a96c0aa32da5e3ecc8d71daae8822b70b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestination.html#a96c0aa32da5e3ecc8d71daae8822b70b">pathOriginal</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:a96c0aa32da5e3ecc8d71daae8822b70b"><td class="mdescLeft">&#160;</td><td class="mdescRight">path it was read from on the examined volume  <br /></td></tr>
 <tr class="separator:a96c0aa32da5e3ecc8d71daae8822b70b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af047fe2b69bbe3494821f54b350e0dfe" id="r_af047fe2b69bbe3494821f54b350e0dfe"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestination.html#af047fe2b69bbe3494821f54b350e0dfe">typeInt</a> = 0</td></tr>
-<tr class="memdesc:af047fe2b69bbe3494821f54b350e0dfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">kind of list, as the file numbers it  <br /></td></tr>
-<tr class="separator:af047fe2b69bbe3494821f54b350e0dfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab703681f51635c3c5ee5cf5abfce19e2" id="r_ab703681f51635c3c5ee5cf5abfce19e2"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestination.html#ab703681f51635c3c5ee5cf5abfce19e2">type</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:ab703681f51635c3c5ee5cf5abfce19e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">that kind spelled out  <br /></td></tr>
-<tr class="separator:ab703681f51635c3c5ee5cf5abfce19e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e1a2e562f6ad790d8e36e6564ffdd32" id="r_a0e1a2e562f6ad790d8e36e6564ffdd32"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structCustomCategoryHeader.html">CustomCategoryHeader</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestination.html#a0e1a2e562f6ad790d8e36e6564ffdd32">categories</a></td></tr>
+<tr class="memdesc:a0e1a2e562f6ad790d8e36e6564ffdd32"><td class="mdescLeft">&#160;</td><td class="mdescRight">the categories, as the file declares them  <br /></td></tr>
+<tr class="separator:a0e1a2e562f6ad790d8e36e6564ffdd32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5006acc81c834f3e50cb4b7da7efd2b6" id="r_a5006acc81c834f3e50cb4b7da7efd2b6"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structCustomDestinationCategory.html">CustomDestinationCategory</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestination.html#a5006acc81c834f3e50cb4b7da7efd2b6">category</a></td></tr>
 <tr class="separator:a5006acc81c834f3e50cb4b7da7efd2b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adaac772e30c7185b10fb0b6243b11691" id="r_adaac772e30c7185b10fb0b6243b11691"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestination.html#adaac772e30c7185b10fb0b6243b11691">createdUtc</a> = { 0 }</td></tr>
@@ -287,6 +284,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a0e1a2e562f6ad790d8e36e6564ffdd32" name="a0e1a2e562f6ad790d8e36e6564ffdd32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e1a2e562f6ad790d8e36e6564ffdd32">&#9670;&#160;</a></span>categories</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="structCustomCategoryHeader.html">CustomCategoryHeader</a>&gt; CustomDestination::categories</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the categories, as the file declares them </p>
+
+</div>
+</div>
 <a id="a5006acc81c834f3e50cb4b7da7efd2b6" name="a5006acc81c834f3e50cb4b7da7efd2b6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5006acc81c834f3e50cb4b7da7efd2b6">&#9670;&#160;</a></span>category</h2>
 
@@ -380,38 +393,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>SID of the user the jump list belongs to. </p>
-
-</div>
-</div>
-<a id="ab703681f51635c3c5ee5cf5abfce19e2" name="ab703681f51635c3c5ee5cf5abfce19e2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab703681f51635c3c5ee5cf5abfce19e2">&#9670;&#160;</a></span>type</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring CustomDestination::type = L&quot;&quot;</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>that kind spelled out </p>
-
-</div>
-</div>
-<a id="af047fe2b69bbe3494821f54b350e0dfe" name="af047fe2b69bbe3494821f54b350e0dfe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af047fe2b69bbe3494821f54b350e0dfe">&#9670;&#160;</a></span>typeInt</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned int CustomDestination::typeInt = 0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>kind of list, as the file numbers it </p>
 
 </div>
 </div>

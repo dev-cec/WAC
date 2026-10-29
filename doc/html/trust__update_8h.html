@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -127,7 +127,7 @@ Functions</h2></td></tr>
 <li>trust-manifest.json: date, sources, counts, SHA-256 of every file.</li>
 </ul>
 <p>WHY IT CAN BE CARRIED WITHOUT BEING TRUSTED. Both trust lists are signed by Microsoft's trust list publisher, checked up to a Microsoft root embedded in WAC; every root certificate must have the SHA-1 the signed list names. The set is checked again where it is used: altered on the key, it is refused, not believed.</p>
-<p>WRITTEN IN AN ORDER THAT SAYS WHETHER IT IS COMPLETE: the manifest goes last and is removed first. A set without its manifest — interrupted download, full medium — is treated as absent: the current rules apply, every third-party binary is collected. </p>
+<p>WRITTEN IN AN ORDER THAT SAYS WHETHER IT IS COMPLETE: the manifest goes last and is set aside first (trust-manifest.json.interrupted). A set without its manifest — interrupted download, full medium — is treated as absent: the current rules apply, every third-party binary is collected; the folder stays recognised as a set, and the next &ndash;update-trust completes it. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="a18bee1d5762aa036139326a76bf0470d" name="a18bee1d5762aa036139326a76bf0470d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a18bee1d5762aa036139326a76bf0470d">&#9670;&#160;</a></span>UpdateTrust()</h2>

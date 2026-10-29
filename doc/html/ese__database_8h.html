@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,6 +107,7 @@ $(document).ready(function(){initNavTree('ese__database_8h.html',''); initResiza
 <p>Reader of ESE databases (Extensible Storage Engine, "JET Blue"): SRUDB.dat, qmgr.db, and the other databases Windows keeps this way.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;cstdint&gt;</code><br />
+<code>#include &lt;optional&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
@@ -138,20 +139,24 @@ Typedefs</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:acebf5d49b18398f6ba75cd2641822894" id="r_acebf5d49b18398f6ba75cd2641822894"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__database_8h.html#acebf5d49b18398f6ba75cd2641822894">eseCellToJson</a> (const <a class="el" href="structEseColumn.html">EseColumn</a> &amp;column, const <a class="el" href="structEseCell.html">EseCell</a> &amp;cell)</td></tr>
 <tr class="separator:acebf5d49b18398f6ba75cd2641822894"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f55d13087052453ce4aa6dcdb150e5e" id="r_a7f55d13087052453ce4aa6dcdb150e5e"><td class="memItemLeft" align="right" valign="top">std::optional&lt; uint64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__database_8h.html#a7f55d13087052453ce4aa6dcdb150e5e">eseCellInteger</a> (const <a class="el" href="structEseCell.html">EseCell</a> &amp;cell)</td></tr>
+<tr class="separator:a7f55d13087052453ce4aa6dcdb150e5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad830f473171975b755a721a3cb22a817" id="r_ad830f473171975b755a721a3cb22a817"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__database_8h.html#ad830f473171975b755a721a3cb22a817">decompressSevenBit</a> (std::vector&lt; uint8_t &gt; &amp;value)</td></tr>
+<tr class="separator:ad830f473171975b755a721a3cb22a817"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae63c36a6b5b4350699061a9f163eea85" id="r_ae63c36a6b5b4350699061a9f163eea85"><td class="memItemLeft" align="right" valign="top"><a class="el" href="ese__database_8h.html#aaee291391bc0e42b1d1c61f8d6026cac">EseRecord</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__database_8h.html#ae63c36a6b5b4350699061a9f163eea85">parseEseRecord</a> (const std::vector&lt; uint8_t &gt; &amp;data, const std::vector&lt; <a class="el" href="structEseColumn.html">EseColumn</a> &gt; &amp;columns, bool smallPages, bool newFormat)</td></tr>
 <tr class="separator:ae63c36a6b5b4350699061a9f163eea85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Reader of ESE databases (Extensible Storage Engine, "JET Blue"): SRUDB.dat, qmgr.db, and the other databases Windows keeps this way. </p>
-<p>WHY OUR OWN. ESENT's API opens a database for writing, replays its logs and may rewrite its pages — on a copy, it still takes a dependency on the DLL of the analysis workstation. The format is read here, page by page, from the copy in the exhibit store.</p>
+<p>WHY OUR OWN. ESENT's API opens a database for writing and may rewrite its pages, and its reading would depend on the DLL of the analysis workstation. The format is read here, page by page, from the working copy; esent.dll only replays the transaction logs into that copy beforehand (<a class="el" href="ese__recovery_8h.html" title="Replay of an ESE database&#39;s transaction logs into its working copy, by Windows&#39; own engine (esent....">ese_recovery.h</a>), never reads it.</p>
 <p>THE FORMAT, as described by J. Metz (libesedb) and Fox-IT (dissect.esedb), checked on the test VM against dissect.esedb on the same files:</p><ul>
 <li>page 0 is the header (page size at 236, state at 52); logical page n is at (n + 1) × page size;</li>
 <li>a page: a header of 40 bytes, 80 above 8 KiB; at its end, one tag of 4 bytes per entry (size, offset); an entry is a key (with a prefix shared through the page's first tag) then data — a child page number in a branch, a record in a leaf;</li>
 <li>the catalog, MSysObjects, rooted at page 4, gives each table its root page, its columns (identifier, type, code page) and its long values' root;</li>
 <li>a record: fixed columns (identifiers 1–127) with a null bitmap, variable ones (128–255) through an offset table, tagged ones (256 and above) through a table of identifier/offset pairs; a tagged value too large is "separated" into the long-value tree, keyed by its identifier then its offset, big-endian.</li>
 </ul>
-<p>NOT DECODED: compressed values (7-bit, XPRESS), met in neither SRUDB.dat nor qmgr.db of the test VM — they are said so, with their scheme, rather than guessed. Records whose tagged columns are in the pre-Vista format.</p>
-<p>A DATABASE COPIED LIVE is in "dirty shutdown" state: what the service changed since its last checkpoint may be only in its transaction logs, which are collected alongside, for a replay by the analyst (esentutl /r). </p>
+<p>COMPRESSED VALUES: 7-bit text (ASCII or UTF-16), met in the Windows.edb of Windows 8.1, is unpacked; XPRESS, met in neither SRUDB.dat, qmgr.db nor that Windows.edb, is said so, with its scheme, rather than guessed. Records whose tagged columns are in the pre-Vista format give their fixed and variable columns only.</p>
+<p>A DATABASE COPIED LIVE is in "dirty shutdown" state: what the service changed since its last checkpoint may be only in its transaction logs, which are collected alongside and replayed into the working copy before it is read (<a class="el" href="ese__recovery_8h.html" title="Replay of an ESE database&#39;s transaction logs into its working copy, by Windows&#39; own engine (esent....">ese_recovery.h</a>); a replay not applied is said in the log. </p>
 </div><h2 class="groupheader">Typedef Documentation</h2>
 <a id="aaee291391bc0e42b1d1c61f8d6026cac" name="aaee291391bc0e42b1d1c61f8d6026cac"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aaee291391bc0e42b1d1c61f8d6026cac">&#9670;&#160;</a></span>EseRecord</h2>
@@ -170,6 +175,50 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="ad830f473171975b755a721a3cb22a817" name="ad830f473171975b755a721a3cb22a817"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad830f473171975b755a721a3cb22a817">&#9670;&#160;</a></span>decompressSevenBit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool decompressSevenBit </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>value</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Unpacks a value compressed on 7 bits (schemes 1 and 2): after a header byte — the scheme in its high 5 bits, in its low 3 the data bits of the last byte less one —, units of 7 bits packed from the lowest bit: bytes under scheme 1 (of any text, UTF-16 included), UTF-16 characters whose high byte is zero under scheme 2. Measured on the Windows.edb of Windows 8.1, every value confronted with dissect.esedb. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">value</td><td>the value with its header byte; receives the text's bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false, and the value untouched, for another scheme (XPRESS…) </dd></dl>
+
+</div>
+</div>
+<a id="a7f55d13087052453ce4aa6dcdb150e5e" name="a7f55d13087052453ce4aa6dcdb150e5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f55d13087052453ce4aa6dcdb150e5e">&#9670;&#160;</a></span>eseCellInteger()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt; uint64_t &gt; eseCellInteger </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structEseCell.html">EseCell</a> &amp;&#160;</td>
+          <td class="paramname"><em>cell</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The integer a cell holds: its first value, 1 to 8 bytes little-endian, unsigned as stored. Every reader of an identifier or a date goes through it: parsed from its JSON text, a compressed cell or an unexpected type threw, and the whole conversion stopped. </p><dl class="section return"><dt>Returns</dt><dd>none if the cell holds no such value (empty, compressed, wider) </dd></dl>
+
+</div>
+</div>
 <a id="acebf5d49b18398f6ba75cd2641822894" name="acebf5d49b18398f6ba75cd2641822894"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acebf5d49b18398f6ba75cd2641822894">&#9670;&#160;</a></span>eseCellToJson()</h2>
 

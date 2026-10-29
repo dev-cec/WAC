@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -113,13 +113,19 @@ $(document).ready(function(){initNavTree('raw__hive_8h.html',''); initResizable(
 <code>#include &lt;utility&gt;</code><br />
 <code>#include &lt;cstdint&gt;</code><br />
 <code>#include &lt;memory&gt;</code><br />
+<code>#include &lt;functional&gt;</code><br />
 <code>#include &lt;streambuf&gt;</code><br />
+<code>#include &quot;<a class="el" href="vss_8h_source.html">vss.h</a>&quot;</code><br />
 </div>
 <p><a href="raw__hive_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawReadTimes.html">RawReadTimes</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNtfsRun.html">NtfsRun</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawVolumeLayout.html">RawVolumeLayout</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveFingerprints.html">RawHiveFingerprints</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -151,12 +157,32 @@ Functions</h2></td></tr>
 <tr class="separator:a76c0a8bbc2520c48d139b83d02f303e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0f5ca400aaa1626345f2f1bf4b7f5fa" id="r_ab0f5ca400aaa1626345f2f1bf4b7f5fa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#ab0f5ca400aaa1626345f2f1bf4b7f5fa">applyNtfsFixup</a> (uint8_t *record, size_t size)</td></tr>
 <tr class="separator:ab0f5ca400aaa1626345f2f1bf4b7f5fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2636245f44d64fd5cf35397d21c583dc" id="r_a2636245f44d64fd5cf35397d21c583dc"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structNtfsRun.html">NtfsRun</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a2636245f44d64fd5cf35397d21c583dc">decodeNtfsRuns</a> (const uint8_t *p, const uint8_t *end)</td></tr>
+<tr class="separator:a2636245f44d64fd5cf35397d21c583dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac775e0840700d18e5aa6df7cdd50b351" id="r_ac775e0840700d18e5aa6df7cdd50b351"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#ac775e0840700d18e5aa6df7cdd50b351">residentAttributeValue</a> (const uint8_t *attribute, const uint8_t *&amp;value, uint32_t &amp;length)</td></tr>
+<tr class="separator:ac775e0840700d18e5aa6df7cdd50b351"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e13db94d9db864e9ff3ce0f4fdd795c" id="r_a2e13db94d9db864e9ff3ce0f4fdd795c"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a2e13db94d9db864e9ff3ce0f4fdd795c">compressionUnitClusters</a> (uint16_t exponent)</td></tr>
+<tr class="separator:a2e13db94d9db864e9ff3ce0f4fdd795c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a503bdc1d9343f0f011c4f21220f5f20b" id="r_a503bdc1d9343f0f011c4f21220f5f20b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a503bdc1d9343f0f011c4f21220f5f20b">plausibleIndexBlockSize</a> (uint32_t size)</td></tr>
+<tr class="separator:a503bdc1d9343f0f011c4f21220f5f20b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a374154744e29b354d93a9f728afe8389" id="r_a374154744e29b354d93a9f728afe8389"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a374154744e29b354d93a9f728afe8389">RawVolumeLayoutOf</a> (const std::wstring &amp;volumeLetter, <a class="el" href="structRawVolumeLayout.html">RawVolumeLayout</a> &amp;layout)</td></tr>
+<tr class="separator:a374154744e29b354d93a9f728afe8389"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a184e69b73e9a6ebaa55bb3b8df9308db" id="r_a184e69b73e9a6ebaa55bb3b8df9308db"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a184e69b73e9a6ebaa55bb3b8df9308db">ReadMftRecordRaw</a> (const std::wstring &amp;volumeLetter, uint64_t entry, std::vector&lt; uint8_t &gt; &amp;record)</td></tr>
+<tr class="separator:a184e69b73e9a6ebaa55bb3b8df9308db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a0b368f93e2a8cc3dc7d6b7bed973eb" id="r_a0a0b368f93e2a8cc3dc7d6b7bed973eb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a0a0b368f93e2a8cc3dc7d6b7bed973eb">ReadClusterAllocationRaw</a> (const std::wstring &amp;volumeLetter, uint64_t lcn, uint64_t count, std::vector&lt; bool &gt; &amp;inUse)</td></tr>
+<tr class="separator:a0a0b368f93e2a8cc3dc7d6b7bed973eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a259d851e37ae69f231ca9ab5da52f7fb" id="r_a259d851e37ae69f231ca9ab5da52f7fb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a259d851e37ae69f231ca9ab5da52f7fb">ReadClustersRaw</a> (const std::wstring &amp;volumeLetter, uint64_t lcn, uint64_t count, uint8_t *out)</td></tr>
+<tr class="separator:a259d851e37ae69f231ca9ab5da52f7fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad6446910d29fbde129c5738972501a7" id="r_aad6446910d29fbde129c5738972501a7"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#aad6446910d29fbde129c5738972501a7">ForEachIndexBlockRaw</a> (const std::wstring &amp;volumeLetter, uint64_t directory, const std::function&lt; void(const uint8_t *, size_t, bool)&gt; &amp;visit)</td></tr>
+<tr class="separator:aad6446910d29fbde129c5738972501a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c6fcb004a257a7b9bfb351d435286b7" id="r_a7c6fcb004a257a7b9bfb351d435286b7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a7c6fcb004a257a7b9bfb351d435286b7">RawHiveSetProgress</a> (<a class="el" href="raw__hive_8h.html#a8077cabec9441f4ac6617ed5bbe50d02">RawHiveProgressFn</a> fn)</td></tr>
 <tr class="separator:a7c6fcb004a257a7b9bfb351d435286b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff3f1529d81703425b03fe383f20d88d" id="r_aff3f1529d81703425b03fe383f20d88d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#aff3f1529d81703425b03fe383f20d88d">ExtractFileRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;filePathOnVolume, const std::wstring &amp;outFile)</td></tr>
 <tr class="separator:aff3f1529d81703425b03fe383f20d88d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05a06ee1bac073498c6c086ac1f6c925" id="r_a05a06ee1bac073498c6c086ac1f6c925"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a05a06ee1bac073498c6c086ac1f6c925">ExtractFilesRaw</a> (const std::wstring &amp;volumeLetter, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;items, std::vector&lt; HRESULT &gt; *perItem=nullptr, std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; *reading=nullptr)</td></tr>
-<tr class="separator:a05a06ee1bac073498c6c086ac1f6c925"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3df0c6f516ff52c33ddb6de8b0490ab8" id="r_a3df0c6f516ff52c33ddb6de8b0490ab8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a3df0c6f516ff52c33ddb6de8b0490ab8">ExtractFilesRaw</a> (const std::wstring &amp;volumeLetter, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;items, std::vector&lt; HRESULT &gt; *perItem=nullptr, std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; *reading=nullptr, int shadowCopy=-1)</td></tr>
+<tr class="separator:a3df0c6f516ff52c33ddb6de8b0490ab8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afea775718172fe47e490367c6f9cd6e8" id="r_afea775718172fe47e490367c6f9cd6e8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#afea775718172fe47e490367c6f9cd6e8">RawShadowCopies</a> (const std::wstring &amp;volumeLetter, std::vector&lt; <a class="el" href="structShadowCopyInfo.html">ShadowCopyInfo</a> &gt; &amp;copies, std::wstring &amp;diagnostic)</td></tr>
+<tr class="separator:afea775718172fe47e490367c6f9cd6e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79a9fccb4a4b062049187aede1ca5636" id="r_a79a9fccb4a4b062049187aede1ca5636"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a79a9fccb4a4b062049187aede1ca5636">ExtractStreamRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;pathOnVolume, const std::wstring &amp;streamName, const std::wstring &amp;outFile, bool skipLeadingSparse, <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;line)</td></tr>
 <tr class="separator:a79a9fccb4a4b062049187aede1ca5636"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24ea0d8ea40d581e472dbbaf14af682d" id="r_a24ea0d8ea40d581e472dbbaf14af682d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__hive_8h.html#a24ea0d8ea40d581e472dbbaf14af682d">ExtractWofStreamRaw</a> (const std::wstring &amp;volumeLetter, const std::wstring &amp;pathOnVolume, const std::wstring &amp;outFile, uint32_t *algorithm=nullptr)</td></tr>
@@ -234,6 +260,62 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the array is well formed and every stride ends with the update sequence number; false otherwise (record left as it is) </dd></dl>
+
+</div>
+</div>
+<a id="a2e13db94d9db864e9ff3ce0f4fdd795c" name="a2e13db94d9db864e9ff3ce0f4fdd795c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e13db94d9db864e9ff3ce0f4fdd795c">&#9670;&#160;</a></span>compressionUnitClusters()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t compressionUnitClusters </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>exponent</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The compression unit of a non-resident attribute, in clusters, from the exponent its header gives (NTFS writes 4: 16 clusters). </p><dl class="section return"><dt>Returns</dt><dd>2^exponent, or 0 for an exponent above 16 — a forged one shifted past the integer's width, or asked for gigabytes of buffers </dd></dl>
+
+</div>
+</div>
+<a id="a2636245f44d64fd5cf35397d21c583dc" name="a2636245f44d64fd5cf35397d21c583dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2636245f44d64fd5cf35397d21c583dc">&#9670;&#160;</a></span>decodeNtfsRuns()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="structNtfsRun.html">NtfsRun</a> &gt; decodeNtfsRuns </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>end</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decodes the data runs (mapping pairs) of a non-resident attribute.</p>
+<p>HOSTILE INPUT. A run's header gives the sizes of its two fields, each at most 8 bytes: a forged header announcing up to 15 shifted the bytes past the width of the integer (undefined behaviour), and a run of length zero or a cluster before the volume's start was taken as it came. Such a list is refused whole: half of it would describe a content that is not the file's. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">p</td><td>the first run's header </td></tr>
+    <tr><td class="paramname">end</td><td>the end of the attribute: nothing at or past it is read </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the runs, up to the terminating zero or <code>end</code>; EMPTY if the list is malformed (field size beyond 8 bytes, length zero, truncated run, negative cluster) </dd></dl>
 
 </div>
 </div>
@@ -378,7 +460,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">volumeLetter</td><td>letter of the volume to read, without the colon (e.g. L"C") </td></tr>
     <tr><td class="paramname">dirPathOnVolume</td><td>path of the directory on the volume </td></tr>
     <tr><td class="paramname">outDir</td><td>destination directory; the tree is reproduced there </td></tr>
-    <tr><td class="paramname">extensions</td><td>extensions to extract (empty = all) </td></tr>
+    <tr><td class="paramname">extensions</td><td>extensions to extract (empty = all); an entry without a leading "." is a whole file name ("Thumbs.db") </td></tr>
     <tr><td class="paramname">extracted</td><td>receives the number of files extracted </td></tr>
     <tr><td class="paramname">maxDepth</td><td>guard against a cyclic or abnormal tree (a corrupt NTFS index could loop); 0 = no descent </td></tr>
     <tr><td class="paramname">reading</td><td>(optional) receives a record per file, fingerprints included: it is the source of the exhibit store manifest </td></tr>
@@ -433,8 +515,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a05a06ee1bac073498c6c086ac1f6c925" name="a05a06ee1bac073498c6c086ac1f6c925"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a05a06ee1bac073498c6c086ac1f6c925">&#9670;&#160;</a></span>ExtractFilesRaw()</h2>
+<a id="a3df0c6f516ff52c33ddb6de8b0490ab8" name="a3df0c6f516ff52c33ddb6de8b0490ab8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3df0c6f516ff52c33ddb6de8b0490ab8">&#9670;&#160;</a></span>ExtractFilesRaw()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -461,7 +543,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; *&#160;</td>
-          <td class="paramname"><em>reading</em> = <code>nullptr</code>&#160;</td>
+          <td class="paramname"><em>reading</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>shadowCopy</em> = <code>-1</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -476,6 +564,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">items</td><td>pairs {path on the volume, output file} </td></tr>
     <tr><td class="paramname">perItem</td><td>(optional) receives the HRESULT of each item, in order </td></tr>
     <tr><td class="paramname">reading</td><td>(optional) receives a record per item, fingerprints included. It is the source of the exhibit store manifest: without it, an exhibit is copied with nothing to identify it. </td></tr>
+    <tr><td class="paramname">shadowCopy</td><td>-1 to read the volume as it is now, or the index of one of its shadow copies (RawShadowCopies), read raw through it </td></tr>
   </table>
   </dd>
 </dl>
@@ -597,6 +686,49 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="aad6446910d29fbde129c5738972501a7" name="aad6446910d29fbde129c5738972501a7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad6446910d29fbde129c5738972501a7">&#9670;&#160;</a></span>ForEachIndexBlockRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ForEachIndexBlockRaw </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volumeLetter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t&#160;</td>
+          <td class="paramname"><em>directory</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::function&lt; void(const uint8_t *, size_t, bool)&gt; &amp;&#160;</td>
+          <td class="paramname"><em>visit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Every index block (INDX) of a directory, as it is now, its fixups applied: those the directory uses and those it released — which keep the entries of files gone (level 2 of the deleted files' recovery). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>the volume's letter </td></tr>
+    <tr><td class="paramname">directory</td><td>the directory's $MFT record </td></tr>
+    <tr><td class="paramname">visit</td><td>called with each block, its size, and whether the index's $BITMAP marks it in use </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK (a directory whose index fits its record has no block); ERROR_FILE_CORRUPT if its record or index could not be read </dd></dl>
+
+</div>
+</div>
 <a id="a80f45d2b127d66b0a056a29cf3b80523" name="a80f45d2b127d66b0a056a29cf3b80523"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a80f45d2b127d66b0a056a29cf3b80523">&#9670;&#160;</a></span>ListAttributesRaw()</h2>
 
@@ -685,6 +817,30 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a503bdc1d9343f0f011c4f21220f5f20b" name="a503bdc1d9343f0f011c4f21220f5f20b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a503bdc1d9343f0f011c4f21220f5f20b">&#9670;&#160;</a></span>plausibleIndexBlockSize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool plausibleIndexBlockSize </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>size</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Whether the index block size an $INDEX_ROOT gives is possible: a power of two from 512 bytes to 64 KiB (NTFS writes 4096). A forged size sized the block buffer up to 4 GiB before any check. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">size</td><td>the size, in bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a7c6fcb004a257a7b9bfb351d435286b7" name="a7c6fcb004a257a7b9bfb351d435286b7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7c6fcb004a257a7b9bfb351d435286b7">&#9670;&#160;</a></span>RawHiveSetProgress()</h2>
 
@@ -742,6 +898,85 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="afea775718172fe47e490367c6f9cd6e8" name="afea775718172fe47e490367c6f9cd6e8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afea775718172fe47e490367c6f9cd6e8">&#9670;&#160;</a></span>RawShadowCopies()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT RawShadowCopies </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volumeLetter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structShadowCopyInfo.html">ShadowCopyInfo</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>copies</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>diagnostic</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The shadow copies of a volume, read raw from its catalog and stores, without the Volume Shadow Copy service (<a class="el" href="vss_8h.html" title="Volume shadow copies read raw: the catalog and stores that the Volume Shadow Copy service keeps on an...">vss.h</a>). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>letter of the volume, without the colon (e.g. L"C") </td></tr>
+    <tr><td class="paramname">copies</td><td>receives them, oldest first: their index is the one ExtractFilesRaw and <a class="el" href="classRawReader.html">RawReader</a> take </td></tr>
+    <tr><td class="paramname">diagnostic</td><td>receives what was found, or why the reading stopped </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK (no copy is a valid answer), or the failure </dd></dl>
+
+</div>
+</div>
+<a id="a374154744e29b354d93a9f728afe8389" name="a374154744e29b354d93a9f728afe8389"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a374154744e29b354d93a9f728afe8389">&#9670;&#160;</a></span>RawVolumeLayoutOf()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT RawVolumeLayoutOf </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volumeLetter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structRawVolumeLayout.html">RawVolumeLayout</a> &amp;&#160;</td>
+          <td class="paramname"><em>layout</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The geometry of a volume, from its boot sector. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>the volume's letter, without the colon </td></tr>
+    <tr><td class="paramname">layout</td><td>receives it </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK, or why the volume could not be read </dd></dl>
+
+</div>
+</div>
 <a id="acc8af4f01e18e78112f44f8c57b3954c" name="acc8af4f01e18e78112f44f8c57b3954c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acc8af4f01e18e78112f44f8c57b3954c">&#9670;&#160;</a></span>RawVolumesClose()</h2>
 
@@ -782,6 +1017,192 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>S_OK, or S_FALSE if one could not be opened (it is retried by no one) </dd></dl>
+
+</div>
+</div>
+<a id="a0a0b368f93e2a8cc3dc7d6b7bed973eb" name="a0a0b368f93e2a8cc3dc7d6b7bed973eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a0b368f93e2a8cc3dc7d6b7bed973eb">&#9670;&#160;</a></span>ReadClusterAllocationRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ReadClusterAllocationRaw </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volumeLetter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t&#160;</td>
+          <td class="paramname"><em>lcn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t&#160;</td>
+          <td class="paramname"><em>count</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; bool &gt; &amp;&#160;</td>
+          <td class="paramname"><em>inUse</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Whether each cluster of a range is in use now, as $Bitmap says. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>the volume's letter </td></tr>
+    <tr><td class="paramname">lcn</td><td>first cluster </td></tr>
+    <tr><td class="paramname">count</td><td>clusters </td></tr>
+    <tr><td class="paramname">inUse</td><td>receives one flag per cluster </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK; ERROR_INVALID_DATA if the range leaves the volume or $Bitmap could not be read </dd></dl>
+
+</div>
+</div>
+<a id="a259d851e37ae69f231ca9ab5da52f7fb" name="a259d851e37ae69f231ca9ab5da52f7fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a259d851e37ae69f231ca9ab5da52f7fb">&#9670;&#160;</a></span>ReadClustersRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ReadClustersRaw </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volumeLetter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t&#160;</td>
+          <td class="paramname"><em>lcn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t&#160;</td>
+          <td class="paramname"><em>count</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads clusters as they are now. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>the volume's letter </td></tr>
+    <tr><td class="paramname">lcn</td><td>first cluster </td></tr>
+    <tr><td class="paramname">count</td><td>clusters </td></tr>
+    <tr><td class="paramname">out</td><td>receives count × <a class="el" href="structRawVolumeLayout.html#a58fde4898de4393cc880bdb3ee6d92cd" title="bytes per cluster">RawVolumeLayout::clusterSize</a> bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK; ERROR_READ_FAULT if the range leaves the volume or a read failed </dd></dl>
+
+</div>
+</div>
+<a id="a184e69b73e9a6ebaa55bb3b8df9308db" name="a184e69b73e9a6ebaa55bb3b8df9308db"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a184e69b73e9a6ebaa55bb3b8df9308db">&#9670;&#160;</a></span>ReadMftRecordRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ReadMftRecordRaw </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volumeLetter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t&#160;</td>
+          <td class="paramname"><em>entry</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>record</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads a $MFT record as it is now, its fixups applied. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">volumeLetter</td><td>the volume's letter </td></tr>
+    <tr><td class="paramname">entry</td><td>the record's number </td></tr>
+    <tr><td class="paramname">record</td><td>receives its bytes (<a class="el" href="structRawVolumeLayout.html#aceae0a74d661f73f47e22f423962e45d" title="bytes per $MFT record">RawVolumeLayout::recordSize</a>) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK; ERROR_FILE_CORRUPT if it is not a FILE record or is torn </dd></dl>
+
+</div>
+</div>
+<a id="ac775e0840700d18e5aa6df7cdd50b351" name="ac775e0840700d18e5aa6df7cdd50b351"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac775e0840700d18e5aa6df7cdd50b351">&#9670;&#160;</a></span>residentAttributeValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool residentAttributeValue </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>attribute</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&amp;&#160;</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t &amp;&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The value of a RESIDENT attribute, bounded by the attribute: its offset and length are read in the record — hostile —, and a value said to start or end past the attribute is refused, never read (a forged $DATA of 0x7FFFFFFF bytes in a 1 KiB record used to be copied from past it). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">attribute</td><td>the attribute's header; the caller has checked that its whole length, as its header gives it, lies in the record </td></tr>
+    <tr><td class="paramname">value</td><td>receives the value's first byte </td></tr>
+    <tr><td class="paramname">length</td><td>receives its length </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the attribute is shorter than a resident header (0x18) or its value leaves it </dd></dl>
 
 </div>
 </div>

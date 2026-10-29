@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -132,9 +132,9 @@ $(document).ready(function(){initNavTree('local__groups_8h_source.html',''); ini
 </div>
 <div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:62</div></div>
 <div class="ttc" id="aclassLocalGroups_html"><div class="ttname"><a href="classLocalGroups.html">LocalGroups</a></div><div class="ttdoc">The local groups of the examined machine (local_groups.json).</div><div class="ttdef"><b>Definition</b> local_groups.h:36</div></div>
-<div class="ttc" id="aclassLocalGroups_html_a9765cbe0a735fd331a870f209138b489"><div class="ttname"><a href="classLocalGroups.html#a9765cbe0a735fd331a870f209138b489">LocalGroups::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">releases the groups</div><div class="ttdef"><b>Definition</b> local_groups.cpp:152</div></div>
-<div class="ttc" id="aclassLocalGroups_html_aac72e1241e3dfeded27dd57b53384167"><div class="ttname"><a href="classLocalGroups.html#aac72e1241e3dfeded27dd57b53384167">LocalGroups::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> local_groups.cpp:146</div></div>
-<div class="ttc" id="aclassLocalGroups_html_ab0142eba9ad81967205a28c4319cab0b"><div class="ttname"><a href="classLocalGroups.html#ab0142eba9ad81967205a28c4319cab0b">LocalGroups::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> local_groups.cpp:127</div></div>
+<div class="ttc" id="aclassLocalGroups_html_a9765cbe0a735fd331a870f209138b489"><div class="ttname"><a href="classLocalGroups.html#a9765cbe0a735fd331a870f209138b489">LocalGroups::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">releases the groups</div><div class="ttdef"><b>Definition</b> local_groups.cpp:146</div></div>
+<div class="ttc" id="aclassLocalGroups_html_aac72e1241e3dfeded27dd57b53384167"><div class="ttname"><a href="classLocalGroups.html#aac72e1241e3dfeded27dd57b53384167">LocalGroups::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> local_groups.cpp:140</div></div>
+<div class="ttc" id="aclassLocalGroups_html_ab0142eba9ad81967205a28c4319cab0b"><div class="ttname"><a href="classLocalGroups.html#ab0142eba9ad81967205a28c4319cab0b">LocalGroups::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> local_groups.cpp:121</div></div>
 <div class="ttc" id="ajson_8h_html"><div class="ttname"><a href="json_8h.html">json.h</a></div><div class="ttdoc">Centralised JSON serialiser for WAC, and the reader of the JSON it writes back (exhibit manifest,...</div></div>
 <div class="ttc" id="astructLocalGroup_html"><div class="ttname"><a href="structLocalGroup.html">LocalGroup</a></div><div class="ttdef"><b>Definition</b> local_groups.h:24</div></div>
 <div class="ttc" id="astructLocalGroup_html_a1c2dbadb1fca9085fd017e566b7d8f7c"><div class="ttname"><a href="structLocalGroup.html#a1c2dbadb1fca9085fd017e566b7d8f7c">LocalGroup::description</a></div><div class="ttdeci">std::wstring description</div><div class="ttdoc">its description</div><div class="ttdef"><b>Definition</b> local_groups.h:29</div></div>
@@ -143,7 +143,7 @@ $(document).ready(function(){initNavTree('local__groups_8h_source.html',''); ini
 <div class="ttc" id="astructLocalGroup_html_a46b79fd6bca28aa1d7d8ee313142c86c"><div class="ttname"><a href="structLocalGroup.html#a46b79fd6bca28aa1d7d8ee313142c86c">LocalGroup::rid</a></div><div class="ttdeci">DWORD rid</div><div class="ttdoc">the alias RID (the subkey name, in hex)</div><div class="ttdef"><b>Definition</b> local_groups.h:26</div></div>
 <div class="ttc" id="astructLocalGroup_html_a54a24a27a14b56bdeb31a6c6876d426d"><div class="ttname"><a href="structLocalGroup.html#a54a24a27a14b56bdeb31a6c6876d426d">LocalGroup::keyLastWriteUtc</a></div><div class="ttdeci">FILETIME keyLastWriteUtc</div><div class="ttdoc">last change of the group's key</div><div class="ttdef"><b>Definition</b> local_groups.h:31</div></div>
 <div class="ttc" id="astructLocalGroup_html_a9af789cb6d7d2470bce1115c769f3d79"><div class="ttname"><a href="structLocalGroup.html#a9af789cb6d7d2470bce1115c769f3d79">LocalGroup::sid</a></div><div class="ttdeci">std::wstring sid</div><div class="ttdoc">the group's own SID (S-1-5-32-&lt;rid&gt; or machine-&lt;rid&gt;)</div><div class="ttdef"><b>Definition</b> local_groups.h:27</div></div>
-<div class="ttc" id="astructLocalGroup_html_ac1f24884084c1bd1b95ead1862ad4f7c"><div class="ttname"><a href="structLocalGroup.html#ac1f24884084c1bd1b95ead1862ad4f7c">LocalGroup::toJson</a></div><div class="ttdeci">Json toJson() const</div><div class="ttdef"><b>Definition</b> local_groups.cpp:105</div></div>
+<div class="ttc" id="astructLocalGroup_html_ac1f24884084c1bd1b95ead1862ad4f7c"><div class="ttname"><a href="structLocalGroup.html#ac1f24884084c1bd1b95ead1862ad4f7c">LocalGroup::toJson</a></div><div class="ttdeci">Json toJson() const</div><div class="ttdef"><b>Definition</b> local_groups.cpp:99</div></div>
 <div class="ttc" id="astructLocalGroup_html_afed81ed5542c4bc9b623a6e171c259fe"><div class="ttname"><a href="structLocalGroup.html#afed81ed5542c4bc9b623a6e171c259fe">LocalGroup::members</a></div><div class="ttdeci">std::vector&lt; std::wstring &gt; members</div><div class="ttdoc">member SIDs, as text</div><div class="ttdef"><b>Definition</b> local_groups.h:30</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

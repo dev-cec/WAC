@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -117,10 +117,111 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a7fa6234c0663dbc506091ef62ff45c80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87fa68b78a3e8a2f7bbfc35a3421f80d" id="r_a87fa68b78a3e8a2f7bbfc35a3421f80d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFatVolume.html#a87fa68b78a3e8a2f7bbfc35a3421f80d">readContent</a> (const <a class="el" href="structFatEntry.html">FatEntry</a> &amp;e, const std::function&lt; bool(const uint8_t *, size_t)&gt; &amp;sink)</td></tr>
 <tr class="separator:a87fa68b78a3e8a2f7bbfc35a3421f80d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af38ec9d73998bc88f300e6ad5459b610" id="r_af38ec9d73998bc88f300e6ad5459b610"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFatVolume.html#af38ec9d73998bc88f300e6ad5459b610">clusterSize</a> () const</td></tr>
+<tr class="separator:af38ec9d73998bc88f300e6ad5459b610"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae724879a554174e31a737f73da418009" id="r_ae724879a554174e31a737f73da418009"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFatVolume.html#ae724879a554174e31a737f73da418009">clusterCount</a> () const</td></tr>
+<tr class="separator:ae724879a554174e31a737f73da418009"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07083b668e810440677201cf7100080a" id="r_a07083b668e810440677201cf7100080a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFatVolume.html#a07083b668e810440677201cf7100080a">allocation</a> (uint32_t first, uint32_t count, std::vector&lt; bool &gt; &amp;used)</td></tr>
+<tr class="separator:a07083b668e810440677201cf7100080a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ea84827e0d0a964473ff0d8a51fb310" id="r_a2ea84827e0d0a964473ff0d8a51fb310"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFatVolume.html#a2ea84827e0d0a964473ff0d8a51fb310">readClusters</a> (uint32_t first, uint32_t count, uint8_t *out)</td></tr>
+<tr class="separator:a2ea84827e0d0a964473ff0d8a51fb310"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A FAT or exFAT volume. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a07083b668e810440677201cf7100080a" name="a07083b668e810440677201cf7100080a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a07083b668e810440677201cf7100080a">&#9670;&#160;</a></span>allocation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FatVolume::allocation </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>first</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>count</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; bool &gt; &amp;&#160;</td>
+          <td class="paramname"><em>used</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Whether each of <code>count</code> clusters from <code>first</code> (2 and up) is allocated NOW — read again from the volume, not from the FAT loaded at open: the deleted files' recovery checks a cluster before and after reading it. FAT: its entry is not 0; exFAT: its bit of the allocation bitmap. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">used</td><td>receives one flag per cluster </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the range leaves the volume or cannot be read </dd></dl>
+
+</div>
+</div>
+<a id="ae724879a554174e31a737f73da418009" name="ae724879a554174e31a737f73da418009"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae724879a554174e31a737f73da418009">&#9670;&#160;</a></span>clusterCount()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t FatVolume::clusterCount </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>clusters of the data region, numbered from 2 </dd></dl>
+
+</div>
+</div>
+<a id="af38ec9d73998bc88f300e6ad5459b610" name="af38ec9d73998bc88f300e6ad5459b610"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af38ec9d73998bc88f300e6ad5459b610">&#9670;&#160;</a></span>clusterSize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t FatVolume::clusterSize </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>bytes per cluster </dd></dl>
+
+</div>
+</div>
 <a id="a7fa6234c0663dbc506091ef62ff45c80" name="a7fa6234c0663dbc506091ef62ff45c80"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7fa6234c0663dbc506091ef62ff45c80">&#9670;&#160;</a></span>entries()</h2>
 
@@ -181,6 +282,47 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Reads the boot sector. </p><dl class="section return"><dt>Returns</dt><dd>false if it is neither FAT nor exFAT </dd></dl>
+
+</div>
+</div>
+<a id="a2ea84827e0d0a964473ff0d8a51fb310" name="a2ea84827e0d0a964473ff0d8a51fb310"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ea84827e0d0a964473ff0d8a51fb310">&#9670;&#160;</a></span>readClusters()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool FatVolume::readClusters </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>first</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>count</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads <code>count</code> clusters from <code>first</code>. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">out</td><td>receives count × <a class="el" href="classFatVolume.html#af38ec9d73998bc88f300e6ad5459b610">clusterSize()</a> bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the range leaves the volume or cannot be read </dd></dl>
 
 </div>
 </div>

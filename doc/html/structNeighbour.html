@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -120,8 +120,11 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:add240b97b08278f8a3e35b5e421353f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">its hardware (MAC) address  <br /></td></tr>
 <tr class="separator:add240b97b08278f8a3e35b5e421353f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2cf905f24c522b37c2226d7c2cc1216" id="r_ad2cf905f24c522b37c2226d7c2cc1216"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNeighbour.html#ad2cf905f24c522b37c2226d7c2cc1216">state</a></td></tr>
-<tr class="memdesc:ad2cf905f24c522b37c2226d7c2cc1216"><td class="mdescLeft">&#160;</td><td class="mdescRight">NL_NEIGHBOR_STATE spelled out.  <br /></td></tr>
+<tr class="memdesc:ad2cf905f24c522b37c2226d7c2cc1216"><td class="mdescLeft">&#160;</td><td class="mdescRight">NL_NEIGHBOR_STATE spelled out; empty when read by the ARP table of before Vista.  <br /></td></tr>
 <tr class="separator:ad2cf905f24c522b37c2226d7c2cc1216"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66d1917b6427c736eba8db4dd46396b3" id="r_a66d1917b6427c736eba8db4dd46396b3"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNeighbour.html#a66d1917b6427c736eba8db4dd46396b3">type</a></td></tr>
+<tr class="memdesc:a66d1917b6427c736eba8db4dd46396b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">kind of ARP entry (Dynamic, Static…): what Windows XP and Server 2003 give instead of a state  <br /></td></tr>
+<tr class="separator:a66d1917b6427c736eba8db4dd46396b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b7fbac3ecd35bdd31d1e489dbb61bcf" id="r_a5b7fbac3ecd35bdd31d1e489dbb61bcf"><td class="memItemLeft" align="right" valign="top">ULONG&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNeighbour.html#a5b7fbac3ecd35bdd31d1e489dbb61bcf">interfaceIndex</a> = 0</td></tr>
 <tr class="memdesc:a5b7fbac3ecd35bdd31d1e489dbb61bcf"><td class="mdescLeft">&#160;</td><td class="mdescRight">interface it was seen on  <br /></td></tr>
 <tr class="separator:a5b7fbac3ecd35bdd31d1e489dbb61bcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -227,7 +230,23 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>NL_NEIGHBOR_STATE spelled out. </p>
+<p>NL_NEIGHBOR_STATE spelled out; empty when read by the ARP table of before Vista. </p>
+
+</div>
+</div>
+<a id="a66d1917b6427c736eba8db4dd46396b3" name="a66d1917b6427c736eba8db4dd46396b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66d1917b6427c736eba8db4dd46396b3">&#9670;&#160;</a></span>type</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Neighbour::type</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>kind of ARP entry (Dynamic, Static…): what Windows XP and Server 2003 give instead of a state </p>
 
 </div>
 </div>

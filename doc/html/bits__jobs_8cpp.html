@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -110,10 +110,13 @@ $(document).ready(function(){initNavTree('bits__jobs_8cpp.html',''); initResizab
 <code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="ese__database_8h_source.html">ese_database.h</a>&quot;</code><br />
 <code>#include &lt;algorithm&gt;</code><br />
+<code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a7cf24eff3e195726db5458f246b1c6ec" id="r_a7cf24eff3e195726db5458f246b1c6ec"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bits__jobs_8cpp.html#a7cf24eff3e195726db5458f246b1c6ec">parseBitsQueue</a> (const std::vector&lt; uint8_t &gt; &amp;queue, const std::wstring &amp;queueFile, std::vector&lt; <a class="el" href="structBitsJob.html">BitsJob</a> &gt; &amp;jobs)</td></tr>
+<tr class="separator:a7cf24eff3e195726db5458f246b1c6ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf1ce7dec4d51cb05eff56852884ccec" id="r_adf1ce7dec4d51cb05eff56852884ccec"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bits__jobs_8cpp.html#adf1ce7dec4d51cb05eff56852884ccec">parseBitsJob</a> (const std::vector&lt; uint8_t &gt; &amp;b, <a class="el" href="structBitsJob.html">BitsJob</a> &amp;job)</td></tr>
 <tr class="separator:adf1ce7dec4d51cb05eff56852884ccec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa2f78459d080516377aa07d02aadfe1c" id="r_aa2f78459d080516377aa07d02aadfe1c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bits__jobs_8cpp.html#aa2f78459d080516377aa07d02aadfe1c">parseBitsFile</a> (const std::vector&lt; uint8_t &gt; &amp;b, <a class="el" href="structBitsFile.html">BitsFile</a> &amp;file)</td></tr>
@@ -177,6 +180,49 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Reads a job's blob. Every length is bounded by the blob. </p><dl class="section return"><dt>Returns</dt><dd>false if its first part (up to the notification flags) does not fit </dd></dl>
+
+</div>
+</div>
+<a id="a7cf24eff3e195726db5458f246b1c6ec" name="a7cf24eff3e195726db5458f246b1c6ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7cf24eff3e195726db5458f246b1c6ec">&#9670;&#160;</a></span>parseBitsQueue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool parseBitsQueue </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>queueFile</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structBitsJob.html">BitsJob</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>jobs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the jobs of a queue file of Windows 8.1 and earlier (qmgr0.dat, qmgr1.dat): each between two delimiters of its version of BITS, its files written in it. Every length is bounded by the file. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">queue</td><td>the queue file </td></tr>
+    <tr><td class="paramname">queueFile</td><td>its path on the examined machine </td></tr>
+    <tr><td class="paramname">jobs</td><td>receives the jobs read </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if no known job delimiter is in it </dd></dl>
 
 </div>
 </div>

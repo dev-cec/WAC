@@ -7,6 +7,7 @@ var structStoredExhibit =
     [ "sha1", "structStoredExhibit.html#a24dce5d56272e2eccd36a2b343069a5d", null ],
     [ "sha256", "structStoredExhibit.html#a74ef9929defb951df5e3c489200dcd7f", null ],
     [ "signature", "structStoredExhibit.html#a96a01b760062861f3bfb0805032547b4", null ],
+    [ "signatureChecked", "structStoredExhibit.html#a7c9227e1e14d58c1a1bdd75713eabeda", null ],
     [ "sourcePath", "structStoredExhibit.html#a6555d0ad6ac850de43056158904421b7", null ],
     [ "workingFile", "structStoredExhibit.html#ab6f0edb9f7591a2b2b84efecc7686985", null ]
 ];

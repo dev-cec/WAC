@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -109,6 +109,7 @@ $(document).ready(function(){initNavTree('parsers__test_8cpp.html',''); initResi
 <code>#include &lt;atomic&gt;</code><br />
 <code>#include &lt;chrono&gt;</code><br />
 <code>#include &lt;cstdio&gt;</code><br />
+<code>#include &lt;cstring&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
 <code>#include &lt;mutex&gt;</code><br />
 <code>#include &lt;random&gt;</code><br />
@@ -123,6 +124,8 @@ $(document).ready(function(){initNavTree('parsers__test_8cpp.html',''); initResi
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a1f70bb0f149dfc56cb14218f4c882bcc" id="r_a1f70bb0f149dfc56cb14218f4c882bcc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parsers__test_8cpp.html#a1f70bb0f149dfc56cb14218f4c882bcc">unsupportedVersionsDeclared</a> (const std::vector&lt; BYTE &gt; &amp;data, const char *name)</td></tr>
+<tr class="separator:a1f70bb0f149dfc56cb14218f4c882bcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c04138a5bfe5d72780bb7e82a18e627" id="r_a3c04138a5bfe5d72780bb7e82a18e627"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="parsers__test_8cpp.html#a3c04138a5bfe5d72780bb7e82a18e627">main</a> (int argc, char **argv)</td></tr>
 <tr class="separator:a3c04138a5bfe5d72780bb7e82a18e627"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -141,6 +144,7 @@ Variables</h2></td></tr>
 <li>its truncations: every length up to 2048 bytes, then about 1000 more, spread over the rest of the file;</li>
 <li>1000 copies with 1 to 8 random bytes overwritten (fixed seed). A compressed <a class="el" href="structPrefetch.html">Prefetch</a> ("MAM") is decompressed first: the test aims at WAC's SCCA parser, not at ntdll's decompressor. Its compressed form is still given whole and in its truncations, for WAC's checks around the call.</li>
 </ul>
+<p>A <a class="el" href="structPrefetch.html">Prefetch</a> is also given with its version rewritten to one WAC has no decoder for (17, 23, and the next one): it must be declared "unsupported format" and nothing of it decoded.</p>
 <p>Registry hives ("hive") go through WAC's own reader (<a class="el" href="offline__registry_8cpp.html" title="Reading of registry hive files (regf), with offreg&#39;s contract — see offline_registry....">offline_registry.cpp</a>): the whole tree is walked — subkeys, values, ORQueryInfoKey.</p>
 <p>Usage: <code>parsers_test jumplist-auto|jumplist-custom|prefetch|hive &lt;file&gt; [file ...]</code> Built by <code>build-windows.sh --test</code>; runs on Windows (real ntdll) or under Wine for the jump lists. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
@@ -169,13 +173,49 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1f70bb0f149dfc56cb14218f4c882bcc" name="a1f70bb0f149dfc56cb14218f4c882bcc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f70bb0f149dfc56cb14218f4c882bcc">&#9670;&#160;</a></span>unsupportedVersionsDeclared()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool unsupportedVersionsDeclared </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; BYTE &gt; &amp;&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 <p><a class="el" href="structRuns.html">Runs</a> the test. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">argc,argv</td><td><code>&lt;kind&gt; &lt;file&gt; [file ...]</code> </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>0 if no input made a parser read outside its buffer or loop </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>0 if no input made a parser read outside its buffer or loop</dd></dl>
+<p>A FORMAT WITHOUT DECODER, presented to the decoder: the decompressed <a class="el" href="structPrefetch.html">Prefetch</a> with its version rewritten to one nobody has seen yet. It must be declared "unsupported format", with its name and hash read and NOTHING decoded with the offsets of another layout; the file's own version must still decode. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td>a decompressed <a class="el" href="structPrefetch.html">Prefetch</a> of a decoded version </td></tr>
+    <tr><td class="paramname">name</td><td>its name, for the messages </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false, with a message, if a version is treated otherwise </dd></dl>
 
 </div>
 </div>

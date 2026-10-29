@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -140,6 +140,8 @@ Functions</h2></td></tr>
 <tr class="separator:ac8731c2371091c6290d353fd98aa3e59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abec213e18f991fd799f47dfecc884a20" id="r_abec213e18f991fd799f47dfecc884a20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structBinarySummary.html">BinarySummary</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#abec213e18f991fd799f47dfecc884a20">BinariesSummary</a> ()</td></tr>
 <tr class="separator:abec213e18f991fd799f47dfecc884a20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cfa8ff3643994147639245bc9304cea" id="r_a2cfa8ff3643994147639245bc9304cea"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structRecoveredStorage.html">RecoveredStorage</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#a2cfa8ff3643994147639245bc9304cea">BinariesStoreRecovered</a> (const std::wstring &amp;exhibitPath, const std::wstring &amp;formerPath, const std::vector&lt; uint8_t &gt; &amp;content, const std::wstring &amp;method, <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;line)</td></tr>
+<tr class="separator:a2cfa8ff3643994147639245bc9304cea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e65fdf5f12a059cc9fd26d884adbc6c" id="r_a3e65fdf5f12a059cc9fd26d884adbc6c"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#a3e65fdf5f12a059cc9fd26d884adbc6c">BinariesCollectAll</a> ()</td></tr>
 <tr class="separator:a3e65fdf5f12a059cc9fd26d884adbc6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34664c60e401d227b487dc96c610a55a" id="r_a34664c60e401d227b487dc96c610a55a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="binaires_8cpp.html#a34664c60e401d227b487dc96c610a55a">recordMissingCrls</a> ()</td></tr>
@@ -187,7 +189,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Adds the three fingerprints to a JSON object, under the keys <code>&lt;prefix&gt;Md5&lt;suffix&gt;</code>, <code>&lt;prefix&gt;Sha1&lt;suffix&gt;</code>, <code>&lt;prefix&gt;Sha256&lt;suffix&gt;</code>. A missing fingerprint is not emitted: an empty field would read as a software defect. </p>
+<p>Adds the three fingerprints to a JSON object, under the keys <code>&lt;prefix&gt;MD5&lt;suffix&gt;</code>, <code>&lt;prefix&gt;SHA1&lt;suffix&gt;</code>, <code>&lt;prefix&gt;SHA256&lt;suffix&gt;</code>. A missing fingerprint is not emitted: an empty field would read as a software defect. </p>
 
 </div>
 </div>
@@ -225,6 +227,63 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Stores in the exhibit store the signature catalogs that justified not collecting a file, then closes the volumes kept open. To be called once no artefact cites files any more, BEFORE the copy to the working directory and the sealing. </p>
+
+</div>
+</div>
+<a id="a2cfa8ff3643994147639245bc9304cea" name="a2cfa8ff3643994147639245bc9304cea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2cfa8ff3643994147639245bc9304cea">&#9670;&#160;</a></span>BinariesStoreRecovered()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structRecoveredStorage.html">RecoveredStorage</a> BinariesStoreRecovered </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>exhibitPath</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>formerPath</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>content</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>method</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;&#160;</td>
+          <td class="paramname"><em>line</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Stores a content recovered from a deleted file (<a class="el" href="deleted__files_8h.html" title="DELETED FILES: the content a deleted file still has on the disk, recovered by raw reading (deleted_fi...">deleted_files.h</a>), judged as the volume's executables are: under <code>binary: unverified</code>, an executable — by its former name, or by its content (MZ) — whose signature holds is fingerprinted, not copied; under <code>binary: all</code> everything is. Under <code>binary: none</code> nothing is judged, and an executable that cannot be cleared is copied like any other content: a deleted executable is what the recovery looks for. Its three fingerprints are in the manifest whatever was done, an identical content already stored is not stored twice. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">exhibitPath</td><td>its place, "X:\$DeletedFiles\…": the source the manifest names, distinct from any file of the volume </td></tr>
+    <tr><td class="paramname">formerPath</td><td>the path the file had, for its kind </td></tr>
+    <tr><td class="paramname">content</td><td>its bytes, holes as zeros </td></tr>
+    <tr><td class="paramname">method</td><td>the collection method, for the manifest </td></tr>
+    <tr><td class="paramname">line</td><td>receives the record, fingerprints included </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>what was done </dd></dl>
 
 </div>
 </div>

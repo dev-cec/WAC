@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -132,6 +132,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a3c813163603dc1a826b7e00eee9bd4f5" id="r_a3c813163603dc1a826b7e00eee9bd4f5"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structStoredExhibit.html#a3c813163603dc1a826b7e00eee9bd4f5">leadingSparseBytes</a> = 0</td></tr>
 <tr class="memdesc:a3c813163603dc1a826b7e00eee9bd4f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">offset of the copy in its stream (the change journal)  <br /></td></tr>
 <tr class="separator:a3c813163603dc1a826b7e00eee9bd4f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c9227e1e14d58c1a1bdd75713eabeda" id="r_a7c9227e1e14d58c1a1bdd75713eabeda"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structStoredExhibit.html#a7c9227e1e14d58c1a1bdd75713eabeda">signatureChecked</a> = false</td></tr>
+<tr class="memdesc:a7c9227e1e14d58c1a1bdd75713eabeda"><td class="mdescLeft">&#160;</td><td class="mdescRight">the collection checked its signature (SignatureVerified), valid or not  <br /></td></tr>
+<tr class="separator:a7c9227e1e14d58c1a1bdd75713eabeda"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An exhibit of a loaded manifest (see ExhibitStoreIndex). </p>
@@ -241,6 +244,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Microsoft authenticity verdict, if recorded. </p>
+
+</div>
+</div>
+<a id="a7c9227e1e14d58c1a1bdd75713eabeda" name="a7c9227e1e14d58c1a1bdd75713eabeda"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c9227e1e14d58c1a1bdd75713eabeda">&#9670;&#160;</a></span>signatureChecked</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool StoredExhibit::signatureChecked = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the collection checked its signature (SignatureVerified), valid or not </p>
 
 </div>
 </div>

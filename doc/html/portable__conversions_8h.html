@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -114,6 +114,8 @@ $(document).ready(function(){initNavTree('portable__conversions_8h.html',''); in
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a129d3173cc8908c45431b87c90b72e21" id="r_a129d3173cc8908c45431b87c90b72e21"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="portable__conversions_8h.html#a129d3173cc8908c45431b87c90b72e21">fits</a> (size_t size, size_t offset, size_t length)</td></tr>
+<tr class="separator:a129d3173cc8908c45431b87c90b72e21"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57e2afaf2a51f351691340d3ff017e04" id="r_a57e2afaf2a51f351691340d3ff017e04"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a57e2afaf2a51f351691340d3ff017e04"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="portable__conversions_8h.html#a57e2afaf2a51f351691340d3ff017e04">readLittleEndian</a> (const uint8_t *p)</td></tr>
 <tr class="separator:a57e2afaf2a51f351691340d3ff017e04"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -250,6 +252,57 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the encoded text </dd></dl>
+
+</div>
+</div>
+<a id="a129d3173cc8908c45431b87c90b72e21" name="a129d3173cc8908c45431b87c90b72e21"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a129d3173cc8908c45431b87c90b72e21">&#9670;&#160;</a></span>fits()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool fits </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>offset</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>True if <code>length</code> bytes starting at <code>offset</code> lie inside a structure of <code>size</code> bytes. Written so that no addition can wrap around — the form every bound check on data read from a file takes. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">size</td><td>size of the structure (or buffer) </td></tr>
+    <tr><td class="paramname">offset</td><td>position of the field </td></tr>
+    <tr><td class="paramname">length</td><td>size of the field </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the field is entirely inside </dd></dl>
 
 </div>
 </div>

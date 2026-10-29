@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,11 +107,12 @@ $(document).ready(function(){initNavTree('wevt_8cpp.html',''); initResizable(); 
 <div class="textblock"><code>#include &quot;<a class="el" href="wevt_8h_source.html">wevt.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
+<code>#include &lt;cwchar&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a9f2e2dda6a95e7c3cab1e5753f63af7c" id="r_a9f2e2dda6a95e7c3cab1e5753f63af7c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wevt_8cpp.html#a9f2e2dda6a95e7c3cab1e5753f63af7c">formatItemValue</a> (const <a class="el" href="structWevtItem.html">WevtItem</a> &amp;item, const <a class="el" href="structWevtValueMap.html">WevtValueMap</a> *map, const <a class="el" href="classTableMessages.html">TableMessages</a> &amp;messages, const <a class="el" href="structSystemMessages.html">SystemMessages</a> &amp;system, const std::wstring &amp;value)</td></tr>
-<tr class="separator:a9f2e2dda6a95e7c3cab1e5753f63af7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6eed91e873361794aba243a6cad3f0c" id="r_ae6eed91e873361794aba243a6cad3f0c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wevt_8cpp.html#ae6eed91e873361794aba243a6cad3f0c">formatItemValue</a> (const <a class="el" href="structWevtItem.html">WevtItem</a> &amp;item, const <a class="el" href="structWevtValueMap.html">WevtValueMap</a> *map, const <a class="el" href="classTableMessages.html">TableMessages</a> &amp;messages, const <a class="el" href="structSystemMessages.html">SystemMessages</a> &amp;system, const std::wstring &amp;value, bool vista)</td></tr>
+<tr class="separator:ae6eed91e873361794aba243a6cad3f0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a433884d225b73b18a68b70a7a4f5a412" id="r_a433884d225b73b18a68b70a7a4f5a412"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wevt_8cpp.html#a433884d225b73b18a68b70a7a4f5a412">formatMessage</a> (const std::wstring &amp;messageTemplate, const std::vector&lt; std::wstring &gt; &amp;values)</td></tr>
 <tr class="separator:a433884d225b73b18a68b70a7a4f5a412"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -121,8 +122,8 @@ Functions</h2></td></tr>
 <p>Structures, as libyal's reference implementation (libfwevt) describes them:</p>
 <p>manifest "CRIM" (4), size (4), major (2), minor (2), number of providers (4) = 16 entry GUID (16), offset of the data (4) = 20 provider "WEVT" (4), size (4), message identifier (4), number of descriptors (4), number of unknowns (4) = 20 then an offset of 4 bytes per descriptor events "EVNT" (4), size (4), number of events (4), unknown (4) = 16 event identifier (2), version (1), channel (1), level (1), opcode (1), task (2), keywords (8), MESSAGE IDENTIFIER (4), then six fields of 4 = 44 </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a9f2e2dda6a95e7c3cab1e5753f63af7c" name="a9f2e2dda6a95e7c3cab1e5753f63af7c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9f2e2dda6a95e7c3cab1e5753f63af7c">&#9670;&#160;</a></span>formatItemValue()</h2>
+<a id="ae6eed91e873361794aba243a6cad3f0c" name="ae6eed91e873361794aba243a6cad3f0c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6eed91e873361794aba243a6cad3f0c">&#9670;&#160;</a></span>formatItemValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -155,7 +156,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>value</em>&#160;</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>vista</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -169,7 +176,8 @@ Functions</h2></td></tr>
 <li>a hexadecimal input type (win:HexInt32, win:HexInt64), or a hexadecimal output type of an integer, and win:ErrorCode, as 0x and upper-case digits: "0x3e7" -&gt; "0x3E7", "2147746053" -&gt; "0x80040105". A pointer keeps the log's form ("0x1b3c");</li>
 <li>an error code by its text: win:Win32Error and win:HResult from the system's table ("87" -&gt; "Paramètre incorrect."), a Win32 HRESULT (0x8007xxxx) by its Win32 code first, an unknown HRESULT "Unknown
     HResult Error code: 0x…" without its 0x10000000 bit, as Windows writes it; win:NTSTATUS from ntdll's ("0" -&gt; "STATUS_SUCCESS");</li>
-<li>binary data as xs:hexBinary: "0x" before its digits; as win:SocketAddress, an IPv4 address and its port ("127.0.0.1:58241"). A value that is no number, absent from its map or from the tables, stays as it is.</li>
+<li>binary data as xs:hexBinary: "0x" before its digits; as win:SocketAddress, an IPv4 address and its port ("127.0.0.1:58241").</li>
+<li>a win:Double, 15 significant digits ("17.4690293241336"), where the log's XML gives the shortest exact form ("17.469029324133604"): Vista and Windows 11 render a record of Vista's ReadyBoost alike. A value that is no number, absent from its map or from the tables, stays as it is.</li>
 </ul>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -178,6 +186,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">messages</td><td>the provider's message table, where the labels are </td></tr>
     <tr><td class="paramname">system</td><td>the system's tables (either may be missing) </td></tr>
     <tr><td class="paramname">value</td><td>the value, as the log holds it (decimal, or "0x…") </td></tr>
+    <tr><td class="paramname">vista</td><td>the messages are Vista's, which write a win:ErrorCode in decimal (UMDF 2105, a UInt32 status shown as win:ErrorCode: "3221225659" under Vista, "0xC00000BB" under Windows 7, measured) </td></tr>
   </table>
   </dd>
 </dl>

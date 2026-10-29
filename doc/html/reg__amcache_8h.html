@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('reg__amcache_8h.html',''); initResizab
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">reg_amcache.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -120,18 +121,61 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcache.html">Amcache</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ac7e8272ea4cdce2f970eff660f7bf36d" id="r_ac7e8272ea4cdce2f970eff660f7bf36d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="reg__amcache_8h.html#ac7e8272ea4cdce2f970eff660f7bf36d">decodeRecentFileCache</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, std::vector&lt; std::wstring &gt; &amp;paths)</td></tr>
+<tr class="separator:ac7e8272ea4cdce2f970eff660f7bf36d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structAmcache.html">Amcache</a>: the inventory Windows keeps of the applications, binaries, drivers, devices and shortcuts the machine has known. </p>
 <p>WHAT IT SHOWS. <code>Windows\AppCompat\Programs\Amcache.hve</code> is a hive of its own, whose <code>Root\Inventory*</code> keys each hold one table: InventoryApplication (the installed products), InventoryApplicationFile (the executables, with their SHA-1, size and PE link date), InventoryDriverBinary, InventoryDevicePnp, InventoryApplicationShortcut… An entry proves the object was PRESENT and inventoried, not that it ran; it survives the object's deletion, and the SHA-1 identifies a binary long gone.</p>
 <p>WHY EVERY VALUE. Only four to six values of two tables were read: no SHA-1, no size, no driver, no device (B-015, against AmcacheParser, which gives them). Each table is now read whole — every value of every entry, typed as the hive stores it, with the key's last write time — so that a value a later Windows adds is not lost either. Values are converted only where the conversion was checked:</p><ul>
-<li><code>FileId</code> of an executable and <code>DriverId</code> of a driver ("0000" + 40 hexadecimal digits) give <code>Sha1</code>; for a file larger than 30 MiB, <a class="el" href="structAmcache.html">Amcache</a> hashed only its first 31,457,280 bytes, which <code>Sha1CoversBytes</code> says;</li>
+<li><code>FileId</code> of an executable and <code>DriverId</code> of a driver ("0000" + 40 hexadecimal digits) give <code>AmcacheSha1</code>; for a file larger than 30 MiB, <a class="el" href="structAmcache.html">Amcache</a> hashed only its first 31,457,280 bytes, which <code>AmcacheSha1CoversBytes</code> says;</li>
 <li><code>LinkDate</code>, InventoryApplication's <code>InstallDate</code> and a driver's <code>DriverLastWriteTime</code>, text dates, are UTC (measured against the PE header, the folder's creation and the driver file's own date);</li>
 <li><code>DriverTimeStamp</code>, the driver's PE TimeDateStamp, is a Unix time;</li>
 <li><code>LowerCaseLongPath</code> is published as <code>LongPath</code>, its name since the start. The other text dates are given as written: a device's <code>InstallDate</code> holds only the day, a driver package's <code>Date</code> too; their time zone is not known.</li>
 </ul>
-<p>OUTPUT. InventoryApplication in <code>amcache_applications.json</code>, InventoryApplicationFile in <code>amcache_application_files.json</code> (their names since the start), every other table in <code>amcache_inventory.json</code>, each entry with its <code>Table</code>. </p>
-</div></div><!-- contents -->
+<p>OUTPUT. InventoryApplication in <code>amcache_applications.json</code>, InventoryApplicationFile in <code>amcache_application_files.json</code> (their names since the start), every other table in <code>amcache_inventory.json</code>, each entry with its <code>Table</code>.</p>
+<p>WINDOWS 7: RecentFileCache.bcf. Before Amcache.hve (and next to it once KB2952664 brought it to Windows 7), Windows lists in <code>Windows\AppCompat\Programs\RecentFileCache.bcf</code> the executables run since the last pass of its ProgramDataUpdater task: their paths only, no date. A header of 20 bytes, its first 8 a signature (FE FF EE FF 11 22 00 00), the others not known; then each path as a count of characters on 32 bits, the characters in UTF-16 and a null. Measured on the Windows 7 VM. Each path goes to <code>amcache_application_files.json</code> with <code>Table</code> "RecentFileCache". </p>
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="ac7e8272ea4cdce2f970eff660f7bf36d" name="ac7e8272ea4cdce2f970eff660f7bf36d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7e8272ea4cdce2f970eff660f7bf36d">&#9670;&#160;</a></span>decodeRecentFileCache()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool decodeRecentFileCache </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>paths</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decodes RecentFileCache.bcf (see the file's header). Every count is bounded by the file's size: a cut or forged entry ends the reading, the paths before it kept. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>the file </td></tr>
+    <tr><td class="paramname">paths</td><td>receives the paths, in the file's order </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the signature is not there </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

@@ -19,6 +19,7 @@ var structPrefetch =
     [ "run_count", "structPrefetch.html#a76b2fe4776446360ac3cb06874dcb150", null ],
     [ "signature", "structPrefetch.html#a4dfafd4622e287305a023c1d8dca9b6f", null ],
     [ "size", "structPrefetch.html#a68cf15cba02b871d6df9945b029cf473", null ],
+    [ "unsupportedFormat", "structPrefetch.html#a1092cd09bced7855624a9cbb8896dbb2", null ],
     [ "version", "structPrefetch.html#a9aee39b5276aa88928b595c5209b10ab", null ],
     [ "volumes", "structPrefetch.html#a77b4dfb38277a26b079563c7a8fe911a", null ]
 ];

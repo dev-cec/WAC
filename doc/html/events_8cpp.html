@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -106,14 +106,21 @@ $(document).ready(function(){initNavTree('events_8cpp.html',''); initResizable()
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="events_8h_source.html">events.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="evtx_8h_source.html">evtx.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="event__log__files_8h_source.html">event_log_files.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="evt_8h_source.html">evt.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="event__messages_8h_source.html">event_messages.h</a>&quot;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
+<code>#include &lt;memory&gt;</code><br />
 <code>#include &quot;<a class="el" href="raw__hive_8h_source.html">raw_hive.h</a>&quot;</code><br />
 <code>#include &lt;chrono&gt;</code><br />
 <code>#include &lt;cwchar&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:aa42a26f874a31d98819ad165d6d3cdb0" id="r_aa42a26f874a31d98819ad165d6d3cdb0"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structEventLogFile.html">EventLogFile</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="events_8cpp.html#aa42a26f874a31d98819ad165d6d3cdb0">workingEventLogs</a> ()</td></tr>
+<tr class="separator:aa42a26f874a31d98819ad165d6d3cdb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acba9131f37249359b3c4946015a4d5b6" id="r_acba9131f37249359b3c4946015a4d5b6"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="events_8cpp.html#acba9131f37249359b3c4946015a4d5b6">readEventLog</a> (const <a class="el" href="structEventLogFile.html">EventLogFile</a> &amp;<a class="el" href="tools_8cpp.html#a3fd0bef5fa02565cb2da3f612cf978b9">log</a>, const std::function&lt; bool(const <a class="el" href="structEvtxRecord.html">EvtxRecord</a> &amp;)&gt; &amp;onRecord, <a class="el" href="structEvtxSummary.html">EvtxSummary</a> *summary)</td></tr>
+<tr class="separator:acba9131f37249359b3c4946015a4d5b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c0de7bd7804e97f9f9e0cb8e273d706" id="r_a7c0de7bd7804e97f9f9e0cb8e273d706"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="events_8cpp.html#a7c0de7bd7804e97f9f9e0cb8e273d706">EventProvidersCited</a> (std::set&lt; std::wstring &gt; &amp;guids, std::set&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;sources)</td></tr>
 <tr class="separator:a7c0de7bd7804e97f9f9e0cb8e273d706"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -156,6 +163,67 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_FILE_NOT_FOUND if no log was extracted </dd></dl>
+
+</div>
+</div>
+<a id="acba9131f37249359b3c4946015a4d5b6" name="acba9131f37249359b3c4946015a4d5b6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acba9131f37249359b3c4946015a4d5b6">&#9670;&#160;</a></span>readEventLog()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT readEventLog </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structEventLogFile.html">EventLogFile</a> &amp;&#160;</td>
+          <td class="paramname"><em>log</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::function&lt; bool(const <a class="el" href="structEvtxRecord.html">EvtxRecord</a> &amp;)&gt; &amp;&#160;</td>
+          <td class="paramname"><em>onRecord</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structEvtxSummary.html">EvtxSummary</a> *&#160;</td>
+          <td class="paramname"><em>summary</em> = <code>nullptr</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads one log, whatever its format. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">log</td><td>the log </td></tr>
+    <tr><td class="paramname">onRecord</td><td>called for each record; false stops the reading </td></tr>
+    <tr><td class="paramname">summary</td><td>receives the count and the diagnosis (optional) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>as EvtxReadFile / EvtReadFile </dd></dl>
+
+</div>
+</div>
+<a id="aa42a26f874a31d98819ad165d6d3cdb0" name="aa42a26f874a31d98819ad165d6d3cdb0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa42a26f874a31d98819ad165d6d3cdb0">&#9670;&#160;</a></span>workingEventLogs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="structEventLogFile.html">EventLogFile</a> &gt; workingEventLogs </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The logs of the working copy: the .evtx of winevt\Logs, the .evt of System32\config before Vista — both read into the same XML —, and those the examined registry keeps elsewhere, as the collection took them (<a class="el" href="event__log__files_8h.html" title="The event logs the examined machine keeps outside their default folder (backlog B-053).">event_log_files.h</a>; one not taken, an unreadable volume, is not there). The one list every reader of the logs walks: one of its own missed the moved logs. </p><dl class="section return"><dt>Returns</dt><dd>the logs found </dd></dl>
 
 </div>
 </div>

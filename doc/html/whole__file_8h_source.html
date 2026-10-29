@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,24 +107,29 @@ $(document).ready(function(){initNavTree('whole__file_8h_source.html',''); initR
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &lt;fstream&gt;</span></div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &lt;system_error&gt;</span></div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">template</span> &lt;<span class="keyword">class</span> Bytes&gt;</div>
-<div class="foldopen" id="foldopen00028" data-start="{" data-end="}">
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="whole__file_8h.html#aa23e42f263a693d96342f85e7c9a4dce">   28</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="whole__file_8h.html#aa23e42f263a693d96342f85e7c9a4dce">readWholeFile</a>(<span class="keyword">const</span> std::filesystem::path&amp; file, uintmax_t maximum, Bytes&amp; bytes) {</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    bytes.clear();</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    std::error_code ec;</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <span class="keyword">const</span> uintmax_t size = std::filesystem::file_size(file, ec);</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="keywordflow">if</span> (ec || size &gt; maximum) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    std::ifstream in(file, std::ios::binary);</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordflow">if</span> (!in) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    bytes.resize((<span class="keywordtype">size_t</span>)size);</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="keywordflow">if</span> (size != 0 &amp;&amp; !in.read(<span class="keyword">reinterpret_cast&lt;</span><span class="keywordtype">char</span>*<span class="keyword">&gt;</span>(bytes.data()), (std::streamsize)size)) {</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        bytes.clear();</div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    }</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>}</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &quot;<a class="code" href="long__path_8h.html">long_path.h</a>&quot;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword">template</span> &lt;<span class="keyword">class</span> Bytes&gt;</div>
+<div class="foldopen" id="foldopen00030" data-start="{" data-end="}">
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="whole__file_8h.html#aa23e42f263a693d96342f85e7c9a4dce">   30</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="whole__file_8h.html#aa23e42f263a693d96342f85e7c9a4dce">readWholeFile</a>(<span class="keyword">const</span> std::filesystem::path&amp; file, uintmax_t maximum, Bytes&amp; bytes) {</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    bytes.clear();</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="comment">// Whatever the length of its path: an exhibit&#39;s working copy can pass MAX_PATH (B-049).</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    uint64_t size = 0;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordflow">if</span> (!<a class="code hl_function" href="long__path_8h.html#af0100a0cf6de1b798e1e16b126c70383">fileSizeOf</a>(file.wstring(), size) || size &gt; maximum) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    std::ifstream in(std::filesystem::path(<a class="code hl_function" href="long__path_8h.html#a2d5982fbaf23c49e5666a5e09b95baf0">extendedPath</a>(file.wstring())), std::ios::binary);</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="keywordflow">if</span> (!in) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    bytes.resize((<span class="keywordtype">size_t</span>)size);</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keywordflow">if</span> (size != 0 &amp;&amp; !in.read(<span class="keyword">reinterpret_cast&lt;</span><span class="keywordtype">char</span>*<span class="keyword">&gt;</span>(bytes.data()), (std::streamsize)size)) {</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        bytes.clear();</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    }</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>}</div>
 </div>
-<div class="ttc" id="awhole__file_8h_html_aa23e42f263a693d96342f85e7c9a4dce"><div class="ttname"><a href="whole__file_8h.html#aa23e42f263a693d96342f85e7c9a4dce">readWholeFile</a></div><div class="ttdeci">bool readWholeFile(const std::filesystem::path &amp;file, uintmax_t maximum, Bytes &amp;bytes)</div><div class="ttdef"><b>Definition</b> whole_file.h:28</div></div>
+<div class="ttc" id="along__path_8h_html"><div class="ttname"><a href="long__path_8h.html">long_path.h</a></div><div class="ttdoc">Paths longer than MAX_PATH: the extended form, and the operations on folders and files that hold with...</div></div>
+<div class="ttc" id="along__path_8h_html_a2d5982fbaf23c49e5666a5e09b95baf0"><div class="ttname"><a href="long__path_8h.html#a2d5982fbaf23c49e5666a5e09b95baf0">extendedPath</a></div><div class="ttdeci">std::wstring extendedPath(const std::wstring &amp;path)</div><div class="ttdef"><b>Definition</b> long_path.h:46</div></div>
+<div class="ttc" id="along__path_8h_html_af0100a0cf6de1b798e1e16b126c70383"><div class="ttname"><a href="long__path_8h.html#af0100a0cf6de1b798e1e16b126c70383">fileSizeOf</a></div><div class="ttdeci">bool fileSizeOf(const std::wstring &amp;file, uint64_t &amp;size)</div><div class="ttdef"><b>Definition</b> long_path.h:90</div></div>
+<div class="ttc" id="awhole__file_8h_html_aa23e42f263a693d96342f85e7c9a4dce"><div class="ttname"><a href="whole__file_8h.html#aa23e42f263a693d96342f85e7c9a4dce">readWholeFile</a></div><div class="ttdeci">bool readWholeFile(const std::filesystem::path &amp;file, uintmax_t maximum, Bytes &amp;bytes)</div><div class="ttdef"><b>Definition</b> whole_file.h:30</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

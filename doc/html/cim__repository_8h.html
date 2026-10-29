@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -140,12 +140,12 @@ Typedefs</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:ad954a2ffa91ceb0d284286d2c4e3b503" id="r_ad954a2ffa91ceb0d284286d2c4e3b503"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8h.html#ad954a2ffa91ceb0d284286d2c4e3b503">parseCimClass</a> (const std::vector&lt; uint8_t &gt; &amp;record, <a class="el" href="structCimClass.html">CimClass</a> &amp;out)</td></tr>
 <tr class="separator:ad954a2ffa91ceb0d284286d2c4e3b503"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a232a2863acebabe831c0843ae6612f77" id="r_a232a2863acebabe831c0843ae6612f77"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8h.html#a232a2863acebabe831c0843ae6612f77">parseCimInstance</a> (const std::vector&lt; uint8_t &gt; &amp;record, const std::vector&lt; const <a class="el" href="structCimClass.html">CimClass</a> * &gt; &amp;chain, <a class="el" href="cim__repository_8h.html#a170817cd9887acedca1534b7587ef6d1">CimValues</a> &amp;out)</td></tr>
-<tr class="separator:a232a2863acebabe831c0843ae6612f77"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a37908e5b28cb88b5c7642c4f67d0bbcf" id="r_a37908e5b28cb88b5c7642c4f67d0bbcf"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8h.html#a37908e5b28cb88b5c7642c4f67d0bbcf">cimNameHash</a> (const std::wstring &amp;name)</td></tr>
-<tr class="separator:a37908e5b28cb88b5c7642c4f67d0bbcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a535559fbe3bda61d94bd12ae2e1692af" id="r_a535559fbe3bda61d94bd12ae2e1692af"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8h.html#a535559fbe3bda61d94bd12ae2e1692af">parseCimMappings</a> (const std::vector&lt; uint8_t &gt; &amp;file, <a class="el" href="structCimMapping.html">CimMapping</a> &amp;data, <a class="el" href="structCimMapping.html">CimMapping</a> &amp;index)</td></tr>
-<tr class="separator:a535559fbe3bda61d94bd12ae2e1692af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0a437c6acc09b4a29f4fa776675be0e" id="r_ad0a437c6acc09b4a29f4fa776675be0e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8h.html#ad0a437c6acc09b4a29f4fa776675be0e">parseCimInstance</a> (const std::vector&lt; uint8_t &gt; &amp;record, const std::vector&lt; const <a class="el" href="structCimClass.html">CimClass</a> * &gt; &amp;chain, <a class="el" href="cim__repository_8h.html#a170817cd9887acedca1534b7587ef6d1">CimValues</a> &amp;out, bool xp=false)</td></tr>
+<tr class="separator:ad0a437c6acc09b4a29f4fa776675be0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cf4302131e6ada2d2d538e08ae8369b" id="r_a2cf4302131e6ada2d2d538e08ae8369b"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8h.html#a2cf4302131e6ada2d2d538e08ae8369b">cimNameHash</a> (const std::wstring &amp;name, bool md5=false)</td></tr>
+<tr class="separator:a2cf4302131e6ada2d2d538e08ae8369b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ad1549cbc93a3f86c2214d2664adb1d" id="r_a6ad1549cbc93a3f86c2214d2664adb1d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8h.html#a6ad1549cbc93a3f86c2214d2664adb1d">parseCimMappings</a> (const std::vector&lt; uint8_t &gt; &amp;file, <a class="el" href="structCimMapping.html">CimMapping</a> &amp;data, <a class="el" href="structCimMapping.html">CimMapping</a> &amp;index, bool xp=false)</td></tr>
+<tr class="separator:a6ad1549cbc93a3f86c2214d2664adb1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Offline reader of the WMI repository (CIM): <code>\Windows\System32\wbem\Repository</code>. </p>
@@ -156,7 +156,7 @@ Functions</h2></td></tr>
 <li>OBJECTS.DATA: each page starts with a table (record id, offset, size, CRC); a record larger than its page continues on the next logical pages;</li>
 <li>a class definition (CD_) gives its superclass, its properties (type, index, offset in the value table) and default values; an instance (CI_…/IL_) gives, for each property of its class and ancestors, two state bits, then a value table, then a heap of strings and arrays. Every length read in the files is bounded by the page or the record.</li>
 </ul>
-<p>Windows XP's format (MD5 hashes, other mapping) is not read. </p>
+<p>WINDOWS XP (python-cim's "XP" type, measured on the XP VMs): the names are hashed with MD5 (32 hexadecimal digits, an instance's class hash 0x40 bytes); a mapping's header is 16 bytes (no two identifiers) and its entries 4 (the physical page alone); the index's root is in the header of the index's logical page 0. The files are in <code>Repository\\FS</code>: the mappings in MAPPING1..2.MAP (SP2 and later), or in OBJECTS.MAP and INDEX.MAP, the same two mappings in two files (SP1). </p>
 </div><h2 class="groupheader">Typedef Documentation</h2>
 <a id="a170817cd9887acedca1534b7587ef6d1" name="a170817cd9887acedca1534b7587ef6d1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a170817cd9887acedca1534b7587ef6d1">&#9670;&#160;</a></span>CimValues</h2>
@@ -175,8 +175,8 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a37908e5b28cb88b5c7642c4f67d0bbcf" name="a37908e5b28cb88b5c7642c4f67d0bbcf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a37908e5b28cb88b5c7642c4f67d0bbcf">&#9670;&#160;</a></span>cimNameHash()</h2>
+<a id="a2cf4302131e6ada2d2d538e08ae8369b" name="a2cf4302131e6ada2d2d538e08ae8369b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2cf4302131e6ada2d2d538e08ae8369b">&#9670;&#160;</a></span>cimNameHash()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -185,18 +185,29 @@ Functions</h2></td></tr>
           <td class="memname">std::string cimNameHash </td>
           <td>(</td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>name</em></td><td>)</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>md5</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The hash WMI files a name under: SHA-256 of the upper-case UTF-16 name, in upper-case hexadecimal. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>The hash WMI files a name under: SHA-256 of the upper-case UTF-16 name, MD5 on Windows XP, in upper-case hexadecimal. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">name</td><td>a namespace, class or instance name </td></tr>
+    <tr><td class="paramname">md5</td><td>Windows XP's repository </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the 64 hexadecimal digits </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the 64 (or 32) hexadecimal digits </dd></dl>
 
 </div>
 </div>
@@ -236,8 +247,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a232a2863acebabe831c0843ae6612f77" name="a232a2863acebabe831c0843ae6612f77"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a232a2863acebabe831c0843ae6612f77">&#9670;&#160;</a></span>parseCimInstance()</h2>
+<a id="ad0a437c6acc09b4a29f4fa776675be0e" name="ad0a437c6acc09b4a29f4fa776675be0e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad0a437c6acc09b4a29f4fa776675be0e">&#9670;&#160;</a></span>parseCimInstance()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -258,7 +269,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="cim__repository_8h.html#a170817cd9887acedca1534b7587ef6d1">CimValues</a> &amp;&#160;</td>
-          <td class="paramname"><em>out</em>&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>xp</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -279,8 +296,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a535559fbe3bda61d94bd12ae2e1692af" name="a535559fbe3bda61d94bd12ae2e1692af"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a535559fbe3bda61d94bd12ae2e1692af">&#9670;&#160;</a></span>parseCimMappings()</h2>
+<a id="a6ad1549cbc93a3f86c2214d2664adb1d" name="a6ad1549cbc93a3f86c2214d2664adb1d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ad1549cbc93a3f86c2214d2664adb1d">&#9670;&#160;</a></span>parseCimMappings()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -301,7 +318,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structCimMapping.html">CimMapping</a> &amp;&#160;</td>
-          <td class="paramname"><em>index</em>&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>xp</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>

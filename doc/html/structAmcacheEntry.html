@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -108,8 +108,8 @@ $(document).ready(function(){initNavTree('structAmcacheEntry.html',''); initResi
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6671ecf7fb1e3baee19572b7a9ef757a" id="r_a6671ecf7fb1e3baee19572b7a9ef757a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#a6671ecf7fb1e3baee19572b7a9ef757a">AmcacheEntry</a> (ORHKEY key, const std::wstring &amp;<a class="el" href="structAmcacheEntry.html#a3df588abfca091fc9ebbd7cd6ca17288">table</a>, const std::wstring &amp;name)</td></tr>
-<tr class="separator:a6671ecf7fb1e3baee19572b7a9ef757a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8aa8d87e93b6484f6ba1d78ff4759004" id="r_a8aa8d87e93b6484f6ba1d78ff4759004"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#a8aa8d87e93b6484f6ba1d78ff4759004">AmcacheEntry</a> (ORHKEY key, const std::wstring &amp;<a class="el" href="structAmcacheEntry.html#a3df588abfca091fc9ebbd7cd6ca17288">table</a>, const std::wstring &amp;name, const std::wstring &amp;<a class="el" href="structAmcacheEntry.html#a5fa2dcc17b709cda33826ba0b81d16be">volume</a>=L&quot;&quot;)</td></tr>
+<tr class="separator:a8aa8d87e93b6484f6ba1d78ff4759004"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad84879e9cf4c83e401a2b40f3e13567a" id="r_ad84879e9cf4c83e401a2b40f3e13567a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#ad84879e9cf4c83e401a2b40f3e13567a">toJson</a> (bool withTable) const</td></tr>
 <tr class="separator:ad84879e9cf4c83e401a2b40f3e13567a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -127,6 +127,20 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aa8b2d609d2cddf4b7d94c68eb13f63b2" id="r_aa8b2d609d2cddf4b7d94c68eb13f63b2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::pair&lt; std::wstring, <a class="el" href="classJson.html">Json</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#aa8b2d609d2cddf4b7d94c68eb13f63b2">values</a></td></tr>
 <tr class="memdesc:aa8b2d609d2cddf4b7d94c68eb13f63b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">every value, by name, converted (see the file's header)  <br /></td></tr>
 <tr class="separator:aa8b2d609d2cddf4b7d94c68eb13f63b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9dadea0485c197b00134f37006fce3e" id="r_ad9dadea0485c197b00134f37006fce3e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classJson.html">Json</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#ad9dadea0485c197b00134f37006fce3e">unnamed</a></td></tr>
+<tr class="memdesc:ad9dadea0485c197b00134f37006fce3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">values of a Windows 8 table whose meaning is not confirmed: name, type, value  <br /></td></tr>
+<tr class="separator:ad9dadea0485c197b00134f37006fce3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fa2dcc17b709cda33826ba0b81d16be" id="r_a5fa2dcc17b709cda33826ba0b81d16be"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#a5fa2dcc17b709cda33826ba0b81d16be">volume</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:a5fa2dcc17b709cda33826ba0b81d16be"><td class="mdescLeft">&#160;</td><td class="mdescRight">File (Windows 8): the volume's GUID, the key above the entry.  <br /></td></tr>
+<tr class="separator:a5fa2dcc17b709cda33826ba0b81d16be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1a0528bc1f532dc25033b042f2a033d" id="r_aa1a0528bc1f532dc25033b042f2a033d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#aa1a0528bc1f532dc25033b042f2a033d">mftReferenceKnown</a> = false</td></tr>
+<tr class="memdesc:aa1a0528bc1f532dc25033b042f2a033d"><td class="mdescLeft">&#160;</td><td class="mdescRight">File (Windows 8): the key's name gave the file's $MFT reference.  <br /></td></tr>
+<tr class="separator:aa1a0528bc1f532dc25033b042f2a033d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a705efc60256379076948d9f865018daf" id="r_a705efc60256379076948d9f865018daf"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#a705efc60256379076948d9f865018daf">mftEntry</a> = 0</td></tr>
+<tr class="separator:a705efc60256379076948d9f865018daf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61c32223697e8f63831723e33acb6831" id="r_a61c32223697e8f63831723e33acb6831"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#a61c32223697e8f63831723e33acb6831">mftSequence</a> = 0</td></tr>
+<tr class="memdesc:a61c32223697e8f63831723e33acb6831"><td class="mdescLeft">&#160;</td><td class="mdescRight">that reference  <br /></td></tr>
+<tr class="separator:a61c32223697e8f63831723e33acb6831"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a186c8952167389ef0fe24c6956a5cac9" id="r_a186c8952167389ef0fe24c6956a5cac9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structBinaryFingerprint.html">BinaryFingerprint</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcacheEntry.html#a186c8952167389ef0fe24c6956a5cac9">fingerprint</a></td></tr>
 <tr class="memdesc:a186c8952167389ef0fe24c6956a5cac9"><td class="mdescLeft">&#160;</td><td class="mdescRight">fingerprints of the file an InventoryApplicationFile entry names, with <code>--binary</code>  <br /></td></tr>
 <tr class="separator:a186c8952167389ef0fe24c6956a5cac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -134,8 +148,8 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One entry of an <a class="el" href="structAmcache.html">Amcache</a> table: one key, every value of it. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a6671ecf7fb1e3baee19572b7a9ef757a" name="a6671ecf7fb1e3baee19572b7a9ef757a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6671ecf7fb1e3baee19572b7a9ef757a">&#9670;&#160;</a></span>AmcacheEntry()</h2>
+<a id="a8aa8d87e93b6484f6ba1d78ff4759004" name="a8aa8d87e93b6484f6ba1d78ff4759004"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8aa8d87e93b6484f6ba1d78ff4759004">&#9670;&#160;</a></span>AmcacheEntry()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -156,7 +170,13 @@ Public Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>name</em>&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>volume</em> = <code>L&quot;&quot;</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -170,6 +190,7 @@ Public Attributes</h2></td></tr>
     <tr><td class="paramname">key</td><td>its key, already open </td></tr>
     <tr><td class="paramname">table</td><td>name of its table </td></tr>
     <tr><td class="paramname">name</td><td>name of its key </td></tr>
+    <tr><td class="paramname">volume</td><td>File of Windows 8: the volume's GUID </td></tr>
   </table>
   </dd>
 </dl>
@@ -251,6 +272,52 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a705efc60256379076948d9f865018daf" name="a705efc60256379076948d9f865018daf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a705efc60256379076948d9f865018daf">&#9670;&#160;</a></span>mftEntry</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long long AmcacheEntry::mftEntry = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aa1a0528bc1f532dc25033b042f2a033d" name="aa1a0528bc1f532dc25033b042f2a033d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1a0528bc1f532dc25033b042f2a033d">&#9670;&#160;</a></span>mftReferenceKnown</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AmcacheEntry::mftReferenceKnown = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>File (Windows 8): the key's name gave the file's $MFT reference. </p>
+
+</div>
+</div>
+<a id="a61c32223697e8f63831723e33acb6831" name="a61c32223697e8f63831723e33acb6831"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61c32223697e8f63831723e33acb6831">&#9670;&#160;</a></span>mftSequence</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long long AmcacheEntry::mftSequence = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>that reference </p>
+
+</div>
+</div>
 <a id="a3df588abfca091fc9ebbd7cd6ca17288" name="a3df588abfca091fc9ebbd7cd6ca17288"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3df588abfca091fc9ebbd7cd6ca17288">&#9670;&#160;</a></span>table</h2>
 
@@ -267,6 +334,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ad9dadea0485c197b00134f37006fce3e" name="ad9dadea0485c197b00134f37006fce3e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9dadea0485c197b00134f37006fce3e">&#9670;&#160;</a></span>unnamed</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="classJson.html">Json</a>&gt; AmcacheEntry::unnamed</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>values of a Windows 8 table whose meaning is not confirmed: name, type, value </p>
+
+</div>
+</div>
 <a id="aa8b2d609d2cddf4b7d94c68eb13f63b2" name="aa8b2d609d2cddf4b7d94c68eb13f63b2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa8b2d609d2cddf4b7d94c68eb13f63b2">&#9670;&#160;</a></span>values</h2>
 
@@ -280,6 +363,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>every value, by name, converted (see the file's header) </p>
+
+</div>
+</div>
+<a id="a5fa2dcc17b709cda33826ba0b81d16be" name="a5fa2dcc17b709cda33826ba0b81d16be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5fa2dcc17b709cda33826ba0b81d16be">&#9670;&#160;</a></span>volume</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring AmcacheEntry::volume = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>File (Windows 8): the volume's GUID, the key above the entry. </p>
 
 </div>
 </div>

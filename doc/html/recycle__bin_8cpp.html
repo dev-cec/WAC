@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,6 +107,7 @@ $(document).ready(function(){initNavTree('recycle__bin_8cpp.html',''); initResiz
 <div class="textblock"><code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="recycle__bin_8h_source.html">recycle_bin.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
+<code>#include &lt;cstring&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
 </div><table class="memberdecls">
@@ -114,10 +115,62 @@ $(document).ready(function(){initNavTree('recycle__bin_8cpp.html',''); initResiz
 Functions</h2></td></tr>
 <tr class="memitem:a97d8056db2ad1ec442a24d44c60482aa" id="r_a97d8056db2ad1ec442a24d44c60482aa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recycle__bin_8cpp.html#a97d8056db2ad1ec442a24d44c60482aa">parseRecycleBinIndex</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, <a class="el" href="structRecycledFile.html">RecycledFile</a> &amp;recycled)</td></tr>
 <tr class="separator:a97d8056db2ad1ec442a24d44c60482aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36da887d9e0fe5ff7e10a3940950fdac" id="r_a36da887d9e0fe5ff7e10a3940950fdac"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recycle__bin_8cpp.html#a36da887d9e0fe5ff7e10a3940950fdac">parseInfo2</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, const std::wstring &amp;indexFile, const std::wstring &amp;sid, std::vector&lt; <a class="el" href="structRecycledFile.html">RecycledFile</a> &gt; &amp;files)</td></tr>
+<tr class="separator:a36da887d9e0fe5ff7e10a3940950fdac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Recycle bin (see <a class="el" href="recycle__bin_8h.html" title="Recycle bin: the $I index files of \\$Recycle.Bin\\&lt;SID&gt;\\ on every fixed NTFS volume.">recycle_bin.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a36da887d9e0fe5ff7e10a3940950fdac" name="a36da887d9e0fe5ff7e10a3940950fdac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a36da887d9e0fe5ff7e10a3940950fdac">&#9670;&#160;</a></span>parseInfo2()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool parseInfo2 </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>indexFile</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>sid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRecycledFile.html">RecycledFile</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>files</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads an INFO2 file of Windows XP and Server 2003 (version 5). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>its content </td></tr>
+    <tr><td class="paramname">indexFile</td><td>its path on the examined machine </td></tr>
+    <tr><td class="paramname">sid</td><td>the user folder it is in </td></tr>
+    <tr><td class="paramname">files</td><td>receives one entry per record; one entry declared "unsupported format" for another version </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the header is missing: every record is bounded by the size </dd></dl>
+
+</div>
+</div>
 <a id="a97d8056db2ad1ec442a24d44c60482aa" name="a97d8056db2ad1ec442a24d44c60482aa"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a97d8056db2ad1ec442a24d44c60482aa">&#9670;&#160;</a></span>parseRecycleBinIndex()</h2>
 
@@ -146,11 +199,11 @@ Functions</h2></td></tr>
 <p>Reads a <code>$I</code> file. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">bytes</td><td>its content </td></tr>
-    <tr><td class="paramname">recycled</td><td>receives version, size, deletion and original path </td></tr>
+    <tr><td class="paramname">recycled</td><td>receives version, size, deletion and original path; for a version the artefact table holds no decoder for, the version alone and <code>unsupportedFormat</code> </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>false if the content is not a <code>$I</code> of version 1 or 2, or is truncated: every read is bounded by the size given </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the content is truncated: every read is bounded by the size given </dd></dl>
 
 </div>
 </div>

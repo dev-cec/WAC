@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -118,8 +118,11 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a6d2b275608f9462291612eb034521027" id="r_a6d2b275608f9462291612eb034521027"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFileDirectory.html#a6d2b275608f9462291612eb034521027">formatVersion</a> = 0</td></tr>
-<tr class="memdesc:a6d2b275608f9462291612eb034521027"><td class="mdescLeft">&#160;</td><td class="mdescRight">format of the entry  <br /></td></tr>
+<tr class="memdesc:a6d2b275608f9462291612eb034521027"><td class="mdescLeft">&#160;</td><td class="mdescRight">version of the DestList, as its header states it: 1 (Windows 7, 8), 3 and 4 (Windows 10), 6 (Windows 11)  <br /></td></tr>
 <tr class="separator:a6d2b275608f9462291612eb034521027"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a398b3c5311744d060e93e9bcf990d5d3" id="r_a398b3c5311744d060e93e9bcf990d5d3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFileDirectory.html#a398b3c5311744d060e93e9bcf990d5d3">unsupportedFormat</a> = false</td></tr>
+<tr class="memdesc:a398b3c5311744d060e93e9bcf990d5d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">a version WAC has no decoder for (pieceFormat): no entry was read  <br /></td></tr>
+<tr class="separator:a398b3c5311744d060e93e9bcf990d5d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a269efd98d7c418d2fdede6af62c5a422" id="r_a269efd98d7c418d2fdede6af62c5a422"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDestFileDirectory.html#a269efd98d7c418d2fdede6af62c5a422">numberOfEntries</a> = 0</td></tr>
 <tr class="memdesc:a269efd98d7c418d2fdede6af62c5a422"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of entries  <br /></td></tr>
 <tr class="separator:a269efd98d7c418d2fdede6af62c5a422"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -242,7 +245,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>format of the entry </p>
+<p>version of the DestList, as its header states it: 1 (Windows 7, 8), 3 and 4 (Windows 10), 6 (Windows 11) </p>
 
 </div>
 </div>
@@ -275,6 +278,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>number of pinned entries </p>
+
+</div>
+</div>
+<a id="a398b3c5311744d060e93e9bcf990d5d3" name="a398b3c5311744d060e93e9bcf990d5d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a398b3c5311744d060e93e9bcf990d5d3">&#9670;&#160;</a></span>unsupportedFormat</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool DestFileDirectory::unsupportedFormat = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>a version WAC has no decoder for (pieceFormat): no entry was read </p>
 
 </div>
 </div>

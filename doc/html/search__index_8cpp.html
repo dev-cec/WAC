@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -103,10 +103,12 @@ $(document).ready(function(){initNavTree('search__index_8cpp.html',''); initResi
 </div><!--header-->
 <div class="contents">
 
-<p>Windows Search index (Windows 11): see <a class="el" href="search__index_8h.html" title="Windows Search index (Windows 11): what the indexer recorded of each file, read in Windows....">search_index.h</a>.  
+<p>Windows Search index (Windows 11): see <a class="el" href="search__index_8h.html" title="Windows Search index: what the indexer recorded of each file, read in Windows.db and Windows-gather....">search_index.h</a>.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="search__index_8h_source.html">search_index.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="ese__database_8h_source.html">ese_database.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="ese__recovery_8h_source.html">ese_recovery.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="sqlite__reader_8h_source.html">sqlite_reader.h</a>&quot;</code><br />
 <code>#include &lt;algorithm&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
@@ -115,12 +117,18 @@ $(document).ready(function(){initNavTree('search__index_8cpp.html',''); initResi
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a19ec8be6f85a24687c66ce7169d5fe4a" id="r_a19ec8be6f85a24687c66ce7169d5fe4a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="search__index_8cpp.html#a19ec8be6f85a24687c66ce7169d5fe4a">decodeSearchText</a> (const std::vector&lt; uint8_t &gt; &amp;encoded, std::wstring &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>)</td></tr>
+<tr class="separator:a19ec8be6f85a24687c66ce7169d5fe4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0bde9191eec401019add51726aa03df" id="r_af0bde9191eec401019add51726aa03df"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="search__index_8cpp.html#af0bde9191eec401019add51726aa03df">addSearchBlob</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;key, int variantType, const std::vector&lt; uint8_t &gt; &amp;bytes)</td></tr>
 <tr class="separator:af0bde9191eec401019add51726aa03df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa15a2a96f194f7fedfc22a74f00eabe5" id="r_aa15a2a96f194f7fedfc22a74f00eabe5"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="search__index_8cpp.html#aa15a2a96f194f7fedfc22a74f00eabe5">readSearchPropertyStore</a> (const std::wstring &amp;file, const std::wstring &amp;path, std::vector&lt; <a class="el" href="structSearchIndexItem.html">SearchIndexItem</a> &gt; &amp;items)</td></tr>
 <tr class="separator:aa15a2a96f194f7fedfc22a74f00eabe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbc9da512cec45133d4227ec1b87be40" id="r_adbc9da512cec45133d4227ec1b87be40"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="search__index_8cpp.html#adbc9da512cec45133d4227ec1b87be40">readSearchGather</a> (const std::wstring &amp;file, const std::wstring &amp;path, std::vector&lt; <a class="el" href="structSearchIndexItem.html">SearchIndexItem</a> &gt; &amp;items)</td></tr>
 <tr class="separator:adbc9da512cec45133d4227ec1b87be40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d55192ecda3c2e14d56f805eac516ce" id="r_a9d55192ecda3c2e14d56f805eac516ce"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="search__index_8cpp.html#a9d55192ecda3c2e14d56f805eac516ce">readSearchEdb</a> (const std::wstring &amp;file, const std::wstring &amp;path, std::vector&lt; <a class="el" href="structSearchIndexItem.html">SearchIndexItem</a> &gt; &amp;items)</td></tr>
+<tr class="separator:a9d55192ecda3c2e14d56f805eac516ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18536d7e2895f8127d4112fa1ae5a08b" id="r_a18536d7e2895f8127d4112fa1ae5a08b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="search__index_8cpp.html#a18536d7e2895f8127d4112fa1ae5a08b">readEseGather</a> (<a class="el" href="classEseDatabase.html">EseDatabase</a> &amp;db, const std::wstring &amp;path, std::vector&lt; <a class="el" href="structSearchIndexItem.html">SearchIndexItem</a> &gt; &amp;items)</td></tr>
+<tr class="separator:a18536d7e2895f8127d4112fa1ae5a08b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -129,7 +137,7 @@ Variables</h2></td></tr>
 <tr class="separator:aa3259db6498aef1b6b8500471535a821"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Windows Search index (Windows 11): see <a class="el" href="search__index_8h.html" title="Windows Search index (Windows 11): what the indexer recorded of each file, read in Windows....">search_index.h</a>. </p>
+<div class="textblock"><p>Windows Search index (Windows 11): see <a class="el" href="search__index_8h.html" title="Windows Search index: what the indexer recorded of each file, read in Windows.db and Windows-gather....">search_index.h</a>. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="af0bde9191eec401019add51726aa03df" name="af0bde9191eec401019add51726aa03df"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af0bde9191eec401019add51726aa03df">&#9670;&#160;</a></span>addSearchBlob()</h2>
@@ -177,6 +185,127 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a19ec8be6f85a24687c66ce7169d5fe4a" name="a19ec8be6f85a24687c66ce7169d5fe4a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19ec8be6f85a24687c66ce7169d5fe4a">&#9670;&#160;</a></span>decodeSearchText()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool decodeSearchText </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>encoded</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>text</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decodes a text value of Windows 7's index, as libyal describes the format and as measured on the test VM: each byte XOR a byte of (0x05000113 XOR the value's size), in turn, XOR its position's low byte; then a first byte for the form — 1: one byte per character; 0: runs of a count, the high byte the run shares, the low byte of each character. Every run is bounded by the value's size. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">encoded</td><td>the value as the column holds it </td></tr>
+    <tr><td class="paramname">text</td><td>receives the text </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false for another form, or a run past the value's end </dd></dl>
+
+</div>
+</div>
+<a id="a18536d7e2895f8127d4112fa1ae5a08b" name="a18536d7e2895f8127d4112fa1ae5a08b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a18536d7e2895f8127d4112fa1ae5a08b">&#9670;&#160;</a></span>readEseGather()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void readEseGather </td>
+          <td>(</td>
+          <td class="paramtype">class <a class="el" href="classEseDatabase.html">EseDatabase</a> &amp;&#160;</td>
+          <td class="paramname"><em>db</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structSearchIndexItem.html">SearchIndexItem</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>items</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the crawler's table of an open ESE index, its URLs rebuilt from the scope tree. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">db</td><td>the database </td></tr>
+    <tr><td class="paramname">path</td><td>the database on the examined machine </td></tr>
+    <tr><td class="paramname">items</td><td>receives one item per document </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a9d55192ecda3c2e14d56f805eac516ce" name="a9d55192ecda3c2e14d56f805eac516ce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d55192ecda3c2e14d56f805eac516ce">&#9670;&#160;</a></span>readSearchEdb()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT readSearchEdb </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structSearchIndexItem.html">SearchIndexItem</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>items</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the ESE index of Windows 10 and earlier, Windows.edb: its property store and its crawler's table, one item per WorkID and per document as from the SQLite databases of Windows 11. Its transaction logs are replayed into the copy first. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file</td><td>the database in the working copy of the collection </td></tr>
+    <tr><td class="paramname">path</td><td>the database on the examined machine </td></tr>
+    <tr><td class="paramname">items</td><td>receives the items </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the failure to open the database </dd></dl>
 
 </div>
 </div>

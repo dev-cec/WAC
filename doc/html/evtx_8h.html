@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -124,6 +124,8 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:afdec56de451b97d4bc69c2c822284ac6" id="r_afdec56de451b97d4bc69c2c822284ac6"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="evtx_8h.html#afdec56de451b97d4bc69c2c822284ac6">EvtxReadFile</a> (const std::wstring &amp;path, const std::function&lt; bool(const <a class="el" href="structEvtxRecord.html">EvtxRecord</a> &amp;)&gt; &amp;onRecord, <a class="el" href="structEvtxSummary.html">EvtxSummary</a> *summary=nullptr)</td></tr>
 <tr class="separator:afdec56de451b97d4bc69c2c822284ac6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90bcf726a67d0c4a538595fe689de038" id="r_a90bcf726a67d0c4a538595fe689de038"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="evtx_8h.html#a90bcf726a67d0c4a538595fe689de038">EvtxXmlEscape</a> (const std::wstring &amp;s)</td></tr>
+<tr class="separator:a90bcf726a67d0c4a538595fe689de038"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35239b1da0e8481cc5c9e92b5955797e" id="r_a35239b1da0e8481cc5c9e92b5955797e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="evtx_8h.html#a35239b1da0e8481cc5c9e92b5955797e">EvtxChannelFromFileName</a> (const std::wstring &amp;fileName)</td></tr>
 <tr class="separator:a35239b1da0e8481cc5c9e92b5955797e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -214,6 +216,31 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS if the file was walked, an error code if it is inaccessible; S_FALSE if records were discarded </dd></dl>
+
+</div>
+</div>
+<a id="a90bcf726a67d0c4a538595fe689de038" name="a90bcf726a67d0c4a538595fe689de038"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90bcf726a67d0c4a538595fe689de038">&#9670;&#160;</a></span>EvtxXmlEscape()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring EvtxXmlEscape </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>s</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A value escaped for the XML of an event (&amp;, &lt;, &gt;, quotes; control characters, forbidden in XML 1.0, as spaces): a malformed XML would lose the whole event. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">s</td><td>the value, as read in the log </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the escaped value </dd></dl>
 
 </div>
 </div>

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -119,6 +119,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a9bfe0b7d31f99716e0c84dc3aad44d8e" id="r_a9bfe0b7d31f99716e0c84dc3aad44d8e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structRawHiveFingerprints.html">RawHiveFingerprints</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveExtraction.html#a9bfe0b7d31f99716e0c84dc3aad44d8e">fingerprints</a></td></tr>
 <tr class="memdesc:a9bfe0b7d31f99716e0c84dc3aad44d8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">empty if the extraction failed  <br /></td></tr>
 <tr class="separator:a9bfe0b7d31f99716e0c84dc3aad44d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4286acd75944c50f4964e944c69521c" id="r_af4286acd75944c50f4964e944c69521c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRawHiveExtraction.html#af4286acd75944c50f4964e944c69521c">shadowCopy</a></td></tr>
+<tr class="memdesc:af4286acd75944c50f4964e944c69521c"><td class="mdescLeft">&#160;</td><td class="mdescRight">the shadow copy read through ("{…}"), empty for the volume as it is now  <br /></td></tr>
+<tr class="separator:af4286acd75944c50f4964e944c69521c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An extracted file, as it will be recorded in the manifest. </p>
@@ -168,6 +171,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>outcome of the extraction </p>
+
+</div>
+</div>
+<a id="af4286acd75944c50f4964e944c69521c" name="af4286acd75944c50f4964e944c69521c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4286acd75944c50f4964e944c69521c">&#9670;&#160;</a></span>shadowCopy</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RawHiveExtraction::shadowCopy</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the shadow copy read through ("{…}"), empty for the volume as it is now </p>
 
 </div>
 </div>

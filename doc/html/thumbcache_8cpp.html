@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -109,6 +109,8 @@ $(document).ready(function(){initNavTree('thumbcache_8cpp.html',''); initResizab
 <code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="sha_8h_source.html">sha.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="oleparser_8h_source.html">oleparser.h</a>&quot;</code><br />
+<code>#include &lt;algorithm&gt;</code><br />
 <code>#include &lt;array&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
@@ -119,10 +121,14 @@ Functions</h2></td></tr>
 <tr class="separator:a21b0a9b66a7c92ec8ea459cd5eef14d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ae6a319e5aa169b362d1249e838bb38" id="r_a8ae6a319e5aa169b362d1249e838bb38"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thumbcache_8cpp.html#a8ae6a319e5aa169b362d1249e838bb38">thumbcacheDataChecksum</a> (const uint8_t *data, size_t size)</td></tr>
 <tr class="separator:a8ae6a319e5aa169b362d1249e838bb38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6caaf279937361eb6d4270325d7e3ade" id="r_a6caaf279937361eb6d4270325d7e3ade"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thumbcache_8cpp.html#a6caaf279937361eb6d4270325d7e3ade">thumbcacheSize</a> (uint32_t type)</td></tr>
-<tr class="separator:a6caaf279937361eb6d4270325d7e3ade"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae957086051a0eb280dbe8a22a55a29e4" id="r_ae957086051a0eb280dbe8a22a55a29e4"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thumbcache_8cpp.html#ae957086051a0eb280dbe8a22a55a29e4">thumbcacheSize</a> (uint32_t version, uint32_t type)</td></tr>
+<tr class="separator:ae957086051a0eb280dbe8a22a55a29e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb9ce200e19e604e2e51b9b1eb1ddd3b" id="r_afb9ce200e19e604e2e51b9b1eb1ddd3b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thumbcache_8cpp.html#afb9ce200e19e604e2e51b9b1eb1ddd3b">thumbnailCacheId</a> (uint32_t version, const <a class="el" href="structThumbcacheEntry.html">ThumbcacheEntry</a> &amp;e)</td></tr>
+<tr class="separator:afb9ce200e19e604e2e51b9b1eb1ddd3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af65c95428d87228bc878123251f9bf53" id="r_af65c95428d87228bc878123251f9bf53"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thumbcache_8cpp.html#af65c95428d87228bc878123251f9bf53">decodeThumbcache</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, <a class="el" href="structThumbcacheFile.html">ThumbcacheFile</a> &amp;file)</td></tr>
 <tr class="separator:af65c95428d87228bc878123251f9bf53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a330a9534e906a9899b860abfdd884d70" id="r_a330a9534e906a9899b860abfdd884d70"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="thumbcache_8cpp.html#a330a9534e906a9899b860abfdd884d70">decodeThumbsDb</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, std::vector&lt; <a class="el" href="structThumbsDbEntry.html">ThumbsDbEntry</a> &gt; &amp;entries)</td></tr>
+<tr class="separator:a330a9534e906a9899b860abfdd884d70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -166,6 +172,42 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the file is a CMMM cache of a version decoded </dd></dl>
+
+</div>
+</div>
+<a id="a330a9534e906a9899b860abfdd884d70" name="a330a9534e906a9899b860abfdd884d70"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a330a9534e906a9899b860abfdd884d70">&#9670;&#160;</a></span>decodeThumbsDb()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool decodeThumbsDb </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structThumbsDbEntry.html">ThumbsDbEntry</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>entries</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decodes a Thumbs.db of Windows XP and Server 2003 (measured on the XP VM). An OLE compound file: a "Catalog" stream — a header (its size, a version, the number of entries, the thumbnails' width and height), then per entry its size, number, the image's modification (FILETIME) and file name (UTF-16) — and one stream per thumbnail, named by the number's digits in reverse ("21" for 12): a header of 12 bytes, a second of 16 (type, length, width, height), then the image. The image is a JPEG of four components (R, G, B, A) without its quantization and Huffman tables, which no ordinary viewer renders: it is given as stored, with its SHA-256, not rendered. Every size is bounded by its stream. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>the file </td></tr>
+    <tr><td class="paramname">entries</td><td>receives the catalogued thumbnails </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if it is not an OLE file with a Catalog </dd></dl>
 
 </div>
 </div>
@@ -248,8 +290,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a6caaf279937361eb6d4270325d7e3ade" name="a6caaf279937361eb6d4270325d7e3ade"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6caaf279937361eb6d4270325d7e3ade">&#9670;&#160;</a></span>thumbcacheSize()</h2>
+<a id="ae957086051a0eb280dbe8a22a55a29e4" name="ae957086051a0eb280dbe8a22a55a29e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae957086051a0eb280dbe8a22a55a29e4">&#9670;&#160;</a></span>thumbcacheSize()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -258,18 +300,65 @@ Variables</h2></td></tr>
           <td class="memname">std::wstring thumbcacheSize </td>
           <td>(</td>
           <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>type</em></td><td>)</td>
+          <td class="paramname"><em>version</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>type</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The size a cache type names ("256", "sr", "wide"…). </p><dl class="params"><dt>Parameters</dt><dd>
+<p>The size a cache type names ("256", "sr", "wide"…): Windows 7 numbers its sizes otherwise than Windows 8 and later. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramname">version</td><td>the file's version </td></tr>
     <tr><td class="paramname">type</td><td>the header's type </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>its name, empty if unknown </dd></dl>
+
+</div>
+</div>
+<a id="afb9ce200e19e604e2e51b9b1eb1ddd3b" name="afb9ce200e19e604e2e51b9b1eb1ddd3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb9ce200e19e604e2e51b9b1eb1ddd3b">&#9670;&#160;</a></span>thumbnailCacheId()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring thumbnailCacheId </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>version</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structThumbcacheEntry.html">ThumbcacheEntry</a> &amp;&#160;</td>
+          <td class="paramname"><em>e</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The System.ThumbnailCacheId Windows gives the file an entry shows — what ties a thumbnail to its file. From Windows 7 on, the entry's hash; on Vista, its identifier, the hash being another key (measured on the Vista VM: the witness picture's id was the identifier of its entry, not its hash). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">version</td><td>the cache's version </td></tr>
+    <tr><td class="paramname">e</td><td>the entry </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>16 hexadecimal digits in lower case, empty when the entry carries none </dd></dl>
 
 </div>
 </div>

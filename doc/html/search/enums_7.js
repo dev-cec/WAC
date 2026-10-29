@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['sqlitetype_0',['SqliteType',['../sqlite__reader_8h.html#a5c41670f18324eca0c2ea25882bfed61',1,'sqlite_reader.h']]]
+  ['precision_0',['Precision',['../tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2',1,'tools.h']]]
 ];

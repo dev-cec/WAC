@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,8 +107,10 @@ $(document).ready(function(){initNavTree('classCimRepository.html',''); initResi
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aca02adb95ce413d717ee9ca66b2d1770" id="r_aca02adb95ce413d717ee9ca66b2d1770"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCimRepository.html#aca02adb95ce413d717ee9ca66b2d1770">open</a> (const std::wstring &amp;index, const std::wstring &amp;objects, const std::vector&lt; std::wstring &gt; &amp;mappings)</td></tr>
-<tr class="separator:aca02adb95ce413d717ee9ca66b2d1770"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbc13f083e0c27dc4af77ce21e8f7f97" id="r_acbc13f083e0c27dc4af77ce21e8f7f97"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCimRepository.html#acbc13f083e0c27dc4af77ce21e8f7f97">open</a> (const std::wstring &amp;index, const std::wstring &amp;objects, const std::vector&lt; std::wstring &gt; &amp;mappings, bool xp=false)</td></tr>
+<tr class="separator:acbc13f083e0c27dc4af77ce21e8f7f97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c1d40750cb5e669890347bba66deec3" id="r_a8c1d40750cb5e669890347bba66deec3"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCimRepository.html#a8c1d40750cb5e669890347bba66deec3">openMappings</a> (const std::wstring &amp;index, const std::wstring &amp;objects, const std::vector&lt; std::vector&lt; uint8_t &gt; &gt; &amp;mappings, bool xp)</td></tr>
+<tr class="separator:a8c1d40750cb5e669890347bba66deec3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7ea78c291b0eaac95c78be1e2d3177b" id="r_af7ea78c291b0eaac95c78be1e2d3177b"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCimRepository.html#af7ea78c291b0eaac95c78be1e2d3177b">namespaces</a> ()</td></tr>
 <tr class="separator:af7ea78c291b0eaac95c78be1e2d3177b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b7c3d0da17204ada8cb534074469d3a" id="r_a7b7c3d0da17204ada8cb534074469d3a"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCimRepository.html#a7b7c3d0da17204ada8cb534074469d3a">classHashesWithInstances</a> (const std::wstring &amp;space)</td></tr>
@@ -236,8 +238,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aca02adb95ce413d717ee9ca66b2d1770" name="aca02adb95ce413d717ee9ca66b2d1770"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aca02adb95ce413d717ee9ca66b2d1770">&#9670;&#160;</a></span>open()</h2>
+<a id="acbc13f083e0c27dc4af77ce21e8f7f97" name="acbc13f083e0c27dc4af77ce21e8f7f97"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbc13f083e0c27dc4af77ce21e8f7f97">&#9670;&#160;</a></span>open()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -258,7 +260,13 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
-          <td class="paramname"><em>mappings</em>&#160;</td>
+          <td class="paramname"><em>mappings</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>xp</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -272,10 +280,52 @@ Public Member Functions</h2></td></tr>
     <tr><td class="paramname">index</td><td>INDEX.BTR </td></tr>
     <tr><td class="paramname">objects</td><td>OBJECTS.DATA </td></tr>
     <tr><td class="paramname">mappings</td><td>MAPPING1..3.MAP, those present </td></tr>
+    <tr><td class="paramname">xp</td><td>Windows XP's format (see the file's header) </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why the repository cannot be read </dd></dl>
+
+</div>
+</div>
+<a id="a8c1d40750cb5e669890347bba66deec3" name="a8c1d40750cb5e669890347bba66deec3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c1d40750cb5e669890347bba66deec3">&#9670;&#160;</a></span>openMappings()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT CimRepository::openMappings </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>objects</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::vector&lt; uint8_t &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>mappings</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>xp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The same, from the mappings' contents already read — Windows XP SP1's OBJECTS.MAP and INDEX.MAP joined into the one mapping file they make. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or why the repository cannot be read </dd></dl>
 
 </div>
 </div>

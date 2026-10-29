@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -124,13 +124,66 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a97d8056db2ad1ec442a24d44c60482aa" id="r_a97d8056db2ad1ec442a24d44c60482aa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recycle__bin_8h.html#a97d8056db2ad1ec442a24d44c60482aa">parseRecycleBinIndex</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, <a class="el" href="structRecycledFile.html">RecycledFile</a> &amp;recycled)</td></tr>
 <tr class="separator:a97d8056db2ad1ec442a24d44c60482aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36da887d9e0fe5ff7e10a3940950fdac" id="r_a36da887d9e0fe5ff7e10a3940950fdac"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recycle__bin_8h.html#a36da887d9e0fe5ff7e10a3940950fdac">parseInfo2</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, const std::wstring &amp;indexFile, const std::wstring &amp;sid, std::vector&lt; <a class="el" href="structRecycledFile.html">RecycledFile</a> &gt; &amp;files)</td></tr>
+<tr class="separator:a36da887d9e0fe5ff7e10a3940950fdac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Recycle bin: the <code>$I</code> index files of <code>\\$Recycle.Bin\\&lt;SID&gt;\\</code> on every fixed NTFS volume. </p>
 <p>WHAT THE ARTEFACT PROVES. A file sent to the recycle bin is renamed <code>$R&lt;random&gt;&lt;extension&gt;</code> and Windows writes beside it <code>$I&lt;same&gt;</code> — the original path, the size and the instant of the deletion. Until the bin is emptied, it names who deleted (the SID folder), what and when; emptied, the names of both files remain as deleted records of mft.json.</p>
 <p>ONLY THE <code>$I</code> ARE COLLECTED: the <code>$R</code> are the deleted files themselves, of any size; their presence and size are in mft.json, and &ndash;binary collects the executables among them.</p>
+<p>WINDOWS XP AND SERVER 2003 keep one index per user folder instead, <code>\\RECYCLER\\&lt;SID&gt;\\INFO2</code> (measured on the XP VM): a header of 20 bytes — version 5, two DWORDs, the record size 800, a DWORD — then a record per deleted file: its path in the ANSI code page (260 bytes), its number n — the copy is <code>Dc&lt;n&gt;&lt;extension&gt;</code> in the same folder —, its drive (0 for A:), the deletion (FILETIME UTC), the size the file occupied, its path in UTF-16 (520 bytes). Each record is one entry, its <code>RecycledName</code> the <code>Dc&lt;n&gt;</code> name.</p>
 <p>THE FORMAT (little-endian): 0 8 version: 1 (Vista to 8.1) or 2 (Windows 10 and later) 8 8 size of the deleted file, bytes 16 8 deletion, FILETIME UTC v1: 24 520 original path, UTF-16, 260 characters, zero-padded v2: 24 4 length of the path in characters, terminating zero included 28 … original path, UTF-16 </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a36da887d9e0fe5ff7e10a3940950fdac" name="a36da887d9e0fe5ff7e10a3940950fdac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a36da887d9e0fe5ff7e10a3940950fdac">&#9670;&#160;</a></span>parseInfo2()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool parseInfo2 </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>indexFile</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>sid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRecycledFile.html">RecycledFile</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>files</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads an INFO2 file of Windows XP and Server 2003 (version 5). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>its content </td></tr>
+    <tr><td class="paramname">indexFile</td><td>its path on the examined machine </td></tr>
+    <tr><td class="paramname">sid</td><td>the user folder it is in </td></tr>
+    <tr><td class="paramname">files</td><td>receives one entry per record; one entry declared "unsupported format" for another version </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the header is missing: every record is bounded by the size </dd></dl>
+
+</div>
+</div>
 <a id="a97d8056db2ad1ec442a24d44c60482aa" name="a97d8056db2ad1ec442a24d44c60482aa"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a97d8056db2ad1ec442a24d44c60482aa">&#9670;&#160;</a></span>parseRecycleBinIndex()</h2>
 
@@ -159,11 +212,11 @@ Functions</h2></td></tr>
 <p>Reads a <code>$I</code> file. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">bytes</td><td>its content </td></tr>
-    <tr><td class="paramname">recycled</td><td>receives version, size, deletion and original path </td></tr>
+    <tr><td class="paramname">recycled</td><td>receives version, size, deletion and original path; for a version the artefact table holds no decoder for, the version alone and <code>unsupportedFormat</code> </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>false if the content is not a <code>$I</code> of version 1 or 2, or is truncated: every read is bounded by the size given </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the content is truncated: every read is bounded by the size given </dd></dl>
 
 </div>
 </div>

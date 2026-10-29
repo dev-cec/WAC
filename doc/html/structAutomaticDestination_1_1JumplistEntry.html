@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,9 +107,9 @@ $(document).ready(function(){initNavTree('structAutomaticDestination_1_1Jumplist
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a8fb38b3f369947a5e61479d5dfb110b9" id="r_a8fb38b3f369947a5e61479d5dfb110b9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structDestFile.html">DestFile</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination_1_1JumplistEntry.html#a8fb38b3f369947a5e61479d5dfb110b9">destList</a></td></tr>
-<tr class="memdesc:a8fb38b3f369947a5e61479d5dfb110b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">the DestList entry: last access, host, droid GUIDs, pin  <br /></td></tr>
-<tr class="separator:a8fb38b3f369947a5e61479d5dfb110b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30f80575299ed2aa76a2addc518caa18" id="r_a30f80575299ed2aa76a2addc518caa18"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="structDestFile.html">DestFile</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination_1_1JumplistEntry.html#a30f80575299ed2aa76a2addc518caa18">destList</a></td></tr>
+<tr class="memdesc:a30f80575299ed2aa76a2addc518caa18"><td class="mdescLeft">&#160;</td><td class="mdescRight">the DestList entry: last access, host, droid GUIDs, pin; empty when the DestList is in an unsupported format  <br /></td></tr>
+<tr class="separator:a30f80575299ed2aa76a2addc518caa18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3628eaf4da0939a1a5a55d81bd1f3987" id="r_a3628eaf4da0939a1a5a55d81bd1f3987"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="structRecentDoc.html">RecentDoc</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAutomaticDestination_1_1JumplistEntry.html#a3628eaf4da0939a1a5a55d81bd1f3987">lnk</a></td></tr>
 <tr class="memdesc:a3628eaf4da0939a1a5a55d81bd1f3987"><td class="mdescLeft">&#160;</td><td class="mdescRight">its shortcut; empty if the stream is missing or unreadable  <br /></td></tr>
 <tr class="separator:a3628eaf4da0939a1a5a55d81bd1f3987"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -117,19 +117,19 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One DestList entry and the shortcut its number points to. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="a8fb38b3f369947a5e61479d5dfb110b9" name="a8fb38b3f369947a5e61479d5dfb110b9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8fb38b3f369947a5e61479d5dfb110b9">&#9670;&#160;</a></span>destList</h2>
+<a id="a30f80575299ed2aa76a2addc518caa18" name="a30f80575299ed2aa76a2addc518caa18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a30f80575299ed2aa76a2addc518caa18">&#9670;&#160;</a></span>destList</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structDestFile.html">DestFile</a> AutomaticDestination::JumplistEntry::destList</td>
+          <td class="memname">std::optional&lt;<a class="el" href="structDestFile.html">DestFile</a>&gt; AutomaticDestination::JumplistEntry::destList</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>the DestList entry: last access, host, droid GUIDs, pin </p>
+<p>the DestList entry: last access, host, droid GUIDs, pin; empty when the DestList is in an unsupported format </p>
 
 </div>
 </div>

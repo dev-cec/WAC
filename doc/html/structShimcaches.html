@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -110,6 +110,8 @@ $(document).ready(function(){initNavTree('structShimcaches.html',''); initResiza
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a41620f175cff97448ea62c7cdcdfdeb8" id="r_a41620f175cff97448ea62c7cdcdfdeb8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcaches.html#a41620f175cff97448ea62c7cdcdfdeb8">getData</a> ()</td></tr>
 <tr class="separator:a41620f175cff97448ea62c7cdcdfdeb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3f31cc160cd4e8af0741c98c2687859" id="r_ac3f31cc160cd4e8af0741c98c2687859"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcaches.html#ac3f31cc160cd4e8af0741c98c2687859">parse</a> (const std::vector&lt; BYTE &gt; &amp;value)</td></tr>
+<tr class="separator:ac3f31cc160cd4e8af0741c98c2687859"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8824282f09596ae01cd7b67bb0b60b86" id="r_a8824282f09596ae01cd7b67bb0b60b86"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcaches.html#a8824282f09596ae01cd7b67bb0b60b86">toJson</a> ()</td></tr>
 <tr class="separator:a8824282f09596ae01cd7b67bb0b60b86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a66f46b5c11acdc5aeafdea3d87aef624" id="r_a66f46b5c11acdc5aeafdea3d87aef624"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcaches.html#a66f46b5c11acdc5aeafdea3d87aef624">clear</a> ()</td></tr>
@@ -121,6 +123,12 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a4782aa9366a401e3d5cac3f51f1164d1" id="r_a4782aa9366a401e3d5cac3f51f1164d1"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structShimcache.html">Shimcache</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcaches.html#a4782aa9366a401e3d5cac3f51f1164d1">shimcaches</a></td></tr>
 <tr class="memdesc:a4782aa9366a401e3d5cac3f51f1164d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">the entries, in cache order  <br /></td></tr>
 <tr class="separator:a4782aa9366a401e3d5cac3f51f1164d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a158043af999615afdf6af7694a16fe" id="r_a0a158043af999615afdf6af7694a16fe"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcaches.html#a0a158043af999615afdf6af7694a16fe">unsupportedFormat</a> = false</td></tr>
+<tr class="memdesc:a0a158043af999615afdf6af7694a16fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">the value is in a format WAC has no decoder for (pieceFormat): no entry was read  <br /></td></tr>
+<tr class="separator:a0a158043af999615afdf6af7694a16fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc592f4ce5c0b37315921e2e122b443e" id="r_afc592f4ce5c0b37315921e2e122b443e"><td class="memItemLeft" align="right" valign="top">unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcaches.html#afc592f4ce5c0b37315921e2e122b443e">formatSignature</a> = 0</td></tr>
+<tr class="memdesc:afc592f4ce5c0b37315921e2e122b443e"><td class="mdescLeft">&#160;</td><td class="mdescRight">what the value states of its format: its header, or the tag of its first entry under Windows 8 and 8.1  <br /></td></tr>
+<tr class="separator:afc592f4ce5c0b37315921e2e122b443e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The whole cache, in the order it is stored: most recent entry first. </p>
@@ -162,6 +170,31 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ac3f31cc160cd4e8af0741c98c2687859" name="ac3f31cc160cd4e8af0741c98c2687859"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac3f31cc160cd4e8af0741c98c2687859">&#9670;&#160;</a></span>parse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT Shimcaches::parse </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; BYTE &gt; &amp;&#160;</td>
+          <td class="paramname"><em>value</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Parses an AppCompatCache value according to its format. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">value</td><td>the value's bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK, or why it cannot be read </dd></dl>
+
+</div>
+</div>
 <a id="a8824282f09596ae01cd7b67bb0b60b86" name="a8824282f09596ae01cd7b67bb0b60b86"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8824282f09596ae01cd7b67bb0b60b86">&#9670;&#160;</a></span>toJson()</h2>
 
@@ -181,6 +214,22 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="afc592f4ce5c0b37315921e2e122b443e" name="afc592f4ce5c0b37315921e2e122b443e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc592f4ce5c0b37315921e2e122b443e">&#9670;&#160;</a></span>formatSignature</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned Shimcaches::formatSignature = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>what the value states of its format: its header, or the tag of its first entry under Windows 8 and 8.1 </p>
+
+</div>
+</div>
 <a id="a4782aa9366a401e3d5cac3f51f1164d1" name="a4782aa9366a401e3d5cac3f51f1164d1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4782aa9366a401e3d5cac3f51f1164d1">&#9670;&#160;</a></span>shimcaches</h2>
 
@@ -194,6 +243,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>the entries, in cache order </p>
+
+</div>
+</div>
+<a id="a0a158043af999615afdf6af7694a16fe" name="a0a158043af999615afdf6af7694a16fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a158043af999615afdf6af7694a16fe">&#9670;&#160;</a></span>unsupportedFormat</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Shimcaches::unsupportedFormat = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the value is in a format WAC has no decoder for (pieceFormat): no entry was read </p>
 
 </div>
 </div>

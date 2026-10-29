@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,6 +116,8 @@ Inheritance diagram for RawReader:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a482c482a48c34e4646f71c16352fb0d8" id="r_a482c482a48c34e4646f71c16352fb0d8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRawReader.html#a482c482a48c34e4646f71c16352fb0d8">RawReader</a> (int shadowCopy=-1)</td></tr>
+<tr class="separator:a482c482a48c34e4646f71c16352fb0d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8539fcdd4d3eb748b92835723bfd639a" id="r_a8539fcdd4d3eb748b92835723bfd639a"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRawReader.html#a8539fcdd4d3eb748b92835723bfd639a">read</a> (const std::wstring &amp;absolutePath, const std::wstring &amp;output, <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;line, std::streambuf *observer=nullptr) override</td></tr>
 <tr class="separator:a8539fcdd4d3eb748b92835723bfd639a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2d1c7195409554d850018cea096dfb8" id="r_ab2d1c7195409554d850018cea096dfb8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRawReader.html#ab2d1c7195409554d850018cea096dfb8">list</a> (const std::wstring &amp;absoluteFolder, std::vector&lt; <a class="el" href="structRawDirEntry.html">RawDirEntry</a> &gt; &amp;entries) override</td></tr>
@@ -125,8 +127,41 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a38128f94b6433e19f5cb9f9189c346af inherit pub_methods_classFileSource"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Raw reader: reads files and lists directories on the NTFS volumes, through the volumes opened once for the whole run (see RawVolumesOpen). It holds nothing of its own: two readers share the same volumes and cache. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
+<div class="textblock"><p>Raw reader: reads files and lists directories on the NTFS volumes, through the volumes opened once for the whole run (see RawVolumesOpen). It holds nothing of its own but the view it reads: two readers of the same view share the same volumes and cache. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a482c482a48c34e4646f71c16352fb0d8" name="a482c482a48c34e4646f71c16352fb0d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a482c482a48c34e4646f71c16352fb0d8">&#9670;&#160;</a></span>RawReader()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">RawReader::RawReader </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>shadowCopy</em> = <code>-1</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">shadowCopy</td><td>-1 to read the volumes as they are now, or the index of a shadow copy (RawShadowCopies) to read each volume through </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
 <a id="ab2d1c7195409554d850018cea096dfb8" name="ab2d1c7195409554d850018cea096dfb8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab2d1c7195409554d850018cea096dfb8">&#9670;&#160;</a></span>list()</h2>
 

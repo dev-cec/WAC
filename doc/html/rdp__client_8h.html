@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -127,6 +127,12 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a40ad6838f7effd76d58766656a174be5" id="r_a40ad6838f7effd76d58766656a174be5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rdp__client_8h.html#a40ad6838f7effd76d58766656a174be5">decodeRdpBitmapCache</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, uint32_t &amp;version, std::vector&lt; <a class="el" href="structRdpCacheTile.html">RdpCacheTile</a> &gt; &amp;tiles)</td></tr>
 <tr class="separator:a40ad6838f7effd76d58766656a174be5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa882dbeb5a6a6376d52fc34e6045d1a0" id="r_aa882dbeb5a6a6376d52fc34e6045d1a0"><td class="memItemLeft" align="right" valign="top">unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rdp__client_8h.html#aa882dbeb5a6a6376d52fc34e6045d1a0">bmcBytesPerPixel</a> (const std::wstring &amp;fileName)</td></tr>
+<tr class="separator:aa882dbeb5a6a6376d52fc34e6045d1a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae40bd7dd3097562478af5ffe0c8d7bf2" id="r_ae40bd7dd3097562478af5ffe0c8d7bf2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rdp__client_8h.html#ae40bd7dd3097562478af5ffe0c8d7bf2">rdpRleDecompress16</a> (const uint8_t *data, size_t size, unsigned width, unsigned height, std::vector&lt; uint16_t &gt; &amp;pixels)</td></tr>
+<tr class="separator:ae40bd7dd3097562478af5ffe0c8d7bf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae50ccf7e5b6856f7ef2880b7ab17a853" id="r_ae50ccf7e5b6856f7ef2880b7ab17a853"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rdp__client_8h.html#ae50ccf7e5b6856f7ef2880b7ab17a853">decodeRdpBmcCache</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, std::vector&lt; <a class="el" href="structRdpCacheTile.html">RdpCacheTile</a> &gt; &amp;tiles, size_t &amp;unread)</td></tr>
+<tr class="separator:ae50ccf7e5b6856f7ef2880b7ab17a853"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6ada369faa85a74895b14a2ddd5f669" id="r_ae6ada369faa85a74895b14a2ddd5f669"><td class="memItemLeft" align="right" valign="top">std::vector&lt; uint8_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rdp__client_8h.html#ae6ada369faa85a74895b14a2ddd5f669">rdpTileBmp</a> (const <a class="el" href="structRdpCacheTile.html">RdpCacheTile</a> &amp;tile)</td></tr>
 <tr class="separator:ae6ada369faa85a74895b14a2ddd5f669"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39750170c6309ead11a97e281440acae" id="r_a39750170c6309ead11a97e281440acae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rdp__client_8h.html#a39750170c6309ead11a97e281440acae">parseRdpFile</a> (const std::wstring &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>, <a class="el" href="classJson.html">Json</a> &amp;settings)</td></tr>
@@ -145,8 +151,34 @@ Variables</h2></td></tr>
 <li>the connection files (*.rdp) in the profile's Documents, Default.rdp among them: the settings of the last connection, its address and user;</li>
 <li>the persistent bitmap cache, in <code>AppData\\Local\\Microsoft\\Terminal Server Client\\Cache</code>: pieces of the remote screen as the client drew it — what the intruder saw there.</li>
 </ul>
-<p>THE CACHE FILES. <code>Cache&lt;NNNN&gt;.bin</code> (RDP 8 and later, the graphics pipeline of Windows 10 and 11) is read: the header "RDP8bmp\\0" and a version on four bytes, then tiles, each a header — two keys, width and height on two bytes each — and its pixels, 4 × width × height bytes, BGRA, rows from the top. Each tile is exported as a BMP image next to the JSON (<code>rdp_cache\\&lt;SID&gt;\\&lt;file&gt;\\tile_&lt;NNNN&gt;.bmp</code>); the JSON gives its size, keys and the SHA-256 of its pixels. The format was established on a session of the test VM and confronted with bmc-tools (ANSSI) tile by tile. The older <code>bcache2*.bmc</code> (compressed tiles of the RDP 6/7 drawing orders) are collected but not decoded: the test VM writes them empty, and nothing is decoded without a sample to check it on. </p>
+<p>THE CACHE FILES. <code>Cache&lt;NNNN&gt;.bin</code> (RDP 8 and later, the graphics pipeline of Windows 10 and 11) is read: the header "RDP8bmp\\0" and a version on four bytes, then tiles, each a header — two keys, width and height on two bytes each — and its pixels, 4 × width × height bytes, BGRA, rows from the top. Each tile is exported as a BMP image next to the JSON (<code>rdp_cache\\&lt;SID&gt;\\&lt;file&gt;\\tile_&lt;NNNN&gt;.bmp</code>); the JSON gives its size, keys and the SHA-256 of its pixels. The format was established on a session of the test VM and confronted with bmc-tools (ANSSI) tile by tile.</p>
+<p><code>bcache22.bmc</code> (the client of Windows XP; Vista's and 7's when the server draws by orders) is read too: no file header, one slot per tile — a header of 20 bytes (two keys, width and height on two bytes, the length of the data and flags on four) and 64 × 64 pixels of two bytes, the data of a smaller tile at the start of its slot. A tile whose flags carry 0x08 is compressed by the interleaved RLE codec of RDP (MS-RDPBCGR 3.1.9), rows from the bottom, pixels RGB 5-6-5. Measured on the client of XP SP1 against Windows Server 2012 R2: sessions asked at 8, 15, 16 and 24 bits per pixel all wrote this one file, every tile compressed with flags 0x19. The other names (bcache2.bmc, bcache24.bmc) and an uncompressed tile are counted, not decoded: no sample of them was ever written to check them on. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="aa882dbeb5a6a6376d52fc34e6045d1a0" name="aa882dbeb5a6a6376d52fc34e6045d1a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa882dbeb5a6a6376d52fc34e6045d1a0">&#9670;&#160;</a></span>bmcBytesPerPixel()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned bmcBytesPerPixel </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>fileName</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The bytes per pixel of a <code>.bmc</code> bitmap cache, told by its name. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fileName</td><td>the file's name </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>2 for bcache22.bmc, 0 for a name WAC has no sample of </dd></dl>
+
+</div>
+</div>
 <a id="a40ad6838f7effd76d58766656a174be5" name="a40ad6838f7effd76d58766656a174be5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a40ad6838f7effd76d58766656a174be5">&#9670;&#160;</a></span>decodeRdpBitmapCache()</h2>
 
@@ -190,6 +222,49 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="ae50ccf7e5b6856f7ef2880b7ab17a853" name="ae50ccf7e5b6856f7ef2880b7ab17a853"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae50ccf7e5b6856f7ef2880b7ab17a853">&#9670;&#160;</a></span>decodeRdpBmcCache()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool decodeRdpBmcCache </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRdpCacheTile.html">RdpCacheTile</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>tiles</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t &amp;&#160;</td>
+          <td class="paramname"><em>unread</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decodes a <code>bcache22.bmc</code> bitmap cache. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>the file </td></tr>
+    <tr><td class="paramname">tiles</td><td>receives its decoded tiles, in the file's order </td></tr>
+    <tr><td class="paramname">unread</td><td>receives the number of tiles not decoded (uncompressed, or whose data does not fill the tile) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the file has the layout: a first tile of 1 to 64 pixels a side; the reading stops at the first slot that is not one </dd></dl>
+
+</div>
+</div>
 <a id="a39750170c6309ead11a97e281440acae" name="a39750170c6309ead11a97e281440acae"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a39750170c6309ead11a97e281440acae">&#9670;&#160;</a></span>parseRdpFile()</h2>
 
@@ -223,6 +298,63 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="ae40bd7dd3097562478af5ffe0c8d7bf2" name="ae40bd7dd3097562478af5ffe0c8d7bf2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae40bd7dd3097562478af5ffe0c8d7bf2">&#9670;&#160;</a></span>rdpRleDecompress16()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool rdpRleDecompress16 </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>height</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; uint16_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>pixels</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Decompresses a bitmap of the interleaved RLE codec of RDP (MS-RDPBCGR 3.1.9), pixels of two bytes. Every order is bounded by the data and by the bitmap: a run that would pass either fails the bitmap. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td>the compressed bitmap </td></tr>
+    <tr><td class="paramname">size</td><td>its length </td></tr>
+    <tr><td class="paramname">width</td><td>its width in pixels, the length of a row </td></tr>
+    <tr><td class="paramname">height</td><td>its height </td></tr>
+    <tr><td class="paramname">pixels</td><td>receives width × height pixels, rows from the bottom </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the data fills the bitmap exactly </dd></dl>
 
 </div>
 </div>

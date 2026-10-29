@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('jumplist__custom_8cpp.html',''); initR
 
 <div class="header">
   <div class="summary">
+<a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">jumplist_custom.cpp File Reference</div></div>
 </div><!--header-->
@@ -106,7 +107,13 @@ $(document).ready(function(){initNavTree('jumplist__custom_8cpp.html',''); initR
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="jumplist__custom_8h_source.html">jumplist_custom.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
+<code>#include &lt;algorithm&gt;</code><br />
 </div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a274c705cabc591bd156f5ae655c50a54" id="r_a274c705cabc591bd156f5ae655c50a54"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structCustomCategoryHeader.html">CustomCategoryHeader</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="jumplist__custom_8cpp.html#a274c705cabc591bd156f5ae655c50a54">customDestinationCategories</a> (const uint8_t *data, size_t size)</td></tr>
+<tr class="separator:a274c705cabc591bd156f5ae655c50a54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
 <tr class="memitem:a4d0af98fce75632208e48b822174f1db" id="r_a4d0af98fce75632208e48b822174f1db"><td class="memItemLeft" align="right" valign="top">const uintmax_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="jumplist__custom_8cpp.html#a4d0af98fce75632208e48b822174f1db">JUMPLIST_MAX</a> = 256ull * 1024 * 1024</td></tr>
@@ -115,7 +122,44 @@ Variables</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Reading of the custom jump lists (see <a class="el" href="jumplist__custom_8h.html" title="Custom jump lists: the entries an application pins itself.">jumplist_custom.h</a>). </p>
-</div><h2 class="groupheader">Variable Documentation</h2>
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a274c705cabc591bd156f5ae655c50a54" name="a274c705cabc591bd156f5ae655c50a54"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a274c705cabc591bd156f5ae655c50a54">&#9670;&#160;</a></span>customDestinationCategories()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="structCustomCategoryHeader.html">CustomCategoryHeader</a> &gt; customDestinationCategories </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The categories of a .customDestinations-ms file, walked from its header (version 2, category count) from one category footer (0xBABFFBAB) to the next: the shortcuts between them are not parsed here. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td>the file's bytes </td></tr>
+    <tr><td class="paramname">size</td><td>their count </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the categories read, in order; the walk stops at the first that does not hold — an unknown version gives none </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
 <a id="a4d0af98fce75632208e48b822174f1db" name="a4d0af98fce75632208e48b822174f1db"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4d0af98fce75632208e48b822174f1db">&#9670;&#160;</a></span>JUMPLIST_MAX</h2>
 

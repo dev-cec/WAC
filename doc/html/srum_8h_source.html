@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -100,42 +100,42 @@ $(document).ready(function(){initNavTree('srum_8h_source.html',''); initResizabl
 </div><!--header-->
 <div class="contents">
 <a href="srum_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#pragma once</span></div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#include &lt;map&gt;</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#include &lt;utility&gt;</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#include &quot;<a class="code" href="ese__database_8h.html">ese_database.h</a>&quot;</span></div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>std::wstring <a class="code hl_function" href="srum_8h.html#a2608df3d2f4e6b1ff52a5e2831d7198c">srumProviderName</a>(<span class="keyword">const</span> std::wstring&amp; table);</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>std::wstring <a class="code hl_function" href="srum_8h.html#abc040ba736b854689169229b79a4e809">srumKey</a>(<span class="keyword">const</span> std::wstring&amp; column);</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>std::wstring <a class="code hl_function" href="srum_8h.html#a0ad3cb57555108f914e6c1d8b2de4bb4">srumIdentity</a>(<span class="keywordtype">unsigned</span> type, <span class="keyword">const</span> std::vector&lt;uint8_t&gt;&amp; blob);</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="foldopen" id="foldopen00047" data-start="{" data-end="};">
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno"><a class="line" href="classSrum.html">   47</a></span><span class="keyword">class </span><a class="code hl_class" href="classSrum.html">Srum</a> {</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    HRESULT <a class="code hl_function" href="classSrum.html#a7077faae296bdea2d37f2226024d52ce">getData</a>();          </div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    HRESULT <a class="code hl_function" href="classSrum.html#ab03ae0486fdae64c21653a13184ab605">toJson</a>();           </div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSrum.html#a92e17eebcae3bf9a2a4578ca96f3aaf8">clear</a>();               </div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <a class="code hl_class" href="classEseDatabase.html">EseDatabase</a> database_;</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    std::map&lt;int32_t, std::pair&lt;unsigned, std::wstring&gt;&gt; identities_;   </div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>};</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#include &lt;map&gt;</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#include &lt;utility&gt;</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#include &lt;windows.h&gt;</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#include &quot;<a class="code" href="ese__database_8h.html">ese_database.h</a>&quot;</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#include &quot;<a class="code" href="tools_8h.html">tools.h</a>&quot;</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>std::wstring <a class="code hl_function" href="srum_8h.html#a2608df3d2f4e6b1ff52a5e2831d7198c">srumProviderName</a>(<span class="keyword">const</span> std::wstring&amp; table);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>std::wstring <a class="code hl_function" href="srum_8h.html#abc040ba736b854689169229b79a4e809">srumKey</a>(<span class="keyword">const</span> std::wstring&amp; column);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>std::wstring <a class="code hl_function" href="srum_8h.html#a0ad3cb57555108f914e6c1d8b2de4bb4">srumIdentity</a>(<span class="keywordtype">unsigned</span> type, <span class="keyword">const</span> std::vector&lt;uint8_t&gt;&amp; blob);</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
+<div class="foldopen" id="foldopen00048" data-start="{" data-end="};">
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="classSrum.html">   48</a></span><span class="keyword">class </span><a class="code hl_class" href="classSrum.html">Srum</a> {</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    HRESULT <a class="code hl_function" href="classSrum.html#a7077faae296bdea2d37f2226024d52ce">getData</a>();          </div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    HRESULT <a class="code hl_function" href="classSrum.html#ab03ae0486fdae64c21653a13184ab605">toJson</a>();           </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classSrum.html#a92e17eebcae3bf9a2a4578ca96f3aaf8">clear</a>();               </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <a class="code hl_class" href="classEseDatabase.html">EseDatabase</a> database_;</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    std::map&lt;int32_t, std::pair&lt;unsigned, std::wstring&gt;&gt; identities_;   </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>};</div>
 </div>
-<div class="ttc" id="aclassEseDatabase_html"><div class="ttname"><a href="classEseDatabase.html">EseDatabase</a></div><div class="ttdef"><b>Definition</b> ese_database.h:91</div></div>
-<div class="ttc" id="aclassSrum_html"><div class="ttname"><a href="classSrum.html">Srum</a></div><div class="ttdoc">SRUM (srum.json).</div><div class="ttdef"><b>Definition</b> srum.h:47</div></div>
-<div class="ttc" id="aclassSrum_html_a7077faae296bdea2d37f2226024d52ce"><div class="ttname"><a href="classSrum.html#a7077faae296bdea2d37f2226024d52ce">Srum::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> srum.cpp:55</div></div>
-<div class="ttc" id="aclassSrum_html_a92e17eebcae3bf9a2a4578ca96f3aaf8"><div class="ttname"><a href="classSrum.html#a92e17eebcae3bf9a2a4578ca96f3aaf8">Srum::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">releases the database</div><div class="ttdef"><b>Definition</b> srum.cpp:156</div></div>
-<div class="ttc" id="aclassSrum_html_ab03ae0486fdae64c21653a13184ab605"><div class="ttname"><a href="classSrum.html#ab03ae0486fdae64c21653a13184ab605">Srum::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> srum.cpp:119</div></div>
+<div class="ttc" id="aclassEseDatabase_html"><div class="ttname"><a href="classEseDatabase.html">EseDatabase</a></div><div class="ttdef"><b>Definition</b> ese_database.h:113</div></div>
+<div class="ttc" id="aclassSrum_html"><div class="ttname"><a href="classSrum.html">Srum</a></div><div class="ttdoc">SRUM (srum.json).</div><div class="ttdef"><b>Definition</b> srum.h:48</div></div>
+<div class="ttc" id="aclassSrum_html_a7077faae296bdea2d37f2226024d52ce"><div class="ttname"><a href="classSrum.html#a7077faae296bdea2d37f2226024d52ce">Srum::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> srum.cpp:47</div></div>
+<div class="ttc" id="aclassSrum_html_a92e17eebcae3bf9a2a4578ca96f3aaf8"><div class="ttname"><a href="classSrum.html#a92e17eebcae3bf9a2a4578ca96f3aaf8">Srum::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">releases the identities read; the database closes with the object</div><div class="ttdef"><b>Definition</b> srum.cpp:146</div></div>
+<div class="ttc" id="aclassSrum_html_ab03ae0486fdae64c21653a13184ab605"><div class="ttname"><a href="classSrum.html#ab03ae0486fdae64c21653a13184ab605">Srum::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> srum.cpp:109</div></div>
 <div class="ttc" id="aese__database_8h_html"><div class="ttname"><a href="ese__database_8h.html">ese_database.h</a></div><div class="ttdoc">Reader of ESE databases (Extensible Storage Engine, &quot;JET Blue&quot;): SRUDB.dat, qmgr.db,...</div></div>
-<div class="ttc" id="asrum_8h_html_a0ad3cb57555108f914e6c1d8b2de4bb4"><div class="ttname"><a href="srum_8h.html#a0ad3cb57555108f914e6c1d8b2de4bb4">srumIdentity</a></div><div class="ttdeci">std::wstring srumIdentity(unsigned type, const std::vector&lt; uint8_t &gt; &amp;blob)</div><div class="ttdef"><b>Definition</b> srum.cpp:50</div></div>
-<div class="ttc" id="asrum_8h_html_a2608df3d2f4e6b1ff52a5e2831d7198c"><div class="ttname"><a href="srum_8h.html#a2608df3d2f4e6b1ff52a5e2831d7198c">srumProviderName</a></div><div class="ttdeci">std::wstring srumProviderName(const std::wstring &amp;table)</div><div class="ttdef"><b>Definition</b> srum.cpp:28</div></div>
-<div class="ttc" id="asrum_8h_html_abc040ba736b854689169229b79a4e809"><div class="ttname"><a href="srum_8h.html#abc040ba736b854689169229b79a4e809">srumKey</a></div><div class="ttdeci">std::wstring srumKey(const std::wstring &amp;column)</div><div class="ttdef"><b>Definition</b> srum.cpp:44</div></div>
+<div class="ttc" id="asrum_8h_html_a0ad3cb57555108f914e6c1d8b2de4bb4"><div class="ttname"><a href="srum_8h.html#a0ad3cb57555108f914e6c1d8b2de4bb4">srumIdentity</a></div><div class="ttdeci">std::wstring srumIdentity(unsigned type, const std::vector&lt; uint8_t &gt; &amp;blob)</div><div class="ttdef"><b>Definition</b> srum.cpp:42</div></div>
+<div class="ttc" id="asrum_8h_html_a2608df3d2f4e6b1ff52a5e2831d7198c"><div class="ttname"><a href="srum_8h.html#a2608df3d2f4e6b1ff52a5e2831d7198c">srumProviderName</a></div><div class="ttdeci">std::wstring srumProviderName(const std::wstring &amp;table)</div><div class="ttdef"><b>Definition</b> srum.cpp:20</div></div>
+<div class="ttc" id="asrum_8h_html_abc040ba736b854689169229b79a4e809"><div class="ttname"><a href="srum_8h.html#abc040ba736b854689169229b79a4e809">srumKey</a></div><div class="ttdeci">std::wstring srumKey(const std::wstring &amp;column)</div><div class="ttdef"><b>Definition</b> srum.cpp:36</div></div>
 <div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div><div class="ttdoc">Shared tools: configuration, console display, log, registry reads, time formatting,...</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

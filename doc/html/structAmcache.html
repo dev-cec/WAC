@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -121,9 +121,15 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aa1756e905619d3e16d6144f855c80d4e" id="r_aa1756e905619d3e16d6144f855c80d4e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structAmcacheEntry.html">AmcacheEntry</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcache.html#aa1756e905619d3e16d6144f855c80d4e">entries</a></td></tr>
 <tr class="memdesc:aa1756e905619d3e16d6144f855c80d4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">every entry, table after table  <br /></td></tr>
 <tr class="separator:aa1756e905619d3e16d6144f855c80d4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0813fc9faca3738b74e33ea5baa8176a" id="r_a0813fc9faca3738b74e33ea5baa8176a"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcache.html#a0813fc9faca3738b74e33ea5baa8176a">recentFiles</a></td></tr>
+<tr class="memdesc:a0813fc9faca3738b74e33ea5baa8176a"><td class="mdescLeft">&#160;</td><td class="mdescRight">the paths RecentFileCache.bcf lists  <br /></td></tr>
+<tr class="separator:a0813fc9faca3738b74e33ea5baa8176a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a980f232bf330a8a0126b2bd2003c4b3c" id="r_a980f232bf330a8a0126b2bd2003c4b3c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAmcache.html#a980f232bf330a8a0126b2bd2003c4b3c">recentFileCache</a></td></tr>
+<tr class="memdesc:a980f232bf330a8a0126b2bd2003c4b3c"><td class="mdescLeft">&#160;</td><td class="mdescRight">that file on the examined machine, when read  <br /></td></tr>
+<tr class="separator:a980f232bf330a8a0126b2bd2003c4b3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Every table of the <a class="el" href="structAmcache.html">Amcache</a> hive. </p>
+<div class="textblock"><p>Every table of the <a class="el" href="structAmcache.html">Amcache</a> hive, and the paths of RecentFileCache.bcf. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="aeba34236ea5718e774b64e6c787a2d30" name="aeba34236ea5718e774b64e6c787a2d30"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aeba34236ea5718e774b64e6c787a2d30">&#9670;&#160;</a></span>clear()</h2>
@@ -158,7 +164,7 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Opens Amcache.hve and reads every table under <code>Root</code>. </p><dl class="section return"><dt>Returns</dt><dd>S_OK, or why the hive or its root could not be read </dd></dl>
+<p>Reads RecentFileCache.bcf, then opens Amcache.hve and reads every table under <code>Root</code>. </p><dl class="section return"><dt>Returns</dt><dd>S_OK, or why the hive or its root could not be read when RecentFileCache.bcf was not read either </dd></dl>
 
 </div>
 </div>
@@ -194,6 +200,38 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>every entry, table after table </p>
+
+</div>
+</div>
+<a id="a980f232bf330a8a0126b2bd2003c4b3c" name="a980f232bf330a8a0126b2bd2003c4b3c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a980f232bf330a8a0126b2bd2003c4b3c">&#9670;&#160;</a></span>recentFileCache</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Amcache::recentFileCache</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>that file on the examined machine, when read </p>
+
+</div>
+</div>
+<a id="a0813fc9faca3738b74e33ea5baa8176a" name="a0813fc9faca3738b74e33ea5baa8176a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0813fc9faca3738b74e33ea5baa8176a">&#9670;&#160;</a></span>recentFiles</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::wstring&gt; Amcache::recentFiles</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the paths RecentFileCache.bcf lists </p>
 
 </div>
 </div>

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -130,6 +130,12 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a25f060e1fa0a1ad2b68a711fd6f56db5" id="r_a25f060e1fa0a1ad2b68a711fd6f56db5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a25f060e1fa0a1ad2b68a711fd6f56db5">Count</a> = 0</td></tr>
 <tr class="memdesc:a25f060e1fa0a1ad2b68a711fd6f56db5"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of runs counted by Explorer  <br /></td></tr>
 <tr class="separator:a25f060e1fa0a1ad2b68a711fd6f56db5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c405786cbe2981af3685338d50185d7" id="r_a7c405786cbe2981af3685338d50185d7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a7c405786cbe2981af3685338d50185d7">countKnown</a> = true</td></tr>
+<tr class="memdesc:a7c405786cbe2981af3685338d50185d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">false for an XP counter below its base: no number of runs given  <br /></td></tr>
+<tr class="separator:a7c405786cbe2981af3685338d50185d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7ce3d88f0cf0e83a6e13e9e525afae0" id="r_ae7ce3d88f0cf0e83a6e13e9e525afae0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#ae7ce3d88f0cf0e83a6e13e9e525afae0">windowsXp</a> = false</td></tr>
+<tr class="memdesc:ae7ce3d88f0cf0e83a6e13e9e525afae0"><td class="mdescLeft">&#160;</td><td class="mdescRight">an entry of 16 bytes (XP, Server 2003, Vista): no focus fields  <br /></td></tr>
+<tr class="separator:ae7ce3d88f0cf0e83a6e13e9e525afae0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ba8b3e449ec33c381c7f5db6403ea93" id="r_a5ba8b3e449ec33c381c7f5db6403ea93"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a5ba8b3e449ec33c381c7f5db6403ea93">FocusCount</a> = 0</td></tr>
 <tr class="memdesc:a5ba8b3e449ec33c381c7f5db6403ea93"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of times the window received the focus  <br /></td></tr>
 <tr class="separator:a5ba8b3e449ec33c381c7f5db6403ea93"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,6 +150,10 @@ Public Attributes</h2></td></tr>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:a0976434ad1631bb66c0044003d4d2e0d" id="r_a0976434ad1631bb66c0044003d4d2e0d"><td class="memItemLeft" align="right" valign="top">static const size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a0976434ad1631bb66c0044003d4d2e0d">ENTRY_SIZE</a> = 72</td></tr>
 <tr class="separator:a0976434ad1631bb66c0044003d4d2e0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ec43ba9ae07899908909b222f9f7d43" id="r_a4ec43ba9ae07899908909b222f9f7d43"><td class="memItemLeft" align="right" valign="top">static const size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#a4ec43ba9ae07899908909b222f9f7d43">XP_ENTRY_SIZE</a> = 16</td></tr>
+<tr class="separator:a4ec43ba9ae07899908909b222f9f7d43"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae4c7a176fdd0cb9e3cab49cbad24320" id="r_aae4c7a176fdd0cb9e3cab49cbad24320"><td class="memItemLeft" align="right" valign="top">static const int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUserAssist.html#aae4c7a176fdd0cb9e3cab49cbad24320">XP_COUNT_BASE</a> = 5</td></tr>
+<tr class="separator:aae4c7a176fdd0cb9e3cab49cbad24320"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One <a class="el" href="structUserAssist.html">UserAssist</a> entry: something the user started from the shell. </p>
@@ -185,7 +195,7 @@ Static Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Builds the entry from a registry value of ENTRY_SIZE bytes. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Builds the entry from a registry value of ENTRY_SIZE or XP_ENTRY_SIZE bytes. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">hKey</td><td>name of the GUID subkey the value comes from. </td></tr>
     <tr><td class="paramname">valueName</td><td>name of the value, ROT13-encoded. </td></tr>
@@ -265,6 +275,22 @@ Static Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>number of runs counted by Explorer </p>
+
+</div>
+</div>
+<a id="a7c405786cbe2981af3685338d50185d7" name="a7c405786cbe2981af3685338d50185d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c405786cbe2981af3685338d50185d7">&#9670;&#160;</a></span>countKnown</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool UserAssist::countKnown = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>false for an XP counter below its base: no number of runs given </p>
 
 </div>
 </div>
@@ -367,6 +393,67 @@ Static Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>SID of the user who started it. </p>
+
+</div>
+</div>
+<a id="ae7ce3d88f0cf0e83a6e13e9e525afae0" name="ae7ce3d88f0cf0e83a6e13e9e525afae0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7ce3d88f0cf0e83a6e13e9e525afae0">&#9670;&#160;</a></span>windowsXp</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool UserAssist::windowsXp = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>an entry of 16 bytes (XP, Server 2003, Vista): no focus fields </p>
+
+</div>
+</div>
+<a id="aae4c7a176fdd0cb9e3cab49cbad24320" name="aae4c7a176fdd0cb9e3cab49cbad24320"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aae4c7a176fdd0cb9e3cab49cbad24320">&#9670;&#160;</a></span>XP_COUNT_BASE</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const int UserAssist::XP_COUNT_BASE = 5</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a4ec43ba9ae07899908909b222f9f7d43" name="a4ec43ba9ae07899908909b222f9f7d43"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ec43ba9ae07899908909b222f9f7d43">&#9670;&#160;</a></span>XP_ENTRY_SIZE</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const size_t UserAssist::XP_ENTRY_SIZE = 16</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Size of an entry before Windows 7: session (4), counter (4), last run FILETIME (8). The counter starts at 5: measured on the XP VM, Notepad started twice from the <a class="el" href="structRun.html">Run</a> box read 7, shutdown.exe once read 6. </p>
 
 </div>
 </div>

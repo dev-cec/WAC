@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -105,6 +105,7 @@ $(document).ready(function(){initNavTree('ese__database_8cpp.html',''); initResi
 <p>Reader of ESE databases (see <a class="el" href="ese__database_8h.html" title="Reader of ESE databases (Extensible Storage Engine, &quot;JET Blue&quot;): SRUDB.dat, qmgr.db,...">ese_database.h</a>).  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="long__path_8h_source.html">long_path.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="ese__database_8h_source.html">ese_database.h</a>&quot;</code><br />
 <code>#include &lt;algorithm&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
@@ -112,6 +113,10 @@ $(document).ready(function(){initNavTree('ese__database_8cpp.html',''); initResi
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ad830f473171975b755a721a3cb22a817" id="r_ad830f473171975b755a721a3cb22a817"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__database_8cpp.html#ad830f473171975b755a721a3cb22a817">decompressSevenBit</a> (std::vector&lt; uint8_t &gt; &amp;value)</td></tr>
+<tr class="separator:ad830f473171975b755a721a3cb22a817"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f55d13087052453ce4aa6dcdb150e5e" id="r_a7f55d13087052453ce4aa6dcdb150e5e"><td class="memItemLeft" align="right" valign="top">std::optional&lt; uint64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__database_8cpp.html#a7f55d13087052453ce4aa6dcdb150e5e">eseCellInteger</a> (const <a class="el" href="structEseCell.html">EseCell</a> &amp;cell)</td></tr>
+<tr class="separator:a7f55d13087052453ce4aa6dcdb150e5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acebf5d49b18398f6ba75cd2641822894" id="r_acebf5d49b18398f6ba75cd2641822894"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__database_8cpp.html#acebf5d49b18398f6ba75cd2641822894">eseCellToJson</a> (const <a class="el" href="structEseColumn.html">EseColumn</a> &amp;column, const <a class="el" href="structEseCell.html">EseCell</a> &amp;cell)</td></tr>
 <tr class="separator:acebf5d49b18398f6ba75cd2641822894"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae63c36a6b5b4350699061a9f163eea85" id="r_ae63c36a6b5b4350699061a9f163eea85"><td class="memItemLeft" align="right" valign="top"><a class="el" href="ese__database_8h.html#aaee291391bc0e42b1d1c61f8d6026cac">EseRecord</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__database_8cpp.html#ae63c36a6b5b4350699061a9f163eea85">parseEseRecord</a> (const std::vector&lt; uint8_t &gt; &amp;data, const std::vector&lt; <a class="el" href="structEseColumn.html">EseColumn</a> &gt; &amp;columns, bool smallPages, bool newFormat)</td></tr>
@@ -120,6 +125,50 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Reader of ESE databases (see <a class="el" href="ese__database_8h.html" title="Reader of ESE databases (Extensible Storage Engine, &quot;JET Blue&quot;): SRUDB.dat, qmgr.db,...">ese_database.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="ad830f473171975b755a721a3cb22a817" name="ad830f473171975b755a721a3cb22a817"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad830f473171975b755a721a3cb22a817">&#9670;&#160;</a></span>decompressSevenBit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool decompressSevenBit </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>value</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Unpacks a value compressed on 7 bits (schemes 1 and 2): after a header byte — the scheme in its high 5 bits, in its low 3 the data bits of the last byte less one —, units of 7 bits packed from the lowest bit: bytes under scheme 1 (of any text, UTF-16 included), UTF-16 characters whose high byte is zero under scheme 2. Measured on the Windows.edb of Windows 8.1, every value confronted with dissect.esedb. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">value</td><td>the value with its header byte; receives the text's bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false, and the value untouched, for another scheme (XPRESS…) </dd></dl>
+
+</div>
+</div>
+<a id="a7f55d13087052453ce4aa6dcdb150e5e" name="a7f55d13087052453ce4aa6dcdb150e5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f55d13087052453ce4aa6dcdb150e5e">&#9670;&#160;</a></span>eseCellInteger()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt; uint64_t &gt; eseCellInteger </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structEseCell.html">EseCell</a> &amp;&#160;</td>
+          <td class="paramname"><em>cell</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The integer a cell holds: its first value, 1 to 8 bytes little-endian, unsigned as stored. Every reader of an identifier or a date goes through it: parsed from its JSON text, a compressed cell or an unexpected type threw, and the whole conversion stopped. </p><dl class="section return"><dt>Returns</dt><dd>none if the cell holds no such value (empty, compressed, wider) </dd></dl>
+
+</div>
+</div>
 <a id="acebf5d49b18398f6ba75cd2641822894" name="acebf5d49b18398f6ba75cd2641822894"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acebf5d49b18398f6ba75cd2641822894">&#9670;&#160;</a></span>eseCellToJson()</h2>
 

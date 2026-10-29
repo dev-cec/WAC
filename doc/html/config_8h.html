@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -119,6 +119,8 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a2cbee2aae7c68650daa5389ab0853cc3" id="r_a2cbee2aae7c68650daa5389ab0853cc3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a2cbee2aae7c68650daa5389ab0853cc3">LoadConfiguration</a> (const std::wstring &amp;path, <a class="el" href="structAppliConf.html">AppliConf</a> &amp;<a class="el" href="activities__cache__test_8cpp.html#a0696b00a72abe9d549204f9b105514bc">conf</a>, <a class="el" href="structConfigurationFile.html">ConfigurationFile</a> &amp;file, std::string &amp;error)</td></tr>
 <tr class="separator:a2cbee2aae7c68650daa5389ab0853cc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a676d4470c698a3817cae0609860f35ee" id="r_a676d4470c698a3817cae0609860f35ee"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::pair&lt; std::string, bool * &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#a676d4470c698a3817cae0609860f35ee">artefactSwitches</a> (<a class="el" href="structAppliConf.html">AppliConf</a> &amp;<a class="el" href="activities__cache__test_8cpp.html#a0696b00a72abe9d549204f9b105514bc">conf</a>)</td></tr>
+<tr class="separator:a676d4470c698a3817cae0609860f35ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af165bf13a41dbb5832d9f2e1c7c54cae" id="r_af165bf13a41dbb5832d9f2e1c7c54cae"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#af165bf13a41dbb5832d9f2e1c7c54cae">DefaultConfiguration</a> ()</td></tr>
 <tr class="separator:af165bf13a41dbb5832d9f2e1c7c54cae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeb5cc8e3f0885a2669032781c77db9a6" id="r_aeb5cc8e3f0885a2669032781c77db9a6"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8h.html#aeb5cc8e3f0885a2669032781c77db9a6">DefaultConfigurationPath</a> ()</td></tr>
@@ -140,6 +142,31 @@ artefacts:
 </pre><p> STRICT: an unknown key, a value outside the ones allowed, a duplicate key refuse the collection before it starts, with the line at fault — a typo must not switch an artefact off silently. A key left out keeps its default.</p>
 <p>RECORDED: the file's path, SHA-256 and content go into investigation.json: the procedure applied is part of the evidence. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a676d4470c698a3817cae0609860f35ee" name="a676d4470c698a3817cae0609860f35ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a676d4470c698a3817cae0609860f35ee">&#9670;&#160;</a></span>artefactSwitches()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; std::pair&lt; std::string, bool * &gt; &gt; artefactSwitches </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structAppliConf.html">AppliConf</a> &amp;&#160;</td>
+          <td class="paramname"><em>conf</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The switch of each artefact, by its key of wac.yml: THE list of the keys, which the configuration file and the table of the artefacts by version of Windows (<a class="el" href="artefact__catalogue_8h.html" title="THE table of the artefacts by version of Windows: where each one exists, where it lies and in which f...">artefact_catalogue.h</a>) both go through. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">conf</td><td>the configuration </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>each key with its switch in <code>conf.artefacts</code> </dd></dl>
+
+</div>
+</div>
 <a id="af165bf13a41dbb5832d9f2e1c7c54cae" name="af165bf13a41dbb5832d9f2e1c7c54cae"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af165bf13a41dbb5832d9f2e1c7c54cae">&#9670;&#160;</a></span>DefaultConfiguration()</h2>
 

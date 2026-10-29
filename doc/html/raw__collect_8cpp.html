@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,7 +97,8 @@ $(document).ready(function(){initNavTree('raw__collect_8cpp.html',''); initResiz
 
 <div class="header">
   <div class="summary">
-<a href="#func-members">Functions</a>  </div>
+<a href="#func-members">Functions</a> &#124;
+<a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">raw_collect.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -118,6 +119,7 @@ $(document).ready(function(){initNavTree('raw__collect_8cpp.html',''); initResiz
 <code>#include &quot;<a class="el" href="hive__recover_8h_source.html">hive_recover.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="quickdigest5_8h_source.html">quickdigest5.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="powershell__history_8h_source.html">powershell_history.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="powershell__profiles_8h_source.html">powershell_profiles.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="activities__cache_8h_source.html">activities_cache.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="search__index_8h_source.html">search_index.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rdp__client_8h_source.html">rdp_client.h</a>&quot;</code><br />
@@ -128,6 +130,13 @@ $(document).ready(function(){initNavTree('raw__collect_8cpp.html',''); initResiz
 <code>#include &quot;<a class="el" href="shortcuts_8h_source.html">shortcuts.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="dpapi__master__keys_8h_source.html">dpapi_master_keys.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="web__client_8h_source.html">web_client.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="live__snapshot_8h_source.html">live_snapshot.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="event__log__files_8h_source.html">event_log_files.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="sysmon_8h_source.html">sysmon.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="firewall__log_8h_source.html">firewall_log.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="intune__logs_8h_source.html">intune_logs.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="cloud__identity_8h_source.html">cloud_identity.h</a>&quot;</code><br />
+<code>#include &lt;algorithm&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -139,8 +148,19 @@ Functions</h2></td></tr>
 <tr class="separator:af9979687d9c2b542a94076e0201c54e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14ecabd8882d23f12a2dbb1e272fabc9" id="r_a14ecabd8882d23f12a2dbb1e272fabc9"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8cpp.html#a14ecabd8882d23f12a2dbb1e272fabc9">ExtractNtfsMetadataRaw</a> ()</td></tr>
 <tr class="separator:a14ecabd8882d23f12a2dbb1e272fabc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1029090bd6bc5248545abd55168e722" id="r_ac1029090bd6bc5248545abd55168e722"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8cpp.html#ac1029090bd6bc5248545abd55168e722">ExtractShadowCopiesRaw</a> ()</td></tr>
+<tr class="separator:ac1029090bd6bc5248545abd55168e722"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0de7ffdec832eb1431c73ede66b0334" id="r_af0de7ffdec832eb1431c73ede66b0334"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8cpp.html#af0de7ffdec832eb1431c73ede66b0334">RepairWorkingHives</a> ()</td></tr>
 <tr class="separator:af0de7ffdec832eb1431c73ede66b0334"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
+Variables</h2></td></tr>
+<tr class="memitem:a5081d75ddaf56e295041e5c4ade559da" id="r_a5081d75ddaf56e295041e5c4ade559da"><td class="memItemLeft" align="right" valign="top">const wchar_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8cpp.html#a5081d75ddaf56e295041e5c4ade559da">DEFENDER_ENDPOINT_FOLDER</a> [] = L&quot;\\ProgramData\\Microsoft\\Windows Defender Advanced Threat Protection&quot;</td></tr>
+<tr class="memdesc:a5081d75ddaf56e295041e5c4ade559da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defender for Endpoint's local folder.  <br /></td></tr>
+<tr class="separator:a5081d75ddaf56e295041e5c4ade559da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e0ce207d14c427bcfc9e00c8570f124" id="r_a8e0ce207d14c427bcfc9e00c8570f124"><td class="memItemLeft" align="right" valign="top">const wchar_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="raw__collect_8cpp.html#a8e0ce207d14c427bcfc9e00c8570f124">ONEDRIVE_FOLDER</a> [] = L&quot;\\AppData\\Local\\Microsoft\\OneDrive&quot;</td></tr>
+<tr class="memdesc:a8e0ce207d14c427bcfc9e00c8570f124"><td class="mdescLeft">&#160;</td><td class="mdescRight">OneDrive's folder in a profile.  <br /></td></tr>
+<tr class="separator:a8e0ce207d14c427bcfc9e00c8570f124"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Orchestration of the offline extraction of artefacts (see <a class="el" href="raw__collect_8h.html" title="Orchestration of the offline extraction of artefacts (WAC).">raw_collect.h</a>). </p>
@@ -166,6 +186,7 @@ the machine". The count per directory is therefore logged, so that the report te
 <p>&lt; volume letter, without the colon</p>
 <p>&lt; path relative to that volume's root</p>
 <p>&lt; destination on the collection medium</p>
+<p>Deepest folder walked for Thumbs.db: far below any folder a user browses.</p>
 <p>&lt; the folder, with its letter or relative to the system volume</p>
 <p>&lt; filter, empty for every file</p>
 <p>&lt; guard against an abnormal tree</p>
@@ -191,6 +212,24 @@ the machine". The count per directory is therefore logged, so that the report te
 <p>Extracts the NTFS metadata of the system volume, for the file system's timeline: <code>$MFT</code> (every file, present or deleted, with its dates), <code>$Extend\$UsnJrnl:$J</code> (the change journal: creations, renames, deletions) and <code>$LogFile</code> (the transaction journal, raw only), as wac.yml asks (artefacts.mft, usn_journal, log_file). The change journal needs the <code>$MFT</code> for its paths: it is extracted for either.</p>
 <p>These files weigh up to gigabytes, and are copied to the working directory like every exhibit: the conversion reads them there, never in the exhibit store (backlog B-040).</p>
 <dl class="section return"><dt>Returns</dt><dd>S_OK, S_FALSE if one could not be extracted, or ERROR_EMPTY if none is asked for </dd></dl>
+
+</div>
+</div>
+<a id="ac1029090bd6bc5248545abd55168e722" name="ac1029090bd6bc5248545abd55168e722"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1029090bd6bc5248545abd55168e722">&#9670;&#160;</a></span>ExtractShadowCopiesRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ExtractShadowCopiesRaw </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Extracts, from each shadow copy of each fixed NTFS volume, the files the copy kept of the hives (system, <a class="el" href="structAmcache.html">Amcache</a>, profiles) and of the event logs, read raw through the copy (<a class="el" href="vss_8h.html" title="Volume shadow copies read raw: the catalog and stores that the Volume Shadow Copy service keeps on an...">vss.h</a>) — without the Volume Shadow Copy service. A file identical (SHA-256) to its newer version — on the volume as it is now, or in the next copy — is not copied again: the manifest records it as shared with that version. The copies' list is recorded as a live snapshot (<code>shadow_copies.json</code>) and the catalog file copied raw. </p><dl class="section return"><dt>Returns</dt><dd>S_OK, S_FALSE if a file or a copy could not be read, or ERROR_EMPTY if the artefact is not asked for </dd></dl>
 
 </div>
 </div>
@@ -250,6 +289,39 @@ the machine". The count per directory is therefore logged, so that the report te
       </table>
 </div><div class="memdoc">
 <p>Repairs the hives of a working copy rebuilt from an exhibit store (&ndash;convert): transaction log replay, patch as a fallback, as the collection does right after extracting them. The hives are found by name in the working directory. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or S_FALSE if a hive stays unusable </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
+<a id="a5081d75ddaf56e295041e5c4ade559da" name="a5081d75ddaf56e295041e5c4ade559da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5081d75ddaf56e295041e5c4ade559da">&#9670;&#160;</a></span>DEFENDER_ENDPOINT_FOLDER</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const wchar_t DEFENDER_ENDPOINT_FOLDER[] = L&quot;\\ProgramData\\Microsoft\\Windows Defender Advanced Threat Protection&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Defender for Endpoint's local folder. </p>
+
+</div>
+</div>
+<a id="a8e0ce207d14c427bcfc9e00c8570f124" name="a8e0ce207d14c427bcfc9e00c8570f124"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8e0ce207d14c427bcfc9e00c8570f124">&#9670;&#160;</a></span>ONEDRIVE_FOLDER</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const wchar_t ONEDRIVE_FOLDER[] = L&quot;\\AppData\\Local\\Microsoft\\OneDrive&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>OneDrive's folder in a profile. </p>
 
 </div>
 </div>

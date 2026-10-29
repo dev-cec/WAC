@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,6 +107,7 @@ $(document).ready(function(){initNavTree('cim__repository_8cpp.html',''); initRe
 <div class="textblock"><code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="cim__repository_8h_source.html">cim_repository.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="sha_8h_source.html">sha.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="quickdigest5_8h_source.html">quickdigest5.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="whole__file_8h_source.html">whole_file.h</a>&quot;</code><br />
 <code>#include &lt;algorithm&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
@@ -115,20 +116,20 @@ $(document).ready(function(){initNavTree('cim__repository_8cpp.html',''); initRe
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a37908e5b28cb88b5c7642c4f67d0bbcf" id="r_a37908e5b28cb88b5c7642c4f67d0bbcf"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8cpp.html#a37908e5b28cb88b5c7642c4f67d0bbcf">cimNameHash</a> (const std::wstring &amp;name)</td></tr>
-<tr class="separator:a37908e5b28cb88b5c7642c4f67d0bbcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adab29387d887e807e30df2ae4125a6bd" id="r_adab29387d887e807e30df2ae4125a6bd"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8cpp.html#adab29387d887e807e30df2ae4125a6bd">cimNameHash</a> (const std::wstring &amp;name, bool md5)</td></tr>
+<tr class="separator:adab29387d887e807e30df2ae4125a6bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99ce3cba5f25134bab88e2a591105c0a" id="r_a99ce3cba5f25134bab88e2a591105c0a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8cpp.html#a99ce3cba5f25134bab88e2a591105c0a">parseCimClass</a> (const std::vector&lt; uint8_t &gt; &amp;b, <a class="el" href="structCimClass.html">CimClass</a> &amp;c)</td></tr>
 <tr class="separator:a99ce3cba5f25134bab88e2a591105c0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fec495cce63e1ac132d718636e8e1f5" id="r_a8fec495cce63e1ac132d718636e8e1f5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8cpp.html#a8fec495cce63e1ac132d718636e8e1f5">parseCimInstance</a> (const std::vector&lt; uint8_t &gt; &amp;b, const std::vector&lt; const <a class="el" href="structCimClass.html">CimClass</a> * &gt; &amp;chain, <a class="el" href="cim__repository_8h.html#a170817cd9887acedca1534b7587ef6d1">CimValues</a> &amp;out)</td></tr>
-<tr class="separator:a8fec495cce63e1ac132d718636e8e1f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a535559fbe3bda61d94bd12ae2e1692af" id="r_a535559fbe3bda61d94bd12ae2e1692af"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8cpp.html#a535559fbe3bda61d94bd12ae2e1692af">parseCimMappings</a> (const std::vector&lt; uint8_t &gt; &amp;file, <a class="el" href="structCimMapping.html">CimMapping</a> &amp;data, <a class="el" href="structCimMapping.html">CimMapping</a> &amp;index)</td></tr>
-<tr class="separator:a535559fbe3bda61d94bd12ae2e1692af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a361ef0e6b55d5f658b05ef386157e13b" id="r_a361ef0e6b55d5f658b05ef386157e13b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8cpp.html#a361ef0e6b55d5f658b05ef386157e13b">parseCimInstance</a> (const std::vector&lt; uint8_t &gt; &amp;b, const std::vector&lt; const <a class="el" href="structCimClass.html">CimClass</a> * &gt; &amp;chain, <a class="el" href="cim__repository_8h.html#a170817cd9887acedca1534b7587ef6d1">CimValues</a> &amp;out, bool xp)</td></tr>
+<tr class="separator:a361ef0e6b55d5f658b05ef386157e13b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e4dbb2bae0cf2daf15fb5fb310dc8a2" id="r_a0e4dbb2bae0cf2daf15fb5fb310dc8a2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8cpp.html#a0e4dbb2bae0cf2daf15fb5fb310dc8a2">parseCimMappings</a> (const std::vector&lt; uint8_t &gt; &amp;file, <a class="el" href="structCimMapping.html">CimMapping</a> &amp;data, <a class="el" href="structCimMapping.html">CimMapping</a> &amp;index, bool xp)</td></tr>
+<tr class="separator:a0e4dbb2bae0cf2daf15fb5fb310dc8a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Offline reader of the WMI repository (see <a class="el" href="cim__repository_8h.html" title="Offline reader of the WMI repository (CIM): \Windows\System32\wbem\Repository.">cim_repository.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a37908e5b28cb88b5c7642c4f67d0bbcf" name="a37908e5b28cb88b5c7642c4f67d0bbcf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a37908e5b28cb88b5c7642c4f67d0bbcf">&#9670;&#160;</a></span>cimNameHash()</h2>
+<a id="adab29387d887e807e30df2ae4125a6bd" name="adab29387d887e807e30df2ae4125a6bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adab29387d887e807e30df2ae4125a6bd">&#9670;&#160;</a></span>cimNameHash()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -137,18 +138,29 @@ Functions</h2></td></tr>
           <td class="memname">std::string cimNameHash </td>
           <td>(</td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>name</em></td><td>)</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>md5</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>The hash WMI files a name under: SHA-256 of the upper-case UTF-16 name, in upper-case hexadecimal. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>The hash WMI files a name under: SHA-256 of the upper-case UTF-16 name, MD5 on Windows XP, in upper-case hexadecimal. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">name</td><td>a namespace, class or instance name </td></tr>
+    <tr><td class="paramname">md5</td><td>Windows XP's repository </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the 64 hexadecimal digits </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the 64 (or 32) hexadecimal digits </dd></dl>
 
 </div>
 </div>
@@ -188,8 +200,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a8fec495cce63e1ac132d718636e8e1f5" name="a8fec495cce63e1ac132d718636e8e1f5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8fec495cce63e1ac132d718636e8e1f5">&#9670;&#160;</a></span>parseCimInstance()</h2>
+<a id="a361ef0e6b55d5f658b05ef386157e13b" name="a361ef0e6b55d5f658b05ef386157e13b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a361ef0e6b55d5f658b05ef386157e13b">&#9670;&#160;</a></span>parseCimInstance()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -210,7 +222,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="cim__repository_8h.html#a170817cd9887acedca1534b7587ef6d1">CimValues</a> &amp;&#160;</td>
-          <td class="paramname"><em>out</em>&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>xp</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -231,8 +249,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a535559fbe3bda61d94bd12ae2e1692af" name="a535559fbe3bda61d94bd12ae2e1692af"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a535559fbe3bda61d94bd12ae2e1692af">&#9670;&#160;</a></span>parseCimMappings()</h2>
+<a id="a0e4dbb2bae0cf2daf15fb5fb310dc8a2" name="a0e4dbb2bae0cf2daf15fb5fb310dc8a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e4dbb2bae0cf2daf15fb5fb310dc8a2">&#9670;&#160;</a></span>parseCimMappings()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -253,7 +271,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structCimMapping.html">CimMapping</a> &amp;&#160;</td>
-          <td class="paramname"><em>index</em>&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>xp</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>

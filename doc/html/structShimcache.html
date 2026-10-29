@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -130,6 +130,15 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ad10e36f246dc6c743e6a7ae324b55914" id="r_ad10e36f246dc6c743e6a7ae324b55914"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcache.html#ad10e36f246dc6c743e6a7ae324b55914">lastModificationUtc</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:ad10e36f246dc6c743e6a7ae324b55914"><td class="mdescLeft">&#160;</td><td class="mdescRight">the same instant in UTC  <br /></td></tr>
 <tr class="separator:ad10e36f246dc6c743e6a7ae324b55914"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f48c1ab809f687ce55a507d2443ea07" id="r_a5f48c1ab809f687ce55a507d2443ea07"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcache.html#a5f48c1ab809f687ce55a507d2443ea07">fileSize</a> = 0</td></tr>
+<tr class="memdesc:a5f48c1ab809f687ce55a507d2443ea07"><td class="mdescLeft">&#160;</td><td class="mdescRight">the file's size, as Windows XP records it  <br /></td></tr>
+<tr class="separator:a5f48c1ab809f687ce55a507d2443ea07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f334e03a1978812b87584cc640efd3c" id="r_a3f334e03a1978812b87584cc640efd3c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcache.html#a3f334e03a1978812b87584cc640efd3c">fileSizeKnown</a> = false</td></tr>
+<tr class="memdesc:a3f334e03a1978812b87584cc640efd3c"><td class="mdescLeft">&#160;</td><td class="mdescRight">a Windows XP entry: the size is given  <br /></td></tr>
+<tr class="separator:a3f334e03a1978812b87584cc640efd3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1511b2a24585dfb379fce9ebbdeb0d2" id="r_af1511b2a24585dfb379fce9ebbdeb0d2"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimcache.html#af1511b2a24585dfb379fce9ebbdeb0d2">lastUpdateUtc</a> = { 0, 0 }</td></tr>
+<tr class="memdesc:af1511b2a24585dfb379fce9ebbdeb0d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">when Windows XP last updated the entry; zero before or after XP  <br /></td></tr>
+<tr class="separator:af1511b2a24585dfb379fce9ebbdeb0d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One ShimCache entry: a binary the compatibility layer examined. </p>
@@ -172,6 +181,38 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="a5f48c1ab809f687ce55a507d2443ea07" name="a5f48c1ab809f687ce55a507d2443ea07"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f48c1ab809f687ce55a507d2443ea07">&#9670;&#160;</a></span>fileSize</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long long Shimcache::fileSize = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the file's size, as Windows XP records it </p>
+
+</div>
+</div>
+<a id="a3f334e03a1978812b87584cc640efd3c" name="a3f334e03a1978812b87584cc640efd3c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3f334e03a1978812b87584cc640efd3c">&#9670;&#160;</a></span>fileSizeKnown</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Shimcache::fileSizeKnown = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>a Windows XP entry: the size is given </p>
+
+</div>
+</div>
 <a id="a9713fad1b909b71af03e9613065504f1" name="a9713fad1b909b71af03e9613065504f1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9713fad1b909b71af03e9613065504f1">&#9670;&#160;</a></span>fingerprint</h2>
 
@@ -217,6 +258,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>the same instant in UTC </p>
+
+</div>
+</div>
+<a id="af1511b2a24585dfb379fce9ebbdeb0d2" name="af1511b2a24585dfb379fce9ebbdeb0d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af1511b2a24585dfb379fce9ebbdeb0d2">&#9670;&#160;</a></span>lastUpdateUtc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME Shimcache::lastUpdateUtc = { 0, 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>when Windows XP last updated the entry; zero before or after XP </p>
 
 </div>
 </div>

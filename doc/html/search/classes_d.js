@@ -10,6 +10,7 @@ var searchData=
   ['networkstate_7',['NetworkState',['../structNetworkState.html',1,'']]],
   ['ntfsbootsector_8',['NtfsBootSector',['../structNtfsBootSector.html',1,'']]],
   ['ntfsreference_9',['NtfsReference',['../structNtfsReference.html',1,'']]],
-  ['ntfsvolumeinfo_10',['NtfsVolumeInfo',['../structNtfsVolumeInfo.html',1,'']]],
-  ['ntfsvolumes_11',['NtfsVolumes',['../classNtfsVolumes.html',1,'']]]
+  ['ntfsrun_10',['NtfsRun',['../structNtfsRun.html',1,'']]],
+  ['ntfsvolumeinfo_11',['NtfsVolumeInfo',['../structNtfsVolumeInfo.html',1,'']]],
+  ['ntfsvolumes_12',['NtfsVolumes',['../classNtfsVolumes.html',1,'']]]
 ];

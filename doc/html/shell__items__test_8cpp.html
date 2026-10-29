@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -114,6 +114,8 @@ $(document).ready(function(){initNavTree('shell__items__test_8cpp.html',''); ini
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a5b145151a2badc46abce232c42c3c27c" id="r_a5b145151a2badc46abce232c42c3c27c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="shell__items__test_8cpp.html#a5b145151a2badc46abce232c42c3c27c">lpwstrVector</a> ()</td></tr>
+<tr class="separator:a5b145151a2badc46abce232c42c3c27c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:accd1e08d01d2949549aaaca77cec644b" id="r_accd1e08d01d2949549aaaca77cec644b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="shell__items__test_8cpp.html#accd1e08d01d2949549aaaca77cec644b">wmain</a> ()</td></tr>
 <tr class="separator:accd1e08d01d2949549aaaca77cec644b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -135,6 +137,24 @@ Variables</h2></td></tr>
 </ul>
 <p>Usage (runs under wine): shell_items_test.exe </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a5b145151a2badc46abce232c42c3c27c" name="a5b145151a2badc46abce232c42c3c27c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5b145151a2badc46abce232c42c3c27c">&#9670;&#160;</a></span>lpwstrVector()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void lpwstrVector </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Vector&lt;VT_LPWSTR&gt; (0x101F): each string advances by its own length. Computed on 32 bits, 4 + size × 2 wrapped to 0 for a forged size: the position stood still and the loop pushed the same string four billion times (B-050, lot 2). </p>
+
+</div>
+</div>
 <a id="accd1e08d01d2949549aaaca77cec644b" name="accd1e08d01d2949549aaaca77cec644b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#accd1e08d01d2949549aaaca77cec644b">&#9670;&#160;</a></span>wmain()</h2>
 

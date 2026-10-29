@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -110,6 +110,8 @@ $(document).ready(function(){initNavTree('structScheduledTasks.html',''); initRe
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ac2d992fa98db77e5060b039f8a213478" id="r_ac2d992fa98db77e5060b039f8a213478"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTasks.html#ac2d992fa98db77e5060b039f8a213478">getData</a> ()</td></tr>
 <tr class="separator:ac2d992fa98db77e5060b039f8a213478"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5715275627905d797dad34bd98459201" id="r_a5715275627905d797dad34bd98459201"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTasks.html#a5715275627905d797dad34bd98459201">readJobFiles</a> ()</td></tr>
+<tr class="separator:a5715275627905d797dad34bd98459201"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6c4083be40b47156a45efe46cb39c05" id="r_ad6c4083be40b47156a45efe46cb39c05"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTasks.html#ad6c4083be40b47156a45efe46cb39c05">toJson</a> ()</td></tr>
 <tr class="separator:ad6c4083be40b47156a45efe46cb39c05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca7b24c654a8851c8f6f50b60b6c805d" id="r_aca7b24c654a8851c8f6f50b60b6c805d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledTasks.html#aca7b24c654a8851c8f6f50b60b6c805d">clear</a> ()</td></tr>
@@ -159,6 +161,24 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Reads the tasks from the extracted XML files and enriches them with the TaskCache. Uses neither COM nor the Schedule service. </p><dl class="section return"><dt>Returns</dt><dd>S_OK, or the failure of the last read attempted. </dd></dl>
+
+</div>
+</div>
+<a id="a5715275627905d797dad34bd98459201" name="a5715275627905d797dad34bd98459201"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5715275627905d797dad34bd98459201">&#9670;&#160;</a></span>readJobFiles()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ScheduledTasks::readJobFiles </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the .job files of Windows XP and Server 2003 (parseJobFile). </p>
 
 </div>
 </div>

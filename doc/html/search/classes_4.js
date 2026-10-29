@@ -11,12 +11,13 @@ var searchData=
   ['event_8',['Event',['../structEvent.html',1,'']]],
   ['eventlogchannel_9',['EventLogChannel',['../structEventLogChannel.html',1,'']]],
   ['eventlogconfiguration_10',['EventLogConfiguration',['../classEventLogConfiguration.html',1,'']]],
-  ['events_11',['Events',['../structEvents.html',1,'']]],
-  ['evtxrecord_12',['EvtxRecord',['../structEvtxRecord.html',1,'']]],
-  ['evtxsummary_13',['EvtxSummary',['../structEvtxSummary.html',1,'']]],
-  ['exhibitreader_14',['ExhibitReader',['../classExhibitReader.html',1,'']]],
-  ['exhibitstorecheck_15',['ExhibitStoreCheck',['../structExhibitStoreCheck.html',1,'']]],
-  ['explorerinput_16',['ExplorerInput',['../structExplorerInput.html',1,'']]],
-  ['explorerrecentdoc_17',['ExplorerRecentDoc',['../structExplorerRecentDoc.html',1,'']]],
-  ['explorerrecentdocs_18',['ExplorerRecentDocs',['../classExplorerRecentDocs.html',1,'']]]
+  ['eventlogfile_11',['EventLogFile',['../structEventLogFile.html',1,'']]],
+  ['events_12',['Events',['../structEvents.html',1,'']]],
+  ['evtxrecord_13',['EvtxRecord',['../structEvtxRecord.html',1,'']]],
+  ['evtxsummary_14',['EvtxSummary',['../structEvtxSummary.html',1,'']]],
+  ['exhibitreader_15',['ExhibitReader',['../classExhibitReader.html',1,'']]],
+  ['exhibitstorecheck_16',['ExhibitStoreCheck',['../structExhibitStoreCheck.html',1,'']]],
+  ['explorerinput_17',['ExplorerInput',['../structExplorerInput.html',1,'']]],
+  ['explorerrecentdoc_18',['ExplorerRecentDoc',['../structExplorerRecentDoc.html',1,'']]],
+  ['explorerrecentdocs_19',['ExplorerRecentDocs',['../classExplorerRecentDocs.html',1,'']]]
 ];

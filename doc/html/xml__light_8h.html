@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -120,6 +120,8 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a09ad3dcbfed1e2484fa4b53247587756" id="r_a09ad3dcbfed1e2484fa4b53247587756"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structXmlNode.html">XmlNode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8h.html#a09ad3dcbfed1e2484fa4b53247587756">xmlParse</a> (const std::wstring &amp;content, bool keepText=false)</td></tr>
 <tr class="separator:a09ad3dcbfed1e2484fa4b53247587756"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6cbcd7e64e6bdf252d4239a5b94ef50" id="r_ae6cbcd7e64e6bdf252d4239a5b94ef50"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8h.html#ae6cbcd7e64e6bdf252d4239a5b94ef50">xmlDecodeEntities</a> (const std::wstring &amp;s)</td></tr>
+<tr class="separator:ae6cbcd7e64e6bdf252d4239a5b94ef50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c8b880642b0a4d5c6ffb0e937f30a81" id="r_a2c8b880642b0a4d5c6ffb0e937f30a81"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="structXmlNode.html">XmlNode</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8h.html#a2c8b880642b0a4d5c6ffb0e937f30a81">xmlReadFile</a> (const std::wstring &amp;path)</td></tr>
 <tr class="separator:a2c8b880642b0a4d5c6ffb0e937f30a81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -129,6 +131,26 @@ Functions</h2></td></tr>
 <p>AN ASSUMED SCOPE. This is NOT a conforming XML parser: it handles neither dynamically declared namespaces, nor DTDs, nor entities other than the five predefined ones, nor nested CDATA sections. It handles the subset actually produced by the Windows task scheduler, whose schema is narrow and stable (<code>&lt;RegistrationInfo&gt;</code>, <code>&lt;Triggers&gt;</code>, <code>&lt;Actions&gt;</code>, <code>&lt;Principals&gt;</code>, <code>&lt;Settings&gt;</code>).</p>
 <p>The files parsed coming from a suspect machine, the parsing is defensive: no unbounded recursion, no access out of the buffer, and any malformed document returns an empty tree rather than throwing an exception. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="ae6cbcd7e64e6bdf252d4239a5b94ef50" name="ae6cbcd7e64e6bdf252d4239a5b94ef50"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6cbcd7e64e6bdf252d4239a5b94ef50">&#9670;&#160;</a></span>xmlDecodeEntities()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring xmlDecodeEntities </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>s</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Replaces the five predefined entities (&lt; &gt; &amp; &quot; '), the others left as they are: a faithful text is better than a guessed substitution. The inverse of EvtxXmlEscape. </p><dl class="section return"><dt>Returns</dt><dd>the text</dd></dl>
+<p>Replaces the five predefined entities. The others are left as they are: a faithful text is better than a guessed substitution. </p>
+
+</div>
+</div>
 <a id="a09ad3dcbfed1e2484fa4b53247587756" name="a09ad3dcbfed1e2484fa4b53247587756"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a09ad3dcbfed1e2484fa4b53247587756">&#9670;&#160;</a></span>xmlParse()</h2>
 

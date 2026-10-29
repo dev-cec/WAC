@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,6 +116,8 @@ Functions</h2></td></tr>
 <tr class="separator:af3916999dca8b273537df7a2416db81a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b85e213c64e19d8ae2488d3fe754207" id="r_a8b85e213c64e19d8ae2488d3fe754207"><td class="memItemLeft" align="right" valign="top"><a class="el" href="registry__common_8h.html#a2abb077e169c7d2277a9b5f9341ae8a4">NameValues</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__lot2_8cpp.html#a8b85e213c64e19d8ae2488d3fe754207">parseFirewallRule</a> (const std::wstring &amp;rule, std::wstring &amp;version)</td></tr>
 <tr class="separator:a8b85e213c64e19d8ae2488d3fe754207"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a122519b075221dabdba6220fccf88c2f" id="r_a122519b075221dabdba6220fccf88c2f"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structFirewallRule.html">FirewallRule</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__lot2_8cpp.html#a122519b075221dabdba6220fccf88c2f">parseXpFirewallList</a> (const std::wstring &amp;profile, bool ports, const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;values)</td></tr>
+<tr class="separator:a122519b075221dabdba6220fccf88c2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Registry artefacts of the second lot (see <a class="el" href="registry__lot2_8h.html" title="Registry artefacts of the second lot: Office trusted documents, Explorer&#39;s typed paths and searches,...">registry_lot2.h</a>). </p>
@@ -239,6 +241,50 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>false if the value is shorter than a FILETIME and a flag </dd></dl>
+
+</div>
+</div>
+<a id="a122519b075221dabdba6220fccf88c2f" name="a122519b075221dabdba6220fccf88c2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a122519b075221dabdba6220fccf88c2f">&#9670;&#160;</a></span>parseXpFirewallList()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="structFirewallRule.html">FirewallRule</a> &gt; parseXpFirewallList </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>profile</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>ports</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>values</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The exceptions of a Windows XP SP2 profile: AuthorizedApplications\List ("path:scope:state:name") or GloballyOpenPorts\List ("port:protocol:
+scope:state:name"), as rules of version "XP" with the fields of the later rules (Name, Active, App or LPort and Protocol) and Profile and Scope. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">profile</td><td>DomainProfile or StandardProfile </td></tr>
+    <tr><td class="paramname">ports</td><td>true for the ports' list </td></tr>
+    <tr><td class="paramname">values</td><td>the list's values: name, text </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the rules; a value of another layout is left out </dd></dl>
 
 </div>
 </div>

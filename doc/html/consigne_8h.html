@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -105,7 +105,8 @@ $(document).ready(function(){initNavTree('consigne_8h.html',''); initResizable()
 
 <p>EXHIBIT STORE AND WORKING DIRECTORY.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;windows.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;functional&gt;</code><br />
+<code>#include &lt;windows.h&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
@@ -152,8 +153,12 @@ Functions</h2></td></tr>
 <tr class="separator:a1d81cf6fbf82e5322d1974fc1518c20f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac840ed3dd3458e6a329084ac1146e121" id="r_ac840ed3dd3458e6a329084ac1146e121"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#ac840ed3dd3458e6a329084ac1146e121">ExhibitStoreHolds</a> (const std::wstring &amp;storedPath)</td></tr>
 <tr class="separator:ac840ed3dd3458e6a329084ac1146e121"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f176470396b33b7d2713a4c19c110fb" id="r_a0f176470396b33b7d2713a4c19c110fb"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#a0f176470396b33b7d2713a4c19c110fb">ExhibitStoreWriteManifest</a> ()</td></tr>
-<tr class="separator:a0f176470396b33b7d2713a4c19c110fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f4b7691e1b746dee019ea72e94ffa3a" id="r_a5f4b7691e1b746dee019ea72e94ffa3a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#a5f4b7691e1b746dee019ea72e94ffa3a">ExhibitStoreCurrent</a> (const std::wstring &amp;sourcePath, <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;stored)</td></tr>
+<tr class="separator:a5f4b7691e1b746dee019ea72e94ffa3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35cd37289ae35b8b5c3c72de1e9e19d3" id="r_a35cd37289ae35b8b5c3c72de1e9e19d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#a35cd37289ae35b8b5c3c72de1e9e19d3">ExhibitStoreSharedOfShadowCopy</a> (const std::wstring &amp;copyId, const std::function&lt; void(const std::wstring &amp;source, const std::wstring &amp;workingCopy)&gt; &amp;visit)</td></tr>
+<tr class="separator:a35cd37289ae35b8b5c3c72de1e9e19d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafb1618ca9765aec670529af9403fc84" id="r_aafb1618ca9765aec670529af9403fc84"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#aafb1618ca9765aec670529af9403fc84">ExhibitStoreWriteManifest</a> (std::wstring *sealValue=nullptr)</td></tr>
+<tr class="separator:aafb1618ca9765aec670529af9403fc84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ffd259a4f3605e24082adbb7ae7453c" id="r_a3ffd259a4f3605e24082adbb7ae7453c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8h.html#a3ffd259a4f3605e24082adbb7ae7453c">ExhibitStoreSummary</a> (size_t *exhibits, size_t *failures, unsigned long long *bytes)</td></tr>
 <tr class="separator:a3ffd259a4f3605e24082adbb7ae7453c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -414,6 +419,42 @@ or a drive / stream ":"). A forged manifest could otherwise have files elsewhere
 
 </div>
 </div>
+<a id="a5f4b7691e1b746dee019ea72e94ffa3a" name="a5f4b7691e1b746dee019ea72e94ffa3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f4b7691e1b746dee019ea72e94ffa3a">&#9670;&#160;</a></span>ExhibitStoreCurrent()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ExhibitStoreCurrent </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>sourcePath</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;&#160;</td>
+          <td class="paramname"><em>stored</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The exhibit a file of the volume AS IT IS NOW was stored as: what the same file in a shadow copy is compared with, to store it only if it differs. Scanned at each call, the collection adding exhibits as it goes. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sourcePath</td><td>the file, "X:\\…" </td></tr>
+    <tr><td class="paramname">stored</td><td>receives its record </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the collection stored no content for that file </dd></dl>
+
+</div>
+</div>
 <a id="a1129c4bdeff39121c0ed5c72be8e7252" name="a1129c4bdeff39121c0ed5c72be8e7252"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1129c4bdeff39121c0ed5c72be8e7252">&#9670;&#160;</a></span>exhibitStoreFolder()</h2>
 
@@ -569,6 +610,41 @@ or a drive / stream ":"). A forged manifest could otherwise have files elsewhere
 
 </div>
 </div>
+<a id="a35cd37289ae35b8b5c3c72de1e9e19d3" name="a35cd37289ae35b8b5c3c72de1e9e19d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a35cd37289ae35b8b5c3c72de1e9e19d3">&#9670;&#160;</a></span>ExhibitStoreSharedOfShadowCopy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ExhibitStoreSharedOfShadowCopy </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>copyId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::function&lt; void(const std::wstring &amp;source, const std::wstring &amp;workingCopy)&gt; &amp;&#160;</td>
+          <td class="paramname"><em>visit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The files of a shadow copy that were not copied again, identical to a newer version (SharedExhibit): their source path, and the working copy of the exhibit they share. A shadow copy's conversion puts them back in its tree, which then holds every file the copy kept. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">copyId</td><td>the copy's identifier, "{…}" </td></tr>
+    <tr><td class="paramname">visit</td><td>called with the source path ("X:\\…") and that working copy </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a3ffd259a4f3605e24082adbb7ae7453c" name="a3ffd259a4f3605e24082adbb7ae7453c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3ffd259a4f3605e24082adbb7ae7453c">&#9670;&#160;</a></span>ExhibitStoreSummary()</h2>
 
@@ -642,8 +718,8 @@ or a drive / stream ":"). A forged manifest could otherwise have files elsewhere
 
 </div>
 </div>
-<a id="a0f176470396b33b7d2713a4c19c110fb" name="a0f176470396b33b7d2713a4c19c110fb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0f176470396b33b7d2713a4c19c110fb">&#9670;&#160;</a></span>ExhibitStoreWriteManifest()</h2>
+<a id="aafb1618ca9765aec670529af9403fc84" name="aafb1618ca9765aec670529af9403fc84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aafb1618ca9765aec670529af9403fc84">&#9670;&#160;</a></span>ExhibitStoreWriteManifest()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -651,13 +727,20 @@ or a drive / stream ":"). A forged manifest could otherwise have files elsewhere
         <tr>
           <td class="memname">HRESULT ExhibitStoreWriteManifest </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">std::wstring *&#160;</td>
+          <td class="paramname"><em>sealValue</em> = <code>nullptr</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Writes <code>exhibits\MANIFEST.json</code> then its seal <code>exhibits\MANIFEST.sha256</code>.</p>
 <p>To be called once every extraction is over. The seal is written AFTER the manifest and carries its SHA-256 fingerprint.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sealValue</td><td>receives that fingerprint, for the console: written down by the investigator, it is the one copy of the seal a rewritten manifest and MANIFEST.sha256 cannot follow (optional) </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or E_FAIL if either file could not be written — in which case the exhibit store cannot be identified, and that must be known. </dd></dl>
 
 </div>

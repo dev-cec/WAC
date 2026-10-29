@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -120,8 +120,11 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:ab19118386c74b66d73cce733141fac9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">SID of the folder: the user who deleted.  <br /></td></tr>
 <tr class="separator:ab19118386c74b66d73cce733141fac9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3df309ed8ee00a450cadf64d8ed08c8" id="r_ab3df309ed8ee00a450cadf64d8ed08c8"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecycledFile.html#ab3df309ed8ee00a450cadf64d8ed08c8">version</a> = 0</td></tr>
-<tr class="memdesc:ab3df309ed8ee00a450cadf64d8ed08c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">1 or 2, the format of the <code>$I</code>  <br /></td></tr>
+<tr class="memdesc:ab3df309ed8ee00a450cadf64d8ed08c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">the format of the <code>$I</code>, as the file states it  <br /></td></tr>
 <tr class="separator:ab3df309ed8ee00a450cadf64d8ed08c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3bcc98dab3c2df3363a7b2bb5b7028df" id="r_a3bcc98dab3c2df3363a7b2bb5b7028df"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecycledFile.html#a3bcc98dab3c2df3363a7b2bb5b7028df">unsupportedFormat</a> = false</td></tr>
+<tr class="memdesc:a3bcc98dab3c2df3363a7b2bb5b7028df"><td class="mdescLeft">&#160;</td><td class="mdescRight">a version WAC has no decoder for (pieceFormat): nothing but the version was read  <br /></td></tr>
+<tr class="separator:a3bcc98dab3c2df3363a7b2bb5b7028df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea5f6a2bd5191a864deb56e161735a37" id="r_aea5f6a2bd5191a864deb56e161735a37"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecycledFile.html#aea5f6a2bd5191a864deb56e161735a37">size</a> = 0</td></tr>
 <tr class="memdesc:aea5f6a2bd5191a864deb56e161735a37"><td class="mdescLeft">&#160;</td><td class="mdescRight">size of the deleted file, bytes  <br /></td></tr>
 <tr class="separator:aea5f6a2bd5191a864deb56e161735a37"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,7 +132,10 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:aac82f313fbf4e7022cd129b1c968fb19"><td class="mdescLeft">&#160;</td><td class="mdescRight">instant of the deletion, UTC  <br /></td></tr>
 <tr class="separator:aac82f313fbf4e7022cd129b1c968fb19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0fb4b8002471748a3b9d3065ea8b661" id="r_ad0fb4b8002471748a3b9d3065ea8b661"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecycledFile.html#ad0fb4b8002471748a3b9d3065ea8b661">originalPath</a></td></tr>
+<tr class="memdesc:ad0fb4b8002471748a3b9d3065ea8b661"><td class="mdescLeft">&#160;</td><td class="mdescRight">where the file was before being deleted  <br /></td></tr>
 <tr class="separator:ad0fb4b8002471748a3b9d3065ea8b661"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06d94e9c5088ee5d639d383c798b99c7" id="r_a06d94e9c5088ee5d639d383c798b99c7"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRecycledFile.html#a06d94e9c5088ee5d639d383c798b99c7">recycledName</a></td></tr>
+<tr class="separator:a06d94e9c5088ee5d639d383c798b99c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One <code>$I</code> file: one deleted file. </p>
@@ -196,7 +202,23 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
 <p>where the file was before being deleted </p>
+
+</div>
+</div>
+<a id="a06d94e9c5088ee5d639d383c798b99c7" name="a06d94e9c5088ee5d639d383c798b99c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06d94e9c5088ee5d639d383c798b99c7">&#9670;&#160;</a></span>recycledName</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RecycledFile::recycledName</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>INFO2 (Windows XP): the copy's name in the bin, D&lt;drive letter&gt;&lt;n&gt;&lt;extension&gt; </p>
 
 </div>
 </div>
@@ -232,6 +254,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a3bcc98dab3c2df3363a7b2bb5b7028df" name="a3bcc98dab3c2df3363a7b2bb5b7028df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3bcc98dab3c2df3363a7b2bb5b7028df">&#9670;&#160;</a></span>unsupportedFormat</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool RecycledFile::unsupportedFormat = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>a version WAC has no decoder for (pieceFormat): nothing but the version was read </p>
+
+</div>
+</div>
 <a id="ab3df309ed8ee00a450cadf64d8ed08c8" name="ab3df309ed8ee00a450cadf64d8ed08c8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab3df309ed8ee00a450cadf64d8ed08c8">&#9670;&#160;</a></span>version</h2>
 
@@ -244,7 +282,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>1 or 2, the format of the <code>$I</code> </p>
+<p>the format of the <code>$I</code>, as the file states it </p>
 
 </div>
 </div>

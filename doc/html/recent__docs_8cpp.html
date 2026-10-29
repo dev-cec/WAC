@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('recent__docs_8cpp.html',''); initResiz
 
 <div class="header">
   <div class="summary">
+<a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">recent_docs.cpp File Reference</div></div>
 </div><!--header-->
@@ -107,6 +108,11 @@ $(document).ready(function(){initNavTree('recent__docs_8cpp.html',''); initResiz
 <div class="textblock"><code>#include &quot;<a class="el" href="recent__docs_8h_source.html">recent_docs.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
 </div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:adb3868c0fbe9578a285ae5a17b1152fb" id="r_adb3868c0fbe9578a285ae5a17b1152fb"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recent__docs_8cpp.html#adb3868c0fbe9578a285ae5a17b1152fb">internetShortcutUrl</a> (const std::string &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>)</td></tr>
+<tr class="separator:adb3868c0fbe9578a285ae5a17b1152fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
 <tr class="memitem:a3215ad571ddea9d9b92bda34674670bb" id="r_a3215ad571ddea9d9b92bda34674670bb"><td class="memItemLeft" align="right" valign="top">const uintmax_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recent__docs_8cpp.html#a3215ad571ddea9d9b92bda34674670bb">SHORTCUT_MAX</a> = 16ull * 1024 * 1024</td></tr>
@@ -115,7 +121,34 @@ Variables</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Decoding of the .lnk shortcuts of the Recent folder (see <a class="el" href="recent__docs_8h.html" title="Recent documents: the .lnk shortcuts of \\Recent.">recent_docs.h</a>). </p>
-</div><h2 class="groupheader">Variable Documentation</h2>
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="adb3868c0fbe9578a285ae5a17b1152fb" name="adb3868c0fbe9578a285ae5a17b1152fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adb3868c0fbe9578a285ae5a17b1152fb">&#9670;&#160;</a></span>internetShortcutUrl()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string internetShortcutUrl </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>text</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>One recent document: a .lnk shortcut, and the file it points to.</p>
+<p>The target of an Internet shortcut (.url): the URL= line of its [InternetShortcut] section, wherever that section lies — Internet Explorer and the shell often write a [{000214A0-…}] section and Prop3 before it: the second line of the file, taken for the URL, gave "3=19,11". </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">text</td><td>the file, as bytes </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the URL as written (still %-encoded), "" if the section has none </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Variable Documentation</h2>
 <a id="a3215ad571ddea9d9b92bda34674670bb" name="a3215ad571ddea9d9b92bda34674670bb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3215ad571ddea9d9b92bda34674670bb">&#9670;&#160;</a></span>SHORTCUT_MAX</h2>
 

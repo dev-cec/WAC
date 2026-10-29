@@ -8,6 +8,7 @@ var structSystemInfo =
     [ "bootFromKernel", "structSystemInfo.html#a82bb467bddb2ae052806fa6f631fc0d8", null ],
     [ "buildLabEx", "structSystemInfo.html#a3c1cac8a1022062307ec66f5040861a0", null ],
     [ "clockCorrection100ns", "structSystemInfo.html#ac573bb7051da162b9ba045a7bfe42a0e", null ],
+    [ "clockRead", "structSystemInfo.html#ab205048a88922cda4821435d5b86ab30", null ],
     [ "collectionTimeUtc", "structSystemInfo.html#ae8917699c8642fcea60d8821d39807cb", null ],
     [ "computerName", "structSystemInfo.html#a076b6619e9293c8f3a6d122d5e96b7fc", null ],
     [ "displayVersion", "structSystemInfo.html#a0490822073cb62572bc9c1a519983a03", null ],

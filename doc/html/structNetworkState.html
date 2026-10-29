@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -132,6 +132,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:ae9da78f070519f00847e43c4b2efe266"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5bbb4c5afca8f9b2c59fe8dd6e91c17d" id="r_a5bbb4c5afca8f9b2c59fe8dd6e91c17d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNetworkState.html#a5bbb4c5afca8f9b2c59fe8dd6e91c17d">tablesNotRead</a></td></tr>
 <tr class="separator:a5bbb4c5afca8f9b2c59fe8dd6e91c17d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc5bc6f0402263ce9ac05a3a4be0146a" id="r_adc5bc6f0402263ce9ac05a3a4be0146a"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNetworkState.html#adc5bc6f0402263ce9ac05a3a4be0146a">tablesIpv4Only</a></td></tr>
+<tr class="separator:adc5bc6f0402263ce9ac05a3a4be0146a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The network state while the collection runs. </p>
@@ -253,6 +255,21 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>routing table </p>
+
+</div>
+</div>
+<a id="adc5bc6f0402263ce9ac05a3a4be0146a" name="adc5bc6f0402263ce9ac05a3a4be0146a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc5bc6f0402263ce9ac05a3a4be0146a">&#9670;&#160;</a></span>tablesIpv4Only</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::wstring&gt; NetworkState::tablesIpv4Only</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The tables read by the functions of Windows XP and Server 2003, which know IPv4 only: no IPv6 row in them, whatever the machine holds. </p>
 
 </div>
 </div>

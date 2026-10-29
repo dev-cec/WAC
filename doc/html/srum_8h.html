@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -134,7 +134,7 @@ Functions</h2></td></tr>
 <div class="textblock"><p>System Resource Usage Monitor: <code>\Windows\System32\sru\SRUDB.dat</code> (srum.json). </p>
 <p>WHAT IT PROVES. Every hour, Windows records per application and per user what it used: bytes sent and received on each network interface (an exfiltration shows there, with the program that made it), CPU cycles, bytes read and written on disk, time in the foreground, network connections and their duration. Thirty to sixty days are kept, well beyond the event logs.</p>
 <p>WHAT IS WRITTEN. One element per row of every table of the database: its table (a provider's GUID for most) and that table's documented name when known, then its columns by name — a name keeps only its letters and digits ("Energy Data" gives EnergyData). AppId and UserId are resolved through SruDbIdMapTable: App (a path, a service, a package), UserSID and UserName are added. The FILETIME columns SRUM keeps as 64-bit numbers (ConnectStartTime, EndTime…) stay numbers. Rows are written as they are read: a database of sixty days holds hundreds of thousands.</p>
-<p>THE DATABASE IS COPIED LIVE (dirty shutdown): the last hour, still in the service's transaction logs SRU*.log, is not in it; the logs are in the exhibit store, for a replay (esentutl /r) on a copy. Said in the log. </p>
+<p>THE DATABASE IS COPIED LIVE (dirty shutdown): the last hour is still in the service's transaction logs SRU*.log, collected with it and replayed into the working copy before it is read (<a class="el" href="ese__recovery_8h.html" title="Replay of an ESE database&#39;s transaction logs into its working copy, by Windows&#39; own engine (esent....">ese_recovery.h</a>); a replay not applied is said in the log. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="a0ad3cb57555108f914e6c1d8b2de4bb4" name="a0ad3cb57555108f914e6c1d8b2de4bb4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0ad3cb57555108f914e6c1d8b2de4bb4">&#9670;&#160;</a></span>srumIdentity()</h2>

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -120,11 +120,20 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="archive_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="archive_8h.html">archive.h</a></td></tr>
 <tr class="memdesc:archive_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">A file taken out of an archive — cabinet (<a class="el" href="cab_8h.html" title="CABINET (.cab) EXTRACTION, for the trust lists –update-trust downloads.">cab.h</a>) or ZIP (<a class="el" href="zip_8h.html" title="ZIP EXTRACTION, for the list of vulnerable drivers –update-trust downloads.">zip.h</a>), the two containers &ndash;update-trust downloads. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="artefact__catalogue_8cpp.html">artefact_catalogue.cpp</a></td></tr>
+<tr class="memdesc:artefact__catalogue_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The table of the artefacts by version of Windows (see <a class="el" href="artefact__catalogue_8h.html" title="THE table of the artefacts by version of Windows: where each one exists, where it lies and in which f...">artefact_catalogue.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="artefact__catalogue_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="artefact__catalogue_8h.html">artefact_catalogue.h</a></td></tr>
+<tr class="memdesc:artefact__catalogue_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">THE table of the artefacts by version of Windows: where each one exists, where it lies and in which format, version after version. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="artefact__catalogue__test_8cpp.html">artefact_catalogue_test.cpp</a></td></tr>
+<tr class="memdesc:artefact__catalogue__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the table of the artefacts by version of Windows, and dumps it for the documentation. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="asciiart_8cpp.html">asciiart.cpp</a></td></tr>
 <tr class="memdesc:asciiart_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">WAC's console banner. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="asciiart_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="asciiart_8h.html">asciiart.h</a></td></tr>
-<tr class="memdesc:asciiart_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints WAC's banner on the console. The file is encoded in UTF-8. Prints WAC's banner on the console. <br /></td></tr>
+<tr class="memdesc:asciiart_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints WAC's banner on the console, in ASCII. Prints WAC's banner on the console. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="audit_8cpp.html">audit.cpp</a></td></tr>
 <tr class="memdesc:audit_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implementation of the investigation log (see <a class="el" href="audit_8h.html" title="Investigation log: what WAC did, when, and what it left behind.">audit.h</a>). <br /></td></tr>
@@ -153,6 +162,21 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="bits__jobs_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bits__jobs_8h.html">bits_jobs.h</a></td></tr>
 <tr class="memdesc:bits__jobs_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Background Intelligent Transfer Service jobs: <code>\ProgramData\Microsoft\Network\Downloader\qmgr.db</code> (bits_jobs.json). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="boot__records_8cpp.html">boot_records.cpp</a></td></tr>
+<tr class="memdesc:boot__records_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The boot records of the disks (see <a class="el" href="boot__records_8h.html" title="THE BOOT RECORDS: what runs before Windows — each disk&#39;s first mebibyte, each partition&#39;s boot sector...">boot_records.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="boot__records_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="boot__records_8h.html">boot_records.h</a></td></tr>
+<tr class="memdesc:boot__records_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">THE BOOT RECORDS: what runs before Windows — each disk's first mebibyte, each partition's boot sectors, the EFI system partition's files (backlog B-052). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="browser__sessions_8cpp.html">browser_sessions.cpp</a></td></tr>
+<tr class="memdesc:browser__sessions_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decoding of Chromium's SNSS session files and Firefox's mozLz4 files (see <a class="el" href="browser__sessions_8h.html" title="The browsers&#39; sessions: Chromium&#39;s SNSS files (Session_*, Tabs_*) and Firefox&#39;s mozLz4 (....">browser_sessions.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="browser__sessions_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="browser__sessions_8h.html">browser_sessions.h</a></td></tr>
+<tr class="memdesc:browser__sessions_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">The browsers' sessions: Chromium's SNSS files (Session_*, Tabs_*) and Firefox's mozLz4 (.jsonlz4) files, decoded. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="browser__sessions__test_8cpp.html">browser_sessions_test.cpp</a></td></tr>
+<tr class="memdesc:browser__sessions__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the decoding of the browsers' sessions: LZ4 blocks against an independent compressor, SNSS files built field by field, and both damaged at random. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cab_8cpp.html">cab.cpp</a></td></tr>
 <tr class="memdesc:cab_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cabinet extraction (see <a class="el" href="cab_8h.html" title="CABINET (.cab) EXTRACTION, for the trust lists –update-trust downloads.">cab.h</a>). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -162,6 +186,15 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cab__test_8cpp.html">cab_test.cpp</a></td></tr>
 <tr class="memdesc:cab__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the cabinet extraction with cabextract, then with damaged cabinets. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="carving_8cpp.html">carving.cpp</a></td></tr>
+<tr class="memdesc:carving_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Carving: where a PE, a ZIP or a PDF ends (see <a class="el" href="carving_8h.html" title="LEVEL 3 OF THE DELETED FILES&#39; RECOVERY: files found in the free clusters by their structure (carving)...">carving.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="carving_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="carving_8h.html">carving.h</a></td></tr>
+<tr class="memdesc:carving_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">LEVEL 3 OF THE DELETED FILES' RECOVERY: files found in the free clusters by their structure (carving), when even their record is gone (backlog B-036). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="carving__test_8cpp.html">carving_test.cpp</a></td></tr>
+<tr class="memdesc:carving__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the carving's structure checks (<a class="el" href="carving_8h.html" title="LEVEL 3 OF THE DELETED FILES&#39; RECOVERY: files found in the free clusters by their structure (carving)...">carving.h</a>): a PE, a ZIP and a PDF cut at their exact end, forged ones refused, nothing read outside the bytes given. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__repository_8cpp.html">cim_repository.cpp</a></td></tr>
 <tr class="memdesc:cim__repository_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Offline reader of the WMI repository (see <a class="el" href="cim__repository_8h.html" title="Offline reader of the WMI repository (CIM): \Windows\System32\wbem\Repository.">cim_repository.h</a>). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -170,6 +203,12 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cim__test_8cpp.html">cim_test.cpp</a></td></tr>
 <tr class="memdesc:cim__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the WMI repository reader: a class, its ancestor and an instance built as the format lays them out, hostile variants, the name hash against a key of a real repository — and, given a repository folder, the subscriptions it holds. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cloud__identity_8cpp.html">cloud_identity.cpp</a></td></tr>
+<tr class="memdesc:cloud__identity_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Entra ID registrations (see <a class="el" href="cloud__identity_8h.html" title="The machine&#39;s and its users&#39; registration with Microsoft Entra ID (backlog B-052).">cloud_identity.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="cloud__identity_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cloud__identity_8h.html">cloud_identity.h</a></td></tr>
+<tr class="memdesc:cloud__identity_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">The machine's and its users' registration with Microsoft Entra ID (backlog B-052). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config_8cpp.html">config.cpp</a></td></tr>
 <tr class="memdesc:config_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The configuration file, wac.yml (see <a class="el" href="config_8h.html" title="THE CONFIGURATION FILE, wac.yml: the collection&#39;s procedure, written once, applied the same way every...">config.h</a>). <br /></td></tr>
@@ -213,6 +252,21 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="defender__log_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="defender__log_8h.html">defender_log.h</a></td></tr>
 <tr class="memdesc:defender__log_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Microsoft Defender's support logs: <code>\\ProgramData\\Microsoft\\Windows Defender\\Support\\MPLog-*.log</code>. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="deleted__files_8cpp.html">deleted_files.cpp</a></td></tr>
+<tr class="memdesc:deleted__files_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deleted files recovered by raw reading (see <a class="el" href="deleted__files_8h.html" title="DELETED FILES: the content a deleted file still has on the disk, recovered by raw reading (deleted_fi...">deleted_files.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="deleted__files_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="deleted__files_8h.html">deleted_files.h</a></td></tr>
+<tr class="memdesc:deleted__files_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">DELETED FILES: the content a deleted file still has on the disk, recovered by raw reading (deleted_files.json, backlog B-036). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="deleted__files__test_8cpp.html">deleted_files_test.cpp</a></td></tr>
+<tr class="memdesc:deleted__files__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the recovery of deleted files (<a class="el" href="deleted__files_8h.html" title="DELETED FILES: the content a deleted file still has on the disk, recovered by raw reading (deleted_fi...">deleted_files.h</a>) on a volume held in memory: what is recovered is the deleted content exactly, a cluster given to another file is never published as the file's, and a forged record never makes the reading leave the volume. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="des_8cpp.html">des.cpp</a></td></tr>
+<tr class="memdesc:des_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">DES, one block in decryption: see <a class="el" href="des_8h.html" title="DES, one 64-bit block, in decryption: the cipher of the layer that keys a SAM password hash on its ac...">des.h</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="des_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="des_8h.html">des.h</a></td></tr>
+<tr class="memdesc:des_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">DES, one 64-bit block, in decryption: the cipher of the layer that keys a SAM password hash on its account's RID. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dpapi__master__keys_8cpp.html">dpapi_master_keys.cpp</a></td></tr>
 <tr class="memdesc:dpapi__master__keys_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">DPAPI master keys (see <a class="el" href="dpapi__master__keys_8h.html" title="DPAPI master keys: which keys each user and the system hold, and since when — never the key.">dpapi_master_keys.h</a>). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -246,6 +300,12 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__test_8cpp.html">ese_test.cpp</a></td></tr>
 <tr class="memdesc:ese__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the ESE reader: records built as the format lays them out (fixed, variable, tagged, multi-valued, null), hostile variants, the BITS blobs and SRUM's identities read through it — and, given a database, dumps every table for a comparison with an independent reader (vmtest/lib/ese-compare.py, dissect.esedb). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__log__files_8cpp.html">event_log_files.cpp</a></td></tr>
+<tr class="memdesc:event__log__files_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The event logs kept outside their default folder (see <a class="el" href="event__log__files_8h.html" title="The event logs the examined machine keeps outside their default folder (backlog B-053).">event_log_files.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="event__log__files_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__log__files_8h.html">event_log_files.h</a></td></tr>
+<tr class="memdesc:event__log__files_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">The event logs the examined machine keeps outside their default folder (backlog B-053). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html">event_messages.cpp</a></td></tr>
 <tr class="memdesc:event__messages_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finding, extracting and caching the providers' resource files. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -260,6 +320,12 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="events_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="events_8h.html">events.h</a></td></tr>
 <tr class="memdesc:events_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows event logs. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="evt_8cpp.html">evt.cpp</a></td></tr>
+<tr class="memdesc:evt_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Classic event logs (.evt): see <a class="el" href="evt_8h.html" title="Classic event logs (.evt) of Windows XP and Server 2003, read into the same XML as the ....">evt.h</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="evt_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="evt_8h.html">evt.h</a></td></tr>
+<tr class="memdesc:evt_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Classic event logs (.evt) of Windows XP and Server 2003, read into the same XML as the .evtx records. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="evtx_8cpp.html">evtx.cpp</a></td></tr>
 <tr class="memdesc:evtx_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Offline decoding of Windows event logs. <br /></td></tr>
@@ -294,6 +360,12 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html">file_artefacts_test.cpp</a></td></tr>
 <tr class="memdesc:file__artefacts__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the decoders of the small file artefacts on inputs whose result is known: PowerShell history, setupapi.dev.log, recycle bin <code>$I</code>, hosts, Report.wer, Defender's MPLog, DetectionHistory and quarantine, Zone.Identifier, and the registry values of the second lot (TrustRecords, firewall rules, certificate Blob), the NTFS security descriptors of $Secure:$SDS, the NTFS boot sector and change journal header, and the volume serial of a shortcut, the DPAPI master key header and Preferred, the paths of <a class="el" href="structUser.html">User</a> Shell Folders, and the reading of an SQLite database on a private copy, its write-ahead log replayed, a Chromium History and Firefox's places and form history. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="firewall__log_8cpp.html">firewall_log.cpp</a></td></tr>
+<tr class="memdesc:firewall__log_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Windows <a class="el" href="classFirewall.html" title="Firewall rules and profile settings (firewall.json).">Firewall</a>'s log (see <a class="el" href="firewall__log_8h.html" title="The Windows Firewall&#39;s log, pfirewall.log (backlog B-052).">firewall_log.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="firewall__log_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="firewall__log_8h.html">firewall_log.h</a></td></tr>
+<tr class="memdesc:firewall__log_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Windows <a class="el" href="classFirewall.html" title="Firewall rules and profile settings (firewall.json).">Firewall</a>'s log, pfirewall.log (backlog B-052). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="guard__page_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="guard__page_8h.html">guard_page.h</a></td></tr>
 <tr class="memdesc:guard__page_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test support: an input placed against a PAGE_NOACCESS page. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -302,6 +374,9 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="hive__recover_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover_8h.html">hive_recover.h</a></td></tr>
 <tr class="memdesc:hive__recover_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes a hive copied live ("dirty") usable. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hive__recover__test_8cpp.html">hive_recover_test.cpp</a></td></tr>
+<tr class="memdesc:hive__recover__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the replay of a hive's transaction logs (<a class="el" href="hive__recover_8cpp.html" title="Base-block repair and transaction-log replay of copied hives.">hive_recover.cpp</a>) on a hive and logs forged here, entry by entry. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hosts__file_8cpp.html">hosts_file.cpp</a></td></tr>
 <tr class="memdesc:hosts__file_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The hosts file (see <a class="el" href="hosts__file_8h.html" title="The hosts file: \\Windows\\System32\\drivers\\etc\\hosts.">hosts_file.h</a>). <br /></td></tr>
@@ -338,6 +413,12 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="inflate__test_8cpp.html">inflate_test.cpp</a></td></tr>
 <tr class="memdesc:inflate__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the DEFLATE decompression with zlib, then with damaged input. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="intune__logs_8cpp.html">intune_logs.cpp</a></td></tr>
+<tr class="memdesc:intune__logs_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Intune Management Extension's logs (see <a class="el" href="intune__logs_8h.html" title="The Intune Management Extension&#39;s logs (backlog B-052).">intune_logs.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="intune__logs_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="intune__logs_8h.html">intune_logs.h</a></td></tr>
+<tr class="memdesc:intune__logs_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Intune Management Extension's logs (backlog B-052). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ip__address_8cpp.html">ip_address.cpp</a></td></tr>
 <tr class="memdesc:ip__address_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">IP addresses as text (see <a class="el" href="ip__address_8h.html" title="IP ADDRESSES AS TEXT, for the network state WAC records.">ip_address.h</a>). <br /></td></tr>
@@ -390,6 +471,9 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="local__groups_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="local__groups_8h.html">local_groups.h</a></td></tr>
 <tr class="memdesc:local__groups_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Local groups (aliases) of the examined machine, read from the SAM. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="long__path_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="long__path_8h.html">long_path.h</a></td></tr>
+<tr class="memdesc:long__path_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Paths longer than MAX_PATH: the extended form, and the operations on folders and files that hold with it. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="lznt1_8cpp.html">lznt1.cpp</a></td></tr>
 <tr class="memdesc:lznt1_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">LZNT1 decompression, the NTFS compression. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -432,8 +516,17 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="network_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="network_8h.html">network.h</a></td></tr>
 <tr class="memdesc:network_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">THE NETWORK STATE of the examined machine, observed live: who talks to whom, and through what. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ntfs__boot__sector_8cpp.html">ntfs_boot_sector.cpp</a></td></tr>
+<tr class="memdesc:ntfs__boot__sector_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The NTFS boot sector, decoded (see <a class="el" href="ntfs__boot__sector_8h.html" title="The NTFS boot sector, decoded: THE reading of a volume&#39;s geometry, shared by the raw reader (raw_hive...">ntfs_boot_sector.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="ntfs__boot__sector_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ntfs__boot__sector_8h.html">ntfs_boot_sector.h</a></td></tr>
+<tr class="memdesc:ntfs__boot__sector_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">The NTFS boot sector, decoded: THE reading of a volume's geometry, shared by the raw reader (raw_hive) and ntfs_volumes.json. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ntfs__fixup__test_8cpp.html">ntfs_fixup_test.cpp</a></td></tr>
 <tr class="memdesc:ntfs__fixup__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks applyNtfsFixup: a torn NTFS record is refused, a sound one restored exactly, a malformed array rejected, and nothing is read outside the record. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ntfs__runs__test_8cpp.html">ntfs_runs_test.cpp</a></td></tr>
+<tr class="memdesc:ntfs__runs__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks decodeNtfsRuns: data runs decoded exactly, a forged list refused whole, and nothing read outside the attribute; and the other bounds the raw reader takes from a record — a resident attribute's value, the compression unit, the index block size. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ntfs__volumes_8cpp.html">ntfs_volumes.cpp</a></td></tr>
 <tr class="memdesc:ntfs__volumes_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">NTFS volumes (see <a class="el" href="ntfs__volumes_8h.html" title="NTFS volumes: boot sector ($Boot) and change journal header ($UsnJrnl:$Max).">ntfs_volumes.h</a>). <br /></td></tr>
@@ -479,6 +572,12 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="powershell__history_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="powershell__history_8h.html">powershell_history.h</a></td></tr>
 <tr class="memdesc:powershell__history_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">PowerShell command history: the PSReadLine files of each profile. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="powershell__profiles_8cpp.html">powershell_profiles.cpp</a></td></tr>
+<tr class="memdesc:powershell__profiles_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">PowerShell profiles (see <a class="el" href="powershell__profiles_8h.html" title="PowerShell profiles: the scripts PowerShell runs at each start, for every user or for one (powershell...">powershell_profiles.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="powershell__profiles_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="powershell__profiles_8h.html">powershell_profiles.h</a></td></tr>
+<tr class="memdesc:powershell__profiles_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">PowerShell profiles: the scripts PowerShell runs at each start, for every user or for one (powershell_profiles.json). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="prefetchs_8cpp.html">prefetchs.cpp</a></td></tr>
 <tr class="memdesc:prefetchs_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decoding of the <a class="el" href="structPrefetch.html">Prefetch</a> files, compressed or not (see <a class="el" href="prefetchs_8h.html" title="Prefetch: which executables ran, how many times, and what they loaded.">prefetchs.h</a>). <br /></td></tr>
@@ -660,6 +759,9 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="sam__secrets_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sam__secrets_8h.html">sam_secrets.h</a></td></tr>
 <tr class="memdesc:sam__secrets_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decryption of the SAM password hashes, for an offline investigation. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sam__secrets__test_8cpp.html">sam_secrets_test.cpp</a></td></tr>
+<tr class="memdesc:sam__secrets__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the derivation of the SAM's hashed boot key (<a class="el" href="sam__secrets_8cpp.html" title="Implementation of the SAM hash decryption (see sam_secrets.h).">sam_secrets.cpp</a>, hashedBootKeyFromF) on an F value built here. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduledTasks_8cpp.html">scheduledTasks.cpp</a></td></tr>
 <tr class="memdesc:scheduledTasks_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Offline reading of the scheduled tasks (see <a class="el" href="scheduledTasks_8h.html" title="Scheduled tasks, read OFFLINE: what the machine runs on its own.">scheduledTasks.h</a>). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -667,10 +769,13 @@ Files</h2></td></tr>
 <tr class="memdesc:scheduledTasks_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scheduled tasks, read OFFLINE: what the machine runs on its own. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="search__index_8cpp.html">search_index.cpp</a></td></tr>
-<tr class="memdesc:search__index_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows Search index (Windows 11): see <a class="el" href="search__index_8h.html" title="Windows Search index (Windows 11): what the indexer recorded of each file, read in Windows....">search_index.h</a>. <br /></td></tr>
+<tr class="memdesc:search__index_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows Search index (Windows 11): see <a class="el" href="search__index_8h.html" title="Windows Search index: what the indexer recorded of each file, read in Windows.db and Windows-gather....">search_index.h</a>. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="search__index_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="search__index_8h.html">search_index.h</a></td></tr>
-<tr class="memdesc:search__index_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows Search index (Windows 11): what the indexer recorded of each file, read in Windows.db and Windows-gather.db. <br /></td></tr>
+<tr class="memdesc:search__index_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows Search index: what the indexer recorded of each file, read in Windows.db and Windows-gather.db (Windows 11), or in Windows.edb (Windows 10 and earlier). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="search__property__types_8cpp.html">search_property_types.cpp</a></td></tr>
+<tr class="memdesc:search__property__types_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The VARIANT type of each property of the Windows Search index, by its canonical name: what the ESE index (Windows.edb) does not say. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="security__descriptors_8cpp.html">security_descriptors.cpp</a></td></tr>
 <tr class="memdesc:security__descriptors_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">NTFS security descriptors (see <a class="el" href="security__descriptors_8h.html" title="NTFS security descriptors ($Secure:$SDS): the owner and the access rights of every file.">security_descriptors.h</a>). <br /></td></tr>
@@ -711,6 +816,12 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sha__test_8cpp.html">sha_test.cpp</a></td></tr>
 <tr class="memdesc:sha__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts <a class="el" href="sha_8cpp.html" title="SHA-1, SHA-256, SHA-384 and SHA-512, computed incrementally.">sha.cpp</a> with the public test vectors. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="shadow__copy__listing_8cpp.html">shadow_copy_listing.cpp</a></td></tr>
+<tr class="memdesc:shadow__copy__listing_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>shadow_copies.json</code>: see <a class="el" href="shadow__copy__listing_8h.html" title="shadow_copies.json: the shadow copies of the fixed NTFS volumes, as the collection read them raw (raw...">shadow_copy_listing.h</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="shadow__copy__listing_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="shadow__copy__listing_8h.html">shadow_copy_listing.h</a></td></tr>
+<tr class="memdesc:shadow__copy__listing_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>shadow_copies.json</code>: the shadow copies of the fixed NTFS volumes, as the collection read them raw (<a class="el" href="raw__collect_8h.html" title="Orchestration of the offline extraction of artefacts (WAC).">raw_collect.h</a>, ExtractShadowCopiesRaw). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="shell__items__test_8cpp.html">shell_items_test.cpp</a></td></tr>
 <tr class="memdesc:shell__items__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the decoding of the shell items of an archive's content (ARCHIVE_FILE_CONTENT), and that it never reads outside the item. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -738,6 +849,12 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="startup__folders_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="startup__folders_8h.html">startup_folders.h</a></td></tr>
 <tr class="memdesc:startup__folders_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Startup folders: what Windows runs at each logon, for every user and for each profile. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sysmon_8cpp.html">sysmon.cpp</a></td></tr>
+<tr class="memdesc:sysmon_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classSysmon.html" title="The installations of Sysmon (sysmon.json).">Sysmon</a>'s configuration and archives (see <a class="el" href="sysmon_8h.html" title="SYSMON, where it runs: its configuration, read in the examined SYSTEM hive, and the files it archived...">sysmon.h</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="sysmon_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sysmon_8h.html">sysmon.h</a></td></tr>
+<tr class="memdesc:sysmon_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">SYSMON, where it runs: its configuration, read in the examined SYSTEM hive, and the files it archived (backlog B-053). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="system_8cpp.html">system.cpp</a></td></tr>
 <tr class="memdesc:system_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Offline reading of the system information (see <a class="el" href="system_8h.html" title="System information of the examined machine.">system.h</a>). <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -749,6 +866,9 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="system__library_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="system__library_8h.html">system_library.h</a></td></tr>
 <tr class="memdesc:system__library_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">A Windows library loaded at run time, from System32 only, and its functions resolved — for the libraries WAC must not import. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="test__exhibits_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="test__exhibits_8h.html">test_exhibits.h</a></td></tr>
+<tr class="memdesc:test__exhibits_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test support: a data file placed as the collection places an exhibit — in the exhibit store and in its working copy — then registered in the manifest. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="third__party__chain__test_8cpp.html">third_party_chain_test.cpp</a></td></tr>
 <tr class="memdesc:third__party__chain__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks each rule of <a class="el" href="classThirdPartyRoots.html">ThirdPartyRoots</a> on chains made to break it. <br /></td></tr>
@@ -830,6 +950,15 @@ Files</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="version__info__test_8cpp.html">version_info_test.cpp</a></td></tr>
 <tr class="memdesc:version__info__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confronts the reading of version resources with Windows's, then with damaged resources. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vss_8cpp.html">vss.cpp</a></td></tr>
+<tr class="memdesc:vss_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Volume shadow copies read raw: see <a class="el" href="vss_8h.html" title="Volume shadow copies read raw: the catalog and stores that the Volume Shadow Copy service keeps on an...">vss.h</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="vss_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vss_8h.html">vss.h</a></td></tr>
+<tr class="memdesc:vss_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Volume shadow copies read raw: the catalog and stores that the Volume Shadow Copy service keeps on an NTFS volume, and each copy rebuilt as the volume was when it was taken — without the service. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vss__test_8cpp.html">vss_test.cpp</a></td></tr>
+<tr class="memdesc:vss__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the raw reading of shadow copies (<a class="el" href="vss_8cpp.html" title="Volume shadow copies read raw: see vss.h.">vss.cpp</a>). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vulnerable__drivers__test_8cpp.html">vulnerable_drivers_test.cpp</a></td></tr>
 <tr class="memdesc:vulnerable__drivers__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks each rule of <a class="el" href="classVulnerableDrivers.html">VulnerableDrivers</a>, one at a time. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -862,6 +991,15 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="xml__light_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xml__light_8h.html">xml_light.h</a></td></tr>
 <tr class="memdesc:xml__light_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minimal XML reader, with no dependency. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xp__imports_8cpp.html">xp_imports.cpp</a></td></tr>
+<tr class="memdesc:xp__imports_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">The fourteen functions Windows XP lacks, for the 32-bit WAC (WAC32.exe) — see <a class="el" href="xp__imports_8h.html" title="The equivalents WAC32.exe uses where Windows XP lacks a function: declared here for their test (xp_im...">xp_imports.h</a>. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><a href="xp__imports_8h_source.html"><span class="icondoc"></span></a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xp__imports_8h.html">xp_imports.h</a></td></tr>
+<tr class="memdesc:xp__imports_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">The equivalents WAC32.exe uses where Windows XP lacks a function: declared here for their test (<a class="el" href="xp__imports__test_8cpp.html" title="Checks the equivalents WAC32.exe uses where Windows XP lacks a function (xp_imports....">xp_imports_test.cpp</a>), which runs them against the system's own on a Windows that has both. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xp__imports__test_8cpp.html">xp_imports_test.cpp</a></td></tr>
+<tr class="memdesc:xp__imports__test_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks the equivalents WAC32.exe uses where Windows XP lacks a function (<a class="el" href="xp__imports_8cpp.html" title="The fourteen functions Windows XP lacks, for the 32-bit WAC (WAC32.exe) — see xp_imports....">xp_imports.cpp</a>), against the system's own. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top"><span class="icondoc"></span>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xpress_8cpp.html">xpress.cpp</a></td></tr>
 <tr class="memdesc:xpress_8cpp"><td class="mdescLeft">&#160;</td><td class="mdescRight">XPRESS Huffman decompression, as WOF ("Compact OS") uses it. <br /></td></tr>

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -147,6 +147,12 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a7792cd4c6326cdcd129f46c68c213892"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41d939675ef37698d9fbbd89cc5e6035" id="r_a41d939675ef37698d9fbbd89cc5e6035"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBitsJob.html#a41d939675ef37698d9fbbd89cc5e6035">fileIds</a></td></tr>
 <tr class="separator:a41d939675ef37698d9fbbd89cc5e6035"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3492d33c2072bfac1f52e43c61a20e78" id="r_a3492d33c2072bfac1f52e43c61a20e78"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBitsJob.html#a3492d33c2072bfac1f52e43c61a20e78">queueFile</a></td></tr>
+<tr class="memdesc:a3492d33c2072bfac1f52e43c61a20e78"><td class="mdescLeft">&#160;</td><td class="mdescRight">before Windows 10: the queue file it was read in (qmgr0.dat, qmgr1.dat)  <br /></td></tr>
+<tr class="separator:a3492d33c2072bfac1f52e43c61a20e78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7adea491f7b0f32e8bd4e36cf4018f85" id="r_a7adea491f7b0f32e8bd4e36cf4018f85"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structBitsFile.html">BitsFile</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBitsJob.html#a7adea491f7b0f32e8bd4e36cf4018f85">inlineFiles</a></td></tr>
+<tr class="memdesc:a7adea491f7b0f32e8bd4e36cf4018f85"><td class="mdescLeft">&#160;</td><td class="mdescRight">before Windows 10: its files, written in the job itself  <br /></td></tr>
+<tr class="separator:a7adea491f7b0f32e8bd4e36cf4018f85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10160a540af3ac0a45e8a4ba5014596f" id="r_a10160a540af3ac0a45e8a4ba5014596f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBitsJob.html#a10160a540af3ac0a45e8a4ba5014596f">parsed</a> = false</td></tr>
 <tr class="separator:a10160a540af3ac0a45e8a4ba5014596f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5046829df6c08def43aead5e0c84bcdd" id="r_a5046829df6c08def43aead5e0c84bcdd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structBitsJob.html#a5046829df6c08def43aead5e0c84bcdd">metadataParsed</a> = false</td></tr>
@@ -258,6 +264,22 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a7adea491f7b0f32e8bd4e36cf4018f85" name="a7adea491f7b0f32e8bd4e36cf4018f85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7adea491f7b0f32e8bd4e36cf4018f85">&#9670;&#160;</a></span>inlineFiles</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="structBitsFile.html">BitsFile</a>&gt; BitsJob::inlineFiles</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>before Windows 10: its files, written in the job itself </p>
 
 </div>
 </div>
@@ -398,6 +420,22 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a3492d33c2072bfac1f52e43c61a20e78" name="a3492d33c2072bfac1f52e43c61a20e78"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3492d33c2072bfac1f52e43c61a20e78">&#9670;&#160;</a></span>queueFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring BitsJob::queueFile</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>before Windows 10: the queue file it was read in (qmgr0.dat, qmgr1.dat) </p>
 
 </div>
 </div>

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -119,6 +119,8 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:add3b36b24f347ee5b2470cb853f107f4" id="r_add3b36b24f347ee5b2470cb853f107f4"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxRecord.html#add3b36b24f347ee5b2470cb853f107f4">xml</a></td></tr>
 <tr class="memdesc:add3b36b24f347ee5b2470cb853f107f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">event body, as XML  <br /></td></tr>
 <tr class="separator:add3b36b24f347ee5b2470cb853f107f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae74f980877a73a12e79b03b7af3ed469" id="r_ae74f980877a73a12e79b03b7af3ed469"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxRecord.html#ae74f980877a73a12e79b03b7af3ed469">values</a></td></tr>
+<tr class="separator:ae74f980877a73a12e79b03b7af3ed469"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7175d834f1246f129f2fc0f909e82bc" id="r_af7175d834f1246f129f2fc0f909e82bc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxRecord.html#af7175d834f1246f129f2fc0f909e82bc">recovered</a> = false</td></tr>
 <tr class="separator:af7175d834f1246f129f2fc0f909e82bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -153,6 +155,21 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Found past the free-space offset of a chunk whose header declares no live record: an event of a cleared log, which Windows no longer shows. Kept, since it is the trace the clearing meant to erase, but flagged so that it is never read as a live event. </p>
+
+</div>
+</div>
+<a id="ae74f980877a73a12e79b03b7af3ed469" name="ae74f980877a73a12e79b03b7af3ed469"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae74f980877a73a12e79b03b7af3ed469">&#9670;&#160;</a></span>values</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::wstring&gt; EvtxRecord::values</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The event's data as its template instance holds them, in the order of the provider's template (empty for a null one): the values a message's N designate, the XML not showing them all. Empty when the record has no nested instance (a classic .evt record). </p>
 
 </div>
 </div>

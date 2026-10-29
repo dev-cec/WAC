@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -127,6 +127,8 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:aa914a2fbbb3d9fde1a81be847edf62c1" id="r_aa914a2fbbb3d9fde1a81be847edf62c1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bits__jobs_8h.html#aa914a2fbbb3d9fde1a81be847edf62c1">parseBitsJob</a> (const std::vector&lt; uint8_t &gt; &amp;blob, <a class="el" href="structBitsJob.html">BitsJob</a> &amp;job)</td></tr>
 <tr class="separator:aa914a2fbbb3d9fde1a81be847edf62c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cf24eff3e195726db5458f246b1c6ec" id="r_a7cf24eff3e195726db5458f246b1c6ec"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bits__jobs_8h.html#a7cf24eff3e195726db5458f246b1c6ec">parseBitsQueue</a> (const std::vector&lt; uint8_t &gt; &amp;queue, const std::wstring &amp;queueFile, std::vector&lt; <a class="el" href="structBitsJob.html">BitsJob</a> &gt; &amp;jobs)</td></tr>
+<tr class="separator:a7cf24eff3e195726db5458f246b1c6ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a81e6e3bff85aa545c2ffe3bb8c29037c" id="r_a81e6e3bff85aa545c2ffe3bb8c29037c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bits__jobs_8h.html#a81e6e3bff85aa545c2ffe3bb8c29037c">parseBitsFile</a> (const std::vector&lt; uint8_t &gt; &amp;blob, <a class="el" href="structBitsFile.html">BitsFile</a> &amp;file)</td></tr>
 <tr class="separator:a81e6e3bff85aa545c2ffe3bb8c29037c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -135,6 +137,7 @@ Functions</h2></td></tr>
 <p>WHAT IT PROVES. A BITS job downloads (or uploads) files in the background, surviving reboots, as SYSTEM or a user; its "notification
 command line" runs a program when the transfer ends or fails. Intruders use it to fetch a payload through a proxy-friendly Windows service, and as a persistence: a job that fails again and again runs its command each time. The source URL, the destination, the command and the owner are here.</p>
 <p>THE FORMAT. Since Windows 10, qmgr.db is an ESE database (<a class="el" href="ese__database_8h.html" title="Reader of ESE databases (Extensible Storage Engine, &quot;JET Blue&quot;): SRUDB.dat, qmgr.db,...">ese_database.h</a>): table Jobs (Id, Blob), table Files (Id, Blob). The blobs are BITS's own serialisation, undocumented, described by FireEye (BitsParser, bits_parser) and checked on a witness job of the test VM against Get-BitsTransfer: after a 16-byte header, a job gives its type, priority, state, identifier, then UTF-16 strings each preceded by its length in characters — name, description, notification program and arguments, owner SID —, its notification flags; a delimited section lists its files' identifiers; then error counts, retry delay, timeout and dates. A file gives its destination, source, temporary file, sizes, drive and volume. The whole blob is also given in hexadecimal: beyond these fields, BITS 10 keeps more (the path of the program that created the job) at places not described.</p>
+<p>BEFORE WINDOWS 10, qmgr0.dat and qmgr1.dat, which BITS writes in turn: a header, the jobs each framed by a delimiter of its version of BITS, the same job layout without the blob's header, its files written in it after their count — each followed by a trailer not described —, then the same metadata (bits_parser, ANSSI; measured on the witness job of the Windows 8.1 VM). Each job names the queue file it was read in: the older one may hold an earlier state of the same job.</p>
 <p>A job is written to qmgr.db when created and when a file is added; BITS changes made since may be only in the service's logs (edb*.log), collected alongside. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="a81e6e3bff85aa545c2ffe3bb8c29037c" name="a81e6e3bff85aa545c2ffe3bb8c29037c"></a>
@@ -192,6 +195,49 @@ command line" runs a program when the transfer ends or fails. Intruders use it t
       </table>
 </div><div class="memdoc">
 <p>Reads a job's blob. Every length is bounded by the blob. </p><dl class="section return"><dt>Returns</dt><dd>false if its first part (up to the notification flags) does not fit </dd></dl>
+
+</div>
+</div>
+<a id="a7cf24eff3e195726db5458f246b1c6ec" name="a7cf24eff3e195726db5458f246b1c6ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7cf24eff3e195726db5458f246b1c6ec">&#9670;&#160;</a></span>parseBitsQueue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool parseBitsQueue </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>queueFile</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structBitsJob.html">BitsJob</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>jobs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads the jobs of a queue file of Windows 8.1 and earlier (qmgr0.dat, qmgr1.dat): each between two delimiters of its version of BITS, its files written in it. Every length is bounded by the file. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">queue</td><td>the queue file </td></tr>
+    <tr><td class="paramname">queueFile</td><td>its path on the examined machine </td></tr>
+    <tr><td class="paramname">jobs</td><td>receives the jobs read </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if no known job delimiter is in it </dd></dl>
 
 </div>
 </div>

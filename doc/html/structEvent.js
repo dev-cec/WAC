@@ -30,6 +30,8 @@ var structEvent =
     [ "messageQualifiers", "structEvent.html#aef3fccacc4ff9b60aba81be4f1ac9e50", null ],
     [ "messageSource", "structEvent.html#a0caeb7e06a3037518eb9db0247466f6d", null ],
     [ "messageVersion", "structEvent.html#a8554701296aaf954a5d718fd7be235d2", null ],
+    [ "processingError", "structEvent.html#ae162c75c881d050ece523e3866ffb904", null ],
     [ "rawNames", "structEvent.html#a66b061577a5419ede23dc40b0c5deb3e", null ],
-    [ "rawValues", "structEvent.html#a87d52e43fc651704be2220d757ae8310", null ]
+    [ "rawValues", "structEvent.html#a87d52e43fc651704be2220d757ae8310", null ],
+    [ "templateValues", "structEvent.html#a3dcdbed83ddff73b1e9e376c027984cb", null ]
 ];

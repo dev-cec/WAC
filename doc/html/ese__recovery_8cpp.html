@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -106,6 +106,7 @@ $(document).ready(function(){initNavTree('ese__recovery_8cpp.html',''); initResi
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="ese__recovery_8h_source.html">ese_recovery.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="audit_8h_source.html">audit.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="long__path_8h_source.html">long_path.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="system__library_8h_source.html">system_library.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
 <code>#include &lt;esent.h&gt;</code><br />
@@ -119,10 +120,55 @@ $(document).ready(function(){initNavTree('ese__recovery_8cpp.html',''); initResi
 Functions</h2></td></tr>
 <tr class="memitem:a02d1bc971194bc2ee651455d00892426" id="r_a02d1bc971194bc2ee651455d00892426"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structEseReplay.html">EseReplay</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__recovery_8cpp.html#a02d1bc971194bc2ee651455d00892426">ReplayEseLogsOnce</a> (const std::wstring &amp;workingDatabase, const std::wstring &amp;originalDatabase)</td></tr>
 <tr class="separator:a02d1bc971194bc2ee651455d00892426"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e02d45567520f55719db925f799b151" id="r_a3e02d45567520f55719db925f799b151"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ese__recovery_8cpp.html#a3e02d45567520f55719db925f799b151">OpenRecoveredEseDatabase</a> (<a class="el" href="classEseDatabase.html">EseDatabase</a> &amp;database, const std::wstring &amp;workingDatabase, const std::wstring &amp;originalDatabase)</td></tr>
+<tr class="separator:a3e02d45567520f55719db925f799b151"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Replay of an ESE database's transaction logs into its working copy (see <a class="el" href="ese__recovery_8h.html" title="Replay of an ESE database&#39;s transaction logs into its working copy, by Windows&#39; own engine (esent....">ese_recovery.h</a>). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a3e02d45567520f55719db925f799b151" name="a3e02d45567520f55719db925f799b151"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e02d45567520f55719db925f799b151">&#9670;&#160;</a></span>OpenRecoveredEseDatabase()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT OpenRecoveredEseDatabase </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classEseDatabase.html">EseDatabase</a> &amp;&#160;</td>
+          <td class="paramname"><em>database</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>workingDatabase</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>originalDatabase</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Opens the working copy of an ESE database once its logs are replayed into it (ReplayEseLogsOnce): every ESE artefact goes through here, none reads a database without its latest changes unsaid. A replay not applied is logged. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">database</td><td>receives the opened database </td></tr>
+    <tr><td class="paramname">workingDatabase</td><td>the copy, in the working directory </td></tr>
+    <tr><td class="paramname">originalDatabase</td><td>its path on the examined machine </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the result of <a class="el" href="classEseDatabase.html#a12be1489773f519068676c3022a7b828">EseDatabase::open</a> </dd></dl>
+
+</div>
+</div>
 <a id="a02d1bc971194bc2ee651455d00892426" name="a02d1bc971194bc2ee651455d00892426"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a02d1bc971194bc2ee651455d00892426">&#9670;&#160;</a></span>ReplayEseLogsOnce()</h2>
 

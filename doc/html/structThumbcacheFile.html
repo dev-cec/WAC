@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -108,8 +108,11 @@ $(document).ready(function(){initNavTree('structThumbcacheFile.html',''); initRe
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a7dce6c4313eba8fd203e03c7f540f92c" id="r_a7dce6c4313eba8fd203e03c7f540f92c"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheFile.html#a7dce6c4313eba8fd203e03c7f540f92c">version</a> = 0</td></tr>
-<tr class="memdesc:a7dce6c4313eba8fd203e03c7f540f92c"><td class="mdescLeft">&#160;</td><td class="mdescRight">0x1E Windows 8, 0x1F 8.1, 0x20 10 and 11  <br /></td></tr>
+<tr class="memdesc:a7dce6c4313eba8fd203e03c7f540f92c"><td class="mdescLeft">&#160;</td><td class="mdescRight">0x14 Vista, 0x15 Windows 7, 0x1E Windows 8, 0x1F 8.1, 0x20 10 and 11  <br /></td></tr>
 <tr class="separator:a7dce6c4313eba8fd203e03c7f540f92c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5c5c09d0ab430c98d93b946fed18555" id="r_ae5c5c09d0ab430c98d93b946fed18555"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheFile.html#ae5c5c09d0ab430c98d93b946fed18555">unsupportedFormat</a> = false</td></tr>
+<tr class="memdesc:ae5c5c09d0ab430c98d93b946fed18555"><td class="mdescLeft">&#160;</td><td class="mdescRight">a version WAC has no decoder for (pieceFormat): no entry was read  <br /></td></tr>
+<tr class="separator:ae5c5c09d0ab430c98d93b946fed18555"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab204fc34ad60823257801ef4abf1c349" id="r_ab204fc34ad60823257801ef4abf1c349"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheFile.html#ab204fc34ad60823257801ef4abf1c349">type</a> = 0</td></tr>
 <tr class="memdesc:ab204fc34ad60823257801ef4abf1c349"><td class="mdescLeft">&#160;</td><td class="mdescRight">index of the cache's size (see thumbcacheSize)  <br /></td></tr>
 <tr class="separator:ab204fc34ad60823257801ef4abf1c349"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,6 +155,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ae5c5c09d0ab430c98d93b946fed18555" name="ae5c5c09d0ab430c98d93b946fed18555"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae5c5c09d0ab430c98d93b946fed18555">&#9670;&#160;</a></span>unsupportedFormat</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ThumbcacheFile::unsupportedFormat = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>a version WAC has no decoder for (pieceFormat): no entry was read </p>
+
+</div>
+</div>
 <a id="a7dce6c4313eba8fd203e03c7f540f92c" name="a7dce6c4313eba8fd203e03c7f540f92c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7dce6c4313eba8fd203e03c7f540f92c">&#9670;&#160;</a></span>version</h2>
 
@@ -164,7 +183,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>0x1E Windows 8, 0x1F 8.1, 0x20 10 and 11 </p>
+<p>0x14 Vista, 0x15 Windows 7, 0x1E Windows 8, 0x1F 8.1, 0x20 10 and 11 </p>
 
 </div>
 </div>

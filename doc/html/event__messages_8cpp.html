@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -122,8 +122,10 @@ $(document).ready(function(){initNavTree('event__messages_8cpp.html',''); initRe
 Functions</h2></td></tr>
 <tr class="memitem:a3f3680eee7a2ea96511ecf89666db325" id="r_a3f3680eee7a2ea96511ecf89666db325"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#a3f3680eee7a2ea96511ecf89666db325">MessagesInit</a> ()</td></tr>
 <tr class="separator:a3f3680eee7a2ea96511ecf89666db325"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11d76e90ccde8acce4422887ce1c944e" id="r_a11d76e90ccde8acce4422887ce1c944e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#a11d76e90ccde8acce4422887ce1c944e">EventMessage</a> (const std::wstring &amp;providerGuid, uint16_t eventId, uint8_t version, const std::vector&lt; std::wstring &gt; &amp;values, const std::vector&lt; std::wstring &gt; &amp;names)</td></tr>
-<tr class="separator:a11d76e90ccde8acce4422887ce1c944e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee154a53786253f41ef336fdc904a7da" id="r_aee154a53786253f41ef336fdc904a7da"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#aee154a53786253f41ef336fdc904a7da">QualifiedEventMessage</a> (const std::wstring &amp;providerGuid, uint32_t messageId, const std::vector&lt; std::wstring &gt; &amp;values)</td></tr>
+<tr class="separator:aee154a53786253f41ef336fdc904a7da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52e2a434213c43b9e0aab3279b108a96" id="r_a52e2a434213c43b9e0aab3279b108a96"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#a52e2a434213c43b9e0aab3279b108a96">EventMessage</a> (const std::wstring &amp;providerGuid, uint16_t eventId, uint8_t version, const std::vector&lt; std::wstring &gt; &amp;values, const std::vector&lt; std::wstring &gt; &amp;names, const std::vector&lt; std::wstring &gt; &amp;templateValues)</td></tr>
+<tr class="separator:a52e2a434213c43b9e0aab3279b108a96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac77d76595b7aaeeb73b3d80ce6a65b23" id="r_ac77d76595b7aaeeb73b3d80ce6a65b23"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#ac77d76595b7aaeeb73b3d80ce6a65b23">ClassicEventMessage</a> (const std::wstring &amp;logName, const std::wstring &amp;source, uint32_t messageId, const std::vector&lt; std::wstring &gt; &amp;values)</td></tr>
 <tr class="separator:ac77d76595b7aaeeb73b3d80ce6a65b23"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93a5a5291f3b51af457b154f8772d04f" id="r_a93a5a5291f3b51af457b154f8772d04f"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="event__messages_8cpp.html#a93a5a5291f3b51af457b154f8772d04f">MessagesCollect</a> (const std::set&lt; std::wstring &gt; &amp;guids, const std::set&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt; &amp;sources)</td></tr>
@@ -188,8 +190,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a11d76e90ccde8acce4422887ce1c944e" name="a11d76e90ccde8acce4422887ce1c944e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11d76e90ccde8acce4422887ce1c944e">&#9670;&#160;</a></span>EventMessage()</h2>
+<a id="a52e2a434213c43b9e0aab3279b108a96" name="a52e2a434213c43b9e0aab3279b108a96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52e2a434213c43b9e0aab3279b108a96">&#9670;&#160;</a></span>EventMessage()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -222,7 +224,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
-          <td class="paramname"><em>names</em>&#160;</td>
+          <td class="paramname"><em>names</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>templateValues</em> = <code>{}</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -239,6 +247,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">version</td><td>version of the event's schema </td></tr>
     <tr><td class="paramname">values</td><td>data of the event, in order: they are what fills the %1 %2 … marks of the template </td></tr>
     <tr><td class="paramname">names</td><td>the name of each value (its Data's Name), by which it is matched to its template item; may be empty </td></tr>
+    <tr><td class="paramname">templateValues</td><td>the event's values as its template instance holds them, in the template's order: taken when the names do not line up with the items and there is one per item; may be empty </td></tr>
   </table>
   </dd>
 </dl>
@@ -364,6 +373,50 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="aee154a53786253f41ef336fdc904a7da" name="aee154a53786253f41ef336fdc904a7da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee154a53786253f41ef336fdc904a7da">&#9670;&#160;</a></span>QualifiedEventMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring QualifiedEventMessage </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>providerGuid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>messageId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;&#160;</td>
+          <td class="paramname"><em>values</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The message of an event that carries qualifiers — published the classic way by a provider that has a manifest —, looked up in the provider's own message table by its full identifier, qualifiers in the high word: what Windows shows for it. The manifest's message for the bare identifier may be another one (Vista's CAPI2 11, qualifiers 0xC002: "For more details
+for this event…" in the manifest, the cause in the table). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">providerGuid</td><td>the provider's GUID </td></tr>
+    <tr><td class="paramname">messageId</td><td>qualifiers in the high word, event identifier in the low one </td></tr>
+    <tr><td class="paramname">values</td><td>data of the event, in order: %1, %2… </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the sentence, or an empty string if the table has no such message </dd></dl>
 
 </div>
 </div>

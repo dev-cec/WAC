@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -143,6 +143,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a9aee39b5276aa88928b595c5209b10ab" id="r_a9aee39b5276aa88928b595c5209b10ab"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrefetch.html#a9aee39b5276aa88928b595c5209b10ab">version</a> = 0</td></tr>
 <tr class="memdesc:a9aee39b5276aa88928b595c5209b10ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">format version, which follows the Windows version  <br /></td></tr>
 <tr class="separator:a9aee39b5276aa88928b595c5209b10ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1092cd09bced7855624a9cbb8896dbb2" id="r_a1092cd09bced7855624a9cbb8896dbb2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrefetch.html#a1092cd09bced7855624a9cbb8896dbb2">unsupportedFormat</a> = false</td></tr>
+<tr class="memdesc:a1092cd09bced7855624a9cbb8896dbb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">a version WAC has no decoder for (pieceFormat): only the header was read  <br /></td></tr>
+<tr class="separator:a1092cd09bced7855624a9cbb8896dbb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a68cf15cba02b871d6df9945b029cf473" id="r_a68cf15cba02b871d6df9945b029cf473"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrefetch.html#a68cf15cba02b871d6df9945b029cf473">size</a> = 0</td></tr>
 <tr class="memdesc:a68cf15cba02b871d6df9945b029cf473"><td class="mdescLeft">&#160;</td><td class="mdescRight">size the .pf file declares  <br /></td></tr>
 <tr class="separator:a68cf15cba02b871d6df9945b029cf473"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -510,6 +513,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>size the .pf file declares </p>
+
+</div>
+</div>
+<a id="a1092cd09bced7855624a9cbb8896dbb2" name="a1092cd09bced7855624a9cbb8896dbb2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1092cd09bced7855624a9cbb8896dbb2">&#9670;&#160;</a></span>unsupportedFormat</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Prefetch::unsupportedFormat = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>a version WAC has no decoder for (pieceFormat): only the header was read </p>
 
 </div>
 </div>

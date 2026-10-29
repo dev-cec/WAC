@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -185,9 +185,15 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a66b061577a5419ede23dc40b0c5deb3e" id="r_a66b061577a5419ede23dc40b0c5deb3e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#a66b061577a5419ede23dc40b0c5deb3e">rawNames</a></td></tr>
 <tr class="memdesc:a66b061577a5419ede23dc40b0c5deb3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The name of each of rawValues (Data's Name, a UserData leaf's element); "" for a classic event's data.  <br /></td></tr>
 <tr class="separator:a66b061577a5419ede23dc40b0c5deb3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3dcdbed83ddff73b1e9e376c027984cb" id="r_a3dcdbed83ddff73b1e9e376c027984cb"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#a3dcdbed83ddff73b1e9e376c027984cb">templateValues</a></td></tr>
+<tr class="memdesc:a3dcdbed83ddff73b1e9e376c027984cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The event's values in its template's order (<a class="el" href="structEvtxRecord.html#ae74f980877a73a12e79b03b7af3ed469">EvtxRecord::values</a>), for a message whose names do not line up.  <br /></td></tr>
+<tr class="separator:a3dcdbed83ddff73b1e9e376c027984cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e93f008db2a3f1c58f856bd3790ec0c" id="r_a1e93f008db2a3f1c58f856bd3790ec0c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#a1e93f008db2a3f1c58f856bd3790ec0c">messageProviderGuid</a></td></tr>
 <tr class="memdesc:a1e93f008db2a3f1c58f856bd3790ec0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">GUID of the provider.  <br /></td></tr>
 <tr class="separator:a1e93f008db2a3f1c58f856bd3790ec0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae162c75c881d050ece523e3866ffb904" id="r_ae162c75c881d050ece523e3866ffb904"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#ae162c75c881d050ece523e3866ffb904">processingError</a> = false</td></tr>
+<tr class="memdesc:ae162c75c881d050ece523e3866ffb904"><td class="mdescLeft">&#160;</td><td class="mdescRight">ProcessingErrorData: its values are the error's, the message gets none.  <br /></td></tr>
+<tr class="separator:ae162c75c881d050ece523e3866ffb904"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a405659b4ba212541bef65d7ba28227fd" id="r_a405659b4ba212541bef65d7ba28227fd"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvent.html#a405659b4ba212541bef65d7ba28227fd">messageEventId</a> = 0</td></tr>
 <tr class="memdesc:a405659b4ba212541bef65d7ba28227fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">identifier of the event  <br /></td></tr>
 <tr class="separator:a405659b4ba212541bef65d7ba28227fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -732,6 +738,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ae162c75c881d050ece523e3866ffb904" name="ae162c75c881d050ece523e3866ffb904"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae162c75c881d050ece523e3866ffb904">&#9670;&#160;</a></span>processingError</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Event::processingError = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>ProcessingErrorData: its values are the error's, the message gets none. </p>
+
+</div>
+</div>
 <a id="a66b061577a5419ede23dc40b0c5deb3e" name="a66b061577a5419ede23dc40b0c5deb3e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a66b061577a5419ede23dc40b0c5deb3e">&#9670;&#160;</a></span>rawNames</h2>
 
@@ -761,6 +783,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>Values of <code>EventData</code>, in order, as they fill the %1 %2 … marks of a message template.</p>
 <p>Kept apart from <code>evtEventData</code>, which has already laid them out with their names: getting them back out of the JSON would need accessors nobody else needs, to recover information one already had at hand. </p>
+
+</div>
+</div>
+<a id="a3dcdbed83ddff73b1e9e376c027984cb" name="a3dcdbed83ddff73b1e9e376c027984cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3dcdbed83ddff73b1e9e376c027984cb">&#9670;&#160;</a></span>templateValues</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::wstring&gt; Event::templateValues</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The event's values in its template's order (<a class="el" href="structEvtxRecord.html#ae74f980877a73a12e79b03b7af3ed469">EvtxRecord::values</a>), for a message whose names do not line up. </p>
 
 </div>
 </div>

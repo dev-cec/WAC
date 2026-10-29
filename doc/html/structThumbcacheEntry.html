@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -111,15 +111,18 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:ab764c3a9dabdc463332aef5b9ca4364f"><td class="mdescLeft">&#160;</td><td class="mdescRight">position of the entry in the file  <br /></td></tr>
 <tr class="separator:ab764c3a9dabdc463332aef5b9ca4364f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a704d375dde5dff251014c57b60a718c7" id="r_a704d375dde5dff251014c57b60a718c7"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheEntry.html#a704d375dde5dff251014c57b60a718c7">hash</a> = 0</td></tr>
-<tr class="memdesc:a704d375dde5dff251014c57b60a718c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">the file's System.ThumbnailCacheId  <br /></td></tr>
+<tr class="memdesc:a704d375dde5dff251014c57b60a718c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">the entry's key: the file's System.ThumbnailCacheId from Windows 7 on (see thumbnailCacheId)  <br /></td></tr>
 <tr class="separator:a704d375dde5dff251014c57b60a718c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c17220ff09c48aee80816f5f626272b" id="r_a5c17220ff09c48aee80816f5f626272b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheEntry.html#a5c17220ff09c48aee80816f5f626272b">identifier</a></td></tr>
 <tr class="memdesc:a5c17220ff09c48aee80816f5f626272b"><td class="mdescLeft">&#160;</td><td class="mdescRight">the hash in hexadecimal, or the shell name of what is shown  <br /></td></tr>
 <tr class="separator:a5c17220ff09c48aee80816f5f626272b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a068fe0d21b617eaa747f727704870172" id="r_a068fe0d21b617eaa747f727704870172"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheEntry.html#a068fe0d21b617eaa747f727704870172">extension</a></td></tr>
+<tr class="memdesc:a068fe0d21b617eaa747f727704870172"><td class="mdescLeft">&#160;</td><td class="mdescRight">the source file's extension ("jpg"), on Vista only  <br /></td></tr>
+<tr class="separator:a068fe0d21b617eaa747f727704870172"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab83f1dd9ac3190fbcf3b5cdbb693efc7" id="r_ab83f1dd9ac3190fbcf3b5cdbb693efc7"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheEntry.html#ab83f1dd9ac3190fbcf3b5cdbb693efc7">width</a> = 0</td></tr>
 <tr class="separator:ab83f1dd9ac3190fbcf3b5cdbb693efc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af030182f4e2ba7233e70f7c3c350df56" id="r_af030182f4e2ba7233e70f7c3c350df56"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheEntry.html#af030182f4e2ba7233e70f7c3c350df56">height</a> = 0</td></tr>
-<tr class="memdesc:af030182f4e2ba7233e70f7c3c350df56"><td class="mdescLeft">&#160;</td><td class="mdescRight">size of the image, in pixels  <br /></td></tr>
+<tr class="memdesc:af030182f4e2ba7233e70f7c3c350df56"><td class="mdescLeft">&#160;</td><td class="mdescRight">size of the image, in pixels; 0 on Windows 7, whose entry has none  <br /></td></tr>
 <tr class="separator:af030182f4e2ba7233e70f7c3c350df56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada7434a063aade9f4419428b15a70d75" id="r_ada7434a063aade9f4419428b15a70d75"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheEntry.html#ada7434a063aade9f4419428b15a70d75">dataOffset</a> = 0</td></tr>
 <tr class="memdesc:ada7434a063aade9f4419428b15a70d75"><td class="mdescLeft">&#160;</td><td class="mdescRight">position of the image in the file  <br /></td></tr>
@@ -133,6 +136,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a10be732ae4d2e4bd8508c01068e1678b" id="r_a10be732ae4d2e4bd8508c01068e1678b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheEntry.html#a10be732ae4d2e4bd8508c01068e1678b">dataChecksumValid</a> = false</td></tr>
 <tr class="memdesc:a10be732ae4d2e4bd8508c01068e1678b"><td class="mdescLeft">&#160;</td><td class="mdescRight">the image is as Windows wrote it  <br /></td></tr>
 <tr class="separator:a10be732ae4d2e4bd8508c01068e1678b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d91e78efed40dcd3d86a6696978c19b" id="r_a3d91e78efed40dcd3d86a6696978c19b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structThumbcacheEntry.html#a3d91e78efed40dcd3d86a6696978c19b">remnant</a> = false</td></tr>
+<tr class="memdesc:a3d91e78efed40dcd3d86a6696978c19b"><td class="mdescLeft">&#160;</td><td class="mdescRight">found past the first free place: an earlier state's entry, its header checksum valid  <br /></td></tr>
+<tr class="separator:a3d91e78efed40dcd3d86a6696978c19b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One entry of a cache file. </p>
@@ -185,6 +191,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a068fe0d21b617eaa747f727704870172" name="a068fe0d21b617eaa747f727704870172"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a068fe0d21b617eaa747f727704870172">&#9670;&#160;</a></span>extension</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring ThumbcacheEntry::extension</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the source file's extension ("jpg"), on Vista only </p>
+
+</div>
+</div>
 <a id="a704d375dde5dff251014c57b60a718c7" name="a704d375dde5dff251014c57b60a718c7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a704d375dde5dff251014c57b60a718c7">&#9670;&#160;</a></span>hash</h2>
 
@@ -197,7 +219,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>the file's System.ThumbnailCacheId </p>
+<p>the entry's key: the file's System.ThumbnailCacheId from Windows 7 on (see thumbnailCacheId) </p>
 
 </div>
 </div>
@@ -229,7 +251,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>size of the image, in pixels </p>
+<p>size of the image, in pixels; 0 on Windows 7, whose entry has none </p>
 
 </div>
 </div>
@@ -262,6 +284,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>position of the entry in the file </p>
+
+</div>
+</div>
+<a id="a3d91e78efed40dcd3d86a6696978c19b" name="a3d91e78efed40dcd3d86a6696978c19b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d91e78efed40dcd3d86a6696978c19b">&#9670;&#160;</a></span>remnant</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ThumbcacheEntry::remnant = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>found past the first free place: an earlier state's entry, its header checksum valid </p>
 
 </div>
 </div>

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -123,21 +123,12 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ad24e8a9379efa06c8cf3f898ee9df61e" id="r_ad24e8a9379efa06c8cf3f898ee9df61e"><td class="memItemLeft" align="right" valign="top">unsigned short int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestinationCategory.html#ad24e8a9379efa06c8cf3f898ee9df61e">nameSize</a> = 0</td></tr>
-<tr class="memdesc:ad24e8a9379efa06c8cf3f898ee9df61e"><td class="mdescLeft">&#160;</td><td class="mdescRight">length of the category's name, as declared  <br /></td></tr>
-<tr class="separator:ad24e8a9379efa06c8cf3f898ee9df61e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ed876b503cffcbcc7a1f2de50c6b3ca" id="r_a6ed876b503cffcbcc7a1f2de50c6b3ca"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestinationCategory.html#a6ed876b503cffcbcc7a1f2de50c6b3ca">name</a> = L&quot;&quot;</td></tr>
-<tr class="memdesc:a6ed876b503cffcbcc7a1f2de50c6b3ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">name of the category, in the application's own words  <br /></td></tr>
-<tr class="separator:a6ed876b503cffcbcc7a1f2de50c6b3ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a2b51aa2ce01db7376e08939fda8d61" id="r_a0a2b51aa2ce01db7376e08939fda8d61"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestinationCategory.html#a0a2b51aa2ce01db7376e08939fda8d61">nbentries</a> = 0</td></tr>
-<tr class="memdesc:a0a2b51aa2ce01db7376e08939fda8d61"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of entries the category declares  <br /></td></tr>
-<tr class="separator:a0a2b51aa2ce01db7376e08939fda8d61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51444583e9d789fa2a05212424f2c314" id="r_a51444583e9d789fa2a05212424f2c314"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structRecentDoc.html">RecentDoc</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCustomDestinationCategory.html#a51444583e9d789fa2a05212424f2c314">recentDocs</a></td></tr>
 <tr class="memdesc:a51444583e9d789fa2a05212424f2c314"><td class="mdescLeft">&#160;</td><td class="mdescRight">its entries, each a complete shortcut  <br /></td></tr>
 <tr class="separator:a51444583e9d789fa2a05212424f2c314"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>One category of a custom jump list, as the application names it. </p>
+<div class="textblock"><p>The shortcuts of a custom jump list, all categories together. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ac2cd75cd2cb290e3263ac3cc932cdc23" name="ac2cd75cd2cb290e3263ac3cc932cdc23"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac2cd75cd2cb290e3263ac3cc932cdc23">&#9670;&#160;</a></span>CustomDestinationCategory() <span class="overload">[1/2]</span></h2>
@@ -288,54 +279,6 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a6ed876b503cffcbcc7a1f2de50c6b3ca" name="a6ed876b503cffcbcc7a1f2de50c6b3ca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ed876b503cffcbcc7a1f2de50c6b3ca">&#9670;&#160;</a></span>name</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring CustomDestinationCategory::name = L&quot;&quot;</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>name of the category, in the application's own words </p>
-
-</div>
-</div>
-<a id="ad24e8a9379efa06c8cf3f898ee9df61e" name="ad24e8a9379efa06c8cf3f898ee9df61e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad24e8a9379efa06c8cf3f898ee9df61e">&#9670;&#160;</a></span>nameSize</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned short int CustomDestinationCategory::nameSize = 0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>length of the category's name, as declared </p>
-
-</div>
-</div>
-<a id="a0a2b51aa2ce01db7376e08939fda8d61" name="a0a2b51aa2ce01db7376e08939fda8d61"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a2b51aa2ce01db7376e08939fda8d61">&#9670;&#160;</a></span>nbentries</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned int CustomDestinationCategory::nbentries = 0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>number of entries the category declares </p>
-
-</div>
-</div>
 <a id="a51444583e9d789fa2a05212424f2c314" name="a51444583e9d789fa2a05212424f2c314"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a51444583e9d789fa2a05212424f2c314">&#9670;&#160;</a></span>recentDocs</h2>
 

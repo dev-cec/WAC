@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -152,7 +152,7 @@ Functions</h2></td></tr>
 <div class="textblock"><p>Microsoft Defender's detection history and quarantine: <code>\ProgramData\Microsoft\Windows Defender\Scans\History\Service\DetectionHistory</code> and <code>…\Windows Defender\Quarantine</code>. </p>
 <p>WHAT THEY PROVE. One DetectionHistory file per detection: the threat, the file or key it was found in, the process that touched it, the account, and when. It outlives the event log: a detection whose events were cleared is still there. The quarantine keeps what Defender removed — the file's original path, its dates and attributes, and its content.</p>
 <p>THE DETECTIONHISTORY FORMAT, undocumented, established on Defender 4.18.26080 (Magic.Version 1.2) against MSFT_MpThreatDetection on two detections that differ: a sequence of fields, each "size (4 bytes), type
-(4 bytes), value", aligned on 8 bytes. Types 0x06 a 32-bit number, 0x08 a 64-bit one, 0x0A a FILETIME, 0x15 a UTF-16 string, 0x1E a GUID, 0x28 a bag of NAMED properties (ThreatTrackingSha1, …ThreatTrackingStartTime…). Only the fields whose position the reference confirmed are named; every other one is given as read — offset, type, value — without a meaning made up. Two fields that both follow DetectionSourceTypeID, two dates that both equal RemediationTime, stay unnamed for that reason.</p>
+(4 bytes), value", aligned on 8 bytes. Types 0x06 a 32-bit number, 0x08 a 64-bit one, 0x0A a FILETIME, 0x15 a UTF-16 string, 0x1E a GUID, 0x28 a bag of NAMED properties (ThreatTrackingSha1, …ThreatTrackingStartTime…). Only the fields whose position the reference confirmed are named; every other one is given as read — offset, type, value — without a meaning made up. Two fields that both follow DetectionSourceTypeID, two dates that both equal RemediationTime, stay unnamed for that reason. Defender of Windows 8.1 writes the same fields without any Magic.Version marker — the threat's name comes right after the detection's GUID, a resource is its type and path alone —, established the same way against MSFT_MpThreat and MSFT_MpThreatDetection on two detections.</p>
 <p>THE QUARANTINE, established the same way against a file of known dates. EntriesGUID} describes a quarantine: three parts, each encrypted with RC4 under a fixed key found in mpengine.dll (published: ERNW, "quarantine-formats"; N. Knežević, "defender-dump"). ResourceData\xx&lt;SHA-1&gt; holds the removed file, encrypted the same way. The exhibits are copied AS THEY ARE, encrypted: nothing malicious is written in clear, on the collection medium or on the analysis workstation (user decision 2026-09-30). The content is decrypted in memory only, for its size and fingerprints. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="af9cdd2deb7bbd4870b160335d3288d0d" name="af9cdd2deb7bbd4870b160335d3288d0d"></a>

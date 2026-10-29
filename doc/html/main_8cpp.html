@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -135,11 +135,17 @@ $(document).ready(function(){initNavTree('main_8cpp.html',''); initResizable(); 
 <code>#include &quot;<a class="el" href="mft_8h_source.html">mft.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="usn__journal_8h_source.html">usn_journal.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="powershell__history_8h_source.html">powershell_history.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="powershell__profiles_8h_source.html">powershell_profiles.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="deleted__files_8h_source.html">deleted_files.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="activities__cache_8h_source.html">activities_cache.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="search__index_8h_source.html">search_index.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rdp__client_8h_source.html">rdp_client.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="thumbcache_8h_source.html">thumbcache.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="emails_8h_source.html">emails.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="sysmon_8h_source.html">sysmon.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="firewall__log_8h_source.html">firewall_log.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="intune__logs_8h_source.html">intune_logs.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="cloud__identity_8h_source.html">cloud_identity.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rdp__server_8h_source.html">rdp_server.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="setupapi__log_8h_source.html">setupapi_log.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="recycle__bin_8h_source.html">recycle_bin.h</a>&quot;</code><br />
@@ -150,6 +156,8 @@ $(document).ready(function(){initNavTree('main_8cpp.html',''); initResizable(); 
 <code>#include &quot;<a class="el" href="srum_8h_source.html">srum.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="bits__jobs_8h_source.html">bits_jobs.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="fat__volumes_8h_source.html">fat_volumes.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="boot__records_8h_source.html">boot_records.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="shadow__copy__listing_8h_source.html">shadow_copy_listing.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="defender__log_8h_source.html">defender_log.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="startup__folders_8h_source.html">startup_folders.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="zone__identifiers_8h_source.html">zone_identifiers.h</a>&quot;</code><br />
@@ -181,6 +189,10 @@ $(document).ready(function(){initNavTree('main_8cpp.html',''); initResizable(); 
 <code>#include &quot;<a class="el" href="trust__update_8h_source.html">trust_update.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="trust__set_8h_source.html">trust_set.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="config_8h_source.html">config.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="live__snapshot_8h_source.html">live_snapshot.h</a>&quot;</code><br />
+<code>#include &lt;unordered_set&gt;</code><br />
+<code>#include &lt;fstream&gt;</code><br />
+<code>#include &lt;sstream&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -191,10 +203,16 @@ Functions</h2></td></tr>
 <tr class="separator:adf0c2410a6a37c230e8d9aa2b2dbbd83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6fa7f1d05238966f7cd1751cf2a70d8a" id="r_a6fa7f1d05238966f7cd1751cf2a70d8a"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a6fa7f1d05238966f7cd1751cf2a70d8a">checkCollectionLocation</a> ()</td></tr>
 <tr class="separator:a6fa7f1d05238966f7cd1751cf2a70d8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4634e4f56368b7fa5cd9b8b75a96f5f" id="r_ad4634e4f56368b7fa5cd9b8b75a96f5f"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ad4634e4f56368b7fa5cd9b8b75a96f5f">shadowCopyTreesToWorking</a> ()</td></tr>
+<tr class="separator:ad4634e4f56368b7fa5cd9b8b75a96f5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e4df6ca58374098de76031e0f5de8c0" id="r_a3e4df6ca58374098de76031e0f5de8c0"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a3e4df6ca58374098de76031e0f5de8c0">prepareConversion</a> ()</td></tr>
 <tr class="separator:a3e4df6ca58374098de76031e0f5de8c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67bbc3b881262c0cf72741a0266efcbb" id="r_a67bbc3b881262c0cf72741a0266efcbb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a67bbc3b881262c0cf72741a0266efcbb">requested</a> (bool wanted, const char *file, <a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> label, const wchar_t *key)</td></tr>
 <tr class="separator:a67bbc3b881262c0cf72741a0266efcbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9608061026fdc57178c24546b4396b82" id="r_a9608061026fdc57178c24546b4396b82"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a9608061026fdc57178c24546b4396b82">applyArtefactCatalogue</a> ()</td></tr>
+<tr class="separator:a9608061026fdc57178c24546b4396b82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28002ee20501e507122ae92d8c9e2432" id="r_a28002ee20501e507122ae92d8c9e2432"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a28002ee20501e507122ae92d8c9e2432">reportUnread</a> (const char *file, const std::wstring &amp;artefact, const wchar_t *key, HRESULT hresult)</td></tr>
+<tr class="separator:a28002ee20501e507122ae92d8c9e2432"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1c9f0135d4c94f0e81bd30b2a7c82c8" id="r_ab1c9f0135d4c94f0e81bd30b2a7c82c8"><td class="memTemplParams" colspan="2">template&lt;class Collector &gt; </td></tr>
 <tr class="memitem:ab1c9f0135d4c94f0e81bd30b2a7c82c8"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ab1c9f0135d4c94f0e81bd30b2a7c82c8">convertArtefact</a> (bool wanted, std::initializer_list&lt; std::pair&lt; const char *, <a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> &gt; &gt; outputs, const wchar_t *key, <a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> step)</td></tr>
 <tr class="separator:ab1c9f0135d4c94f0e81bd30b2a7c82c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -219,10 +237,22 @@ Functions</h2></td></tr>
 <tr class="separator:a0256b719b5ad5be6f6d4a5172395fa46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a523d1e43e5b8b1d64df50286f9b4c5e1" id="r_a523d1e43e5b8b1d64df50286f9b4c5e1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a523d1e43e5b8b1d64df50286f9b4c5e1">convertNtfsMetadata</a> ()</td></tr>
 <tr class="separator:a523d1e43e5b8b1d64df50286f9b4c5e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b3bc6873ee8f0bfacfe85a2297d0e0b" id="r_a4b3bc6873ee8f0bfacfe85a2297d0e0b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a4b3bc6873ee8f0bfacfe85a2297d0e0b">readJsonFile</a> (const std::filesystem::path &amp;path)</td></tr>
+<tr class="separator:a4b3bc6873ee8f0bfacfe85a2297d0e0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa66dc169b97efdf98bb785ec20e080a1" id="r_aa66dc169b97efdf98bb785ec20e080a1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#aa66dc169b97efdf98bb785ec20e080a1">entryIdentity</a> (const <a class="el" href="classJson.html">Json</a> &amp;entry)</td></tr>
+<tr class="separator:aa66dc169b97efdf98bb785ec20e080a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77935dd9c527137a0547e653510b4b89" id="r_a77935dd9c527137a0547e653510b4b89"><td class="memTemplParams" colspan="2">template&lt;class Collector &gt; </td></tr>
+<tr class="memitem:a77935dd9c527137a0547e653510b4b89"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a77935dd9c527137a0547e653510b4b89">convertQuietly</a> (bool wanted)</td></tr>
+<tr class="separator:a77935dd9c527137a0547e653510b4b89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a339cf3c7654893f6b1e3291630837a59" id="r_a339cf3c7654893f6b1e3291630837a59"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a339cf3c7654893f6b1e3291630837a59">convertShadowCopies</a> ()</td></tr>
+<tr class="separator:a339cf3c7654893f6b1e3291630837a59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a177385e8857c5db1f20026a012c0c4ec" id="r_a177385e8857c5db1f20026a012c0c4ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a177385e8857c5db1f20026a012c0c4ec">convertArtefacts</a> (bool systemAvailable)</td></tr>
 <tr class="separator:a177385e8857c5db1f20026a012c0c4ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2dd60886620db621029aa7487053c6e2" id="r_a2dd60886620db621029aa7487053c6e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a2dd60886620db621029aa7487053c6e2">clearConsole</a> (HANDLE console)</td></tr>
 <tr class="separator:a2dd60886620db621029aa7487053c6e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af95d413610788be237442141636e1d42" id="r_af95d413610788be237442141636e1d42"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#af95d413610788be237442141636e1d42">restoreConsoleCodePage</a> ()</td></tr>
+<tr class="memdesc:af95d413610788be237442141636e1d42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gives the console back its output code page: registered with atexit.  <br /></td></tr>
+<tr class="separator:af95d413610788be237442141636e1d42"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1325efcce4a4b1b4ea52247f0a0a0c1" id="r_ae1325efcce4a4b1b4ea52247f0a0a0c1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#ae1325efcce4a4b1b4ea52247f0a0a0c1">wmain</a> (int argc, wchar_t *argv[])</td></tr>
 <tr class="separator:ae1325efcce4a4b1b4ea52247f0a0a0c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -231,10 +261,37 @@ Variables</h2></td></tr>
 <tr class="memitem:a0696b00a72abe9d549204f9b105514bc" id="r_a0696b00a72abe9d549204f9b105514bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structAppliConf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a0696b00a72abe9d549204f9b105514bc">conf</a></td></tr>
 <tr class="memdesc:a0696b00a72abe9d549204f9b105514bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">the application's configuration, shared by every collector  <br /></td></tr>
 <tr class="separator:a0696b00a72abe9d549204f9b105514bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3127912484cc30a93f48b898f0774c55" id="r_a3127912484cc30a93f48b898f0774c55"><td class="memItemLeft" align="right" valign="top">const unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a3127912484cc30a93f48b898f0774c55">VALIDATED_SINCE_BUILD</a> = 10240</td></tr>
+<tr class="memdesc:a3127912484cc30a93f48b898f0774c55"><td class="mdescLeft">&#160;</td><td class="mdescRight">First build of Windows 10: the oldest version the whole test cycle validates WAC on; an older one is collected, and said so.  <br /></td></tr>
+<tr class="separator:a3127912484cc30a93f48b898f0774c55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc439e9282300da7a0823f2e5cf62b9b" id="r_afc439e9282300da7a0823f2e5cf62b9b"><td class="memItemLeft" align="right" valign="top">std::unordered_set&lt; uint64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#afc439e9282300da7a0823f2e5cf62b9b">g_volumeEvents</a></td></tr>
+<tr class="separator:afc439e9282300da7a0823f2e5cf62b9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7469ddfe4b7e187a905b6ea5d3bf4067" id="r_a7469ddfe4b7e187a905b6ea5d3bf4067"><td class="memItemLeft" align="right" valign="top">UINT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a7469ddfe4b7e187a905b6ea5d3bf4067">g_consoleCodePage</a> = 0</td></tr>
+<tr class="memdesc:a7469ddfe4b7e187a905b6ea5d3bf4067"><td class="mdescLeft">&#160;</td><td class="mdescRight">The console's output code page when WAC started (restoreConsoleCodePage).  <br /></td></tr>
+<tr class="separator:a7469ddfe4b7e187a905b6ea5d3bf4067"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Entry point: parses the command line, then runs the collection phases in order — prerequisites, live artefacts, raw extraction, registry, files, event logs, sealing of the exhibit store, investigation log. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a9608061026fdc57178c24546b4396b82" name="a9608061026fdc57178c24546b4396b82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9608061026fdc57178c24546b4396b82">&#9670;&#160;</a></span>applyArtefactCatalogue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void applyArtefactCatalogue </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>THE GUARD BEFORE ANY COLLECTION (backlog B-039). Reads the version of the examined Windows in its SOFTWARE hive, just opened, and applies the table of the artefacts (<a class="el" href="artefact__catalogue_8h.html" title="THE table of the artefacts by version of Windows: where each one exists, where it lies and in which f...">artefact_catalogue.h</a>): an artefact asked for that this version does not have is switched off — neither launched nor counted as a failure — and remembered, so that its file says "absent from this
+version". One whose form on this version WAC has no decoder for (undecodedOn) is collected as usual, and at the conversion declared "unsupported format" instead of being read with another version's decoder. A version newer than the table is treated as the last one known, and said so; an unreadable one holds nothing back. Announced on the console and recorded in the investigation log. </p>
+
+</div>
+</div>
 <a id="a6fa7f1d05238966f7cd1751cf2a70d8a" name="a6fa7f1d05238966f7cd1751cf2a70d8a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6fa7f1d05238966f7cd1751cf2a70d8a">&#9670;&#160;</a></span>checkCollectionLocation()</h2>
 
@@ -434,7 +491,7 @@ template&lt;class Collector &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts one artefact read from the working copy — its files or the hives it lives in: getData, then its JSON files — the same sequence for each of them. An artefact that could not be read says so in each of its files (writeNotCollected); one not asked for, likewise (requested). </p><dl class="tparams"><dt>Template Parameters</dt><dd>
+<p>Converts one artefact read from the working copy — its files or the hives it lives in: getData, then its JSON files — the same sequence for each of them. An artefact that could not be read says so in each of its files (reportUnread); one not asked for, likewise (requested). </p><dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">Collector</td><td>the artefact's class: getData(), toJson(), clear() </td></tr>
   </table>
@@ -491,6 +548,86 @@ template&lt;class Collector &gt; </div>
       </table>
 </div><div class="memdoc">
 <p>The $MFT, the change journal and the Zone.Identifier streams of every fixed NTFS volume. Each volume's $MFT is loaded once for the three: the journal names its files through it, and the streams are in its records. Every volume goes into the same mft.json and usn_journal.json, each record carrying its volume — record numbers only mean something within theirs. An artefact is "not collected" only if no volume gave it. </p>
+
+</div>
+</div>
+<a id="a77935dd9c527137a0547e653510b4b89" name="a77935dd9c527137a0547e653510b4b89"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77935dd9c527137a0547e653510b4b89">&#9670;&#160;</a></span>convertQuietly()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class Collector &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void convertQuietly </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>wanted</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Converts a registry artefact from the hives the configuration points to, without its console step: a shadow copy's conversion runs a score of them per copy, which the console does not need to list. </p><dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">Collector</td><td>the artefact's class </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">wanted</td><td>the configuration's switch </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a339cf3c7654893f6b1e3291630837a59" name="a339cf3c7654893f6b1e3291630837a59"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a339cf3c7654893f6b1e3291630837a59">&#9670;&#160;</a></span>convertShadowCopies()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void convertShadowCopies </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>What the shadow copies keep and the volume no longer holds (B-014).</p>
+<p>WHY NOT EVERYTHING. A copy converted whole repeats, nearly identical, the thousands of entries of the volume's conversion, once per copy: huge, and what matters drowned. What a copy brings is what was there THEN and is gone NOW — what an intruder erases. Hence two files:</p><ul>
+<li><code>shadow_copy_events.json</code>: the events of a copy's logs that the volume's logs no longer hold (a cleared Security log, records overwritten by rotation), each once, with the newest copy that kept it;</li>
+<li><code>shadow_copy_registry.json</code>: the entries of the registry artefacts converted from a copy's hives that the volume's conversion does not give (a <a class="el" href="structRun.html">Run</a> value, a service, an account deleted since; a ShimCache, <a class="el" href="structAmcache.html">Amcache</a> or BAM entry of a tool deleted since), compared on their identity (entryIdentity), each once, with its artefact and the newest copy that kept it. The copies are taken newest first. A copy's tree, in the working directory, was completed with the files it shares with a newer version before the hives were repaired (shadowCopyTreesToWorking). The registry artefacts are converted into a folder apart, compared, and that folder removed.</li>
+</ul>
+<p>The copies of the system volume only: they hold the system's hives and logs. </p>
+
+</div>
+</div>
+<a id="aa66dc169b97efdf98bb785ec20e080a1" name="aa66dc169b97efdf98bb785ec20e080a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa66dc169b97efdf98bb785ec20e080a1">&#9670;&#160;</a></span>entryIdentity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring entryIdentity </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classJson.html">Json</a> &amp;&#160;</td>
+          <td class="paramname"><em>entry</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>What identifies a registry entry across time: the entry without its fields that move with use alone — dates, counters, positions in a list (<a class="el" href="structUserAssist.html">UserAssist</a>'s FocusCount, an account's LogonCount, a key's KeyLastWrite, an MRU position). Compared with them, every entry a user touched since the copy came out "gone" (measured on Windows 7: most of the list); without them, what is listed is gone indeed, or changed in what it says — a <a class="el" href="structRun.html">Run</a> value pointing elsewhere, a member taken out of a group. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">entry</td><td>the entry, as its artefact gives it </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>its identity, as text </dd></dl>
 
 </div>
 </div>
@@ -601,6 +738,81 @@ template&lt;class Collector &gt; </div>
 
 </div>
 </div>
+<a id="a4b3bc6873ee8f0bfacfe85a2297d0e0b" name="a4b3bc6873ee8f0bfacfe85a2297d0e0b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4b3bc6873ee8f0bfacfe85a2297d0e0b">&#9670;&#160;</a></span>readJsonFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classJson.html">Json</a> readJsonFile </td>
+          <td>(</td>
+          <td class="paramtype">const std::filesystem::path &amp;&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A JSON file of the output, read back. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>the file </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>its value, or null if it is absent or not JSON </dd></dl>
+
+</div>
+</div>
+<a id="a28002ee20501e507122ae92d8c9e2432" name="a28002ee20501e507122ae92d8c9e2432"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a28002ee20501e507122ae92d8c9e2432">&#9670;&#160;</a></span>reportUnread()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void reportUnread </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>artefact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const wchar_t *&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">HRESULT&#160;</td>
+          <td class="paramname"><em>hresult</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>THE GUARD ON THE MACHINE'S SIDE (backlog B-039). Records an artefact that could not be read. When its source was simply not there, and the examined version of Windows always has one (expectedOn), it is "expected but
+missing": said on the console, recorded in the investigation log, and its file carries that status — the absence is a finding, not a failed reading. Any other failure stays a failed reading (writeNotCollected). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file</td><td>the artefact's JSON file </td></tr>
+    <tr><td class="paramname">artefact</td><td>its label, in English </td></tr>
+    <tr><td class="paramname">key</td><td>its configuration key </td></tr>
+    <tr><td class="paramname">hresult</td><td>the collector's result </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a67bbc3b881262c0cf72741a0266efcbb" name="a67bbc3b881262c0cf72741a0266efcbb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a67bbc3b881262c0cf72741a0266efcbb">&#9670;&#160;</a></span>requested()</h2>
 
@@ -652,6 +864,25 @@ template&lt;class Collector &gt; </div>
 
 </div>
 </div>
+<a id="af95d413610788be237442141636e1d42" name="af95d413610788be237442141636e1d42"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af95d413610788be237442141636e1d42">&#9670;&#160;</a></span>restoreConsoleCodePage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void restoreConsoleCodePage </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gives the console back its output code page: registered with atexit. </p>
+
+</div>
+</div>
 <a id="ae7ed5c323d3bb4779eebecfb18a1ff68" name="ae7ed5c323d3bb4779eebecfb18a1ff68"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae7ed5c323d3bb4779eebecfb18a1ff68">&#9670;&#160;</a></span>sealExhibitStore()</h2>
 
@@ -667,6 +898,25 @@ template&lt;class Collector &gt; </div>
       </table>
 </div><div class="memdoc">
 <p>Writes the manifest and its seal: the last operation on the exhibit store (see ExhibitStoreWriteManifest). </p>
+
+</div>
+</div>
+<a id="ad4634e4f56368b7fa5cd9b8b75a96f5f" name="ad4634e4f56368b7fa5cd9b8b75a96f5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4634e4f56368b7fa5cd9b8b75a96f5f">&#9670;&#160;</a></span>shadowCopyTreesToWorking()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t shadowCopyTreesToWorking </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Completes each shadow copy's tree in the working directory with the files it shares with a newer version — not copied twice at collection, the manifest pointing them to that version's exhibit (SharedExhibit).</p>
+<p>WHY HERE, before the hives are repaired. A shared file is the RAW content of the other version: copied after the repair, a copy's SOFTWARE took the volume's base replayed with the volume's logs, and the copy's own logs, stored apart, were never replayed — a <a class="el" href="structRun.html">Run</a> value the copy kept was lost (measured on Windows 11). Copied here, from the working copy just made, each copy's hive is repaired with its own logs like any other. </p><dl class="section return"><dt>Returns</dt><dd>the number of files put in the copies' trees </dd></dl>
 
 </div>
 </div>
@@ -714,13 +964,6 @@ template&lt;class Collector &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p><a class="el" href="structRuns.html">Runs</a> a collection. wmain: the runtime hands the arguments in UTF-16, as Windows holds them — CommandLineToArgvW (shell32) is no longer needed for that. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">argc,argv</td><td>the command line (see <a class="el" href="main_8cpp.html#aec315d77f5c38417289a0e311d2a9d31" title="Prints the command-line help.">showHelp()</a>) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>0 once the collection has run to the end, an error code otherwise </dd></dl>
 
 </div>
 </div>
@@ -739,6 +982,60 @@ template&lt;class Collector &gt; </div>
 
 <p>the application's configuration, shared by every collector </p>
 <p>the application's configuration, shared by every collector </p>
+
+</div>
+</div>
+<a id="a7469ddfe4b7e187a905b6ea5d3bf4067" name="a7469ddfe4b7e187a905b6ea5d3bf4067"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7469ddfe4b7e187a905b6ea5d3bf4067">&#9670;&#160;</a></span>g_consoleCodePage</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">UINT g_consoleCodePage = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The console's output code page when WAC started (restoreConsoleCodePage). </p>
+<p><a class="el" href="structRuns.html">Runs</a> a collection. wmain: the runtime hands the arguments in UTF-16, as Windows holds them — CommandLineToArgvW (shell32) is no longer needed for that. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">argc,argv</td><td>the command line (see <a class="el" href="main_8cpp.html#aec315d77f5c38417289a0e311d2a9d31" title="Prints the command-line help.">showHelp()</a>) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 once the collection has run to the end, an error code otherwise </dd></dl>
+
+</div>
+</div>
+<a id="afc439e9282300da7a0823f2e5cf62b9b" name="afc439e9282300da7a0823f2e5cf62b9b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc439e9282300da7a0823f2e5cf62b9b">&#9670;&#160;</a></span>g_volumeEvents</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::unordered_set&lt;uint64_t&gt; g_volumeEvents</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The events of the volume as it is now, by digest (<a class="el" href="structEvents.html#a8a140e1dc54faca8733d8ed0d76f8719">Events::seen</a>): filled by the conversion of the logs, read by convertShadowCopies. </p>
+
+</div>
+</div>
+<a id="a3127912484cc30a93f48b898f0774c55" name="a3127912484cc30a93f48b898f0774c55"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3127912484cc30a93f48b898f0774c55">&#9670;&#160;</a></span>VALIDATED_SINCE_BUILD</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const unsigned VALIDATED_SINCE_BUILD = 10240</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>First build of Windows 10: the oldest version the whole test cycle validates WAC on; an older one is collected, and said so. </p>
 
 </div>
 </div>

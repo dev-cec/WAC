@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -130,6 +130,8 @@ Functions</h2></td></tr>
 <div class="textblock"><p>Device installation log: <code>\\Windows\\INF\\setupapi.dev.log</code>. </p>
 <p>WHAT THE ARTEFACT PROVES. Windows writes a section to this log every time it installs a device — the first time a USB key, a phone or a disk is plugged in — with the device's identifier (vendor, product, serial number) and the instant. It complements USBSTOR: the registry keeps the device, the log dates its FIRST connection, and keeps it when the key was cleaned. Windows rotates it into <code>setupapi.dev.&lt;date&gt;.log</code>: both are read.</p>
 <p>A SECTION: &gt;&gt;&gt; [Device Install (Hardware initiated) - USB\VID_0781&amp;PID_5567\4C53…] &gt;&gt;&gt; Section start 2023/05/12 10:11:12.345 … &lt;&lt;&lt; Section end 2023/05/12 10:11:13.456 &lt;&lt;&lt; [Exit status: SUCCESS]</p>
+<p>WINDOWS XP writes <code>\\Windows\\setupapi.log</code> otherwise (measured on the XP VM): a "[SetupAPI Log]" header, then a section per line "[2026/10/13 17:38:19 280.16]" (start, process, sequence) and its lines "#&lt;code&gt; &lt;message&gt;" — "#-199 Executing …", "#I121 Device install of
+"&lt;instance&gt;" finished successfully.", "#E… &lt;error&gt;". The operation is the first message, the subject the instance #I121 names, the outcome SUCCESS by #I121 or the first error; there is no end date.</p>
 <p>THE DATES are in the LOCAL time of the examined machine, with no offset written: they are converted with its time zone (suspectLocalToUtc), as every local date of WAC. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="ae7610cb938b767c77c460dbbfe848d9d" name="ae7610cb938b767c77c460dbbfe848d9d"></a>

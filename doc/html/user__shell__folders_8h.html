@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -123,22 +123,22 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:ae767d6c3362f0991bb710ae164525d52" id="r_ae767d6c3362f0991bb710ae164525d52"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user__shell__folders_8h.html#ae767d6c3362f0991bb710ae164525d52">resolveUserShellFolder</a> (const std::wstring &amp;raw, const std::wstring &amp;profilePath)</td></tr>
 <tr class="separator:ae767d6c3362f0991bb710ae164525d52"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64ebad51e637f67ec1744099897dc7bb" id="r_a64ebad51e637f67ec1744099897dc7bb"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user__shell__folders_8h.html#a64ebad51e637f67ec1744099897dc7bb">redirectedDesktop</a> (const std::wstring &amp;sid, const std::wstring &amp;profilePath)</td></tr>
-<tr class="separator:a64ebad51e637f67ec1744099897dc7bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3c961c1e7c3072bca3c964f8f7b9424" id="r_ae3c961c1e7c3072bca3c964f8f7b9424"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="user__shell__folders_8h.html#ae3c961c1e7c3072bca3c964f8f7b9424">redirectedShellFolder</a> (const std::wstring &amp;sid, const std::wstring &amp;profilePath, const std::wstring &amp;name, const std::wstring &amp;defaultFolder)</td></tr>
+<tr class="separator:ae3c961c1e7c3072bca3c964f8f7b9424"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Each user's shell folders (<a class="el" href="structUser.html">User</a> Shell Folders): where the desktop, the documents, the downloads really are. </p>
 <p>WHAT THE ARTEFACT PROVES. Explorer finds a user's desktop, documents, downloads and AppData through <code>Software\\Microsoft\\Windows\\CurrentVersion\\ Explorer\\<a class="el" href="structUser.html">User</a> Shell Folders</code> of the user's NTUSER.DAT, not at a fixed place. OneDrive moves the desktop and the documents into <code>OneDrive\\</code>, a company redirects them to a share, a user puts them on D:. The key traces no activity, but it says WHERE to look for the user's files — and a desktop quietly redirected to a share is itself a trace; the key's last write dates the change.</p>
 <p>WAC FOLLOWS IT. The shortcuts of a desktop redirected to a local folder are collected there too (shortcuts.json), not only at <code>&lt;profile&gt;\\Desktop</code>. A folder on a share cannot be read raw: it is listed, not followed. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a64ebad51e637f67ec1744099897dc7bb" name="a64ebad51e637f67ec1744099897dc7bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a64ebad51e637f67ec1744099897dc7bb">&#9670;&#160;</a></span>redirectedDesktop()</h2>
+<a id="ae3c961c1e7c3072bca3c964f8f7b9424" name="ae3c961c1e7c3072bca3c964f8f7b9424"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3c961c1e7c3072bca3c964f8f7b9424">&#9670;&#160;</a></span>redirectedShellFolder()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::wstring redirectedDesktop </td>
+          <td class="memname">std::wstring redirectedShellFolder </td>
           <td>(</td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
           <td class="paramname"><em>sid</em>, </td>
@@ -147,7 +147,19 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::wstring &amp;&#160;</td>
-          <td class="paramname"><em>profilePath</em>&#160;</td>
+          <td class="paramname"><em>profilePath</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;&#160;</td>
+          <td class="paramname"><em>defaultFolder</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -156,14 +168,16 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Where a profile's desktop is, when it is not <code>&lt;profile&gt;\\Desktop</code>. Read in the working copy of the profile's NTUSER.DAT, once per profile. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Where a profile's shell folder is, when it is not its default one — a desktop or documents moved to OneDrive or another disk. Read in the working copy of the profile's NTUSER.DAT, once per profile and folder. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">sid</td><td>the profile's SID </td></tr>
     <tr><td class="paramname">profilePath</td><td>its absolute path </td></tr>
+    <tr><td class="paramname">name</td><td>the value of <a class="el" href="structUser.html">User</a> Shell Folders: L"Desktop", L"Personal"… </td></tr>
+    <tr><td class="paramname">defaultFolder</td><td>the folder's default place in the profile: L"Desktop", L"Documents"… </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the redirected desktop's local absolute path, or "" when the desktop is the default one, on a share, or the value cannot be read </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the redirected folder's local absolute path, or "" when it is the default one, on a share, or the value cannot be read </dd></dl>
 
 </div>
 </div>

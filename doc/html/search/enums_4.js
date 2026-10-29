@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['language_0',['Language',['../translations_8h.html#a315ca917ad583797f709ea477dd28705',1,'translations.h']]]
+  ['hexletters_0',['HexLetters',['../conversions_8h.html#a2d620cc94517351d3a467f847aa450ed',1,'conversions.h']]]
 ];

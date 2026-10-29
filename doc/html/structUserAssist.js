@@ -5,9 +5,11 @@ var structUserAssist =
     [ "toJson", "structUserAssist.html#a2bea266d0f06bce34a3a3765a269598b", null ],
     [ "Class", "structUserAssist.html#afa49227090ce0422a8ee62e67caa82e5", null ],
     [ "Count", "structUserAssist.html#a25f060e1fa0a1ad2b68a711fd6f56db5", null ],
+    [ "countKnown", "structUserAssist.html#a7c405786cbe2981af3685338d50185d7", null ],
     [ "FocusCount", "structUserAssist.html#a5ba8b3e449ec33c381c7f5db6403ea93", null ],
     [ "FocusTimeMs", "structUserAssist.html#aee34fa909378a40e4a9b10da56b8c11b", null ],
     [ "lastRunUtc", "structUserAssist.html#a2a04a92cffe7c9881f0eac6713adbde7", null ],
     [ "Name", "structUserAssist.html#a18873e5bb3412c2d67535bd436a42669", null ],
-    [ "Sid", "structUserAssist.html#a556b4c407330c0a0ce4c4886c8f8aa3f", null ]
+    [ "Sid", "structUserAssist.html#a556b4c407330c0a0ce4c4886c8f8aa3f", null ],
+    [ "windowsXp", "structUserAssist.html#ae7ce3d88f0cf0e83a6e13e9e525afae0", null ]
 ];

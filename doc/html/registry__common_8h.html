@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('registry__common_8h.html',''); initRes
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">registry_common.h File Reference</div></div>
@@ -114,6 +115,11 @@ $(document).ready(function(){initNavTree('registry__common_8h.html',''); initRes
 </div>
 <p><a href="registry__common_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSubkey.html">Subkey</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:a2abb077e169c7d2277a9b5f9341ae8a4" id="r_a2abb077e169c7d2277a9b5f9341ae8a4"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__common_8h.html#a2abb077e169c7d2277a9b5f9341ae8a4">NameValues</a> = std::vector&lt; std::pair&lt; std::wstring, std::wstring &gt; &gt;</td></tr>
@@ -124,12 +130,16 @@ Typedefs</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a1f8f4a91c0edba91faf44e55259233a4" id="r_a1f8f4a91c0edba91faf44e55259233a4"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__common_8h.html#a1f8f4a91c0edba91faf44e55259233a4">lastWrite</a> (ORHKEY key)</td></tr>
 <tr class="separator:a1f8f4a91c0edba91faf44e55259233a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0eff07cd338e6d0ad3dbf16e0a556ee7" id="r_a0eff07cd338e6d0ad3dbf16e0a556ee7"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structSubkey.html">Subkey</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__common_8h.html#a0eff07cd338e6d0ad3dbf16e0a556ee7">subkeysOf</a> (ORHKEY key)</td></tr>
+<tr class="separator:a0eff07cd338e6d0ad3dbf16e0a556ee7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e9857fbf857ad418b4ac90644267dbe" id="r_a4e9857fbf857ad418b4ac90644267dbe"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__common_8h.html#a4e9857fbf857ad418b4ac90644267dbe">subkeys</a> (ORHKEY root, const std::wstring &amp;path)</td></tr>
 <tr class="separator:a4e9857fbf857ad418b4ac90644267dbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c7e556814fad2fd0caf761d53835f89" id="r_a2c7e556814fad2fd0caf761d53835f89"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__common_8h.html#a2c7e556814fad2fd0caf761d53835f89">valueText</a> (DWORD type, const std::vector&lt; BYTE &gt; &amp;data)</td></tr>
 <tr class="separator:a2c7e556814fad2fd0caf761d53835f89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2162caf7e577d8da1c67fb0390a49bce" id="r_a2162caf7e577d8da1c67fb0390a49bce"><td class="memItemLeft" align="right" valign="top">unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__common_8h.html#a2162caf7e577d8da1c67fb0390a49bce">urlValueNumber</a> (const std::wstring &amp;name)</td></tr>
 <tr class="separator:a2162caf7e577d8da1c67fb0390a49bce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ed987cbb01607f6346c96fcec91dd20" id="r_a6ed987cbb01607f6346c96fcec91dd20"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__common_8h.html#a6ed987cbb01607f6346c96fcec91dd20">readAllValues</a> (ORHKEY key, std::vector&lt; std::pair&lt; std::wstring, <a class="el" href="classJson.html">Json</a> &gt; &gt; &amp;out)</td></tr>
+<tr class="separator:a6ed987cbb01607f6346c96fcec91dd20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acbeab4aef470b1f58a7fa5d6c6e2e5ad" id="r_acbeab4aef470b1f58a7fa5d6c6e2e5ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="registry__common_8h.html#acbeab4aef470b1f58a7fa5d6c6e2e5ad">pairs</a> (const <a class="el" href="registry__common_8h.html#a2abb077e169c7d2277a9b5f9341ae8a4">NameValues</a> &amp;values)</td></tr>
 <tr class="separator:acbeab4aef470b1f58a7fa5d6c6e2e5ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af37611af22eb6ce85ac228f2e08e37b3" id="r_af37611af22eb6ce85ac228f2e08e37b3"><td class="memTemplParams" colspan="2">template&lt;class Element &gt; </td></tr>
@@ -206,6 +216,41 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a6ed987cbb01607f6346c96fcec91dd20" name="a6ed987cbb01607f6346c96fcec91dd20"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ed987cbb01607f6346c96fcec91dd20">&#9670;&#160;</a></span>readAllValues()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void readAllValues </td>
+          <td>(</td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::pair&lt; std::wstring, <a class="el" href="classJson.html">Json</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramname"><em>out</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Every value of an open key, typed as the hive stores it, under its PascalCase name. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>the key </td></tr>
+    <tr><td class="paramname">out</td><td>receives the values </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a4e9857fbf857ad418b4ac90644267dbe" name="a4e9857fbf857ad418b4ac90644267dbe"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4e9857fbf857ad418b4ac90644267dbe">&#9670;&#160;</a></span>subkeys()</h2>
 
@@ -238,7 +283,32 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the names of the subkeys of <code>path</code>, empty if it cannot be opened </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the names of the subkeys of <code>path</code> (subkeysOf), empty if it cannot be opened </dd></dl>
+
+</div>
+</div>
+<a id="a0eff07cd338e6d0ad3dbf16e0a556ee7" name="a0eff07cd338e6d0ad3dbf16e0a556ee7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0eff07cd338e6d0ad3dbf16e0a556ee7">&#9670;&#160;</a></span>subkeysOf()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="structSubkey.html">Subkey</a> &gt; subkeysOf </td>
+          <td>(</td>
+          <td class="paramtype">ORHKEY&#160;</td>
+          <td class="paramname"><em>key</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>THE enumeration of a key's subkeys, every walk of WAC through it. Their number is asked first: a subkey that cannot be read (a damaged cell) is logged and skipped, not taken for the list's end — a loop that stopped at the first error dropped every later sibling (Uninstall programs, LSA secrets…) without a word; and a name longer than a fixed buffer is read whole (ERROR_MORE_DATA): one that did not fit left the previous name in the buffer, a service read twice and the long-named one hidden. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>an open key </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>its subkeys, in the hive's order; empty if it has none or its count cannot be read </dd></dl>
 
 </div>
 </div>

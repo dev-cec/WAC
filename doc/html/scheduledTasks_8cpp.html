@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -96,6 +96,8 @@ $(document).ready(function(){initNavTree('scheduledTasks_8cpp.html',''); initRes
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">scheduledTasks.cpp File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -103,12 +105,56 @@ $(document).ready(function(){initNavTree('scheduledTasks_8cpp.html',''); initRes
 <p>Offline reading of the scheduled tasks (see <a class="el" href="scheduledTasks_8h.html" title="Scheduled tasks, read OFFLINE: what the machine runs on its own.">scheduledTasks.h</a>).  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="scheduledTasks_8h_source.html">scheduledTasks.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="registry__common_8h_source.html">registry_common.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="xml__light_8h_source.html">xml_light.h</a>&quot;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
-</div><a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a2fcd3cc295bce50e8e2dfc7767bbb0f9" id="r_a2fcd3cc295bce50e8e2dfc7767bbb0f9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduledTasks_8cpp.html#a2fcd3cc295bce50e8e2dfc7767bbb0f9">parseJobFile</a> (const std::vector&lt; uint8_t &gt; &amp;b, <a class="el" href="structScheduledTask.html">ScheduledTask</a> &amp;task)</td></tr>
+<tr class="separator:a2fcd3cc295bce50e8e2dfc7767bbb0f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Offline reading of the scheduled tasks (see <a class="el" href="scheduledTasks_8h.html" title="Scheduled tasks, read OFFLINE: what the machine runs on its own.">scheduledTasks.h</a>). </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a2fcd3cc295bce50e8e2dfc7767bbb0f9" name="a2fcd3cc295bce50e8e2dfc7767bbb0f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2fcd3cc295bce50e8e2dfc7767bbb0f9">&#9670;&#160;</a></span>parseJobFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool parseJobFile </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structScheduledTask.html">ScheduledTask</a> &amp;&#160;</td>
+          <td class="paramname"><em>task</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads a .job file of Windows XP and Server 2003 into a task (see the file's header). Every count and offset is bounded by the file's size. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bytes</td><td>the file </td></tr>
+    <tr><td class="paramname">task</td><td>receives its program, author, comment, status, last run and triggers </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if the file is shorter than its fixed part or its strings </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

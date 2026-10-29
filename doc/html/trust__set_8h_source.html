@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -132,8 +132,8 @@ $(document).ready(function(){initNavTree('trust__set_8h_source.html',''); initRe
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>std::wstring <a class="code hl_function" href="trust__set_8h.html#a93cc9411491f8d67d44b8561b45329aa">DefaultTrustFolder</a>();</div>
 <div class="ttc" id="aauthenticode_8h_html"><div class="ttname"><a href="authenticode_8h.html">authenticode.h</a></div><div class="ttdoc">Microsoft authenticity of a binary, verified without any API.</div></div>
-<div class="ttc" id="astructRevocationLists_html"><div class="ttname"><a href="structRevocationLists.html">RevocationLists</a></div><div class="ttdef"><b>Definition</b> authenticode.h:275</div></div>
-<div class="ttc" id="astructTrustList_html"><div class="ttname"><a href="structTrustList.html">TrustList</a></div><div class="ttdef"><b>Definition</b> authenticode.h:389</div></div>
+<div class="ttc" id="astructRevocationLists_html"><div class="ttname"><a href="structRevocationLists.html">RevocationLists</a></div><div class="ttdef"><b>Definition</b> authenticode.h:279</div></div>
+<div class="ttc" id="astructTrustList_html"><div class="ttname"><a href="structTrustList.html">TrustList</a></div><div class="ttdef"><b>Definition</b> authenticode.h:393</div></div>
 <div class="ttc" id="astructTrustSet_html"><div class="ttname"><a href="structTrustSet.html">TrustSet</a></div><div class="ttdef"><b>Definition</b> trust_set.h:31</div></div>
 <div class="ttc" id="astructTrustSet_html_a0d6be506939503b0729dde8bc943962a"><div class="ttname"><a href="structTrustSet.html#a0d6be506939503b0729dde8bc943962a">TrustSet::revokedAuthorities</a></div><div class="ttdeci">std::set&lt; std::wstring &gt; revokedAuthorities</div><div class="ttdoc">SHA-256 of the authorities the CCADB says revoked.</div><div class="ttdef"><b>Definition</b> trust_set.h:44</div></div>
 <div class="ttc" id="astructTrustSet_html_a52d6c7ffad0a15beaef30418b1f90ed3"><div class="ttname"><a href="structTrustSet.html#a52d6c7ffad0a15beaef30418b1f90ed3">TrustSet::deniedSigners</a></div><div class="ttdeci">std::vector&lt; DeniedSigner &gt; deniedSigners</div><div class="ttdoc">the signers Microsoft's blocklist denies</div><div class="ttdef"><b>Definition</b> trust_set.h:42</div></div>
@@ -148,9 +148,9 @@ $(document).ready(function(){initNavTree('trust__set_8h_source.html',''); initRe
 <div class="ttc" id="astructTrustSet_html_adf24acbe530082ddd61174addd9eb6b7"><div class="ttname"><a href="structTrustSet.html#adf24acbe530082ddd61174addd9eb6b7">TrustSet::reason</a></div><div class="ttdeci">std::string reason</div><div class="ttdoc">why not usable: absent, or the check that failed</div><div class="ttdef"><b>Definition</b> trust_set.h:34</div></div>
 <div class="ttc" id="astructTrustSet_html_af134ff485ebd58c5befd17df3f2414b8"><div class="ttname"><a href="structTrustSet.html#af134ff485ebd58c5befd17df3f2414b8">TrustSet::driverListsMissing</a></div><div class="ttdeci">std::vector&lt; std::wstring &gt; driverListsMissing</div><div class="ttdoc">driver lists –update-trust could not obtain</div><div class="ttdef"><b>Definition</b> trust_set.h:43</div></div>
 <div class="ttc" id="astructTrustSet_html_af277c3e5a1af50011e87774eded30758"><div class="ttname"><a href="structTrustSet.html#af277c3e5a1af50011e87774eded30758">TrustSet::revocationLists</a></div><div class="ttdeci">RevocationLists revocationLists</div><div class="ttdoc">the CRLs, loaded; empty if the CCADB was not obtained</div><div class="ttdef"><b>Definition</b> trust_set.h:45</div></div>
-<div class="ttc" id="atrust__set_8h_html_a0671f7b7d5ccdd736852f1db1343680b"><div class="ttname"><a href="trust__set_8h.html#a0671f7b7d5ccdd736852f1db1343680b">CollectionTrustSet</a></div><div class="ttdeci">const TrustSet &amp; CollectionTrustSet()</div><div class="ttdef"><b>Definition</b> trust_set.cpp:121</div></div>
-<div class="ttc" id="atrust__set_8h_html_a612414ab9062cd99c685204c3c02ad4a"><div class="ttname"><a href="trust__set_8h.html#a612414ab9062cd99c685204c3c02ad4a">LoadTrustSet</a></div><div class="ttdeci">TrustSet LoadTrustSet(const std::wstring &amp;folder)</div><div class="ttdef"><b>Definition</b> trust_set.cpp:128</div></div>
-<div class="ttc" id="atrust__set_8h_html_a93cc9411491f8d67d44b8561b45329aa"><div class="ttname"><a href="trust__set_8h.html#a93cc9411491f8d67d44b8561b45329aa">DefaultTrustFolder</a></div><div class="ttdeci">std::wstring DefaultTrustFolder()</div><div class="ttdef"><b>Definition</b> trust_set.cpp:114</div></div>
+<div class="ttc" id="atrust__set_8h_html_a0671f7b7d5ccdd736852f1db1343680b"><div class="ttname"><a href="trust__set_8h.html#a0671f7b7d5ccdd736852f1db1343680b">CollectionTrustSet</a></div><div class="ttdeci">const TrustSet &amp; CollectionTrustSet()</div><div class="ttdef"><b>Definition</b> trust_set.cpp:122</div></div>
+<div class="ttc" id="atrust__set_8h_html_a612414ab9062cd99c685204c3c02ad4a"><div class="ttname"><a href="trust__set_8h.html#a612414ab9062cd99c685204c3c02ad4a">LoadTrustSet</a></div><div class="ttdeci">TrustSet LoadTrustSet(const std::wstring &amp;folder)</div><div class="ttdef"><b>Definition</b> trust_set.cpp:129</div></div>
+<div class="ttc" id="atrust__set_8h_html_a93cc9411491f8d67d44b8561b45329aa"><div class="ttname"><a href="trust__set_8h.html#a93cc9411491f8d67d44b8561b45329aa">DefaultTrustFolder</a></div><div class="ttdeci">std::wstring DefaultTrustFolder()</div><div class="ttdef"><b>Definition</b> trust_set.cpp:115</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

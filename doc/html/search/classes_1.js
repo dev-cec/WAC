@@ -34,5 +34,7 @@ var searchData=
   ['binarysummary_31',['BinarySummary',['../structBinarySummary.html',1,'']]],
   ['bitsfile_32',['BitsFile',['../structBitsFile.html',1,'']]],
   ['bitsjob_33',['BitsJob',['../structBitsJob.html',1,'']]],
-  ['bitsjobs_34',['BitsJobs',['../classBitsJobs.html',1,'']]]
+  ['bitsjobs_34',['BitsJobs',['../classBitsJobs.html',1,'']]],
+  ['bootpartition_35',['BootPartition',['../structBootPartition.html',1,'']]],
+  ['bootrecords_36',['BootRecords',['../classBootRecords.html',1,'']]]
 ];

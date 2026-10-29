@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -123,7 +123,7 @@ Variables</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Checks the WMI repository reader: a class, its ancestor and an instance built as the format lays them out, hostile variants, the name hash against a key of a real repository — and, given a repository folder, the subscriptions it holds. </p>
 <p>WHY THIS TEST. A class read one byte off still gives names and values — wrong ones: every value is found through offsets. Each case here has a known result; the hostile ones (a count that lies, a record cut short) must be refused, never read beyond the bytes given.</p>
-<p>Usage (runs under wine): cim_test.exe [Repository folder] </p>
+<p>Usage (runs under wine): cim_test.exe [Repository folder [xp]] </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="aa3a67a95d5205c37194aa17a9e4255e3" name="aa3a67a95d5205c37194aa17a9e4255e3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa3a67a95d5205c37194aa17a9e4255e3">&#9670;&#160;</a></span>wmain()</h2>

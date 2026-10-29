@@ -8,6 +8,8 @@ var structAutomaticDestination =
     [ "accessedUtc", "structAutomaticDestination.html#a1180b3ce5bd27cf3a9a3ac3c388dfb76", null ],
     [ "application", "structAutomaticDestination.html#ab9f64a818e4bfb12581b2408cf913d23", null ],
     [ "createdUtc", "structAutomaticDestination.html#ab3f03a5fec0fa2b4fa81cbee1fbc42df", null ],
+    [ "destListUnsupported", "structAutomaticDestination.html#af426a16f67242abeb764a265b1d4c051", null ],
+    [ "destListVersion", "structAutomaticDestination.html#a1aa0de0fa0b13a95a43dec463d3a6d7c", null ],
     [ "entries", "structAutomaticDestination.html#ae8867ef3ace711c1bd5e511293c661ca", null ],
     [ "modifiedUtc", "structAutomaticDestination.html#ac5f1fdadf2e68d631a045c1127f097a4", null ],
     [ "ole", "structAutomaticDestination.html#adf146dff12607de34518ef2d43227c1d", null ],

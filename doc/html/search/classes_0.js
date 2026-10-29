@@ -10,5 +10,7 @@ var searchData=
   ['appliconf_7',['AppliConf',['../structAppliConf.html',1,'']]],
   ['archivefile_8',['ArchiveFile',['../structArchiveFile.html',1,'']]],
   ['archivefilecontent_9',['ArchiveFileContent',['../structArchiveFileContent.html',1,'']]],
-  ['automaticdestination_10',['AutomaticDestination',['../structAutomaticDestination.html',1,'']]]
+  ['artefactentry_10',['ArtefactEntry',['../structArtefactEntry.html',1,'']]],
+  ['artefactform_11',['ArtefactForm',['../structArtefactForm.html',1,'']]],
+  ['automaticdestination_12',['AutomaticDestination',['../structAutomaticDestination.html',1,'']]]
 ];
