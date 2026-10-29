@@ -49,7 +49,6 @@ supprimés (B-036), la couverture MITRE ATT&CK (B-052), puis la revue (B-050), l
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-050](B-050-revue-code-securite-avant-3.0.md) | Revue de code et revue de sécurité de tout le projet — préalable à la publication de la 3.0.0 | à faire | P1 | fort |
 | [B-058](B-058-article-3.0.md) | Article de la 3.0.0 : suite de celui de la 2.0.0, les nouveautés seules | à faire (après la publication de la 3.0.0) | P3 | moyen |
 
 ### Version 4.0 — serveurs

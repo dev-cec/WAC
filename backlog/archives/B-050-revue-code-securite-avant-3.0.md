@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (préalable à la publication de la 3.0.0) | P1 | fort |
+| fait (29a013ee) | P1 | fort |
 
 ## Pourquoi
 Demande utilisateur du 2026-10-15 : avant de publier la 3.0.0, une revue de code de l'ensemble du projet, et idéalement une revue de sécurité. La 3.0 ajoute beaucoup de décodeurs de formats non documentés (Prefetch 26, ShimCache et Amcache de Windows 8, index de recherche ESE, files BITS anciennes, réseau et journaux de XP…), et le travail de 2.0.1 à 2.0.3 a montré que des défauts anciens produisent du JSON valide et faux sans le moindre signal : rejeu des ruches qui perdait une entrée, condensats SAM faux au schéma RC4, empreintes prises sur les copies de travail. Une revue d'ensemble, distincte des contrôles du harnais, cherche ce que les cycles ne voient pas.
@@ -50,10 +50,10 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
 
 ## Tâches
 - [x] Découper le dépôt en lots de revue (ci-dessus)
-- [ ] `/code-review` lot par lot ; constats triés et traités (lots 1 à 3 : faits — 1315c4da, 49d34970, dac5efc5 ; lot 4 : fait — 171993b3 ; lot 5 : fait — 6430ba17 ; lot 6 : fait — 45a9a96f ; lot 7 : fait — 2ab95fb9)
+- [x] `/code-review` lot par lot ; constats triés et traités (lots 1 à 3 : faits — 1315c4da, 49d34970, dac5efc5 ; lot 4 : fait — 171993b3 ; lot 5 : fait — 6430ba17 ; lot 6 : fait — 45a9a96f ; lot 7 : fait — 2ab95fb9)
 - [x] `/security-review` sur le code livré ; constats triés et traités (2026-10-29 : un candidat, écarté après filtrage — voir le journal)
 - [x] `/code-review ultra` : écarté par l'utilisateur (2026-10-27) — la revue se fait lot par lot avec `/code-review`
-- [ ] Cycles VM verts après corrections
+- [x] Cycles VM verts après corrections (2026-10-29 : Windows 8.1 462 ✅ / 0 ❌, Windows 11 547 ✅ / 0 ❌)
 - [x] Mise à jour des documents (validation, innocuité) si une correction change une opération (754a59a5 : sceau relevé, règle de `--output`, vérificateur PowerShell 4)
 
 ## Journal
@@ -165,3 +165,4 @@ Par exposition aux données hostiles, les lecteurs du disque brut en premier :
   - Quatrième cycle 8.1 : **462 ✅, 0 ❌** ; `verify-exhibits.ps1` 7 850 pièces conformes ; les 4 témoins supprimés retrouvés sur H: avec leur SHA-256. Cycle Windows 11 relancé pour éprouver le `.ps1` réécrit (CreateFileW, JavaScriptSerializer) sous PowerShell 5.1.
 - 2026-10-29 : cycle Windows 11 (`.ps1` réécrit) : 546 ✅, 1 ❌ ; `verify-exhibits.ps1` 33 994 pièces conformes sous PowerShell 5.1. Le ❌ (« aucune lecture de la consigne enregistrée ») vient du harnais : le retrait de la règle d'audit produit un événement 4907 par pièce (22 174), qui a rempli le journal Security (20 Mo, circulaire) avant le relevé des lectures. Corrigé (d484f039) : lectures relevées avant le retrait. Documents de validation, d'innocuité et manuel mis à jour (754a59a5). Reste : un cycle Windows 11 final, après les cinq cycles Vista de B-057.
 - 2026-10-29 : B-057 close (7d46c9df) ; harnais corrigé au passage (e4ffcebe : lecture relancée avec son positionnement, `split` non supprimé signalé). Cycle Windows 11 final lancé à 10:35 (démarrage, 20 min de repos) : il doit confirmer d484f039 (lectures de la consigne relevées avant le retrait de la règle d'audit).
+- 2026-10-29 : cycle Windows 11 final : **547 ✅, 0 ❌** ; `verify-exhibits.ps1` 27 961 pièces conformes ; consigne : 26 916 lectures par WAC.exe, toutes avant sa copie de travail, aucune après — d484f039 confirmé (le ⏭️ du même contrôle concerne la collecte principale, sans audit). Revue terminée, fiche close et archivée.
