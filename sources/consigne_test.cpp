@@ -96,6 +96,25 @@ int wmain(int argc, wchar_t** argv){
 	conf.systemDrive = L"C:";
 	auditInit({ L"consigne_test" });
 
+	/* The log's local times are those of the suspect's time zone, read after
+	   the first operations: recorded before it, they must still carry it, and
+	   never UTC labelled +00:00. */
+	auditRecord(L"Test: an operation before the suspect's time zone", L"", ERROR_SUCCESS, L"");
+	conf.timeZone.valid = true;
+	conf.timeZone.rules = TimeZoneRules{};
+	conf.timeZone.rules.current.biasMinutes = -60;   // UTC+01:00
+	const std::wstring startLocal = auditStartLocal();
+	check(startLocal.size() > 6 && startLocal.compare(startLocal.size() - 6, 6, L"+01:00") == 0,
+	      "the start's local time carries the time zone read after it (" + narrow(startLocal) + ")");
+	check(auditWrite() == ERROR_SUCCESS, "the investigation log is written");
+	{
+		std::ifstream log(std::filesystem::path(conf._outputDir) / L"investigation.json");
+		const std::string text((std::istreambuf_iterator<char>(log)), std::istreambuf_iterator<char>());
+		check(text.find("+00:00") == std::string::npos && text.find("+01:00\"") != std::string::npos,
+		      "every local time of the log carries the time zone read after the first operation");
+	}
+	conf.timeZone = TimeZoneInfo{};
+
 	std::error_code ec;
 	std::filesystem::remove_all(exhibitStoreFolder(), ec);
 	std::filesystem::remove_all(workingFolder(), ec);

@@ -55,8 +55,7 @@ namespace {
 //! One recorded operation.
 struct Operation {
 	unsigned     sequence = 0;
-	std::wstring timestampUtc;
-	std::wstring timestampLocal;
+	FILETIME     instant  = { 0, 0 };   //!< formatted when the log is written (see now)
 	std::wstring operation;
 	std::wstring target;
 	std::wstring result;      //!< "OK", or the code and its message
@@ -65,22 +64,24 @@ struct Operation {
 
 std::vector<Operation> g_operations;
 unsigned     g_sequence      = 0;
-std::wstring g_startUtc, g_startLocal;
 FILETIME     g_start         = { 0, 0 };
 std::wstring g_commandLine;
 std::wstring g_machine, g_user, g_sid, g_timeZone;
 long         g_biasMinutes  = 0;
 bool         g_elevated         = false;
 
-/*! Current timestamp, in UTC and in the suspect's local time: the same time
- *  zone as every other local date of the collection (the running machine's
- *  until the suspect's SYSTEM hive is read).
+/*! Current instant, kept as a FILETIME and formatted only when it is written.
+ *  LOCAL TIME FORMATTED LATE. The first operations are recorded before the
+ *  running machine's settings or the suspect's SYSTEM hive are read: formatted
+ *  then, their local time had no rule and read as UTC labelled +00:00. Written
+ *  at the end, every local time of the log carries the suspect's time zone,
+ *  as every other local date of the collection.
  *  PRECISE CLOCK. The timestamps are written to the 100 ns, and Windows'
  *  object-access audit, which the test VM sets against them, is that
  *  precise. GetSystemTimeAsFileTime moves only at each clock tick, up to
  *  15.6 ms: reads of the exhibit store made during its copy showed 0.4 ms
  *  after the copy's own record, as if made after it. */
-void now(std::wstring& utc, std::wstring& local, FILETIME* nowFiletime = nullptr) {
+FILETIME now() {
 	/* RESOLVED AT RUN TIME. GetSystemTimePreciseAsFileTime exists from
 	   Windows 8 on: imported, it kept WAC.exe from loading at all under
 	   Windows 7 ("entry point not found") — the only one of its 285 imports
@@ -92,9 +93,7 @@ void now(std::wstring& utc, std::wstring& local, FILETIME* nowFiletime = nullptr
 	FILETIME ft = { 0, 0 };
 	if (precise) precise(&ft);
 	else GetSystemTimeAsFileTime(&ft);
-	utc = timeToIso8601Utc(ft);
-	local = utcTimeToIso8601Local(ft);
-	if (nowFiletime) *nowFiletime = ft;
+	return ft;
 }
 
 //! Context of the machine and of the operator at collection time.
@@ -144,7 +143,7 @@ void readContext() {
 void auditInit(const std::vector<std::wstring>& args) {
 	g_operations.clear();
 	g_sequence = 0;
-	now(g_startUtc, g_startLocal, &g_start);
+	g_start = now();
 
 	g_commandLine.clear();
 	for (size_t i = 0; i < args.size(); ++i) {
@@ -159,7 +158,7 @@ void auditRecord(const std::wstring& operation, const std::wstring& target,
                  HRESULT result, const wchar_t* footprint) {
 	Operation o;
 	o.sequence = ++g_sequence;
-	now(o.timestampUtc, o.timestampLocal);
+	o.instant = now();
 	o.operation = operation;
 	o.target     = target;
 	/* S_FALSE (1) means "succeeded, but only partly" — typically hives that are
@@ -254,13 +253,11 @@ Json auditContext() {
 	return root;
 }
 
-std::wstring auditStartUtc()   { return g_startUtc; }
-std::wstring auditStartLocal() { return g_startLocal; }
+std::wstring auditStartUtc()   { return timeToIso8601Utc(g_start); }
+std::wstring auditStartLocal() { return utcTimeToIso8601Local(g_start); }
 
 HRESULT auditWrite() {
-	std::wstring finUtc, finLocal;
-	FILETIME end = { 0, 0 };
-	now(finUtc, finLocal, &end);
+	const FILETIME end = now();
 
 	const ULONGLONG d = ticksFromFiletime(g_start);
 	const ULONGLONG f = ticksFromFiletime(end);
@@ -271,10 +268,10 @@ HRESULT auditWrite() {
 	Json root = auditContext();
 
 	Json collection = Json::obj();
-	collection.add(L"StartUtc",        Json::str(g_startUtc));
-	collection.add(L"StartLocal",      Json::str(g_startLocal));
-	collection.add(L"EndUtc",          Json::str(finUtc));
-	collection.add(L"EndLocal",        Json::str(finLocal));
+	collection.add(L"StartUtc",        Json::str(auditStartUtc()));
+	collection.add(L"StartLocal",      Json::str(auditStartLocal()));
+	collection.add(L"EndUtc",          Json::str(timeToIso8601Utc(end)));
+	collection.add(L"EndLocal",        Json::str(utcTimeToIso8601Local(end)));
 	collection.add(L"DurationSeconds", Json::num((unsigned long long)duration));
 	collection.add(L"OperationCount",  Json::num((unsigned long long)g_operations.size()));
 	root.add(L"Collection", std::move(collection));
@@ -283,8 +280,8 @@ HRESULT auditWrite() {
 	for (const Operation& o : g_operations) {
 		Json j = Json::obj();
 		j.add(L"Seq",            Json::num((unsigned long long)o.sequence));
-		j.add(L"TimestampUtc",   Json::str(o.timestampUtc));
-		j.add(L"TimestampLocal", Json::str(o.timestampLocal));
+		j.add(L"TimestampUtc",   Json::str(timeToIso8601Utc(o.instant)));
+		j.add(L"TimestampLocal", Json::str(utcTimeToIso8601Local(o.instant)));
 		j.add(L"Operation",      Json::str(o.operation));
 		j.add(L"Target",         Json::str(o.target));
 		j.add(L"Result",         Json::str(o.result));
