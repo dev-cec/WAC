@@ -30,7 +30,7 @@ $hives = "$exhibits\Windows\system32\config"
 $tools = @{
     mft      = @{ Exe = "$ez\MFTECmd\MFTECmd.exe";            Args = @('-f', "$exhibits\`$MFT");                          Inputs = @('$MFT'); Json = @('mft.json') }
     events   = @{ Exe = "$ez\EvtxECmd\EvtxeCmd\EvtxECmd.exe"; Args = @('-d', "$exhibits\Windows\System32\winevt\Logs");  Inputs = @('Windows\System32\winevt\Logs'); Json = @('events.json') }
-    recent_documents = @{ Exe = "$ez\LECmd\LECmd.exe"; Args = @('-d', "$exhibits\Users", '-q', '--all', '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Inputs = @('Users'); Json = @('recentdocs.json') }
+    recent_documents = @{ Exe = "$ez\LECmd\LECmd.exe"; Args = @('-d', "$exhibits\Users", '-q', '--all', '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Inputs = @('Users'); Json = @('recentdocs.json', 'shortcuts.json') }
     jump_lists = @{ Exe = "$ez\JLECmd\JLECmd.exe";        Args = @('-d', "$exhibits\Users", '-q', '--mp', '--ld');   Inputs = @('Users'); Json = @('jumplistAutomaticDestinations.json', 'jumplistCustomDestinations.json') }
     prefetch = @{ Exe = "$ez\PECmd\PECmd.exe";                 Args = @('-d', "$exhibits\Windows\Prefetch", '-q', '--mp'); Inputs = @('Windows\Prefetch'); Json = @('prefetchs.json') }
     shellbags = @{ Exe = "$ez\SBECmd\SBECmd.exe";              Args = @('-d', "$exhibits\Users", '--dedupe', '--dt', 'yyyy-MM-dd HH:mm:ss.fffffff'); Inputs = @('Users'); Json = @('shellbags.json') }

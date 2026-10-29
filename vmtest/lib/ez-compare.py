@@ -11,7 +11,7 @@ holding the EZ tool's CSV and WAC's JSON. Modes:
   mft       MFTECmd  / mft.json (volume C:)
   evtx      EvtxECmd / events.json
   prefetch  PECmd    / prefetchs.json (PECmd run with --mp, full precision)
-  lnk       LECmd    / recentdocs.json
+  lnk       LECmd    / recentdocs.json, shortcuts.json
   jumplist  JLECmd   / jumplistAutomaticDestinations.json, jumplistCustomDestinations.json
   amcache   AmcacheParser / amcache_applications.json, amcache_application_files.json, amcache_inventory.json
   shimcache AppCompatCacheParser / shimcache.json
@@ -373,8 +373,13 @@ def compare_prefetch(ez_csv, wac_json):
             if not r[f"Volume{i}Name"] and i >= len(volumes):
                 continue
             v = volumes[i] if i < len(volumes) else {}
-            note("volume", key, (v.get("DeviceName"), v.get("SerialNumber"), wac_date(v.get("CreationTimeUtc"))),
-                 (r[f"Volume{i}Name"], r[f"Volume{i}Serial"], ez_date(r[f"Volume{i}Created"])))
+            mine = (v.get("DeviceName"), v.get("SerialNumber"), wac_date(v.get("CreationTimeUtc")))
+            theirs = (r[f"Volume{i}Name"], r[f"Volume{i}Serial"], ez_date(r[f"Volume{i}Created"]))
+            # A volume whose creation time is zero in the .pf: PECmd writes 1601-01-01, WAC no date.
+            if mine != theirs and not v.get("CreationTimeUtc") and theirs[2] == ez_date(ZERO_FILETIME.rstrip("Z")) and mine[:2] == theirs[:2]:
+                explained["volume created at the zero FILETIME: PECmd writes 1601-01-01, WAC no date"] += 1
+                continue
+            note("volume", key, mine, theirs)
         mine = sorted(d.get("Directory") for v in volumes for d in v.get("Directories") or [])
         theirs = split(r["Directories"])
         # PECmd joins the directory lists of two volumes without a separator
@@ -496,12 +501,20 @@ def compare_shortcut(c, key, r, w):
            {b.strip().lower().replace("trackerdatabaseblock", "trackerdatablock") for b in r["ExtraBlocksPresent"].split(",") if b.strip()})
 
 
-def compare_lnk(ez_csv, wac_json):
-    """recentdocs.json against LECmd, shortcut by shortcut (file name)."""
+def compare_lnk(ez_csv, wac_jsons):
+    """recentdocs.json and shortcuts.json against LECmd, shortcut by shortcut.
+    LECmd reads every .lnk of the profiles (Recent, Start menus, desktops,
+    Quick Launch); WAC gives Recent in one file, the others in another. Paired
+    by the path under Users: the same name lies in several profiles."""
     with open(ez_csv, encoding="utf-8-sig", newline="") as f:
-        ez = {row["SourceFile"].rsplit("\\", 1)[-1].lower(): row for row in csv.DictReader(f)}
-    with open(wac_json, encoding="utf-8-sig") as f:
-        wac = {str(d["Path"]).rsplit("\\", 1)[-1].lower(): d for d in json.load(f) if isinstance(d, dict) and "Path" in d}
+        ez = {"users\\" + row["SourceFile"].lower().split("\\input\\users\\", 1)[-1]: row for row in csv.DictReader(f)}
+    wac = {}
+    for wac_json in wac_jsons:
+        with open(wac_json, encoding="utf-8-sig") as f:
+            for d in json.load(f):
+                path = str(d.get("Path", "")).lower() if isinstance(d, dict) else ""
+                if path[1:].startswith(":\\users\\"):   # LECmd was given the profiles only
+                    wac[path[3:]] = d
     c = Comparison("LECmd")
     for key in sorted(set(ez) & set(wac)):
         compare_shortcut(c, key, ez[key], wac[key])
@@ -1020,7 +1033,7 @@ def main():
     if mode == "evtx":
         return compare_evtx(only(folder, "*_EvtxECmd_Output.csv"), only(folder, "events.json"))
     if mode == "lnk":
-        return compare_lnk(only(folder, "*_LECmd_Output.csv"), only(folder, "recentdocs.json"))
+        return compare_lnk(only(folder, "*_LECmd_Output.csv"), [only(folder, "recentdocs.json"), only(folder, "shortcuts.json")])
     if mode == "jumplist":
         return compare_jumplist(only(folder, "*_AutomaticDestinations.csv"), only(folder, "*_CustomDestinations.csv"),
                                 only(folder, "jumplistAutomaticDestinations.json"), only(folder, "jumplistCustomDestinations.json"))
