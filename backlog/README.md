@@ -49,7 +49,8 @@ supprimés (B-036), la couverture MITRE ATT&CK (B-052), puis la revue (B-050), l
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-058](B-058-article-3.0.md) | Article de la 3.0.0 : suite de celui de la 2.0.0, les nouveautés seules | à faire (après la publication de la 3.0.0) | P3 | moyen |
+| [B-059](B-059-mesures-3.0.md) | Comparaison à KAPE et aux outils EZ, mesure des traces et dossiers refaits sur la 3.0.0 | en cours | P1 | fort |
+| [B-058](B-058-article-3.0.md) | Article de la 3.0.0 : suite de celui de la 2.0.0, les nouveautés seules | en cours | P3 | moyen |
 
 ### Version 4.0 — serveurs
 

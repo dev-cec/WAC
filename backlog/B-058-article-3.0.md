@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire (après la publication de la 3.0.0) | P3 | moyen |
+| en cours | P3 | moyen |
 
 ## Pourquoi
 Demande utilisateur du 2026-10-24 : un article pour la 3.0.0, écrit **après sa publication**. Il fait suite à l'article de la 2.0.0 (B-018, `doc/article/article_FR_2.0.tex` et `article_EN_2.0.tex`) : il ne reprend **que les nouveautés** de la 3.0.0, sans redire ce que le premier article présentait (principe de la collecte sans trace, prélèvement brut, consigne scellée, séparation collecte et conversion…), auquel il renvoie.
@@ -33,10 +33,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Écrit après la publication de la 3.0.0 : la version décrite est celle publiée.
 
 ## Tâches
-- [ ] Relire l'article de la 2.0.0 : liste de ce qu'il a déjà dit
+- [x] Relire l'article de la 2.0.0 : liste de ce qu'il a déjà dit
 - [ ] Liste des nouveautés de la 3.0.0 (fiches closes, `git log v2.0.0..v3.0.0`)
 - [ ] Rédaction FR et EN, chiffres datés
 - [ ] Relecture
 
 ## Journal
 - 2026-10-24 : créée à la demande de l'utilisateur — après la publication de la 3.0.0 ; suite de l'article de la 2.0.0, nouveautés seules.
+- 2026-10-29 : 3.0.0 publiée (tag sur afd85f44, release GitHub avec les 9 fichiers de bin/, vérifiés). Rédaction lancée à la demande de l'utilisateur, FR et EN.
