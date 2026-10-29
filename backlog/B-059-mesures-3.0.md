@@ -27,13 +27,15 @@ Les outils EZ, KAPE, Sysmon et le journal des modifications NTFS du clone, comme
 ## Tâches
 - [x] `bump-version.sh` ne réécrit plus la version mesurée (836fbad6)
 - [x] Innocuité : imports d'ADVAPI32 pour XP, WAC32.exe, étape 3 (Windows 11 et 8.1) — non commités
-- [ ] Cycle Windows 11 sur la 3.0.0 ; résultat de référence de la validation
+- [x] Cycle Windows 11 sur la 3.0.0 ; résultat de référence de la validation (non commité)
 - [ ] 11 comparaisons EZ, tableau des temps
 - [ ] KAPE, sans les exécutables et kit livré
-- [ ] Clone de mesure recréé, mesure des traces (WAC, KAPE cibles, KAPE modules, outils EZ, témoin)
+- [x] `footprint/hive-diff.py` : ruches avant/après chaque passage, lues hors ligne (non commité)
+- [ ] Clone de mesure recréé, mesure des traces (WAC, KAPE cibles, KAPE modules, outils EZ, témoin), registre compris
 - [ ] Dossier de comparaison FR/EN
 - [ ] Dossier d'innocuité, manuels, tests : relecture et chiffres
 - [ ] Compilation des documents, 0 débordement ; commit
 
 ## Journal
 - 2026-10-29 : créée. Cycle Windows 11 sur `bin/WAC.exe` 3.0.0 lancé ; le clone de mesure n'existe plus (supprimé le 2026-10-09 pour la place) : à recréer depuis win11-test, ~61 Go, 122 Go libres.
+- 2026-10-29 : cycle Windows 11 sur la 3.0.0 : 550 ✅, 0 ❌. Résultat de référence de la validation repris. Traces du cycle complet relues : Prefetch, ShimCache, Amcache, SRUM attendus ; audit 4663 posé par le harnais ; RADAR (détecteur de fuites mémoire) a noté WAC.exe le 15/09 et le 15/10, jamais sur la 3.0.0 — ajouté au dossier d'innocuité. Défaut trouvé : heures locales du journal d'investigation à +00:00 avant la lecture du fuseau, corrigé (ec146f1c). Comparaisons EZ lancées.
