@@ -66,9 +66,16 @@ if (-not $Seal) { Say Unnoted }
 
 # 2. Every exhibit: its SHA-256 must be the one in the manifest. A manifest
 # that is no JSON, or without its list of exhibits, is refused: never taken
-# for an empty collection.
-try { $m = Get-Content -Raw -Encoding UTF8 -LiteralPath $manifest | ConvertFrom-Json -ErrorAction Stop } catch { $m = $null }
-if (-not $m -or $m.Items -isnot [array]) { Say Unreadable $manifest; Say Total 0 1; exit 1 }
+# for an empty collection. Read by the serializer ConvertFrom-Json is built
+# on, its limit lifted as PowerShell 5 does: that of PowerShell 4, 2 MB of
+# text, refused every collection's manifest (tens of MB) on Windows 8.1.
+try {
+    Add-Type -AssemblyName System.Web.Extensions
+    $serializer = New-Object Web.Script.Serialization.JavaScriptSerializer
+    $serializer.MaxJsonLength = [int]::MaxValue
+    $m = $serializer.DeserializeObject((Get-Content -Raw -Encoding UTF8 -LiteralPath $manifest))
+} catch { $m = $null }
+if ($m -isnot [Collections.IDictionary] -or $m['Items'] -isnot [Collections.IList]) { Say Unreadable $manifest; Say Total 0 1; exit 1 }
 # The manifest comes from the examined machine: an exhibit path that leaves
 # the collection (.., absolute path, drive) is refused, never read. Checked on
 # the string. A path past 259 characters is read through \\?\, which .NET
