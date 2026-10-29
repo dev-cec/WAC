@@ -54,10 +54,11 @@ DOCS=("$HERE"/doc/user/documentation_{FR,EN}.tex "$HERE"/doc/tests/testing_{FR,E
       "$HERE"/doc/harmlessness/harmlessness_{FR,EN}.tex "$HERE"/doc/comparison/comparison_{FR,EN}.tex)
 sed -i -E "s#^(Version du logiciel|Software version) & [0-9]+\.[0-9]+\.[0-9]+ #\1 \& $VERSION #" "${DOCS[@]}"
 # The other sentences that name the version: the manuals' scope, the import
-# list of the harmlessness file, the comparison's test bench.
+# list of the harmlessness file. Not the comparison's test bench: it names the
+# version MEASURED, which only a new measurement changes — rewritten here, it
+# gave 3.0.0 to the measures of 2.0.0.
 sed -i -E "s#(Ce document décrit la version|This document describes version) [0-9]+\.[0-9]+\.[0-9]+#\1 $VERSION#" "$HERE"/doc/user/documentation_{FR,EN}.tex
 sed -i -E "s#^(Pour la version|For version) [0-9]+\.[0-9]+\.[0-9]+,#\1 $VERSION,#" "$HERE"/doc/harmlessness/harmlessness_{FR,EN}.tex
-sed -i -E "s#^(\\\\wac\{\} & version) [0-9]+\.[0-9]+\.[0-9]+ #\1 $VERSION #" "$HERE"/doc/comparison/comparison_{FR,EN}.tex
 # The wac.yml shown in the user manuals carries the version, as --write-config writes it.
 sed -i -E "s#^wac_version: [0-9]+\.[0-9]+\.[0-9]+ #wac_version: $VERSION #" "$HERE"/doc/user/documentation_{FR,EN}.tex "$HERE/README.md"
 # Rebuilt as the editor builds them (LuaLaTeX), their artefacts removed after.
