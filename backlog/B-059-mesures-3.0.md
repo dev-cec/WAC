@@ -28,7 +28,7 @@ Les outils EZ, KAPE, Sysmon et le journal des modifications NTFS du clone, comme
 - [x] `bump-version.sh` ne réécrit plus la version mesurée (836fbad6)
 - [x] Innocuité : imports d'ADVAPI32 pour XP, WAC32.exe, étape 3 (Windows 11 et 8.1) — non commités
 - [x] Cycle Windows 11 sur la 3.0.0 ; résultat de référence de la validation (non commité)
-- [ ] 11 comparaisons EZ, tableau des temps
+- [x] 11 comparaisons EZ (452b8f71 : LECmd sur tous les raccourcis, date de volume nulle du Prefetch), tableau des temps
 - [ ] KAPE, sans les exécutables et kit livré
 - [x] `footprint/hive-diff.py` : ruches avant/après chaque passage, lues hors ligne (non commité)
 - [ ] Clone de mesure recréé, mesure des traces (WAC, KAPE cibles, KAPE modules, outils EZ, témoin), registre compris
@@ -39,3 +39,4 @@ Les outils EZ, KAPE, Sysmon et le journal des modifications NTFS du clone, comme
 ## Journal
 - 2026-10-29 : créée. Cycle Windows 11 sur `bin/WAC.exe` 3.0.0 lancé ; le clone de mesure n'existe plus (supprimé le 2026-10-09 pour la place) : à recréer depuis win11-test, ~61 Go, 122 Go libres.
 - 2026-10-29 : cycle Windows 11 sur la 3.0.0 : 550 ✅, 0 ❌. Résultat de référence de la validation repris. Traces du cycle complet relues : Prefetch, ShimCache, Amcache, SRUM attendus ; audit 4663 posé par le harnais ; RADAR (détecteur de fuites mémoire) a noté WAC.exe le 15/09 et le 15/10, jamais sur la 3.0.0 — ajouté au dossier d'innocuité. Défaut trouvé : heures locales du journal d'investigation à +00:00 avant la lecture du fuseau, corrigé (ec146f1c). Comparaisons EZ lancées.
+- 2026-10-29 : 11 comparaisons EZ refaites ; écarts tous tranchés (SrumECmd : 8 lignes d'énergie décalées, dissect.esedb donne raison à WAC ; RECmd : ruches ramenées à un état ancien ; AmcacheParser : 5 500 valeurs inventées). KAPE sans exécutables : 5 desktop.ini seuls chez KAPE ; WAC 196 s contre 62 s, dont 128 s de fichiers supprimés (13 318, nouveaux en 3.0). Familles et étapes nouvelles classées (189baf7e). Conversion de cette collecte dans la VM : disque plein rendu « données non valides » ; contrôle de place de la conversion et budget des fichiers supprimés dans l'estimation de la collecte (130fc924). À reprendre : section « Place nécessaire » des manuels (chiffres 2.0, et « la conversion lit la consigne » faux), dépannage « Windows 10 ».
