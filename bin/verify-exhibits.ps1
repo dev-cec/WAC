@@ -43,7 +43,7 @@ $messages = @{
 $text = if ($messages.ContainsKey($Language)) { $messages[$Language] } else { $messages['en'] }
 function Say([string]$key) { Write-Output ($text[$key] -f $args) }
 
-# Get-FileHash, ConvertFrom-Json and Get-Content -Raw came with PowerShell 4:
+# Get-FileHash, which reads the seal, came with PowerShell 4:
 # on an older one the reading would fail, and its failure read as a mismatch
 # of the seal. Said so instead.
 if ($PSVersionTable.PSVersion.Major -lt 4) { Say Version $PSVersionTable.PSVersion; exit 2 }
@@ -78,8 +78,31 @@ try {
 if ($m -isnot [Collections.IDictionary] -or $m['Items'] -isnot [Collections.IList]) { Say Unreadable $manifest; Say Total 0 1; exit 1 }
 # The manifest comes from the examined machine: an exhibit path that leaves
 # the collection (.., absolute path, drive) is refused, never read. Checked on
-# the string. A path past 259 characters is read through \\?\, which .NET
-# accepts only from 4.6.2: an ordinary path otherwise, as every version reads.
+# the string.
+#
+# Each exhibit is opened by CreateFileW and read through its handle: a path
+# past 259 characters needs \\?\, which .NET refuses before 4.6.2 (Windows
+# 8.1 has 4.5) and CreateFileW takes on every Windows. Below that, an
+# ordinary path, normalised as WAC's own writing was.
+Add-Type -TypeDefinition @'
+using System; using System.Runtime.InteropServices; using Microsoft.Win32.SafeHandles;
+public static class ExhibitFile {
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr security,
+                                                    uint disposition, uint flags, IntPtr template);
+}
+'@
+$GENERIC_READ = [uint32]2147483648   # 0x80000000: as a literal, a negative Int32 before PowerShell 7
+$FILE_SHARE_READ = 1; $OPEN_EXISTING = 3; $FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000
+$sha256 = [Security.Cryptography.SHA256]::Create()
+# The SHA-256 of a file, in upper-case hexadecimal; throws if it cannot be read.
+function Get-ExhibitHash([string]$path) {
+    $handle = [ExhibitFile]::CreateFileW($path, $GENERIC_READ, $FILE_SHARE_READ, [IntPtr]::Zero,
+                                         $OPEN_EXISTING, $FILE_FLAG_SEQUENTIAL_SCAN, [IntPtr]::Zero)
+    if ($handle.IsInvalid) { throw "CreateFileW: $([Runtime.InteropServices.Marshal]::GetLastWin32Error())" }
+    $stream = New-Object IO.FileStream($handle, [IO.FileAccess]::Read)
+    try { [BitConverter]::ToString($sha256.ComputeHash($stream)) -replace '-', '' } finally { $stream.Dispose() }
+}
 $root = (Resolve-Path -LiteralPath $Output).ProviderPath.TrimEnd('\') + '\'
 $ok = 0; $ko = 0; $fingerprintOnly = 0
 foreach ($p in ($m.Items | Where-Object { $_.Result -eq 'OK' })) {
@@ -91,7 +114,7 @@ foreach ($p in ($m.Items | Where-Object { $_.Result -eq 'OK' })) {
     }
     $path = $root + $rel
     if ($path.Length -gt 259) { $path = if ($root.StartsWith('\\')) { '\\?\UNC\' + $path.Substring(2) } else { '\\?\' + $path } }
-    try { $h = (Get-FileHash -Algorithm SHA256 -LiteralPath $path -ErrorAction Stop).Hash }
+    try { $h = Get-ExhibitHash $path }
     catch { $ko++; Say NotRead $p.ExhibitPath; continue }   # unread is no mismatch: said as such
     if ($h -eq $p.SHA256) { $ok++ } else { $ko++; Say Mismatch $p.ExhibitPath }
 }
