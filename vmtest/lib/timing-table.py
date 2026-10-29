@@ -58,14 +58,16 @@ SHARED_CONVERSION = [
 ]
 # The collection's steps, by what they do; anything else is "other".
 COLLECTION = [
-    ("checks and trust set", ["Check OS >= Windows 10", "Check administrator rights", "Checking the collection medium", "Trust set"]),
+    ("checks and trust set", ["Check administrator rights", "Checking the collection medium", "Trust set"]),
     ("live observations", ["Extraction of RUNNING MACHINE SETTINGS", "Extraction of SESSIONS", "Extraction of PROCESS",
                            "Extraction of NETWORK STATE", "Extraction of SERVICE STATES", "Extraction of SYSTEM CLOCK"]),
     ("hives, file artefacts, NTFS and FAT metadata (raw reading)", [
         "Extracting system hives (raw NTFS)", "Opening the SYSTEM hive", "Opening the SOFTWARE hive",
         "Listing USER PROFILES (SOFTWARE hive)", "Extracting user hives (raw NTFS)", "Extracting file artefacts (raw NTFS)",
-        "Extracting NTFS metadata ($MFT, $UsnJrnl, $LogFile) (raw NTFS)", "FAT and exFAT volumes (raw reading of the metadata)"]),
+        "Extracting NTFS metadata ($MFT, $UsnJrnl, $LogFile) (raw NTFS)", "Extracting BOOT RECORDS",
+        "FAT and exFAT volumes (raw reading of the metadata)", "Shadow copies (raw reading, without the VSS service)"]),
     ("event providers' resource files", ["Extracting the resource files of the providers the logs cite"]),
+    ("deleted files recovered (KAPE: none)", ["Recovering DELETED FILES (raw reading)"]),
     ("every executable read, signatures checked", ["Reading every executable, collecting the unauthenticated (raw NTFS)"]),
     ("sealing (manifest, three fingerprints)", ["Sealing the exhibit store (manifest + SHA-256)"]),
 ]

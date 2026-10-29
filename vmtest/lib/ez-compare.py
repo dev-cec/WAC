@@ -962,6 +962,11 @@ def compare_registry(folder):
 def kape_category(path):
     """A file's family, for the coverage table: what an analyst would call it."""
     p = path.lower()
+    # Exhibits without a live file to pair (keyed by their place in the store).
+    if p.startswith("exhibits\\$deletedfiles\\"):
+        return "deleted files recovered (raw reading)"
+    if p.startswith("exhibits\\$bootrecords\\"):
+        return "boot records (MBR, GPT, boot sectors, EFI partition)"
     # What KAPE alone takes and B-032 classified: left out with its reason, or
     # an artefact of its own in the backlog.
     if p.endswith("\\desktop.ini"):
@@ -983,7 +988,17 @@ def kape_category(path):
              ("\\wbem\\", "WMI repository"), ("\\downloader\\", "BITS"), ("\\sru\\", "SRUM"),
              ("psreadline", "PowerShell history"), ("\\inf\\setupapi", "setupapi logs"),
              ("\\drivers\\etc\\", "hosts and network files"), ("\\tasks\\", "scheduled tasks"),
-             ("\\$recycle.bin\\", "recycle bin"))
+             ("\\$recycle.bin\\", "recycle bin"), ("\\$deletedfiles\\", "deleted files recovered (raw reading)"),
+             ("\\onedrive\\", "OneDrive (logs, settings)"), ("\\thunderbird\\", "mail (Thunderbird, Outlook)"),
+             ("\\mozilla\\firefox\\", "web browsers (B-016)"), ("\\google\\chrome\\", "web browsers (B-016)"),
+             ("\\inetcache\\", "web browsers (B-016)"), ("\\explorer\\thumbcache", "thumbnail caches"),
+             ("\\explorer\\iconcache", "thumbnail caches"), ("\\search\\data\\", "Windows search index"),
+             ("\\tokenbroker\\", "cloud identity (Entra ID tokens, still encrypted)"),
+             ("\\microsoft.aad.brokerplugin", "cloud identity (Entra ID tokens, still encrypted)"),
+             ("\\terminal server client\\", "RDP client (bitmap cache)"),
+             ("\\connecteddevicesplatform\\", "Windows timeline (ActivitiesCache, B-010)"))
+    if p.endswith(".etl"):
+        return "ETW traces (.etl)"
     for needle, name in rules:
         if needle in p:
             return name
@@ -1001,7 +1016,12 @@ def compare_kape(folder):
                 for r in csv.DictReader(f):
                     kape.setdefault(r["SourceFile"].lower(), r)
     with open(only(folder, "wac-manifest.json"), encoding="utf-8-sig") as f:
-        wac = {i["SourcePath"].lower(): i for i in json.load(f)["Items"]}
+        # A recovered deleted file or a boot record names a file that no
+        # longer exists, or no file: kept by its place in the store, never
+        # paired with the live file KAPE copied at the same path. Two of them
+        # can share one exhibit (identical content): its source told apart.
+        wac = {(i["ExhibitPath"] + "|" + i["SourcePath"] if i["ExhibitPath"].lower().startswith(("exhibits\\$deletedfiles\\", "exhibits\\$bootrecords\\"))
+                else i["SourcePath"]).lower(): i for i in json.load(f)["Items"]}
     common = set(kape) & set(wac)
     differ = sorted(k for k in common if (kape[k].get("SourceFileSha1") or "").upper() != (wac[k].get("SHA1") or "").upper())
     print(f"files: KAPE {len(kape)}, WAC {len(wac)}, common {len(common)}, same SHA-1 {len(common) - len(differ)}")
