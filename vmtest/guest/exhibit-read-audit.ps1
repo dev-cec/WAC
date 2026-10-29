@@ -27,10 +27,10 @@ if ($Start) {
     (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')
 }
 if ($Stop) {
-    $acl = Get-Acl -Path $Stop -Audit
-    $acl.SetAuditRuleProtection($false, $false)
-    foreach ($r in @($acl.GetAuditRules($true, $false, [Security.Principal.SecurityIdentifier]))) { [void]$acl.RemoveAuditRule($r) }
-    Set-Acl -Path $Stop -AclObject $acl
+    # The reads are listed BEFORE the rule is removed: removing it changes the
+    # audit settings of every file of the store, one event 4907 each (and
+    # reads by PowerShell), which filled the 20 MB Security log and overwrote
+    # WAC's reads (Windows 11, 34 000 exhibits: 22 174 events 4907).
     auditpol /set /subcategory:$fileSystem /success:disable | Out-Null
     $from = [datetime]::Parse($Since, $null, [Globalization.DateTimeStyles]::AdjustToUniversal -bor [Globalization.DateTimeStyles]::AssumeUniversal)
     $prefix = $Stop.TrimEnd('\') + '\'
@@ -45,5 +45,9 @@ if ($Stop) {
     # No read: $lines is $null, which @() counts as one element on PowerShell 2.
     $lines = @($lines | Where-Object { $_ })
     [IO.File]::WriteAllLines($Output, [string[]]$lines, (New-Object Text.UTF8Encoding $false))
+    $acl = Get-Acl -Path $Stop -Audit
+    $acl.SetAuditRuleProtection($false, $false)
+    foreach ($r in @($acl.GetAuditRules($true, $false, [Security.Principal.SecurityIdentifier]))) { [void]$acl.RemoveAuditRule($r) }
+    Set-Acl -Path $Stop -AclObject $acl
     "$($lines.Count) read(s)"
 }
