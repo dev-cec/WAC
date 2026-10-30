@@ -285,9 +285,6 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
 	return false;
 }
 
-//! First build of Windows 10: the oldest version the whole test cycle validates WAC on; an older one is collected, and said so.
-const unsigned VALIDATED_SINCE_BUILD = 10240;
-
 /*! THE GUARD BEFORE ANY COLLECTION (backlog B-039). Reads the version of the
  *  examined Windows in its SOFTWARE hive, just opened, and applies the table
  *  of the artefacts (artefact_catalogue.h): an artefact asked for that this
@@ -336,14 +333,14 @@ void applyArtefactCatalogue() {
 	            + (absent.empty() ? L"; every artefact asked for exists on it"
 	                              : L"; asked for but absent from this version, not collected: " + absent)
 	            + (undecoded.empty() ? L"" : L"; in a format without decoder on this version, collected raw and not converted: " + undecoded)
-	            + (conf.examinedVersion.build < VALIDATED_SINCE_BUILD
-	                   ? L"; older than Windows 10, the first version the whole test cycle validates WAC on" : L""),
+	            // The test cycle validates every client from XP SP1 to 11; a server edition is collected, and said so.
+	            + (validatedByTestCycle(conf.examinedVersion) ? L"" : L"; a server edition: the test cycle validates WAC on the clients only"),
 	            source, ERROR_SUCCESS, Footprint::HIVE_COPY);
 	for (const std::string& key : conf.absentFromVersion) {
 		writeConsole(L"   " + decodeText(key, CP_UTF8) + L" : " + text(Text::AbsentFromVersion, { release.name }) + L"\n");
 	}
 	if (!undecoded.empty()) writeConsole(L"   " + undecoded + L" : " + text(Text::UndecodedOnVersion, { release.name }) + L"\n");
-	if (conf.examinedVersion.build < VALIDATED_SINCE_BUILD) writeConsole(L"   " + text(Text::OlderThanValidated) + L"\n");
+	if (!validatedByTestCycle(conf.examinedVersion)) writeConsole(L"   " + text(Text::ServerNotValidated) + L"\n");
 }
 
 /*! THE GUARD ON THE MACHINE'S SIDE (backlog B-039). Records an artefact that

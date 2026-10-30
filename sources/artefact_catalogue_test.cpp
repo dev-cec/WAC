@@ -124,6 +124,10 @@ int main(int argc, char** argv) {
 	check(availabilityOf("bam", ten) == Availability::Present && availabilityOf("bam", eight) == Availability::AbsentFromThisVersion, "BAM");
 	check(availabilityOf("activities_cache", eleven) == Availability::Present, "ActivitiesCache.db withdrawn from Windows 11 (it is still written)");
 	check(availabilityOf("mft", xp) == Availability::Present && availabilityOf("events", xp) == Availability::Present, "$MFT or events absent from XP");
+	check(validatedByTestCycle(xp) && validatedByTestCycle(WindowsVersion{ 7601, false, false })
+	      && validatedByTestCycle(eleven) && !validatedByTestCycle(WindowsVersion{ 17763, true, false })
+	      && !validatedByTestCycle(WindowsVersion{ 20348, true, true }),
+	      "the test cycle validates every client from XP on, no server edition");
 	check(classicEventLogs(xp) && classicEventLogs(WindowsVersion{ 3790, true, false }) && !classicEventLogs(vista)
 	      && !classicEventLogs(eleven) && !classicEventLogs(WindowsVersion{}),
 	      "the .evt logs are those of XP and Server 2003 only; an unread version is not taken for one of them");

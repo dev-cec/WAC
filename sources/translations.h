@@ -62,7 +62,7 @@ enum class Text : unsigned {
 	ArtefactDefenderLogs, ArtefactDefenderDetections, ArtefactDefenderQuarantine, ArtefactStartupFolders, ArtefactZoneIdentifiers, ArtefactSecurityHive,
 	ArtefactPersistence, ArtefactOfficeTrustRecords, ArtefactTypedPaths, ArtefactWordWheelQueries, ArtefactRootCertificates, ArtefactInternetSettingsSet, ArtefactFirewall, ArtefactFirewallLog, ArtefactIntuneLogs, ArtefactCloudIdentity, ArtefactWmiPersistence, ArtefactSrum, ArtefactBitsJobs, ArtefactBootRecords, ArtefactFatVolumes, ArtefactInstalledPrograms, ArtefactDefenderConfiguration, ArtefactExplorerRecentDocs, ArtefactMountPoints, ArtefactKnownNetworks, ArtefactProgramUsages, ArtefactDevices, ArtefactNetworkShares, ArtefactNetworkConfiguration, ArtefactEventLogConfiguration, ArtefactShortcuts, ArtefactSecurityDescriptors, ArtefactNtfsVolumes, ArtefactDpapiMasterKeys, ArtefactUserShellFolders, ArtefactWebClient, ArtefactActivitiesCache, ArtefactSearchIndex, ArtefactRdpClient, ArtefactRdpServer, ArtefactThumbcache, ArtefactEmails, ArtefactSysmon, ArtefactShadowCopies,
 	ArtefactOperatingSystem, ArtefactEvents,
-	NotRequested, NotNeeded, AbsentFromVersion, ExpectedButMissing, UndecodedOnVersion, OlderThanValidated,
+	NotRequested, NotNeeded, AbsentFromVersion, ExpectedButMissing, UndecodedOnVersion, ServerNotValidated,
 	StepExaminedVersion, ExaminedVersionUnknown, ExaminedVersionUnread,
 	// End of the run
 	TimeElapsed, PressAnyKey, ConversionLogNotWritten,
