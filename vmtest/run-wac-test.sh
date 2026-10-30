@@ -297,12 +297,6 @@ $QGA write "$HERE/guest/place-file-artefacts.ps1" "$VMDIR\\place-file-artefacts.
 $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\place-file-artefacts.ps1" \
   ${ONLY:+-Only} ${ONLY:+$ONLY} > "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null \
   && echo "   + reference/file-artefacts.txt" || echo "   ⚠️ file artefact witnesses not placed"
-# taskkill again once the witnesses are placed: they take minutes (real
-# browsing, an RDP session…), and the BAM check expects an execution within
-# 300 s of the collection; Windows writes it to the disk within 56 to 82 s,
-# hence the wait (and the registry witnesses' with it).
-$QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
-if wants_registry_witness; then wait_registry_on_disk; fi
 
 if ! full_cycle; then
   echo "== 3. skipped (--only) == ($(date +%H:%M:%S))"
@@ -392,7 +386,15 @@ $QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
 # One hour for each run: the recovery of the deleted files read 2.6 GB at
 # 3.3 MB/s in the Vista VM (13 min), and the collection passed the agent's
 # 30 minutes (2026-10-23); 25 MB/s in the Windows 11 VM.
-$QGA run --timeout 3600 --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\out 2>nul & rmdir /s /q \\\\?\\$VMDIR\\split 2>nul & WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
+$QGA run --timeout 3600 --shell "rmdir /s /q \\\\?\\$VMDIR\\out 2>nul & rmdir /s /q \\\\?\\$VMDIR\\split 2>nul & exit /b 0" >/dev/null 2>&1 || true
+# taskkill once the witnesses are placed and the previous stores removed: both
+# take minutes (real browsing, an RDP session, 3 min to remove a store with
+# its deleted files), and the BAM check expects an execution within 300 s of
+# the collection; Windows writes it to the disk within 56 to 82 s, hence the
+# wait (and the registry witnesses' with it).
+$QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
+if wants_registry_witness; then wait_registry_on_disk; fi
+$QGA run --timeout 3600 --shell "cd /d $VMDIR && WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
 [[ "$CODE" == "0" ]] && { $QGA run --timeout 3600 --shell "cd /d $VMDIR && WAC.exe --convert=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 >> run.log 2>&1" || CODE=$?; }
 $QGA read "$VMDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
 
@@ -706,10 +708,9 @@ if [[ $SPLIT -eq 1 ]]; then
 
   fi
 
-  # taskkill just before the collection, as in step 2: the BAM check expects
+  # taskkill just before the collection, as in step 4: the BAM check expects
   # its execution within minutes of the collection, and the references above
-  # take several. In step 2 the upload and the raw validation leave Windows the
-  # time to write it; here the collection follows at once.
+  # take several.
   $QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
   wants_registry_witness && wait_registry_on_disk
 
