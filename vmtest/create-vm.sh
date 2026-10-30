@@ -100,7 +100,21 @@ case "$PROFILE" in
     # network at all with the e1000e — no route, no known network).
     NIC_MODEL=rtl8139
     FIRMWARE=(--boot hd,cdrom) ;;
-  srv2012r2|srv2016|srv2019|srv2022|srv2025)
+  srv2008r2)
+    # Server 2008 R2 SP1, evaluation (no product key), Standard with the
+    # graphical interface (index 1; 2 is its Server Core): the kernel of
+    # Windows 7, installed as its profile is (BIOS, the answer file without
+    # Windows 8's settings, virtio-win 0.1.173's drivers). The medium is no
+    # longer on Microsoft's site: the copy kept has the SHA-1 Microsoft
+    # published (beed231a34e90e1dd9a04b3afabec31d62ce3889).
+    DOM="${DOM:-srv2008r2-test}"; OSINFO=win2k8r2; MEMORY=4096
+    ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2008r2sp1_eval_en-us.iso}"
+    IMAGE='<Key>/IMAGE/INDEX</Key><Value>1</Value>'; KEY=""
+    MEDIA_LANGUAGE=en-US; GA_DRIVERS='2k8R2\amd64'; OOBE_ENTER=1; BIOS=1; OOBE7=1; ARCH=amd64; CPU=host-passthrough; MACHINE=q35
+    SERVER_PASSWORD="Wac-Server-2026!"
+    ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.173.iso}"
+    FIRMWARE=(--boot hd,cdrom) ;;
+  srv2012|srv2012r2|srv2016|srv2019|srv2022|srv2025)
     # Evaluation media: no product key (the element is removed from the
     # answer file), the edition by its index — 2, Standard with the graphical
     # interface, on every evaluation medium of 2012 R2 to 2025 (1 is its
@@ -112,6 +126,8 @@ case "$PROFILE" in
     SERVER_PASSWORD="Wac-Server-2026!"
     FIRMWARE=(--boot firmware=efi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no)
     case "$PROFILE" in
+      srv2012)   OSINFO=win2k12;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2012_eval_en-us.iso}";     MEDIA_LANGUAGE=en-US
+                 GA_DRIVERS='2k12\amd64'; ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.189.iso}" ;;
       srv2012r2) OSINFO=win2k12r2; ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2012r2_eval_fr-fr.iso}"; MEDIA_LANGUAGE=fr-FR
                  GA_DRIVERS='2k12R2\amd64'; ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.189.iso}" ;;
       srv2016)   OSINFO=win2k16;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2016_eval_fr-fr.iso}";   MEDIA_LANGUAGE=fr-FR
@@ -127,7 +143,7 @@ case "$PROFILE" in
     DOM="${DOM:-winxp-test}"
     ISO_WIN="${ISO_WIN:-$HERE/tools/isos/Windows XP Professional (SP1) (x86).iso}"
     ISO_VIRTIO="$ISO_WIN" ;;   # no virtio driver: nothing but what XP itself has
-  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, vista, winxp, srv2012r2, srv2016, srv2019, srv2022, srv2025)" >&2; exit 2 ;;
+  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, vista, winxp, srv2008r2, srv2012, srv2012r2, srv2016, srv2019, srv2022, srv2025)" >&2; exit 2 ;;
 esac
 
 ISO_ANS="$VMS/autounattend-$PROFILE.iso"
