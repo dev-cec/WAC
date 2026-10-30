@@ -70,6 +70,7 @@
 #include "registry_common.h"
 #include "sqlite3.h"
 #include "sha.h"
+#include "processes.h"
 #include <filesystem>
 #include <fstream>
 #include "guard_page.h"
@@ -2432,8 +2433,31 @@ int dumpBmcCache(const wchar_t* path, const wchar_t* folder) {
 	return 0;
 }
 
+/*! The modules of a running process, read through the handle WAC opens for
+ *  them (query and memory read): the test's own process, whose first module
+ *  is its executable. The rights asked for are checked under Sysmon, on the
+ *  footprint clone; here, that the list is still read and in order. */
+void processModulesOfOwnProcess() {
+	PROCESSENTRY32W entry = {};
+	entry.dwSize = sizeof(entry);
+	entry.th32ProcessID = GetCurrentProcessId();
+	wcscpy_s(entry.szExeFile, L"file_artefacts_test.exe");
+	Process own(&entry);
+	wchar_t self[MAX_PATH] = L"";
+	const DWORD length = GetModuleFileNameW(nullptr, self, MAX_PATH);
+	check(own.processModulesAccess == L"OK", "own process: its modules listed");
+	check(!own.processModules.empty() && length && _wcsicmp(own.processModules.front().c_str(), self) == 0,
+	      "own process: its first module is its executable");
+	bool kernel32 = false;
+	for (const std::wstring& m : own.processModules)
+		kernel32 = kernel32 || (m.size() >= 12 && _wcsicmp(m.c_str() + m.size() - 12, L"kernel32.dll") == 0);
+	check(kernel32, "own process: kernel32.dll among its modules");
+	own.clear();
+}
+
 int wmain(int argc, wchar_t** argv) {
 	if ((argc == 3 || argc == 4) && std::wcscmp(argv[1], L"--bmc") == 0) return dumpBmcCache(argv[2], argc == 4 ? argv[3] : nullptr);
+	processModulesOfOwnProcess();
 	shimcacheWindows7();
 	shimcacheVista();
 	rdpBmcCache();

@@ -135,9 +135,9 @@ done
 echo "== Link =="
 # Only what querying the running system requires: accounts, tokens and
 # services (advapi32), the process list (wtsapi32), the logon sessions
-# (secur32). Formatting and parsing — GUIDs, SIDs, OLE dates, property names,
+# (secur32), the modules of each process (psapi, present since XP). Formatting and parsing — GUIDs, SIDs, OLE dates, property names,
 # the command line, the registry hives — are WAC's own code.
-LIBS=(-ladvapi32 -lwtsapi32 -lsecur32 -lbcrypt)
+LIBS=(-ladvapi32 -lwtsapi32 -lsecur32 -lpsapi -lbcrypt)
 # -municode: WAC's entry point is wmain (arguments in UTF-16).
 # --no-insert-timestamp: no link date in the PE header — the same sources give
 # the same WAC.exe, byte for byte; its version is in its resource (WAC.rc).
@@ -173,7 +173,7 @@ if command -v "$CXX32" >/dev/null && [[ "$("$CXX32" -v 2>&1 | sed -n 's/^Thread 
     'mapfile -t F < "$BUILD32/flags.txt"; tu="{}"; "$CXX32" "${F[@]}" -c "$SRC/$tu" -o "$BUILD32/${tu%.cpp}.o"'
   for tu in "${TUS[@]}"; do OBJS32+=("$BUILD32/${tu%.cpp}.o"); done
   # No -lbcrypt: bcrypt.dll does not exist under XP, xp_imports.cpp loads it where it does.
-  LIBS32=(-ladvapi32 -lwtsapi32 -lsecur32)
+  LIBS32=(-ladvapi32 -lwtsapi32 -lsecur32 -lpsapi)
   "$CXX32" -municode -static -static-libgcc -static-libstdc++ -Wl,--no-insert-timestamp \
     "${OBJS32[@]}" "$BUILD32/WAC_res.o" -o "$BUILD/WAC32.exe" "${LIBS32[@]}"
   WAC32="$BUILD/WAC32.exe"

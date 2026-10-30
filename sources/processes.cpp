@@ -5,6 +5,11 @@
 #include "live_snapshot.h"
 
 #include <wtsapi32.h>
+/* PSAPI_VERSION 1: EnumProcessModules and GetModuleFileNameExW from psapi.dll,
+   which every Windows has since XP. Version 2, the default for Windows 7 and
+   later, names them K32… in kernel32.dll, absent from XP: WAC32 would not load. */
+#define PSAPI_VERSION 1
+#include <psapi.h>
 
 namespace {
 
@@ -65,11 +70,11 @@ Process::Process(const PROCESSENTRY32W* pe32) {
 	log(2, L"❇️Process Name : " + processName + L" (PID " + std::to_wstring(processId) + L")");
 
 	/* PID 0 — THE TRAP NOT TO REPRODUCE.
-	   `CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0)` does not mean "process 0"
-	   but "the CURRENT PROCESS". The Idle process was therefore credited with
-	   the 25 modules of WAC.exe itself, WAC.exe first: an investigation report
-	   stated that the system process had loaded the collection tool. The Idle
-	   process has neither an image nor a module anyway. */
+	   The Toolhelp module snapshot once used here read PID 0 as "the CURRENT
+	   PROCESS": the Idle process was credited with the 25 modules of WAC.exe
+	   itself, WAC.exe first, and an investigation report stated that the system
+	   process had loaded the collection tool. The Idle process has neither an
+	   image nor a module: it is not asked. */
 	if (processId == 0) {
 		processModulesAccess = L"Idle process: no module by nature";
 		return;
@@ -78,62 +83,87 @@ Process::Process(const PROCESSENTRY32W* pe32) {
 	/* The modules are read independently of the owner. In the original version, a
 	   failure to read the token caused a `return` before this call: the 16
 	   protected processes therefore also came out with NO module at all, while
-	   the Toolhelp snapshot does not depend on the token. */
+	   the module list does not depend on the token. */
 	log(3, L"🔈ListProcessModules");
 	const HRESULT result = ListProcessModules();
 	if (result != ERROR_SUCCESS)
 		log(2, L"🔥ListProcessModules : ", result);
 }
 
+/*! The modules of the process, through a handle opened with the least the
+ *  listing needs.
+ *
+ *  WHY NOT TOOLHELP ANY MORE. `CreateToolhelp32Snapshot(TH32CS_SNAPMODULE)`
+ *  opens the process itself, inside kernel32, with every right it can get:
+ *  measured under Sysmon (event 10) on Windows 11, 42 processes of the session
+ *  opened with 0x1FFFFF, PROCESS_ALL_ACCESS — the footprint processes.h
+ *  explains WAC gave up, asked for by the API in its place. Reading the module
+ *  list needs PROCESS_QUERY_INFORMATION and PROCESS_VM_READ (0x410), nothing
+ *  more: no write, no thread, no injection right. A protected process (lsass
+ *  under LSA protection, services, csrss, Defender) refuses it, as it refused
+ *  Toolhelp; the refusal is recorded.
+ *
+ *  The modules are those of the process's own bitness, as Toolhelp gave them
+ *  (LIST_MODULES_DEFAULT): the same list as before, for each process. */
 HRESULT Process::ListProcessModules() {
-	HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
-	MODULEENTRY32 me32;
-
-	// Take a snapshot of all modules in the specified process.
-	log(3, L"🔈CreateToolhelp32Snapshot");
-	hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId);
-	if (hModuleSnap == INVALID_HANDLE_VALUE)
-	{
-		HRESULT error = GetLastError();
-		log(3, L"🔈getErrorMessage error");
-		processModulesAccess = getErrorMessage(error);
-		log(2, L"🔥CreateToolhelp32Snapshot (of modules)", error);
-		return(ERROR_INVALID_HANDLE);
-	}
-
-	// Set the size of the structure before using it.
-	me32.dwSize = sizeof(MODULEENTRY32);
-
-	// Retrieve information about the first module,
-	// and exit if unsuccessful
-	log(3, L"🔈Module32First");
-	if (!Module32First(hModuleSnap, &me32)) {
+	log(3, L"🔈OpenProcess (query, memory read)");
+	HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+	if (!process) {
 		// Taken once: log() opens its file, which sets another error.
 		const DWORD error = GetLastError();
-		log(2, L"🔥Module32First", error);
 		processModulesAccess = getErrorMessage(error);
-		CloseHandle(hModuleSnap);
+		log(2, L"🔥OpenProcess (query, memory read)", error);
 		return ERROR_INVALID_HANDLE;
 	}
 
-	if (conf.binary) {
-		// The first module returns the executable's path
-		log(3, L"🔈FingerprintFile");
-		fingerprint = FingerprintFile(me32.szExePath);
+	/* The list, as large as the process says it is. A process that is starting
+	   or loading a library answers ERROR_PARTIAL_COPY while its loader list
+	   moves: asked again, a few times, as Toolhelp did. */
+	std::vector<HMODULE> modules(256);
+	DWORD needed = 0;
+	DWORD error = ERROR_SUCCESS;
+	for (int attempt = 0; attempt < 4; ++attempt) {
+		const DWORD bytes = (DWORD)(modules.size() * sizeof(HMODULE));
+		log(3, L"🔈EnumProcessModules");
+		if (!EnumProcessModules(process, modules.data(), bytes, &needed)) {
+			error = GetLastError();
+			if (error == ERROR_PARTIAL_COPY) continue;
+			break;
+		}
+		error = ERROR_SUCCESS;
+		if (needed <= bytes) break;
+		modules.resize(needed / sizeof(HMODULE));   // grown: asked again
+		error = ERROR_INSUFFICIENT_BUFFER;
 	}
+	if (error != ERROR_SUCCESS) {
+		processModulesAccess = getErrorMessage(error);
+		log(2, L"🔥EnumProcessModules", error);
+		CloseHandle(process);
+		return ERROR_INVALID_HANDLE;
+	}
+	modules.resize(needed / sizeof(HMODULE));
 
-	// Now walk the module list of the process,
-	// and display information about each module
-
-	do {
-		std::wstring path = me32.szExePath;
-		log(2, L"❇️Module exePath : " + path);
-		processModules.push_back(std::move(path));
-		log(3, L"🔈Module32Next");
-	} while (Module32Next(hModuleSnap, &me32));
-
-	CloseHandle(hModuleSnap);
-	return(ERROR_SUCCESS);
+	/* Each module's path, bounded by the buffer: a path past MAX_PATH is held
+	   by the extended length of the API (32 767 characters). */
+	std::vector<wchar_t> path(32768);
+	for (size_t i = 0; i < modules.size(); ++i) {
+		log(3, L"🔈GetModuleFileNameExW");
+		const DWORD length = GetModuleFileNameExW(process, modules[i], path.data(), (DWORD)path.size());
+		if (length == 0) {
+			log(2, L"🔥GetModuleFileNameExW", GetLastError());   // unloaded meanwhile: left out
+			continue;
+		}
+		std::wstring name(path.data(), length);
+		// The first module is the executable.
+		if (i == 0 && conf.binary) {
+			log(3, L"🔈FingerprintFile");
+			fingerprint = FingerprintFile(name);
+		}
+		log(2, L"❇️Module exePath : " + name);
+		processModules.push_back(std::move(name));
+	}
+	CloseHandle(process);
+	return ERROR_SUCCESS;
 }
 
 Json Process::toJson() const {

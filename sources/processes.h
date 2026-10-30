@@ -24,10 +24,12 @@
  *  call, which returns them for ALL processes without opening any handle. Less
  *  footprint, and more data.
  *
- *  The module list goes through `CreateToolhelp32Snapshot(TH32CS_SNAPMODULE)`,
- *  which never needed the handle. It is therefore collected even when the owner
- *  is unknown: the two reads are independent, and chaining them lost the
- *  modules on every token failure.
+ *  The module list needs a handle on each process: it is opened with
+ *  PROCESS_QUERY_INFORMATION and PROCESS_VM_READ alone, and read through psapi
+ *  (see ListProcessModules — the Toolhelp module snapshot it replaces opened
+ *  the process with PROCESS_ALL_ACCESS in its place, measured under Sysmon).
+ *  It is collected even when the owner is unknown: the two reads are
+ *  independent, and chaining them lost the modules on every token failure.
  */
 #pragma once
 
@@ -67,8 +69,9 @@ struct Process {
 	*/
 	explicit Process(const PROCESSENTRY32W* pe32);
 
-	/*! Lists the modules (DLLs) the process has loaded. Needs no handle on the
-	 *  process, so it works on protected processes too.
+	/*! Lists the modules (DLLs) the process has loaded, through a handle with
+	 *  query and memory-read rights only; a protected process refuses it, and
+	 *  the refusal is recorded (processModulesAccess).
 	 *  @return the result of the listing.
 	*/
 	HRESULT ListProcessModules();

@@ -30,8 +30,10 @@ const wchar_t* SCM          = L"A single read-only enumeration of the service ma
                               L"(EnumServicesStatusExW), to read the current state. No "
                               L"handle opened service by service: the configuration comes "
                               L"from the copied SYSTEM hive.";
-const wchar_t* PROCESSES    = L"Enumeration of the processes: opening of process and token "
-                              L"handles (auditable if the policy provides for it).";
+const wchar_t* PROCESSES    = L"Enumeration of the processes (Toolhelp, Terminal Services), then one "
+                              L"handle per process with query and memory-read rights only, for its module "
+                              L"list: no write, thread or injection right (auditable if the policy "
+                              L"provides for it).";
 const wchar_t* SESSIONS     = L"Query of the open sessions (LSA / Terminal Services): "
                               L"solicits LSASS, without modifying any artefact.";
 const wchar_t* NETWORK      = L"Reading of the TCP/IP stack's tables (connections, ARP/NDP "
