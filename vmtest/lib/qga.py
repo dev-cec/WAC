@@ -244,8 +244,16 @@ def guest_read_text(dom, guest_path):
                 break
     finally:
         qga(dom, {"execute": "guest-file-close", "arguments": {"handle": h}})
-    # UTF-8 when the script set its output so, the console's code page otherwise.
-    # PowerShell 2 heads a redirected UTF-8 output with a byte-order mark: not part of it.
+    return console_text(data)
+
+
+def console_text(data):
+    """The output of a command of the VM as text: UTF-8 when the command set
+    its output so, the console's code page otherwise. PowerShell 2 heads a
+    redirected UTF-8 output with a byte-order mark: not part of it. PowerShell
+    4 (Server 2012 R2) keeps the encoder its redirected output started with:
+    measured, [Console]::OutputEncoding then gives 65001 and "é" is still
+    written 0x82, in the console's code page."""
     if data.startswith(b"\xef\xbb\xbf"):
         data = data[3:]
     try:
@@ -279,8 +287,8 @@ def run_direct(dom, argv, capture=True, timeout=DEFAULT_TIMEOUT):
         st = qga(dom, {"execute": "guest-exec-status", "arguments": {"pid": pid}})
         if st.get("exited"):
             pending_save(dom, [p for p in pending_load(dom) if p != pid])
-            out = base64.b64decode(st.get("out-data", "")).decode("utf-8", "replace")
-            err = base64.b64decode(st.get("err-data", "")).decode("utf-8", "replace")
+            out = console_text(base64.b64decode(st.get("out-data", "")))
+            err = console_text(base64.b64decode(st.get("err-data", "")))
             return st.get("exitcode", 0), out, err
         if time.time() - t0 > timeout:
             sys.exit(f"[qga] execution timeout ({timeout} s) — the command "

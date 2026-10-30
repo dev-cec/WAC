@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""qga_test.py — read_file of qga.py against a fake agent, without any VM.
+"""qga_test.py — read_file of qga.py against a fake agent, without any VM,
+and the decoding of a command's output.
 
 The fake agent holds one file and its position, as qemu-guest-agent does,
 and answers some reads as virsh does on a timeout: the read is done, the
@@ -46,7 +47,23 @@ class FakeAgent:
         return subprocess.CompletedProcess(argv, 0, json.dumps({"return": result}), "")
 
 
+def check_console_text():
+    """The output of PowerShell 4 on a French Windows, as measured on Server
+    2012 R2: "é" written 0x82 (code page 850) though UTF-8 was asked for."""
+    measured = b"Utilisateurs du Bureau \x85 distance\r\nR\x82seau\r\n"
+    if qga.console_text(measured) != "Utilisateurs du Bureau à distance\r\nRéseau\r\n":
+        print(f"FAIL: code page 850 output read as {qga.console_text(measured)!r}")
+        return 1
+    if qga.console_text("\ufeffRéseau".encode("utf-8")) != "Réseau":
+        print("FAIL: UTF-8 output with its byte-order mark not read as written")
+        return 1
+    print("OK: console output in code page 850 and in UTF-8 read as written")
+    return 0
+
+
 def main():
+    if check_console_text():
+        return 1
     agent = FakeAgent(10 * CHUNK + 1234, lost={4, 9})
     with tempfile.TemporaryDirectory() as folder, \
          mock.patch.object(qga.subprocess, "run", agent), mock.patch.object(qga.time, "sleep"):
