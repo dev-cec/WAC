@@ -109,6 +109,7 @@ Machine & Windows 11 Professionnel (build 26200), machine virtuelle \\
 Outils EZ & version 2026.5.0 (.NET 9.0.20) \\
 KAPE & version 1.3.0.2, cible \texttt{KapeTriage} \\
 \wac{} & version 3.0.0 et ses corrections issues de cette confrontation \\
+Mesures & 29 et 30 octobre 2026 \\
 Mesure des traces & clone de la machine, sans réseau, figé ; Sysmon 15.22 ; \\
                   & outils sur une clé USB (K:), une exécution par outil \\
 \end{tabular}
@@ -136,25 +137,25 @@ la même valeur des deux côtés.
 \toprule
 \textbf{Artefact --- outil} & \textbf{Comparés} & \textbf{Champs comparés} & \textbf{Écarts, et qui a raison} \\
 \midrule\endhead
-\$MFT --- MFTECmd & 361\,920 entrées & chemin, état (supprimé, dossier), 8 dates, taille, entrée MFT & tailles de 1\,491 fichiers compressés (WOF), 8 fichiers ouverts, 1 fichier supprimé : \wac{}, comme Windows \\
-EVTX --- EvtxECmd & 211\,525 événements & identifiant, date, fournisseur, machine, données de l'événement & 10 valeurs : \wac{}, comme Windows ; 435 événements Perflib qu'EvtxECmd ne lit pas ; journaux vidés qu'il ignore \\
-Prefetch --- PECmd & 478 fichiers & exécutable, empreinte, exécutions et leurs dates, volumes, fichiers chargés & empreinte sans son zéro de tête chez PECmd (23) ; répertoires de deux volumes collés (1) \\
-Raccourcis --- LECmd & 26 fichiers & cible, dates au 100\,ns, taille, volume, machine, arguments & aucun \\
-Jump lists --- JLECmd & 60 entrées & chemin, compteur, épinglage, dates, raccourci de chaque entrée & aucun \\
+\$MFT --- MFTECmd & 358\,335 entrées & chemin, état (supprimé, dossier), 8 dates, taille, entrée MFT & tailles de 2\,010 fichiers compressés (WOF) et de 10 fichiers ouverts en écriture : \wac{}, comme Windows \\
+EVTX --- EvtxECmd & 246\,096 événements & identifiant, date, fournisseur, machine, données de l'événement & 25 valeurs : \wac{}, comme Windows ; 835 événements Perflib qu'EvtxECmd ne lit pas ; journaux vidés qu'il ignore \\
+Prefetch --- PECmd & 411 fichiers & exécutable, empreinte, exécutions et leurs dates, volumes, fichiers chargés & empreinte sans son zéro de tête chez PECmd (20) ; répertoires de deux volumes collés (1) ; date de volume nulle écrite 1601 (2) \\
+Raccourcis --- LECmd & 67 fichiers & cible, dates au 100\,ns, taille, volume, machine, arguments & aucun \\
+Jump lists --- JLECmd & 123 entrées & chemin, compteur, épinglage, dates, raccourci de chaque entrée & aucun \\
 Shellbags --- SBECmd & 46 dossiers & nom, rang, dates de la clé et du dossier, entrée MFT & NodeSlot faux au premier niveau chez SBECmd (9) ; « exploré » toujours faux \\
-Amcache --- AmcacheParser & 1\,479 entrées & les 124 colonnes communes des 7 tables & 3\,450 valeurs absentes de la ruche, inventées par AmcacheParser ; SHA-1 partiel non signalé \\
-ShimCache --- AppCompat\-Cache\-Parser & 367 entrées & chemin, date, rang & aucun ; l'indicateur « exécuté » d'AppCompatCacheParser, trompeur, n'est pas relevé \\
-Corbeille --- RBCmd & 66 fichiers & chemin d'origine, taille, date de suppression & aucun \\
-SRUM --- SrumECmd & 91\,008 lignes & les 5 tables, toutes leurs colonnes & 16 lignes d'énergie fausses chez SrumECmd (dissect.esedb) ; base non fermée qu'il refuse \\
-Registre --- RECmd & 9 artefacts & UserAssist, BAM, USBSTOR, comptes, Run, MuiCache, chemins tapés, recherches, documents de confiance & 4 ruches ramenées à un état ancien par RECmd ; un compte supprimé encore listé \\
-Collecte --- KAPE & 1\,416 fichiers pris des deux côtés & empreinte SHA-1 & 23 différents : fichiers que Windows a réécrits entre les deux collectes \\
+Amcache --- AmcacheParser & 1\,890 entrées & les 124 colonnes communes des 8 tables & 5\,500 valeurs absentes de la ruche, inventées par AmcacheParser ; SHA-1 partiel non signalé \\
+ShimCache --- AppCompat\-Cache\-Parser & 596 entrées & chemin, date, rang & aucun ; l'indicateur « exécuté » d'AppCompatCacheParser, trompeur, n'est pas relevé \\
+Corbeille --- RBCmd & 130 fichiers & chemin d'origine, taille, date de suppression & aucun \\
+SRUM --- SrumECmd & 115\,899 lignes & les 7 tables, toutes leurs colonnes & 8 lignes d'énergie décalées d'une ligne chez SrumECmd (dissect.esedb) \\
+Registre --- RECmd & 9 artefacts & UserAssist, BAM, USBSTOR, comptes, Run, MuiCache, chemins tapés, recherches, documents de confiance & ruches ramenées à un état ancien par RECmd (BAM, UserAssist, USBSTOR, SAM, documents de confiance) \\
+Collecte --- KAPE & 1\,430 fichiers pris des deux côtés & empreinte SHA-1 & 18 différents : fichiers que Windows a réécrits entre les deux collectes \\
 \bottomrule
 \end{longtable}
 
 \begin{note}
 Sur tout ce que les deux côtés lisent, \wac{} donne les mêmes valeurs que les
 outils de référence, ou des valeurs plus justes, établies à chaque fois par une
-source indépendante. La confrontation a aussi révélé 28 défauts de \wac{}, tous
+source indépendante. La confrontation a aussi révélé 29 défauts de \wac{}, tous
 corrigés (chapitre~\ref{chap:defauts}), et des lacunes de couverture,
 toutes comblées depuis (section~\ref{sec:couverture}).
 
@@ -162,9 +163,9 @@ Lancé depuis une clé, \wac{} n'écrit rien sur la machine examinée : ni fichi
 ni valeur de registre, ni événement dans les journaux de Windows. Restent les
 traces que Windows laisse de tout programme lancé (Amcache, ShimCache), et ce
 qu'une surveillance en place enregistre de son exécution : Sysmon, l'audit de
-création de processus, un EDR. KAPE et les outils EZ, des
-programmes .NET, écrivent dans le registre de l'utilisateur et, pour les
-modules de KAPE, des fichiers sur le volume système
+création de processus, un EDR ; les ruches relues hors ligne le confirment.
+KAPE, un programme .NET, écrit dans le registre de l'utilisateur, et ses
+modules des clés dans SOFTWARE et des fichiers sur le volume système
 (chapitre~\ref{chap:traces}).
 \end{note}
 
@@ -193,59 +194,70 @@ juste après l'autre.
 \toprule
 \textbf{Outil, réglage} & \textbf{Durée} & \textbf{Fichiers} & \textbf{Volume} \\
 \midrule\endhead
-KAPE, \texttt{KapeTriage} & 44\,s & 1\,427 & 0,96\,Go \\
-\wac{}, sans les exécutables (\texttt{binary: none}) & 41\,s & 2\,178 & 2,62\,Go \\
-\wac{}, kit livré (\texttt{binary: unverified}) & 488\,s & 72\,887 consignés & 3,66\,Go \\
+KAPE, \texttt{KapeTriage} & 53\,s & 1\,435 & 0,98\,Go \\
+\wac{}, sans les exécutables (\texttt{binary: none}) & 226\,s & 16\,042 & 7,52\,Go \\
+\quad dont les fichiers supprimés récupérés & 156\,s & 12\,529 & 4,29\,Go \\
+\wac{}, kit livré (\texttt{binary: unverified}) & 626\,s & 72\,188 consignés & 8,50\,Go \\
 \bottomrule
 \end{longtable}
 
-Sans les exécutables, \wac{} est un peu plus rapide que KAPE et ramène
-2,7~fois plus de données. Ses étapes, mesurées dans cette exécution :
+Les deux tiers de la collecte de \wac{} vont aux fichiers supprimés, que la
+version 3.0.0 récupère par défaut (niveau~2, 4\,Gio copiés au plus) : KAPE
+n'en récupère aucun. Sans eux, \wac{} prend en 64\,s ce que KAPE prend en
+53\,s, et 2\,078 fichiers de plus (3\,513 en tout, 3,2\,Go). Ses étapes,
+mesurées dans cette exécution :
 
 \begin{longtable}{@{}L{8.4cm}L{2.0cm}L{4.6cm}@{}}
 \toprule
 \textbf{Étape de \wac{}} & \textbf{Durée} & \textbf{Chez KAPE} \\
 \midrule\endhead
-Contrôles : version de Windows, droits, place libre sur le support & 0,00\,s & aucun contrôle de place \\
-Observation de la machine en marche : sessions, processus, réseau, services, horloge & 0,16\,s & --- \\
+Contrôles : droits, place libre sur le support & 0,00\,s & aucun contrôle de place \\
+Observation de la machine en marche : sessions, processus, réseau, services, horloge & 0,15\,s & --- \\
 Ruches du système, en lecture brute NTFS ; le volume est ouvert une fois, et
-  ses répertoires mis en cache pour toute la collecte & 2,09\,s & copie, lecture brute pour les fichiers verrouillés \\
-Ruches des utilisateurs & 0,23\,s & idem \\
-Fichiers des artefacts (journaux, Prefetch, raccourcis, navigateurs…) & 18,10\,s & idem \\
-\$MFT, \$UsnJrnl, \$LogFile, \$Boot, \$Secure:\$SDS & 6,03\,s & idem \\
-Recherche des volumes FAT et exFAT (clés USB) et lecture de leurs métadonnées & 0,02\,s & --- \\
+  ses répertoires mis en cache pour toute la collecte & 2,34\,s & copie, lecture brute pour les fichiers verrouillés \\
+Ruches des utilisateurs & 0,25\,s & idem \\
+Fichiers des artefacts (journaux, Prefetch, raccourcis, navigateurs, traces
+  ETW, courrier…) & 38,22\,s & idem \\
+\$MFT, \$UsnJrnl, \$LogFile, \$Boot, \$Secure:\$SDS & 6,63\,s & idem \\
+Secteurs et fichiers de démarrage (MBR, GPT, secteurs de démarrage, partition EFI) & 2,51\,s & --- \\
+Recherche des volumes FAT et exFAT (clés USB) et lecture de leurs métadonnées & 0,04\,s & --- \\
+Clichés instantanés, en lecture brute, sans le service VSS (aucun sur la machine) & 0,01\,s & option, par le service VSS \\
 Fichiers de ressources des fournisseurs que citent les journaux, pour le
-  texte des événements & 11,15\,s & --- \\
-Scellement : manifeste, empreinte SHA-256 du manifeste & 0,09\,s & journal de copie \\
-Hors étapes : démarrage, écriture du journal d'investigation & 3,1\,s & \\
+  texte des événements & 13,76\,s & --- \\
+Fichiers supprimés : contenu des enregistrements libres de la \$MFT et noms
+  restés dans les index & 156,10\,s & --- \\
+Scellement : manifeste, empreinte SHA-256 du manifeste & 0,29\,s & journal de copie \\
+Hors étapes : démarrage, écriture du journal d'investigation & 4,7\,s & \\
 \bottomrule
 \end{longtable}
 
 Les trois empreintes de chaque pièce (MD5, SHA-1, SHA-256) et ses dates NTFS
 sont prises pendant la lecture même : le scellement n'a plus qu'à écrire le
-manifeste. Les étapes propres à \wac{} --- contrôles, observation de la machine,
-volumes FAT, ressources des fournisseurs, scellement --- coûtent 11,4\,s, dont
-11,2\,s pour les ressources des fournisseurs. Ce sont elles qui permettent, sur le
-poste d'analyse, de rendre le texte de chaque événement comme Windows
-l'affiche.
+manifeste. Hors fichiers supprimés, les étapes propres à \wac{} --- contrôles,
+observation de la machine, démarrage, volumes FAT, clichés instantanés,
+ressources des fournisseurs, scellement --- coûtent 16,8\,s, dont 13,8\,s pour
+les ressources des fournisseurs. Ce sont elles qui permettent, sur le poste
+d'analyse, de rendre le texte de chaque événement comme Windows l'affiche. Le
+niveau et le budget des fichiers supprimés se règlent dans \fichier{wac.yml}
+(\texttt{deleted\_files}).
 
-Avec les exécutables (réglage du kit livré), la collecte prend 488\,s, dont
-389\,s pour lire chaque exécutable, bibliothèque, pilote et script du volume.
+Avec les exécutables (réglage du kit livré), la collecte prend 626\,s, dont
+334\,s pour lire chaque exécutable, bibliothèque, pilote et script du volume.
 \wac{} en vérifie la signature Authenticode, en mémoire, contre son jeu de
-confiance, et ne copie que ceux dont la signature ne tient pas. Les 54\,467
+confiance, et ne copie que ceux dont la signature ne tient pas. Les 40\,531
 fichiers lus se répartissent ainsi :
 \begin{itemize}[nosep]
-  \item 28\,180 authentifiés comme Microsoft et 328 validés par une chaîne
+  \item 25\,875 authentifiés comme Microsoft et 329 validés par une chaîne
         tierce : empreintes consignées, fichiers non copiés ;
-  \item 12\,691 fichiers différentiels de Windows (MSDELTA), qui ne sont pas
+  \item 11\,334 fichiers différentiels de Windows (MSDELTA), qui ne sont pas
         des exécutables : empreintes consignées, non copiés ;
-  \item 2\,599 dont la signature ne tient pas, copiés (771\,Mo) ;
-  \item 10\,669 au contenu identique à une pièce déjà copiée : consignés,
+  \item 2\,768 dont la signature ne tient pas, copiés (823\,Mio) ;
+  \item 225 au contenu identique à une pièce déjà copiée : consignés,
         renvoyés à cette pièce, non copiés une seconde fois.
 \end{itemize}
-Les 43\,s de l'observation des processus
+Les 41\,s de l'observation des processus
 viennent, dans ce réglage, des empreintes de chaque module chargé, et les
-5\,s du jeu de confiance de son chargement. KAPE ne fait aucun de ces
+6\,s du jeu de confiance de son chargement. KAPE ne fait aucun de ces
 contrôles : il copie les fichiers de ses cibles sans les examiner.
 
 \section{Conversion et décodage}
@@ -261,19 +273,19 @@ refusé de convertir une consigne qui ne correspondait plus à son manifeste.
 \toprule
 \textbf{Artefact} & \textbf{\wac{}} & \textbf{\wac{} \opt{binary}} & \textbf{Outil EZ} & \textbf{Outil} \\
 \midrule\endhead
-\$MFT (C: et G:) & 4,14\,s & 4,02\,s & 9,2\,s & MFTECmd (C: seul) \\
-Journaux d'événements & 10,65\,s & 9,97\,s & 24,6\,s & EvtxECmd \\
-Prefetch (478) & 0,33\,s & 11,66\,s & 2,4\,s & PECmd \\
-Raccourcis & 0,03\,s & 0,04\,s & 1,6\,s & LECmd \\
-Jump lists & 0,03\,s & 0,04\,s & 0,6\,s & JLECmd \\
-Shellbags & 0,01\,s & 0,01\,s & 0,9\,s & SBECmd \\
-ShimCache & 0,01\,s & 0,39\,s & 1,2\,s & AppCompat\-Cache\-Parser \\
-Amcache & 0,07\,s & 8,96\,s & 0,7\,s & AmcacheParser \\
-Corbeille & 0,07\,s & 0,01\,s & 0,5\,s & RBCmd \\
-SRUM & 1,77\,s & 1,72\,s & 2,5\,s & SrumECmd \\
-Registre (lot Kroll) & 0,26\,s & 1,43\,s & 10,2\,s & RECmd \\
+\$MFT (C: et G:) & 4,81\,s & 4,68\,s & 10,0\,s & MFTECmd (C: seul) \\
+Journaux d'événements & 15,37\,s & 16,34\,s & 33,1\,s & EvtxECmd \\
+Prefetch (411) & 0,36\,s & 2,78\,s & 3,0\,s & PECmd \\
+Raccourcis & 0,04\,s & 0,19\,s & 4,4\,s & LECmd \\
+Jump lists & 0,04\,s & 0,44\,s & 0,8\,s & JLECmd \\
+Shellbags & 0,02\,s & 0,04\,s & 1,0\,s & SBECmd \\
+ShimCache & 0,00\,s & 0,32\,s & 1,5\,s & AppCompat\-Cache\-Parser \\
+Amcache & 0,12\,s & 11,14\,s & 0,8\,s & AmcacheParser \\
+Corbeille & 0,02\,s & 0,07\,s & 0,6\,s & RBCmd \\
+SRUM & 2,26\,s & 2,36\,s & 3,1\,s & SrumECmd \\
+Registre (lot Kroll) & 0,49\,s & 2,45\,s & 15,9\,s & RECmd \\
 \midrule
-\textbf{Somme} & 17,4\,s & 38,3\,s & 54,4\,s & les 11 outils \\
+\textbf{Somme} & 23,5\,s & 40,8\,s & 74,2\,s & les 11 outils \\
 \bottomrule
 \end{longtable}
 
@@ -284,21 +296,23 @@ et que les outils EZ n'ont pas :
 \toprule
 \textbf{Étape commune de \wac{}} & \textbf{Durée} \\
 \midrule\endhead
-Vérification du sceau et des empreintes de chaque pièce & 10,9\,s \\
-Reconstruction de la copie de travail depuis la consigne (2,1\,Go), chaque
-  copie vérifiée par son empreinte & 45,1\,s \\
+Vérification du sceau et des empreintes de chaque pièce & 37,2\,s \\
+Reconstruction de la copie de travail depuis la consigne (5,9\,Go, dont
+  4,3\,Go de fichiers supprimés), chaque copie vérifiée par son empreinte & 136,8\,s \\
 Réparation des ruches de la copie de travail (rejeu de leurs journaux) & 0,5\,s \\
 Fuseau, page de codes, profils et noms des comptes du suspect & 0,0\,s \\
 \midrule
-\textbf{Total} & 56,5\,s \\
+\textbf{Total} & 174,5\,s \\
 \bottomrule
 \end{longtable}
 
-La conversion entière dure 80\,s : les 56\,s communs, les 17,4\,s des onze
-artefacts comparés, et 6,4\,s pour les 38 autres, que les outils EZ ne lisent
-pas (journal des modifications, tâches planifiées, caches de miniatures,
-connexions RDP, courrier, navigateurs…). Les onze outils EZ prennent ensemble
-54\,s, sans copie de travail ni vérification de la consigne.
+La conversion entière dure 209\,s : les 175\,s communs, les 23,5\,s des onze
+artefacts comparés, et 10,8\,s pour les 45 autres, que les outils EZ ne lisent
+pas (fichiers supprimés, journal des modifications, tâches planifiées, caches
+de miniatures, connexions RDP, courrier, navigateurs…). Les onze outils EZ
+prennent ensemble 74\,s, sans copie de travail ni vérification de la
+consigne. Les fichiers supprimés pèsent surtout ici : leurs 4,3\,Go sont
+vérifiés et recopiés comme toute pièce.
 
 \begin{itemize}
   \item Une fois la copie de travail faite, chaque décodage de \wac{} est plus
@@ -308,59 +322,63 @@ connexions RDP, courrier, navigateurs…). Les onze outils EZ prennent ensemble
         d'une analyse qui ne touche jamais la consigne, et la même copie est
         nécessaire aux outils EZ, comme SrumECmd l'a montré.
   \item Avec \opt{binary}, \wac{} calcule l'empreinte de chaque fichier que citent
-        les artefacts : +11,3\,s pour le Prefetch (les bibliothèques chargées), +8,9\,s
+        les artefacts : +2,4\,s pour le Prefetch (les bibliothèques chargées), +11,0\,s
         pour l'Amcache. Les outils EZ ne le font pas.
 \end{itemize}
 
 \section{Collecte depuis un même état}
 
-Mesures de la comparaison des traces (chapitre~\ref{chap:traces}) : chaque
-outil part du même état figé de la machine, lancé depuis la clé ; la durée est
-celle de la tâche qui le lance, entre parenthèses celle que l'outil annonce.
+Mesures de la comparaison des traces (chapitre~\ref{chap:traces}), les 29 et
+30 octobre 2026 : chaque outil part du même état figé de la machine, lancé
+depuis la clé ; la durée est celle de la tâche qui le lance, entre parenthèses
+celle que l'outil annonce.
 
 \begin{longtable}{@{}L{5.6cm}L{2.6cm}L{3.4cm}L{3.4cm}@{}}
 \toprule
 \textbf{Outil, réglage} & \textbf{Durée} & \textbf{Pris} & \textbf{Sur la clé} \\
 \midrule\endhead
-KAPE, \texttt{!SANS\_Triage} & 127\,s (115\,s) & 2\,291 fichiers & 2\,286 fichiers, 1,25\,Go \\
-KAPE, \texttt{!SANS\_Triage} et modules \texttt{!EZParser} & 235\,s (223\,s) & 2\,288 fichiers, 14 outils & 2\,345 fichiers, 1,63\,Go \\
-Outils EZ sur la machine vivante (6 outils) & 132\,s & \$MFT, journaux, ruches, Prefetch, Amcache, ShimCache & 36 CSV, 0,55\,Go \\
-\wac{}, collecte (réglage par défaut) & 592\,s (588\,s) & 11\,830 pièces, 67\,882 consignées & 8\,240 fichiers, 4,9\,Go \\
+KAPE, \texttt{!SANS\_Triage} & 167\,s (136\,s) & 2\,674 fichiers & 2\,664 fichiers, 1,33\,Go \\
+KAPE, \texttt{!SANS\_Triage} et modules \texttt{!EZParser} & 304\,s (289\,s) & 2\,673 fichiers, 14 outils & 2\,717 fichiers, 1,86\,Go \\
+Outils EZ sur la machine vivante (6 outils) & 106\,s & \$MFT, journaux, ruches, Prefetch, Amcache, ShimCache & 36 CSV, 0,60\,Go \\
+\wac{}, collecte (réglage par défaut) & 927\,s (924\,s) & 19\,350 pièces, 71\,249 consignées & 22\,004 fichiers, 9,84\,Go \\
 \bottomrule
 \end{longtable}
 
 La collecte de \wac{} est la plus longue parce qu'elle lit \emph{chaque} exécutable
-de la machine : la conversion se fera ailleurs, et elle ne sait pas encore
-lesquels les artefacts citeront. Elle en calcule les empreintes, vérifie leur
-signature et ne copie que ceux dont la signature ne tient pas ; d'où 67\,882
-pièces consignées pour 11\,830 copiées. La conversion, sur le poste d'analyse,
-ne relit rien de la machine (chapitre~\ref{chap:traces}). KAPE copie les fichiers de
-ses cibles sans les examiner.
+de la machine --- la conversion se fera ailleurs, et elle ne sait pas encore
+lesquels les artefacts citeront --- et parce qu'elle récupère les fichiers
+supprimés. Elle calcule les empreintes des exécutables, vérifie leur signature
+et ne copie que ceux dont la signature ne tient pas ; d'où 71\,249 pièces
+consignées pour 19\,350 copiées. La conversion, sur le poste d'analyse, ne
+relit rien de la machine (chapitre~\ref{chap:traces}). KAPE copie les fichiers
+de ses cibles sans les examiner.
 
 % ============================================================ 4
 \chapter{Ce que chacun prélève}\label{chap:prelevement}
 
 \section{Les mêmes pièces, des fichiers différents}
 
-Dernière comparaison : KAPE avec sa cible \texttt{KapeTriage}, et \wac{} sans
-les exécutables (\texttt{binary: none}), l'un juste après l'autre ; les
-fichiers sont appariés par leur chemin d'origine (manifeste de \wac{}, journal
-de copie de KAPE). KAPE prend 1\,421 fichiers, \wac{} 2\,206 ; 1\,416 sont pris
-par les deux.
+Dernière comparaison, le 29 octobre 2026 : KAPE avec sa cible
+\texttt{KapeTriage}, et \wac{} sans les exécutables (\texttt{binary: none}),
+l'un juste après l'autre ; les fichiers sont appariés par leur chemin
+d'origine (manifeste de \wac{}, journal de copie de KAPE). KAPE prend 1\,435
+fichiers, \wac{} 16\,040 ; 1\,430 sont pris par les deux.
 
 KAPE ne prend que 5 fichiers que \wac{} ne prend pas : des \fichier{desktop.ini},
 qui ne fixent que l'icône et le nom affiché d'un dossier. \wac{} prend en plus
-790 fichiers : les fichiers de ressources des fournisseurs d'événements (286),
-qui donnent le texte des événements ; Defender (123) ; les raccourcis hors de
-Recent (76) ; le courrier de Thunderbird, les caches de miniatures de
-l'Explorateur et l'index de recherche de Windows (183 en tout) ; les rapports
-d'erreur (32) ; d'autres ruches et des métadonnées NTFS ; BITS, WMI, DPAPI, hosts, setupapi, les volumes FAT, l'état de la machine
-en marche.
+14\,610 fichiers : les fichiers supprimés qu'il récupère (12\,529) ; les journaux
+et réglages de OneDrive (811) ; les fichiers de ressources des fournisseurs
+d'événements (285), qui donnent le texte des événements ; les traces ETW
+(227) ; Defender (186) ; les secteurs et fichiers de démarrage (158) ; le
+courrier de Thunderbird (156) ; les raccourcis hors de Recent (76) ; l'index
+de recherche de Windows et les caches de miniatures (53 en tout) ; d'autres
+ruches et des métadonnées NTFS ; DPAPI, l'identité cloud, BITS, WMI, hosts,
+setupapi, les volumes FAT, l'état de la machine en marche.
 
-Sur les 1\,416 fichiers communs, 1\,393 ont la même empreinte SHA-1. Les 23
+Sur les 1\,430 fichiers communs, 1\,412 ont la même empreinte SHA-1. Les 18
 autres sont des fichiers que Windows réécrit sans cesse --- \$MFT, journal des
-modifications, Prefetch, journaux de Defender, SRUM --- et qu'il a modifiés entre
-les deux collectes.
+modifications, Prefetch, journaux de Defender, WebCache --- et qu'il a modifiés
+entre les deux collectes.
 
 \section{Ce qui est consigné de chaque pièce}
 
@@ -376,7 +394,7 @@ Dates du fichier & les 4 de \texttt{\$STANDARD\_INFORMATION} et les 4 de
 Emplacement & numéro d'enregistrement MFT & chemin seul \\
 Méthode & dite pour chaque pièce (lecture brute NTFS, observation vivante) &
   copie ordinaire ; lecture brute « différée » pour les fichiers verrouillés
-  (181 sur 2\,292) \\
+  (180 sur 2\,674) \\
 Échec & code et cause dans le manifeste, pièce par pièce & console et journal \\
 Intégrité & manifeste scellé (SHA-256), revérifié à chaque conversion & --- \\
 \bottomrule
@@ -395,12 +413,12 @@ MFT qui permet de la retrouver dans \fichier{mft.json}.
 
 \section{La mesure}
 
-Un clone de la machine de test, sans réseau, est figé avec Sysmon installé ; les
-outils sont sur une clé USB, lettre K:. Chaque exécution part de ce même état :
-le disque système et la clé sont des couches neuves sur les images figées. Le
-démarrage passé, chaque outil est lancé de la même façon --- une tâche planifiée
-de l'utilisateur, avec ses droits élevés, comme un examinateur depuis une invite
-élevée.
+Un clone de la machine de test, sans réseau, est figé avec Sysmon~15.22 installé ;
+les outils sont sur une clé USB, lettre K:. Chaque exécution part de ce même
+état : le disque système et la clé sont des couches neuves sur les images
+figées. Le démarrage passé, chaque outil est lancé de la même façon --- une
+tâche planifiée de l'utilisateur, avec ses droits élevés, comme un examinateur
+depuis une invite élevée.
 
 \begin{description}[style=nextline,leftmargin=1em]
   \item[Les fichiers] Le numéro USN du journal des modifications de C: est relevé
@@ -408,9 +426,16 @@ de l'utilisateur, avec ses droits élevés, comme un examinateur depuis une invi
         ou supprimé entre les deux y figure, même créé puis supprimé pendant
         l'exécution. Les relevés sont écrits sur la clé, après la borne de fin.
   \item[L'auteur] Sysmon donne l'arbre des processus de l'outil et ce que chacun
-        a écrit, fichiers et registre. Une écriture d'un autre processus qui
-        nomme l'outil (Amcache, Prefetch, BAM) est une réaction de Windows à son
-        lancement.
+        a écrit, fichiers et registre, et chaque processus qu'il a ouvert. Une
+        écriture d'un autre processus qui nomme l'outil (Amcache, Prefetch, BAM)
+        est une réaction de Windows à son lancement.
+  \item[Le registre] Après l'arrêt propre de chaque exécution, les ruches du
+        disque --- SYSTEM, SOFTWARE, SAM, SECURITY, DEFAULT, Amcache, celles des
+        profils --- sont lues hors ligne, la machine éteinte, et confrontées
+        clé par clé et valeur par valeur à celles de l'image figée. C'est le
+        compte indépendant de ce que Sysmon attribue aux processus. Le volume
+        système, chiffré par BitLocker sans protecteur, est ouvert par sa clé en
+        clair.
   \item[Le témoin] Une exécution qui ne lance rien (\texttt{ver}) mesure le
         lanceur et l'activité propre de Windows ; ce qu'elle montre aussi n'est
         pas imputé à l'outil.
@@ -428,46 +453,67 @@ de l'utilisateur, avec ses droits élevés, comme un examinateur depuis une invi
 \wac{} (collecte) & aucun & aucun & Amcache : une entrée pendant
   l'exécution ; ShimCache : une entrée à l'arrêt \\
 KAPE, cibles & aucun & 4 valeurs \texttt{ZoneMap} d'Internet Settings dans la
-  ruche de l'utilisateur ; 169 ouvertures en création (magasins de
+  ruche de l'utilisateur ; 115 ouvertures en création (magasins de
   certificats, stratégies) & Amcache et ShimCache pour \fichier{kape.exe} \\
 KAPE, cibles et modules & 28 : 14 dans
   \fichier{ProgramData\textbackslash Microsoft\textbackslash NetFramework\textbackslash
   BreadcrumbStore}, 14 dans le Temp de l'utilisateur
   (\fichier{system-commandline-sentinel-files}) & les mêmes 4 valeurs,
-  réécrites par 14 des 15 processus (136 écritures) ; environ 2\,600
-  ouvertures en création & Amcache et ShimCache pour KAPE et 14 outils \\
-Outils EZ, en direct & aucun & aucune valeur ; 54 ouvertures en création
+  réécrites par 14 processus (136 écritures) ; 8 clés de traçage RAS créées
+  par 4 outils (56 valeurs) ; 126 ouvertures en création & Amcache et
+  ShimCache pour KAPE et 14 outils ; table des partitions de la clé
+  réécrite dans USBSTOR \\
+Outils EZ, en direct & aucun & aucune valeur ; 4 ouvertures en création
   (stratégies, \texttt{Tcpip}, \texttt{Internet Settings}) & Amcache et
   ShimCache pour les 6 outils \\
 \bottomrule
 \end{longtable}
 
+Les ruches lues hors ligne le confirment. Hors ce que le témoin change aussi,
+elles changent pendant chaque exécution --- de 59 clés et valeurs pour KAPE
+à 311 pour \wac{}, dont la collecte dure 15 minutes ---, mais seules les
+écritures que Sysmon attribue aux processus de l'outil lui reviennent : pour
+\wac{}, aucune ; le reste est l'activité de Windows dans la fenêtre de mesure
+(WaaSMedic, Defender, tâches planifiées, WMI, Windows Update, OneDrive,
+l'Explorateur), sans lien avec l'outil, et l'entrée Amcache de chaque
+exécutable lancé. Les clés de traçage RAS des modules de KAPE y apparaissent
+ajoutées, comme Sysmon les donne.
+
 Les processus des outils n'ont fait écrire aucun événement dans les journaux
 de Windows eux-mêmes (System, Security, Application, journaux d'exploitation) :
 ceux de la fenêtre de mesure sont les ouvertures de session des services,
-Defender, la stratégie de groupe, communs au témoin ou sans lien avec l'outil.
-L'audit de création de processus n'est pas actif sur le clone ; actif, il
-aurait inscrit un 4688 et un 4689 par processus (chapitre~\ref{chap:limites}).
+Defender, la stratégie de groupe, le compte Microsoft, la télémétrie, communs
+au témoin ou d'autres processus. L'audit de création de processus n'est pas
+actif sur le clone ; actif, il aurait inscrit un 4688 et un 4689 par
+processus (chapitre~\ref{chap:limites}).
 
 La surveillance installée, elle, enregistre l'exécution de chaque outil : le
 journal de Sysmon a reçu, pour les processus de l'outil seulement,
 
-\begin{longtable}{@{}L{3.6cm}L{2.0cm}L{2.0cm}L{4.0cm}L{3.0cm}@{}}
+\begin{longtable}{@{}L{2.6cm}L{2.0cm}L{1.8cm}L{3.8cm}L{4.4cm}@{}}
 \toprule
-\textbf{Outil} & \textbf{Processus} & \textbf{Lectures brutes} & \textbf{Fichiers créés} & \textbf{Registre} \\
+\textbf{Outil} & \textbf{Processus} & \textbf{Lectures brutes} & \textbf{Fichiers créés} & \textbf{Processus ouverts} \\
 \midrule\endhead
-\wac{} & 1 & 2 & 16\,382, tous sur la clé ; 5\,588 supprimés sur la clé & aucun \\
-KAPE, cibles & 1 & 2 & 2\,553, tous sur la clé & 169 clés ouvertes en création, 8 valeurs \\
-KAPE, cibles et modules & 17 & 19 & 2\,622 sur la clé, 27 sur C: & 2\,611 clés, 179 valeurs \\
-Outils EZ, en direct & 6 & 78 & 45, tous sur la clé & 54 clés \\
+\wac{} & 1 & 3 & 25\,532, tous sur la clé ; 777 supprimés sur la clé & 128 en lecture limitée (0x1000), 42 en requête et lecture mémoire (0x1410) \\
+KAPE, cibles & 1 & 2 & 2\,940, tous sur la clé & Defender, en synchronisation \\
+KAPE, cibles et modules & 15 & 2 & 3\,008 sur la clé, 28 sur C: & ses outils, en accès complet (17 ouvertures) ; Defender, en synchronisation (18) \\
+Outils EZ, en direct & 6 & 6 & 45, tous sur la clé & Defender, en synchronisation (6) \\
 \bottomrule
 \end{longtable}
 
 \noindent auxquels s'ajoutent les bibliothèques chargées par chaque processus
-(24 pour \wac{}). Un EDR en tire la même télémétrie, et peut signaler la lecture
-brute des volumes (\texttt{RawAccessRead}).
+(25 pour \wac{}). Un EDR en tire la même télémétrie, et peut signaler la lecture
+brute des volumes (\texttt{RawAccessRead}) : celles de \wac{} portent sur C:, la
+partition EFI et le disque physique, pour les secteurs de démarrage.
 
 \begin{description}[style=nextline,leftmargin=1em]
+  \item[Processus ouverts] \wac{} lit la liste des processus et leurs
+        propriétaires par Terminal Services, qui ouvre chacun en lecture
+        limitée (0x1000), LSASS compris ; puis, pour la liste des modules de
+        chaque processus, il l'ouvre en requête et lecture mémoire (0x1410),
+        sans droit d'écriture, de fil ni d'injection. Les processus protégés
+        (LSASS, services, Defender) refusent la seconde. KAPE ouvre ses
+        propres outils en accès complet pour les piloter.
   \item[Ouverture en création] \texttt{RegCreateKeyEx} crée la clé si elle manque
         et l'ouvre sinon ; Sysmon ne distingue pas les deux cas. Ce sont les
         bibliothèques .NET qui ouvrent ainsi les magasins de certificats et les
@@ -477,11 +523,15 @@ brute des volumes (\texttt{RawAccessRead}).
         chaque processus .NET qui la charge, elles modifient la ruche
         \fichier{NTUSER.DAT} de l'utilisateur examiné, donc son journal et la date
         de la clé.
+  \item[Les clés de traçage RAS] Le chargement des bibliothèques d'accès
+        distant (\fichier{rasapi32.dll}) crée, pour chaque programme, deux clés
+        sous \path|HKLM\SOFTWARE\Microsoft\Tracing| : EvtxECmd, MFTECmd, RECmd et
+        SrumECmd lancés par KAPE en ont laissé huit dans SOFTWARE.
   \item[Les fichiers .NET] Le runtime laisse une « miette » par assemblage chargé
         dans \fichier{BreadcrumbStore}, et la bibliothèque System.CommandLine un
         fichier par outil dans le Temp de l'utilisateur. Lancés seuls, les
         outils EZ n'en ont pas laissé ; lancés par KAPE, si.
-  \item[Prefetch et BAM] Aucun des 22 programmes lancés depuis la clé USB n'a
+  \item[Prefetch et BAM] Aucun des programmes lancés depuis la clé USB n'a
         reçu de fichier Prefetch ni de valeur BAM, quand \fichier{cmd.exe}, lancé
         du disque système par la même tâche, a sa valeur BAM. Un outil copié sur la machine et lancé de
         là en recevrait.
@@ -498,6 +548,14 @@ brute des volumes (\texttt{RawAccessRead}).
 l'API de la console, \wac{} n'importe plus aucune fonction capable de lancer un
 processus, et le script de compilation refuse une version qui en importerait
 une.
+
+La mesure du 29 octobre 2026 a montré une seconde trace : pour lister les
+modules de chaque processus, l'instantané de Toolhelp
+(\texttt{CreateToolhelp32Snapshot}) ouvrait lui-même 42 processus de la
+session en accès complet (\texttt{PROCESS\_ALL\_ACCESS}, 0x1FFFFF), le motif
+même que surveille un EDR. \wac{} ouvre désormais chaque processus avec les
+seuls droits de requête et de lecture mémoire, et lit ses modules par psapi ;
+remesuré le 30 octobre, aucune ouverture en accès complet.
 
 \begin{note}
 Chaque trace de \wac{} est expliquée : il ne lance aucun processus, n'écrit
@@ -517,10 +575,11 @@ de processus, EDR) : inévitables, et décrites dans le dossier d'innocuité.
   \item[Journaux de ruche rejoués dans l'ordre] Les journaux \fichier{.LOG1} et
         \fichier{.LOG2} gardent, derrière les entrées récentes, les restes d'une
         génération précédente. RECmd les applique dans l'ordre du fichier, donc
-        après les plus récentes. Il ramène ainsi SYSTEM, SECURITY, DEFAULT et une
-        ruche de profil de service à un état plus ancien : dans SYSTEM, la
-        séquence 0x3618 au lieu de 0x3620, et quatre dernières exécutions BAM
-        affichées 13 minutes trop tôt. \wac{} trie les entrées par séquence et
+        après les plus récentes. Il ramène ainsi des ruches à un état plus ancien :
+        34 dernières exécutions BAM plus anciennes que celles de la ruche, la
+        dernière connexion du compte de test et le dernier branchement des deux
+        clés USB d'avant le démarrage du jour, des compteurs d'UserAssist en
+        retard (mesure du 29 octobre 2026). \wac{} trie les entrées par séquence et
         s'arrête à la rupture de chaîne. Les journaux eux-mêmes le vérifient,
         sommes Marvin32 comprises.
   \item[Événements des journaux vidés] Un journal vidé garde ses enregistrements :
@@ -530,12 +589,12 @@ de processus, EDR) : inévitables, et décrites dans le dossier d'innocuité.
         GUID entre accolades, booléens \texttt{true}, binaire \texttt{69060000},
         dates avec leur \texttt{Z}, marques U+200E conservées : les formes
         qu'affiche l'Observateur d'événements et que l'on recherche. EvtxECmd en
-        change huit, et se trompe sur dix valeurs, par exemple un booléen
+        change neuf, et se trompe sur 25 valeurs, par exemple un booléen
         \texttt{False} que Windows rend \texttt{true} ; chacune est tranchée par
         le XML que rend Windows (\texttt{Get-WinEvent}) sur le même journal.
   \item[Rien d'inventé] Une valeur absente de la source n'est pas émise.
-        AmcacheParser écrit 3\,450 valeurs par défaut absentes de la ruche
-        (\texttt{IsPeFile: False} pour un exécutable PE), SrumECmd 10\,936
+        AmcacheParser écrit 5\,500 valeurs par défaut absentes de la ruche
+        (\texttt{IsPeFile: False} pour un exécutable PE), SrumECmd 18\,412
         (0 ou $-1$).
   \item[SHA-1 partiel de l'Amcache signalé] Pour un fichier de plus de 30\,Mio,
         Amcache ne hache que les 31\,457\,280 premiers octets (mesuré sur
@@ -558,11 +617,11 @@ de processus, EDR) : inévitables, et décrites dans le dossier d'innocuité.
         elles-mêmes : chacun en tire la lecture qu'il veut, sans en hériter une
         toute faite. SBECmd donne en outre un \texttt{NodeSlot} faux (0) aux
         dossiers de premier niveau.
-  \item[Erreurs de lecture ESE de SrumECmd] 16 lignes d'énergie sur 1\,370 portent
-        le contenu d'une autre ligne ou un identifiant absent de la table ;
-        dissect.esedb donne raison à \wac{}.
+  \item[Erreurs de lecture ESE de SrumECmd] 8 lignes d'énergie sur 2\,306 portent
+        le contenu de la ligne précédente ; dissect.esedb donne raison à \wac{}.
   \item[Base ESE non fermée proprement] Une base SRUM prise sur une machine en
-        marche n'est pas fermée proprement. SrumECmd s'arrête sur elle ; \wac{}
+        marche peut ne pas être fermée proprement. SrumECmd s'est arrêté sur
+        l'une d'elles (mesure du 9 octobre 2026) ; \wac{}
         rejoue ses journaux sur la copie de travail (\texttt{esent.dll}), puis la
         lit.
   \item[Comptes supprimés] Le banc supprime un compte (\texttt{wacrdp}) après
@@ -691,7 +750,8 @@ Identifiants connus & 105 chemins de DLL de la table des GUID (253 occurrences) 
 Registre & BAM limité aux comptes ayant un profil (un compte supprimé perdait ses exécutions) ; durée de premier plan de UserAssist non lue \\
 Collecte & pièces dont le chemin dépasse 260 caractères une fois dans la consigne non écrites (482 sur le kit complet) : écrites désormais en chemin étendu \\
 Lancement & \texttt{system("cls")} lançait \fichier{cmd.exe} sur la machine examinée (mesure des traces) \\
-Harnais & un contrôle qui plantait interrompait tous les suivants sans échec visible ; les outils EZ lancés sur le magasin scellé lui-même --- SrumECmd y a écrit, \wac{} a refusé la conversion suivante ; ils lisent désormais une copie \\
+Processus & la liste des modules de chaque processus, par l'instantané de Toolhelp, faisait ouvrir 42 processus en accès complet (mesure des traces) : ouverts désormais en requête et lecture mémoire seules \\
+Harnais & un contrôle qui plantait interrompait tous les suivants sans échec visible ; les outils EZ lancés sur le magasin scellé lui-même --- SrumECmd y a écrit, \wac{} a refusé la conversion suivante ; ils lisent désormais une copie ; LECmd confronté aux seuls raccourcis de Recent, la table PushNotifications de SRUM jamais appariée \\
 \bottomrule
 \end{longtable}
 

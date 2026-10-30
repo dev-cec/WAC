@@ -35,7 +35,7 @@
 \medskip
 \begin{tabular}{@{}ll@{}}
 Version du logiciel & 3.0.0 \\
-Édition du document & septembre 2026 \\
+Édition du document & octobre 2026 \\
 Éditeur & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
         & École de l'air et de l'espace, base aérienne 701, Salon-de-Provence \\
 \end{tabular}
@@ -222,54 +222,63 @@ l'écriture est le poste le plus coûteux d'une collecte.
 
 La place nécessaire dépend du mode et des options. Deux emplacements se
 remplissent : la \textbf{consigne} (copies brutes scellées) et la \textbf{copie
-de travail}, qui ne reprend que ce que les collecteurs modifient ou lisent
-pendant la collecte (ruches, Prefetch, raccourcis, listes de sauts, binaires
-cités). Les binaires prélevés par \opt{collect} \opt{binary} et les
-métadonnées NTFS ne sont jamais recopiés : la conversion les lit dans la
-consigne même. Mesures sur la machine virtuelle de test (Windows~11 sans
-logiciel ajouté, 1~volume) :
+de travail}. À la collecte, celle-ci ne reprend que ce que les collecteurs
+lisent sur place (ruches et leurs journaux, état de la machine en marche,
+dernières extractions) ; à la conversion, sur le poste d'analyse, elle est
+refaite depuis la consigne entière, chaque pièce recopiée et vérifiée par son
+empreinte, et la consigne n'est plus lue ensuite. Mesures du 29 octobre 2026
+sur la machine virtuelle de test (Windows~11, un volume système et un volume
+de données), avec le \fichier{wac.yml} du kit :
 
 \begin{center}
 \begin{tabular}{@{}L{7.4cm}rrr@{}}
 \toprule
-Collecte & Consigne & Copie de travail & Durée \\
+Opération & Consigne & Copie de travail & Durée \\
 \midrule
-\opt{collect} \opt{events} \opt{binary} (tous les exécutables) & 2,7~Go & 0,3~Go & 8~min~30 \\
+Collecte, kit livré (\texttt{binary: unverified}) & 6,8~Go & 1,7~Go & 10~min~26 \\
+Collecte sans les exécutables (\texttt{binary: none}) & 5,9~Go & 1,6~Go & 3~min~46 \\
+Conversion de cette dernière, sur le poste d'analyse & --- & 5,9~Go & 3~min~29 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Les postes les plus lourds de la consigne :
+Les postes les plus lourds de la consigne du kit :
 
 \begin{center}
 \begin{tabular}{@{}L{9.6cm}r@{}}
 \toprule
 Contenu & Consigne \\
 \midrule
-Métadonnées NTFS : \path|$MFT| (380~Mo), \path|$LogFile| (64~Mo),
-  \path|$UsnJrnl:$J| (35~Mo, sur 3,6~Go logiques : NTFS a libéré le début,
-  qui n'est pas copié) & 480~Mo \\
-Binaires copiés : 2\,853 non authentifiés sur 44\,446 lus & 1,2~Go \\
-Journaux d'événements (\opt{events}) & 170~Mo \\
-Ruches, Prefetch, raccourcis, listes de sauts & 180 à 230~Mo \\
+Fichiers supprimés récupérés : 10\,338, au plus 4~Gio par défaut
+  (\texttt{deleted\_files}, \texttt{max\_total\_mib}) & 4,2~Go \\
+Binaires copiés : 2\,766 non authentifiés sur 40\,531 lus & 850~Mo \\
+Métadonnées NTFS : \path|$MFT| (400~Mo), \path|$LogFile| (73~Mo),
+  \path|$UsnJrnl:$J| (42~Mo : NTFS a libéré le début, qui n'est pas copié) & 515~Mo \\
+Journaux d'événements (\opt{events}) & 250~Mo \\
+Fichiers de ressources des fournisseurs d'événements & 230~Mo \\
+Ruches et leurs journaux & 130~Mo \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 Une machine utilisée depuis longtemps, ou chargée de logiciels, dépasse ces
 chiffres : la \path|$MFT| croît avec le nombre de fichiers, les binaires tiers
-non authentifiés avec les logiciels installés. Prévoir \textbf{au moins 5~Go
-libres} pour une collecte seule avec \opt{binary}.
+non authentifiés avec les logiciels installés, les fichiers supprimés jusqu'à
+leur budget. Prévoir \textbf{au moins 12~Go libres} pour une collecte avec le
+kit, et, sur le poste d'analyse, la taille de la consigne pour sa conversion.
 
 \wac{} vérifie l'emplacement \textbf{avant la toute première écriture} et refuse
 de démarrer :
 \begin{itemize}
   \item si le répertoire de travail contient déjà des fichiers — une collecte
         antérieure serait analysée à la place de celle-ci ;
-  \item si la place libre est manifestement insuffisante.
+  \item si la place libre est manifestement insuffisante : il demande deux
+        fois l'estimation de la consigne, budget des fichiers supprimés compris.
 \end{itemize}
-Si la place vient à manquer en cours de prélèvement des binaires, ceux-ci sont
-hachés sans être copiés, et le journal d'investigation l'indique.
+La conversion vérifie de même, avant de refaire la copie de travail, que le
+poste d'analyse a la place de toutes les pièces. Si la place vient à manquer en
+cours de prélèvement des binaires, ceux-ci sont hachés sans être copiés, et le
+journal d'investigation l'indique.
 
 \section{Avant d'intervenir}
 
@@ -2232,8 +2241,8 @@ dernière connue, et signalée comme telle : la collecte se fait. Le tableau
 ci-dessous donne, pour chaque clé de \fichier{wac.yml}, le premier Windows qui
 porte l'artefact, son emplacement et son format selon la version. Il est
 produit depuis la table du programme, la seule que \wac{} consulte. La
-version~2 de \wac{} n'est éprouvée que sous Windows~10 et 11 ; les formes plus
-anciennes y figurent pour la suite.
+version~3 de \wac{} est éprouvée sur chaque poste client, de Windows~XP SP1 à
+Windows~11 ; les éditions serveur y figurent pour la suite.
 
 Les emplacements sont écrits comme Windows~Vista et suivants rangent leurs
 dossiers. Sous Windows~XP et Server~2003, \wac{} les cherche là où ces versions
@@ -2395,8 +2404,10 @@ Rejeu des journaux de ruche & Sur la copie de travail uniquement, avec journal
   d'annulation. \\
 État des services & Une requête en lecture au gestionnaire de services. Aucun
   service n'est ouvert ni modifié. \\
-Processus & Un instantané du noyau ; aucun processus n'est ouvert. Relevé des
-  propriétaires : une requête au service Terminal Services. \\
+Processus & Un instantané du noyau. Relevé des propriétaires : une requête au
+  service Terminal Services. Liste des modules : chaque processus ouvert en
+  requête et lecture mémoire seules, sans droit d'écriture ni d'injection ; un
+  EDR peut le relever. \\
 Sessions & Une requête en lecture à LSASS. \\
 État réseau & Lectures en mémoire des tables de la pile TCP/IP : aucun paquet
   émis, aucun nom résolu. \texttt{iphlpapi.dll} n'est chargée que si
@@ -2482,10 +2493,10 @@ lieu de la prendre pour l'activité étudiée :
 \endhead
 Échec de « Check administrator rights » & L'invite n'a pas été lancée en tant
   qu'administrateur. Relancez-la avec les droits d'administrateur. \\
-« antérieur à Windows 10 » sous la version de Windows examinée & La collecte se
+« édition serveur » sous la version de Windows examinée & La collecte se
   fait, et chaque format que \wac{} ne décode pas sur cette version est déclaré
   (section~\ref{sec:format}) ; le cycle de test complet ne couvre encore que
-  Windows~10 et 11. \\
+  les postes clients, de XP SP1 à Windows~11. \\
 Échec de « Checking the collection medium », répertoire non vide & Le dossier de
   sortie contient une collecte antérieure. Indiquez un dossier neuf avec
   \opt{output}. \\

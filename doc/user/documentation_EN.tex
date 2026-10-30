@@ -36,7 +36,7 @@
 \medskip
 \begin{tabular}{@{}ll@{}}
 Software version & 3.0.0 \\
-Document edition & September 2026 \\
+Document edition & October 2026 \\
 Publisher & Aerospace Cyber Defence Centre of Excellence (CEC) \\
           & French Air and Space Force Academy, Air Base 701, Salon-de-Provence \\
 \end{tabular}
@@ -217,54 +217,65 @@ results there. Choose an \textbf{empty} medium, preferably USB~3: writing is the
 most expensive part of a collection.
 
 The space needed depends on the mode and the options. Two places fill up: the
-\textbf{exhibit store} (sealed raw copies) and the \textbf{working copy}, which
-takes only what the collectors modify or read during the collection (hives,
-Prefetch, shortcuts, jump lists, referenced binaries). The binaries acquired by
-\opt{collect} \opt{binary} and the NTFS metadata are never copied again: the
-conversion reads them in the exhibit store itself. Measured on the test virtual
-machine (Windows~11 without added software, 1~volume):
+\textbf{exhibit store} (sealed raw copies) and the \textbf{working copy}. At
+collection, the latter takes only what the collectors read on site (hives and
+their logs, the running machine's state, the last extractions); at
+conversion, on the analysis workstation, it is made again from the whole
+exhibit store, each exhibit copied and checked by its fingerprint, and the
+exhibit store is not read afterwards. Measured on 29 October 2026 on the test
+virtual machine (Windows~11, one system volume and one data volume), with the
+kit's \fichier{wac.yml}:
 
 \begin{center}
 \begin{tabular}{@{}L{7.4cm}rrr@{}}
 \toprule
-Collection & Exhibit store & Working copy & Time \\
+Operation & Exhibit store & Working copy & Time \\
 \midrule
-\opt{collect} \opt{events} \opt{binary} (every executable) & 2.7~GB & 0.3~GB & 8~min~30 \\
+Collection, kit as shipped (\texttt{binary: unverified}) & 6.8~GB & 1.7~GB & 10~min~26 \\
+Collection without the executables (\texttt{binary: none}) & 5.9~GB & 1.6~GB & 3~min~46 \\
+Conversion of the latter, on the analysis workstation & --- & 5.9~GB & 3~min~29 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The heaviest items of the exhibit store:
+The heaviest items of the kit's exhibit store:
 
 \begin{center}
 \begin{tabular}{@{}L{9.6cm}r@{}}
 \toprule
 Content & Exhibit store \\
 \midrule
-NTFS metadata: \path|$MFT| (380~MB), \path|$LogFile| (64~MB),
-  \path|$UsnJrnl:$J| (35~MB, out of 3.6~GB logical: NTFS freed the start,
-  which is not copied) & 480~MB \\
-Binaries copied: 2,853 not authenticated out of 44,446 read & 1.2~GB \\
-Event logs (\opt{events}) & 170~MB \\
-Hives, Prefetch, shortcuts, jump lists & 180 to 230~MB \\
+Deleted files recovered: 10,338, at most 4~GiB by default
+  (\texttt{deleted\_files}, \texttt{max\_total\_mib}) & 4.2~GB \\
+Binaries copied: 2,766 not authenticated out of 40,531 read & 850~MB \\
+NTFS metadata: \path|$MFT| (400~MB), \path|$LogFile| (73~MB),
+  \path|$UsnJrnl:$J| (42~MB: NTFS freed the start, which is not copied) & 515~MB \\
+Event logs (\opt{events}) & 250~MB \\
+Resource files of the event providers & 230~MB \\
+Hives and their logs & 130~MB \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 A machine used for a long time, or loaded with software, exceeds these
 figures: the \path|$MFT| grows with the number of files, the unauthenticated
-third-party binaries with the installed software. Allow \textbf{at least
-5~GB free} for a collection only with \opt{binary}.
+third-party binaries with the installed software, the deleted files up to
+their budget. Allow \textbf{at least 12~GB free} for a collection with the
+kit, and, on the analysis workstation, the size of the exhibit store for its
+conversion.
 
 \wac{} checks the location \textbf{before its very first write} and refuses to
 start:
 \begin{itemize}
   \item if the working directory already holds files — an earlier collection
         would be analysed instead of this one;
-  \item if the free space is clearly insufficient.
+  \item if the free space is clearly insufficient: it asks for twice the
+        exhibit store's estimate, the deleted files' budget included.
 \end{itemize}
-If space runs out while binaries are being collected, they are hashed without
-being copied, and the investigation log says so.
+The conversion checks likewise, before making the working copy again, that
+the analysis workstation has room for every exhibit. If space runs out while
+binaries are being collected, they are hashed without being copied, and the
+investigation log says so.
 
 \section{Before going on site}
 
@@ -2141,8 +2152,9 @@ A version newer than those \wac{} knows is treated as the last one known, and
 flagged as such: the collection goes on. The table below gives, for each key
 of \fichier{wac.yml}, the first Windows that has the artefact, where it lies and
 its format according to the version. It is produced from the program's own
-table, the only one \wac{} consults. Version~2 of \wac{} is only validated under
-Windows~10 and 11; the older forms are listed for what comes next.
+table, the only one \wac{} consults. Version~3 of \wac{} is validated on every client,
+from Windows~XP SP1 to Windows~11; the server editions are listed for what
+comes next.
 
 The locations are written as Windows~Vista and later lay out their folders.
 On Windows~XP and Server~2003, \wac{} looks for them where those versions keep
@@ -2296,8 +2308,9 @@ Writing the results & On the collection medium only. Nothing is written to the
 Replaying hive logs & On the working copy only, with an undo journal. \\
 Service state & One read-only query to the Service Control Manager. No service
   is opened or modified. \\
-Processes & A kernel snapshot; no process is opened. Owners: one query to the
-  Terminal Services service. \\
+Processes & A kernel snapshot. Owners: one query to the Terminal Services
+  service. Module list: each process opened with query and memory read only,
+  with no write or injection right; an EDR may record it. \\
 Sessions & One read-only query to LSASS. \\
 Network state & Reads of the TCP/IP stack's tables in memory: no packet sent,
   no name resolved. \texttt{iphlpapi.dll} is loaded only when
@@ -2378,10 +2391,10 @@ instead of taking it for the activity under study:
 \endhead
 ``Check administrator rights'' fails & The prompt was not started as
   administrator. Start it again with administrator rights. \\
-``older than Windows 10'' under the examined version of Windows & The
+``server edition'' under the examined version of Windows & The
   collection is made, and every format \wac{} does not decode on that version
   is declared (section~\ref{sec:format}); the whole test cycle only covers
-  Windows~10 and 11 so far. \\
+  the clients so far, XP SP1 to Windows~11. \\
 ``Checking the collection medium'' fails, directory not empty & The output
   folder holds an earlier collection. Give a new folder with \opt{output}. \\
 ``Checking the collection medium'' fails, not enough space & The medium is too

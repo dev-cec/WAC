@@ -36,7 +36,7 @@
 \medskip
 \begin{tabular}{@{}ll@{}}
 Software version & 3.0.0 \\
-Document edition & September 2026 \\
+Document edition & October 2026 \\
 Publisher & Aerospace Cyber Defence Centre of Excellence (CEC) \\
           & French Air and Space Force Academy, Air Base 701, Salon-de-Provence \\
 \end{tabular}
@@ -384,7 +384,8 @@ cases answer right (no SRUM before Windows~8, Prefetch~23 on Vista and 30 on
 Windows~10), that on Windows~7 the guard holds back only the five artefacts
 that version lacks, and that a Windows newer than the table is treated as the
 last one known, and flagged. An unknown key or version never holds a collection
-back. It also checks that a source is said ``always there'' only where it is:
+back. Only a server edition is said not validated by the test cycle: every
+client, from XP SP1 to Windows~11, is. It also checks that a source is said ``always there'' only where it is:
 not on a server, not for a key that exists only once a device was plugged, not
 for a metadata file of the volume or a state of the running system. Lastly,
 that a piece is decoded only if the table holds its signature with a decoder: a
@@ -573,7 +574,11 @@ exhibit store stays identical byte for byte while the working copy is changed,
 and the seal carries the manifest's real fingerprint. Last, it checks that an
 exhibit path read from a manifest stays inside the exhibit store: a
 \texttt{..} component is refused, a WinSxS name holding \texttt{..}
-(\texttt{i..sermode}) is accepted.
+(\texttt{i..sermode}) is accepted. An operation written to the investigation log
+before the suspect's time zone is read still carries its local time, never
+UTC labelled \texttt{+00:00}; and an exhibit store reloaded as a conversion
+does gives its exhibits' size, one byte too little free space being refused
+for the space, not as invalid data.
 
 \begin{lstlisting}
 cd build-windows/tests
@@ -717,7 +722,7 @@ integers for 50,000 random lists placed against a forbidden page.
 cd build-windows/tests && wine ntfs_runs_test.exe
 \end{lstlisting}
 
-Reference: 100,017 checks, no failure; the former decoder, which took a field
+Reference: 100,026 checks, no failure; the former decoder, which took a field
 of 15~bytes, fails 48,224 of them.
 
 \section{Deleted files: \texttt{deleted\_files\_test}}
@@ -741,7 +746,7 @@ former live entries; 4,000 damaged blocks against a forbidden page.
 cd build-windows/tests && wine deleted_files_test.exe
 \end{lstlisting}
 
-Reference: 91,839 checks, no failure — the clusters claimed since by a later deleted file among them (known cases, 2,000 draws against a cluster-by-cluster reckoning, a hole said so); without the check of the parent
+Reference: 91,842 checks, no failure — the clusters claimed since by a later deleted file among them (known cases, 2,000 draws against a cluster-by-cluster reckoning, a hole said so); without the check of the parent
 directory, level~2 fails three of them; without the check of \fichier{\$Bitmap}
 after the reading, the cluster taken during the reading is published as the
 file's content and the check fails. In the VM, files of known content
@@ -803,7 +808,7 @@ wine mft_test.exe "Z:/tmp/mft"
 wine usn_journal_test.exe "Z:/tmp/mft"
 \end{lstlisting}
 
-Reference: 278 checks for \texttt{mft\_test}, 27 for
+Reference: 281 checks for \texttt{mft\_test}, 27 for
 \texttt{usn\_journal\_test}, no failure.
 
 \section{Raw reading on a real volume: \texttt{raw\_volume\_test.sh}}
@@ -937,7 +942,8 @@ password nor cookie value in the JSON. No data needed.
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Reference: 174 checks, no failure (the second-lot registry values included: TrustRecords, firewall rule, certificate Blob; and the thumbnail caches: a real entry header of the VM and the checksum Windows wrote for it, a cache built here, forged lengths; Thunderbird's mail: an mbox written here, encoded words, quoted-printable, base64, an RFC~2231 name, a nested multipart or one without boundary, a date with its offset). In the VM cycle,
+Reference: 283 checks, no failure (the module list of the test's own
+process, its executable first, read as \wac{} reads it; the second-lot registry values included: TrustRecords, firewall rule, certificate Blob; and the thumbnail caches: a real entry header of the VM and the checksum Windows wrote for it, a cache built here, forged lengths; Thunderbird's mail: an mbox written here, encoded words, quoted-printable, base64, an RFC~2231 name, a nested multipart or one without boundary, a date with its offset). In the VM cycle,
 \fichier{place-file-artefacts.ps1} places witnesses whose content is known (a
 history, a file sent to the bin, a hosts entry, a startup script) and
 \fichier{check-json.py} finds them in the JSON.

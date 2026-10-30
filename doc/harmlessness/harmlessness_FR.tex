@@ -40,7 +40,7 @@
 \medskip
 \begin{tabular}{@{}ll@{}}
 Version du logiciel & 3.0.0 \\
-Édition du document & septembre 2026 \\
+Édition du document & octobre 2026 \\
 Éditeur & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
         & École de l'air et de l'espace, base aérienne 701, Salon-de-Provence \\
 \end{tabular}
@@ -157,6 +157,13 @@ Journaux & Security 4688 et 4689 si l'audit de création de processus est actif 
   l'ouverture du volume en lecture brute). \\
 Mémoire & Les pages de \wac{} occupent la mémoire pendant la collecte et
   peuvent en évincer d'autres vers le fichier d'échange. \\
+RADAR & Si la mémoire de \fichier{WAC.exe} passe le seuil de Windows, son
+  détecteur de fuites le note : une valeur sous
+  \path|HKLM\SOFTWARE\Microsoft\RADAR\HeapLeakDetection\DiagnosedApplications\WAC.exe|
+  (\champ{LastDetectionTime}) et l'événement 1014 de
+  \fichier{Microsoft-Windows-Resource-Exhaustion-Resolver/Operational}. Vu
+  deux fois sur la machine de test, en septembre et octobre 2026, aucune lors
+  des cycles de la version 3.0.0. \\
 \bottomrule
 \end{longtable}
 
@@ -172,8 +179,11 @@ daté : l'intervalle \champ{Collection.StartUtc} --- \champ{EndUtc} de
 Sur un clone de la machine de test, figé avec Sysmon, chaque outil est lancé
 depuis une clé USB à partir du même état ; le journal des modifications de C:,
 borné avant et après l'outil, et Sysmon disent ce qu'il a écrit, et qui l'a
-écrit (document de comparaison, chapitre « Traces laissées sur la machine
-examinée »).
+écrit ; après l'arrêt, les ruches du disque sont relues hors ligne et
+confrontées à celles de l'état figé, clé par clé et valeur par valeur
+(document de comparaison, chapitre « Traces laissées sur la machine
+examinée »). Mesure des 29 et 30 octobre 2026, sur la version 3.0.0 et la
+correction de la liste des modules décrite plus bas.
 
 \begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
 \toprule
@@ -183,22 +193,30 @@ examinée »).
 \wac{} & Rien : aucun fichier, aucune valeur de registre. \\
 KAPE (cibles) & 4 valeurs \texttt{ZoneMap} d'Internet Settings dans la ruche
   de l'utilisateur. \\
-KAPE et ses modules & Les mêmes valeurs, réécrites par 14 processus ; 28
-  fichiers sur C: (miettes du runtime .NET, fichiers sentinelles dans le Temp
-  de l'utilisateur). \\
+KAPE et ses modules & Les mêmes valeurs, réécrites par 14 processus ; 8 clés
+  de traçage RAS (\path|HKLM\SOFTWARE\Microsoft\Tracing|) créées par 4 outils ;
+  28 fichiers sur C: (miettes du runtime .NET, fichiers sentinelles dans le
+  Temp de l'utilisateur). \\
 Outils EZ en direct & Aucune valeur ni aucun fichier, mais des ouvertures en
   création de clés de stratégie et de réseau. \\
 \bottomrule
 \end{longtable}
 
-Aucun n'a fait écrire d'événement dans les journaux de Windows eux-mêmes. Mais
-tous sont enregistrés par la surveillance installée, comme le prévoit la
-section précédente : Sysmon a noté, pour \wac{}, son processus, ses 2 lectures
-brutes de volume et les 16\,382 fichiers qu'il a créés, tous sur la clé ;
-l'audit de création de processus, inactif sur le clone, aurait inscrit un 4688
-et un 4689. Pour tous, Windows ajoute une entrée Amcache pendant l'exécution et
-une entrée ShimCache à l'arrêt ; tous lisent les volumes en brut. KAPE et les outils EZ
-demandent en outre le runtime .NET~9 sur la machine examinée.
+Les ruches relues hors ligne le confirment : ce qui y change pendant la
+collecte de \wac{}, hors ce que le témoin change aussi, est l'entrée Amcache
+de \fichier{WAC.exe} et l'activité de Windows dans la fenêtre de mesure
+(WaaSMedic, Defender, tâches planifiées, WMI, Windows Update, OneDrive), que
+Sysmon attribue à d'autres processus. Aucun outil n'a fait écrire d'événement
+dans les journaux de Windows eux-mêmes. Mais tous sont enregistrés par la
+surveillance installée, comme le prévoit la section précédente : Sysmon a noté,
+pour \wac{}, son processus, ses 3 lectures brutes (C:, la partition EFI, le
+disque physique), les 25\,532 fichiers qu'il a créés, tous sur la clé, et les
+processus qu'il a ouverts --- en lecture limitée par Terminal Services, puis en
+requête et lecture mémoire pour leur liste de modules ; l'audit de création de
+processus, inactif sur le clone, aurait inscrit un 4688 et un 4689. Pour tous,
+Windows ajoute une entrée Amcache pendant l'exécution et une entrée ShimCache
+à l'arrêt ; tous lisent les volumes en brut. KAPE et les outils EZ demandent en
+outre le runtime .NET~9 sur la machine examinée.
 
 \section{Les opérations de WAC}
 
@@ -246,12 +264,18 @@ Caches de jetons Entra ID (\opt{cloud\_identity}) & Lus par la lecture directe
 Binaires (\opt{binary}) & Lus par la lecture directe ; signatures et
   catalogues vérifiés en mémoire. Aucun magasin de certificats ouvert, aucune
   vérification de révocation en ligne. \\
-Processus & Un instantané du noyau (\texttt{CreateToolhelp32Snapshot}) et une
-  requête au service Terminal Services (\texttt{WTSEnumerateProcessesW})
-  pour les propriétaires. Aucun processus n'est ouvert : \fichier{WAC.exe}
-  n'importe pas \texttt{OpenProcess}. \\
-Modules des processus & Un instantané par processus ; ceux que le noyau
-  protège (LSASS, antivirus) le refusent, et le refus est consigné. \\
+Processus & Un instantané du noyau (\texttt{CreateToolhelp32Snapshot}, la
+  liste des processus seule) et une requête au service Terminal Services
+  (\texttt{WTSEnumerateProcessesW}) pour les propriétaires, qui ouvre chaque
+  processus en lecture limitée (\texttt{0x1000}), LSASS compris. \\
+Modules des processus & Chaque processus ouvert en requête et lecture mémoire
+  seules (\texttt{OpenProcess}, \texttt{PROCESS\_QUERY\_INFORMATION} et
+  \texttt{PROCESS\_VM\_READ}, accordés en \texttt{0x1410}), sa liste lue par
+  psapi : ni écriture, ni fil, ni injection. Ceux que le noyau protège
+  (LSASS sous protection LSA, services, antivirus) le refusent, et le refus
+  est consigné. Jusqu'à la version 3.0.0, l'instantané de modules de Toolhelp
+  ouvrait lui-même chaque processus en accès complet
+  (\texttt{PROCESS\_ALL\_ACCESS}, mesuré sous Sysmon) : remplacé. \\
 Sessions & Une requête en lecture à LSASS
   (\texttt{LsaEnumerateLogonSessions}, \texttt{LsaGetLogonSessionData}). \\
 État des services & Une énumération en lecture seule du gestionnaire de
@@ -337,12 +361,18 @@ Hors \fichier{msvcrt.dll} (la bibliothèque C) :
   \item[ADVAPI32.dll] \texttt{OpenSCManagerW}, \texttt{EnumServicesStatusExW},
     \texttt{CloseServiceHandle} (état des services) ; \texttt{OpenProcessToken},
     \texttt{GetTokenInformation}, \texttt{GetUserNameW}, \texttt{GetLengthSid},
-    \texttt{IsValidSid} (le jeton de \wac{} lui-même). Aucune fonction
+    \texttt{IsValidSid} (le jeton de \wac{} lui-même) ;
+    \texttt{AllocateAndInitializeSid}, \texttt{CheckTokenMembership},
+    \texttt{FreeSid} (l'appartenance au groupe des administrateurs, seule
+    élévation que connaît Windows~XP). Aucune fonction
     \texttt{Reg*}, aucune fonction de modification de service.
   \item[Secur32.dll] \texttt{LsaEnumerateLogonSessions},
     \texttt{LsaGetLogonSessionData}, \texttt{LsaFreeReturnBuffer}.
   \item[WTSAPI32.dll] \texttt{WTSEnumerateProcessesW},
     \texttt{WTSFreeMemory}.
+  \item[PSAPI.DLL] \texttt{EnumProcessModules},
+    \texttt{GetModuleFileNameExW} : la liste des modules de chaque processus,
+    ouvert par \texttt{OpenProcess} en requête et lecture mémoire.
   \item[bcrypt.dll] \texttt{BCryptOpenAlgorithmProvider},
     \texttt{BCryptSetProperty}, \texttt{BCryptGetProperty}, \texttt{BCryptGenerateSymmetricKey},
     \texttt{BCryptDecrypt}, \texttt{BCryptDestroyKey},
@@ -350,7 +380,7 @@ Hors \fichier{msvcrt.dll} (la bibliothèque C) :
     de la SAM, à la conversion seule. Du calcul en mémoire, sans fichier ni
     registre.
   \item[KERNEL32.dll] Fichiers, mémoire, fils d'exécution, heure, console,
-    volumes, instantané des processus. Les fonctions qui écrivent ou
+    volumes, instantané et ouverture des processus. Les fonctions qui écrivent ou
     suppriment (\texttt{DeleteFileW}, \texttt{MoveFileExW},
     \texttt{RemoveDirectoryW}, \texttt{CreateHardLinkW}, \texttt{SetEndOfFile})
     servent au dossier de sortie, ou appartiennent à la bibliothèque C++ liée
@@ -361,7 +391,7 @@ Hors \fichier{msvcrt.dll} (la bibliothèque C) :
 
 \textbf{Chargements dynamiques.} Trois bibliothèques seulement, depuis
 \path|System32| (\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32} ou,
-sous un Windows~7 qui ne connaît pas ce drapeau, leur chemin absolu dans ce
+sous un Windows qui ne connaît pas ce drapeau, leur chemin absolu dans ce
 dossier) :
 \fichier{iphlpapi.dll}, pour l'état réseau, quand \texttt{artefacts.network}
 est demandé ; \fichier{winhttp.dll}, pour \opt{update-trust} seul, et
@@ -369,6 +399,19 @@ est demandé ; \fichier{winhttp.dll}, pour \opt{update-trust} seul, et
 SRUM, BITS) dans la copie de travail, à la conversion seule — ni l'une ni
 l'autre ne s'exécute sur la machine examinée : \wac{} y collecte, et n'y
 convertit jamais.
+
+\textbf{\fichier{WAC32.exe}}, le \wac{} 32~bits (Windows~XP~SP1 à Windows~8
+x86), est construit des mêmes sources et importe les mêmes fonctions, sauf
+celles que XP n'a pas : les quatorze fonctions venues avec Vista (dont toute
+\fichier{bcrypt.dll}) y sont définies par \wac{} lui-même, qui appelle la
+fonction de Windows quand elle existe et la remplace sinon par ce que XP
+offre. \fichier{bcrypt.dll} est alors chargée depuis \path|System32|, à la
+conversion seule. S'y ajoutent \texttt{CreateSemaphoreW},
+\texttt{ReleaseSemaphore} (les fils de la bibliothèque C++ 32~bits) et
+\texttt{LoadLibraryA}, que son code de démarrage n'appelle que pour une
+bibliothèque d'exécution déjà présente dans le processus. La compilation
+confronte chaque import de \fichier{WAC32.exe} aux exportations de
+Windows~XP~SP1.
 
 \section{Les garde-fous de la compilation}
 
@@ -393,7 +436,7 @@ threads} n'est pas « win32 ». Un gcc en threads « posix » — celui de MSYS2
 sous Windows — intègre winpthreads à \fichier{WAC.exe}, et avec lui 38
 imports que \wac{} n'appelle jamais : \texttt{SetSystemTime},
 \texttt{SetThreadContext}, \texttt{SuspendThread},
-\texttt{TerminateProcess}, \texttt{OpenProcess},
+\texttt{TerminateProcess},
 \texttt{SetProcessAffinityMask}\ldots{} Ils ne changent rien à ce que fait
 \wac{}, mais ils élargissent ce qu'il \emph{pourrait} demander au système, et
 ce sont précisément les noms qu'un outil de défense ou un analyste remarque
@@ -446,7 +489,7 @@ s'explique dans ce dossier avant la livraison.
 \section{Étape 3 : la mesure sur une machine de test}
 
 Le cycle automatique (\fichier{vmtest/run-wac-test.sh}, voir le \emph{Guide des
-tests}) lance \wac{} dans une machine virtuelle Windows~11 et vérifie, sur des
+tests}) lance \wac{} dans une machine virtuelle (Windows~11, et Vista à 8.1) et vérifie, sur des
 fichiers témoins que \wac{} lit, qu'aucune de leurs métadonnées ne change :
 
 \begin{enumerate}
@@ -463,6 +506,10 @@ fichiers témoins que \wac{} lit, qu'aucune de leurs métadonnées ne change :
 \end{enumerate}
 
 Le résultat figure dans le compte rendu du cycle (\fichier{harmlessness.txt}).
+Le 29 octobre 2026, sur le code de la version 3.0.0 : témoins inchangés sous
+Windows~11 et sous Windows~8.1. Sous Windows~11, la lecture par Windows a
+changé la date d'accès : le contrôle sait échouer. Windows~8.1 ne tenait pas
+les dates d'accès du volume : là, le contrôle ne prouve que le numéro USN.
 
 \section{Étape 4 : le journal d'une collecte réelle}
 
@@ -481,7 +528,9 @@ défaut à signaler.
         le support de collecte.
   \item[Surveillance] Un EDR ou une politique d'audit peut journaliser
         l'ouverture du volume en lecture brute, l'énumération des processus et
-        des sessions. Ces journaux sont écrits par la machine, non par \wac{} ;
+        des sessions, et l'ouverture de chaque processus en lecture mémoire
+        pour sa liste de modules (Sysmon, événement~10 ; LSASS, quand il n'est
+        pas protégé, en fait partie). Ces journaux sont écrits par la machine, non par \wac{} ;
         ils sont attendus.
   \item[Mémoire] \wac{} ne capture pas la mémoire, mais il en occupe : une
         page évincée vers le fichier d'échange pendant la collecte n'est pas

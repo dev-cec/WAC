@@ -40,7 +40,7 @@
 \medskip
 \begin{tabular}{@{}ll@{}}
 Software version & 3.0.0 \\
-Document edition & September 2026 \\
+Document edition & October 2026 \\
 Publisher & Aerospace Cyber Defence Centre of Excellence (CEC) \\
           & French Air and Space Force Academy, Air Base 701, Salon-de-Provence \\
 \end{tabular}
@@ -155,6 +155,13 @@ Logs & Security 4688 and 4689 if process creation auditing is on; Sysmon~1 if
   volume). \\
 Memory & \wac{}'s pages take up memory during the collection and may push
   others out to the page file. \\
+RADAR & If \fichier{WAC.exe}'s memory crosses Windows' threshold, its leak
+  detector records it: a value under
+  \path|HKLM\SOFTWARE\Microsoft\RADAR\HeapLeakDetection\DiagnosedApplications\WAC.exe|
+  (\champ{LastDetectionTime}) and event 1014 of
+  \fichier{Microsoft-Windows-Resource-Exhaustion-Resolver/Operational}. Seen
+  twice on the test machine, in September and October 2026, never during the
+  cycles of version 3.0.0. \\
 \bottomrule
 \end{longtable}
 
@@ -167,10 +174,13 @@ the \champ{Collection.StartUtc} --- \champ{EndUtc} interval of
 
 \section{Measured against KAPE and the EZ tools}
 
-On a clone of the test machine, frozen with Sysmon, every tool is started from
+On a clone of the test machine, frozen with Sysmon, each tool is started from
 a USB key from the same state; C:'s change journal, bounded before and after
-the tool, and Sysmon tell what it wrote, and who wrote it (comparison document,
-chapter ``Traces left on the examined machine'').
+the tool, and Sysmon say what it wrote, and who wrote it; after the shutdown,
+the disk's hives are read again offline and set against those of the frozen
+state, key by key and value by value (comparison file, chapter ``Traces left
+on the examined machine''). Measured on 29 and 30 October 2026, on version
+3.0.0 and the fix of the module list described below.
 
 \begin{longtable}{@{}L{4.3cm}L{10.1cm}@{}}
 \toprule
@@ -178,23 +188,31 @@ chapter ``Traces left on the examined machine'').
 \midrule
 \endhead
 \wac{} & Nothing: no file, no registry value. \\
-KAPE (targets) & 4 Internet Settings \texttt{ZoneMap} values in the user's
+KAPE (targets) & 4 \texttt{ZoneMap} values of Internet Settings in the user's
   hive. \\
-KAPE and its modules & The same values, rewritten by 14 processes; 28 files on
-  C: (.NET runtime breadcrumbs, sentinel files in the user's Temp). \\
-EZ tools, live & No value and no file, but open-or-create calls on policy and
+KAPE and its modules & The same values, rewritten by 14 processes; 8 RAS
+  tracing keys (\path|HKLM\SOFTWARE\Microsoft\Tracing|) created by 4 tools;
+  28 files on C: (.NET runtime breadcrumbs, sentinel files in the user's
+  Temp). \\
+EZ tools live & No value and no file, but creation opens of policy and
   network keys. \\
 \bottomrule
 \end{longtable}
 
-None made Windows write an event in its own logs. But all of them are recorded
-by the installed monitoring, as the previous section says: Sysmon noted, for
-\wac{}, its process, its 2 raw reads of a volume and the 16,382 files it
-created, all on the key; process creation auditing, inactive on the clone,
-would have logged a 4688 and a 4689. For all of them, Windows adds an Amcache
-entry during the run and a ShimCache entry at shutdown; all of them read the
-volumes raw. KAPE and the EZ tools also
-need the .NET~9 runtime on the examined machine.
+The hives read again offline confirm it: what changes in them during \wac{}'s
+collection, beyond what the control run changes too, is the Amcache entry of
+\fichier{WAC.exe} and Windows' activity in the measuring window (WaaSMedic,
+Defender, scheduled tasks, WMI, Windows Update, OneDrive), which Sysmon gives
+other processes. No tool had an event written in Windows' own logs. But all
+are recorded by the monitoring installed, as the previous section foresees:
+Sysmon noted, for \wac{}, its process, its 3 raw reads (C:, the EFI partition,
+the physical disk), the 25,532 files it created, all on the key, and the
+processes it opened --- with limited query through Terminal Services, then
+with query and memory read for their module list; process creation auditing,
+off on the clone, would have recorded a 4688 and a 4689. For all, Windows adds
+an Amcache entry during the run and a ShimCache entry at shutdown; all read
+the volumes raw. KAPE and the EZ tools also need the .NET~9 runtime on the
+examined machine.
 
 \section{WAC's operations}
 
@@ -239,12 +257,18 @@ Entra ID token caches (\opt{cloud\_identity}) & Read by the raw reading and
 Binaries (\opt{binary}) & Read by the raw reading; signatures and catalogues
   verified in memory. No certificate store opened, no online revocation
   check. \\
-Processes & One kernel snapshot (\texttt{CreateToolhelp32Snapshot}) and one
-  query to the Terminal Services service (\texttt{WTSEnumerateProcessesW})
-  for the owners. No process is opened: \fichier{WAC.exe} does not import
-  \texttt{OpenProcess}. \\
-Process modules & One snapshot per process; those the kernel protects (LSASS,
-  antivirus) refuse it, and the refusal is recorded. \\
+Processes & One kernel snapshot (\texttt{CreateToolhelp32Snapshot}, the
+  process list only) and one query to the Terminal Services service
+  (\texttt{WTSEnumerateProcessesW}) for the owners, which opens each process
+  with limited query (\texttt{0x1000}), LSASS included. \\
+Process modules & Each process opened with query and memory read only
+  (\texttt{OpenProcess}, \texttt{PROCESS\_QUERY\_INFORMATION} and
+  \texttt{PROCESS\_VM\_READ}, granted as \texttt{0x1410}), its list read
+  through psapi: no write, thread or injection right. Those the kernel protects
+  (LSASS under LSA protection, services, antivirus) refuse it, and the refusal
+  is recorded. Up to version 3.0.0, the Toolhelp module snapshot opened each
+  process itself with full access (\texttt{PROCESS\_ALL\_ACCESS}, measured
+  under Sysmon): replaced. \\
 Sessions & One read query to LSASS (\texttt{LsaEnumerateLogonSessions},
   \texttt{LsaGetLogonSessionData}). \\
 State of the services & One read-only enumeration of the service manager,
@@ -328,12 +352,17 @@ Apart from \fichier{msvcrt.dll} (the C library):
     \texttt{CloseServiceHandle} (state of the services);
     \texttt{OpenProcessToken}, \texttt{GetTokenInformation},
     \texttt{GetUserNameW}, \texttt{GetLengthSid}, \texttt{IsValidSid}
-    (\wac{}'s own token). No \texttt{Reg*} function, no function that changes
+    (\wac{}'s own token); \texttt{AllocateAndInitializeSid},
+    \texttt{CheckTokenMembership}, \texttt{FreeSid} (membership of the
+    administrators group, the only elevation Windows~XP knows). No \texttt{Reg*} function, no function that changes
     a service.
   \item[Secur32.dll] \texttt{LsaEnumerateLogonSessions},
     \texttt{LsaGetLogonSessionData}, \texttt{LsaFreeReturnBuffer}.
   \item[WTSAPI32.dll] \texttt{WTSEnumerateProcessesW},
     \texttt{WTSFreeMemory}.
+  \item[PSAPI.DLL] \texttt{EnumProcessModules},
+    \texttt{GetModuleFileNameExW}: the module list of each process, opened by
+    \texttt{OpenProcess} with query and memory read.
   \item[bcrypt.dll] \texttt{BCryptOpenAlgorithmProvider},
     \texttt{BCryptSetProperty}, \texttt{BCryptGetProperty}, \texttt{BCryptGenerateSymmetricKey},
     \texttt{BCryptDecrypt}, \texttt{BCryptDestroyKey},
@@ -341,7 +370,7 @@ Apart from \fichier{msvcrt.dll} (the C library):
     hashes, at the conversion only. Computation in memory, no file, no
     registry.
   \item[KERNEL32.dll] Files, memory, threads, time, console, volumes, process
-    snapshot. The functions that write or delete (\texttt{DeleteFileW},
+    snapshot and opening. The functions that write or delete (\texttt{DeleteFileW},
     \texttt{MoveFileExW}, \texttt{RemoveDirectoryW}, \texttt{CreateHardLinkW},
     \texttt{SetEndOfFile}) serve the output folder, or belong to the
     statically linked C++ library (\texttt{std::filesystem}) without \wac{}
@@ -351,13 +380,25 @@ Apart from \fichier{msvcrt.dll} (the C library):
 
 \textbf{Dynamic loads.} Three libraries only, from \path|System32|
 (\texttt{LOAD\_LIBRARY\_}\allowbreak\texttt{SEARCH\_SYSTEM32} or, under a
-Windows~7 that does not know that flag, their full path in that folder):
+Windows that does not know that flag, their full path in that folder):
 \fichier{iphlpapi.dll}, for the
 network state, when \texttt{artefacts.network} is asked for;
 \fichier{winhttp.dll}, for \opt{update-trust} alone, and \fichier{esent.dll},
 which replays a copied ESE database's logs (WebCache, SRUM, BITS) into the
 working copy, at conversion alone — neither of the last two runs on the
 examined machine: \wac{} collects there, and never converts there.
+
+\textbf{\fichier{WAC32.exe}}, the 32-bit \wac{} (Windows~XP~SP1 to Windows~8
+x86), is built from the same sources and imports the same functions, except
+those XP lacks: the fourteen functions that came with Vista (the whole of
+\fichier{bcrypt.dll} among them) are defined by \wac{} itself, which calls
+Windows' function where it exists and replaces it otherwise with what XP
+offers. \fichier{bcrypt.dll} is then loaded from \path|System32|, at
+conversion alone. Added are \texttt{CreateSemaphoreW},
+\texttt{ReleaseSemaphore} (the threads of the 32-bit C++ library) and
+\texttt{LoadLibraryA}, which its start-up code calls only for a runtime
+library already present in the process. The build confronts every import of
+\fichier{WAC32.exe} with the exports of Windows~XP~SP1.
 
 \section{The guards of the build}
 
@@ -379,7 +420,7 @@ Before even building, it refuses a compiler whose \emph{thread model} is not
 ``win32''. A gcc with ``posix'' threads — MSYS2's on Windows — links
 winpthreads into \fichier{WAC.exe}, and with it 38 imports \wac{} never
 calls: \texttt{SetSystemTime}, \texttt{SetThreadContext},
-\texttt{SuspendThread}, \texttt{TerminateProcess}, \texttt{OpenProcess},
+\texttt{SuspendThread}, \texttt{TerminateProcess},
 \texttt{SetProcessAffinityMask}\ldots{} They change nothing in what \wac{}
 does, but they widen what it \emph{could} ask of the system, and they are
 precisely the names a defence tool or an analyst notices on the examined
@@ -432,7 +473,7 @@ file before the release.
 \section{Step 3: the measurement on a test machine}
 
 The automatic cycle (\fichier{vmtest/run-wac-test.sh}, see the \emph{Testing
-guide}) runs \wac{} in a Windows~11 virtual machine and checks, on witness
+guide}) runs \wac{} in a virtual machine (Windows~11, and Vista to 8.1) and checks, on witness
 files that \wac{} reads, that none of their metadata changes:
 
 \begin{enumerate}
@@ -448,7 +489,11 @@ files that \wac{} reads, that none of their metadata changes:
         part, changes when Windows updates it.
 \end{enumerate}
 
-The result is in the cycle's report (\fichier{harmlessness.txt}).
+The result is in the cycle's report (\fichier{harmlessness.txt}). On
+29 October 2026, on the code of version 3.0.0: witnesses unchanged under
+Windows~11 and under Windows~8.1. Under Windows~11, the read through Windows
+changed the access date: the check can fail. Windows~8.1 kept no access dates
+on the volume: there, the check proves the USN only.
 
 \section{Step 4: the log of a real collection}
 
@@ -466,7 +511,9 @@ report.
         than those it examines: it is up to the operator to start it from the
         collection medium.
   \item[Monitoring] An EDR or an audit policy may log the raw opening of the
-        volume, the enumeration of processes and sessions. These logs are
+        volume, the enumeration of processes and sessions, and the opening of each
+        process with memory read for its module list (Sysmon, event~10; LSASS,
+        when not protected, among them). These logs are
         written by the machine, not by \wac{}; they are expected.
   \item[Memory] \wac{} does not capture memory, but it occupies some: a page
         pushed out to the page file during the collection is not a trace on

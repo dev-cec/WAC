@@ -39,7 +39,7 @@
 \medskip
 \begin{tabular}{@{}ll@{}}
 Version du logiciel & 3.0.0 \\
-Édition du document & septembre 2026 \\
+Édition du document & octobre 2026 \\
 Éditeur & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
         & École de l'air et de l'espace, base aérienne 701, Salon-de-Provence \\
 \end{tabular}
@@ -375,7 +375,7 @@ lui.
   interdite : 44~610 contrôles, aucun échec \\
 \texttt{mft\_test} & \texttt{ntfsinfo} (ntfs-3g), implémentation NTFS indépendante &
   volume formaté par \texttt{mkntfs} : nom, parent, taille, huit dates et flux
-  nommés identiques pour chaque enregistrement ; 278 contrôles, second volume compris, aucun échec \\
+  nommés identiques pour chaque enregistrement ; 281 contrôles, second volume compris, aucun échec \\
 \texttt{usn\_journal\_test} & structures du compilateur (\texttt{USN\_RECORD}
   de MinGW, version~3 d'après Microsoft) &
   champs restitués tels qu'écrits, numéros égaux aux positions dans le flux
@@ -415,7 +415,7 @@ lui.
   cas ordinaires et hostiles (\path|$I| tronqué, longueur mensongère, date
   impossible), flux \fichier{Zone.Identifier}, DetectionHistory et entrées de
   quarantaine (clé RC4 éprouvée sur un en-tête écrit par Defender, longueurs
-  mensongères refusées) ; 62 contrôles, aucun échec \\
+  mensongères refusées), liste des modules d'un processus ; 283 contrôles, aucun échec \\
 \texttt{shell\_items\_test} & octets écrits par l'Explorateur de la VM ;
   libfwsi et la bibliothèque Lnk de SBECmd &
   éléments de shellbag d'un contenu d'archive : ZIP (dossier réel, fichier
@@ -875,33 +875,32 @@ deux conversions d'une même collecte & dates lues sur la copie de travail,
 
 \section{Résultat de référence}
 
-Dernier cycle, le 9 octobre 2026, sur la version 2.0.0 (Windows~11, fuseau de
-Paris) : 472 contrôles passés, aucun échec.
+Dernier cycle, le 30 octobre 2026, sur le code de la version 3.0.1
+(Windows~11 build 26200, fuseau de Paris) : 553 contrôles passés, aucun échec.
+Le 29 octobre, sous Windows~8.1, sur le code de la 3.0.0 : 462 contrôles passés, aucun échec.
 
 \begin{itemize}
   \item \textbf{collecte puis conversion} (\opt{collect} \opt{events}
-    \opt{binary}, collecte 7~min, conversion 1~min~47~s) : 72 fichiers JSON
-    valides, USBSTOR compris (le harnais branche deux clés USB virtuelles à
-    chaque cycle, si bien qu'une machine de test recréée les connaît aussi) ;
-    226 contrôles passés, dont 59~107 dates locales confrontées à la base IANA
-    et 211~972 événements décodés dans 405 journaux, dont 98,5\,\% des sortes
-    d'événements avec le texte que rend Windows ; 6~014 fichiers dans la
-    consigne, exactement ceux du manifeste, sceau conforme ; un script au
-    chemin de 261 caractères consigné avec l'empreinte que donne Windows ;
-  \item \textbf{collecte seule} (\opt{collect} \opt{events} \opt{binary},
-    7~min~30~s) : rien converti ; 49~226 exécutables lus, 28~180 authentifiés
-    comme Microsoft et 328 tiers validés par leur chaîne, non copiés ; 5~430
-    contenus déjà consignés ; 2~597 prélevés (771~Mo) ; 11~515 pièces vérifiées
-    par \fichier{verify-exhibits.ps1} ; une pièce retouchée refusée avant toute
-    lecture ; contrôle d'innocuité conforme ;
-  \item \textbf{conversion} (\opt{convert}, 1~min~43~s) : 243 contrôles passés,
-    dont les 8~537 exécutables de System32 et SysWOW64 présents au manifeste,
-    625 clés de récupération égales aux en-têtes PE, un script aux dates
-    falsifiées démasqué (\texttt{\$STANDARD\_\allowbreak INFORMATION} de 2001,
-    \texttt{\$FILE\_NAME} du jour), la vérification des paquets du Store ; une
-    seconde conversion donne des JSON identiques, octet pour octet ;
-  \item \textbf{collecte pilotée par \fichier{wac.yml}} : le fichier est suivi
-    et consigné.
+    \opt{binary}) : 84 fichiers JSON valides ; 53~885 dates locales
+    confrontées à la base IANA ; 249~231 événements décodés, et les 495
+    journaux que liste \texttt{Get-WinEvent} avec le même état ; 17~378
+    fichiers dans la consigne, exactement ceux du manifeste, sceau conforme ;
+    52~315 binaires authentifiés sans copie, chacun avec ses empreintes et son
+    verdict ; un script au chemin de plus de 260 caractères consigné avec
+    l'empreinte que donne Windows ; fichiers supprimés : 103~472 entrées, les
+    quatre témoins supprimés retrouvés avec leur SHA-256, 138 des 150 noms
+    déplacés retrouvés dans l'espace libre de leur index, les témoins supprimés
+    des clés FAT32 et exFAT retrouvés ;
+  \item \textbf{collecte seule} (\opt{collect} \opt{events} \opt{binary}) :
+    rien converti ; 24~827 pièces vérifiées par \fichier{verify-exhibits.ps1} ;
+    une pièce retouchée refusée avant toute lecture ; contrôle d'innocuité
+    conforme ; la consigne lue 26~905 fois par \fichier{WAC.exe}, toutes avant
+    sa copie de travail, aucune après ;
+  \item \textbf{conversion} (\opt{convert}) : 626 clés de récupération égales
+    aux en-têtes PE ; 18 chaînes de signature tierces jugées comme Windows les
+    juge ; une seconde conversion donne des JSON identiques, octet pour octet ;
+  \item \textbf{collecte pilotée par \fichier{wac.yml}} : 13 réglages
+    confrontés à 2~374 pièces, le fichier consigné avec son SHA-256.
 \end{itemize}
 
 % ============================================================ 5

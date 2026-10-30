@@ -36,7 +36,7 @@
 \medskip
 \begin{tabular}{@{}ll@{}}
 Version du logiciel & 3.0.0 \\
-Édition du document & septembre 2026 \\
+Édition du document & octobre 2026 \\
 Éditeur & Centre d'Excellence Cyberdéfense Aérospatiale (CEC) \\
         & École de l'air et de l'espace, base aérienne 701, Salon-de-Provence \\
 \end{tabular}
@@ -396,7 +396,9 @@ les cas connus répondent juste (pas de SRUM avant Windows~8, Prefetch~23 sous
 Vista et 30 sous Windows~10), que le garde-fou n'écarte sous Windows~7 que les
 cinq artefacts que cette version n'a pas, et qu'un Windows plus récent que la
 table est traité comme le dernier connu, et signalé. Une clé ou une version
-inconnue ne retient jamais une collecte. Il contrôle aussi qu'une source n'est
+inconnue ne retient jamais une collecte. Seule une édition serveur est dite
+non éprouvée par le cycle de test : tout poste client, de XP SP1 à Windows~11,
+l'est. Il contrôle aussi qu'une source n'est
 dite « toujours présente » que là où elle l'est : ni sur un serveur, ni pour
 une clé qui n'existe qu'après le branchement d'un périphérique, ni pour un
 métafichier du volume ou un état du système en marche. Enfin, qu'une pièce
@@ -589,7 +591,12 @@ compilation ne révèle : la consigne reste identique octet pour octet pendant q
 la copie de travail est modifiée, et le sceau porte l'empreinte réelle du
 manifeste. Il vérifie enfin qu'un chemin de pièce lu dans un manifeste reste
 dans la consigne : un composant \texttt{..} est refusé, un nom de WinSxS qui
-contient \texttt{..} (\texttt{i..sermode}) est accepté.
+contient \texttt{..} (\texttt{i..sermode}) est accepté. Une opération inscrite au
+journal d'investigation avant la lecture du fuseau du suspect y porte quand
+même son heure locale, jamais l'UTC marqué \texttt{+00:00} ; et une consigne
+rechargée comme à la conversion donne la taille de ses pièces, une place
+libre d'un octet trop courte étant refusée pour la place, non comme une
+donnée invalide.
 
 \begin{lstlisting}
 cd build-windows/tests
@@ -738,7 +745,7 @@ aléatoires placées contre une page interdite.
 cd build-windows/tests && wine ntfs_runs_test.exe
 \end{lstlisting}
 
-Référence : 100~017 contrôles, aucun échec ; l'ancien décodeur, qui prenait un
+Référence : 100~026 contrôles, aucun échec ; l'ancien décodeur, qui prenait un
 champ de 15~octets, en fait échouer 48~224.
 
 \section{Fichiers supprimés : \texttt{deleted\_files\_test}}
@@ -764,7 +771,7 @@ contre une page interdite.
 cd build-windows/tests && wine deleted_files_test.exe
 \end{lstlisting}
 
-Référence : 91~839 contrôles, aucun échec — dont les clusters réclamés depuis par un fichier supprimé plus récent (cas connus, 2~000 tirages confrontés à un décompte cluster par cluster, un trou dit tel) ; sans le contrôle du répertoire
+Référence : 91~842 contrôles, aucun échec — dont les clusters réclamés depuis par un fichier supprimé plus récent (cas connus, 2~000 tirages confrontés à un décompte cluster par cluster, un trou dit tel) ; sans le contrôle du répertoire
 parent, le niveau~2 en fait échouer trois ; sans la vérification de
 \fichier{\$Bitmap} après la lecture, le cluster pris pendant la lecture est
 publié comme contenu du fichier et le contrôle échoue. Dans la VM, des
@@ -832,7 +839,7 @@ wine mft_test.exe "Z:/tmp/mft"
 wine usn_journal_test.exe "Z:/tmp/mft"
 \end{lstlisting}
 
-Référence : 278 contrôles pour \texttt{mft\_test}, 27 pour
+Référence : 281 contrôles pour \texttt{mft\_test}, 27 pour
 \texttt{usn\_journal\_test}, aucun échec.
 
 \section{Lecture brute sur un vrai volume : \texttt{raw\_volume\_test.sh}}
@@ -977,7 +984,8 @@ Aucune donnée nécessaire.
 cd build-windows/tests && wine file_artefacts_test.exe
 \end{lstlisting}
 
-Référence : 174 contrôles, aucun échec (dont les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat ; et les caches des miniatures : une en-tête d'entrée réelle de la VM et la somme que Windows lui a écrite, un cache construit, des longueurs forgées ; le courrier de Thunderbird : une boîte mbox écrite ici, mots encodés, quoted-printable, base64, nom RFC~2231, multipart imbriqué ou sans frontière, date avec décalage). Dans le cycle VM,
+Référence : 283 contrôles, aucun échec (dont la liste des modules du
+processus du test, l'exécutable en premier, lue comme \wac{} la lit ; les valeurs du lot 2 du registre : TrustRecords, règle de pare-feu, blob de certificat ; et les caches des miniatures : une en-tête d'entrée réelle de la VM et la somme que Windows lui a écrite, un cache construit, des longueurs forgées ; le courrier de Thunderbird : une boîte mbox écrite ici, mots encodés, quoted-printable, base64, nom RFC~2231, multipart imbriqué ou sans frontière, date avec décalage). Dans le cycle VM,
 \fichier{place-file-artefacts.ps1} dépose des témoins de contenu connu (un
 historique, un fichier mis à la corbeille, une entrée \fichier{hosts}, un
 script de démarrage) et \fichier{check-json.py} les retrouve dans les JSON.

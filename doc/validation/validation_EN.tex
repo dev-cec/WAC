@@ -39,7 +39,7 @@
 \medskip
 \begin{tabular}{@{}ll@{}}
 Software version & 3.0.0 \\
-Document edition & September 2026 \\
+Document edition & October 2026 \\
 Publisher & Aerospace Cyber Defence Centre of Excellence (CEC) \\
           & French Air and Space Force Academy, Air Base 701, Salon-de-Provence \\
 \end{tabular}
@@ -364,7 +364,7 @@ with it.
   failure \\
 \texttt{mft\_test} & \texttt{ntfsinfo} (ntfs-3g), an independent NTFS implementation &
   volume formatted by \texttt{mkntfs}: name, parent, size, eight dates and
-  named streams identical for every record; 278 checks, a second volume included, no failure \\
+  named streams identical for every record; 281 checks, a second volume included, no failure \\
 \texttt{usn\_journal\_test} & the compiler's structures (MinGW's
   \texttt{USN\_RECORD}, version~3 from Microsoft) &
   fields returned as written, numbers equal to the positions in the whole
@@ -402,8 +402,8 @@ with it.
   (versions 1 and 2), \fichier{hosts}, \fichier{Report.wer}, Defender's MPLog:
   ordinary and hostile cases (truncated \path|$I|, lying length, impossible
   date), \fichier{Zone.Identifier} streams, DetectionHistory and quarantine
-  entries (RC4 key proven on a header Defender wrote, lying lengths refused);
-  62 checks, no failure \\
+  entries (RC4 key proven on a header Defender wrote, lying lengths refused),
+  a process's module list; 283 checks, no failure \\
 \texttt{shell\_items\_test} & bytes the VM's Explorer wrote; libfwsi and
   SBECmd's Lnk library &
   shellbag items of an archive's content: ZIP (real folder, file with sizes,
@@ -842,33 +842,32 @@ two conversions of one collection & dates read on the working copy, rebuilt at
 
 \section{Reference result}
 
-Last cycle, 9 October 2026, on version 2.0.0 (Windows~11, Paris time zone):
-472 checks passed, no failure.
+Last cycle, 30 October 2026, on the code of version 3.0.1 (Windows~11 build
+26200, Paris time zone): 553 checks passed, no failure. On 29 October, on
+Windows~8.1, on the code of 3.0.0: 462 checks passed, no failure.
 
 \begin{itemize}
   \item \textbf{collection then conversion} (\opt{collect} \opt{events}
-    \opt{binary}, collection 7~min, conversion 1~min~47~s): 72 valid JSON
-    files, USBSTOR included (the harness attaches two virtual USB keys on every
-    cycle, so that a recreated test machine knows them too); 226 checks
-    passed, among them 59,107 local dates confronted with the IANA database and
-    211,972 events decoded from 405 logs, 98.5\,\% of the event kinds with the
-    text Windows renders; 6,014 files in the exhibit store, exactly those of the
-    manifest, seal conforms; a script whose path is 261 characters long
-    recorded with the fingerprint Windows gives;
-  \item \textbf{collection only} (\opt{collect} \opt{events} \opt{binary},
-    7~min~30~s): nothing converted; 49,226 executables read, 28,180
-    authenticated as Microsoft and 328 third-party cleared by their chain, not
-    copied; 5,430 contents already recorded; 2,597 collected (771~MB); 11,515
-    exhibits verified by \fichier{verify-exhibits.ps1}; a retouched exhibit
-    refused before any read; harmlessness check conforms;
-  \item \textbf{conversion} (\opt{convert}, 1~min~43~s): 243 checks passed,
-    among them the 8,537 executables of System32 and SysWOW64 present in the
-    manifest, 625 retrieval keys equal to the PE headers, a timestomped script
-    visible (\texttt{\$STANDARD\_\allowbreak INFORMATION} of 2001,
-    \texttt{\$FILE\_NAME} of the day), the Store package verification; a second
-    conversion gives identical JSON files, byte for byte;
-  \item \textbf{collection driven by \fichier{wac.yml}}: the file is followed
-    and recorded.
+    \opt{binary}): 84 valid JSON files; 53,885 local dates confronted with the
+    IANA database; 249,231 events decoded, and the 495 logs
+    \texttt{Get-WinEvent} lists with the same state; 17,378 files in the
+    exhibit store, exactly those of the manifest, seal conforms; 52,315
+    binaries authenticated without a copy, each with its fingerprints and
+    verdict; a script whose path is over 260 characters long recorded with the
+    fingerprint Windows gives; deleted files: 103,472 entries, the four deleted
+    witnesses recovered with their SHA-256, 138 of the 150 moved names found in
+    the slack of their index, the deleted witnesses of the FAT32 and exFAT keys
+    recovered;
+  \item \textbf{collection only} (\opt{collect} \opt{events} \opt{binary}):
+    nothing converted; 24,827 exhibits verified by
+    \fichier{verify-exhibits.ps1}; a retouched exhibit refused before any read;
+    harmlessness check conforms; the exhibit store read 26,905 times by
+    \fichier{WAC.exe}, all before its working copy, none after;
+  \item \textbf{conversion} (\opt{convert}): 626 retrieval keys equal to the PE
+    headers; 18 third-party signature chains judged as Windows judges them; a
+    second conversion gives identical JSON files, byte for byte;
+  \item \textbf{collection driven by \fichier{wac.yml}}: 13 settings
+    confronted with 2,374 exhibits, the file recorded with its SHA-256.
 \end{itemize}
 
 % ============================================================ 5
