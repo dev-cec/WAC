@@ -199,6 +199,16 @@ OLDER_VERSION_STATUSES = {
 }
 
 
+# The server of the same kernel as each measured client build, as WAC names
+# it: the journal names the edition Windows is, the lists stay those of the
+# kernel (measured on Server 2012 R2: those of Windows 8.1).
+SERVER_RELEASES = {9200: "Windows Server 2012", 9600: "Windows Server 2012 R2", 7601: "Windows Server 2008 R2"}
+
+# The first server build whose sources WAC calls "expected" (artefact_catalogue.cpp:
+# SERVER_EXPECTED_SINCE_BUILD): an older server's missing source is only not collected.
+SERVER_EXPECTED_SINCE_BUILD = 20348
+
+
 def skipped_unplaced(folder, section, reference):
     """True, with the line that says so, when a check has no reference because
     the witnesses of its section were not placed: nothing to confront."""
@@ -3116,6 +3126,8 @@ def check_examined_version(folder):
     older = OLDER_VERSION_STATUSES.get(build)
     if older:
         expected_release, expected_absent, expected_undecoded = older
+        if not workstation:
+            expected_release = SERVER_RELEASES[build]
     elif build < VALIDATED_SINCE_BUILD:
         print(f"  ⏭️  examined version: build {build}, a Windows this check has no measured list for")
         return 0
@@ -3154,6 +3166,9 @@ def check_expected_missing(folder):
     other artefact may claim the status.
     """
     faults = []
+    build = examined_build(folder)
+    if server_edition(folder) and (build or 0) < SERVER_EXPECTED_SINCE_BUILD:
+        return check_missing_not_expected(folder, build)
     manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
     paths = [str(i.get("SourcePath", "")).lower() for i in (manifest or {}).get("Items") or []] \
         if isinstance(manifest, dict) else []
@@ -3166,13 +3181,6 @@ def check_expected_missing(folder):
     if not isinstance(hosts, dict) or hosts.get("CollectionStatus") != "ExpectedButMissing":
         faults.append(f"hosts.json does not say ExpectedButMissing: {str(hosts)[:90]}")
     else:
-        build = None
-        try:
-            with open(os.path.join(folder, "reference", "windows-version.txt"), encoding="utf-8", errors="replace") as f:
-                match = re.search(r"windows=(\d+)\|", f.read())
-                build = int(match.group(1)) if match else None
-        except OSError:
-            pass
         if build is None:
             faults.append("reference/windows-version.txt unreadable: build not confronted")
         elif hosts.get("WindowsBuild") != build:
@@ -3199,6 +3207,33 @@ def check_expected_missing(folder):
     print(f"  ✅ expected but missing: hosts.json says so (build {hosts.get('WindowsBuild')}, "
           f"{hosts.get('ExpectedLocation')}), the journal records it, the store holds {len(folder_files)} other "
           f"file(s) of the folder and no hosts, no other artefact claims it")
+    return 0
+
+
+def check_missing_not_expected(folder, build):
+    """The hosts file moved aside on a server older than those measured: WAC
+    does not call it expected there, so hosts.json says NotCollected with a
+    "not found" error, and no journal record nor artefact claims the finding."""
+    hosts = raw_json(os.path.join(folder, "hosts.json"))
+    faults = []
+    if not isinstance(hosts, dict) or hosts.get("CollectionStatus") != "NotCollected":
+        faults.append(f"hosts.json does not say NotCollected: {str(hosts)[:90]}")
+    elif "80070002" not in str(hosts.get("Error", "")) and "80070003" not in str(hosts.get("Error", "")):
+        faults.append(f"Error is not a 'not found': {hosts.get('Error')!r}")
+    conversion = load(folder, "conversion.json")
+    if any(str(o.get("Operation", "")).startswith("Expected but missing")
+           for o in (conversion or {}).get("Operations", []) if isinstance(conversion, dict)):
+        faults.append("conversion.json records an 'Expected but missing'")
+    others = [n for n in sorted(os.listdir(folder)) if n.endswith(".json")
+              and isinstance(raw_json(os.path.join(folder, n)), dict)
+              and raw_json(os.path.join(folder, n)).get("CollectionStatus") == "ExpectedButMissing"]
+    if others:
+        faults.append(f"the status is claimed by {others[:3]}")
+    if faults:
+        print("  ❌ expected but missing (server build {}): ".format(build) + " ; ".join(faults))
+        return 1
+    print(f"  ✅ expected but missing: on a server of build {build}, older than those measured, the hosts file "
+          f"moved aside is not collected and no artefact says it expected")
     return 0
 
 

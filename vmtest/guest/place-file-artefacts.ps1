@@ -808,6 +808,17 @@ try { if (Wants 'installed_programs') {
     Set-ItemProperty $witness -Name InstallDate -Value '20260930'
     Set-ItemProperty $witness -Name InstallLocation -Value 'C:\wactest\wac-program'
     Write-Output "program=WacTestProgram|WAC test program|WAC test publisher|1.2.3|20260930"
+    # Windows 8 and 8.1 inventory the Uninstall keys in Amcache.hve's Programs
+    # with the ProgramDataUpdater task, which a client runs in its maintenance
+    # but a fresh server had never run (Server 2012 R2: no program at all).
+    # Run here and waited for, so that the witness is in the inventory WAC reads.
+    if ([Environment]::OSVersion.Version.Build -in 9200, 9600) {
+        $task = @{ TaskPath = '\Microsoft\Windows\Application Experience\'; TaskName = 'ProgramDataUpdater' }
+        Start-ScheduledTask @task
+        $deadline = (Get-Date).AddMinutes(10)
+        do { Start-Sleep 5 } while ((Get-ScheduledTask @task).State -eq 'Running' -and (Get-Date) -lt $deadline)
+        Write-Output ("programinventory={0}" -f (Get-ScheduledTaskInfo @task).LastTaskResult)
+    }
     $machine = @(Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall' -ErrorAction SilentlyContinue).Count
     $machine32 = @(Get-ChildItem 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall' -ErrorAction SilentlyContinue).Count
     $user = @(Get-ChildItem "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Uninstall" -ErrorAction SilentlyContinue).Count
