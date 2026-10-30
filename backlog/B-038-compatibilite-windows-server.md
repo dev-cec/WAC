@@ -28,7 +28,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Images des versions serveur (2012 R2 à 2025, évaluation) et profils de create-vm.sh ; Server 2022 créée
-- [ ] Cycle du harnais sous chaque génération (2012 R2, 2016+), écarts départagés
+- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012/2012 R2, 2008 R2, 2003 à faire), écarts départagés
 - [ ] Artefacts propres aux rôles (à répartir avec B-035 pour IIS)
 - [ ] Server Core
 - [ ] Contrôleur de domaine : `NTDS.dit` (à étudier)
@@ -54,3 +54,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
   8. hosts « NotCollected » au lieu de « ExpectedButMissing » : la table ne dit pas hosts toujours présent sur un serveur, le harnais l'attend.
   Ordre prévu : cycle Server 2022 (2016+), puis 2012 R2, 2025, Server Core, 2003 (WAC32, piloté comme XP), 2008 dès les ISO fournies.
 - 2026-10-30 : ISO ajoutées (demande utilisateur : depuis les dépôts officiels). Server 2012 d'évaluation (en-US, build 9200, Standard avec interface = index 2) depuis download.microsoft.com, taille conforme à celle annoncée. Server 2008 R2 SP1 d'évaluation : retirée du site de Microsoft (404) ; copie d'Internet Archive gardée parce que son SHA-1 égale celui publié par Microsoft (beed231a34e90e1dd9a04b3afabec31d62ce3889, décision utilisateur). Server 2008 SP2 : aucune image d'évaluation ni empreinte officielle trouvée — 2008 R2 représente seule la génération 2008. Profils `srv2008r2` (comme Windows 7 : BIOS, OOBE de 7, virtio 0.1.173 2k8R2) et `srv2012` (comme 2012 R2, virtio 0.1.189 2k12) ajoutés à create-vm.sh, à éprouver.
+- 2026-10-30 : **Server 2022 vert : 476 ✅, 0 ❌** (cycle sur la 3.0.1 et les correctifs suivants). Écarts départagés : (a) WAC — une source « attendue » vaut désormais sur Server 2022 et suivants avec interface (les 20 y sont, mesuré), hors Server Core (cc7de647) ; (b) harnais — session et profils de wacrdp supprimés avec le compte, témoin libarchive à partir du build 22621, et sur un serveur : pas de Prefetch des applications (EnablePrefetcher absent), pas de fournisseur réseau SRUM, pas d'entrée BAM de SYSTEM, pas de miniature écrite — dits, non comptés en échec (8c90127e). Les 3 désaccords mft/manifeste du 15/10 ne se sont pas reproduits. Non-régression Windows 11 en cours.
