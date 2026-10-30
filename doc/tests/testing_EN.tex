@@ -386,7 +386,7 @@ that version lacks, and that a Windows newer than the table is treated as the
 last one known, and flagged. An unknown key or version never holds a collection
 back. Only a server edition is said not validated by the test cycle: every
 client, from XP SP1 to Windows~11, is. It also checks that a source is said ``always there'' only where it is:
-not on a server, not for a key that exists only once a device was plugged, not
+not on a server the cycle has not measured (before Server~2022, or Server Core), not for a key that exists only once a device was plugged, not
 for a metadata file of the volume or a state of the running system. Lastly,
 that a piece is decoded only if the table holds its signature with a decoder: a
 Prefetch of version~23 is named and not decoded, a Prefetch of version~32,
