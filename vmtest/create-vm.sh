@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # create-vm.sh — creates a Windows test VM from scratch, entirely without interaction.
 #
-# Usage: ./create-vm.sh [win11|win81|win8|win7|vista|winxp|srv2012r2|srv2016|srv2019|srv2022|srv2025]
+# Usage: ./create-vm.sh [win11|win81|win8|win7|vista|winxp|srv2008r2|srv2012|srv2012r2|srv2016|srv2019|srv2022|srv2025]
 #   win11  (default) the VM of the test cycle, Windows 11 — domain win11-test
 #   win81  Windows 8.1 x64, for the compatibility with the older versions —
 #          domain win81-test; run-wac-test.sh is given it with DOM=win81-test
@@ -10,9 +10,11 @@
 #   vista  Windows Vista SP2 Business x86 — domain vista-test. No PowerShell:
 #          the agent's channel driver is installed by certutil and pnputil,
 #          and the VM runs WAC32 through the agent (`qga.py run --shell`)
-#   srv2012r2, srv2016, srv2019, srv2022, srv2025
+#   srv2012, srv2012r2, srv2016, srv2019, srv2022, srv2025
 #          Windows Server Standard with its graphical interface, from the
 #          evaluation media of vmtest/tools/isos — domains srv2012r2-test…
+#   srv2008r2  Windows Server 2008 R2 SP1 Standard, installed as Windows 7 is
+#          — domain srv2008r2-test
 #   winxp  Windows XP Professional SP1 x86 — domain winxp-test. No guest agent
 #          exists for it: installed from an answer floppy (WINNT.SIF), driven
 #          by the keyboard (lib/vmkeys.py, US layout), its output read on its
