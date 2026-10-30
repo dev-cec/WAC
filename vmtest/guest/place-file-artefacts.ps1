@@ -709,8 +709,9 @@ Start-Sleep 12
     else { Write-Output "witness_failed=shellbags|zip|Explorer recorded no shellbag for the ZIP folder" }
 
     # Windows 11 reads 7z and tar.gz through libarchive, made by its tar.exe:
-    # neither exists before Windows 10, and the rest is not attempted.
-    if (Get-Command tar.exe -ErrorAction SilentlyContinue) {
+    # Explorer opens them from build 22621 on (Windows 11 22H2; Server 2022,
+    # build 20348, has tar.exe but its Explorer does not open a .7z: measured).
+    if ((Get-Command tar.exe -ErrorAction SilentlyContinue) -and [Environment]::OSVersion.Version.Build -ge 22621) {
 
     # The same for the archives Windows 11 reads through libarchive (B-029): a
     # 7z and a tar.gz made by its own tar.exe. Their item is laid out
@@ -1571,7 +1572,18 @@ Remove-ItemProperty $client -Name AuthenticationLevelOverride -ErrorAction Silen
         Remove-Item C:\wactest\rdp-witness.ps1, C:\wactest\rdp-witness.done -ErrorAction SilentlyContinue
         Set-ItemProperty $tsKey -Name fDenyTSConnections -Value $denied
         if ($denied) { Disable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue }
+        # On a server, the loopback connection opens a real session for
+        # wacrdp, whose profile Windows copies from Default: the session is
+        # logged off and its profiles removed with the account, or every cycle
+        # left one more (wacrdp.WAC-TEST…) with its shortcuts, its DPAPI key and
+        # a copy of the Default profile's Run witness.
+        foreach ($line in @(quser 2>$null)) {
+            if ($line -match '^\s*>?wacrdp\s+(?:\S+\s+)?(\d+)\s') { logoff $Matches[1] 2>$null }
+        }
+        Start-Sleep 5
         RemoveLocalUser 'wacrdp'
+        Get-WmiObject Win32_UserProfile | Where-Object { $_.LocalPath -match '\\wacrdp(\.[^\\]+)?$' } |
+            ForEach-Object { $_.Delete() }
     }
 
     # A server of known values in "wac"'s hive, flushed to the disk.

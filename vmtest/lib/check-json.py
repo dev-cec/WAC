@@ -250,6 +250,20 @@ def examined_build(folder):
     return int(match.group(1)) if match else None
 
 
+def server_edition(folder):
+    """Whether the cycle ran on a server edition (reference/windows-version.txt
+    gives Windows' ProductType after the build: 1 for a workstation). A
+    server lacks some sources a client always has — measured on Server 2022:
+    no application Prefetch, no network usage in SRUM, no BAM entry of
+    SYSTEM, no thumbnail written for a picture Explorer shows."""
+    try:
+        with open(os.path.join(folder, "reference", "windows-version.txt"), encoding="utf-8", errors="replace") as f:
+            match = re.search(r"windows=\d+\|(\d+)", f.read())
+    except OSError:
+        return False
+    return bool(match) and match.group(1) != "1"
+
+
 def older_version(folder):
     """Whether the cycle ran on a Windows older than those it validates WAC on:
     statuses that are faults on Windows 10 and 11 are expected there."""
@@ -2969,8 +2983,12 @@ def check_small_file_artefacts(folder):
         unresolved = sum(1 for r in srum if r.get("AppId") in with_blob and "App" not in r)
         users = sum(1 for r in srum if r.get("UserId") in with_blob and "UserSID" not in r)
         future = sum(1 for r in srum if start and r.get("TimeStamp") and r["TimeStamp"][:19] > start[:19])
-        report(network and not unresolved and not users and not future,
-               f"srum.json: {len(srum)} row(s), {len(network)} of network usage, every AppId and UserId resolved, none after the database's extraction",
+        # A server registers no network usage provider (measured on Server 2022):
+        # no network row is expected there.
+        report((network or server_edition(folder)) and not unresolved and not users and not future,
+               f"srum.json: {len(srum)} row(s), {len(network)} of network usage"
+               + (" (a server edition registers no network usage provider)" if server_edition(folder) and not network else "")
+               + ", every AppId and UserId resolved, none after the database's extraction",
                f"srum.json: {len(network)} network row(s), {unresolved} AppId and {users} UserId unresolved, {future} after the database's extraction ({start})")
 
     # The EICAR detection of the cycle, against MSFT_MpThreatDetection, and
@@ -3745,6 +3763,10 @@ def check_prefetch_libscca(folder):
                    [v.get("SerialNumber") for v in p.get("Volumes") or []], p.get("FileCount"))
             if got != theirs:
                 wrong.append(f"{name}: WAC {got}, libscca {theirs}")
+    if compared == 0 and not wrong and server_edition(folder):
+        print("  ⏭️  prefetchs.json: no application Prefetch on a server edition (EnablePrefetcher absent, "
+              "measured on Server 2022): only the harness's own witness, not compared")
+        return 0
     ok = compared > 0 and not wrong
     print(f"  {'✅' if ok else '❌'} prefetchs.json: {compared} Prefetch as libscca reads them (version, hash, run count, "
           f"run times, volume serials, number of files)" + (f", {len(unread)} unread by libscca" if unread else "")
@@ -3956,6 +3978,9 @@ def check_thumbcache(folder):
     if entry and same and entry.get("Format") in ("png", "jpg", "bmp"):
         print(f"  ✅ thumbcache.json: the thumbnail of {picture} (ThumbnailCacheId {cache_id}) in {entry.get('Cache')}, "
               f"{entry.get('Width')}×{entry.get('Height')} {entry.get('Format')}, exported with its SHA-256")
+    elif not entry and server_edition(folder):
+        print(f"  ⏭️  thumbcache.json: no entry for {picture} on a server edition, which wrote none for it "
+              f"(measured on Server 2022): the other entries are checked above")
     else:
         print(f"  ❌ thumbcache.json: the thumbnail of {picture} (ThumbnailCacheId {cache_id}) "
               f"{'exported image missing or different' if entry else 'not found'}")
@@ -4364,6 +4389,9 @@ def check_prefetch_mft_references(folder):
                 recreated += 1
             else:
                 wrong.append((path, ref, record[:2]))
+    if not wrong and not same and server_edition(folder):
+        print("  ⏭️  prefetchs.json: no application Prefetch on a server edition: $MFT references not confronted")
+        return 0
     if wrong or not same:
         print(f"  ❌ prefetchs.json: {len(wrong)} $MFT reference(s) whose sequence is not the record's, "
               f"{same} identical")
@@ -4991,6 +5019,10 @@ def check_utc_sources(folder):
     elif not isinstance(bams, list) or not bams:
         print("  ❌ bams.json empty: the BAM keys hold at least the harness's own commands")
         found += 1
+    elif server_edition(folder):
+        # The harness runs taskkill.exe as SYSTEM; a server's BAM keeps no
+        # SYSTEM entry (measured on Server 2022: none for S-1-5-18).
+        print(f"  ⏭️  bams.json: {len(bams)} entry(ies); a server edition keeps none for SYSTEM: the harness's taskkill.exe not looked for")
     elif start:
         # "executionTimeUtc" until 2026-09-25: archived results stay checkable.
         runs = [instant(b.get("LastExecutionUtc") or b["executionTimeUtc"]) for b in bams
