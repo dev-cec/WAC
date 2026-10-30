@@ -210,7 +210,7 @@ var translations_8h =
       [ "AbsentFromVersion", "translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a988843c516fc35b40bc54b06ca13d1da", null ],
       [ "ExpectedButMissing", "translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4aca6bdf9e1bbca60f3c64b918c868daeb", null ],
       [ "UndecodedOnVersion", "translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a36fb239f6e0918dc8ac82d55166fb9c3", null ],
-      [ "OlderThanValidated", "translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a131bb4584797da8d703773d8418304cf", null ],
+      [ "ServerNotValidated", "translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4af5bfc582d7258ea5c321d3a2bc5a2c6d", null ],
       [ "StepExaminedVersion", "translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a019e0f1458a1a17d224244021ede1a38", null ],
       [ "ExaminedVersionUnknown", "translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ae05e1b3479b08052f86936d60e02c8b5", null ],
       [ "ExaminedVersionUnread", "translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a96baab04fb25b5a23337916a5bf79788", null ],

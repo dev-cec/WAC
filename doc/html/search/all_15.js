@@ -32,7 +32,7 @@ var searchData=
   ['usable_29',['usable',['../structTrustSet.html#ab263dd67a03fb2a474ce9710b5438084',1,'TrustSet']]],
   ['usb_5fwrite_30',['USB_WRITE',['../namespaceFootprint.html#a0f4e23dd36a28a486fe8d93c7f381d9d',1,'Footprint']]],
   ['usbs_31',['usbs',['../structUsbstors.html#a8db49a85aca68f8604cca00b453b974d',1,'Usbstors']]],
-  ['usbstor_32',['usbstor',['../structUsbstor.html#a74b5e9382ae33cfe92b01183b9bd6f32',1,'Usbstor::Usbstor()'],['../structAppliConf_1_1CollectedArtefacts.html#aea4fd668e7be6b328a1a82dc63466669',1,'AppliConf::CollectedArtefacts::usbstor'],['../structUsbstor.html',1,'Usbstor']]],
+  ['usbstor_32',['usbstor',['../structAppliConf_1_1CollectedArtefacts.html#aea4fd668e7be6b328a1a82dc63466669',1,'AppliConf::CollectedArtefacts::usbstor'],['../structUsbstor.html#a74b5e9382ae33cfe92b01183b9bd6f32',1,'Usbstor::Usbstor()'],['../structUsbstor.html',1,'Usbstor']]],
   ['usbstors_33',['Usbstors',['../structUsbstors.html',1,'']]],
   ['user_34',['User',['../structUser.html',1,'']]],
   ['user_5fshell_5ffolders_2ecpp_35',['user_shell_folders.cpp',['../user__shell__folders_8cpp.html',1,'']]],

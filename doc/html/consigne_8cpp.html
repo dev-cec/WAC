@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.1</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -127,6 +127,8 @@ Functions</h2></td></tr>
 <tr class="separator:ad9c067276db577f8eb0c52df71620dc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac7c990e675e55b36529d931af2ef06fd" id="r_ac7c990e675e55b36529d931af2ef06fd"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#ac7c990e675e55b36529d931af2ef06fd">ExhibitStoreCheckLocation</a> (unsigned long long estimatedNeed)</td></tr>
 <tr class="separator:ac7c990e675e55b36529d931af2ef06fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9ebfdc7c12fb3138f2bd49effd413ba" id="r_af9ebfdc7c12fb3138f2bd49effd413ba"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#af9ebfdc7c12fb3138f2bd49effd413ba">ExhibitStoreCheckWorkingSpace</a> (unsigned long long freeBytes)</td></tr>
+<tr class="separator:af9ebfdc7c12fb3138f2bd49effd413ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25d26c12360861fb12b3fbe80ec4ee6b" id="r_a25d26c12360861fb12b3fbe80ec4ee6b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a25d26c12360861fb12b3fbe80ec4ee6b">ExhibitStoreAdd</a> (const std::vector&lt; <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &gt; &amp;reading, const std::wstring &amp;method, const <a class="el" href="structSignatureVerdict.html">SignatureVerdict</a> &amp;verdict)</td></tr>
 <tr class="separator:a25d26c12360861fb12b3fbe80ec4ee6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7333e88a038e5f9ea97111f94dd523bc" id="r_a7333e88a038e5f9ea97111f94dd523bc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="consigne_8cpp.html#a7333e88a038e5f9ea97111f94dd523bc">ExhibitStoreAddDuplicate</a> (const <a class="el" href="structRawHiveExtraction.html">RawHiveExtraction</a> &amp;e, const std::wstring &amp;method, const <a class="el" href="structSignatureVerdict.html">SignatureVerdict</a> &amp;verdict)</td></tr>
@@ -385,6 +387,31 @@ or a drive / stream ":"). A forged manifest could otherwise have files elsewhere
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or an error code with the reason logged </dd></dl>
+
+</div>
+</div>
+<a id="af9ebfdc7c12fb3138f2bd49effd413ba" name="af9ebfdc7c12fb3138f2bd49effd413ba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9ebfdc7c12fb3138f2bd49effd413ba">&#9670;&#160;</a></span>ExhibitStoreCheckWorkingSpace()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT ExhibitStoreCheckWorkingSpace </td>
+          <td>(</td>
+          <td class="paramtype">unsigned long long&#160;</td>
+          <td class="paramname"><em>freeBytes</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Checks, before a conversion rebuilds the working copy, that the medium holds it: as many bytes as the exhibit store's contents. WHY. A copy short of space fails file after file, and was reported as a working copy "not matching" its store — invalid data —, the store being sound (measured: a 7 GiB collection converted on a full disk). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">freeBytes</td><td>free bytes on the medium (ExhibitStoreFreeSpace); 0, unknown: not checked </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or ERROR_DISK_FULL with the figures logged </dd></dl>
 
 </div>
 </div>

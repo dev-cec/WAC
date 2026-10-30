@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.1</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -142,7 +142,7 @@ Functions</h2></td></tr>
 <li>asking for full write and injection access on every process is the heaviest footprint there is, and the very pattern the protections in place watch for.</li>
 </ul>
 <p>The SID and the session now come from a SINGLE <code>WTSEnumerateProcessesW</code> call, which returns them for ALL processes without opening any handle. Less footprint, and more data.</p>
-<p>The module list goes through <code>CreateToolhelp32Snapshot(TH32CS_SNAPMODULE)</code>, which never needed the handle. It is therefore collected even when the owner is unknown: the two reads are independent, and chaining them lost the modules on every token failure. </p>
+<p>The module list needs a handle on each process: it is opened with PROCESS_QUERY_INFORMATION and PROCESS_VM_READ alone, and read through psapi (see ListProcessModules — the Toolhelp module snapshot it replaces opened the process with PROCESS_ALL_ACCESS in its place, measured under <a class="el" href="classSysmon.html" title="The installations of Sysmon (sysmon.json).">Sysmon</a>). It is collected even when the owner is unknown: the two reads are independent, and chaining them lost the modules on every token failure. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="adf309cd7fe1e0a0d397e9f14c37262d7" name="adf309cd7fe1e0a0d397e9f14c37262d7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adf309cd7fe1e0a0d397e9f14c37262d7">&#9670;&#160;</a></span>writeProcessesFromSnapshot()</h2>

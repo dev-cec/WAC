@@ -12,6 +12,7 @@ var file__artefacts__test_8cpp =
     [ "lsaStrings", "file__artefacts__test_8cpp.html#a385d55aab7f083e8bc1c9c9645ac4dfd", null ],
     [ "md5OfUnreadableFile", "file__artefacts__test_8cpp.html#aa01e3db857a9a5d7ad7b5d140f07824e", null ],
     [ "prefetchVersion17", "file__artefacts__test_8cpp.html#a6cdc42fe7105762291c2017758d4b923", null ],
+    [ "processModulesOfOwnProcess", "file__artefacts__test_8cpp.html#aecdc5acc5d8b0b18823948100286718b", null ],
     [ "rdpBmcCache", "file__artefacts__test_8cpp.html#a62d13e769c926ddf9efa56a09b2030ba", null ],
     [ "recycleBinInfo2", "file__artefacts__test_8cpp.html#a4249df5c51ef8e51103ce7f64f3bf9c1", null ],
     [ "setupApiXp", "file__artefacts__test_8cpp.html#a56582f626185325d3f07f4890392edf3", null ],

@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.1</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -261,9 +261,6 @@ Variables</h2></td></tr>
 <tr class="memitem:a0696b00a72abe9d549204f9b105514bc" id="r_a0696b00a72abe9d549204f9b105514bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structAppliConf.html">AppliConf</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a0696b00a72abe9d549204f9b105514bc">conf</a></td></tr>
 <tr class="memdesc:a0696b00a72abe9d549204f9b105514bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">the application's configuration, shared by every collector  <br /></td></tr>
 <tr class="separator:a0696b00a72abe9d549204f9b105514bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3127912484cc30a93f48b898f0774c55" id="r_a3127912484cc30a93f48b898f0774c55"><td class="memItemLeft" align="right" valign="top">const unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a3127912484cc30a93f48b898f0774c55">VALIDATED_SINCE_BUILD</a> = 10240</td></tr>
-<tr class="memdesc:a3127912484cc30a93f48b898f0774c55"><td class="mdescLeft">&#160;</td><td class="mdescRight">First build of Windows 10: the oldest version the whole test cycle validates WAC on; an older one is collected, and said so.  <br /></td></tr>
-<tr class="separator:a3127912484cc30a93f48b898f0774c55"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc439e9282300da7a0823f2e5cf62b9b" id="r_afc439e9282300da7a0823f2e5cf62b9b"><td class="memItemLeft" align="right" valign="top">std::unordered_set&lt; uint64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#afc439e9282300da7a0823f2e5cf62b9b">g_volumeEvents</a></td></tr>
 <tr class="separator:afc439e9282300da7a0823f2e5cf62b9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7469ddfe4b7e187a905b6ea5d3bf4067" id="r_a7469ddfe4b7e187a905b6ea5d3bf4067"><td class="memItemLeft" align="right" valign="top">UINT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8cpp.html#a7469ddfe4b7e187a905b6ea5d3bf4067">g_consoleCodePage</a> = 0</td></tr>
@@ -1020,22 +1017,6 @@ missing": said on the console, recorded in the investigation log, and its file c
       </table>
 </div><div class="memdoc">
 <p>The events of the volume as it is now, by digest (<a class="el" href="structEvents.html#a8a140e1dc54faca8733d8ed0d76f8719">Events::seen</a>): filled by the conversion of the logs, read by convertShadowCopies. </p>
-
-</div>
-</div>
-<a id="a3127912484cc30a93f48b898f0774c55" name="a3127912484cc30a93f48b898f0774c55"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3127912484cc30a93f48b898f0774c55">&#9670;&#160;</a></span>VALIDATED_SINCE_BUILD</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">const unsigned VALIDATED_SINCE_BUILD = 10240</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>First build of Windows 10: the oldest version the whole test cycle validates WAC on; an older one is collected, and said so. </p>
 
 </div>
 </div>

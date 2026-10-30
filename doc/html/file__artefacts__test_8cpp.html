@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.1</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -150,6 +150,7 @@ $(document).ready(function(){initNavTree('file__artefacts__test_8cpp.html',''); 
 <code>#include &quot;<a class="el" href="registry__common_8h_source.html">registry_common.h</a>&quot;</code><br />
 <code>#include &quot;sqlite3.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="sha_8h_source.html">sha.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="processes_8h_source.html">processes.h</a>&quot;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;fstream&gt;</code><br />
 <code>#include &quot;<a class="el" href="guard__page_8h_source.html">guard_page.h</a>&quot;</code><br />
@@ -209,6 +210,8 @@ Functions</h2></td></tr>
 <tr class="separator:a62d13e769c926ddf9efa56a09b2030ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4aa4f3e58553676b7523e41c629c1b67" id="r_a4aa4f3e58553676b7523e41c629c1b67"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#a4aa4f3e58553676b7523e41c629c1b67">dumpBmcCache</a> (const wchar_t *path, const wchar_t *folder)</td></tr>
 <tr class="separator:a4aa4f3e58553676b7523e41c629c1b67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecdc5acc5d8b0b18823948100286718b" id="r_aecdc5acc5d8b0b18823948100286718b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#aecdc5acc5d8b0b18823948100286718b">processModulesOfOwnProcess</a> ()</td></tr>
+<tr class="separator:aecdc5acc5d8b0b18823948100286718b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa3a67a95d5205c37194aa17a9e4255e3" id="r_aa3a67a95d5205c37194aa17a9e4255e3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="file__artefacts__test_8cpp.html#aa3a67a95d5205c37194aa17a9e4255e3">wmain</a> (int argc, wchar_t **argv)</td></tr>
 <tr class="separator:aa3a67a95d5205c37194aa17a9e4255e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -455,6 +458,24 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>A <a class="el" href="structPrefetch.html">Prefetch</a> of version 17, as Windows XP wrote it on the test VM (SPOOLSV.EXE, 780 bytes): its run count, its last run, its volume and its two files as libscca reads them. </p>
+
+</div>
+</div>
+<a id="aecdc5acc5d8b0b18823948100286718b" name="aecdc5acc5d8b0b18823948100286718b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecdc5acc5d8b0b18823948100286718b">&#9670;&#160;</a></span>processModulesOfOwnProcess()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void processModulesOfOwnProcess </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The modules of a running process, read through the handle WAC opens for them (query and memory read): the test's own process, whose first module is its executable. The rights asked for are checked under <a class="el" href="classSysmon.html" title="The installations of Sysmon (sysmon.json).">Sysmon</a>, on the footprint clone; here, that the list is still read and in order. </p>
 
 </div>
 </div>

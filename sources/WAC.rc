@@ -54,8 +54,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,0,0,0
- PRODUCTVERSION 3,0,0,0
+ FILEVERSION 3,0,1,0
+ PRODUCTVERSION 3,0,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -72,12 +72,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Ecole de l'air et de l'espace / Centre d'Excellence Cyberdéfense aérospatiale"
             VALUE "FileDescription", "This tool provide a fast extraction of numerous Windows artefacts and event logs. "
-            VALUE "FileVersion", "3.0.0"
+            VALUE "FileVersion", "3.0.1"
             VALUE "InternalName", "WAC.exe"
             VALUE "LegalCopyright", "Licence GPL 3.0"
             VALUE "OriginalFilename", "WAC.exe"
             VALUE "ProductName", "Windows Artefact Exctractor (WAC)"
-            VALUE "ProductVersion", "3.0.0"
+            VALUE "ProductVersion", "3.0.1"
         END
     END
     BLOCK "VarFileInfo"

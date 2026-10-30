@@ -9,6 +9,7 @@ var consigne_8h =
     [ "ExhibitStoreAddDuplicate", "consigne_8h.html#ac6453a8bf28233279f70e672640b970b", null ],
     [ "ExhibitStoreAddFingerprint", "consigne_8h.html#af69ede93fe083f34a2a5f7728b35e06e", null ],
     [ "ExhibitStoreCheckLocation", "consigne_8h.html#ac7c990e675e55b36529d931af2ef06fd", null ],
+    [ "ExhibitStoreCheckWorkingSpace", "consigne_8h.html#af9ebfdc7c12fb3138f2bd49effd413ba", null ],
     [ "ExhibitStoreCurrent", "consigne_8h.html#a5f4b7691e1b746dee019ea72e94ffa3a", null ],
     [ "exhibitStoreFolder", "consigne_8h.html#a1129c4bdeff39121c0ed5c72be8e7252", null ],
     [ "ExhibitStoreFreeSpace", "consigne_8h.html#ad9c067276db577f8eb0c52df71620dc7", null ],

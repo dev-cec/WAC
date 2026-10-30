@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.1</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -220,7 +220,10 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Lists the modules (DLLs) the process has loaded. Needs no handle on the process, so it works on protected processes too. </p><dl class="section return"><dt>Returns</dt><dd>the result of the listing. </dd></dl>
+<p>Lists the modules (DLLs) the process has loaded, through a handle with query and memory-read rights only; a protected process refuses it, and the refusal is recorded (processModulesAccess). </p><dl class="section return"><dt>Returns</dt><dd>the result of the listing.</dd></dl>
+<p>The modules of the process, through a handle opened with the least the listing needs.</p>
+<p>WHY NOT TOOLHELP ANY MORE. <code>CreateToolhelp32Snapshot(TH32CS_SNAPMODULE)</code> opens the process itself, inside kernel32, with every right it can get: measured under <a class="el" href="classSysmon.html" title="The installations of Sysmon (sysmon.json).">Sysmon</a> (event 10) on Windows 11, 42 processes of the session opened with 0x1FFFFF, PROCESS_ALL_ACCESS — the footprint <a class="el" href="processes_8h.html" title="Running processes: the instantaneous state of the machine.">processes.h</a> explains WAC gave up, asked for by the API in its place. Reading the module list needs PROCESS_QUERY_INFORMATION and PROCESS_VM_READ (0x410), nothing more: no write, no thread, no injection right. A protected process (lsass under LSA protection, services, csrss, Defender) refuses it, as it refused Toolhelp; the refusal is recorded.</p>
+<p>The modules are those of the process's own bitness, as Toolhelp gave them (LIST_MODULES_DEFAULT): the same list as before, for each process. </p>
 
 </div>
 </div>

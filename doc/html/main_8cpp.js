@@ -29,6 +29,5 @@ var main_8cpp =
     [ "wmain", "main_8cpp.html#ae1325efcce4a4b1b4ea52247f0a0a0c1", null ],
     [ "conf", "main_8cpp.html#a0696b00a72abe9d549204f9b105514bc", null ],
     [ "g_consoleCodePage", "main_8cpp.html#a7469ddfe4b7e187a905b6ea5d3bf4067", null ],
-    [ "g_volumeEvents", "main_8cpp.html#afc439e9282300da7a0823f2e5cf62b9b", null ],
-    [ "VALIDATED_SINCE_BUILD", "main_8cpp.html#a3127912484cc30a93f48b898f0774c55", null ]
+    [ "g_volumeEvents", "main_8cpp.html#afc439e9282300da7a0823f2e5cf62b9b", null ]
 ];

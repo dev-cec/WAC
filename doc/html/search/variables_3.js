@@ -90,7 +90,7 @@ var searchData=
   ['copied_87',['copied',['../structRecoveredStorage.html#af67eedaa8b15714ecebf6f5ea00dbdcc',1,'RecoveredStorage']]],
   ['copyid_88',['copyId',['../structShadowCopyInfo.html#a8974a778d239cbdced21ba423912f8ae',1,'ShadowCopyInfo']]],
   ['copysetid_89',['copySetId',['../structShadowCopyInfo.html#a79fa4e2eff124fe1c4b6b81b8e821a28',1,'ShadowCopyInfo']]],
-  ['count_90',['count',['../structNtfsRun.html#a18673c1d1822e805e3dc18dc7538d867',1,'NtfsRun::count'],['../structUserAssist.html#a25f060e1fa0a1ad2b68a711fd6f56db5',1,'UserAssist::Count']]],
+  ['count_90',['count',['../structUserAssist.html#a25f060e1fa0a1ad2b68a711fd6f56db5',1,'UserAssist::Count'],['../structNtfsRun.html#a18673c1d1822e805e3dc18dc7538d867',1,'NtfsRun::count']]],
   ['countknown_91',['countKnown',['../structUserAssist.html#a7c405786cbe2981af3685338d50185d7',1,'UserAssist']]],
   ['crackurl_92',['crackUrl',['../structHttpClient_1_1Api.html#ade27ef2f4d7ac5643310bfabc6f7be26',1,'HttpClient::Api']]],
   ['crc32_93',['crc32',['../structArchiveFileContent.html#ade426b1ff7ed9f1be89eb47b656a7c36',1,'ArchiveFileContent']]],

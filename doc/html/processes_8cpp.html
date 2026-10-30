@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.1</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('processes_8cpp.html',''); initResizabl
 
 <div class="header">
   <div class="summary">
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">processes.cpp File Reference</div></div>
 </div><!--header-->
@@ -107,7 +108,13 @@ $(document).ready(function(){initNavTree('processes_8cpp.html',''); initResizabl
 <div class="textblock"><code>#include &quot;<a class="el" href="processes_8h_source.html">processes.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="live__snapshot_8h_source.html">live_snapshot.h</a>&quot;</code><br />
 <code>#include &lt;wtsapi32.h&gt;</code><br />
+<code>#include &lt;psapi.h&gt;</code><br />
 </div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a8c4ab5ada1f777fee9c580449515462e" id="r_a8c4ab5ada1f777fee9c580449515462e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="processes_8cpp.html#a8c4ab5ada1f777fee9c580449515462e">PSAPI_VERSION</a>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:a8c4ab5ada1f777fee9c580449515462e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:adf309cd7fe1e0a0d397e9f14c37262d7" id="r_adf309cd7fe1e0a0d397e9f14c37262d7"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="processes_8cpp.html#adf309cd7fe1e0a0d397e9f14c37262d7">writeProcessesFromSnapshot</a> ()</td></tr>
@@ -115,7 +122,22 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Collection of the running processes, their owners and their modules (see <a class="el" href="processes_8h.html" title="Running processes: the instantaneous state of the machine.">processes.h</a>). </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a8c4ab5ada1f777fee9c580449515462e" name="a8c4ab5ada1f777fee9c580449515462e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c4ab5ada1f777fee9c580449515462e">&#9670;&#160;</a></span>PSAPI_VERSION</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PSAPI_VERSION&#160;&#160;&#160;1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="adf309cd7fe1e0a0d397e9f14c37262d7" name="adf309cd7fe1e0a0d397e9f14c37262d7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adf309cd7fe1e0a0d397e9f14c37262d7">&#9670;&#160;</a></span>writeProcessesFromSnapshot()</h2>
 

@@ -6,6 +6,7 @@ var consigne_8cpp =
     [ "ExhibitStoreAddDuplicate", "consigne_8cpp.html#a7333e88a038e5f9ea97111f94dd523bc", null ],
     [ "ExhibitStoreAddFingerprint", "consigne_8cpp.html#af69ede93fe083f34a2a5f7728b35e06e", null ],
     [ "ExhibitStoreCheckLocation", "consigne_8cpp.html#ac7c990e675e55b36529d931af2ef06fd", null ],
+    [ "ExhibitStoreCheckWorkingSpace", "consigne_8cpp.html#af9ebfdc7c12fb3138f2bd49effd413ba", null ],
     [ "ExhibitStoreCurrent", "consigne_8cpp.html#a5f4b7691e1b746dee019ea72e94ffa3a", null ],
     [ "exhibitStoreFolder", "consigne_8cpp.html#a1129c4bdeff39121c0ed5c72be8e7252", null ],
     [ "ExhibitStoreFreeSpace", "consigne_8cpp.html#ad9c067276db577f8eb0c52df71620dc7", null ],

@@ -189,7 +189,7 @@ var searchData=
   ['copyfilelong_186',['copyFileLong',['../long__path_8h.html#a08d2a96bc6d8bbd32fbe992325748e8e',1,'long_path.h']]],
   ['copyid_187',['copyId',['../structShadowCopyInfo.html#a8974a778d239cbdced21ba423912f8ae',1,'ShadowCopyInfo']]],
   ['copysetid_188',['copySetId',['../structShadowCopyInfo.html#a79fa4e2eff124fe1c4b6b81b8e821a28',1,'ShadowCopyInfo']]],
-  ['count_189',['count',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ae93f994f01c537c4e2f7d8528c3eb5e9',1,'Count:&#160;translations.h'],['../structNtfsRun.html#a18673c1d1822e805e3dc18dc7538d867',1,'NtfsRun::count'],['../structUserAssist.html#a25f060e1fa0a1ad2b68a711fd6f56db5',1,'UserAssist::Count']]],
+  ['count_189',['count',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ae93f994f01c537c4e2f7d8528c3eb5e9',1,'Count:&#160;translations.h'],['../structUserAssist.html#a25f060e1fa0a1ad2b68a711fd6f56db5',1,'UserAssist::Count'],['../structNtfsRun.html#a18673c1d1822e805e3dc18dc7538d867',1,'NtfsRun::count']]],
   ['countersignature_190',['counterSignature',['../structThirdPartyRoots_1_1Impl.html#a2ada5e83351601cf145f83e1c5860e60',1,'ThirdPartyRoots::Impl']]],
   ['countknown_191',['countKnown',['../structUserAssist.html#a7c405786cbe2981af3685338d50185d7',1,'UserAssist']]],
   ['crackurl_192',['crackUrl',['../structHttpClient_1_1Api.html#ade27ef2f4d7ac5643310bfabc6f7be26',1,'HttpClient::Api']]],

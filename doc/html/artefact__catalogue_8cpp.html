@@ -30,7 +30,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;3.0.1</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -119,6 +119,8 @@ Functions</h2></td></tr>
 <tr class="separator:ad0d0f653d3c12f89eca32fde71afed7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2062319357068c390267680f7fc4909" id="r_ae2062319357068c390267680f7fc4909"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="artefact__catalogue_8cpp.html#ae2062319357068c390267680f7fc4909">classicEventLogs</a> (const <a class="el" href="structWindowsVersion.html">WindowsVersion</a> &amp;version)</td></tr>
 <tr class="separator:ae2062319357068c390267680f7fc4909"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2f4dc97ea99d7f68fb45b56c74cb2eb" id="r_af2f4dc97ea99d7f68fb45b56c74cb2eb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="artefact__catalogue_8cpp.html#af2f4dc97ea99d7f68fb45b56c74cb2eb">validatedByTestCycle</a> (const <a class="el" href="structWindowsVersion.html">WindowsVersion</a> &amp;version)</td></tr>
+<tr class="separator:af2f4dc97ea99d7f68fb45b56c74cb2eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a844f08220a5b22eda15dfd33c6c7b511" id="r_a844f08220a5b22eda15dfd33c6c7b511"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structWindowsRelease.html">WindowsRelease</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="artefact__catalogue_8cpp.html#a844f08220a5b22eda15dfd33c6c7b511">releaseOf</a> (const <a class="el" href="structWindowsVersion.html">WindowsVersion</a> &amp;version, bool &amp;known)</td></tr>
 <tr class="separator:a844f08220a5b22eda15dfd33c6c7b511"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7655af3489d2200ba3129dad2e792e68" id="r_a7655af3489d2200ba3129dad2e792e68"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structArtefactEntry.html">ArtefactEntry</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="artefact__catalogue_8cpp.html#a7655af3489d2200ba3129dad2e792e68">artefactEntry</a> (const std::string &amp;key)</td></tr>
@@ -502,6 +504,31 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="af2f4dc97ea99d7f68fb45b56c74cb2eb" name="af2f4dc97ea99d7f68fb45b56c74cb2eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2f4dc97ea99d7f68fb45b56c74cb2eb">&#9670;&#160;</a></span>validatedByTestCycle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool validatedByTestCycle </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structWindowsVersion.html">WindowsVersion</a> &amp;&#160;</td>
+          <td class="paramname"><em>version</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Whether the test cycle validates WAC on this version: every client, from XP SP1 to Windows 11, since version 3.0.0; no server edition yet. An unvalidated one is collected, and the console and the investigation log say so. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">version</td><td>the examined machine's </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true for a client edition </dd></dl>
 
 </div>
 </div>

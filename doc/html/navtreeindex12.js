@@ -1,5 +1,10 @@
 var NAVTREEINDEX12 =
 {
+"structMruApp.html#a8c62f975edea40d235ff8b4ce8144658":[1,0,183,8],
+"structMruApp.html#a940cf15da9706c316966ce3be960a5e5":[1,0,183,3],
+"structMruApp.html#a9cb0dba9cbf6326a1b9b52367334978a":[1,0,183,6],
+"structMruApps.html":[1,0,184],
+"structMruApps.html#a12d31cfa013ea660482e3665a60fc610":[1,0,184,2],
 "structMruApps.html#a3cc0368030fea19b89660506eef59fce":[1,0,184,4],
 "structMruApps.html#a603b11cb322a578ffd6890b46ee38380":[1,0,184,1],
 "structMruApps.html#a6a3a81fd67ec3c76d13dd38f3b37593f":[1,0,184,5],
@@ -244,10 +249,5 @@ var NAVTREEINDEX12 =
 "structPstRecipient.html":[1,0,228],
 "structPstRecipient.html#a77d7659ef9a22c657c3598148f683bdd":[1,0,228,0],
 "structPstRecipient.html#af2450a2cdf0046f4092af4a2f39dd3fb":[1,0,228,1],
-"structPstRecipient.html#afe543ac879d0497c17cf53a5aa944c27":[1,0,228,2],
-"structPstSubnode.html":[1,0,229],
-"structPstSubnode.html#a8b3461b47ed8549c4a4c51a5a7ac6b36":[1,0,229,1],
-"structPstSubnode.html#ad12c9faa0feb9c0a0d7614f1626f56ac":[1,0,229,0],
-"structPstValue.html":[1,0,230],
-"structPstValue.html#a270522a9fd9add852f2e7aabe8b793ae":[1,0,230,0]
+"structPstRecipient.html#afe543ac879d0497c17cf53a5aa944c27":[1,0,228,2]
 };

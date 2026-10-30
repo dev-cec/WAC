@@ -1,5 +1,7 @@
 var NAVTREEINDEX1 =
 {
+"classDefenderLogs.html#a133631e6869ebd017701a7ca814501cd":[1,0,76,1],
+"classDefenderLogs.html#acb376a9d605022b6077af83f617b958a":[1,0,76,0],
 "classDefenderQuarantine.html":[1,0,77],
 "classDefenderQuarantine.html#a58619a50151fd2d58a16589242f64ddf":[1,0,77,2],
 "classDefenderQuarantine.html#a62e92b54d3e6240713784742565a8a87":[1,0,77,1],
@@ -247,7 +249,5 @@ var NAVTREEINDEX1 =
 "classSecurityDescriptors.html":[1,0,265],
 "classSecurityDescriptors.html#a6f1b6c0460dd4e3ae4fc42903dd7c7e2":[1,0,265,2],
 "classSecurityDescriptors.html#a8c09cc081750dcf0def6c83bbe4013af":[1,0,265,0],
-"classSecurityDescriptors.html#a9888a54b0799b30eae5e083180bf865c":[1,0,265,1],
-"classSecurityHive.html":[1,0,266],
-"classSecurityHive.html#aa07b6a25bff73ef4293673ac86dbbcb5":[1,0,266,1]
+"classSecurityDescriptors.html#a9888a54b0799b30eae5e083180bf865c":[1,0,265,1]
 };

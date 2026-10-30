@@ -1,5 +1,10 @@
 var NAVTREEINDEX8 =
 {
+"structBeef0004.html#ac2561322b7baaed13baffec89f279b67":[1,0,18,9],
+"structBeef0004.html#ad4978c9da2858976ca7323cfeaa3d470":[1,0,18,8],
+"structBeef0004.html#aec93d123f81b5dafccbdd4ba1fc159d0":[1,0,18,7],
+"structBeef0004.html#aee3b667716368fac31453bb3a8e11ed2":[1,0,18,5],
+"structBeef0004.html#afb11899bc275cc6593c9eff3741d3cbf":[1,0,18,4],
 "structBeef0006.html":[1,0,19],
 "structBeef0006.html#aa61d8b48d81b19aecdc0b8e78a08707b":[1,0,19,0],
 "structBeef0006.html#abf3f89d7af6d34043309300aed775910":[1,0,19,1],
@@ -244,10 +249,5 @@ var NAVTREEINDEX8 =
 "structConnection.html#af58d46d44acabe47110ef2243aef44ac":[1,0,63,5],
 "structConnection.html#af5b67092196f6a6c37e26f4f0b840d91":[1,0,63,1],
 "structControlPanel.html":[1,0,64],
-"structControlPanel.html#a0c13f4feb5a50720bfbc87d8a9399f36":[1,0,64,4],
-"structControlPanel.html#a42e805bf90e8130b50671c415f05d30e":[1,0,64,0],
-"structControlPanel.html#a445c6de7707c6d07d691dcaebb7ba006":[1,0,64,5],
-"structControlPanel.html#a530e2ad55c7cc71899147c15af8fbe28":[1,0,64,1],
-"structControlPanel.html#a9e0763ee263581b7d71a5f720dbcdaf7":[1,0,64,3],
-"structControlPanel.html#ac9e532d06a112786a5c9c7d247499563":[1,0,64,2]
+"structControlPanel.html#a0c13f4feb5a50720bfbc87d8a9399f36":[1,0,64,4]
 };
