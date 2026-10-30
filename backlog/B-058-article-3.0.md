@@ -36,9 +36,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Relire l'article de la 2.0.0 : liste de ce qu'il a déjà dit
 - [x] Liste des nouveautés de la 3.0.0 (notes de version, fiches closes)
 - [x] Rédaction FR et EN, chiffres datés (non commités : fichiers de l'utilisateur)
-- [ ] Relecture
+- [x] Relecture (utilisateur, 2026-10-30)
 
 ## Journal
 - 2026-10-24 : créée à la demande de l'utilisateur — après la publication de la 3.0.0 ; suite de l'article de la 2.0.0, nouveautés seules.
 - 2026-10-29 : 3.0.0 publiée (tag sur afd85f44, release GitHub avec les 9 fichiers de bin/, vérifiés). Rédaction lancée à la demande de l'utilisateur, FR et EN.
 - 2026-10-30 : `doc/article/article_FR_3.0.tex` et `article_EN_3.0.tex` écrits et compilés (une page chacun, 0 débordement), chapô renvoyant à l'article de la 2.0. Nouveautés : XP SP1 à 11 (WAC32), table par version, clichés instantanés sans VSS, fichiers supprimés (12 529 récupérés en 156 s, TRIM), onze artefacts (80 contre 69), ATT&CK résumé (475/479 : 463 journaux et disque, 7 journaux, 5 disque, 4 aucune), sceau au procès-verbal, mesure des traces des 29 et 30 octobre (0 fichier, 0 valeur, ruches relues ; ouverture en accès complet trouvée et corrigée, 9cf4642d), 550 contrôles sous Windows 11. Reste la relecture par l'utilisateur ; le nombre de contrôles à confirmer par le cycle Windows 11 en cours.
+- 2026-10-30 : relecture validée par l'utilisateur. Reste à confirmer le nombre de contrôles du cycle Windows 11 en cours, puis archiver.
