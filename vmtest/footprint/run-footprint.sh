@@ -13,9 +13,12 @@
 #      its highest rights, and exports the journal, Sysmon's events and the
 #      other event logs of the window to the key;
 #   4. the results are fetched into results/<run>/;
-#   5. the clone is shut down cleanly, booted again and its ShimCache
-#      (AppCompatCache) read: Windows writes it only at shutdown, out of any
-#      bound — a deferred trace of every executable started.
+#   5. the clone is shut down cleanly, its hives read offline (hive-diff.py
+#      extract), then booted again and its ShimCache (AppCompatCache) read:
+#      Windows writes it only at shutdown, out of any bound — a deferred
+#      trace of every executable started;
+#   6. after the last run, each run's hives are set against the base's, what
+#      the control run changed too set apart (hive-diff.py diff).
 #
 # The run "control" starts a command that does nothing: it measures the
 # launcher and Windows' own activity, which the analysis (footprint-diff.py)
@@ -49,6 +52,9 @@ RUNS=("${@:-${ORDER[@]}}")
 for run in "${RUNS[@]}"; do [[ -n "${COMMAND[$run]:-}" ]] || { echo "unknown run: $run (runs: ${ORDER[*]})"; exit 2; }; done
 
 [[ -f "$VMS/win11-footprint-base.qcow2" ]] || { echo "no base image: run prepare-footprint.sh first"; exit 1; }
+HIVE_DIFF="$ROOT/vmtest/tools/target-venv/bin/python $HERE/hive-diff.py"
+# The base's hives, read once: what every run is set against.
+[[ -f "$RESULTS/base-hives/sequences.json" ]] || $HIVE_DIFF extract "$VMS/win11-footprint-base.qcow2" - "$RESULTS/base-hives"
 
 # Stops the clone, at once: its layers are thrown away.
 stop_clone() {
@@ -93,6 +99,9 @@ for run in "${RUNS[@]}"; do
   # The deferred trace: the ShimCache, written at shutdown.
   virsh -c "$CONN" shutdown "$DOM" >/dev/null
   for _ in $(seq 1 120); do virsh -c "$CONN" domstate "$DOM" | grep -q "shut off" && break; sleep 5; done
+  # The hives as the clean shutdown left them, read offline before the boot
+  # below changes them: set against the base by hive-diff.py.
+  $HIVE_DIFF extract "$VMS/win11-footprint.qcow2" "$VMS/win11-footprint-base.qcow2" "$out/hives"
   virsh -c "$CONN" start "$DOM" >/dev/null
   wait_agent 30
   $QGA run -- reg.exe query 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache' /v AppCompatCache \
@@ -100,4 +109,12 @@ for run in "${RUNS[@]}"; do
   stop_clone
 done
 rm -f "$VMS/win11-footprint.qcow2" "$VMS/wac-footprint-key.qcow2"
+# The registry of each run against the base, what the control changed too set apart.
+for run in "${RUNS[@]}"; do
+  [[ "$run" == control || ! -d "$RESULTS/$run/hives" ]] && continue
+  echo "== registry: $run =="
+  $HIVE_DIFF diff "$RESULTS/base-hives" "$RESULTS/$run/hives" \
+    $([[ -d "$RESULTS/control/hives" ]] && echo "$RESULTS/control/hives") > "$RESULTS/$run/hive-diff.txt"
+  grep -E '^   [^ ]' "$RESULTS/$run/hive-diff.txt"
+done
 echo "== done == ($(date +%H:%M:%S))"
