@@ -28,7 +28,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Images des versions serveur (2012 R2 à 2025, évaluation) et profils de create-vm.sh ; Server 2022 créée
-- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2 vert le 2026-10-31 ; 2012, 2008 R2, 2003 à faire), écarts départagés
+- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2 et 2012 verts le 2026-10-31 ; 2008 R2, 2003 à faire), écarts départagés
 - [ ] Artefacts propres aux rôles (à répartir avec B-035 pour IIS)
 - [ ] Server Core
 - [ ] Contrôleur de domaine : `NTDS.dit` (à étudier)
@@ -58,3 +58,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
 - 2026-10-30 : **non-régression Windows 11 : 540 ✅, 1 ❌**. L'écart vient du harnais : taskkill.exe exécuté 300,35 s avant la collecte pour une borne de 300 s, la suppression des consignes du cycle précédent ayant pris 3 min entre les deux. La purge passe désormais avant le taskkill (b20f9440). Les changements serveur (cc7de647, 8c90127e) ne cassent rien côté client. Profils srv2012 et srv2008r2 commités (c2cfa15c). Suite : VM Server 2012 R2.
 - 2026-10-30 : VM Server 2012 R2 créée sans interaction (`srv2012r2-test`, build 9600, fr-FR). **Premier cycle : 415 ✅, 13 ❌**, soit 6 sujets comptés deux fois, tous du harnais : (1-4) accents des comptes, réseaux, cartes et événements — PowerShell 4 écrit en code page 850 malgré la demande d'UTF-8, sortie désormais décodée comme les fichiers lus (b2cf1426) ; (5) version examinée : WAC nomme « Windows Server 2012 R2 », le contrôle attendait le nom du client (listes des absents identiques à 8.1, mesuré) ; (6) hosts « NotCollected » sur un serveur antérieur au build 20348, conforme à la table ; Amcache sans programme : ProgramDataUpdater jamais lancé sur un serveur neuf, désormais lancé par le témoin (2a02e179). Cycle restreint de vérification : témoin inventorié, accents égaux. Cycle complet relancé.
 - 2026-10-31 : **Server 2012 R2 vert : 428 ✅, 0 ❌** (second cycle complet, après b2cf1426 et 2a02e179). Suite : VM Server 2012.
+- 2026-10-31 : VM Server 2012 créée sans interaction par le profil `srv2012` (`srv2012-test`, build 9200, en-US). **Server 2012 vert au premier cycle : 420 ✅, 0 ❌.** Suite : VM Server 2008 R2.
