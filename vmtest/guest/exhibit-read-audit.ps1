@@ -17,6 +17,17 @@ param([string]$Start, [string]$Stop, [string]$Since, [string]$Output)
 $ErrorActionPreference = 'Stop'
 $fileSystem = '{0CCE921D-69AE-11D9-BED3-505054503030}'
 $everyone = New-Object Security.Principal.SecurityIdentifier 'S-1-1-0'
+# Whether the first file of the folder's top level holds an audit rule: its
+# own, and with $inherited one it inherits. True without any such file.
+function firstFileAudited([string]$folder, [bool]$inherited) {
+    $first = @([IO.Directory]::GetFiles($folder)) | Select-Object -First 1
+    if (-not $first) { return $inherited }
+    [bool]@([IO.File]::GetAccessControl($first, 'Audit').GetAuditRules($true, $inherited, [Security.Principal.SecurityIdentifier])).Count
+}
+# Every file of the store, by its extended path.
+function storeFiles([string]$folder) {
+    Get-ChildItem -LiteralPath ('\\?\' + $folder) -Recurse -Force | Where-Object { -not $_.PSIsContainer } | ForEach-Object { $_.FullName }
+}
 if ($Start) {
     auditpol /set /subcategory:$fileSystem /success:enable | Out-Null
     $acl = Get-Acl -Path $Start -Audit
@@ -24,6 +35,20 @@ if ($Start) {
         'ContainerInherit,ObjectInherit', 'None', 'Success')
     $acl.AddAuditRule($rule)
     Set-Acl -Path $Start -AclObject $acl
+    # Server 2025 does not propagate the folder's rule to the files already in
+    # it (measured on 2026-10-31: the rule on the folder, none on its files, no
+    # read audited): the rule then goes on each file. Tested on one file of the
+    # top level, so that elsewhere the store is not walked; walked by its
+    # extended path (\\?\: the long-path witness), the rules set by .NET (a
+    # name may hold brackets, which -Path reads as a wildcard).
+    if (-not (firstFileAudited $Start $true)) {
+        $fileRule = New-Object Security.AccessControl.FileSystemAuditRule($everyone, 'ReadData', 'None', 'None', 'Success')
+        foreach ($f in storeFiles $Start) {
+            $security = [IO.File]::GetAccessControl($f, 'Audit')
+            $security.AddAuditRule($fileRule)
+            [IO.File]::SetAccessControl($f, $security)
+        }
+    }
     (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')
 }
 if ($Stop) {
@@ -45,6 +70,14 @@ if ($Stop) {
     # No read: $lines is $null, which @() counts as one element on PowerShell 2.
     $lines = @($lines | Where-Object { $_ })
     [IO.File]::WriteAllLines($Output, [string[]]$lines, (New-Object Text.UTF8Encoding $false))
+    # The rules put on each file (Server 2025), when a file holds its own.
+    if (firstFileAudited $Stop $false) {
+        foreach ($f in storeFiles $Stop) {
+            $security = [IO.File]::GetAccessControl($f, 'Audit')
+            foreach ($r in @($security.GetAuditRules($true, $false, [Security.Principal.SecurityIdentifier]))) { [void]$security.RemoveAuditRule($r) }
+            [IO.File]::SetAccessControl($f, $security)
+        }
+    }
     $acl = Get-Acl -Path $Stop -Audit
     $acl.SetAuditRuleProtection($false, $false)
     foreach ($r in @($acl.GetAuditRules($true, $false, [Security.Principal.SecurityIdentifier]))) { [void]$acl.RemoveAuditRule($r) }
