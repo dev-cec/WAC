@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider (lot 1 : IIS, écrit et testé, cycle Server 2022 à passer) | P3 | fort |
+| en cours (lot 1 IIS fait : d896111c ; lots 2 et 3 à faire) | P3 | fort |
 
 ## Pourquoi
 Sur un serveur web, la compromission passe par le site : un webshell déposé, une requête qui l'appelle, un compte ajouté à l'application. Les journaux disent qui a appelé quoi, le code montre ce qui a été déposé, la base de données dit qui pouvait se connecter (un compte ajouté, un mot de passe faible font passer une connexion pour légitime).
@@ -38,10 +38,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - **Lot 3** — Apache et nginx (configuration, journaux, racines), puis dossiers de données MySQL/MariaDB et PostgreSQL.
 
 ## Tâches
-- [ ] Lot 1 : repérage d'IIS et de sa configuration
-- [ ] Lot 1 : journaux W3C (copie, conversion), lecteur commun avec firewall_log
-- [ ] Lot 1 : code des sites
-- [ ] Lot 1 : témoins IIS dans le harnais (rôle, page, requête, module, pool), cycle serveur vert
+- [x] Lot 1 : repérage d'IIS et de sa configuration
+- [x] Lot 1 : journaux W3C (copie, conversion), lecteur commun avec firewall_log
+- [x] Lot 1 : code des sites
+- [x] Lot 1 : témoins IIS dans le harnais (rôle, page, requête, module, pool), cycle serveur vert
 - [ ] Lot 2 : bases de données (repérage, copie, seuil de taille), chaînes de connexion
 - [ ] Lot 2 : comptes de l'application
 - [ ] Lot 3 : Apache, nginx, moteurs de bases de données
@@ -57,3 +57,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-31 : lot 1 écrit, non commité : lecteur W3C commun (`w3c_log`, le journal du pare-feu y passe, sortie inchangée) ; `web_server` lit `applicationHost.config` (sites, liaisons, applications, répertoires virtuels et chemin résolu, pools et identité, modules globaux, réglages des journaux), convertit les journaux W3C d'IIS et de HTTPERR en UTC, une ligne à la fois (JsonArrayWriter) ; la collecte prend la configuration d'abord (dossier `inetsrv\config`), puis les arbres des sites (en entier, la racine d'un volume exclue), des journaux et de l'historique de la configuration, et `MetaBase.xml` d'IIS 5.1/6 brut. Tests : file_artefacts_test 299 (configuration réaliste, journaux IIS et HTTPERR ; deux mutants pris : dates lues en local, racine de volume prise), artefact_catalogue_test 910. Harnais : témoins IIS sur les serveurs (rôle, page, requête au jeton, module témoin jamais chargé, références appcmd) et check_web_server. Cycle Server 2022 à passer après celui de Server 2003.
 - 2026-10-31 : documentation du lot 1 écrite (non commitée, avec le code après le cycle) : manuels FR/EN (clé `web_server` de wac.yml, quatre fichiers JSON, ce que la collecte prend), tableau des artefacts régénéré depuis le catalogue (traductions IIS ajoutées ; il rattrape aussi la note des listes de sauts personnalisées, restée en retard), couverture ATT&CK (`web_server` dans « Application Log Content » seulement : le rattacher à « Module Load » ou aux flux réseau marquerait couvertes des techniques sans rapport avec IIS ; 475/479 inchangé), document des tests (témoin IIS). 0 Overfull. Cycle Server 2022 après celui de Server 2003.
 - 2026-10-31 : **premier cycle Server 2022 avec IIS : 492 ✅, 4 ❌** (doublés au journal). Pools (identité), 14 modules globaux avec le témoin, requête témoin au journal confirmés par appcmd. (1) **Contenu du site jamais pris (défaut WAC)** : à la collecte, `readIisConfiguration` lisait la copie de travail, pas encore faite — la configuration venait d'être extraite dans la consigne, qu'on ne relit pas ; seuls les dossiers par défaut (journaux, historique) étaient pris → la copie de travail est faite juste après l'extraction de la configuration (`storeToWorking`, l'appel et sa trace d'audit mis en commun avec les deux existants ; un fichier déjà copié n'est jamais relu). (2) Chemin du site : appcmd le donne développé, le harnais compare `PhysicalPathResolved`. (3) IIS_IUSRS sans membre chez WAC, IUSR (S-1-5-17) chez Windows : la valeur `C` de l'alias 0x238 a une liste de membres vide (lue dans la VM) — Windows ajoute IUSR implicitement ; WAC lit juste, le harnais l'écarte. (4) Droits d'IIS_IUSRS « en trop » : `secedit` relevé (section 31) avant l'installation du rôle (25b) → le rôle est installé en tête du script (0b), avant toute référence. Second cycle en cours.
+- 2026-11-01 : **second cycle Server 2022 avec IIS : 502 ✅, 0 ❌** (page témoin prise avec son SHA-256, site, pool, 14 modules, requête témoin confrontés à appcmd). Commités : b3b2b75c (refactor : lecteur W3C commun), d896111c (feat : IIS, avec `bin/wac.yml` ; le `bin/` des exécutables suit dans bd44e12b, même compilation), d0df0772 (test : témoins IIS). Lot 1 fait ; restent le lot 2 (web.config et chaînes de connexion, bases, comptes de l'application) et le lot 3 (Apache, nginx, moteurs de bases).
