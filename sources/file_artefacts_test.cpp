@@ -391,13 +391,19 @@ void defenderHistory() {
 	putField(dh, 0x15, wide(L"Magic.Version:1.2"));
 	putField(dh, 0x15, wide(L"file"));
 	putField(dh, 0x15, wide(L"C:\\wactest\\eicar\\wac-eicar.com"));
-	std::vector<uint8_t> bag(24, 0);
+	// The bag as Windows 11 writes it: a 20-byte header (version 1, its own
+	// size, the lengths), then the properties' length and the properties.
 	const std::wstring name = L"ThreatTrackingStartTime";
 	const std::vector<uint8_t> nameBytes = wide(name);
-	for (uint8_t b : number32((uint32_t)nameBytes.size())) bag.push_back(b);
-	bag.insert(bag.end(), nameBytes.begin(), nameBytes.end());
-	for (uint8_t b : number32(4)) bag.push_back(b);
-	put64(bag, 0x01DD50978AB992EBULL);
+	std::vector<uint8_t> properties = number32((uint32_t)nameBytes.size());
+	properties.insert(properties.end(), nameBytes.begin(), nameBytes.end());
+	for (uint8_t b : number32(4)) properties.push_back(b);
+	put64(properties, 0x01DD50978AB992EBULL);
+	const uint32_t propertiesLength = (uint32_t)properties.size() + 4;
+	std::vector<uint8_t> bag;
+	for (uint32_t n : { 1u, 20u, propertiesLength, propertiesLength + 20, 0u, propertiesLength })
+		for (uint8_t b : number32(n)) bag.push_back(b);
+	bag.insert(bag.end(), properties.begin(), properties.end());
 	putField(dh, 0x28, bag);
 	putField(dh, 0x0A, number64(0x01DD5097915F0F1AULL));
 	putField(dh, 0x1E, std::vector<uint8_t>(entry, entry + 16));
@@ -420,6 +426,17 @@ void defenderHistory() {
 	      "DetectionHistory: quarantine entry, execution status, account and process by their position");
 	check(value(d.initialDetectionUtc) == 0x01DD50978ABA0B12ULL, "DetectionHistory: InitialDetectionTime at +9");
 	check(d.threatTracking.size() == 1 && d.threatTracking[0].name == name, "DetectionHistory: the named bag");
+	// The bag as Defender 4.18.1807 writes it (Server 2019): no header, the
+	// properties' length first — the bag's own.
+	std::vector<uint8_t> bag2019 = number32(propertiesLength);
+	bag2019.insert(bag2019.end(), properties.begin(), properties.end());
+	std::vector<DetectionProperty> tracking2019;
+	parseBag(bag2019, tracking2019);
+	check(tracking2019.size() == 1 && tracking2019[0].name == name, "DetectionHistory: the bag without header (Server 2019)");
+	std::vector<uint8_t> noLength(bag2019.begin() + 4, bag2019.end());
+	std::vector<DetectionProperty> none;
+	parseBag(noLength, none);
+	check(none.empty(), "DetectionHistory: a bag whose length matches no layout read anyway");
 	// The date before the entry, and the numbers not confirmed, stay unnamed — as read.
 	size_t dates = 0;
 	for (const DetectionField& f : d.unnamed) dates += f.type == 0x0A;

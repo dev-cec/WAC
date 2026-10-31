@@ -87,6 +87,16 @@ struct DefenderDetection {
 	Json toJson() const;                  //!< @return the detection as a JSON object
 };
 
+/*! Reads a bag of named properties (field type 0x28): the properties' length
+ *  (4), which runs to the bag's end, then "name length (4), name (UTF-16),
+ *  type (4), value". Defender 4.18.1807, as Server 2019 installs it, puts that
+ *  length first; later ones after a header whose size is at 4 (20: version 1,
+ *  that size, then lengths), measured on Server 2019 and Windows 11
+ *  (2026-10-31). Types 3 a 32-bit number, 4 a 64-bit one — a FILETIME when
+ *  the name ends with "Time" —, 5 a byte, 6 a string preceded by its length.
+ *  An unknown type ends the reading: its size is not known. */
+void parseBag(const std::vector<uint8_t>& bag, std::vector<DetectionProperty>& out);
+
 /*! Reads a DetectionHistory file. Every read is bounded by the file.
  *  @param bytes the file
  *  @param detection receives what was read

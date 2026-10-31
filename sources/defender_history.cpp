@@ -82,41 +82,6 @@ bool isMagic(const DetectionField& f) {
 	return f.type == FIELD_STRING && fieldString(f).compare(0, wcslen(MAGIC_PREFIX), MAGIC_PREFIX) == 0;
 }
 
-/*! Reads a bag of named properties (field type 0x28): a 24-byte header, then
- *  "name length (4), name (UTF-16), type (4), value". Types 3 a 32-bit number,
- *  4 a 64-bit one — a FILETIME when the name ends with "Time" —, 5 a byte,
- *  6 a string preceded by its length. An unknown type ends the reading: its
- *  size is not known. */
-void parseBag(const std::vector<uint8_t>& bag, std::vector<DetectionProperty>& out) {
-	const size_t size = bag.size();
-	const uint8_t* b = bag.data();
-	for (size_t p = 24; fits(size, p, 4);) {
-		const uint32_t nameBytes = readLittleEndian<uint32_t>(b + p);
-		p += 4;
-		if (nameBytes == 0 || !fits(size, p, nameBytes) || !fits(size, p + nameBytes, 4)) return;
-		DetectionProperty property;
-		property.name = readWideZ(b, p + nameBytes, p);
-		p += nameBytes;
-		const uint32_t type = readLittleEndian<uint32_t>(b + p);
-		p += 4;
-		if (type == 3 && fits(size, p, 4)) { property.value = Json::num(readLittleEndian<uint32_t>(b + p)); p += 4; }
-		else if (type == 4 && fits(size, p, 8)) {
-			const uint64_t v = readLittleEndian<uint64_t>(b + p);
-			const bool time = property.name.size() > 4 && property.name.compare(property.name.size() - 4, 4, L"Time") == 0;
-			property.value = time ? Json::str(timeToIso8601Utc(filetimeFromTicks(v))) : Json::num(v);
-			p += 8;
-		}
-		else if (type == 5 && fits(size, p, 1)) { property.value = Json::num((unsigned)b[p]); p += 1; }
-		else if (type == 6 && fits(size, p, 4) && fits(size, p + 4, readLittleEndian<uint32_t>(b + p))) {
-			const uint32_t bytes = readLittleEndian<uint32_t>(b + p);
-			property.value = Json::str(readWideZ(b, p + 4 + bytes, p + 4));
-			p += 4 + bytes;
-		}
-		else return;
-		out.push_back(std::move(property));
-	}
-}
-
 /*! Names the fields whose position the reference confirmed; marks them in
  *  `named`. Two layouts, the same from the quarantine entry's GUID on:
  *  - Magic.Version 1.2 (Defender of Windows 10 and 11): the marker at 2, the
@@ -279,6 +244,44 @@ bool fingerprintContent(const std::wstring& file, QuarantineResource& r) {
 }
 
 } // namespace
+
+void parseBag(const std::vector<uint8_t>& bag, std::vector<DetectionProperty>& out) {
+	const size_t size = bag.size();
+	const uint8_t* b = bag.data();
+	size_t start;
+	if (fits(size, 0, 4) && readLittleEndian<uint32_t>(b) == size) start = 4;
+	else if (fits(size, 4, 4)) {
+		const size_t header = readLittleEndian<uint32_t>(b + 4);
+		if (!fits(size, header, 4) || readLittleEndian<uint32_t>(b + header) != size - header) return;
+		start = header + 4;
+	}
+	else return;
+	for (size_t p = start; fits(size, p, 4);) {
+		const uint32_t nameBytes = readLittleEndian<uint32_t>(b + p);
+		p += 4;
+		if (nameBytes == 0 || !fits(size, p, nameBytes) || !fits(size, p + nameBytes, 4)) return;
+		DetectionProperty property;
+		property.name = readWideZ(b, p + nameBytes, p);
+		p += nameBytes;
+		const uint32_t type = readLittleEndian<uint32_t>(b + p);
+		p += 4;
+		if (type == 3 && fits(size, p, 4)) { property.value = Json::num(readLittleEndian<uint32_t>(b + p)); p += 4; }
+		else if (type == 4 && fits(size, p, 8)) {
+			const uint64_t v = readLittleEndian<uint64_t>(b + p);
+			const bool time = property.name.size() > 4 && property.name.compare(property.name.size() - 4, 4, L"Time") == 0;
+			property.value = time ? Json::str(timeToIso8601Utc(filetimeFromTicks(v))) : Json::num(v);
+			p += 8;
+		}
+		else if (type == 5 && fits(size, p, 1)) { property.value = Json::num((unsigned)b[p]); p += 1; }
+		else if (type == 6 && fits(size, p, 4) && fits(size, p + 4, readLittleEndian<uint32_t>(b + p))) {
+			const uint32_t bytes = readLittleEndian<uint32_t>(b + p);
+			property.value = Json::str(readWideZ(b, p + 4 + bytes, p + 4));
+			p += 4 + bytes;
+		}
+		else return;
+		out.push_back(std::move(property));
+	}
+}
 
 std::vector<uint8_t> defenderDecrypt(const uint8_t* data, size_t size) {
 	std::vector<uint8_t> clear(data, data + size);
