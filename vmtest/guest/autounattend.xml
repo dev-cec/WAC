@@ -78,6 +78,11 @@
         <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
         <ProtectYourPC>3</ProtectYourPC>
       </OOBE>
+      <!-- The host's zone: libvirt gives the hardware clock the host's local
+           time (clock offset="localtime"), which Windows reads in its own zone.
+           Without it, an en-US medium takes Pacific time, starts 7 to 9 hours
+           off, and NTP moves the clock during the cycle (Server 2025). -->
+      <TimeZone>Romance Standard Time</TimeZone>
       <UserAccounts>
         <LocalAccounts>
           <LocalAccount wcm:action="add">

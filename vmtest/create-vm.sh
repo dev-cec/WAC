@@ -372,8 +372,6 @@ text = open(path, encoding="utf-8").read()
 for setting in ("HideOEMRegistrationScreen", "HideOnlineAccountScreens", "HideLocalAccountScreen"):
     text = re.sub(rf"\s*<{setting}>[^<]*</{setting}>", "", text)
 text = text.replace("<ProtectYourPC>3</ProtectYourPC>", "<NetworkLocation>Work</NetworkLocation>\n        <ProtectYourPC>3</ProtectYourPC>")
-# And the time zone, which its first start asks for when the file gives none.
-text = text.replace("      <UserAccounts>", "      <TimeZone>Romance Standard Time</TimeZone>\n      <UserAccounts>", 1)
 open(path, "w", encoding="utf-8").write(text)
 PY
 fi
