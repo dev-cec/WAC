@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # create-vm.sh — creates a Windows test VM from scratch, entirely without interaction.
 #
-# Usage: ./create-vm.sh [win11|win81|win8|win7|vista|winxp|srv2008r2|srv2012|srv2012r2|srv2016|srv2019|srv2022|srv2025]
+# Usage: ./create-vm.sh [win11|win81|win8|win7|vista|winxp|srv2008r2|srv2012|srv2012r2|srv2016|srv2019|srv2022|srv2022core|srv2025]
 #   win11  (default) the VM of the test cycle, Windows 11 — domain win11-test
 #   win81  Windows 8.1 x64, for the compatibility with the older versions —
 #          domain win81-test; run-wac-test.sh is given it with DOM=win81-test
@@ -13,6 +13,9 @@
 #   srv2012, srv2012r2, srv2016, srv2019, srv2022, srv2025
 #          Windows Server Standard with its graphical interface, from the
 #          evaluation media of vmtest/tools/isos — domains srv2012r2-test…
+#   srv2022core  Windows Server 2022 Standard, Server Core installation (no
+#          Explorer, no shell): the same medium and build as srv2022 —
+#          domain srv2022core-test
 #   srv2008r2  Windows Server 2008 R2 SP1 Standard, installed as Windows 7 is
 #          — domain srv2008r2-test
 #   winxp  Windows XP Professional SP1 x86 — domain winxp-test. No guest agent
@@ -116,7 +119,7 @@ case "$PROFILE" in
     SERVER_PASSWORD="Wac-Server-2026!"
     ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.173.iso}"
     FIRMWARE=(--boot hd,cdrom) ;;
-  srv2012|srv2012r2|srv2016|srv2019|srv2022|srv2025)
+  srv2012|srv2012r2|srv2016|srv2019|srv2022|srv2022core|srv2025)
     # Evaluation media: no product key (the element is removed from the
     # answer file), the edition by its index — 2, Standard with the graphical
     # interface, on every evaluation medium of 2012 R2 to 2025 (1 is its
@@ -124,6 +127,7 @@ case "$PROFILE" in
     # accounts get SERVER_PASSWORD, synthetic, for a throwaway VM.
     DOM="${DOM:-$PROFILE-test}"; MEMORY=4096
     IMAGE='<Key>/IMAGE/INDEX</Key><Value>2</Value>'; KEY=""
+    [[ "$PROFILE" == srv2022core ]] && IMAGE='<Key>/IMAGE/INDEX</Key><Value>1</Value>'
     OOBE_ENTER=0; BIOS=0; OOBE7=0; ARCH=amd64; CPU=host-passthrough; MACHINE=q35
     SERVER_PASSWORD="Wac-Server-2026!"
     FIRMWARE=(--boot firmware=efi,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no)
@@ -136,7 +140,7 @@ case "$PROFILE" in
                  GA_DRIVERS='2k16\amd64'; ISO_VIRTIO="${ISO_VIRTIO:-$HERE/tools/isos/virtio-win-0.1.189.iso}" ;;
       srv2019)   OSINFO=win2k19;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2019_eval_fr-fr.iso}";   MEDIA_LANGUAGE=fr-FR
                  GA_DRIVERS=""; ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}" ;;
-      srv2022)   OSINFO=win2k22;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2022_eval_fr-fr.iso}";   MEDIA_LANGUAGE=fr-FR
+      srv2022|srv2022core) OSINFO=win2k22;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2022_eval_fr-fr.iso}";   MEDIA_LANGUAGE=fr-FR
                  GA_DRIVERS=""; ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}" ;;
       srv2025)   OSINFO=win2k25;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2025_eval_en-us.iso}";   MEDIA_LANGUAGE=en-US
                  GA_DRIVERS=""; ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}" ;;
@@ -145,7 +149,7 @@ case "$PROFILE" in
     DOM="${DOM:-winxp-test}"
     ISO_WIN="${ISO_WIN:-$HERE/tools/isos/Windows XP Professional (SP1) (x86).iso}"
     ISO_VIRTIO="$ISO_WIN" ;;   # no virtio driver: nothing but what XP itself has
-  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, vista, winxp, srv2008r2, srv2012, srv2012r2, srv2016, srv2019, srv2022, srv2025)" >&2; exit 2 ;;
+  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, vista, winxp, srv2008r2, srv2012, srv2012r2, srv2016, srv2019, srv2022, srv2022core, srv2025)" >&2; exit 2 ;;
 esac
 
 ISO_ANS="$VMS/autounattend-$PROFILE.iso"
