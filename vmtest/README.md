@@ -225,7 +225,19 @@ person would, by `lib/vmkeys.py` (keys, text typed for the machine's keyboard
 layout, clicks); a command's output is read on the serial port
 (`<command> > COM1`, kept in `~/vms/winxp-test.serial`). Its product key is read
 on the installation medium, or given as `XP_KEY`; it is never written to the
-repository.
+repository. Once installed, a 2 GB data disk is added (IDE `hdd`), on which
+`run-wac-test-xp.sh` formats W: for the carving's witnesses.
+
+Windows Server 2003 (profile `srv2003`, domain `srv2003-test`) is installed
+and driven the same way, from Microsoft's 180-day evaluation kit (part
+X09-45608); its key, printed on the kit's sleeve, is given as `XP_KEY`. Its
+Setup still stops twice near its end — the evaluation notice, then the date
+and time: Enter to each (`virsh send-key srv2003-test KEY_ENTER`). A `.reg`
+on the answer floppy, imported at first logon, switches off what would take
+the keyboard from the harness: Manage Your Server, the Shutdown Event
+Tracker, the screen saver (a server's locks the console after 10 minutes,
+which then takes neither keys nor the ACPI power button).
+`./run-wac-test-xp.sh srv2003-test` runs its cycle.
 
 The test cycle runs on `win11-test`, or on the machine `WAC_VM` names
 (`WAC_VM=win81-test ./run-wac-test.sh`). On a Windows older than 10:

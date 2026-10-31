@@ -62,7 +62,7 @@ full; in short:
 ```bash
 cd vmtest
 ISO_WIN=<Windows 11 ISO> ./create-vm.sh            # once: win11-test, unattended
-./create-vm.sh win7                                  # other profiles: win81 win8 win7 vista winxp srv2012r2…srv2025
+./create-vm.sh win7                                  # other profiles: win81 win8 win7 vista winxp srv2003 srv2008r2…srv2025 srv2022core
 WAC_VM=win11-test ./run-wac-test.sh                  # a full cycle, ~1 h 20
 WAC_VM=win7-test  ./run-wac-test.sh --only=mft       # a few minutes, one artefact
 ./run-wac-test-xp.sh                                 # Windows XP (no agent: keyboard + COM1)

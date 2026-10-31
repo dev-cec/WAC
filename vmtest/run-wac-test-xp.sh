@@ -18,8 +18,10 @@
 # confronted with independent tools when they were written (B-037). The one
 # placed: the carving's (deleted files, level 3, set in the ISO's wac.yml) — an
 # executable and a PDF copied on the data disk W: (formatted NTFS by diskpart on
-# first use), 20 seconds for XP's lazy writer to put them on the disk (a copy
-# truncated at once never reached it), then truncated to nothing and deleted;
+# first use), the volume dismounted (fsutil) so that its cache is written to
+# the disk — 20 seconds of XP's lazy writer left the last 870 KiB of the
+# executable unwritten on Server 2003, and a copy truncated at once never
+# reached the disk —, then truncated to nothing and deleted;
 # their SHA-256, computed on the host, in reference/carving.txt.
 #
 # TRACES IN THE VM. C:\wactest\xp holds the run until the next one, which
@@ -83,7 +85,7 @@ printf '%s\r\n' \
   'if not exist W:\ (diskpart /s %TEMP%\wacdata.txt >nul & echo Y| format W: /FS:NTFS /Q /V:WACDATA >nul)' \
   'del %TEMP%\wacdata.txt 2>nul' \
   'for %%f in (carve-witness.exe carve-witness.pdf) do copy /y "%~dp0%%f" W:\%%f >nul' \
-  'ping -n 21 127.0.0.1 >nul' \
+  'fsutil volume dismount W: >nul' \
   'for %%f in (carve-witness.exe carve-witness.pdf) do (type nul > W:\%%f & del W:\%%f)' \
   'cd /d C:\wactest\xp' \
   'WAC32.exe < nul > collect.log 2>&1' \

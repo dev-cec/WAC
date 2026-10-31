@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # create-vm.sh — creates a Windows test VM from scratch, entirely without interaction.
 #
-# Usage: ./create-vm.sh [win11|win81|win8|win7|vista|winxp|srv2008r2|srv2012|srv2012r2|srv2016|srv2019|srv2022|srv2022core|srv2025]
+# Usage: ./create-vm.sh [win11|win81|win8|win7|vista|winxp|srv2008r2|srv2012|srv2012r2|srv2016|srv2019|srv2022|srv2022core|srv2025|srv2003]
 #   win11  (default) the VM of the test cycle, Windows 11 — domain win11-test
 #   win81  Windows 8.1 x64, for the compatibility with the older versions —
 #          domain win81-test; run-wac-test.sh is given it with DOM=win81-test
@@ -22,6 +22,13 @@
 #          exists for it: installed from an answer floppy (WINNT.SIF), driven
 #          by the keyboard (lib/vmkeys.py, US layout), its output read on its
 #          serial port (see the end of this file)
+#   srv2003  Windows Server 2003 Enterprise x86, Evaluation Edition (180 days,
+#          Microsoft's evaluation kit, part X09-45608) — domain srv2003-test,
+#          installed and driven as XP is (same NT 5.x kernel); its Setup asks
+#          for the evaluation key printed on the kit's sleeve: XP_KEY. Its
+#          GUI Setup still stops twice near its end, whatever WINNT.SIF says:
+#          the evaluation notice, then the date and time — Enter to each
+#          (virsh send-key srv2003-test KEY_ENTER), after checking the date
 # What differs from one version to the next (ISO, edition, key, language of the
 # medium, firmware, drivers of the guest agent) is in the profile below; the
 # answer file is guest/autounattend.xml, adapted by the profile.
@@ -145,11 +152,16 @@ case "$PROFILE" in
       srv2025)   OSINFO=win2k25;   ISO_WIN="${ISO_WIN:-$HERE/tools/isos/server2025_eval_en-us.iso}";   MEDIA_LANGUAGE=en-US
                  GA_DRIVERS=""; ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}" ;;
     esac ;;
+  srv2003)
+    DOM="${DOM:-srv2003-test}"
+    # SHA-256 2f8e2936e50504e9f4ce4a782ea06c05c11f3b597579bb9b7b0f4bbff8274a72
+    ISO_WIN="${ISO_WIN:-$VMS/srv2003-eval/srv2003-eval-x09-45608.iso}"
+    ISO_VIRTIO="$ISO_WIN" ;;   # as XP: nothing but what Windows itself has
   winxp)
     DOM="${DOM:-winxp-test}"
     ISO_WIN="${ISO_WIN:-$HERE/tools/isos/Windows XP Professional (SP1) (x86).iso}"
     ISO_VIRTIO="$ISO_WIN" ;;   # no virtio driver: nothing but what XP itself has
-  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, vista, winxp, srv2008r2, srv2012, srv2012r2, srv2016, srv2019, srv2022, srv2022core, srv2025)" >&2; exit 2 ;;
+  *) echo "Unknown profile $PROFILE (win11, win81, win8, win7, vista, winxp, srv2008r2, srv2012, srv2012r2, srv2016, srv2019, srv2022, srv2022core, srv2025, srv2003)" >&2; exit 2 ;;
 esac
 
 ISO_ANS="$VMS/autounattend-$PROFILE.iso"
@@ -171,9 +183,23 @@ mkdir -p "$VMS"
 # libvirt keeps in a file: that is also where a command's output is read from
 # (`<command> > COM1`), the commands being typed by lib/vmkeys.py.
 # The product key is the one the installation medium carries beside its files
-# ("CD Key.txt"), or XP_KEY: read here, written to the floppy only — never
+# ("CD Key.txt"), or XP_KEY (Server 2003: the evaluation kit's sleeve): read here, written to the floppy only — never
 # shown, never in the repository.
-if [[ "$PROFILE" == winxp ]]; then
+if [[ "$PROFILE" == winxp || "$PROFILE" == srv2003 ]]; then
+  # Server 2003: its own name, its licence mode (Setup asks for it otherwise),
+  # and no window at logon that would take the keyboard from the Run box —
+  # Manage Your Server, the Shutdown Event Tracker —, no screen saver: a
+  # server's locks the console after 10 minutes, and a locked console takes
+  # neither the keys typed nor the power button that shuts it down
+  # (ShutdownWithoutLogon, off on a server, lets it at the logon screen too).
+  COMPUTER=WAC-XP; OSINFO_XP=winxp; SERVER_SIF=""; SERVER_RUNONCE=""
+  if [[ "$PROFILE" == srv2003 ]]; then
+    COMPUTER=WAC-SRV2003; OSINFO_XP=win2k3
+    SERVER_SIF=$'[LicenseFilePrintData]\nAutoMode=PerServer\nAutoUsers=5'
+    # Text-mode Setup refuses a quote inside a value: the settings go in a
+    # .reg file on the answer floppy, imported at first logon.
+    SERVER_RUNONCE='Command3="regedit /s A:\wac-server.reg"'
+  fi
   [[ -f "$ISO_WIN" ]] || { echo "Windows ISO missing: $ISO_WIN" >&2; exit 1; }
   mkdir -p "$VMS"
   FLOPPY="$VMS/$DOM-answers.img"; SERIAL="$VMS/$DOM.serial"; DISK="$VMS/$DOM.qcow2"; ISO_WAC="$VMS/wac-transfer.iso"
@@ -186,7 +212,7 @@ if [[ "$PROFILE" == winxp ]]; then
     # The unmount usually detaches the loop device itself; asked to delete one already gone, udisksctl waits for ever.
     ! losetup "$1" >/dev/null 2>&1 || timeout 10 udisksctl loop-delete -b "$1" >/dev/null 2>&1 || true
   }
-  if [[ -z "${XP_KEY:-}" ]]; then
+  if [[ -z "${XP_KEY:-}" && "$PROFILE" == winxp ]]; then
     LOOP="$(udisksctl loop-setup -r -f "$ISO_WIN" | grep -o '/dev/loop[0-9]*')"
     MEDIUM="$(mounted "$LOOP" ro)"
     XP_KEY="$(python3 - "$MEDIUM/CD Key.txt" <<'PY'
@@ -207,7 +233,7 @@ PY
 )"
     released "$LOOP"
   fi
-  [[ -n "$XP_KEY" ]] || { echo "No product key: the medium carries no \"CD Key.txt\"; give XP_KEY=XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" >&2; exit 1; }
+  [[ -n "${XP_KEY:-}" ]] || { echo "No product key: the medium carries no \"CD Key.txt\"; give XP_KEY=XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" >&2; exit 1; }
   echo "== 1. Answer floppy (WINNT.SIF) =="
   # No AutoPlay: a medium changed under the machine would open a window that takes the keyboard from the prompt.
   # "wac"/"wac": the same throw-away account as the other test machines (see guest/autounattend.xml);
@@ -238,7 +264,7 @@ AutoLogonCount=999
 ProductKey=$XP_KEY
 FullName="wac"
 OrgName="wac"
-ComputerName=WAC-XP
+ComputerName=$COMPUTER
 [Display]
 BitsPerPel=32
 XResolution=1024
@@ -247,15 +273,27 @@ YResolution=768
 JoinWorkgroup=WORKGROUP
 [Networking]
 InstallDefaultComponents=Yes
+$SERVER_SIF
 [GuiRunOnce]
 Command0="reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer /v NoDriveTypeAutoRun /t REG_DWORD /d 255 /f"
 Command1="net accounts /maxpwage:unlimited"
 Command2="cmd /c echo WAC-XP-READY > COM1"
+$SERVER_RUNONCE
 SIF
   sed -i 's/$/\r/' "$TMP/WINNT.SIF"
   rm -f "$FLOPPY"; mkfs.fat -C "$FLOPPY" 1440 >/dev/null
   LOOP="$(udisksctl loop-setup -f "$FLOPPY" | grep -o '/dev/loop[0-9]*')"
-  cp "$TMP/WINNT.SIF" "$(mounted "$LOOP")/WINNT.SIF"
+  ANSWERS="$(mounted "$LOOP")"
+  cp "$TMP/WINNT.SIF" "$ANSWERS/WINNT.SIF"
+  if [[ "$PROFILE" == srv2003 ]]; then
+    printf '%s\r\n' 'REGEDIT4' '' \
+      '[HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\Srvwiz]' '@=dword:00000000' '' \
+      '[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Reliability]' '"ShutdownReasonOn"=dword:00000000' '' \
+      '[HKEY_CURRENT_USER\Control Panel\Desktop]' '"ScreenSaveActive"="0"' '"ScreenSaverIsSecure"="0"' '' \
+      '[HKEY_USERS\.DEFAULT\Control Panel\Desktop]' '"ScreenSaveActive"="0"' '' \
+      '[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System]' '"ShutdownWithoutLogon"=dword:00000001' \
+      > "$ANSWERS/wac-server.reg"
+  fi
   released "$LOOP"
   echo "== 2. wac-transfer.iso =="
   TMP2="$(mktemp -d)"; cp "$ROOT/build-windows/"*.exe "$ROOT/bin/wac.yml" "$TMP2/" 2>/dev/null || true
@@ -265,7 +303,7 @@ SIF
   $C undefine "$DOM" >/dev/null 2>&1 || true
   rm -f "$DISK" "$SERIAL"
   echo "== 4. virt-install =="
-  virt-install --connect qemu:///session --name "$DOM" --osinfo winxp \
+  virt-install --connect qemu:///session --name "$DOM" --osinfo "$OSINFO_XP" \
     --vcpus 1 --memory 1024 --cpu pentium3 --machine pc \
     --disk "path=$DISK,size=20,format=qcow2,bus=ide" --cdrom "$ISO_WIN" \
     --disk "path=$FLOPPY,device=floppy" --disk "path=$ISO_WAC,device=cdrom,readonly=on" \
@@ -275,6 +313,12 @@ SIF
     [[ "$($C domstate "$DOM" 2>/dev/null)" == "running" ]] || $C start "$DOM" >/dev/null 2>&1 || true
     if grep -q WAC-XP-READY "$SERIAL" 2>/dev/null; then
       echo "   ✅ Windows XP installed after ~$((i / 4)) min — driven by lib/vmkeys.py --layout us, output on $SERIAL"
+      # The data disk the carving's witnesses go on (W:, formatted by
+      # run-wac-test-xp.sh), into the definition only: seen from the next
+      # start. IDE's last slot: hda is the system, hdb and hdc the media.
+      [[ -f "$DATA_DISK" ]] || qemu-img create -f qcow2 "$DATA_DISK" 2G >/dev/null
+      $C attach-disk "$DOM" "$DATA_DISK" hdd --driver qemu --subdriver qcow2 --targetbus ide --config >/dev/null \
+        && echo "   data disk added, seen from the next start"
       exit 0
     fi
     sleep 15

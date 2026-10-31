@@ -234,6 +234,20 @@ selon la disposition du clavier de la machine, clics) ; la sortie d'une commande
 se lit sur le port série (`<commande> > COM1`, gardé dans
 `~/vms/winxp-test.serial`). Sa clé de produit est lue sur le support
 d'installation, ou donnée par `XP_KEY` ; elle n'est jamais écrite dans le dépôt.
+Une fois installé, un disque de données de 2 Go lui est ajouté (IDE `hdd`), sur
+lequel `run-wac-test-xp.sh` formate W: pour les témoins du carving.
+
+Windows Server 2003 (profil `srv2003`, domaine `srv2003-test`) s'installe et se
+pilote de la même façon, depuis le kit d'évaluation de 180 jours de Microsoft
+(référence X09-45608) ; sa clé, imprimée sur la pochette du kit, est donnée par
+`XP_KEY`. Son installation s'arrête encore deux fois vers la fin — l'avis
+d'évaluation, puis la date et l'heure : Entrée à chacun (`virsh send-key
+srv2003-test KEY_ENTER`). Un `.reg` de la disquette de réponses, importé à la
+première ouverture de session, coupe ce qui prendrait le clavier au harnais :
+Gérer votre serveur, le suivi des arrêts, l'économiseur d'écran (celui d'un
+serveur verrouille la console au bout de 10 minutes, qui ne prend alors plus ni
+les touches ni le bouton d'arrêt ACPI). `./run-wac-test-xp.sh srv2003-test`
+lance son cycle.
 
 Le cycle de test tourne sur `win11-test`, ou sur la machine que nomme `WAC_VM`
 (`WAC_VM=win81-test ./run-wac-test.sh`). Sur un Windows antérieur à 10 :

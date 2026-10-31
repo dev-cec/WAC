@@ -4715,7 +4715,8 @@ def check_shimcache_dates(folder):
     manifest records, for every collected binary, the NTFS dates read in the
     $MFT: an independent source. For an unchanged file both dates are
     identical to the 100 ns; a gap of a whole number of hours on most entries
-    betrays a time-zone shift.
+    betrays a time-zone shift. Windows XP and Server 2003 also keep the
+    file's size: for an unchanged file, the manifest's byte count.
     """
     sh = load(folder, "shimcache.json")
     store = store_folder(folder)
@@ -4727,7 +4728,8 @@ def check_shimcache_dates(folder):
         return 0
     source = {str(i.get("SourcePath", "")).upper(): i for i in manifest.get("Items") or []
               if i.get("SourceModifiedUtc")}
-    same = shifted = other = 0
+    same = shifted = other = sized = 0
+    wrong_size = []
     for e in sh:
         # Windows 8 and 8.1 name the system volume "SYSVOL\", Windows 7 writes "\??\C:\".
         path = str(e.get("Path", "")).upper()
@@ -4739,6 +4741,11 @@ def check_shimcache_dates(folder):
         gap = (instant(e["LastModificationUtc"]) - instant(i["SourceModifiedUtc"])).total_seconds()
         if abs(gap) < 1:
             same += 1
+            if "FileSize" in e and i.get("Bytes") is not None:
+                if e["FileSize"] == i["Bytes"]:
+                    sized += 1
+                else:
+                    wrong_size.append((e.get("Path"), e["FileSize"], i["Bytes"]))
         elif abs(gap) <= 14 * 3600 and abs(gap) % 900 < 1:
             shifted += 1          # a whole quarter of an hour: a time-zone offset
         else:
@@ -4750,8 +4757,11 @@ def check_shimcache_dates(folder):
         print(f"  ❌ shimcache.json: {shifted} date(s) shifted by a time-zone offset against "
               f"the NTFS date, {same} identical — UTC value treated as local?")
         return 1
+    if wrong_size:
+        print(f"  ❌ shimcache.json: {len(wrong_size)} size(s) different from the collected file's, e.g. {wrong_size[:2]}")
+        return 1
     print(f"  ✅ shimcache.json: {same} date(s) identical to the NTFS date of the file "
-          f"({other} file(s) replaced since)")
+          f"({other} file(s) replaced since)" + (f", {sized} size(s) identical to the collected file's" if sized else ""))
     return 0
 
 
