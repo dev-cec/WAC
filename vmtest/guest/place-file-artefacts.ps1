@@ -63,6 +63,12 @@
 #                SHA-256 and what WAC must do of them -> deleted_files.json;
 #   slack        150 of 450 files moved from a folder to another: their former
 #                names in the released index blocks of the first -> deleted_files.json (level 2)
+#   iissite, iispool, iismodule, iispage, iisrequest  IIS, on a server only
+#                (the Web-Server role installed once): the sites, pools and
+#                global modules appcmd lists, a witness module never loaded,
+#                a page of the default site with its SHA-256, and a request of
+#                it with the token, its instant in UTC -> web_server_*.json
+#                and the exhibit manifest
 #   shadowcopy, shadowfile  every shadow copy Windows lists for C: (identifier,
 #                set, creation in UTC), one made here by the harness — through
 #                the VSS service, which WAC itself never calls — and the SHA-256
@@ -178,6 +184,20 @@ try { if (Wants 'search_index') {
     $searchName = "wac-search-$searchStamp.txt"
     [IO.File]::WriteAllText("C:\Users\wac\Documents\$searchName", "wacsearchwitness$searchStamp contenu du document temoin")
 } } catch { WitnessFailure 'search_index' $_ }
+
+# 0b. B-035 — the Web-Server role, on a server, installed BEFORE any
+#     reference (installed once; it stays): it adds a group (IIS_IUSRS),
+#     account rights and services that the references of the accounts and of
+#     the rights, taken further down, must already see — installed at 25b,
+#     after them, it gave WAC holders the references lacked. Its witnesses
+#     are placed at 25b.
+$iisAppcmd = "$env:windir\System32\inetsrv\appcmd.exe"
+try { if (Wants 'web_server') {
+    $iisProductType = (Get-WmiObject Win32_OperatingSystem).ProductType
+    if ($iisProductType -ne 1 -and (Get-Command Install-WindowsFeature -ErrorAction SilentlyContinue) -and -not (Test-Path $iisAppcmd)) {
+        Install-WindowsFeature Web-Server | Out-Null
+    }
+} } catch { WitnessFailure 'web_server' $_ }
 
 # 1. PowerShell history of the user "wac", under a host name of its own.
 try { if (Wants 'powershell_history') {
@@ -2061,6 +2081,48 @@ public static class WacMove {
     }
     Write-Output "slack=$from|$to|$token|150"
 } } catch { WitnessFailure 'deleted_files' $_ }
+
+# 25b. B-035 — IIS, on a server: the Web-Server role (installed at 0b), a
+#     page of the default site, a request of it carrying the token,
+#     HTTP.sys's log buffer flushed so that the line is on the disk. A native
+#     module witness in globalModules, preCondition bitness32: the 64-bit
+#     pool never loads it (its DLL does not exist). Then what appcmd — IIS's
+#     own tool, not the file WAC reads — lists of the sites, pools and
+#     modules. A workstation is left without IIS: the non-regression machine
+#     keeps its state.
+try { if (Wants 'web_server') {
+    $appcmd = $iisAppcmd
+    if ($iisProductType -eq 1) { Write-Output 'witness_failed=web_server|a workstation: IIS not installed on the non-regression machine' }
+    elseif (-not (Get-Command Install-WindowsFeature -ErrorAction SilentlyContinue)) {
+        Write-Output 'witness_failed=web_server|no Install-WindowsFeature on this server (before 2012)'
+    }
+    elseif (-not (Test-Path $appcmd)) { Write-Output 'witness_failed=web_server|the Web-Server role did not install (0b)' }
+    else {
+        $module = 'WacWitnessModule'
+        if (-not (& $appcmd list config -section:system.webServer/globalModules | Select-String $module)) {
+            & $appcmd set config -section:system.webServer/globalModules "/+[name='$module',image='C:\wactest\wac-iis-module.dll',preCondition='bitness32']" | Out-Null
+        }
+        $page = 'C:\inetpub\wwwroot\wac-witness.htm'
+        Set-Content -Path $page -Value '<html><body>WAC witness page</body></html>'
+        Write-Output ("iispage=$page|" + (Get-FileHash -Algorithm SHA256 -LiteralPath $page).Hash)
+        $iisToken = Get-Date -Format 'yyyyMMddHHmmss'
+        $asked = (Get-Date).ToUniversalTime()
+        $answer = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1/wac-witness.htm?wac=$iisToken"
+        & netsh http flush logbuffer | Out-Null
+        Write-Output ("iisrequest=/wac-witness.htm|wac=$iisToken|" + $answer.StatusCode + '|' + $asked.ToString('yyyy-MM-ddTHH:mm:ss'))
+        foreach ($site in ([xml](& $appcmd list site /config /xml)).appcmd.SITE) {
+            $root = $site.site.application | Where-Object { $_.path -eq '/' } | Select-Object -First 1
+            $directory = $root.virtualDirectory | Where-Object { $_.path -eq '/' } | Select-Object -First 1
+            Write-Output ("iissite=" + $site.'SITE.ID' + '|' + $site.'SITE.NAME' + '|' + $directory.physicalPath)
+        }
+        foreach ($pool in ([xml](& $appcmd list apppool /config /xml)).appcmd.APPPOOL) {
+            Write-Output ("iispool=" + $pool.'APPPOOL.NAME' + '|' + $pool.add.processModel.identityType)
+        }
+        foreach ($m in ([xml](& $appcmd list config -section:system.webServer/globalModules /xml)).appcmd.CONFIG.'system.webServer-globalModules'.add) {
+            Write-Output ("iismodule=" + $m.name + '|' + $m.image)
+        }
+    }
+} } catch { WitnessFailure 'web_server' $_ }
 
 # 26 (end). B-031 — the names each source of program_usage.json holds in the
 #     live registry, read last: the steps after 26 launch programs as "wac"

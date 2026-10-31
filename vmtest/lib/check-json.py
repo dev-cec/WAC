@@ -511,6 +511,7 @@ def cross_checks(folder):
     found += guarded(check_third_party_chains, folder)
     found += guarded(check_vulnerable_driver, folder)
     found += guarded(check_web_client, folder)
+    found += guarded(check_web_server, folder)
     found += guarded(check_activities_cache, folder)
     found += guarded(check_search_index, folder)
     found += guarded(check_event_messages, folder)
@@ -3510,6 +3511,77 @@ def check_browser_sessions(folder, store, records):
     return found
 
 
+def check_web_server(folder):
+    """IIS against what appcmd — IIS's own tool, not the file WAC reads —
+    lists (place-file-artefacts.ps1, on a server): the sites with their
+    root's physical path as written, the pools and their identity, the global
+    modules, the witness module among them; the request of the witness page
+    in web_server_logs.json with its token, status 200 and its instant in UTC
+    within two minutes of the harness's; the page in the exhibit store with
+    its SHA-256. On a workstation, IIS is not installed: skipped."""
+    found = 0
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8", errors="replace") as f:
+        lines = [l.rstrip("\r\n") for l in f]
+    def values(key):
+        return [l[len(key) + 1:].split("|") for l in lines if l.startswith(key + "=")]
+    sites, pools, modules = values("iissite"), values("iispool"), values("iismodule")
+    if skipped_unplaced(folder, "web_server", sites):
+        return 0
+    if not sites:
+        return 0
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  {'✅' if ok else '❌'} {success if ok else failure}")
+        found += 0 if ok else 1
+    mine = load(folder, "web_server_sites.json") or []
+    def root_path(site):
+        for a in site.get("Applications") or []:
+            if a.get("Path") == "/":
+                for d in a.get("VirtualDirectories") or []:
+                    if d.get("Path") == "/":
+                        # appcmd gives the path with its variables expanded
+                        # (%SystemDrive%): WAC's resolved one, else as written.
+                        return d.get("PhysicalPathResolved") or d.get("PhysicalPath", "")
+        return ""
+    theirs = {(i, n, p) for i, n, p in sites}
+    ours = {(s.get("Id", ""), s.get("Name", ""), root_path(s)) for s in mine if isinstance(s, dict)}
+    report(ours == theirs, f"web_server_sites.json: the {len(theirs)} site(s) appcmd lists, id, name and root's physical path resolved",
+           f"web_server_sites.json: WAC only {sorted(ours - theirs)[:2]}, appcmd only {sorted(theirs - ours)[:2]}")
+    mine = load(folder, "web_server_application_pools.json") or []
+    ours = {p.get("Name") for p in mine if isinstance(p, dict)}
+    identities = {p.get("Name"): (p.get("ProcessModel") or {}).get("IdentityType") for p in mine if isinstance(p, dict)}
+    # appcmd gives the identity even when IIS keeps its default unwritten: compared where WAC read one.
+    wrong = [(n, t, identities.get(n)) for n, t in pools if identities.get(n) and identities.get(n) != t]
+    report(ours == {n for n, _ in pools} and not wrong,
+           f"web_server_application_pools.json: the {len(pools)} pool(s) appcmd lists, identities as written",
+           f"web_server_application_pools.json: WAC {sorted(ours)[:3]}, appcmd {sorted(n for n, _ in pools)[:3]}, identities {wrong[:2]}")
+    mine = load(folder, "web_server_modules.json") or []
+    ours = {(m.get("Name"), m.get("Image")) for m in mine if isinstance(m, dict)}
+    theirs = {(n, i) for n, i in modules}
+    report(ours == theirs and ("WacWitnessModule", "C:\\wactest\\wac-iis-module.dll") in ours,
+           f"web_server_modules.json: the {len(theirs)} global module(s) appcmd lists, the witness module among them",
+           f"web_server_modules.json: WAC only {sorted(ours - theirs)[:2]}, appcmd only {sorted(theirs - ours)[:2]}")
+    logs = load(folder, "web_server_logs.json") or []
+    for stem, query, status, asked in values("iisrequest"):
+        hits = [l for l in logs if isinstance(l, dict) and l.get("UriStem") == stem and l.get("UriQuery") == query]
+        gaps = [abs((instant(l["TimeUtc"]) - instant(asked + "Z")).total_seconds()) for l in hits if l.get("TimeUtc")]
+        gap = f"{gaps[0]:.0f}" if gaps else "?"
+        report(len(hits) == 1 and str(hits[0].get("Status")) == status and gaps and gaps[0] <= 120,
+               f"web_server_logs.json: the witness request {stem}?{query}, status {status}, {gap} s from the harness's instant (UTC)",
+               f"web_server_logs.json: witness request {stem}?{query}: {[(h.get('Status'), h.get('TimeUtc')) for h in hits][:2]} (asked at {asked}Z)")
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    for page, sha256 in values("iispage"):
+        stored = [o for o in items if str(o.get("SourcePath", "")).lower() == page.lower()]
+        report(stored and all(str(o.get("SHA256", "")).upper() == sha256.upper() for o in stored),
+               f"manifest: the site's witness page {page} stored with the SHA-256 of Get-FileHash",
+               f"manifest: witness page {page}: {[(o.get('Result'), o.get('SHA256')) for o in stored] or 'not collected'}")
+    return found
+
+
 def check_activities_cache(folder):
     """activities_cache.json against Python's own SQLite on each fetched
     ActivitiesCache.db, its write-ahead log replayed by that engine: every row
@@ -5531,6 +5603,12 @@ def check_local_groups(folder):
     mine = {str(g.get("Sid", "")).lower():
             {str(m.get("Sid", "")).lower() for m in (g.get("Members") or [])}
             for g in groups}
+    # Members Windows adds itself, written nowhere in the SAM (the alias's
+    # member list is empty, measured on Server 2022): IUSR in IIS_IUSRS.
+    implicit = {"s-1-5-32-568": {"s-1-5-17"}}
+    for sid, members in implicit.items():
+        if sid in ref:
+            ref[sid] -= members - mine.get(sid, set())
     found = 0
     wrong = [f"{sid}: WAC only {sorted(mine.get(sid, set()) - want)[:3]}, "
              f"Windows only {sorted(want - mine.get(sid, set()))[:3]}"
