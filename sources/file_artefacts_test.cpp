@@ -473,6 +473,29 @@ void defenderHistory() {
 	      && value(d81.initialDetectionUtc) == 0x01DD5B4ED62FD7A3ULL,
 	      "DetectionHistory of Windows 8.1: no quarantine, execution status, account, process and InitialDetectionTime by their position");
 
+	/* DetectionHistory of Defender on Server 2016 (2026-10-31): the header of
+	   Windows 8.1 — no marker, the name after the detection's GUID — but the
+	   resource preceded by its Magic.Version marker, as on Windows 10. */
+	std::vector<uint8_t> dh2016;
+	putField(dh2016, 0x08, number64(0x80008A1B));
+	putField(dh2016, 0x1E, std::vector<uint8_t>(detection81, detection81 + 16));
+	putField(dh2016, 0x15, wide(L"Virus:DOS/EICAR_Test_File"));
+	for (uint32_t n : { 0u, 5u, 42u, 110u, 4u, 3u, 3u, 3u, 2u, 6u, 1u }) putField(dh2016, 0x06, number32(n));
+	putField(dh2016, 0x15, wide(L"Magic.Version:1.2"));
+	putField(dh2016, 0x15, wide(L"file"));
+	putField(dh2016, 0x15, wide(L"C:\\wactest\\eicar-held\\wac-eicar-024209.txt"));
+	putField(dh2016, 0x06, number32(0));
+	putField(dh2016, 0x1E, std::vector<uint8_t>(16, 0));
+	putField(dh2016, 0x06, number32(0));
+	putField(dh2016, 0x06, number32(2));
+	putField(dh2016, 0x15, wide(L"NT AUTHORITY\\LOCAL SERVICE"));
+	DefenderDetection d2016;
+	check(parseDetectionHistory(dh2016, d2016) && d2016.magicVersion.empty() && d2016.threatName == L"Virus:DOS/EICAR_Test_File"
+	      && d2016.resources.size() == 1 && d2016.resources[0].type == L"file"
+	      && d2016.resources[0].path == L"C:\\wactest\\eicar-held\\wac-eicar-024209.txt"
+	      && d2016.domainUser == L"NT AUTHORITY\\LOCAL SERVICE",
+	      "DetectionHistory of Server 2016: no marker in the header, the resource after its own marker");
+
 	// A quarantine entry: threat, then one resource with its fields.
 	std::vector<uint8_t> threat;
 	put64(threat, 0x80008A1B);

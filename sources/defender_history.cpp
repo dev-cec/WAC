@@ -122,7 +122,8 @@ void parseBag(const std::vector<uint8_t>& bag, std::vector<DetectionProperty>& o
  *  - Magic.Version 1.2 (Defender of Windows 10 and 11): the marker at 2, the
  *    threat's name at 3, each resource a marker then its type and path;
  *  - without any marker (Defender of Windows 8.1): the name at 2, each
- *    resource its type and path, two strings in a row.
+ *    resource its type and path, two strings in a row — or, on Server 2016,
+ *    after its own marker.
  *  Two positions after the name its severity, three its category (as
  *  MSFT_MpThreat gives them); after the resources, the quarantine entry's
  *  GUID, then at +1 CurrentThreatExecutionStatusID, +3 the account, +5 the
@@ -143,8 +144,10 @@ void nameFields(const std::vector<DetectionField>& f, size_t nameAt, bool marker
 	size_t last = nameAt;
 	// Without markers, the resources end at the quarantine entry's GUID: a
 	// string pair after it (account, process) is not a resource.
+	// Server 2016 mixes both: no marker in the header, but each resource after
+	// its own — taken as type and path, the marker would push the path out.
 	for (size_t i = nameAt + 1; i + 1 < f.size() && (markers || !at(i, FIELD_GUID)); ++i) {
-		const size_t type = markers ? i + 1 : i;
+		const size_t type = markers || isMagic(f[i]) ? i + 1 : i;
 		if ((markers && !isMagic(f[i])) || !at(type, FIELD_STRING) || !at(type + 1, FIELD_STRING)) continue;
 		d.resources.push_back({ fieldString(f[type]), fieldString(f[type + 1]) });
 		named[type] = named[type + 1] = true;
