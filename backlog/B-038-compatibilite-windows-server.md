@@ -24,7 +24,7 @@ Une VM par version serveur passée par le harnais (création sans interaction, c
 ## Critères d'acceptation
 En plus de la définition de « fini » commune (backlog/README.md) :
 - Cycle VM vert sur au moins une version de chaque génération (2003, 2008/2008 R2, 2012/2012 R2, 2016 et suivantes).
-- Une installation Server Core collectée sans erreur, ses artefacts absents déclarés.
+- Une installation Server Core collectée sans erreur, ses artefacts absents déclarés (décision du 2026-10-31 : les artefacts de l'Explorateur y sont cherchés, une liste vide disant ce que le disque porte ; seuls les témoins impossibles sont déclarés dans le harnais).
 
 ## Tâches
 - [x] Images des versions serveur (2012 R2 à 2025, évaluation) et profils de create-vm.sh ; Server 2022 créée
@@ -80,3 +80,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
   - **harnais** (9) : Core n'a ni explorer.exe, ni calc.exe, ni mstsc.exe, ni spouleur (clé Print\Monitors), ni barre des tâches (Taskband), et l'Explorateur n'y écrit ni RecentDocs, ni MountPoints2, ni UserAssist ; BAM n'y garde aucun utilisateur ; l'identifiant d'objet NTFS y a un volume de naissance nul (champ que WAC n'écrit pas). Témoins déclarés non placés ou référence vide confrontée au registre vivant (commit suivant).
 - 2026-10-31 : second cycle Server Core **456 ✅, 2 ❌** (un sujet, aux deux collectes, du harnais) : la ligne `monitors=` vide n'est pas gardée par le lecteur de référence, le contrôle l'exigeait — fondé désormais sur l'échec ou non du témoin ; le relevé RDP entrant lisait `$rdpSince` hors de la session sautée (témoin rdp_client déclaré à tort non placé). RecentDocs, MountPoints2, rdp_server et explorer.exe sautés comme prévu. Troisième cycle lancé.
 - 2026-10-31 : **Server 2022 Core vert : 458 ✅, 0 ❌** (troisième cycle). Témoins impossibles sans Explorateur déclarés et sautés (RecentDocs, MountPoints2, ShellBags du ZIP, index de recherche, RDP entrant, lecture brute d'explorer.exe) ; BAM et UserAssist vides confrontés au registre vivant vide ; hosts écarté « attendu et introuvable ». Critère « Server Core collectée sans erreur » atteint ; les artefacts de l'Explorateur restent cherchés sur Core (aucun déclaré absent, par prudence). Suite : Server 2003, puis non-régression Windows 11.
+- 2026-10-31 : décisions de l'utilisateur — (1) sur Server Core, les artefacts de l'Explorateur restent cherchés (pas d'`AbsentFromThisVersion`) ; (2) Server 2003 : aucune clé de produit sur les deux médias (SETUPP.INI sans clé, pas de `CD Key.txt`), l'utilisateur fournit une clé licite, passée par `XP_KEY`, jamais écrite dans le dépôt. Non-régression Windows 11 lancée en attendant.
