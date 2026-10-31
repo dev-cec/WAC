@@ -27,6 +27,7 @@
 #include "powershell_history.h"
 #include "setupapi_log.h"
 #include "firewall_log.h"
+#include "web_server.h"
 #include "boot_records.h"
 #include "intune_logs.h"
 #include "recycle_bin.h"
@@ -2567,6 +2568,7 @@ int wmain(int argc, wchar_t** argv) {
 	powershell();
 	setupapi();
 	firewallLog();
+	iisConfigurationAndLogs();
 	partitionTables();
 	cmTraceLog();
 	internetShortcut();

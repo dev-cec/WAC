@@ -43,6 +43,7 @@
 #include "emails.h"
 #include "sysmon.h"
 #include "firewall_log.h"
+#include "web_server.h"
 #include "intune_logs.h"
 #include "cloud_identity.h"
 #include "rdp_server.h"
@@ -285,6 +286,18 @@ bool requested(bool wanted, const char* file, Text label, const wchar_t* key) {
 	return false;
 }
 
+/*! Whether the form an artefact takes on the examined version names the
+ *  piece of an installed role (installedPiece) and the collection did not
+ *  take it: the role is not there, and the conversion finds nothing rather
+ *  than declaring a format it would have had no source for. */
+bool installedPieceMissing(const std::string& key) {
+	const ArtefactEntry* entry = artefactEntry(key);
+	if (!entry) return false;
+	const wchar_t* piece = formOf(*entry, conf.examinedVersion).installedPiece;
+	std::error_code ec;
+	return piece && !std::filesystem::exists(extractedPath(conf.systemDrive.substr(0, 2) + L"\\" + piece), ec);
+}
+
 /*! THE GUARD BEFORE ANY COLLECTION (backlog B-039). Reads the version of the
  *  examined Windows in its SOFTWARE hive, just opened, and applies the table
  *  of the artefacts (artefact_catalogue.h): an artefact asked for that this
@@ -319,6 +332,8 @@ void applyArtefactCatalogue() {
 	std::wstring undecoded;
 	for (const auto& [key, wanted] : switches) {
 		if (!*wanted || !undecodedOn(key, conf.examinedVersion)) continue;
+		// At the conversion, an installed role's piece the collection did not find: no role, nothing to declare.
+		if (conf.mode == RunMode::Convert && installedPieceMissing(key)) continue;
 		undecoded += (undecoded.empty() ? L"" : L", ") + decodeText(key, CP_UTF8);
 		if (conf.mode != RunMode::Convert) continue;
 		conf.undecodedOnVersion.insert(key);
@@ -1439,6 +1454,12 @@ void convertArtefacts(bool systemAvailable) {
 	                                  Text::StepUserShellFolders);
 	convertArtefact<WebClient>(conf.artefacts.webClient, "web_client.json", Text::ArtefactWebClient,
 	                           L"artefacts.web_client", Text::StepWebClient);
+	convertArtefact<WebServer>(conf.artefacts.webServer,
+	                           { { "web_server_sites.json", Text::ArtefactWebServerSites },
+	                             { "web_server_application_pools.json", Text::ArtefactWebServerPools },
+	                             { "web_server_modules.json", Text::ArtefactWebServerModules },
+	                             { "web_server_logs.json", Text::ArtefactWebServerLogs } },
+	                           L"artefacts.web_server", Text::StepWebServer);
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 
 	/************************

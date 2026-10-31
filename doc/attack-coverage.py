@@ -143,7 +143,7 @@ COMPONENTS = {
     "Volume Creation": ["mounted_devices", "ntfs_volumes", "shadow_copies"],
     "Host Status": [],
     "Named Pipe Metadata": [],
-    "Application Log Content": ["defender", "setupapi", "error_reports", "intune_logs", "onedrive"],
+    "Application Log Content": ["defender", "setupapi", "error_reports", "intune_logs", "onedrive", "web_server"],
     "Web Credential Creation": ["web_client", "dpapi_master_keys", "cloud_identity"],
     "Firmware Modification": [],
     "Active Directory Object Modification": [],

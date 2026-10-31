@@ -30,6 +30,7 @@
 #include "event_log_files.h"
 #include "sysmon.h"
 #include "firewall_log.h"
+#include "web_server.h"
 #include "intune_logs.h"
 #include "cloud_identity.h"
 #include <algorithm>
@@ -157,6 +158,23 @@ HRESULT repairHives(const std::vector<std::wstring>& hives,
 	return (failures == 0) ? ERROR_SUCCESS : S_FALSE;
 }
 
+/*! EXHIBIT STORE -> WORKING COPY after an extraction phase: what the
+ *  phase added is copied into the working directory and verified
+ *  (ExhibitStoreToWorking, which overwrites nothing already there), and the
+ *  copy is recorded in the investigation log.
+ *  @return the result of ExhibitStoreToWorking */
+HRESULT storeToWorking() {
+	size_t copies = 0;
+	unsigned long long bytes = 0;
+	const HRESULT hr = ExhibitStoreToWorking(&copies, &bytes);
+	auditRecord(L"Copy of the exhibit store into the working directory ("
+	            + std::to_wstring(copies) + L" file(s), "
+	            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
+	            exhibitStoreFolder() + L" -> " + workingFolder(),
+	            hr, Footprint::USB_WRITE);
+	return hr;
+}
+
 /*! Raw extraction of a batch of hives, then repair of the working copies:
  *  transaction log replay, patch as a fallback.
  *
@@ -269,14 +287,7 @@ HRESULT extractHiveSet(const std::vector<std::wstring>& hivePaths,
 	 *  identified: their working copy is made, verified by fingerprint, and
 	 *  everything that follows applies to it alone. */
 	{
-		size_t copies = 0;
-		unsigned long long bytes = 0;
-		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
-		auditRecord(L"Copy of the exhibit store into the working directory ("
-		            + std::to_wstring(copies) + L" file(s), "
-		            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
-		            exhibitStoreFolder() + L" -> " + workingFolder(),
-		            hrCopy, Footprint::USB_WRITE);
+		const HRESULT hrCopy = storeToWorking();
 		if (FAILED(hrCopy)) return hrCopy;     // without a working copy, nothing follows
 		if (hrCopy == S_FALSE) hr = S_FALSE;
 	}
@@ -517,6 +528,8 @@ HRESULT ExtractFileArtefactsRaw() {
 			const std::wstring name = file.substr(file.rfind(L'\\') + 1);
 			addTarget(file.substr(0, file.rfind(L'\\')), { name, name + L".old" });
 		}
+	// IIS 5.1 and 6 (XP, Server 2003): their metabase, collected raw.
+	if (conf.artefacts.webServer) addTarget(L"\\Windows\\System32\\inetsrv", { L"MetaBase.xml", L"MBSchema.xml" });
 	// The Intune Management Extension's logs, where it is installed.
 	if (conf.artefacts.intuneLogs) addTarget(INTUNE_LOGS_FOLDER, { L".log" });
 	// hosts has no extension: the whole folder, a handful of small files.
@@ -612,6 +625,35 @@ HRESULT ExtractFileArtefactsRaw() {
 		std::wstring skipped = L"";            //!< a subfolder another artefact extracts, same form as absolute; empty for none
 	};
 	std::vector<Tree> trees;
+	/* IIS: its configuration first, raw — it names the folders of the
+	   sites and of the logs, taken next (web_server.h). Without IIS, the
+	   folder is absent: nothing taken, nothing failed. */
+	if (conf.artefacts.webServer) {
+		const std::wstring configuration = iisConfigurationFile();
+		const std::wstring folder = configuration.substr(0, configuration.rfind(L'\\'));
+		size_t extracted = 0;
+		std::wstring diagnostic;
+		std::vector<RawHiveExtraction> reading;
+		const HRESULT hr = ExtractDirectoryRaw(volumeOfPath(folder), pathRelativeToVolume(folder), exhibitTarget(folder),
+		                                       { L"applicationHost.config", L"administration.config", L"redirection.config" },
+		                                       &extracted, &diagnostic, &reading);
+		ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volumeOfPath(folder)
+		                        + L": — $MFT, directory indexes, $DATA attribute); no file opened by the system");
+		auditRecord(L"Raw extraction of IIS's configuration (" + std::to_wstring(extracted) + L" file(s) — " + diagnostic + L")",
+		            L"\\\\.\\" + volumeOfPath(folder) + L":" + pathRelativeToVolume(folder), hr, Footprint::VOLUME_BRUT);
+		total += extracted;
+		if (hr != S_OK) global = S_FALSE;
+		/* The configuration is read in its working copy, made now: the
+		   exhibit store is never read after its copy (it used to be read
+		   there — absent, the sites' folders were never taken). */
+		if (storeToWorking() != S_OK) global = S_FALSE;
+		const IisSources iis = iisSources(readIisConfiguration());
+		//! Deepest folder walked in a site: far below any real site's tree.
+		const unsigned SITE_DEPTH = 32;
+		for (const std::wstring& site : iis.siteFolders) trees.push_back({ site, {}, SITE_DEPTH, L"IIS site's content" });
+		for (const std::wstring& logs : iis.logFolders) trees.push_back({ logs, { L".log" }, 3, L"IIS logs" });
+		trees.push_back({ iis.historyFolder, { L".config" }, 2, L"IIS configuration history" });
+	}
 	if (conf.artefacts.scheduledTasks)
 		trees.push_back({ L"\\Windows\\System32\\Tasks", {}, 8, L"scheduled task definitions" });
 	if (conf.artefacts.errorReports) {
@@ -869,14 +911,7 @@ HRESULT ExtractFileArtefactsRaw() {
 	 *  what the tool believes it does, which is precisely what must be
 	 *  checkable from outside. */
 	{
-		size_t copies = 0;
-		unsigned long long bytes = 0;
-		const HRESULT hrCopy = ExhibitStoreToWorking(&copies, &bytes);
-		auditRecord(L"Copy of the exhibit store into the working directory ("
-		            + std::to_wstring(copies) + L" file(s), "
-		            + std::to_wstring(bytes / 1024 / 1024) + L" MiB)",
-		            exhibitStoreFolder() + L" -> " + workingFolder(),
-		            hrCopy, Footprint::USB_WRITE);
+		const HRESULT hrCopy = storeToWorking();
 		if (FAILED(hrCopy)) return hrCopy;
 		if (hrCopy == S_FALSE) global = S_FALSE;
 	}

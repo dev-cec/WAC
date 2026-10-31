@@ -310,6 +310,15 @@ publishes an evaluation medium, and its media without a key do not install
 unattended; the cycle of Windows~XP, same kernel and same
 \fichier{WAC32.exe}, covers it.
 
+On a server, the harness installs IIS (the \texttt{Web-Server} role) if it
+is missing, drops a witness page whose SHA-256 it records, requests it with
+a unique token in the query, and adds a witness native module to the global
+modules, declared 32-bit so that the 64-bit pool never loads it. Its
+references come from \texttt{appcmd}, IIS's own tool, not from the file
+\wac{} reads: sites (id, name, physical path of the root), pools and their
+identity, modules, the token's request in the logs (status, time within
+120~s) and the page's hash in the exhibit store's manifest.
+
 \section{Checking the outputs}
 
 \begin{lstlisting}

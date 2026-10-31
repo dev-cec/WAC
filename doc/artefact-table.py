@@ -130,10 +130,17 @@ PHRASES = [
     ("XML, registry values", "XML, valeurs de registre"),
     ("VSS catalog and stores, 16 KiB blocks", "catalogue et magasins VSS, blocs de 16 Kio"),
     ("PowerShell script", "script PowerShell"),
+    ("IIS 7 and later:", "IIS 7 et suivants :"),
+    ("IIS 5.1 and 6:", "IIS 5.1 et 6 :"),
+    ("W3SVC<n> logs", "journaux W3SVC<n>"),
+    ("IIS metabase XML", "métabase d'IIS en XML"),
+    ("XML; W3C text, UTC", "XML ; texte W3C, UTC"),
 ]
 # Whole cells that are one word.
 WHOLE = {"files": "fichiers", "text": "texte", "observation": "observation"}
 NOTES = {
+    "Present only where IIS is installed; Apache and nginx are not read yet.":
+        "Présent seulement là où IIS est installé ; Apache et nginx ne sont pas encore lus.",
     "What a deleted file still holds depends on the disk: a solid-state drive that received TRIM returns zeros for the freed clusters, declared as such, never as the content.":
         "Ce qu'un fichier supprimé garde dépend du disque : un SSD qui a reçu TRIM rend des zéros pour les clusters libérés, déclarés comme tels, jamais comme le contenu.",
     "Still written by Windows 11 (measured, build 26200), though the Timeline is no longer shown. Server editions to be measured.":

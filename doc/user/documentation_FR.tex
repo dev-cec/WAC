@@ -429,6 +429,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   user_shell_folders:      true   # où sont vraiment le Bureau, les Documents, les Téléchargements de chacun
   usn_journal:             true   # $UsnJrnl:$J : créations, renommages, suppressions
   web_client:              true   # navigateurs Chromium et Firefox : visites, téléchargements, recherches ; leurs bases copiées brutes
+  web_server:              true   # IIS : sites, pools d'applications, modules natifs, journaux des requêtes ; dossier de chaque site copié entier
   wmi:                     true   # dépôt WMI lu hors ligne : abonnements (filtres, consommateurs, liaisons)
   word_wheel_query:        true   # recherches de l'Explorateur
   zone_identifiers:        true   # flux Zone.Identifier : d'où viennent les fichiers téléchargés
@@ -1608,6 +1609,40 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         convertie en UTC avec le décalage en vigueur à sa date. La base est
         copiée vivante avec ses journaux : ses dernières entrées peuvent n'être
         que dans ceux-ci (rejeu \texttt{esentutl /r} par l'analyste).
+  \item[\fichier{web\_server\_sites.json}, \fichier{web\_server\_application\_pools.json}, \fichier{web\_server\_modules.json}]
+        le serveur web IIS (7 et suivants) ; sa configuration est lue dans
+        \path|inetsrv\config\applicationHost.config|. Chaque site avec ses
+        attributs tels qu'IIS les stocke (nom, \champ{Id}\ldots), ses
+        liaisons (\champ{Bindings} : protocole, adresse et port, nom d'hôte),
+        ses applications et leurs répertoires virtuels : \champ{PhysicalPath}
+        tel qu'écrit, et \champ{PhysicalPathResolved}, le même avec ses
+        variables d'environnement développées ; ses réglages de journal et le dossier
+        de ses journaux (\champ{LogFolder}) ; chaque pool d'applications avec
+        son \champ{ProcessModel} (l'identité sous laquelle tournent ses
+        processus : un pool passé en \texttt{LocalSystem} exécute chaque page
+        qu'il sert en tant que système) ; chaque module natif chargé dans
+        chaque processus (\path|globalModules| : nom, \champ{Image},
+        \champ{PreCondition}) --- un module ajouté là voit chaque requête,
+        une porte dérobée connue. Un mot de passe de pool ou de répertoire
+        virtuel reste tel qu'IIS l'a chiffré. La collecte prend la
+        configuration d'abord, puis le dossier de chaque site en entier (le
+        code, les données, et ce qu'un intrus y a déposé : un web shell),
+        sauf un site posé à la racine d'un volume, l'historique de la
+        configuration (\path|inetpub\history|, les états antérieurs qu'IIS
+        garde lui-même) et les dossiers des journaux. IIS~5.1 et~6
+        (Windows~XP, Server~2003) gardent leur configuration dans
+        \fichier{MetaBase.xml} : elle est copiée brute, non convertie.
+  \item[\fichier{web\_server\_logs.json}] un objet par requête des journaux
+        d'IIS (\path|W3SVC<id>\u_ex<date>.log|, format W3C étendu) et de ceux
+        de HTTP.sys (\path|System32\LogFiles\HTTPERR|, les requêtes refusées
+        avant qu'un site les voie) : \champ{Time} (UTC, comme IIS l'écrit),
+        \champ{Method}, \champ{UriStem}, \champ{UriQuery},
+        \champ{ClientAddress}, \champ{UserName}, \champ{UserAgent},
+        \champ{Status}, \champ{TimeTakenMs}, \champ{Reason}
+        (HTTPERR)\ldots, \champ{File} et \champ{Line}. Un champ qu'IIS écrit
+        \texttt{-} n'est pas émis ; un champ que WAC ne nomme pas garde son
+        propre nom. Un journal dans un autre format (IIS, NCSA, personnalisé)
+        est copié brut, non converti.
   \item[\fichier{dpapi\_master\_keys.json}] clés maîtresses DPAPI du système
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System}) et
         de chaque profil (\path|AppData\Roaming\Microsoft\Protect|,

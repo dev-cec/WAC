@@ -87,7 +87,7 @@
 \texttt{jump\_lists} & Windows 7 & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Recent\textbackslash{}AutomaticDestinations, CustomDestinations} & OLE compound file, DestList version 1 & yes \\
  & Windows 10 & \texttt{the same folders} & OLE compound file, DestList version 3 and 4 & yes \\
  & Windows 11 & \texttt{the same folders} & OLE compound file, DestList version 6 & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape DestList version 6 measured on build 26200; the custom lists (CustomDestinations) carry version 2 in their header, any other is not read.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape DestList version 6 measured on build 26200; the custom lists (CustomDestinations) carry no version.} \\
 \addlinespace
 \texttt{known\_networks} & Windows Vista & \texttt{SOFTWARE\textbackslash{}Microsoft\textbackslash{}Windows NT\textbackslash{}CurrentVersion\textbackslash{}NetworkList} & registry keys, SYSTEMTIME dates & yes \\
 \addlinespace
@@ -254,6 +254,10 @@
  & Windows 8 & \texttt{Internet Explorer 10 and 11, Edge Legacy: …\textbackslash{}WebCache\textbackslash{}WebCacheV01.dat} & ESE & yes \\
  & Windows 10 & \texttt{…and Chromium browsers, Firefox: History, places.sqlite, session files} & SQLite, SNSS, mozLz4 & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chromium and Firefox depend on the browser installed, not on Windows.} \\
+\addlinespace
+\texttt{web\_server} & Windows XP & \texttt{IIS 5.1 and 6: Windows\textbackslash{}System32\textbackslash{}inetsrv\textbackslash{}MetaBase.xml, W3SVC\textless{}n\textgreater{} logs} & IIS metabase XML & no \\
+ & Windows Vista & \texttt{IIS 7 and later: Windows\textbackslash{}System32\textbackslash{}inetsrv\textbackslash{}config\textbackslash{}applicationHost.config, inetpub\textbackslash{}logs\textbackslash{}LogFiles} & XML; W3C text, UTC & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only where IIS is installed; Apache and nginx are not read yet.} \\
 \addlinespace
 \texttt{wmi} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository\textbackslash{}FS} & CIM repository of Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, in FS) & yes \\
  & Windows Vista & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository} & CIM repository (INDEX.BTR, OBJECTS.DATA, MAPPING) & yes \\

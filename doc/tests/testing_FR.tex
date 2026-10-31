@@ -320,6 +320,15 @@ n'est pas mesuré : Microsoft ne publie plus de média d'évaluation, et ses mé
 sans clé ne s'installent pas sans intervention ; le cycle de Windows~XP, même
 noyau et même \fichier{WAC32.exe}, le couvre.
 
+Sur un serveur, le harnais installe IIS (rôle \texttt{Web-Server}) s'il
+manque, y pose une page témoin dont il relève le SHA-256, la demande avec un
+jeton unique dans la requête, et ajoute aux modules globaux un module natif
+témoin, déclaré 32~bits pour que le pool 64~bits ne le charge jamais. Ses
+références viennent d'\texttt{appcmd}, l'outil d'IIS, et non du fichier que
+lit \wac{} : sites (identifiant, nom, chemin physique de la racine), pools et
+leur identité, modules, la requête du jeton dans les journaux (statut, heure
+à 120~s près) et l'empreinte de la page dans le manifeste de la consigne.
+
 \section{Contrôler les sorties}
 
 \begin{lstlisting}

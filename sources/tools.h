@@ -159,6 +159,7 @@ struct AppliConf {
 		bool dpapiMasterKeys = true;  //!< DPAPI master keys of each profile and of the system, copied encrypted; their metadata
 		bool userShellFolders = true; //!< each user's shell folders (User Shell Folders): where desktop and documents really are
 		bool webClient = true;        //!< the browsers: visits, downloads, searches (Chromium History), their databases raw
+		bool webServer = true;        //!< IIS: its configuration, logs and sites' content (web_server.h)
 		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy
 		bool security = true;         //!< SECURITY hive: LSA secrets' names and dates, cached logons, audit policy
 		bool persistence = true;      //!< registry persistence beyond Run: IFEO, AppInit, Winlogon, LSA, COM…

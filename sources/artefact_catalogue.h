@@ -72,6 +72,11 @@ struct ArtefactForm {
 	 *  what pieceFormat recognises it by. Empty when the format carries none,
 	 *  or while no collector asks. */
 	std::vector<unsigned> signatures = {};
+	/*! For a source that exists only once a role is installed (IIS): the
+	 *  file, from the system volume's root, whose absence from the
+	 *  collection means there is nothing — not a form without decoder.
+	 *  nullptr for a source every machine of the version has. */
+	const wchar_t* installedPiece = nullptr;
 };
 
 /*! What WAC does of a piece, judged on what the piece states of itself. */

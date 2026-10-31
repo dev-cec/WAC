@@ -119,6 +119,7 @@ artefacts:
   user_shell_folders:      true   # where each user's desktop, documents, downloads really are (OneDrive, another disk, a share)
   usn_journal:             true   # $UsnJrnl:$J: creations, renames, deletions (usn_journal.json)
   web_client:              true   # browsers: visits, downloads, searches (Edge, Chrome, Brave, Vivaldi, Opera); their databases copied raw
+  web_server:              true   # IIS: sites, application pools, native modules, request logs; each site's folder copied whole
   wmi:                     true   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
   word_wheel_query:        true   # terms searched in Explorer
   zone_identifiers:        true   # Zone.Identifier streams (Mark of the Web): where downloaded files came from

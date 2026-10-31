@@ -426,6 +426,7 @@ artefacts:              # one key per artefact; a missing key is true
   user_shell_folders:      true   # where each user's desktop, documents, downloads really are (OneDrive, another disk, a share)
   usn_journal:             true   # $UsnJrnl:$J: creations, renames, deletions (usn_journal.json)
   web_client:              true   # browsers: visits, downloads, searches (Edge, Chrome, Brave, Vivaldi, Opera); their databases copied raw
+  web_server:              true   # IIS: sites, application pools, native modules, request logs; each site's folder copied whole
   wmi:                     true   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
   word_wheel_query:        true   # terms searched in Explorer
   zone_identifiers:        true   # Zone.Identifier streams (Mark of the Web): where downloaded files came from
@@ -1558,6 +1559,38 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         converted to UTC with the offset in force at its date. The database is
         copied live with its logs: its last entries may be only there
         (\texttt{esentutl /r} replay by the analyst).
+  \item[\fichier{web\_server\_sites.json}, \fichier{web\_server\_application\_pools.json}, \fichier{web\_server\_modules.json}]
+        the web server IIS (7 and later), read in its configuration
+        \path|inetsrv\config\applicationHost.config|. Each site with its
+        attributes as IIS stores them (name, \champ{Id}\ldots), its bindings
+        (\champ{Bindings}: protocol, address and port, host name), its
+        applications and their virtual directories (\champ{PhysicalPath} as
+        written, \champ{PhysicalPathResolved} with its environment variables
+        expanded), its log settings and the folder of its logs
+        (\champ{LogFolder}); each application pool with its
+        \champ{ProcessModel} (the identity its workers run under: a pool
+        switched to \texttt{LocalSystem} runs every page it serves as the
+        system); each native module loaded in every worker
+        (\path|globalModules|: name, \champ{Image}, \champ{PreCondition}) ---
+        a module added there sees every request, a known backdoor. A password
+        of a pool or a virtual directory stays as IIS encrypted it. The
+        collection takes the configuration first, then each site's folder
+        whole (code, data, and what an attacker dropped among them: a web
+        shell), except a site rooted at a volume's root, the configuration's
+        history (\path|inetpub\history|, the earlier states IIS keeps itself)
+        and the log folders. IIS~5.1 and~6 (Windows XP, Server~2003) keep
+        their configuration in \fichier{MetaBase.xml}: it is copied raw, not
+        converted.
+  \item[\fichier{web\_server\_logs.json}] one object per request in IIS's
+        logs (\path|W3SVC<id>\u_ex<date>.log|, W3C extended format) and in
+        those of HTTP.sys (\path|System32\LogFiles\HTTPERR|, the requests
+        refused before any site saw them): \champ{Time} (UTC, as IIS writes
+        it), \champ{Method}, \champ{UriStem}, \champ{UriQuery},
+        \champ{ClientAddress}, \champ{UserName}, \champ{UserAgent},
+        \champ{Status}, \champ{TimeTakenMs}, \champ{Reason} (HTTPERR)\ldots,
+        \champ{File} and \champ{Line}. A field IIS writes \texttt{-} is not
+        emitted; a field WAC does not name keeps its own. A log in another
+        format (IIS, NCSA, custom) is copied raw, not converted.
   \item[\fichier{dpapi\_master\_keys.json}] DPAPI master keys of the system
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System})
         and of each profile (\path|AppData\Roaming\Microsoft\Protect|,
