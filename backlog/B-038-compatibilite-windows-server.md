@@ -28,7 +28,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Images des versions serveur (2012 R2 à 2025, évaluation) et profils de create-vm.sh ; Server 2022 créée
-- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2, 2012, 2008 R2 et 2016 verts le 2026-10-31 ; 2019, 2025, 2003 à faire), écarts départagés
+- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2, 2012, 2008 R2, 2016 et 2019 verts le 2026-10-31 ; 2025, 2003 à faire), écarts départagés
 - [ ] Artefacts propres aux rôles (à répartir avec B-035 pour IIS)
 - [ ] Server Core
 - [ ] Contrôleur de domaine : `NTDS.dit` (à étudier)
@@ -67,4 +67,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
 - 2026-10-31 : Server 2019 (17763, fr-FR, Defender 4.18.1807) créé par `create-vm.sh srv2019` ; premier cycle **461 ✅, 4 ❌** (deux écarts, vus aux deux collectes), départagés :
   - **WAC** : le sac ThreatTracking d'une détection Defender était lu après un en-tête fixe de 24 octets (Windows 11) ; Defender 4.18.1807 n'en écrit aucun, ses 8 propriétés étaient perdues sans erreur (masqué au premier cycle par l'écart de taille, seul affiché). Corrigé : 1fa27e86, mesuré sur les fichiers réels de 2019 et de Windows 11 ;
   - **harnais** : la quarantaine de ce Defender ne garde pas la taille du fichier (pas d'étiquette 0x012, dates exactes) ; la valeur de registre `{27B8FB78-…}` de la clé Scan donne une clé de 32 chiffres hexadécimaux, nom de Windows. Corrigé : 4c7d270e.
-  Second cycle à lancer.
+- 2026-10-31 : **Server 2019 vert : 466 ✅, 0 ❌** (second cycle, après 1fa27e86 et 4c7d270e) ; ThreatTrackingSha1 de la détection égal au contenu mis en quarantaine. Suite : Server 2025.
