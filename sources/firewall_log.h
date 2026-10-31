@@ -19,21 +19,21 @@
  *  (Windows XP: `Windows\pfirewall.log`), where a log may stay after its path
  *  was changed.
  *
- *  THE FORMAT, W3C-like text: "#Version: 1.5", "#Software: Microsoft Windows
- *  Firewall", "#Time Format: Local", "#Fields: date time action protocol
- *  src-ip dst-ip src-port dst-port size tcpflags tcpsyn tcpack tcpwin
- *  icmptype icmpcode info path [pid]", then one line per connection, the
- *  fields separated by spaces, "-" for a field without value. The dates are
- *  in the examined machine's local time: converted with its time zone
- *  (suspectLocalToUtc), as every local date of WAC.
+ *  THE FORMAT, W3C extended text (w3c_log.h): "#Version: 1.5", "#Software:
+ *  Microsoft Windows Firewall", "#Time Format: Local", "#Fields: date time
+ *  action protocol src-ip dst-ip src-port dst-port size tcpflags tcpsyn
+ *  tcpack tcpwin icmptype icmpcode info path [pid]", then one line per
+ *  connection. The dates are in the examined machine's local time:
+ *  converted with its time zone (suspectLocalToUtc), as every local date of
+ *  WAC.
  */
 #pragma once
 
 #include <string>
-#include <utility>
 #include <vector>
 #include <windows.h>
 #include "tools.h"
+#include "w3c_log.h"
 
 /*! The firewall's logs the examined registry names, and the defaults: each
  *  once, case ignored, absolute; the rotated `.old` of each is not listed.
@@ -41,22 +41,11 @@
  *  settings are not read; the defaults stay). */
 std::vector<std::wstring> firewallLogFiles();
 
-/*! One line of the log: one connection allowed or dropped. */
-struct FirewallLogEntry {
-	std::wstring file;              //!< the log on the examined machine
-	unsigned long long line = 0;    //!< its line, from 1
-	FILETIME timeLocal = { 0 };     //!< date and time, local time as written; 0 if unreadable
-	bool timeIsLocal = true;        //!< false when the header names another time format: the date is then given as stored
-	std::wstring timeAsStored;      //!< "2026-10-24 15:01:02", given when it is not converted
-	std::vector<std::pair<std::wstring, std::wstring>> fields; //!< the other fields, by their JSON key, "-" left out
-	Json toJson() const;            //!< @return the entry as a JSON object
-};
-
-/*! Reads the lines of a log.
+/*! Reads the lines of a log: one connection allowed or dropped each.
  *  @param text the log, decoded
  *  @param file its path on the examined machine, recorded in each entry
  *  @return the entries, in the log's order; a line before any "#Fields:" is skipped */
-std::vector<FirewallLogEntry> parseFirewallLog(const std::wstring& text, const std::wstring& file);
+std::vector<W3cLogEntry> parseFirewallLog(const std::wstring& text, const std::wstring& file);
 
 /*! The firewall's logs (firewall_log.json). */
 class FirewallLog {
@@ -65,5 +54,5 @@ public:
 	HRESULT toJson();           //!< @return the result of the write
 	void clear();               //!< releases the entries
 private:
-	std::vector<FirewallLogEntry> entries_;
+	std::vector<W3cLogEntry> entries_;
 };

@@ -126,23 +126,23 @@ void firewallLog() {
 		L"2026-10-24 15:01:02 DROP TCP 192.168.1.20 192.168.1.10 51234 445 52 S 1234567 0 64240 - - - RECEIVE 4\r\n"
 		L"2026-10-24 15:01:03 ALLOW UDP 192.168.1.10 8.8.8.8 60000 53 0 - - - - - - - SEND 1312\r\n"
 		L"2026-02-31 00:00:00 ALLOW TCP 10.0.0.1 10.0.0.2 1 2 0 - - - - - - - SEND 1\r\n";
-	const std::vector<FirewallLogEntry> e = parseFirewallLog(text,
+	const std::vector<W3cLogEntry> e = parseFirewallLog(text,
 		L"C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.log");
 	check(e.size() == 3, "firewall log: 3 lines after the header, the line before it skipped");
 	if (e.size() != 3) return;
-	auto field = [](const FirewallLogEntry& x, const wchar_t* key) {
+	auto field = [](const W3cLogEntry& x, const wchar_t* key) {
 		for (const auto& [k, v] : x.fields) if (k == key) return v;
 		return std::wstring();
 	};
 	FILETIME expected;
-	check(iso8601UtcToFiletime(L"2026-10-24T15:01:02Z", expected) && value(e[0].timeLocal) == value(expected) && e[0].timeAsStored.empty(),
+	check(iso8601UtcToFiletime(L"2026-10-24T15:01:02Z", expected) && value(e[0].time) == value(expected) && e[0].timeAsStored.empty(),
 	      "firewall log: local date and time read, behind the zeros Windows left before them");
 	check(e[0].line == 7 && e[1].line == 8, "firewall log: lines counted from 1, the empty one included");
 	check(field(e[0], L"Action") == L"DROP" && field(e[0], L"SourceAddress") == L"192.168.1.20"
 	      && field(e[0], L"DestinationPort") == L"445" && field(e[0], L"Direction") == L"RECEIVE" && field(e[0], L"ProcessId") == L"4",
 	      "firewall log: the fields named by #Fields:");
 	check(field(e[1], L"TcpFlags").empty() && e[1].fields.size() == 9, "firewall log: a \"-\" left out");
-	check(value(e[2].timeLocal) == 0 && e[2].timeAsStored == L"2026-02-31 00:00:00", "firewall log: an impossible date given as stored");
+	check(value(e[2].time) == 0 && e[2].timeAsStored == L"2026-02-31 00:00:00", "firewall log: an impossible date given as stored");
 	check(parseFirewallLog(L"2026-10-24 15:01:02 DROP TCP\r\n", L"x").empty(), "firewall log: no line without a #Fields: header");
 }
 
