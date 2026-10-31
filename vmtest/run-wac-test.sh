@@ -283,8 +283,10 @@ if wants sysmon events && [[ -f "$HERE/tools/sysmon/bin/$SYSMON_EXE" ]] \
 fi
 remove_sysmon() {
   [[ -n "$SYSMON_PLACED" ]] || return 0
-  $QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\sysmon-witness.ps1" -Action Remove -Folder "$VMDIR" >/dev/null 2>&1 \
-    && echo "   Sysmon witness removed" || echo "   ❌ Sysmon witness NOT removed: sysmon-witness.ps1 -Action Remove in the VM"
+  local error
+  error=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\sysmon-witness.ps1" -Action Remove -Folder "$VMDIR" 2>&1 >/dev/null) \
+    && echo "   Sysmon witness removed" \
+    || echo "   ❌ Sysmon witness NOT removed: sysmon-witness.ps1 -Action Remove in the VM: $(printf '%s' "$error" | tr -d '\r' | grep -v '^#< CLIXML' | sed 's/<[^>]*>//g' | head -c 400)"
   $QGA run --shell "del $VMDIR\\sysmon-witness.ps1 2>nul & exit /b 0" >/dev/null 2>&1 || true
   SYSMON_PLACED=""
 }

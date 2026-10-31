@@ -43,7 +43,12 @@ function Native([string]$program, [string[]]$arguments) {
 function Uninstall {
     $installed = Join-Path $env:windir $exe
     if (Test-Path -LiteralPath $installed) { Native $installed @('-u', 'force') | Out-Null }
-    # -u leaves the executable in the Windows folder (measured, Sysmon 15.2).
+    # -u leaves the executable in the Windows folder (measured, Sysmon 15.2),
+    # still held a moment after it returns on Server 2025: its removal failed
+    # once (2026-10-31), the configuration after it left in place. Retried.
+    for ($try = 0; (Test-Path -LiteralPath $installed) -and $try -lt 30; $try++) {
+        try { Remove-Item -LiteralPath $installed -Force -ErrorAction Stop } catch { Start-Sleep 1 }
+    }
     foreach ($path in @($installed, $archive, $witness, $config,
                         "$env:windir\System32\winevt\Logs\Microsoft-Windows-Sysmon%4Operational.evtx")) {
         if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Recurse -Force }
