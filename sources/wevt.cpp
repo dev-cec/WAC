@@ -216,9 +216,7 @@ std::wstring formatItemValue(const WevtItem& item, const WevtValueMap* map, cons
 		wchar_t* end = nullptr;
 		const double number = wcstod(value.c_str(), &end);
 		if (value.empty() || !end || *end != 0) return value;
-		wchar_t formatted[64];
-		swprintf(formatted, 64, L"%.15g", number);
-		return formatted;
+		return realText(number, 15);
 	}
 	if (item.inType == IN_BINARY) {
 		// An AF_INET sockaddr, as hexadecimal text: family (2, little-endian), port and address in network order.

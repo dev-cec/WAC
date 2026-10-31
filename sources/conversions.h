@@ -125,7 +125,8 @@ std::wstring to_hex(T value, int minDigits = 2, HexLetters letters = HexLetters:
 }
 
 /*! A real in text with `digits` significant digits (printf's %g): 9 give a
- *  float back exactly, 17 a double. ESE and CIM columns.
+ *  float back exactly, 17 a double — ESE and CIM columns; 15, a double of an
+ *  event as Windows renders it.
  *  @param value the real
  *  @param digits the significant digits
  *  @return its text */
@@ -135,10 +136,10 @@ inline std::wstring realText(double value, int digits) {
 	return text;
 }
 
-/*! A real as Windows renders it in an event: the shortest text that reads
- *  back to the same value, per its own width — a float gives "0.0020121",
- *  zero gives "0". A fixed 6 decimals ("0.002012") lost digits (B-015,
- *  against Windows' XML).
+/*! A float of an event: the shortest text that reads back to the same
+ *  value at its own width — "0.0020121", zero "0". A fixed 6 decimals
+ *  ("0.002012") lost digits. A double is not written so: Windows gives it
+ *  15 significant digits (realText).
  *  @tparam Real float or double: the width decides the digits
  *  @param value the real
  *  @return its text, empty if it cannot be written */

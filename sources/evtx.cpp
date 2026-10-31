@@ -177,9 +177,11 @@ private:
 			return shortestRealText(f);
 		}
 		case T_REAL64: {
+			// 15 significant digits, as Windows' XML: 13437911542.342863 is
+			// "13437911542.3429" there (AppReadiness, Server 2022 Core).
 			if (size < 8) return L"";
 			double v; uint64_t u = readLittleEndian<uint64_t>(c, tc, off); memcpy(&v, &u, 8);
-			return shortestRealText(v);
+			return realText(v, 15);
 		}
 		case T_BOOL:
 			// 32 bits, not a byte: "true" whatever the non-zero value.

@@ -1770,6 +1770,48 @@ void customDestinationCategoriesRead() {
 	check(customDestinationCategories(f.data(), 10).empty(), "custom jump list: a header cut short gives none");
 }
 
+/*! An .evtx forged here: one record, a template instance whose element <E>
+ *  holds one substitution, a double (BinXML type 0x0C). Windows' XML gives
+ *  it 15 significant digits: 13437911542.342863 is "13437911542.3429" there
+ *  (AppReadiness, Server 2022 Core); the shortest text kept 17. */
+void evtxDoubleAsWindows() {
+	const std::filesystem::path file = std::filesystem::temp_directory_path() / L"wac-double.evtx";
+	std::vector<uint8_t> f(4096 + 65536, 0);
+	std::memcpy(f.data(), "ElfFile", 8);
+	writeLittleEndian<uint16_t>(f.data() + 42, 1);
+	uint8_t* c = f.data() + 4096;
+	std::memcpy(c, "ElfChnk", 8);
+	writeLittleEndian<uint32_t>(c + 48, 629);                  // the live records end
+	writeLittleEndian<uint32_t>(c + 512, 0x2a2a);              // the record: signature, size, id
+	writeLittleEndian<uint32_t>(c + 516, 117);
+	writeLittleEndian<uint64_t>(c + 520, 1);
+	const uint8_t document[] = {
+		0x0F, 0x01, 0x01, 0x00,                                // fragment header
+		0x0C, 0x01, 0, 0, 0, 0, 38, 0x02, 0, 0,                // template instance, its definition in place (550)
+		0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   // definition: next, GUID
+		34, 0, 0, 0,                                           // its fragment's size
+		0x0F, 0x01, 0x01, 0x00,                                // the fragment: header
+		0x01, 0xFF, 0xFF, 22, 0, 0, 0, 0x4D, 0x02, 0, 0,       // <E: dependency, size, name at 589 (in place)
+		0, 0, 0, 0, 0, 0, 1, 0, 'E', 0, 0, 0,                  // the name: 1 character, "E", terminator
+		0x02,                                                  // >
+		0x0D, 0, 0, 0x0C,                                      // substitution 0, a double
+		0x04, 0x00,                                            // </E>, end of the fragment
+		1, 0, 0, 0, 8, 0, 0x0C, 0,                             // the values: one, 8 bytes, a double
+		0, 0, 0, 0, 0, 0, 0, 0,                                // its bytes, written below
+		0x00 };                                                // end of the document
+	std::memcpy(c + 536, document, sizeof document);
+	const double elapsed = 13437911542.342863;
+	std::memcpy(c + 616, &elapsed, 8);
+	writeLittleEndian<uint32_t>(c + 625, 117);                 // the size, again at the end
+	std::ofstream(file, std::ios::binary).write(reinterpret_cast<const char*>(f.data()), (std::streamsize)f.size());
+	std::vector<std::wstring> xml;
+	check(EvtxReadFile(file.wstring(), [&](const EvtxRecord& e) { xml.push_back(e.xml); return true; }) == ERROR_SUCCESS
+	      && xml.size() == 1 && xml[0] == L"<E>13437911542.3429</E>",
+	      "evtx: a double written with Windows' 15 significant digits");
+	std::error_code ec;
+	std::filesystem::remove(file, ec);
+}
+
 /*! An .evtx forged here: one record, an element <E> whose content is a CDATA
  *  section "ab". Its token is the type, a length in characters, the UTF-16
  *  text; read with a name's layout (length at 6, text at 8), the text came
@@ -2506,6 +2548,7 @@ int wmain(int argc, wchar_t** argv) {
 	prefetchVersion17();
 	classicEventLog();
 	evtxCdata();
+	evtxDoubleAsWindows();
 	wevtOffsetsNear4GiB();
 	ieIndexRecordInsideAnOlder();
 	xmlCdataAndAstralReference();
