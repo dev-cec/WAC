@@ -3046,7 +3046,7 @@ def check_small_file_artefacts(folder):
             r = next((r for r in (entry or {}).get("Resources") or [] if (r.get("Path") or "").lower() == path.lower()), None)
             eicar_sha1 = hashlib.sha1(b"X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*").hexdigest().upper()
             tracking = {t.get("Name"): t.get("Value") for t in d.get("ThreatTracking") or []}
-            wrong = []
+            wrong, size_kept = [], True
             if r is None:
                 wrong.append(f"entry {d.get('QuarantineEntryId') or 'of ' + path} or its resource absent")
             else:
@@ -3055,11 +3055,16 @@ def check_small_file_artefacts(folder):
                 if linked and ((r.get("CreatedUtc") or "")[:19] != "2021-01-02T03:04:05"
                                or (r.get("ModifiedUtc") or "")[:19] != "2022-03-04T05:06:07"):
                     wrong.append(f"dates {r.get('CreatedUtc')} / {r.get('ModifiedUtc')}")
-                if linked and r.get("Size") != 68:
+                # Defender 4.18.1807, as Server 2019 installs it, keeps the
+                # file's dates but not its size (no tag 0x012 in the entry,
+                # measured on 2026-10-31); later platforms keep it.
+                size_kept = "Size" in r or (examined_build(folder) or 0) > 17763
+                if linked and size_kept and r.get("Size") != 68:
                     wrong.append(f"size {r.get('Size')}")
                 if linked and (tracking.get("ThreatTrackingSha1") or "").upper() != r.get("ContentSha1"):
                     wrong.append("ThreatTrackingSha1 of the detection differs from the quarantined content")
-            report(not wrong, f"defender_quarantine.json: {path} " + ("with its dates, size and SHA-1" if linked else
+            report(not wrong, f"defender_quarantine.json: {path} " + (("with its dates, size and SHA-1" if size_kept else
+                   "with its dates and SHA-1 (no size kept by this Defender)") if linked else
                    "found by its path (no quarantine GUID in the detection, no dates kept: Windows 8.1), its content's size and SHA-1")
                    + ", decrypted in memory only",
                    f"defender_quarantine.json: {wrong[0] if wrong else ''}")
@@ -5134,6 +5139,8 @@ def check_utc_sources(folder):
 
 # Registry value names WAC publishes as Windows writes them (registryNameToJsonKey
 # only drops their separators), whose abbreviation is Windows' choice, not WAC's.
+# A GUID value name (Defender's Scan key on Server 2019) becomes 32 hexadecimal
+# digits, also accepted.
 WINDOWS_VALUE_NAMES = {"NumRssQueues", "NumCoalesce"}   # NumCoalesce: the RTL8139 driver's parameter (Vista)
 
 
@@ -5150,7 +5157,7 @@ def check_key_names(folder):
         if isinstance(o, dict):
             for k, v in o.items():
                 # Names of Windows' own values, kept as Windows writes them.
-                if k in WINDOWS_VALUE_NAMES:
+                if k in WINDOWS_VALUE_NAMES or re.fullmatch(r"[0-9A-F]{32}", k):
                     continue
                 if not re.match(r"^[A-Z][A-Za-z0-9]*$", k) or re.match(r"^(Nb|Num|Tmp)[A-Z]", k) \
                         or re.search(r"(Locale|Nom|Chemin|Taille|Valeur|Fichier)", k):
