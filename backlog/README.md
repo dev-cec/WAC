@@ -58,7 +58,7 @@ aux serveurs (web, Active Directory).
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
 | [B-038](B-038-compatibilite-windows-server.md) | Collecte compatible avec les versions serveur, de Server 2003 à 2026 (prérequis de B-035) | en cours | P3 | fort |
-| [B-035](B-035-web-serveur.md) | Web côté serveur : journaux, code des sites, bases de données (clé `web_server`) — après B-039 et B-038 | à faire | P3 | fort |
+| [B-035](B-035-web-serveur.md) | Web côté serveur : journaux, code des sites, bases de données (clé `web_server`) — après B-039 et B-038 | en cours (lot 1 IIS fait) | P3 | fort |
 | [B-041](B-041-active-directory.md) | Artefacts de compromission d'Active Directory (contrôleurs de domaine) | à faire | P2 | fort |
 
 ## Réalisé
