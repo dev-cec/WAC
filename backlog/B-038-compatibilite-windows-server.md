@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (4.0 : écarts de Server 2022 à départager) | P3 | fort |
+| en cours (4.0 : générations couvertes ; restent les rôles, avec B-035, et le contrôleur de domaine) | P3 | fort |
 
 ## Pourquoi
 Les serveurs sont une cible de premier ordre (contrôleurs de domaine, serveurs web, de fichiers, d'applications), et beaucoup tournent sous des versions anciennes. WAC est développé et éprouvé sur Windows 10 et 11, des postes clients. Demande utilisateur du 2026-10-06 : la collecte doit fonctionner sur les versions serveur, de Windows Server 2003 à 2026. Les artefacts sont sensiblement les mêmes que ceux du client de la même génération. Prérequis de B-035 (web côté serveur).
@@ -28,7 +28,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Images des versions serveur (2012 R2 à 2025, évaluation) et profils de create-vm.sh ; Server 2022 créée
-- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2, 2012, 2008 R2, 2016, 2019, 2025 et 2022 Core verts le 2026-10-31 ; 2003 à faire), écarts départagés
+- [x] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2, 2012, 2008 R2, 2016, 2019, 2025 et 2022 Core verts le 2026-10-31 ; 2003 couvert par le cycle XP, faute de média licite), écarts départagés
 - [ ] Artefacts propres aux rôles (à répartir avec B-035 pour IIS)
 - [x] Server Core (Server 2022 Core vert le 2026-10-31)
 - [ ] Contrôleur de domaine : `NTDS.dit` (à étudier)
@@ -83,3 +83,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
 - 2026-10-31 : décisions de l'utilisateur — (1) sur Server Core, les artefacts de l'Explorateur restent cherchés (pas d'`AbsentFromThisVersion`) ; (2) Server 2003 : aucune clé de produit sur les deux médias (SETUPP.INI sans clé, pas de `CD Key.txt`), l'utilisateur fournit une clé licite, passée par `XP_KEY`, jamais écrite dans le dépôt. Non-régression Windows 11 lancée en attendant.
 - 2026-10-31 : Server 2003, pistes d'évaluation épuisées : Microsoft ne publie plus d'ISO d'évaluation de 2003 ; le seul média officiel encore hébergé, le VHD « Test Drive » de Server 2003 R2 Enterprise SP2 (centre de téléchargement, id 19727), est une évaluation de 30 jours qui « cesse de fonctionner le 16 août 2009 » et ne doit pas être activée (ReadMe) — inutilisable sans contourner l'évaluation, supprimé. Une clé de volume diffusée publiquement a été écartée (pas de licence). En l'absence de clé licite, **la génération 2003 est couverte par le cycle XP** (même noyau NT 5.x, même WAC32), non mesurée sur le serveur lui-même ; le profil `srv2003` de create-vm.sh (branche XP, licence par serveur, fenêtres de connexion coupées) attend une clé licite, non commité tant qu'il n'a pas tourné.
 - 2026-10-31 : **non-régression Windows 11 verte : 543 ✅, 0 ❌** (win11-test, après LZX, Defender, doubles d'événements, catalogue Core, et les changements du harnais). L'écart avec les 553 de la 3.0 : cliché instantané du harnais purgé par Windows pendant le cycle (ses contrôles sautés, bruit), et deux contrôles qui ne tournaient jamais — volumes lus (`SystemDrive`, que WAC n'écrit pas, au lieu de `SystemRoot`) et WebCache contre dissect.esedb (cherché hors de `tools/ese-venv`) ; corrigés, tous deux verts sur les mêmes résultats (4 volumes dont le système ; 349 entrées WebCache identiques).
+- 2026-10-31 : les serveurs mesurés ne sont plus dits « non éprouvés » (console et journal) : seuls Server 2003 et 2008, Server Core hors 2022 et un build plus récent le restent ; documentation FR/EN des serveurs (mesures, variantes LZX, Defender 2016 et 2019, doubles, Core, 2003 couvert par XP) : 6123888e. Le message changé n'a pas encore tourné en VM (texte seul) : à voir au prochain cycle serveur. Restent : artefacts des rôles (avec B-035, IIS), contrôleur de domaine (`NTDS.dit`, à étudier).
