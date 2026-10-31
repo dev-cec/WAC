@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (lot 1 : IIS) | P3 | fort |
+| à valider (lot 1 : IIS, écrit et testé, cycle Server 2022 à passer) | P3 | fort |
 
 ## Pourquoi
 Sur un serveur web, la compromission passe par le site : un webshell déposé, une requête qui l'appelle, un compte ajouté à l'application. Les journaux disent qui a appelé quoi, le code montre ce qui a été déposé, la base de données dit qui pouvait se connecter (un compte ajouté, un mot de passe faible font passer une connexion pour légitime).
@@ -54,3 +54,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-07 : décision utilisateur — version 3.0, avec la rétrocompatibilité.
 - 2026-10-17 : décision utilisateur — version 4.0, avec les serveurs.
 - 2026-10-31 : B-038 terminée pour les générations (rôles restants ici) ; reprise de la fiche, plan en trois lots, lot 1 (IIS) commencé.
+- 2026-10-31 : lot 1 écrit, non commité : lecteur W3C commun (`w3c_log`, le journal du pare-feu y passe, sortie inchangée) ; `web_server` lit `applicationHost.config` (sites, liaisons, applications, répertoires virtuels et chemin résolu, pools et identité, modules globaux, réglages des journaux), convertit les journaux W3C d'IIS et de HTTPERR en UTC, une ligne à la fois (JsonArrayWriter) ; la collecte prend la configuration d'abord (dossier `inetsrv\config`), puis les arbres des sites (en entier, la racine d'un volume exclue), des journaux et de l'historique de la configuration, et `MetaBase.xml` d'IIS 5.1/6 brut. Tests : file_artefacts_test 299 (configuration réaliste, journaux IIS et HTTPERR ; deux mutants pris : dates lues en local, racine de volume prise), artefact_catalogue_test 910. Harnais : témoins IIS sur les serveurs (rôle, page, requête au jeton, module témoin jamais chargé, références appcmd) et check_web_server. Cycle Server 2022 à passer après celui de Server 2003.
