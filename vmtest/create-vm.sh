@@ -498,6 +498,14 @@ for i in $(seq 1 120); do
   if python3 "$HERE/lib/qga.py" --dom "$DOM" ping >/dev/null 2>&1; then
     echo "   ✅ agent operational after ~$((i / 4)) min — the VM can be driven"
     [[ "$PROFILE" == vista ]] && vista_harness_prerequisites
+    # Windows 7 has .NET 3.5.1 built in; Server 2008 R2 makes it a feature,
+    # off by default, and Get-WinEvent, which the harness's event references
+    # use, requires it (measured: "requires Microsoft .NET Framework version
+    # 3.5 or greater", 4 checks on empty references). From the system's own
+    # store, no download, no restart.
+    [[ "$PROFILE" == srv2008r2 ]] && { python3 "$HERE/lib/qga.py" --dom "$DOM" run --timeout 1200 \
+      --shell "dism /online /enable-feature /featurename:NetFx3 /norestart" >/dev/null \
+      || { echo ".NET 3.5.1 feature not enabled" >&2; exit 1; }; }
     [[ -f "$DATA_DISK" ]] || qemu-img create -f qcow2 "$DATA_DISK" 2G >/dev/null
     # SATA has no hot plug: the disk goes into the definition, and the VM
     # restarts to see it. Target sdf: sda to sde are the system disk and the
