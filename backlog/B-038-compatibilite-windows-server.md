@@ -28,7 +28,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Images des versions serveur (2012 R2 à 2025, évaluation) et profils de create-vm.sh ; Server 2022 créée
-- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2 et 2012 verts le 2026-10-31 ; 2008 R2, 2003 à faire), écarts départagés
+- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2, 2012 et 2008 R2 verts le 2026-10-31 ; 2016, 2019, 2025, 2003 à faire), écarts départagés
 - [ ] Artefacts propres aux rôles (à répartir avec B-035 pour IIS)
 - [ ] Server Core
 - [ ] Contrôleur de domaine : `NTDS.dit` (à étudier)
@@ -61,3 +61,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
 - 2026-10-31 : VM Server 2012 créée sans interaction par le profil `srv2012` (`srv2012-test`, build 9200, en-US). **Server 2012 vert au premier cycle : 420 ✅, 0 ❌.** Suite : VM Server 2008 R2.
 - 2026-10-31 : VM Server 2008 R2 créée sans interaction par le profil `srv2008r2` (build 7601, en-US). Premier cycle : 257 ✅, 30 ❌ — régression du harnais : l'opérateur `-in` (PowerShell 3) ajouté pour ProgramDataUpdater rendait le script des témoins illisible pour PowerShell 2, d'où des références vides. Corrigé, et le script désormais analysé dans la VM avant d'être lancé. Cycle complet relancé.
 - 2026-10-31 : second cycle Server 2008 R2 : 363 ✅, 8 ❌ (4 sujets, tous du harnais). (1-3) arrêt du système, configuration des journaux, messages des événements : Get-WinEvent exige .NET 3.5, fonctionnalité désactivée par défaut sur Server 2008 R2 (intégrée à Windows 7) — activée par create-vm.sh (bf757a62) ; (4) BITS : WAC rend la file témoin de qmgr0.dat (sans son fichier, état antérieur) et de qmgr1.dat (avec), le contrôle prenait la première — il confronte désormais la copie qui porte le fichier (98ee3a01). Troisième cycle lancé.
+- 2026-10-31 : **Server 2008 R2 vert : 376 ✅, 0 ❌** (troisième cycle). La génération 2008 est couverte par 2008 R2 seul (pas d'image officielle de 2008 SP2). Suite : Server 2016, 2019, 2025, puis Server Core et 2003.
