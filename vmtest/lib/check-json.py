@@ -185,7 +185,11 @@ DECODED_PREFETCH_VERSIONS = {17, 23, 26, 30, 31}
 # install there): absent from none of these lists, its witness is confronted.
 # Entra ID's join and Intune's extension (cloud_identity, intune_logs) exist
 # from Windows 10 on, as the artefact table says: absent before (B-052).
+# Windows 10 1607 (Server 2016) predates the BAM (1709, build 16299) and the
+# activities cache (1803, build 17134), as the artefact table says: measured
+# on Server 2016.
 OLDER_VERSION_STATUSES = {
+    14393: ("Windows 10", {"activities_cache.json", "bams.json"}, set()),
     9200: ("Windows 8",
            {"activities_cache.json", "bams.json", "cloud_identity.json", "intune_logs.json"},
            set()),
@@ -202,7 +206,8 @@ OLDER_VERSION_STATUSES = {
 # The server of the same kernel as each measured client build, as WAC names
 # it: the journal names the edition Windows is, the lists stay those of the
 # kernel (measured on Server 2012 R2: those of Windows 8.1).
-SERVER_RELEASES = {9200: "Windows Server 2012", 9600: "Windows Server 2012 R2", 7601: "Windows Server 2008 R2"}
+SERVER_RELEASES = {9200: "Windows Server 2012", 9600: "Windows Server 2012 R2", 7601: "Windows Server 2008 R2",
+                   14393: "Windows Server 2016"}
 
 # The first server build whose sources WAC calls "expected" (artefact_catalogue.cpp:
 # SERVER_EXPECTED_SINCE_BUILD): an older server's missing source is only not collected.
@@ -4568,9 +4573,16 @@ def check_amcache_windows8(folder):
             digests += 1
             if digest != theirs:
                 wrong.append(f"{where}: AmcacheSha1 {digest}, file {theirs}")
+    # Windows 8 and 8.1 inventory the programs in Root\Programs, which the File
+    # table's ProgramId names. From Windows 10 the File table may remain beside
+    # InventoryApplication, and its ProgramId no longer names a program:
+    # measured on Server 2016, the files of Windows itself carry
+    # 0000f519…00000000, which neither Programs (empty) nor
+    # InventoryApplication holds once the hive is loaded by Windows.
     keys = {p.get("KeyName") for p in programs or [] if isinstance(p, dict)}
     orphans = [f.get("LongPath") for f in files
-               if str(f.get("ProgramId", "")).startswith("0000") and f["ProgramId"] not in keys]
+               if str(f.get("ProgramId", "")).startswith("0000") and f["ProgramId"] not in keys] \
+        if (examined_build(folder) or 0) < WINDOWS_10 else []
     if orphans:
         wrong.append(f"ProgramId naming no program: {orphans[:2]}")
     witness = None
