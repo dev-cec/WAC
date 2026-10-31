@@ -333,8 +333,9 @@ void applyArtefactCatalogue() {
 	            + (absent.empty() ? L"; every artefact asked for exists on it"
 	                              : L"; asked for but absent from this version, not collected: " + absent)
 	            + (undecoded.empty() ? L"" : L"; in a format without decoder on this version, collected raw and not converted: " + undecoded)
-	            // The test cycle validates every client from XP SP1 to 11; a server edition is collected, and said so.
-	            + (validatedByTestCycle(conf.examinedVersion) ? L"" : L"; a server edition: the test cycle validates WAC on the clients only"),
+	            // The test cycle validates every client and the servers measured; another server is collected, and said so.
+	            + (validatedByTestCycle(conf.examinedVersion) ? L""
+	               : L"; a server edition the test cycle has not validated (clients XP SP1 to 11, servers 2008 R2 to 2025, Server Core 2022)"),
 	            source, ERROR_SUCCESS, Footprint::HIVE_COPY);
 	for (const std::string& key : conf.absentFromVersion) {
 		writeConsole(L"   " + decodeText(key, CP_UTF8) + L" : " + text(Text::AbsentFromVersion, { release.name }) + L"\n");

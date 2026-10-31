@@ -2242,7 +2242,10 @@ ci-dessous donne, pour chaque clé de \fichier{wac.yml}, le premier Windows qui
 porte l'artefact, son emplacement et son format selon la version. Il est
 produit depuis la table du programme, la seule que \wac{} consulte. La
 version~3 de \wac{} est éprouvée sur chaque poste client, de Windows~XP SP1 à
-Windows~11 ; les éditions serveur y figurent pour la suite.
+Windows~11 ; la version~4, en plus, sur Server~2008~R2, 2012, 2012~R2, 2016,
+2019, 2022 et 2025 avec leur interface, et sur Server~2022 en installation
+Server Core. Server~2003, que le cycle ne mesure pas faute de média
+d'évaluation, est couvert par celui de Windows~XP, de même noyau.
 
 Les emplacements sont écrits comme Windows~Vista et suivants rangent leurs
 dossiers. Sous Windows~XP et Server~2003, \wac{} les cherche là où ces versions
@@ -2308,8 +2311,8 @@ sont alors à expliquer.
 Le statut n'est posé que là où la présence est certaine. Il ne l'est pas pour
 ce qui n'existe qu'après un événement (la clé \fichier{USBSTOR} avant le premier
 support USB), pour ce qui dépend d'un programme installé (navigateurs,
-messagerie), ni sur les éditions serveur, qui restent à mesurer : l'absence y
-reste un artefact non collecté ou une liste vide.
+messagerie), ni sur les serveurs antérieurs à Server~2022, qui restent à
+mesurer : l'absence y reste un artefact non collecté ou une liste vide.
 \end{attention}
 
 \section{Données non décodées}
@@ -2498,8 +2501,9 @@ lieu de la prendre pour l'activité étudiée :
   qu'administrateur. Relancez-la avec les droits d'administrateur. \\
 « édition serveur » sous la version de Windows examinée & La collecte se
   fait, et chaque format que \wac{} ne décode pas sur cette version est déclaré
-  (section~\ref{sec:format}) ; le cycle de test complet ne couvre encore que
-  les postes clients, de XP SP1 à Windows~11. \\
+  (section~\ref{sec:format}) ; le cycle de test complet ne couvre pas ce
+  serveur (il couvre les postes de XP SP1 à Windows~11, les serveurs de
+  2008~R2 à 2025 et Server Core 2022). \\
 Échec de « Checking the collection medium », répertoire non vide & Le dossier de
   sortie contient une collecte antérieure. Indiquez un dossier neuf avec
   \opt{output}. \\

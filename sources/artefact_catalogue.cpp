@@ -3,8 +3,10 @@
  *         artefact_catalogue.h).
  */
 #include "artefact_catalogue.h"
+#include <algorithm>
 #include <cwchar>
 #include <cwctype>
+#include <iterator>
 #include <utility>
 
 namespace {
@@ -12,7 +14,8 @@ namespace {
 // First build of each release that changed an artefact.
 const unsigned XP = 2600, SERVER_2003 = 3790, VISTA = 6000, SEVEN = 7600, EIGHT = 9200, EIGHT_1 = 9600,
                TEN = 10240, TEN_1607 = 14393, TEN_1709 = 16299, TEN_1803 = 17134, TEN_1903 = 18362,
-               ELEVEN = 22000;
+               ELEVEN = 22000,
+               SERVER_2008_R2 = 7601, SERVER_2019 = 17763, SERVER_2022 = 20348, SERVER_2025 = 26100;
 
 /* ShimCache of Windows 8 and 8.1: both headers are 0x80 bytes long and
    their first DWORD is no magic number, so the piece is told by the tag of
@@ -297,7 +300,13 @@ bool classicEventLogs(const WindowsVersion& version) {
 }
 
 bool validatedByTestCycle(const WindowsVersion& version) {
-	return !version.server;
+	if (!version.server) return true;
+	/* The server builds the full cycle passed on, 2026-10-30 and 31: 2008 R2,
+	   2012, 2012 R2, 2016, 2019, 2022 and 2025 with their interface; Server
+	   Core on 2022 only. Server 2003 and 2008, and a later server, are not. */
+	static const unsigned MEASURED[] = { SERVER_2008_R2, EIGHT, EIGHT_1, TEN_1607, SERVER_2019, SERVER_2022, SERVER_2025 };
+	if (version.serverCore) return version.build == SERVER_2022;
+	return std::find(std::begin(MEASURED), std::end(MEASURED), version.build) != std::end(MEASURED);
 }
 
 const WindowsRelease& releaseOf(const WindowsVersion& version, bool& known) {
@@ -345,7 +354,7 @@ namespace {
  *  a Server Core installation on 2026-10-31 — none of them is Explorer's).
  *  An older server is not measured yet: there, a source not found stays a
  *  plain absence, never a trace. */
-const unsigned SERVER_EXPECTED_SINCE_BUILD = 20348;
+const unsigned SERVER_EXPECTED_SINCE_BUILD = SERVER_2022;
 }
 
 bool expectedOn(const std::string& key, const WindowsVersion& version) {

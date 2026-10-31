@@ -2153,8 +2153,10 @@ flagged as such: the collection goes on. The table below gives, for each key
 of \fichier{wac.yml}, the first Windows that has the artefact, where it lies and
 its format according to the version. It is produced from the program's own
 table, the only one \wac{} consults. Version~3 of \wac{} is validated on every client,
-from Windows~XP SP1 to Windows~11; the server editions are listed for what
-comes next.
+from Windows~XP SP1 to Windows~11; version~4, besides, on Server~2008~R2, 2012,
+2012~R2, 2016, 2019, 2022 and 2025 with their interface, and on Server~2022 as a
+Server Core installation. Server~2003, which the cycle does not measure for
+want of an evaluation medium, is covered by Windows~XP's, of the same kernel.
 
 The locations are written as Windows~Vista and later lay out their folders.
 On Windows~XP and Server~2003, \wac{} looks for them where those versions keep
@@ -2218,8 +2220,8 @@ switched off or a damaged system then remains to be explained.
 The status is set only where the presence is certain. It is not for what
 exists only after an event (the \fichier{USBSTOR} key before the first USB
 storage), for what depends on an installed program (browsers, mail), nor on
-server editions, still to be measured: an absence there stays an artefact not
-collected, or an empty list.
+the servers before Server~2022, still to be measured: an absence there stays an
+artefact not collected, or an empty list.
 \end{attention}
 
 \section{Undecoded data}
@@ -2396,8 +2398,9 @@ instead of taking it for the activity under study:
   administrator. Start it again with administrator rights. \\
 ``server edition'' under the examined version of Windows & The
   collection is made, and every format \wac{} does not decode on that version
-  is declared (section~\ref{sec:format}); the whole test cycle only covers
-  the clients so far, XP SP1 to Windows~11. \\
+  is declared (section~\ref{sec:format}); the whole test cycle does not cover
+  that server (it covers the clients from XP SP1 to Windows~11, the servers from
+  2008~R2 to 2025 and Server Core 2022). \\
 ``Checking the collection medium'' fails, directory not empty & The output
   folder holds an earlier collection. Give a new folder with \opt{output}. \\
 ``Checking the collection medium'' fails, not enough space & The medium is too

@@ -109,11 +109,12 @@ const std::vector<ArtefactEntry>& artefactCatalogue();
 bool classicEventLogs(const WindowsVersion& version);
 
 /*! Whether the test cycle validates WAC on this version: every client, from
- *  XP SP1 to Windows 11, since version 3.0.0; no server edition yet. An
- *  unvalidated one is collected, and the console and the investigation log
- *  say so.
+ *  XP SP1 to Windows 11, since version 3.0.0; the servers from 2008 R2 to
+ *  2025 with their interface, and Server Core on 2022, since 4.0.0 — not
+ *  Server 2003 or 2008, nor a server build not measured. An unvalidated one
+ *  is collected, and the console and the investigation log say so.
  *  @param version the examined machine's
- *  @return true for a client edition */
+ *  @return true for a client edition or a server build measured */
 bool validatedByTestCycle(const WindowsVersion& version);
 
 /*! The release of a version.

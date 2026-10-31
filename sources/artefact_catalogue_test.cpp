@@ -125,9 +125,13 @@ int main(int argc, char** argv) {
 	check(availabilityOf("activities_cache", eleven) == Availability::Present, "ActivitiesCache.db withdrawn from Windows 11 (it is still written)");
 	check(availabilityOf("mft", xp) == Availability::Present && availabilityOf("events", xp) == Availability::Present, "$MFT or events absent from XP");
 	check(validatedByTestCycle(xp) && validatedByTestCycle(WindowsVersion{ 7601, false, false })
-	      && validatedByTestCycle(eleven) && !validatedByTestCycle(WindowsVersion{ 17763, true, false })
-	      && !validatedByTestCycle(WindowsVersion{ 20348, true, true }),
-	      "the test cycle validates every client from XP on, no server edition");
+	      && validatedByTestCycle(eleven) && validatedByTestCycle(WindowsVersion{ 17763, true, false })
+	      && validatedByTestCycle(WindowsVersion{ 7601, true, false }) && validatedByTestCycle(WindowsVersion{ 26100, true, false })
+	      && validatedByTestCycle(WindowsVersion{ 20348, true, true }),
+	      "the test cycle validates every client from XP on, and the servers measured");
+	check(!validatedByTestCycle(WindowsVersion{ 3790, true, false }) && !validatedByTestCycle(WindowsVersion{ 6002, true, false })
+	      && !validatedByTestCycle(WindowsVersion{ 26100, true, true }) && !validatedByTestCycle(WindowsVersion{ 28000, true, false }),
+	      "a server not measured said validated: 2003, 2008, Core of 2025, a later build");
 	check(classicEventLogs(xp) && classicEventLogs(WindowsVersion{ 3790, true, false }) && !classicEventLogs(vista)
 	      && !classicEventLogs(eleven) && !classicEventLogs(WindowsVersion{}),
 	      "the .evt logs are those of XP and Server 2003 only; an unread version is not taken for one of them");
