@@ -424,6 +424,12 @@ ARGS=(
   --network "user,model=${NIC_MODEL:-e1000e}" --graphics spice --video qxl --noautoconsole
 )
 [[ -n "$ISO_WAC" ]] && ARGS+=(--disk "path=$ISO_WAC,device=cdrom,readonly=on")
+# The hardware clock in the zone Setup runs in. An en-US medium runs in
+# Pacific time until the answer file's zone applies at the first start: with
+# the host's local time (Paris), those boots were dated 7 to 9 hours ahead,
+# and their events stay in the logs (Server 2025, 2026-10-31). The host's
+# local time comes back once Setup is over (step 6).
+[[ "$MEDIA_LANGUAGE" == en-US ]] && ARGS+=(--xml ./clock/@offset=timezone --xml ./clock/@timezone=America/Los_Angeles)
 virt-install "${ARGS[@]}"
 
 # --- 5. Unblocking the boot ----------------------------------------------------
@@ -480,6 +486,16 @@ with open(sys.argv[1], "rb") as fh:
   "${qga[@]}" run --shell 'del C:\Windows\Temp\kb968930.msu C:\Windows\Temp\dotnetfx35.exe' >/dev/null 2>&1 || true
 }
 
+# The host's local time for the hardware clock again, Windows being in the
+# host's zone now (the answer file's TimeZone): see step 4.
+host_clock() {
+  $C dumpxml --inactive "$DOM" | grep -q "<clock offset='localtime'" && return 0
+  $C dumpxml --inactive "$DOM" \
+    | sed -E "s#<clock offset='timezone' timezone='[^']*'#<clock offset='localtime'#" \
+    | $C define /dev/stdin >/dev/null \
+    && $C dumpxml --inactive "$DOM" | grep -q "<clock offset='localtime'"
+}
+
 # --- 6. Waiting for the agent (= install finished) ----------------------------
 # virt-install --noautoconsole does not restart the VM after Setup's first
 # reboot: it is restarted when needed, and the install is considered finished
@@ -511,6 +527,7 @@ for i in $(seq 1 120); do
     $C attach-disk "$DOM" "$DATA_DISK" sdf --driver qemu --subdriver qcow2 --targetbus sata --config >/dev/null \
       && $C shutdown "$DOM" >/dev/null && echo "   data disk added, the VM restarts" \
       && until [[ "$($C domstate "$DOM")" == "shut off" ]]; do sleep 5; done \
+      && host_clock \
       && $C start "$DOM" >/dev/null
     exit 0
   fi
