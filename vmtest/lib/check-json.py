@@ -1819,10 +1819,11 @@ def check_exhibit_store(folder):
 
     # 4. volumes read, confronted with an independent source
     osj = load(folder, "OperatingSystem.json")
-    system = str((osj or {}).get("SystemDrive") or "")[:1].upper() if isinstance(osj, dict) else ""
+    # SystemRoot ("C:\\Windows"): WAC writes no SystemDrive of its own.
+    system = str((osj or {}).get("SystemRoot") or "")[:1].upper() if isinstance(osj, dict) else ""
     letters = {str(v.get("Letter") or "").upper() for v in (custody.get("VolumesRead") or [])}
     if not system:
-        print("  ⏭️  system drive absent from OperatingSystem.json: volumes check skipped")
+        print("  ⏭️  SystemRoot absent from OperatingSystem.json: volumes check skipped")
     elif system not in letters:
         print(f"  ❌ exhibits: the system drive {system}: is not among the volumes "
               f"read {sorted(letters)}")
@@ -4174,9 +4175,14 @@ def check_webcache(folder, records):
     Every entry of every Container_<n>, its URL and its UTC times identical;
     the modification time of the MSHist containers, written in local time,
     converted here with the tz database (zoneinfo) for the VM's time zone —
-    not with WAC's rules. Skipped when dissect.esedb is not installed
-    (pip install dissect.esedb).
+    not with WAC's rules. Skipped when dissect.esedb is in neither this Python
+    nor vmtest/tools/ese-venv (pip install dissect.esedb).
     """
+    # dissect.esedb (pure Python) lives in vmtest/tools/ese-venv, not in the
+    # Python that runs this script: its packages are looked for there too.
+    venv = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "ese-venv",
+                                  "lib", "python3*", "site-packages"))
+    sys.path.extend(p for p in venv if p not in sys.path)
     try:
         from dissect.esedb import EseDB
         from zoneinfo import ZoneInfo
