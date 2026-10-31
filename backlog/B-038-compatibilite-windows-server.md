@@ -28,9 +28,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Images des versions serveur (2012 R2 à 2025, évaluation) et profils de create-vm.sh ; Server 2022 créée
-- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2, 2012, 2008 R2, 2016, 2019 et 2025 verts le 2026-10-31 ; Server Core, 2003 à faire), écarts départagés
+- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2, 2012, 2008 R2, 2016, 2019, 2025 et 2022 Core verts le 2026-10-31 ; 2003 à faire), écarts départagés
 - [ ] Artefacts propres aux rôles (à répartir avec B-035 pour IIS)
-- [ ] Server Core
+- [x] Server Core (Server 2022 Core vert le 2026-10-31)
 - [ ] Contrôleur de domaine : `NTDS.dit` (à étudier)
 
 ## Point ouvert
@@ -79,3 +79,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
   - **WAC** (2) : un double d'événement rendu avec 17 chiffres, Windows en donne 15 (Elapsed d'AppReadiness, 13437911542.3429) : b047b871 ; les 20 sources « attendues » toutes collectées sur Core, qui devient mesuré — un hosts écarté y est « attendu et introuvable » : 388033b5. Les artefacts de l'Explorateur ne sont pas déclarés absents de Core (prudence : cherchés, une liste vide dit ce que le disque porte) ;
   - **harnais** (9) : Core n'a ni explorer.exe, ni calc.exe, ni mstsc.exe, ni spouleur (clé Print\Monitors), ni barre des tâches (Taskband), et l'Explorateur n'y écrit ni RecentDocs, ni MountPoints2, ni UserAssist ; BAM n'y garde aucun utilisateur ; l'identifiant d'objet NTFS y a un volume de naissance nul (champ que WAC n'écrit pas). Témoins déclarés non placés ou référence vide confrontée au registre vivant (commit suivant).
 - 2026-10-31 : second cycle Server Core **456 ✅, 2 ❌** (un sujet, aux deux collectes, du harnais) : la ligne `monitors=` vide n'est pas gardée par le lecteur de référence, le contrôle l'exigeait — fondé désormais sur l'échec ou non du témoin ; le relevé RDP entrant lisait `$rdpSince` hors de la session sautée (témoin rdp_client déclaré à tort non placé). RecentDocs, MountPoints2, rdp_server et explorer.exe sautés comme prévu. Troisième cycle lancé.
+- 2026-10-31 : **Server 2022 Core vert : 458 ✅, 0 ❌** (troisième cycle). Témoins impossibles sans Explorateur déclarés et sautés (RecentDocs, MountPoints2, ShellBags du ZIP, index de recherche, RDP entrant, lecture brute d'explorer.exe) ; BAM et UserAssist vides confrontés au registre vivant vide ; hosts écarté « attendu et introuvable ». Critère « Server Core collectée sans erreur » atteint ; les artefacts de l'Explorateur restent cherchés sur Core (aucun déclaré absent, par prudence). Suite : Server 2003, puis non-régression Windows 11.
