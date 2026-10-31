@@ -28,7 +28,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Images des versions serveur (2012 R2 à 2025, évaluation) et profils de create-vm.sh ; Server 2022 créée
-- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2, 2012, 2008 R2, 2016 et 2019 verts le 2026-10-31 ; 2025, 2003 à faire), écarts départagés
+- [ ] Cycle du harnais sous chaque génération (2016+ : Server 2022 vert le 2026-10-30 ; 2012 R2, 2012, 2008 R2, 2016, 2019 et 2025 verts le 2026-10-31 ; Server Core, 2003 à faire), écarts départagés
 - [ ] Artefacts propres aux rôles (à répartir avec B-035 pour IIS)
 - [ ] Server Core
 - [ ] Contrôleur de domaine : `NTDS.dit` (à étudier)
@@ -73,3 +73,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
   - audit de la consigne : Server 2025 ne propage pas la règle du dossier aux fichiers existants (aucune lecture auditée) ; règle posée fichier par fichier dans ce cas : 933ab518 ;
   - JumplistData : mstsc (étape RDP du témoin) écrit Microsoft.Windows.RemoteDesktop après le relevé de la référence ; relevé déplacé en fin de témoin : 1e1584f3.
 - 2026-10-31 : Server 2025 recréé (fuseau Romance confirmé) ; second cycle **472 ✅, 5 ❌**, du **harnais** : l'audit de la consigne passe (18 714 lectures, 0 après la copie), le relevé d'usage aussi ; restent (1) les événements du démarrage de l'OOBE, écrit à l'heure du Pacifique avant l'application du fuseau (Kernel-General 12 à 14:55Z pour un démarrage à 06:56Z, 2 748 événements « après la collecte ») : horloge America/Los_Angeles pendant l'installation des médias en-US, 5e2e22d7 ; (2) retrait du témoin Sysmon échoué une fois (Sysmon64.exe encore tenu), réussi à la relance : réessayé, erreur affichée, 9e360460. VM à recréer.
+- 2026-10-31 : Server 2025 recréé avec 5e2e22d7 : horloge rendue à l'heure locale après l'installation (`localtime`), aucun démarrage (Kernel-General 12) daté dans le futur. **Server 2025 vert : 478 ✅, 0 ❌** (troisième cycle) ; témoin Sysmon retiré du premier coup. Suite : Server Core, puis Server 2003, puis non-régression Windows 11.
