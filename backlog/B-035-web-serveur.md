@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P3 | fort |
+| en cours (lot 1 : IIS) | P3 | fort |
 
 ## Pourquoi
 Sur un serveur web, la compromission passe par le site : un webshell déposé, une requête qui l'appelle, un compte ajouté à l'application. Les journaux disent qui a appelé quoi, le code montre ce qui a été déposé, la base de données dit qui pouvait se connecter (un compte ajouté, un mot de passe faible font passer une connexion pour légitime).
@@ -29,12 +29,22 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Clé `web_server` dans `wac.yml`.
 - Témoins retrouvés : page, requête, compte.
 
+## Plan par lots (2026-10-31)
+- **Lot 1 — IIS**, le seul serveur que le harnais peut témoigner (rôle Web-Server des VM serveur) :
+  - configuration : `inetsrv\config\applicationHost.config` (IIS 7 et suivants) lue en JSON — sites (liaisons, applications, répertoires virtuels, chemin physique), pools d'applications (identité), modules globaux (un module natif ajouté est une porte dérobée d'IIS, ATT&CK T1505.004), réglages des journaux ; `MetaBase.xml` d'IIS 5.1 et 6 (XP, 2003) prélevé brut, non converti (aucune machine pour le mesurer) ;
+  - journaux W3C de chaque site (`W3SVC<id>`) et de HTTP.sys (`HTTPERR`), copiés et convertis : un lecteur W3C commun avec le journal du pare-feu (pas de copie du code), dates UTC comme IIS les écrit ;
+  - code de chaque site : l'arbre de son chemin physique, copié en entier.
+- **Lot 2** — `web.config` (chaînes de connexion), bases des sites (SQLite, Access) et seuil de taille dans `wac.yml`, table des comptes de l'application.
+- **Lot 3** — Apache et nginx (configuration, journaux, racines), puis dossiers de données MySQL/MariaDB et PostgreSQL.
+
 ## Tâches
-- [ ] Repérage des serveurs et de leur configuration
-- [ ] Journaux (copie, conversion)
-- [ ] Code des sites
-- [ ] Bases de données (repérage, copie, seuil de taille)
-- [ ] Comptes de l'application
+- [ ] Lot 1 : repérage d'IIS et de sa configuration
+- [ ] Lot 1 : journaux W3C (copie, conversion), lecteur commun avec firewall_log
+- [ ] Lot 1 : code des sites
+- [ ] Lot 1 : témoins IIS dans le harnais (rôle, page, requête, module, pool), cycle serveur vert
+- [ ] Lot 2 : bases de données (repérage, copie, seuil de taille), chaînes de connexion
+- [ ] Lot 2 : comptes de l'application
+- [ ] Lot 3 : Apache, nginx, moteurs de bases de données
 
 ## Journal
 - 2026-09-26 : décision utilisateur, copier le code du site complet plutôt que trier.
@@ -43,3 +53,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-06 : prérequis ajoutés à la demande de l'utilisateur : B-039 (artefacts par version de Windows), puis B-038 (versions serveur, de 2003 à 2026).
 - 2026-10-07 : décision utilisateur — version 3.0, avec la rétrocompatibilité.
 - 2026-10-17 : décision utilisateur — version 4.0, avec les serveurs.
+- 2026-10-31 : B-038 terminée pour les générations (rôles restants ici) ; reprise de la fiche, plan en trois lots, lot 1 (IIS) commencé.
