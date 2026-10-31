@@ -812,7 +812,7 @@ try { if (Wants 'installed_programs') {
     # with the ProgramDataUpdater task, which a client runs in its maintenance
     # but a fresh server had never run (Server 2012 R2: no program at all).
     # Run here and waited for, so that the witness is in the inventory WAC reads.
-    if ([Environment]::OSVersion.Version.Build -in 9200, 9600) {
+    if (@(9200, 9600) -contains [Environment]::OSVersion.Version.Build) {
         $task = @{ TaskPath = '\Microsoft\Windows\Application Experience\'; TaskName = 'ProgramDataUpdater' }
         Start-ScheduledTask @task
         $deadline = (Get-Date).AddMinutes(10)

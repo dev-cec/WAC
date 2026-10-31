@@ -294,6 +294,13 @@ remove_sysmon() {
 # script, and the reference counts of setupapi and Defender (see
 # place-file-artefacts.ps1). check-json.py finds them in the JSON.
 $QGA write "$HERE/guest/place-file-artefacts.ps1" "$VMDIR\\place-file-artefacts.ps1" >/dev/null
+# Parsed first by the VM's own PowerShell: a construct of a later version
+# (`-in` is PowerShell 3) makes PowerShell 2 refuse the whole script, and every
+# check of its witnesses then failed on an empty reference (Server 2008 R2:
+# 30 of them for one line).
+PARSE=$($QGA run -- powershell.exe -NoProfile -Command \
+  "\$e = \$null; [void][System.Management.Automation.PSParser]::Tokenize((Get-Content '$VMDIR\\place-file-artefacts.ps1' | Out-String), [ref]\$e); @(\$e) | Select-Object -First 3 | ForEach-Object { 'line {0}: {1}' -f \$_.Token.StartLine, \$_.Message }" 2>/dev/null || true)
+[[ -z "${PARSE//[$'\r\n ']/}" ]] || echo "   ❌ place-file-artefacts.ps1 does not parse under this PowerShell: ${PARSE//[$'\r\n']/ }"
 $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\place-file-artefacts.ps1" \
   ${ONLY:+-Only} ${ONLY:+$ONLY} > "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null \
   && echo "   + reference/file-artefacts.txt" || echo "   ⚠️ file artefact witnesses not placed"
