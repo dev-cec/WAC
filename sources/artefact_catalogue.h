@@ -147,8 +147,8 @@ std::vector<std::string> absentAmong(const std::vector<std::string>& asked, cons
  *  there on a version. One that is not found then is "expected but missing":
  *  itself a trace (a file erased, a service switched off), not a failed
  *  reading and not an absence of activity. Client editions, and the server
- *  editions measured so far (Server 2022 and later with their interface; not
- *  Server Core); a key the table does not hold, or a version
+ *  editions measured so far (Server 2022 and later, with their interface or
+ *  as Server Core); a key the table does not hold, or a version
  *  without a build, is never expected — nothing is concluded from what is not
  *  known.
  *  @param key the key of wac.yml

@@ -149,7 +149,8 @@ int main(int argc, char** argv) {
 	check(!expectedOn("amcache", server2019), "expected on a server older than the one measured");
 	check(expectedOn("hosts", WindowsVersion{ 20348, true, false }) && expectedOn("amcache", WindowsVersion{ 26100, true, false }),
 	      "expected on Server 2022 and later with their interface, as measured");
-	check(!expectedOn("hosts", WindowsVersion{ 20348, true, true }), "expected on a Server Core installation: not measured yet");
+	check(expectedOn("hosts", WindowsVersion{ 20348, true, true }) && !expectedOn("hosts", WindowsVersion{ 17763, true, true }),
+	      "expected on a Server Core installation of Server 2022, as measured, not on an older one");
 	check(expectedOn("hosts", xp) && expectedOn("hosts", eleven) && expectedOn("srum", eight), "hosts or SRUM not expected where it always is");
 	check(!expectedOn("srum", seven), "SRUM expected on a version that never had it");
 	check(!expectedOn("emails", eleven) && !expectedOn("web_client", eleven), "a source that depends on installed programs is expected");

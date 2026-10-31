@@ -340,17 +340,17 @@ std::vector<std::string> absentAmong(const std::vector<std::string>& asked, cons
 
 namespace {
 /*! The first server build on which every source a client always has was
- *  measured present: Windows Server 2022 with its graphical interface (build
- *  20348; the 20 "expected" artefacts all collected, 2026-10-30). An older
- *  server, or a Server Core installation, is not measured yet: there, a
- *  source not found stays a plain absence, never a trace. */
+ *  measured present: Windows Server 2022 (build 20348; the 20 "expected"
+ *  artefacts all collected, with its graphical interface on 2026-10-30, as
+ *  a Server Core installation on 2026-10-31 — none of them is Explorer's).
+ *  An older server is not measured yet: there, a source not found stays a
+ *  plain absence, never a trace. */
 const unsigned SERVER_EXPECTED_SINCE_BUILD = 20348;
 }
 
 bool expectedOn(const std::string& key, const WindowsVersion& version) {
 	const ArtefactEntry* entry = artefactEntry(key);
-	const bool measuredEdition = !version.server
-	    || (!version.serverCore && version.build >= SERVER_EXPECTED_SINCE_BUILD);
+	const bool measuredEdition = !version.server || version.build >= SERVER_EXPECTED_SINCE_BUILD;
 	return entry && entry->expectedSinceBuild != 0 && measuredEdition && version.build >= entry->expectedSinceBuild
 	    && availabilityOf(key, version) == Availability::Present;
 }
