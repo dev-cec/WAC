@@ -11,9 +11,12 @@
  *    - every chunk truncated, and mutated at random (fixed seed: a failure
  *      reproduces), never makes the decoder read or write out of bounds —
  *      built with AddressSanitizer and UBSan, the inputs in exact-size heap
- *      buffers — and never "succeeds" into a wrong size.
+ *      buffers — and never "succeeds" into a wrong size;
+ *    - without any file, the cases built here: an uncompressed block of odd
+ *      size that ends the chunk, without the padding byte Windows leaves out
+ *      there (measured: shell32.dll of Server 2016, chunk 336).
  *
- *  Usage: lzx_test `<original>` `<wof-stream.bin>`
+ *  Usage: lzx_test [`<original>` `<wof-stream.bin>`]
  *  Native build (Linux): g++ -std=c++17 -g -fsanitize=address,undefined -I. lzx.cpp lzx_test.cpp -o lzx_test
  */
 #include "lzx.h"
@@ -47,15 +50,39 @@ size_t inflateExact(const uint8_t* data, size_t size, uint8_t* output, size_t ou
 	return LzxInflate(exact.get(), size, output, outputSize);
 }
 
+/*! A chunk of one uncompressed block holding `content`: its header (type 3,
+ *  the size on 16 bits), the alignment, the three recent offsets, the bytes —
+ *  and no padding byte after an odd size, as Windows writes the last block. */
+std::vector<uint8_t> uncompressedChunk(const std::vector<uint8_t>& content) {
+	// 3 bits of type, 1 bit "not the default size", 16 bits of size: 20 bits,
+	// padded to two 16-bit words by the alignment.
+	const uint32_t bits = (3u << 29) | ((uint32_t)content.size() << 12);
+	std::vector<uint8_t> chunk = { (uint8_t)(bits >> 16), (uint8_t)(bits >> 24), (uint8_t)bits, (uint8_t)(bits >> 8) };
+	for (int k = 0; k < 3; ++k) chunk.insert(chunk.end(), { 1, 0, 0, 0 });
+	chunk.insert(chunk.end(), content.begin(), content.end());
+	return chunk;
+}
+
+//! The cases that need no file of Windows.
+void builtCases() {
+	const std::vector<uint8_t> odd = { 'W', 'A', 'C', '-', '5' };
+	const std::vector<uint8_t> chunk = uncompressedChunk(odd);
+	std::vector<uint8_t> out(odd.size(), 0);
+	check(inflateExact(chunk.data(), chunk.size(), out.data(), out.size()) == odd.size() && out == odd,
+	      "uncompressed last block of odd size, without its padding byte, not decoded", 0);
+}
+
 } // namespace
 
 /*! Runs every check.
  * @param argc,argv `<original>` `<wof-stream.bin>`
  * @return 0 if all passed */
 int main(int argc, char** argv) {
+	builtCases();
 	if (argc < 3) {
-		std::printf("usage: lzx_test <original> <wof-stream.bin>\n");
-		return 2;
+		std::printf("built cases: %s: %llu check(s), %llu failure(s)\n",
+		            g_failures ? "FAILED" : "all passed", g_checks, g_failures);
+		return g_failures ? 1 : 0;
 	}
 	const std::vector<uint8_t> original = readAll(argv[1]);
 	const std::vector<uint8_t> stream = readAll(argv[2]);

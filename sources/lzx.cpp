@@ -197,7 +197,11 @@ size_t LzxInflate(const uint8_t* compressed, size_t compressedSize,
 				          | ((uint32_t)header[4 * k + 2] << 16) | ((uint32_t)header[4 * k + 3] << 24);
 			if (!bits.bytes(output + position, blockSize)) return 0;
 			position = blockEnd;
-			if ((blockSize & 1) && !bits.bytes(nullptr, 1)) return 0;   // padding to 16 bits
+			/* Padding to 16 bits after an odd size — except after the chunk's
+			   last block, where Windows writes none: measured on shell32.dll of
+			   Server 2016, chunk 336 ends on a block of 3,905 bytes and nothing
+			   after it. Required there, the chunk failed and the file with it. */
+			if ((blockSize & 1) && position < outputSize && !bits.bytes(nullptr, 1)) return 0;
 			continue;
 		}
 		if (type != 1 && type != 2) return 0;
