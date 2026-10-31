@@ -2957,7 +2957,13 @@ def check_small_file_artefacts(folder):
     bits = load(folder, "bits_jobs.json")
     if isinstance(bits, list) and "bits" in reference:
         job_id, description, state, created = reference["bits"].split("|")
-        j = next((x for x in bits if (x.get("JobId") or "").upper() == job_id.upper()), None)
+        # Before Windows 10, BITS writes its queue in turn to qmgr0.dat and
+        # qmgr1.dat, and WAC gives the job of each (QueueFile): the older copy
+        # may predate the file added last — measured on Server 2008 R2 (BITS
+        # 3.0), qmgr0.dat held the witness without its file, qmgr1.dat with it.
+        # The copy that holds a file is confronted, the first one otherwise.
+        copies = [x for x in bits if (x.get("JobId") or "").upper() == job_id.upper()]
+        j = next((x for x in copies if x.get("Files")), copies[0] if copies else None)
         files = (j or {}).get("Files") or []
         wrong = []
         if j is None:
