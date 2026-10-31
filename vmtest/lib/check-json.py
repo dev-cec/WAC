@@ -223,6 +223,18 @@ def skipped_unplaced(folder, section, reference):
     return True
 
 
+def live_key_count(folder, name):
+    """The number of keys the live registry held for a source, as
+    place-file-artefacts.ps1 counted them (`name=count`), or None when the
+    cycle did not count them."""
+    try:
+        with open(os.path.join(folder, "reference", "file-artefacts.txt"), encoding="utf-8", errors="replace") as f:
+            counts = [l.strip()[len(name) + 1:] for l in f if l.startswith(name + "=")]
+    except OSError:
+        return None
+    return int(counts[-1]) if counts and counts[-1].isdigit() else None
+
+
 def chrome_wrote_search(folder, term):
     """True when the History of "wac" collected raw holds the search term, or
     cannot be read: the witness search goes out to google.com, and when that
@@ -2374,8 +2386,8 @@ def check_small_file_artefacts(folder):
                "persistence.json: LSA Security Packages as Windows reads them",
                f"persistence.json: LSA Security Packages {lsa} / Windows {reference.get('lsa_security')}")
         monitors = sorted(p["Key"].split("\\")[-1] + "=" + (p.get("Value") or "") for p in persistence if p.get("Mechanism") == "Print monitor")
-        expected = reference.get("monitors", "").split("|")
-        report(sorted(monitors, key=str.lower) == sorted(expected, key=str.lower),
+        expected = [m for m in reference.get("monitors", "").split("|") if m]
+        report("monitors" in reference and sorted(monitors, key=str.lower) == sorted(expected, key=str.lower),
                f"persistence.json: the {len(monitors)} print monitors and their DLL as Windows reads them",
                f"persistence.json: print monitors {monitors} / Windows {expected}")
 
@@ -2667,7 +2679,10 @@ def check_small_file_artefacts(folder):
         with open(path, encoding="utf-8", errors="replace") as f:
             objids = [l.strip()[len("lnkobjid="):].split("|") for l in f if l.startswith("lnkobjid=")]
         for link, obj, birth_volume, birth_obj in objids:
-            as_guid = lambda raw: "{" + str(uuid.UUID(bytes_le=bytes.fromhex(raw))).upper() + "}"
+            # A null identifier (the birth volume of a Server Core's object
+            # identifiers) is a field WAC does not write.
+            as_guid = lambda raw: ("{" + str(uuid.UUID(bytes_le=bytes.fromhex(raw))).upper() + "}"
+                                   if raw.strip("0") else None)
             doc = next((d for d in docs if isinstance(d, dict) and str(d.get("Path", "")).lower() == link.lower()), None)
             t = (doc or {}).get("Tracker") or {}
             mine = (t.get("GuidDroidFile"), t.get("GuidBirthDroidVolume"), t.get("GuidBirthDroidFile"))
@@ -2718,6 +2733,8 @@ def check_small_file_artefacts(folder):
         report({(extension, 0), ("", 0)} <= mine and bool(shortcut),
                f"explorer_recent_docs.json: {name} first of the {extension} list and of the list of every extension, with its shortcut's shell item",
                f"explorer_recent_docs.json: {name} at {sorted(mine)} (expected first of {extension} and of the whole list)")
+    else:
+        skipped_unplaced(folder, "explorer_recent_docs", None)
 
     # MountPoints2: the same entries as the live registry lists, the
     # harness's share among them, decoded as a share (B-031).
@@ -2729,6 +2746,8 @@ def check_small_file_artefacts(folder):
         report(mine == set(names) and share.get("Kind") == "NetworkShare" and share.get("Share") == "\\\\127.0.0.1\\WacShare",
                f"mount_points.json: the {len(mine)} entries the live registry lists, the share witness decoded as \\\\127.0.0.1\\WacShare",
                f"mount_points.json: WAC only {sorted(mine - set(names))[:3]}, registry only {sorted(set(names) - mine)[:3]}, share {share}")
+    else:
+        skipped_unplaced(folder, "mount_points", None)
 
     # Known networks: the profiles and gateways the live registry lists, and
     # DateLastConnected — stored in local time — equal, in UTC, to the last
@@ -5074,6 +5093,8 @@ def check_utc_sources(folder):
     start = ((inv or {}).get("Collection") or {}).get("StartUtc") if isinstance(inv, dict) else None
     if switched_off(folder, "bams.json"):
         print("  ⏭️  bams.json not requested: BAM not checked")
+    elif isinstance(bams, list) and not bams and live_key_count(folder, "bamusers") == 0:
+        print("  ✅ bams.json empty, as the live registry: no BAM key for any user (Server Core)")
     elif not isinstance(bams, list) or not bams:
         print("  ❌ bams.json empty: the BAM keys hold at least the harness's own commands")
         found += 1
@@ -5097,6 +5118,8 @@ def check_utc_sources(folder):
     pf = load(folder, "prefetchs.json")
     if switched_off(folder, "userassists.json"):
         print("  ⏭️  userassists.json not requested: UserAssist not checked")
+    elif isinstance(ua, list) and not ua and live_key_count(folder, "userassistkeys") == 0:
+        print("  ✅ userassists.json empty, as the live registry: no UserAssist key for wac (no Explorer)")
     elif not isinstance(ua, list) or not ua:
         print("  ❌ userassists.json empty: the test profile holds UserAssist entries")
         found += 1

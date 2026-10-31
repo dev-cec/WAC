@@ -348,6 +348,9 @@ clean() { tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
   # contiguous clusters, a WOF-compressed ("Compact OS") binary.
   for f in '\Windows\System32\drivers\etc\hosts' '\Windows\System32\ntoskrnl.exe' \
            '\Windows\System32\shell32.dll' '\Windows\explorer.exe'; do
+    # Server Core has no explorer.exe: nothing to read there.
+    PRESENT=$($QGA run --shell "if exist C:$f (echo PRESENT) else (echo ABSENT)" 2>/dev/null | clean || true)
+    if [[ "$PRESENT" == ABSENT ]]; then echo "   ⏭️  $f absent from this Windows (Server Core): not read"; continue; fi
     $QGA run --shell "cd /d $VMDIR && raw_hive_test.exe C $f $VMDIR\\hashcheck.bin > nul 2>&1" >/dev/null 2>&1 || true
     SAME=$($QGA run -- powershell.exe -NoProfile -Command \
       "if ((Get-FileHash 'C:$f').Hash -eq (Get-FileHash '$VMDIR\\hashcheck.bin').Hash) { 'SAME' } else { 'DIFFERENT' }" 2>/dev/null | clean || true)

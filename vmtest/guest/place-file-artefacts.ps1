@@ -363,7 +363,12 @@ try { if (Wants 'persistence') {
     Write-Output ("userinit=" + (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon').Userinit)
     Write-Output ("exefile=" + (Get-ItemProperty 'HKLM:\SOFTWARE\Classes\exefile\shell\open\command').'(default)')
     Write-Output ("lsa_security=" + ((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa').'Security Packages' -join '|'))
-    $monitors = Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Control\Print\Monitors' | ForEach-Object { $_.PSChildName + '=' + $_.GetValue('Driver') } | Sort-Object
+    # No Monitors key without the print spooler (Server Core): no monitor.
+    $monitors = @()
+    $printMonitors = 'HKLM:\SYSTEM\CurrentControlSet\Control\Print\Monitors'
+    if (Test-Path $printMonitors) {
+        $monitors = Get-ChildItem $printMonitors | ForEach-Object { $_.PSChildName + '=' + $_.GetValue('Driver') } | Sort-Object
+    }
     Write-Output ("monitors=" + ($monitors -join '|'))
     # Last: in the user's hive, absent when it is not loaded, and its failure
     # must not lose the machine's references above.
@@ -1019,7 +1024,11 @@ Start-Sleep 3
     Start-ScheduledTask -TaskName WacRecentDocs
     Start-Sleep 15
     Unregister-ScheduledTask -TaskName WacRecentDocs -Confirm:$false
-    Write-Output "recentdoc=$wacSid|.wacrd|wac-recent-witness.wacrd"
+    # Explorer writes the list: without it (Server Core), nothing is recorded.
+    if (Test-Path "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs\.wacrd") {
+        Write-Output "recentdoc=$wacSid|.wacrd|wac-recent-witness.wacrd"
+    }
+    else { Write-Output 'witness_failed=explorer_recent_docs|the shell recorded no RecentDocs entry (no Explorer)' }
 } } catch { WitnessFailure 'explorer_recent_docs' $_ }
 
 # 22. B-031 — MountPoints2: a share of the VM (WacShare, read-only for "wac", the test
@@ -1047,7 +1056,9 @@ net use W: /delete /y | Out-Null
     Unregister-ScheduledTask -TaskName WacMountPoints -Confirm:$false
     $base = "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2"
     $names = @(Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object { $_.PSChildName -ne 'CPC' } | ForEach-Object { $_.PSChildName })
-    Write-Output ("mountpoints=$wacSid|" + ($names -join '|'))
+    # Explorer records the share: without it (Server Core), nothing is.
+    if ($names -contains '##127.0.0.1#WacShare') { Write-Output ("mountpoints=$wacSid|" + ($names -join '|')) }
+    else { Write-Output 'witness_failed=mount_points|Explorer recorded no MountPoints2 entry for the share (no Explorer)' }
 } } catch { WitnessFailure 'mount_points' $_ }
 
 # 23. B-031 — known networks: every NetworkList profile as the live registry
@@ -1130,7 +1141,9 @@ try { if (Wants 'program_usage') {
     Set-ItemProperty $layers -Name 'C:\wactest\wac-layer.exe' -Value '~ WIN7RTM'
     # The names each source holds are listed at the end of the witness (see
     # there): the later steps launch programs as "wac".
-    $fav = (Get-Item "$u\Windows\CurrentVersion\Explorer\Taskband" -ErrorAction SilentlyContinue).GetValue('FavoritesResolve')
+    # No Taskband key without a task bar (Server Core): nothing pinned.
+    $taskband = Get-Item "$u\Windows\CurrentVersion\Explorer\Taskband" -ErrorAction SilentlyContinue
+    $fav = if ($taskband) { $taskband.GetValue('FavoritesResolve') } else { $null }
     $count = 0; $o = 0
     while ($fav -and $o + 4 -le $fav.Length) { $n = [BitConverter]::ToUInt32($fav, $o); if ($n -lt 76 -or $o + 4 + $n -gt $fav.Length) { break }; $count++; $o += 4 + $n }
     Write-Output "pinned=$wacSid|$count"
@@ -1284,9 +1297,9 @@ try { if (Wants 'shortcuts', 'user_shell_folders') {
     $writable.Flush()
     $writable.Close()
     $link = (New-Object -ComObject WScript.Shell).CreateShortcut('C:\Users\wac\OneDrive\Desktop\wac-redirected-test.lnk')
-    $link.TargetPath = 'C:\Windows\System32\calc.exe'
+    $link.TargetPath = 'C:\Windows\System32\cmd.exe'
     $link.Save()
-    Write-Output 'shortcut=C:\Users\wac\OneDrive\Desktop\wac-redirected-test.lnk|C:\Windows\System32\calc.exe||Desktop'
+    Write-Output 'shortcut=C:\Users\wac\OneDrive\Desktop\wac-redirected-test.lnk|C:\Windows\System32\cmd.exe||Desktop'
     $key = [Microsoft.Win32.Registry]::Users.OpenSubKey("$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders")
     foreach ($name in $key.GetValueNames()) {
         Write-Output ("usf=" + $wacSid + '|' + $name + '|' + $key.GetValue($name, $null, 'DoNotExpandEnvironmentNames'))
@@ -1533,21 +1546,26 @@ try { if (Wants 'search_index') {
 #     needs is undone afterwards: credential, RDP, firewall rule, account.
 #     `mstsc /v:` and not a .rdp file: Windows now asks before opening one.
 try { if (Wants 'rdp_client', 'rdp_server') {
-    # One cache at a time: those of earlier cycles are removed, or each cycle
-    # would add a Cache<NNNN>.bin to the profile.
-    Remove-Item 'C:\Users\wac\AppData\Local\Microsoft\Terminal Server Client\Cache\*' -Force -ErrorAction SilentlyContinue
-    $rdpSince = (Get-Date).ToUniversalTime()
-    $tsKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server'
-    $denied = (Get-ItemProperty $tsKey).fDenyTSConnections
-    # Everything opened for the session is closed in the finally block, even
-    # when a step fails: a failure once left RDP allowed on the VM.
-    try {
-    Set-ItemProperty $tsKey -Name fDenyTSConnections -Value 0
-    Enable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue
-    $rdpPassword = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object { [char]$_ }) + '!a1'
-    SetLocalUser 'wacrdp' $rdpPassword
-    AddToLocalGroup 'S-1-5-32-555' 'wacrdp'
-    $rdpTask = @'
+    # Server Core has no Remote Desktop client: no session to open, nothing
+    # incoming to list; the Servers witness below needs none.
+    $mstsc = Test-Path "$env:SystemRoot\System32\mstsc.exe"
+    if (-not $mstsc) { Write-Output 'witness_failed=rdp_server|no mstsc.exe (Server Core): no session opened' }
+    if ($mstsc) {
+        # One cache at a time: those of earlier cycles are removed, or each cycle
+        # would add a Cache<NNNN>.bin to the profile.
+        Remove-Item 'C:\Users\wac\AppData\Local\Microsoft\Terminal Server Client\Cache\*' -Force -ErrorAction SilentlyContinue
+        $rdpSince = (Get-Date).ToUniversalTime()
+        $tsKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server'
+        $denied = (Get-ItemProperty $tsKey).fDenyTSConnections
+        # Everything opened for the session is closed in the finally block, even
+        # when a step fails: a failure once left RDP allowed on the VM.
+        try {
+        Set-ItemProperty $tsKey -Name fDenyTSConnections -Value 0
+        Enable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue
+        $rdpPassword = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object { [char]$_ }) + '!a1'
+        SetLocalUser 'wacrdp' $rdpPassword
+        AddToLocalGroup 'S-1-5-32-555' 'wacrdp'
+        $rdpTask = @'
 cmdkey /generic:TERMSRV/127.0.0.2 /user:wacrdp /pass:PASSWORD | Out-Null
 $client = 'HKCU:\Software\Microsoft\Terminal Server Client'
 New-Item -Force $client | Out-Null
@@ -1563,30 +1581,31 @@ cmdkey /delete:TERMSRV/127.0.0.2 | Out-Null
 Remove-ItemProperty $client -Name AuthenticationLevelOverride -ErrorAction SilentlyContinue
 'done' | Set-Content C:\wactest\rdp-witness.done
 '@
-    [IO.File]::WriteAllText('C:\wactest\rdp-witness.ps1', $rdpTask.Replace('PASSWORD', $rdpPassword))
-    Remove-Item C:\wactest\rdp-witness.done -ErrorAction SilentlyContinue
-    $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\wactest\rdp-witness.ps1'
-    $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
-    Register-ScheduledTask -TaskName 'WacRdpWitness' -Action $action -Principal $principal -Force | Out-Null
-    Start-ScheduledTask -TaskName 'WacRdpWitness'
-    for ($i = 0; $i -lt 120 -and -not (Test-Path C:\wactest\rdp-witness.done); $i++) { Start-Sleep 1 }
-    } finally {
-        Unregister-ScheduledTask -TaskName 'WacRdpWitness' -Confirm:$false -ErrorAction SilentlyContinue
-        Remove-Item C:\wactest\rdp-witness.ps1, C:\wactest\rdp-witness.done -ErrorAction SilentlyContinue
-        Set-ItemProperty $tsKey -Name fDenyTSConnections -Value $denied
-        if ($denied) { Disable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue }
-        # On a server, the loopback connection opens a real session for
-        # wacrdp, whose profile Windows copies from Default: the session is
-        # logged off and its profiles removed with the account, or every cycle
-        # left one more (wacrdp.WAC-TEST…) with its shortcuts, its DPAPI key and
-        # a copy of the Default profile's Run witness.
-        foreach ($line in @(quser 2>$null)) {
-            if ($line -match '^\s*>?wacrdp\s+(?:\S+\s+)?(\d+)\s') { logoff $Matches[1] 2>$null }
+        [IO.File]::WriteAllText('C:\wactest\rdp-witness.ps1', $rdpTask.Replace('PASSWORD', $rdpPassword))
+        Remove-Item C:\wactest\rdp-witness.done -ErrorAction SilentlyContinue
+        $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\wactest\rdp-witness.ps1'
+        $principal = New-ScheduledTaskPrincipal -UserId 'wac' -LogonType Interactive
+        Register-ScheduledTask -TaskName 'WacRdpWitness' -Action $action -Principal $principal -Force | Out-Null
+        Start-ScheduledTask -TaskName 'WacRdpWitness'
+        for ($i = 0; $i -lt 120 -and -not (Test-Path C:\wactest\rdp-witness.done); $i++) { Start-Sleep 1 }
+        } finally {
+            Unregister-ScheduledTask -TaskName 'WacRdpWitness' -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-Item C:\wactest\rdp-witness.ps1, C:\wactest\rdp-witness.done -ErrorAction SilentlyContinue
+            Set-ItemProperty $tsKey -Name fDenyTSConnections -Value $denied
+            if ($denied) { Disable-NetFirewallRule -DisplayGroup '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue }
+            # On a server, the loopback connection opens a real session for
+            # wacrdp, whose profile Windows copies from Default: the session is
+            # logged off and its profiles removed with the account, or every cycle
+            # left one more (wacrdp.WAC-TEST…) with its shortcuts, its DPAPI key and
+            # a copy of the Default profile's Run witness.
+            foreach ($line in @(quser 2>$null)) {
+                if ($line -match '^\s*>?wacrdp\s+(?:\S+\s+)?(\d+)\s') { logoff $Matches[1] 2>$null }
+            }
+            Start-Sleep 5
+            RemoveLocalUser 'wacrdp'
+            Get-WmiObject Win32_UserProfile | Where-Object { $_.LocalPath -match '\\wacrdp(\.[^\\]+)?$' } |
+                ForEach-Object { $_.Delete() }
         }
-        Start-Sleep 5
-        RemoveLocalUser 'wacrdp'
-        Get-WmiObject Win32_UserProfile | Where-Object { $_.LocalPath -match '\\wacrdp(\.[^\\]+)?$' } |
-            ForEach-Object { $_.Delete() }
     }
 
     # A server of known values in "wac"'s hive, flushed to the disk.
@@ -2057,3 +2076,13 @@ try { if (Wants 'program_usage') {
         if ($i) { Write-Output ("usage=" + $s[0] + '|' + (($i.GetValueNames() | Sort-Object) -join '|')) }
     }
 } } catch { WitnessFailure 'program_usage' $_ }
+
+# 26c (end). How many keys BAM and UserAssist hold in the live registry: none
+#     on Server Core (no Explorer, and BAM kept no user), where an empty
+#     bams.json or userassists.json is then the truth, not a lost reading.
+try { if (Wants 'bam', 'userassist') {
+    $bam = Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings' -ErrorAction SilentlyContinue
+    Write-Output ("bamusers=" + @($bam).Count)
+    $userAssist = Get-ChildItem "Registry::HKEY_USERS\$wacSid\Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist" -ErrorAction SilentlyContinue
+    Write-Output ("userassistkeys=" + @($userAssist).Count)
+} } catch { WitnessFailure 'bam,userassist' $_ }
