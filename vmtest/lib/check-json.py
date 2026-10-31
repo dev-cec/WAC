@@ -2387,7 +2387,9 @@ def check_small_file_artefacts(folder):
                f"persistence.json: LSA Security Packages {lsa} / Windows {reference.get('lsa_security')}")
         monitors = sorted(p["Key"].split("\\")[-1] + "=" + (p.get("Value") or "") for p in persistence if p.get("Mechanism") == "Print monitor")
         expected = [m for m in reference.get("monitors", "").split("|") if m]
-        report("monitors" in reference and sorted(monitors, key=str.lower) == sorted(expected, key=str.lower),
+        # An empty line (no monitor: Server Core) is not kept in reference: a
+        # witness that did not reach it says so by its failure.
+        report(not witness_not_placed(folder, "persistence") and sorted(monitors, key=str.lower) == sorted(expected, key=str.lower),
                f"persistence.json: the {len(monitors)} print monitors and their DLL as Windows reads them",
                f"persistence.json: print monitors {monitors} / Windows {expected}")
 

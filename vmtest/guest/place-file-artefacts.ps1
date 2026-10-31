@@ -1621,20 +1621,23 @@ Remove-ItemProperty $client -Name AuthenticationLevelOverride -ErrorAction Silen
     $cache = Get-ChildItem 'C:\Users\wac\AppData\Local\Microsoft\Terminal Server Client\Cache' -Filter 'Cache*.bin' -ErrorAction SilentlyContinue
     foreach ($c in $cache) { Write-Output ("rdpcache=" + $c.FullName + '|' + $c.Length) }
 
-    # The incoming side, as Windows lists it: record, user, source.
-    $logs = @{ 'Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational' = 1149
-               'Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational' = 131 }
-    foreach ($log in $logs.Keys) {
-        foreach ($e in (Get-WinEvent -FilterHashtable @{ LogName = $log; Id = $logs[$log]; StartTime = $rdpSince.ToLocalTime() } -ErrorAction SilentlyContinue)) {
-            $d = @{}; foreach ($x in ([xml]$e.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
-            $who = if ($d['Param1']) { $d['Param1'] } else { '' }
-            $from = if ($d['Param3']) { $d['Param3'] } else { $d['ClientIP'] }
-            Write-Output ("rdpin=$log|" + $e.RecordId + "|$who|$from")
+    # The incoming side, as Windows lists it: record, user, source — none
+    # without a session.
+    if ($mstsc) {
+        $logs = @{ 'Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational' = 1149
+                   'Microsoft-Windows-RemoteDesktopServices-RdpCoreTS/Operational' = 131 }
+        foreach ($log in $logs.Keys) {
+            foreach ($e in (Get-WinEvent -FilterHashtable @{ LogName = $log; Id = $logs[$log]; StartTime = $rdpSince.ToLocalTime() } -ErrorAction SilentlyContinue)) {
+                $d = @{}; foreach ($x in ([xml]$e.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
+                $who = if ($d['Param1']) { $d['Param1'] } else { '' }
+                $from = if ($d['Param3']) { $d['Param3'] } else { $d['ClientIP'] }
+                Write-Output ("rdpin=$log|" + $e.RecordId + "|$who|$from")
+            }
         }
-    }
-    foreach ($e in (Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = 4624; StartTime = $rdpSince.ToLocalTime() } -ErrorAction SilentlyContinue)) {
-        $d = @{}; foreach ($x in ([xml]$e.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
-        if ($d['LogonType'] -eq '10' -and $d['TargetUserName'] -eq 'wacrdp') { Write-Output ("rdpin=Security|" + $e.RecordId + "|wacrdp|" + $d['IpAddress']) }
+        foreach ($e in (Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = 4624; StartTime = $rdpSince.ToLocalTime() } -ErrorAction SilentlyContinue)) {
+            $d = @{}; foreach ($x in ([xml]$e.ToXml()).Event.EventData.Data) { $d[$x.Name] = $x.'#text' }
+            if ($d['LogonType'] -eq '10' -and $d['TargetUserName'] -eq 'wacrdp') { Write-Output ("rdpin=Security|" + $e.RecordId + "|wacrdp|" + $d['IpAddress']) }
+        }
     }
 } } catch { WitnessFailure 'rdp_client,rdp_server' $_ }
 
