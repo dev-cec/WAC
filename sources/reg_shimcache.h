@@ -47,8 +47,8 @@ public:
 	BinaryFingerprint fingerprint;  //!< fingerprints of that file, if `--binary` was given
 	std::wstring lastModification = L"";    //!< the file's last modification, suspect's local time
 	std::wstring lastModificationUtc = L"";	//!< the same instant in UTC
-	unsigned long long fileSize = 0;        //!< the file's size, as Windows XP records it
-	bool fileSizeKnown = false;             //!< a Windows XP entry: the size is given
+	unsigned long long fileSize = 0;        //!< the file's size, as Windows XP and Server 2003 record it
+	bool fileSizeKnown = false;             //!< a Windows XP or Server 2003 entry: the size is given
 	FILETIME lastUpdateUtc = { 0, 0 };      //!< when Windows XP last updated the entry; zero before or after XP
 	/* No execution flag. One used to be read at the end of the entry and
 	   emitted as "Executes"; confronted with Prefetch on the test VM, it said

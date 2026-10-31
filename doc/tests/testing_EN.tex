@@ -272,6 +272,7 @@ evaluation media; the cycle is the one of Windows~11
 \toprule
 Server & Checks & Build \\
 \midrule
+Server~2003 & 90 & 3790 \\
 Server~2008~R2 & 376 & 7601 \\
 Server~2012 & 420 & 9200 \\
 Server~2012~R2 & 428 & 9600 \\
@@ -297,7 +298,13 @@ What the servers taught \wac{}, each fix with its test:
   \item a double of an event is written with 15 significant digits, as
     Windows renders it (a large value of Server Core showed it);
   \item Server Core of Server~2022 has every ``always there'' source of a
-    client: it is measured as Server~2022 with its interface.
+    client: it is measured as Server~2022 with its interface;
+  \item the ShimCache of Server~2003: Vista's signature, the file's size in
+    place of the flags, told apart by the examined version (identical to
+    dissect.target, each size equal to the collected file's);
+  \item a form that exists only with an installed role (IIS~6's metabase)
+    is no longer declared ``format not decoded'' on a server without that
+    role.
 \end{itemize}
 
 On Server Core, no Explorer, no \fichier{mstsc.exe}, no spooler, no task bar:
@@ -305,10 +312,16 @@ the witnesses that depend on them (RecentDocs, MountPoints2, incoming Remote
 Desktop, ShellBags) are declared not placed, and an empty BAM or UserAssist is
 confronted with the live registry, empty too. \wac{} still looks for
 Explorer's artefacts there: a file dialog can write some, and an empty list
-says what the disk holds. Server~2003 is not measured: Microsoft no longer
-publishes an evaluation medium, and its media without a key do not install
-unattended; the cycle of Windows~XP, same kernel and same
-\fichier{WAC32.exe}, covers it.
+says what the disk holds.
+
+Server~2003 (profile \texttt{srv2003}) is installed from Microsoft's 180-day
+evaluation kit; its key, printed on the kit's sleeve, is given by
+\texttt{XP\_KEY} and written nowhere in the repository. Its Setup still stops
+twice, whatever \fichier{WINNT.SIF} says: the evaluation notice, then the date
+and time, to confirm with Enter. Without a guest agent, it is driven as
+Windows~XP is (\texttt{./run-wac-test-xp.sh srv2003-test}); the screen saver,
+which locks a server's console after 10~minutes, is switched off at
+installation.
 
 On a server, the harness installs IIS (the \texttt{Web-Server} role) if it
 is missing, drops a witness page whose SHA-256 it records, requests it with
@@ -444,9 +457,9 @@ cases answer right (no SRUM before Windows~8, Prefetch~23 on Vista and 30 on
 Windows~10), that on Windows~7 the guard holds back only the five artefacts
 that version lacks, and that a Windows newer than the table is treated as the
 last one known, and flagged. An unknown key or version never holds a collection
-back. Only a server the cycle has not measured is said not validated (Server~2003
-and 2008, Server Core but on 2022, a later build): every client, from XP SP1 to
-Windows~11, and the servers from 2008~R2 to 2025 are. It also checks that a source is said ``always there'' only where it is:
+back. Only a server the cycle has not measured is said not validated
+(Server~2008, Server Core but on 2022, a later build): every client, from XP SP1
+to Windows~11, and the servers 2003 and 2008~R2 to 2025 are. It also checks that a source is said ``always there'' only where it is:
 not on a server the cycle has not measured (before Server~2022), not for a key that exists only once a device was plugged, not
 for a metadata file of the volume or a state of the running system. Lastly,
 that a piece is decoded only if the table holds its signature with a decoder: a

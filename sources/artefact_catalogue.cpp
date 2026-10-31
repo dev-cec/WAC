@@ -238,13 +238,13 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		    { VISTA, L"UsrClass.dat\\Local Settings\\Software\\Microsoft\\Windows\\Shell, and NTUSER.DAT", L"BagMRU shell items", true } }, L"" },
 		{ "shimcache", XP, 0, XP,
 		  { { XP, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatibility\\AppCompatCache", L"header 0xDEADBEEF, 96 entries", true, { 0xDEADBEEF } },
-		    { SERVER_2003, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", L"header 0xBADC0FFE, the file's size", false, { 0xBADC0FFE } },
+		    { SERVER_2003, L"SYSTEM\\…\\Control\\Session Manager\\AppCompatCache\\AppCompatCache", L"header 0xBADC0FFE, the file's size", true, { 0xBADC0FFE } },
 		    { VISTA, L"the same value", L"header 0xBADC0FFE, entries of 24 or 32 bytes", true, { 0xBADC0FFE } },
 		    { SEVEN, L"the same value", L"header 0xBADC0FEE", true, { 0xBADC0FEE } },
 		    { EIGHT, L"the same value", L"header 0x80, entries \"00ts\"", true, { SHIMCACHE_00TS } },
 		    { EIGHT_1, L"the same value", L"header of 0x80 bytes starting with 0, entries \"10ts\"", true, { SHIMCACHE_10TS } },
 		    { TEN, L"the same value", L"header 0x30 or 0x34, entries \"10ts\"", true, { 0x30, 0x34 } } },
-		  L"Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600. Server 2003 and Vista share their magic: the version picks the form; Vista measured on SP2 x86, Server 2003 not yet." },
+		  L"Windows 8 and 8.1 have a header of 0x80 bytes: they are told apart by the tag of their first entry, which is their signature here. Windows 8.1 measured on build 9600. Server 2003 and Vista share their magic: the version picks the form; Vista measured on SP2 x86, Server 2003 on build 3790 x86." },
 		{ "shortcuts", XP, 0, 0,
 		  { { XP, L"Start menu, desktops, Quick Launch of each profile and of All Users", L"shell link", true } }, L"" },
 		{ "srum", EIGHT, 0, EIGHT,
@@ -306,10 +306,12 @@ bool classicEventLogs(const WindowsVersion& version) {
 
 bool validatedByTestCycle(const WindowsVersion& version) {
 	if (!version.server) return true;
-	/* The server builds the full cycle passed on, 2026-10-30 and 31: 2008 R2,
-	   2012, 2012 R2, 2016, 2019, 2022 and 2025 with their interface; Server
-	   Core on 2022 only. Server 2003 and 2008, and a later server, are not. */
-	static const unsigned MEASURED[] = { SERVER_2008_R2, EIGHT, EIGHT_1, TEN_1607, SERVER_2019, SERVER_2022, SERVER_2025 };
+	/* The server builds the full cycle passed on, 2026-10-30 and 31: 2003
+	   (Enterprise x86, the cycle of XP), 2008 R2, 2012, 2012 R2, 2016, 2019,
+	   2022 and 2025 with their interface; Server Core on 2022 only. Server
+	   2008 and a later server are not. */
+	static const unsigned MEASURED[] = { SERVER_2003, SERVER_2008_R2, EIGHT, EIGHT_1, TEN_1607, SERVER_2019, SERVER_2022,
+	                                     SERVER_2025 };
 	if (version.serverCore) return version.build == SERVER_2022;
 	return std::find(std::begin(MEASURED), std::end(MEASURED), version.build) != std::end(MEASURED);
 }

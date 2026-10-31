@@ -1213,9 +1213,10 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         publié tel quel. Windows~XP y note aussi la taille du fichier
         (\champ{FileSize}) et le moment où il a mis l'entrée à jour
         (\champ{LastUpdateUtc}). Server~2003 écrit la même signature que Vista
-        (\texttt{0xBADC0FFE}) avec un autre contenu : la version examinée les
-        départage, et la forme de Server~2003, pas encore mesurée, est
-        déclarée non prise en charge.
+        (\texttt{0xBADC0FFE}), la taille du fichier (\champ{FileSize}) à la
+        place de ses indicateurs : la valeur ne les distingue pas, la version
+        examinée les départage, et sans version lue la taille n'est pas
+        donnée (mesuré sur Server~2003 Enterprise x86, build 3790).
   \item[\fichier{bams.json}] dernière exécution par programme et par utilisateur
         (Background Activity Moderator). Les ruches étant lues sur le disque,
         une exécution de la ou des dernières minutes peut manquer : Windows
@@ -2277,10 +2278,9 @@ ci-dessous donne, pour chaque clé de \fichier{wac.yml}, le premier Windows qui
 porte l'artefact, son emplacement et son format selon la version. Il est
 produit depuis la table du programme, la seule que \wac{} consulte. La
 version~3 de \wac{} est éprouvée sur chaque poste client, de Windows~XP SP1 à
-Windows~11 ; la version~4, en plus, sur Server~2008~R2, 2012, 2012~R2, 2016,
-2019, 2022 et 2025 avec leur interface, et sur Server~2022 en installation
-Server Core. Server~2003, que le cycle ne mesure pas faute de média
-d'évaluation, est couvert par celui de Windows~XP, de même noyau.
+Windows~11 ; la version~4, en plus, sur Server~2003 (Enterprise x86, par le
+cycle de Windows~XP), Server~2008~R2, 2012, 2012~R2, 2016, 2019, 2022 et 2025
+avec leur interface, et sur Server~2022 en installation Server Core.
 
 Les emplacements sont écrits comme Windows~Vista et suivants rangent leurs
 dossiers. Sous Windows~XP et Server~2003, \wac{} les cherche là où ces versions
@@ -2537,8 +2537,8 @@ lieu de la prendre pour l'activité étudiée :
 « édition serveur » sous la version de Windows examinée & La collecte se
   fait, et chaque format que \wac{} ne décode pas sur cette version est déclaré
   (section~\ref{sec:format}) ; le cycle de test complet ne couvre pas ce
-  serveur (il couvre les postes de XP SP1 à Windows~11, les serveurs de
-  2008~R2 à 2025 et Server Core 2022). \\
+  serveur (il couvre les postes de XP SP1 à Windows~11, les serveurs 2003 et
+  de 2008~R2 à 2025, et Server Core 2022). \\
 Échec de « Checking the collection medium », répertoire non vide & Le dossier de
   sortie contient une collecte antérieure. Indiquez un dossier neuf avec
   \opt{output}. \\

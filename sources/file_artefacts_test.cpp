@@ -147,6 +147,77 @@ void firewallLog() {
 	check(parseFirewallLog(L"2026-10-24 15:01:02 DROP TCP\r\n", L"x").empty(), "firewall log: no line without a #Fields: header");
 }
 
+/*! IIS's applicationHost.config, as IIS 10 writes it: a site whose root
+ *  is written with a variable and logs with siteDefaults', a second whose
+ *  own logFile names a directory and whose application is a volume's root;
+ *  a pool with its identity; a native module. Then a W3C log as IIS writes
+ *  it (UTC, no "#Time Format:"), and HTTP.sys's. */
+void iisConfigurationAndLogs() {
+	const std::wstring drive = conf.systemDrive.substr(0, 2);
+	const IisConfiguration c = parseIisConfiguration(
+		L"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<configuration>\r\n"
+		L"<system.applicationHost>\r\n"
+		L"<applicationPools><add name=\"DefaultAppPool\" managedRuntimeVersion=\"\">"
+		L"<processModel identityType=\"LocalSystem\" /></add></applicationPools>\r\n"
+		L"<configHistory path=\"D:\\history\" />\r\n"
+		L"<sites>\r\n"
+		L"<site name=\"Default Web Site\" id=\"1\">"
+		L"<application path=\"/\"><virtualDirectory path=\"/\" physicalPath=\"%SystemDrive%\\inetpub\\wwwroot\" /></application>"
+		L"<bindings><binding protocol=\"http\" bindingInformation=\"*:80:\" /></bindings></site>\r\n"
+		L"<site name=\"Second\" id=\"7\">"
+		L"<application path=\"/\" applicationPool=\"DefaultAppPool\"><virtualDirectory path=\"/\" physicalPath=\"C:\\\" /></application>"
+		L"<logFile directory=\"D:\\weblogs\" /></site>\r\n"
+		L"<siteDefaults><logFile logFormat=\"W3C\" directory=\"%SystemDrive%\\inetpub\\logs\\LogFiles\" /></siteDefaults>\r\n"
+		L"</sites>\r\n</system.applicationHost>\r\n"
+		L"<system.webServer><globalModules><add name=\"WacModule\" image=\"C:\\wactest\\wac-module.dll\" /></globalModules></system.webServer>\r\n"
+		L"</configuration>\r\n", L"C:\\Windows\\System32\\inetsrv\\config\\applicationHost.config");
+	check(c.sites.size() == 2 && c.pools.size() == 1 && c.modules.size() == 1, "IIS: two sites, a pool, a module read");
+	if (c.sites.size() != 2 || c.pools.size() != 1 || c.modules.size() != 1) return;
+	check(c.sites[0].site.attribute(L"Name") == L"Default Web Site" && c.sites[0].bindings.size() == 1
+	      && c.sites[0].bindings[0].attribute(L"BindingInformation") == L"*:80:",
+	      "IIS: a site's attributes and binding, by their JSON key");
+	check(c.sites[0].logFolder == drive + L"\\inetpub\\logs\\LogFiles\\W3SVC1" && c.sites[1].logFolder == L"D:\\weblogs\\W3SVC7",
+	      "IIS: a site's logs in siteDefaults' directory, or its own, then W3SVC<id>");
+	check(c.pools[0].first.attribute(L"Name") == L"DefaultAppPool" && c.pools[0].first.attribute(L"ManagedRuntimeVersion").empty()
+	      && c.pools[0].second.attribute(L"IdentityType") == L"LocalSystem",
+	      "IIS: a pool, its identity; an empty attribute left out");
+	check(c.modules[0].attribute(L"Image") == L"C:\\wactest\\wac-module.dll", "IIS: a native module and its DLL");
+	check(c.historyFolder == L"D:\\history", "IIS: configHistory's path");
+	const IisSources s = iisSources(c);
+	check(s.siteFolders.size() == 1 && s.siteFolders[0] == drive + L"\\inetpub\\wwwroot",
+	      "IIS: the site's root resolved, a volume's root not taken");
+	check(s.logFolders.size() == 3 && s.logFolders[0] == drive + L"\\inetpub\\logs\\LogFiles" && s.logFolders[1] == L"D:\\weblogs"
+	      && s.logFolders[2] == drive + L"\\Windows\\System32\\LogFiles\\HTTPERR",
+	      "IIS: each logs' directory once, and HTTP.sys's");
+	check(parseIisConfiguration(L"<configuration/>", L"x").sites.empty() && parseIisConfiguration(L"<notIis/>", L"x").sites.empty()
+	      && iisSources(IisConfiguration{}).logFolders.size() == 2,
+	      "IIS: nothing from another document; the defaults without a configuration");
+
+	const std::vector<W3cLogEntry> e = parseIisLog(
+		L"#Software: Microsoft Internet Information Services 10.0\r\n#Version: 1.0\r\n#Date: 2026-10-31 10:00:00\r\n"
+		L"#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken\r\n"
+		L"2026-10-31 10:00:01 ::1 GET /wac.htm wac=token 80 - ::1 Mozilla/5.0+(Windows) - 200 0 0 12\r\n",
+		L"C:\\inetpub\\logs\\LogFiles\\W3SVC1\\u_ex261031.log");
+	FILETIME expected;
+	check(e.size() == 1 && e[0].zone == W3cTime::Utc && iso8601UtcToFiletime(L"2026-10-31T10:00:01Z", expected)
+	      && value(e[0].time) == value(expected),
+	      "IIS log: the date in UTC, IIS writing no #Time Format:");
+	auto field = [](const W3cLogEntry& x, const wchar_t* key) {
+		for (const auto& [k, v] : x.fields) if (k == key) return v;
+		return std::wstring();
+	};
+	check(e.size() == 1 && field(e[0], L"UriStem") == L"/wac.htm" && field(e[0], L"UriQuery") == L"wac=token"
+	      && field(e[0], L"ClientAddress") == L"::1" && field(e[0], L"UserAgent") == L"Mozilla/5.0+(Windows)"
+	      && field(e[0], L"Status") == L"200" && field(e[0], L"TimeTakenMs") == L"12" && field(e[0], L"UserName").empty(),
+	      "IIS log: the request's fields by their JSON key, as written");
+	const std::vector<W3cLogEntry> refused = parseIisLog(
+		L"#Software: Microsoft HTTP API 2.0\r\n#Version: 1.0\r\n"
+		L"#Fields: date time c-ip c-port s-ip s-port cs-version cs-method cs-uri streamid sc-status s-siteid s-reason s-queuename\r\n"
+		L"2026-10-31 10:00:02 10.0.0.9 50000 10.0.0.1 80 HTTP/1.1 GET /x - 400 - BadRequest -\r\n", L"x");
+	check(refused.size() == 1 && field(refused[0], L"Reason") == L"BadRequest" && field(refused[0], L"ClientPort") == L"50000",
+	      "HTTPERR: HTTP.sys's fields");
+}
+
 void partitionTables() {
 	auto put32 = [](std::vector<uint8_t>& b, size_t at, uint32_t v) { for (int i = 0; i < 4; ++i) b[at + i] = (uint8_t)(v >> (8 * i)); };
 	auto put64 = [](std::vector<uint8_t>& b, size_t at, uint64_t v) { for (int i = 0; i < 8; ++i) b[at + i] = (uint8_t)(v >> (8 * i)); };
@@ -1511,8 +1582,7 @@ void shimcacheWindows7() {
 /*! ShimCache of Vista (0xBADC0FFE): three real entries of the Vista VM's
  *  value (SP2 x86), their paths moved next to them — as Windows stores
  *  them, the first entry's last. Paths and dates as dissect.target reads
- *  them. Server 2003 writes the same magic: its form, not measured, stays
- *  undecoded — the examined version tells them apart. */
+ *  them. Server 2003 writes the same magic (shimcacheServer2003). */
 void shimcacheVista() {
 	const std::vector<BYTE> value = {
 		0xFE, 0x0F, 0xDC, 0xBA, 0x03, 0x00, 0x00, 0x00, 0x46, 0x00, 0x48, 0x00, 0xE4, 0x00, 0x00, 0x00,
@@ -1543,10 +1613,53 @@ void shimcacheVista() {
 	      && s.shimcaches[1].path == L"\\??\\C:\\Windows\\system32\\rundll32.exe" && s.shimcaches[1].lastModificationUtc == L"2006-11-02T09:45:37.8460000Z"
 	      && s.shimcaches[2].path == L"\\??\\C:\\Windows\\system32\\verclsid.exe" && s.shimcaches[2].lastModificationUtc == L"2006-11-02T09:45:50.7210000Z",
 	      "ShimCache of Vista: paths, order and dates as dissect.target reads them");
+	check(!s.shimcaches[0].fileSizeKnown, "ShimCache of Vista: its flags given as a file's size");
+	conf.examinedVersion = examined;
+}
+
+/*! ShimCache of Server 2003 (0xBADC0FFE, as Vista): three real entries of
+ *  the Server 2003 VM's value (Enterprise x86, build 3790), their paths
+ *  moved next to them, the first entry's last. Paths and dates as
+ *  dissect.target reads them; the size of WAC32.exe as the copy run there
+ *  had it. The value does not tell Server 2003 from Vista: the examined
+ *  version does, and without it no size is given. */
+void shimcacheServer2003() {
+	const std::vector<BYTE> value = {
+		0xFE, 0x0F, 0xDC, 0xBA, 0x03, 0x00, 0x00, 0x00, 0x50, 0x00, 0x52, 0x00, 0xD2, 0x00, 0x00, 0x00,
+		0x00, 0x60, 0xA9, 0x0F, 0xC6, 0xF2, 0xC2, 0x01, 0x00, 0xE8, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x48, 0x00, 0x4A, 0x00, 0x88, 0x00, 0x00, 0x00, 0x00, 0x60, 0xA9, 0x0F, 0xC6, 0xF2, 0xC2, 0x01,
+		0x00, 0x6C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x38, 0x00, 0x50, 0x00, 0x00, 0x00,
+		0x80, 0xBA, 0x91, 0x9C, 0x71, 0x69, 0xDD, 0x01, 0x1F, 0x8C, 0xC7, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x5C, 0x00, 0x3F, 0x00, 0x3F, 0x00, 0x5C, 0x00, 0x43, 0x00, 0x3A, 0x00, 0x5C, 0x00, 0x77, 0x00,
+		0x61, 0x00, 0x63, 0x00, 0x74, 0x00, 0x65, 0x00, 0x73, 0x00, 0x74, 0x00, 0x5C, 0x00, 0x78, 0x00,
+		0x70, 0x00, 0x5C, 0x00, 0x57, 0x00, 0x41, 0x00, 0x43, 0x00, 0x33, 0x00, 0x32, 0x00, 0x2E, 0x00,
+		0x65, 0x00, 0x78, 0x00, 0x65, 0x00, 0x00, 0x00, 0x5C, 0x00, 0x3F, 0x00, 0x3F, 0x00, 0x5C, 0x00,
+		0x43, 0x00, 0x3A, 0x00, 0x5C, 0x00, 0x57, 0x00, 0x49, 0x00, 0x4E, 0x00, 0x44, 0x00, 0x4F, 0x00,
+		0x57, 0x00, 0x53, 0x00, 0x5C, 0x00, 0x73, 0x00, 0x79, 0x00, 0x73, 0x00, 0x74, 0x00, 0x65, 0x00,
+		0x6D, 0x00, 0x33, 0x00, 0x32, 0x00, 0x5C, 0x00, 0x73, 0x00, 0x68, 0x00, 0x75, 0x00, 0x74, 0x00,
+		0x64, 0x00, 0x6F, 0x00, 0x77, 0x00, 0x6E, 0x00, 0x2E, 0x00, 0x65, 0x00, 0x78, 0x00, 0x65, 0x00,
+		0x00, 0x00, 0x5C, 0x00, 0x3F, 0x00, 0x3F, 0x00, 0x5C, 0x00, 0x43, 0x00, 0x3A, 0x00, 0x5C, 0x00,
+		0x57, 0x00, 0x49, 0x00, 0x4E, 0x00, 0x44, 0x00, 0x4F, 0x00, 0x57, 0x00, 0x53, 0x00, 0x5C, 0x00,
+		0x73, 0x00, 0x79, 0x00, 0x73, 0x00, 0x74, 0x00, 0x65, 0x00, 0x6D, 0x00, 0x33, 0x00, 0x32, 0x00,
+		0x5C, 0x00, 0x57, 0x00, 0x42, 0x00, 0x45, 0x00, 0x4D, 0x00, 0x5C, 0x00, 0x57, 0x00, 0x4D, 0x00,
+		0x49, 0x00, 0x41, 0x00, 0x44, 0x00, 0x41, 0x00, 0x50, 0x00, 0x2E, 0x00, 0x45, 0x00, 0x58, 0x00,
+		0x45, 0x00, 0x00, 0x00,
+	};
+	const WindowsVersion examined = conf.examinedVersion;
 	conf.examinedVersion = WindowsVersion{ 3790, true, false };
-	Shimcaches server2003;
-	check(server2003.parse(value) == S_OK && server2003.unsupportedFormat && server2003.shimcaches.empty(),
-	      "ShimCache 0xBADC0FFE of Server 2003 decoded with Vista's layout");
+	Shimcaches s;
+	check(s.parse(value) == S_OK && !s.unsupportedFormat && s.shimcaches.size() == 3
+	      && s.shimcaches[0].path == L"\\??\\C:\\WINDOWS\\system32\\WBEM\\WMIADAP.EXE" && s.shimcaches[0].lastModificationUtc == L"2003-03-25T12:00:00.0000000Z"
+	      && s.shimcaches[1].path == L"\\??\\C:\\WINDOWS\\system32\\shutdown.exe"
+	      && s.shimcaches[2].path == L"\\??\\C:\\wactest\\xp\\WAC32.exe" && s.shimcaches[2].lastModificationUtc == L"2026-10-31T19:54:17.0000000Z",
+	      "ShimCache of Server 2003: paths, order and dates as dissect.target reads them");
+	check(s.shimcaches.size() == 3 && s.shimcaches[0].fileSizeKnown && s.shimcaches[0].fileSize == 190464
+	      && s.shimcaches[1].fileSize == 27648 && s.shimcaches[2].fileSize == 13077535,
+	      "ShimCache of Server 2003: each file's size after its date (WAC32.exe's to the byte)");
+	conf.examinedVersion = WindowsVersion{ 0, false, false };
+	Shimcaches unread;
+	check(unread.parse(value) == S_OK && unread.shimcaches.size() == 3 && !unread.shimcaches[0].fileSizeKnown,
+	      "ShimCache 0xBADC0FFE without the examined version: a size given that may be Vista's flags");
 	conf.examinedVersion = examined;
 }
 
@@ -2543,6 +2656,7 @@ int wmain(int argc, wchar_t** argv) {
 	processModulesOfOwnProcess();
 	shimcacheWindows7();
 	shimcacheVista();
+	shimcacheServer2003();
 	rdpBmcCache();
 	shimcacheWindows8();
 	shimcacheWindowsXp();

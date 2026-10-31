@@ -281,6 +281,7 @@ médias d'évaluation de Microsoft ; le cycle est le même que sous Windows~11
 \toprule
 Serveur & Contrôles & Build \\
 \midrule
+Server~2003 & 90 & 3790 \\
 Server~2008~R2 & 376 & 7601 \\
 Server~2012 & 420 & 9200 \\
 Server~2012~R2 & 428 & 9600 \\
@@ -307,7 +308,14 @@ Ce que les serveurs ont appris à \wac{}, chaque correction avec son test :
   \item un réel double d'événement s'écrit avec 15 chiffres significatifs,
     comme Windows le rend (une grande valeur de Server Core l'a montré) ;
   \item Server Core de Server~2022 porte toutes les sources « toujours
-    présentes » d'un poste : il est mesuré comme Server~2022 avec interface.
+    présentes » d'un poste : il est mesuré comme Server~2022 avec interface ;
+  \item le ShimCache de Server~2003 : la signature de Vista, la taille du
+    fichier à la place des indicateurs, départagés par la version examinée
+    (identique à dissect.target, chaque taille égale à celle du fichier
+    collecté) ;
+  \item une forme qui n'existe qu'avec un rôle installé (la métabase
+    d'IIS~6) n'est plus déclarée « format non décodé » sur un serveur qui
+    n'a pas ce rôle.
 \end{itemize}
 
 Sur Server Core, ni Explorateur, ni \fichier{mstsc.exe}, ni spouleur, ni
@@ -315,10 +323,16 @@ barre des tâches : les témoins qui en dépendent (RecentDocs, MountPoints2, Bu
 à distance entrant, ShellBags) sont déclarés non placés, et BAM ou UserAssist
 vides sont confrontés au registre vivant, vide lui aussi. \wac{} y cherche
 quand même les artefacts de l'Explorateur : une boîte de dialogue de fichiers
-peut en écrire, et une liste vide dit ce que porte le disque. Server~2003
-n'est pas mesuré : Microsoft ne publie plus de média d'évaluation, et ses médias
-sans clé ne s'installent pas sans intervention ; le cycle de Windows~XP, même
-noyau et même \fichier{WAC32.exe}, le couvre.
+peut en écrire, et une liste vide dit ce que porte le disque.
+
+Server~2003 (profil \texttt{srv2003}) s'installe depuis le kit d'évaluation de
+180~jours de Microsoft ; sa clé, imprimée sur la pochette du kit, est donnée
+par \texttt{XP\_KEY} et n'est écrite nulle part dans le dépôt. Son installation
+s'arrête encore deux fois, quoi que dise \fichier{WINNT.SIF} : l'avis
+d'évaluation, puis la date et l'heure, à valider par Entrée. Sans agent
+invité, il est piloté comme Windows~XP (\texttt{./run-wac-test-xp.sh
+srv2003-test}) ; l'économiseur d'écran, qui verrouille la console d'un
+serveur au bout de 10~minutes, est coupé à l'installation.
 
 Sur un serveur, le harnais installe IIS (rôle \texttt{Web-Server}) s'il
 manque, y pose une page témoin dont il relève le SHA-256, la demande avec un
@@ -458,9 +472,9 @@ Vista et 30 sous Windows~10), que le garde-fou n'écarte sous Windows~7 que les
 cinq artefacts que cette version n'a pas, et qu'un Windows plus récent que la
 table est traité comme le dernier connu, et signalé. Une clé ou une version
 inconnue ne retient jamais une collecte. Seul un serveur que le cycle n'a pas
-mesuré est dit non éprouvé (Server~2003 et 2008, Server Core hors 2022, un
-build plus récent) : tout poste client, de XP SP1 à Windows~11, et les
-serveurs de 2008~R2 à 2025 le sont. Il contrôle aussi qu'une source n'est
+mesuré est dit non éprouvé (Server~2008, Server Core hors 2022, un build plus
+récent) : tout poste client, de XP SP1 à Windows~11, et les serveurs 2003 et
+de 2008~R2 à 2025 le sont. Il contrôle aussi qu'une source n'est
 dite « toujours présente » que là où elle l'est : ni sur un serveur que le cycle n'a pas mesuré (avant Server~2022), ni pour
 une clé qui n'existe qu'après le branchement d'un périphérique, ni pour un
 métafichier du volume ou un état du système en marche. Enfin, qu'une pièce

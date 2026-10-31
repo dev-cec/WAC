@@ -27,30 +27,37 @@ const size_t WINDOWS_XP_PATH = 528;
 } // namespace
 
 /*! A value whose entries are a table of fixed size, each pointing at its
- *  path, stored after the table: Windows 7 and Vista. An entry starts the
- *  same way in both — path length (2), its room (2), then the path's
- *  offset (4 bytes in 32 bits; 8 after 4 reserved bytes in 64 bits), then
- *  the file's last modification —; the header and what follows the date
- *  differ. */
+ *  path, stored after the table: Windows 7, Vista and Server 2003. An entry
+ *  starts the same way in all three — path length (2), its room (2), then
+ *  the path's offset (4 bytes in 32 bits; 8 after 4 reserved bytes in 64
+ *  bits), then the file's last modification —; the header and what follows
+ *  the date differ. */
 struct ShimcachePathTable {
 	unsigned magic;          //!< the value's first DWORD
 	size_t header;           //!< the header: the magic, the number of entries, reserved bytes
 	size_t entry64, entry32; //!< an entry of the 64-bit layout, and of the 32-bit one
 	const wchar_t* release;  //!< for the log
+	bool sizeAfterDate;      //!< the 8 bytes after the date are the file's size (Server 2003), not flags
+	unsigned sinceBuild;     //!< the first build of its form in the artefact table: what tells two tables of one magic apart
 };
 
 namespace {
 /*! Windows 7 and Server 2008 R2: a header of 0x80 bytes; after the date,
  *  insertion and shim flags (2 × 4), data size and offset (2 × 8, or 2 × 4
  *  in 32 bits). */
-const ShimcachePathTable WINDOWS_7_TABLE = { 0xBADC0FEE, 0x80, 48, 32, L"Windows 7" };
+const ShimcachePathTable WINDOWS_7_TABLE = { 0xBADC0FEE, 0x80, 48, 32, L"Windows 7", false, 7600 };
 /*! Vista: a header of 8 bytes; after the date, insertion and shim flags
  *  (2 × 4), nothing more. Measured on Vista SP2 x86: 88 entries of 24 bytes,
  *  the paths at the end of the value, the first entry's last — as on
- *  Windows 7 —, identical to what dissect.target reads. Server 2003 writes
- *  the same magic with the file's size in place of the flags: not measured,
- *  its form is not decoded (the table picks it by the examined version). */
-const ShimcachePathTable VISTA_TABLE = { 0xBADC0FFE, 8, 32, 24, L"Vista" };
+ *  Windows 7 —, identical to what dissect.target reads. */
+const ShimcachePathTable VISTA_TABLE = { 0xBADC0FFE, 8, 32, 24, L"Vista", false, 6000 };
+/*! Server 2003: Vista's magic and layout, the file's size (8 bytes) in
+ *  place of the flags. Measured on Server 2003 Enterprise x86, build 3790:
+ *  33 entries of 24 bytes, paths and dates identical to what dissect.target
+ *  reads, and WAC32.exe's entry giving its size to the byte. The value
+ *  does not say which of the two it is: the examined version does
+ *  (pieceFormat), and without it the size is not given. */
+const ShimcachePathTable SERVER_2003_TABLE = { 0xBADC0FFE, 8, 32, 24, L"Server 2003", true, 3790 };
 } // namespace
 
 Json Shimcache::toJson() {
@@ -136,7 +143,8 @@ HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 	if ((offset == WINDOWS_8_HEADER_SIZE || offset == 0) && fits(size, WINDOWS_8_HEADER_SIZE, 4))
 		formatSignature = *reinterpret_cast<const DWORD*>(data + WINDOWS_8_HEADER_SIZE);
 	// Vista and Server 2003 share their magic: the examined version tells their forms apart.
-	if (!pieceFormat("shimcache", formatSignature, conf.examinedVersion).decoded) {
+	const PieceFormat piece = pieceFormat("shimcache", formatSignature, conf.examinedVersion);
+	if (!piece.decoded) {
 		log(2, L"❇️AppCompatCache in an unsupported format, signature 0x" + to_hex(formatSignature));
 		unsupportedFormat = true;
 		return ERROR_SUCCESS;
@@ -151,7 +159,8 @@ HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 	   The flags are not given: what they say of an execution is not proven
 	   (decision of 2026-09-30, "executed" not reported). */
 	if (formatSignature == WINDOWS_7_TABLE.magic) return parsePathTable(data, size, WINDOWS_7_TABLE);
-	if (formatSignature == VISTA_TABLE.magic) return parsePathTable(data, size, VISTA_TABLE);
+	if (formatSignature == VISTA_TABLE.magic)
+		return parsePathTable(data, size, piece.form->sinceBuild == SERVER_2003_TABLE.sinceBuild ? SERVER_2003_TABLE : VISTA_TABLE);
 	if (formatSignature == WINDOWS_XP_MAGIC) return parseWindowsXp(data, size);
 	const bool windows8 = offset == 0 || offset == WINDOWS_8_HEADER_SIZE;
 	if (windows8) offset = WINDOWS_8_HEADER_SIZE;
@@ -270,6 +279,11 @@ HRESULT Shimcaches::parsePathTable(const BYTE* data, size_t size, const Shimcach
 			continue;
 		}
 		addEntry(std::wstring((const wchar_t*)(data + pathOffset), pathLength / sizeof(wchar_t)), modified);
+		// Only a version read says the value is Server 2003's: unread, Vista's flags would be given as a size.
+		if (table.sizeAfterDate && conf.examinedVersion.build != 0) {
+			shimcaches.back().fileSize = readLittleEndian<uint64_t>(e + (wide ? 24 : 16));
+			shimcaches.back().fileSizeKnown = true;
+		}
 	}
 	return ERROR_SUCCESS;
 }

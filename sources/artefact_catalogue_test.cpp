@@ -127,11 +127,11 @@ int main(int argc, char** argv) {
 	check(validatedByTestCycle(xp) && validatedByTestCycle(WindowsVersion{ 7601, false, false })
 	      && validatedByTestCycle(eleven) && validatedByTestCycle(WindowsVersion{ 17763, true, false })
 	      && validatedByTestCycle(WindowsVersion{ 7601, true, false }) && validatedByTestCycle(WindowsVersion{ 26100, true, false })
-	      && validatedByTestCycle(WindowsVersion{ 20348, true, true }),
+	      && validatedByTestCycle(WindowsVersion{ 20348, true, true }) && validatedByTestCycle(WindowsVersion{ 3790, true, false }),
 	      "the test cycle validates every client from XP on, and the servers measured");
-	check(!validatedByTestCycle(WindowsVersion{ 3790, true, false }) && !validatedByTestCycle(WindowsVersion{ 6002, true, false })
+	check(!validatedByTestCycle(WindowsVersion{ 6002, true, false })
 	      && !validatedByTestCycle(WindowsVersion{ 26100, true, true }) && !validatedByTestCycle(WindowsVersion{ 28000, true, false }),
-	      "a server not measured said validated: 2003, 2008, Core of 2025, a later build");
+	      "a server not measured said validated: 2008, Core of 2025, a later build");
 	check(classicEventLogs(xp) && classicEventLogs(WindowsVersion{ 3790, true, false }) && !classicEventLogs(vista)
 	      && !classicEventLogs(eleven) && !classicEventLogs(WindowsVersion{}),
 	      "the .evt logs are those of XP and Server 2003 only; an unread version is not taken for one of them");
@@ -178,16 +178,17 @@ int main(int argc, char** argv) {
 	check(pieceFormat("thumbcache", 0x20).decoded && pieceFormat("thumbcache", 0x15).decoded && pieceFormat("thumbcache", 0x14).decoded
 	      && !pieceFormat("thumbcache", 0x21).decoded && !pieceFormat("thumbcache", 0x21).form,
 	      "thumbcache: Windows 10, 7 and Vista layouts decoded, an unknown version not");
-	check(pieceFormat("shimcache", 0x34).decoded && pieceFormat("shimcache", 0xBADC0FEE).decoded && !pieceFormat("shimcache", 0xBADC0FFE).decoded
+	check(pieceFormat("shimcache", 0x34).decoded && pieceFormat("shimcache", 0xBADC0FEE).decoded && pieceFormat("shimcache", 0xBADC0FFE).decoded
 	      && !pieceFormat("shimcache", 0x80).form,
-	      "ShimCache: Windows 10 and 7 headers decoded, Server 2003 not, 0x80 alone is no signature");
+	      "ShimCache: Windows 10, 7, Vista and Server 2003 headers decoded, 0x80 alone is no signature");
 	/* One magic, two forms: the ShimCache of Server 2003 and of Vista. The
 	   examined version picks the form; without it, the oldest one. */
 	const WindowsVersion server2003{ 3790, true, false };
-	check(pieceFormat("shimcache", 0xBADC0FFE, vista).decoded && !pieceFormat("shimcache", 0xBADC0FFE, server2003).decoded
-	      && pieceFormat("shimcache", 0xBADC0FFE, server2003).form && !pieceFormat("shimcache", 0xBADC0FFE).decoded
-	      && pieceFormat("shimcache", 0xBADC0FEE, vista).decoded,
-	      "shimcache 0xBADC0FFE: Vista's form decoded, Server 2003's not; a version without that signature's form takes the oldest");
+	const ArtefactForm* vistaForm = pieceFormat("shimcache", 0xBADC0FFE, vista).form;
+	const ArtefactForm* server2003Form = pieceFormat("shimcache", 0xBADC0FFE, server2003).form;
+	check(vistaForm && server2003Form && vistaForm->sinceBuild == 6000 && server2003Form->sinceBuild == 3790
+	      && pieceFormat("shimcache", 0xBADC0FFE).form == server2003Form && pieceFormat("shimcache", 0xBADC0FEE, vista).decoded,
+	      "shimcache 0xBADC0FFE: each version its own form (the decoder picks its layout by it); without a version, the oldest");
 	check(pieceFormat("shimcache", 0x73743031).decoded && pieceFormat("shimcache", 0x73743030).decoded,
 	      "ShimCache: Windows 8.1 entries (\"10ts\" after 0x80 bytes) and Windows 8's (\"00ts\") decoded");
 	check(pieceFormat("jump_lists", 1).decoded && pieceFormat("jump_lists", 4).decoded && pieceFormat("jump_lists", 6).decoded

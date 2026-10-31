@@ -1185,9 +1185,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         volume, and is published as it is. Windows~XP also records the file's
         size (\champ{FileSize}) and when it updated the entry
         (\champ{LastUpdateUtc}). Server~2003 writes Vista's signature
-        (\texttt{0xBADC0FFE}) with other contents: the examined version tells
-        them apart, and Server~2003's form, not measured yet, is declared
-        unsupported.
+        (\texttt{0xBADC0FFE}), the file's size (\champ{FileSize}) in place of
+        its flags: the value does not tell them apart, the examined version
+        does, and without a version read the size is not given (measured on
+        Server~2003 Enterprise x86, build 3790).
   \item[\fichier{bams.json}] last execution per program and per user
         (Background Activity Moderator). The hives being read from the disk,
         an execution of the last minute or so may be missing: Windows keeps a
@@ -2186,10 +2187,10 @@ flagged as such: the collection goes on. The table below gives, for each key
 of \fichier{wac.yml}, the first Windows that has the artefact, where it lies and
 its format according to the version. It is produced from the program's own
 table, the only one \wac{} consults. Version~3 of \wac{} is validated on every client,
-from Windows~XP SP1 to Windows~11; version~4, besides, on Server~2008~R2, 2012,
-2012~R2, 2016, 2019, 2022 and 2025 with their interface, and on Server~2022 as a
-Server Core installation. Server~2003, which the cycle does not measure for
-want of an evaluation medium, is covered by Windows~XP's, of the same kernel.
+from Windows~XP SP1 to Windows~11; version~4, besides, on Server~2003
+(Enterprise x86, through Windows~XP's cycle), Server~2008~R2, 2012, 2012~R2,
+2016, 2019, 2022 and 2025 with their interface, and on Server~2022 as a Server
+Core installation.
 
 The locations are written as Windows~Vista and later lay out their folders.
 On Windows~XP and Server~2003, \wac{} looks for them where those versions keep
@@ -2432,8 +2433,8 @@ instead of taking it for the activity under study:
 ``server edition'' under the examined version of Windows & The
   collection is made, and every format \wac{} does not decode on that version
   is declared (section~\ref{sec:format}); the whole test cycle does not cover
-  that server (it covers the clients from XP SP1 to Windows~11, the servers from
-  2008~R2 to 2025 and Server Core 2022). \\
+  that server (it covers the clients from XP SP1 to Windows~11, the servers 2003
+  and 2008~R2 to 2025, and Server Core 2022). \\
 ``Checking the collection medium'' fails, directory not empty & The output
   folder holds an earlier collection. Give a new folder with \opt{output}. \\
 ``Checking the collection medium'' fails, not enough space & The medium is too
