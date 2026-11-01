@@ -25,9 +25,18 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Témoins retrouvés, avec leur date et l'origine de la modification.
 - Rien de lu par l'annuaire en marche ni par ses services : lecture brute, comme pour les ruches.
 
+## Plan par lots (2026-11-01)
+- **Lot 1 — l'annuaire.** Repérage par le registre (`Services\NTDS\Parameters`), lecture brute de `ntds.dit` et de ses journaux, rejoués sur la copie de travail ; comptes, groupes et appartenances (`link_table`), `adminCount`, délégations, SPN, `sIDHistory`, objets supprimés ; métadonnées de réplication (`replPropertyMetaData` : attribut, version, date, DSA d'origine). Référence : `Get-ADUser`, `Get-ADReplicationAttributeMetadata`, dissect.esedb.
+- **Lot 2 — les condensats.** Clé PEK déchiffrée avec la clé de démarrage, condensats NT et historique en JSON, comme la SAM ; le jugement revient à WAE. Référence : le condensat NT calculé sur l'hôte depuis un mot de passe témoin connu.
+- **Lot 3 — les stratégies de groupe.** `SYSVOL\domain` (le dossier réel : `sysvol\<domaine>` est une jonction) : `GPT.INI`, `Registry.pol`, scripts, tâches des préférences. Référence : `Get-GPO`, `Get-GPRegistryValue`.
+- Les événements du contrôleur (Kerberos, 4662, Directory Service, DFS Replication) sont déjà pris par `events`, quel que soit leur canal : à vérifier par un témoin, pas de code attendu.
+
 ## Tâches
 - [ ] Étude des sources sur un contrôleur de test
-- [ ] Contrôleur de domaine dans le harnais
+- [ ] Contrôleur de domaine dans le harnais (`install-domain-controller.sh`, écrit)
+- [ ] Lot 1 : annuaire
+- [ ] Lot 2 : condensats
+- [ ] Lot 3 : stratégies de groupe
 
 ## Journal
 - 2026-10-07 : créée à la demande de l'utilisateur — version 3.0, pour les serveurs.
