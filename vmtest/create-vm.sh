@@ -43,6 +43,9 @@
 #   - Windows 11 (variable ISO_WIN)
 #   - virtio-win.iso (guest agent + drivers)
 set -euo pipefail
+# The tools' answers are read as text ("shut off", "Mounted … at …"), in English:
+# since Ubuntu 26.04, virsh answers in the session's language ("fermé").
+export LC_ALL=C.UTF-8
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"

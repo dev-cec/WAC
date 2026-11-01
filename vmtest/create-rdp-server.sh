@@ -22,6 +22,9 @@
 #
 # Usage: ./create-rdp-server.sh      then: virsh -c qemu:///session start wac-rdp-server
 set -euo pipefail
+# The tools' answers are read as text ("shut off", "Mounted … at …"), in English:
+# since Ubuntu 26.04, virsh answers in the session's language ("fermé").
+export LC_ALL=C.UTF-8
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VMS="${VMS_DIR:-$HOME/vms}"
