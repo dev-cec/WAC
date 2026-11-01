@@ -273,21 +273,21 @@ un fichier de commandes après lui.
 Les profils \texttt{srv2008r2} à \texttt{srv2025} et \texttt{srv2022core} de
 \fichier{create-vm.sh} créent chaque serveur sans interaction, depuis les
 médias d'évaluation de Microsoft ; le cycle est le même que sous Windows~11
-(\texttt{WAC\_VM=srv2022-test ./run-wac-test.sh}). Les mesures des 30 et
-31~octobre 2026, toutes sans échec :
+(\texttt{WAC\_VM=srv2022-test ./run-wac-test.sh}). Les mesures du 30~octobre au
+1\textsuperscript{er}~novembre 2026, toutes sans échec :
 
 \begin{center}
 \begin{tabular}{@{}lrl@{}}
 \toprule
 Serveur & Contrôles & Build \\
 \midrule
-Server~2003 & 90 & 3790 \\
+Server~2003 & 95 & 3790 \\
 Server~2008~R2 & 376 & 7601 \\
 Server~2012 & 420 & 9200 \\
 Server~2012~R2 & 428 & 9600 \\
 Server~2016 & 446 & 14393 \\
 Server~2019 & 466 & 17763 \\
-Server~2022 & 476 & 20348 \\
+Server~2022, IIS, Apache, nginx, MariaDB, PostgreSQL & 548 & 20348 \\
 Server~2022, Server Core & 458 & 20348 \\
 Server~2025 & 478 & 26100 \\
 \bottomrule
