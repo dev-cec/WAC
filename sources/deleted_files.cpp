@@ -14,6 +14,7 @@
 #include "running_machine.h"
 #include "sha.h"
 #include "tools.h"
+#include <new>
 #include <algorithm>
 #include <cstring>
 #include <filesystem>
@@ -251,6 +252,9 @@ Recovery recoverContent(const DeletedData& data, const ClusterSource& volume,
 
 namespace {
 
+//! The largest file carving holds in memory to check it: a 32-bit process has little room.
+const uint64_t CARVE_READ_MAX = sizeof(size_t) == 4 ? 1ULL << 30 : 4ULL << 30;
+
 //! Clusters looked at a time: their allocation and claims read once.
 const uint64_t CARVE_WINDOW = 256;
 
@@ -334,6 +338,10 @@ CarvedFile carveAt(const ClusterSource& volume, uint64_t lcn, const uint8_t* hea
 } // namespace
 
 uint64_t carveClusters(const ClusterSource& volume, uint64_t maxFile, const std::function<void(const CarvedFile&)>& found) {
+	/* A carved file is checked in memory before it is kept, however high
+	   max_file_mib is set — `unlimited` included: without this bound, a PDF's
+	   start would read every free cluster that follows it. */
+	maxFile = std::min(maxFile, CARVE_READ_MAX);
 	const uint64_t cluster = volume.clusterSize;
 	uint64_t looked = 0;
 	std::vector<bool> used, claimed;
@@ -352,7 +360,12 @@ uint64_t carveClusters(const ClusterSource& volume, uint64_t maxFile, const std:
 			bool jumped = false;
 			for (uint64_t c = k; c < end; ++c) {
 				++looked;
-				const CarvedFile file = carveAt(volume, lcn + c, buffer.data() + (c - k) * cluster, maxFile);
+				CarvedFile file;
+				try { file = carveAt(volume, lcn + c, buffer.data() + (c - k) * cluster, maxFile); }
+				catch (const std::bad_alloc&) {   // the machine's memory, not the collection's end
+					log(2, L"🔥Carving: not enough memory for the candidate at cluster " + std::to_wstring(lcn + c) + L", left out");
+					continue;
+				}
 				if (file.format == CarvedFormat::None) continue;
 				found(file);
 				// Past the file: what it holds (a PE inside an archive) is not another file.
@@ -649,7 +662,7 @@ Json recoverOne(const Candidate& c, const ClusterClaims* claims, Tally& tally) {
 		return o;
 	}
 	const ClusterSource source = rawClusters(letter, layout, claims, c.latest);
-	const uint64_t maxFile = (uint64_t)conf.deletedFilesSettings.maxFileMib << 20;
+	const uint64_t maxFile = AppliConf::ceilingBytes(conf.deletedFilesSettings.maxFileMib);
 	Md5Stream md5;
 	Sha1Stream sha1;
 	Sha256Stream sha256;
@@ -706,8 +719,8 @@ Json recoverOne(const Candidate& c, const ClusterClaims* claims, Tally& tally) {
  *  @return the files found */
 size_t carveSource(const std::wstring& volume, const ClusterSource& source, uint64_t firstCluster,
                    const std::wstring& reading, Json& files, Tally& tally) {
-	const uint64_t maxFile = (uint64_t)conf.deletedFilesSettings.maxFileMib << 20;
-	const uint64_t maxTotal = (uint64_t)conf.deletedFilesSettings.maxTotalMib << 20;
+	const uint64_t maxFile = AppliConf::ceilingBytes(conf.deletedFilesSettings.maxFileMib);
+	const uint64_t maxTotal = AppliConf::ceilingBytes(conf.deletedFilesSettings.maxTotalMib);
 	size_t count = 0;
 	const uint64_t looked = carveClusters(source, maxFile, [&](const CarvedFile& f) {
 		if ((++count & 63) == 1) printProgressStep(L"$Carved " + volume, (unsigned)count, 0);
@@ -810,8 +823,8 @@ void addStoredDate(Json& o, const std::wstring& key, const FILETIME& date, bool 
  *  @param tally the counts, the bytes copied among them
  *  @return the files read */
 size_t collectFatDeleted(Json& files, Tally& tally) {
-	const uint64_t maxFile = (uint64_t)conf.deletedFilesSettings.maxFileMib << 20;
-	const uint64_t maxTotal = (uint64_t)conf.deletedFilesSettings.maxTotalMib << 20;
+	const uint64_t maxFile = AppliConf::ceilingBytes(conf.deletedFilesSettings.maxFileMib);
+	const uint64_t maxTotal = AppliConf::ceilingBytes(conf.deletedFilesSettings.maxTotalMib);
 	size_t read = 0;
 	for (const std::wstring& mountPoint : fatVolumesToRead()) {
 		FileVolumeSource device(L"\\\\.\\" + mountPoint, 0, false);   // nothing kept: contents, not metadata
@@ -1022,8 +1035,8 @@ HRESULT DeletedFilesCollect() {
 	const HRESULT listed = listCandidates(candidates, claims);
 	// The most recent first: the total's bound leaves out the oldest.
 	std::stable_sort(candidates.begin(), candidates.end(), [](const Candidate& a, const Candidate& b) { return a.latest > b.latest; });
-	const uint64_t maxFile = (uint64_t)conf.deletedFilesSettings.maxFileMib << 20;
-	const uint64_t maxTotal = (uint64_t)conf.deletedFilesSettings.maxTotalMib << 20;
+	const uint64_t maxFile = AppliConf::ceilingBytes(conf.deletedFilesSettings.maxFileMib);
+	const uint64_t maxTotal = AppliConf::ceilingBytes(conf.deletedFilesSettings.maxTotalMib);
 	Json files = Json::arr();
 	Tally tally;
 	/* The FAT and exFAT volumes first: a suspect's keys, small, and what the

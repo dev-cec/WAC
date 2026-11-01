@@ -447,6 +447,10 @@ void carving() {
 	std::vector<CarvedFile> bounded;
 	carveClusters(source, 1024, [&](const CarvedFile& f) { bounded.push_back(f); });
 	check(bounded.empty(), "carving: a PDF beyond max_file found");
+	// max_file_mib: unlimited, and the read still stops where the free clusters do.
+	std::vector<CarvedFile> unlimited;
+	carveClusters(source, AppliConf::ceilingBytes(AppliConf::UNLIMITED_MIB), [&](const CarvedFile& f) { unlimited.push_back(f); });
+	check(unlimited.size() == 1 && unlimited[0].content == found && !v.badRead, "carving: unlimited does not find the same PDF");
 }
 
 void names() {

@@ -42,8 +42,9 @@ artefacts:
     enabled:               true   # false: nothing read
     level:                 2      # 1: the content of the $MFT's deleted records; 2: and the names left in the directory indexes;
                                   # 3: and the files carved from the free clusters (PE, ZIP, PDF) — the whole free space read, however long
-    max_file_mib:          64     # a larger file: listed with its fingerprints, not copied
-    max_total_mib:         4096   # all recovered contents copied, at most; the most recent first
+    max_file_mib:          64     # a larger file: listed with its fingerprints, not copied; unlimited: no bound (a carved file
+                                  # is checked in memory: up to 4 GiB, 1 GiB by WAC32, beyond it listed or not found)
+    max_total_mib:         4096   # all recovered contents copied, at most; the most recent first; unlimited: no bound
     excluded_folders:             # never read, on every volume: what the system deletes by the thousand
       - \Windows\WinSxS
       - \Windows\SoftwareDistribution

@@ -236,7 +236,8 @@ struct CarvedFile {
  *         clusters level 1 already gave (left out)
  *  @param maxFile the largest file read, in bytes: a PE beyond it is
  *         reported with its size, not read; a ZIP or PDF whose end lies
- *         beyond it is not found
+ *         beyond it is not found. Held to 4 GiB (1 GiB in 32 bits) whatever
+ *         is asked: a file is checked in memory before it is kept
  *  @param found called with each file, in the order of the volume
  *  @return the free clusters looked at */
 uint64_t carveClusters(const ClusterSource& volume, uint64_t maxFile, const std::function<void(const CarvedFile&)>& found);

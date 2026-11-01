@@ -237,8 +237,8 @@ struct AppliConf {
 		 *  the free clusters — the whole free space read, for as long as it
 		 *  takes: asked for knowingly, never the default. */
 		int level = 2;
-		int maxFileMib = 64;      //!< a larger deleted file is listed with its fingerprints, not copied
-		int maxTotalMib = 4096;   //!< all the recovered contents copied, at most: the most recent first
+		int maxFileMib = 64;      //!< a larger deleted file is listed with its fingerprints, not copied; UNLIMITED_MIB for no bound
+		int maxTotalMib = 4096;   //!< all the recovered contents copied, at most: the most recent first; UNLIMITED_MIB for no bound
 		/*! Folders never read, as paths on each volume ("\\Windows\\WinSxS"):
 		 *  what the system deletes by the thousand, and no intruder's file.
 		 *  Not $Extend as a whole: Windows 10 and later move a file deleted
@@ -255,7 +255,8 @@ struct AppliConf {
 		/*! A database a site's web.config names outside the sites' folders,
 		 *  larger: said with its size, not copied — a very large base is
 		 *  taken on the operator's decision. One inside a site's folder
-		 *  comes with the site, whole (user decision of 2026-09-26). */
+		 *  comes with the site, whole (user decision of 2026-09-26).
+		 *  UNLIMITED_MIB for no bound. */
 		int maxDatabaseMib = 1024;
 	} webServerSettings;
 	/*! The version of the examined Windows, read in its SOFTWARE hive once it

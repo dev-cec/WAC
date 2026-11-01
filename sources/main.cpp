@@ -134,7 +134,9 @@ HRESULT checkCollectionLocation() {
 	// Shadow copies: only what differs from the newer version is stored — a few changed hives and logs per copy.
 	if (conf.artefacts.shadowCopies) need += 500ULL * 1024 * 1024;
 	// Deleted files: their budget, which a used volume fills (4 GiB copied by default, measured on Windows 11).
-	if (conf.artefacts.deletedFiles) need += (unsigned long long)conf.deletedFilesSettings.maxTotalMib * 1024 * 1024;
+	// `unlimited` has no budget to reserve: what fits on the medium is the operator's decision.
+	if (conf.artefacts.deletedFiles && conf.deletedFilesSettings.maxTotalMib != AppliConf::UNLIMITED_MIB)
+		need += AppliConf::ceilingBytes(conf.deletedFilesSettings.maxTotalMib);
 	const HRESULT hrLieu = ExhibitStoreCheckLocation(need);
 	auditRecord(L"Check of the collection location ("
 	            + std::to_wstring(ExhibitStoreFreeSpace() / 1024 / 1024)

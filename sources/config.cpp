@@ -52,6 +52,15 @@ bool readInt(const YamlNode& node, const std::string& key, int low, int high, in
 	return true;
 }
 
+/*! A ceiling in MiB: a number within its range, or `unlimited`. */
+bool readCeiling(const YamlNode& node, const std::string& key, int high, int& value, std::string& error) {
+	if (node.scalar == "unlimited") {
+		value = AppliConf::UNLIMITED_MIB;
+		return true;
+	}
+	return readInt(node, key, 1, high, value, error);
+}
+
 } // namespace
 
 std::vector<std::pair<std::string, bool*>> artefactSwitches(AppliConf& conf) {
@@ -141,10 +150,10 @@ bool readDeletedFiles(const YamlNode& node, AppliConf& conf, std::string& error)
 			if (!readInt(*value, name, 1, 3, settings.level, error)) return false;
 		}
 		else if (option == "max_file_mib") {
-			if (!readInt(*value, name, 1, DELETED_FILE_MAX_MIB, settings.maxFileMib, error)) return false;
+			if (!readCeiling(*value, name, DELETED_FILE_MAX_MIB, settings.maxFileMib, error)) return false;
 		}
 		else if (option == "max_total_mib") {
-			if (!readInt(*value, name, 1, DELETED_TOTAL_MAX_MIB, settings.maxTotalMib, error)) return false;
+			if (!readCeiling(*value, name, DELETED_TOTAL_MAX_MIB, settings.maxTotalMib, error)) return false;
 		}
 		else if (option == "excluded_folders") {
 			if (!value->list) return refuse(error, *value, text(Text::ConfigurationListExpected, { wide(name) }));
@@ -170,7 +179,7 @@ bool readWebServer(const YamlNode& node, AppliConf& conf, std::string& error) {
 			if (!readBool(*value, name, conf.artefacts.webServer, error)) return false;
 		}
 		else if (option == "max_database_mib") {
-			if (!readInt(*value, name, 1, DATABASE_MAX_MIB, conf.webServerSettings.maxDatabaseMib, error)) return false;
+			if (!readCeiling(*value, name, DATABASE_MAX_MIB, conf.webServerSettings.maxDatabaseMib, error)) return false;
 		}
 		else return refuse(error, *value, text(Text::ConfigurationUnknownSetting, { wide(name) }));
 	}

@@ -189,6 +189,20 @@ int wmain(int argc, wchar_t** argv) {
 		check(LoadConfiguration(rawFile("reference-web.yml", DefaultConfiguration()), g, f, error) && g.artefacts.webServer
 		      && g.webServerSettings.maxDatabaseMib == defaults.maxDatabaseMib, "reference file: web_server differs from the defaults");
 	}
+	// `unlimited` for the ceilings in MiB; no other word, and not for a setting that is no ceiling.
+	{
+		AppliConf c;
+		ConfigurationFile f;
+		std::string error;
+		check(LoadConfiguration(file("unlimited.yml", "artefacts:\n  web_server:\n    max_database_mib: unlimited\n"
+		                                              "  deleted_files:\n    max_file_mib: unlimited\n    max_total_mib: unlimited\n"), c, f, error)
+		      && c.webServerSettings.maxDatabaseMib == AppliConf::UNLIMITED_MIB && c.deletedFilesSettings.maxFileMib == AppliConf::UNLIMITED_MIB
+		      && c.deletedFilesSettings.maxTotalMib == AppliConf::UNLIMITED_MIB, "unlimited not applied: " + error);
+		check(AppliConf::ceilingBytes(AppliConf::UNLIMITED_MIB) == UINT64_MAX && AppliConf::ceilingBytes(1024) == 1ULL << 30,
+		      "a ceiling in bytes: 1024 MiB is 1 GiB, unlimited above any size");
+	}
+	refused("unlimited-word.yml", "artefacts:\n  web_server:\n    max_database_mib: illimited\n", 3, "a number expected");
+	refused("unlimited-level.yml", "artefacts:\n  deleted_files:\n    level: unlimited\n", 3, "a number expected");
 	refused("web-unknown.yml", "artefacts:\n  web_server:\n    max_size: 8\n", 3, "unknown setting \"artefacts.web_server.max_size\"");
 	refused("web-ceiling.yml", "artefacts:\n  web_server:\n    max_database_mib: 0\n", 3, "between 1 and 1048576");
 	refused("deleted-scalar.yml", "artefacts:\n  deleted_files:\n    excluded_folders: \\Windows\n", 3, "a list expected");

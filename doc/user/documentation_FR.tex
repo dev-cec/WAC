@@ -352,8 +352,8 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
     enabled:               true   # false : rien n'est lu
     level:                 2      # 1 : contenu des enregistrements supprimés de la $MFT ; 2 : et noms restés dans les index
                                   # 3 : et fichiers taillés dans l'espace libre (PE, ZIP, PDF) — tout l'espace libre lu
-    max_file_mib:          64     # au-delà : relevé avec ses empreintes, pas copié
-    max_total_mib:         4096   # total copié ; les plus récents d'abord
+    max_file_mib:          64     # au-delà : relevé avec ses empreintes, pas copié ; unlimited : aucun plafond
+    max_total_mib:         4096   # total copié ; les plus récents d'abord ; unlimited : aucun plafond
     excluded_folders:             # jamais lus, sur chaque volume
       - \Windows\WinSxS
       - \Windows\SoftwareDistribution
@@ -431,7 +431,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   web_client:              true   # navigateurs Chromium et Firefox : visites, téléchargements, recherches ; leurs bases copiées brutes
   web_server:                     # IIS : sites, pools, modules natifs, journaux, chaînes de connexion, comptes
     enabled:               true   # false : rien n'est lu ; le dossier de chaque site copié entier
-    max_database_mib:      1024   # base désignée hors des sites, au-delà : signalée, pas copiée
+    max_database_mib:      1024   # base hors des sites, données d'un moteur, au-delà : signalés, pas copiés ; unlimited : aucun plafond
   wmi:                     true   # dépôt WMI lu hors ligne : abonnements (filtres, consommateurs, liaisons)
   word_wheel_query:        true   # recherches de l'Explorateur
   zone_identifiers:        true   # flux Zone.Identifier : d'où viennent les fichiers téléchargés
@@ -2044,7 +2044,10 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{NotCopied}) ; sous \texttt{binary: none}, rien n'est jugé et il est
         copié. Les plus récents d'abord (dernière date de
         l'enregistrement, celle de la suppression n'y figurant pas), jusqu'à
-        \texttt{max\_total\_mib} ; les dossiers \texttt{excluded\_folders}
+        \texttt{max\_total\_mib} (\texttt{unlimited} lève ce plafond et celui de
+        \texttt{max\_file\_mib} ; un fichier taillé reste vérifié en mémoire,
+        jusqu'à 4~Gio, 1~Gio avec \fichier{WAC32.exe} ; le support doit alors
+        pouvoir tout contenir, \wac{} ne le réserve plus) ; les dossiers \texttt{excluded\_folders}
         (mises à jour de Windows) ne sont pas lus, ni le dossier de sortie.
         Le réglage est une structure sous \texttt{artefacts:} ;
         \texttt{deleted\_files: false} suffit pour l'écarter.

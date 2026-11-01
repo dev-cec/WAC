@@ -349,8 +349,8 @@ artefacts:              # one key per artefact; a missing key is true
     enabled:               true   # false: nothing read
     level:                 2      # 1: the content of the $MFT's deleted records; 2: and the names left in the indexes
                                   # 3: and files carved from the free space (PE, ZIP, PDF) — the whole free space read
-    max_file_mib:          64     # beyond: listed with its fingerprints, not copied
-    max_total_mib:         4096   # all copied; the most recent first
+    max_file_mib:          64     # beyond: listed with its fingerprints, not copied; unlimited: no bound
+    max_total_mib:         4096   # all copied; the most recent first; unlimited: no bound
     excluded_folders:             # never read, on every volume
       - \Windows\WinSxS
       - \Windows\SoftwareDistribution
@@ -428,7 +428,7 @@ artefacts:              # one key per artefact; a missing key is true
   web_client:              true   # browsers: visits, downloads, searches (Edge, Chrome, Brave, Vivaldi, Opera); their databases copied raw
   web_server:                     # IIS: sites, pools, native modules, logs, connection strings, accounts
     enabled:               true   # false: nothing read; each site's folder copied whole
-    max_database_mib:      1024   # a database named outside the sites, larger: said, not copied
+    max_database_mib:      1024   # a database outside the sites, an engine's data, larger: said, not copied; unlimited: no bound
   wmi:                     true   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
   word_wheel_query:        true   # terms searched in Explorer
   zone_identifiers:        true   # Zone.Identifier streams (Mark of the Web): where downloaded files came from
@@ -1964,7 +1964,10 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\champ{Copied}~\texttt{false}, \champ{NotCopied}); under
         \texttt{binary: none} nothing is judged, and it is copied. The most recent
         first (the record's latest date, the deletion's not being in it), up
-        to \texttt{max\_total\_mib}; the \texttt{excluded\_folders} (Windows
+        to \texttt{max\_total\_mib} (\texttt{unlimited} lifts this bound and that
+        of \texttt{max\_file\_mib}; a carved file is still checked in memory, up
+        to 4~GiB, 1~GiB with \fichier{WAC32.exe}; the medium must then hold it
+        all, \wac{} no longer reserves it); the \texttt{excluded\_folders} (Windows
         updates) are not read, nor the output folder. The setting is a
         structure under \texttt{artefacts:}; \texttt{deleted\_files: false}
         is enough to leave it out.
