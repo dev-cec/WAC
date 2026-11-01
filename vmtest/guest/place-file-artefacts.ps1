@@ -70,6 +70,8 @@
 #                it with the token, its instant in UTC; the site's web.config
 #                and its connection strings, two witness SQLite databases
 #                (App_Data and C:\wacdata) -> web_server_*.json
+#   webpage, webhit, weberror, webmodule, webengine, webheld  Apache, nginx and
+#                the engines, where install-web-servers.sh ran -> web_server_*.json
 #                and the exhibit manifest
 #   shadowcopy, shadowfile  every shadow copy Windows lists for C: (identifier,
 #                set, creation in UTC), one made here by the harness — through
@@ -2149,6 +2151,50 @@ try { if (Wants 'web_server') {
         else { Write-Output 'witness_failed=web_server_accounts|the witness databases were not uploaded' }
     }
 } } catch { WitnessFailure 'web_server' $_ }
+# 25c. B-035, lot 3 — Apache, nginx and the engines install-web-servers.sh put
+#     on this server (once; they stay; nginx, no service, started here). A
+#     page and a request with the token on each server, an error each logs
+#     (a denied .ht* on Apache, a missing page on nginx), each with the instant
+#     asked. Then what the configuration says, read by PowerShell and not by
+#     WAC: the modules loaded; and a file of each data folder, with its SHA-256,
+#     and MariaDB's ibdata1, held by the running engine: the raw reading's proof.
+try { if (Wants 'web_server') {
+    if (-not (Test-Path 'C:\Apache24\bin\httpd.exe')) {
+        Write-Output 'witness_failed=web_installations|install-web-servers.sh not run on this machine'
+    }
+    else {
+        if (-not (Get-Process nginx -ErrorAction SilentlyContinue)) {
+            Start-Process -WindowStyle Hidden -WorkingDirectory 'C:\nginx-1.28.0' 'C:\nginx-1.28.0\nginx.exe'
+            Start-Sleep -Seconds 3
+        }
+        $apache22 = "${env:ProgramFiles(x86)}\Apache Software Foundation\Apache2.2"
+        $servers = @(
+            @('Apache 2.4 vhost', 8081, 'C:\Apache24\wac-vhost', 'C:\Apache24\conf\httpd.conf', '/.htwac'),
+            @('Apache 2.2', 8082, "$apache22\htdocs", "$apache22\conf\httpd.conf", '/.htwac'),
+            @('nginx', 8083, 'C:\nginx-1.28.0\html', 'C:\nginx-1.28.0\conf\nginx.conf', '/wac-missing'))
+        foreach ($server in $servers) {
+            $name, $port, $folder, $config, $errorStem = $server
+            $page = "$folder\wac-witness.htm"
+            Set-Content -Path $page -Value "<html><body>WAC witness page of $name</body></html>"
+            Write-Output ("webpage=$name|$page|" + (Get-FileHash -Algorithm SHA256 -LiteralPath $page).Hash)
+            $token = "$port" + (Get-Date -Format 'yyyyMMddHHmmss')
+            $asked = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss')
+            $answer = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:$port/wac-witness.htm?wac=$token"
+            Write-Output ("webhit=$name|/wac-witness.htm|wac=$token|" + $answer.StatusCode + "|$asked")
+            $denied = "$errorStem-$token"
+            try { Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:$port$denied" | Out-Null } catch { }
+            Write-Output ("weberror=$name|" + $denied.Substring(1) + "|$asked")
+            foreach ($line in Select-String -LiteralPath $config -Pattern '^\s*LoadModule\s+(\S+)') {
+                Write-Output ("webmodule=$name|" + $line.Matches[0].Groups[1].Value)
+            }
+        }
+        foreach ($piece in @(@('MariaDB', 'C:\mariadb\data\my.ini'), @('PostgreSQL', 'C:\pgsql\data\PG_VERSION'))) {
+            Write-Output ('webengine=' + $piece[0] + '|' + $piece[1] + '|' + (Get-FileHash -Algorithm SHA256 -LiteralPath $piece[1]).Hash)
+        }
+        Write-Output 'webheld=MariaDB|C:\mariadb\data\ibdata1'
+    }
+} } catch { WitnessFailure 'web_installations' $_ }
+
 # Uploaded for nothing where IIS is not (a workstation, a server before 2012): not left behind.
 Remove-Item -Force -ErrorAction SilentlyContinue 'C:\wactest\wac-app.db', 'C:\wactest\wac-outside.db'
 

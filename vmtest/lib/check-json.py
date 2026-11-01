@@ -512,6 +512,7 @@ def cross_checks(folder):
     found += guarded(check_vulnerable_driver, folder)
     found += guarded(check_web_client, folder)
     found += guarded(check_web_server, folder)
+    found += guarded(check_web_installations, folder)
     found += guarded(check_activities_cache, folder)
     found += guarded(check_search_index, folder)
     found += guarded(check_event_messages, folder)
@@ -2343,10 +2344,12 @@ def check_small_file_artefacts(folder):
                f"run.json: {name} of the DEFAULT hive, REG_EXPAND_SZ, as written ({value})",
                f"run.json: {name} of the DEFAULT hive missing or different: {match[:1]}")
     # The Default profile (B-032): its NTUSER.DAT read as a profile's, under the
-    # SID S-0-0-0 that cannot be one, told by Profile and without SIDName.
+    # SID S-0-0-0 that cannot be one, told by Profile and without SIDName. A
+    # profile made from Default since has the value too (NT SERVICE\\MariaDB,
+    # whose profile was made after the witness): the Default's own row is read.
     if isinstance(runs, list) and "rundefault" in reference:
         name, value = reference["rundefault"].split("|", 1)
-        match = [r for r in runs if r.get("Name") == name]
+        match = [r for r in runs if r.get("Name") == name and r.get("Profile") == "Default"]
         report(bool(match) and match[0].get("SID") == "S-0-0-0" and match[0].get("Profile") == "Default"
                and "SIDName" not in match[0] and match[0].get("Value") == value,
                f"run.json: {name} of the Default profile, SID S-0-0-0, Profile Default ({value})",
@@ -3616,6 +3619,79 @@ def check_web_server(folder):
         report(theirs and theirs <= ours and all(formats.get(h) for _, _, h in theirs),
                f"web_server_accounts.json: the {len(theirs)} account(s) the host wrote in both databases, login and hash, each scheme named",
                f"web_server_accounts.json: missing {sorted(theirs - ours)[:2]}, formats {[formats.get(h) for _, _, h in theirs]}")
+    return found
+
+
+def check_web_installations(folder):
+    """Apache, nginx and the database engines against what the harness did and
+    PowerShell read (place-file-artefacts.ps1, 25c): each server found with its
+    modules, the witness request in web_server_logs.json with its status and
+    instant in UTC, the error provoked in web_server_error_logs.json with its
+    instant — Apache 2.4 and 2.2's layouts and nginx's —, the pages and engines'
+    files in the store with their SHA-256, a file the running engine holds
+    collected, and each of those servers' files once in the manifest."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8", errors="replace") as f:
+        lines = [l.rstrip("\r\n") for l in f]
+    def values(key):
+        return [l[len(key) + 1:].split("|") for l in lines if l.startswith(key + "=")]
+    pages = values("webpage")
+    if skipped_unplaced(folder, "web_installations", pages) or not pages:
+        return 0
+    found = 0
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  {'✅' if ok else '❌'} {success if ok else failure}")
+        found += 0 if ok else 1
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    def stored(source):
+        return [o for o in items if str(o.get("SourcePath", "")).lower() == source.lower()]
+    installations = load(folder, "web_server_installations.json") or []
+    wanted = {"Apache 2.4 vhost": "c:\\apache24", "Apache 2.2": "apache2.2", "nginx": "c:\\nginx-1.28.0"}
+    def installation(name):
+        return next((i for i in installations if isinstance(i, dict) and str(i.get("Root", "")).lower().endswith(wanted[name])), None)
+    logs = load(folder, "web_server_logs.json") or []
+    errors = load(folder, "web_server_error_logs.json") or []
+    for name, page, sha256 in pages:
+        i = installation(name)
+        modules = {m.get("Name") for m in (i or {}).get("Modules") or []}
+        theirs = {m for n, m in values("webmodule") if n == name}
+        report(i is not None and theirs <= modules,
+               f"web_server_installations.json: {name} at {(i or {}).get('Root')}, from its {(i or {}).get('Source')}, its {len(theirs)} module(s) as its configuration loads them",
+               f"web_server_installations.json: {name}: {i and i.get('Root')}, modules missing {sorted(theirs - modules)[:3]}")
+        report(any(str(o.get("SHA256", "")).upper() == sha256.upper() for o in stored(page)),
+               f"manifest: {name}'s witness page stored with the SHA-256 of Get-FileHash",
+               f"manifest: {name}'s witness page {page}: {[o.get('SHA256') for o in stored(page)] or 'not collected'}")
+    for name, stem, query, status, asked in values("webhit"):
+        hits = [l for l in logs if isinstance(l, dict) and l.get("UriStem") == stem and l.get("UriQuery") == query]
+        gaps = [abs((instant(l["TimeUtc"]) - instant(asked + "Z")).total_seconds()) for l in hits if l.get("TimeUtc")]
+        report(len(hits) == 1 and str(hits[0].get("Status")) == status and gaps and gaps[0] <= 120,
+               f"web_server_logs.json: {name}'s witness request {stem}?{query}, status {status}, {gaps[0] if gaps else '?':.0f} s from the harness's instant (UTC)" if gaps else "",
+               f"web_server_logs.json: {name}'s witness request {stem}?{query}: {[(h.get('Status'), h.get('TimeUtc'), h.get('File')) for h in hits][:2]} (asked at {asked}Z)")
+    for name, needle, asked in values("weberror"):
+        hits = [e for e in errors if isinstance(e, dict) and needle in str(e.get("Message", ""))]
+        gaps = [abs((instant(e["TimeUtc"]) - instant(asked + "Z")).total_seconds()) for e in hits if e.get("TimeUtc")]
+        report(hits and gaps and min(gaps) <= 120 and all(e.get("Level") for e in hits),
+               f"web_server_error_logs.json: {name}'s provoked error, level {hits[0].get('Level') if hits else ''}, its local date to UTC within {min(gaps) if gaps else 0:.0f} s",
+               f"web_server_error_logs.json: {name}'s error {needle}: {[(e.get('Level'), e.get('TimeUtc')) for e in hits][:2]} (asked at {asked}Z), {len(errors)} line(s) in all")
+    engines = load(folder, "web_server_database_engines.json") or []
+    for product, source, sha256 in values("webengine"):
+        named = [e for e in engines if isinstance(e, dict) and str(source).lower().startswith(str(e.get("DataFolder", "?")).lower())]
+        report(named and named[0].get("DataFolderCopied") is True and any(str(o.get("SHA256", "")).upper() == sha256.upper() for o in stored(source)),
+               f"web_server_database_engines.json: {product}, service {named[0].get('Service') if named else ''}, its data folder taken ({source} with the SHA-256 of Get-FileHash)",
+               f"web_server_database_engines.json: {product}: {named or engines}; {source}: {[o.get('SHA256') for o in stored(source)] or 'not collected'}")
+    for product, source in values("webheld"):
+        report(any(o.get("SHA256") for o in stored(source)),
+               f"manifest: {source}, held by the running {product}, collected by the raw reading",
+               f"manifest: {source}, held by the running {product}, not collected")
+    roots = ("c:\\apache24\\", "c:\\nginx-1.28.0\\", "c:\\mariadb\\", "c:\\pgsql\\", "c:\\inetpub\\")
+    twice = [s for s, n in collections.Counter(str(o.get("SourcePath", "")).lower() for o in items
+                                               if str(o.get("SourcePath", "")).lower().startswith(roots)).items() if n > 1]
+    report(not twice, "manifest: each file of the web servers and engines once",
+           f"manifest: {len(twice)} file(s) of the web servers taken twice, e.g. {twice[:2]}")
     return found
 
 
