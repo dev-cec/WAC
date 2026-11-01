@@ -1,5 +1,5 @@
 /*! \file
- *  \brief The web server of the examined machine: IIS (backlog B-035, lot 1).
+ *  \brief The web server of the examined machine: IIS (backlog B-035, lots 1 and 2).
  *
  *  WHAT THE ARTEFACT PROVES. On a web server, a compromise goes through the
  *  site: a web shell dropped in its folder and the requests that call it, a
@@ -28,6 +28,19 @@
  *    whatever its files (user decision of 2026-09-26: the code, the data,
  *    what an attacker dropped among them).
  *
+ *  - The application's databases: a site's web.config names them in its
+ *    connection strings (`|DataDirectory|` is its App_Data). One inside a
+ *    site's folder comes with it; one elsewhere is taken on its own, with
+ *    its -wal and -journal, up to `max_database_mib` of wac.yml — a larger
+ *    one is said, not copied (an engine's server, SQL Server or MySQL, is
+ *    not a file: lot 3).
+ *  - The application's accounts: in each SQLite database, a table whose
+ *    name says accounts (users, wp_users, AspNetUsers, members…) and that
+ *    has a password column; each row given, its hash with the scheme its
+ *    form names (bcrypt, phpass, PBKDF2…), its other columns as
+ *    {Column, Value} — a name from the database is never a JSON key.
+ *    Judging a weak password is WAE's.
+ *
  *  THE LOGS' FORMAT: W3C extended (w3c_log.h), IIS's default; the dates in
  *  UTC — IIS writes W3C in UTC whatever its localTimeRollover, which only
  *  names the files. The other formats (IIS, NCSA, custom) are taken raw,
@@ -36,7 +49,11 @@
  *  OUTPUT. web_server_sites.json, web_server_application_pools.json,
  *  web_server_modules.json (the configuration, each element's attributes as
  *  IIS stores them — a password of a pool or a virtual directory stays as
- *  IIS encrypted it), web_server_logs.json (one object per request).
+ *  IIS encrypted it), web_server_logs.json (one object per request),
+ *  web_server_connection_strings.json (each connection string as written:
+ *  its password in clear when the site keeps it so; an encrypted section
+ *  said by its provider, not decoded), web_server_accounts.json (one object
+ *  per account row).
  */
 #pragma once
 
@@ -106,12 +123,63 @@ IisSources iisSources(const IisConfiguration& configuration);
  *  @return its lines, dates in UTC */
 std::vector<W3cLogEntry> parseIisLog(const std::wstring& text, const std::wstring& file);
 
+/*! A connection string of a web.config. */
+struct IisConnectionString {
+	std::wstring name;              //!< its name in the section
+	std::wstring connectionString;  //!< as written
+	std::wstring providerName;      //!< the data provider ("System.Data.SQLite")
+	std::wstring databaseFile;      //!< the database file it names, resolved; empty for a server or a share
+	std::wstring protectedBy;       //!< an encrypted section's provider: its strings are not read
+	std::wstring file;              //!< the web.config, on the examined machine
+	Json toJson() const;            //!< @return the connection string as a JSON object
+};
+
+/*! The database file a connection string names: the value of Data Source,
+ *  AttachDbFilename, Dbq or Filename, `|DataDirectory|` as the site's
+ *  App_Data, kept only if it is a local path with a database's extension.
+ *  @param connectionString as written
+ *  @param siteFolder the folder of the site whose web.config holds it
+ *  @return the file, absolute; empty if it names none */
+std::wstring connectionDatabaseFile(const std::wstring& connectionString, const std::wstring& siteFolder);
+
+/*! The connection strings of a web.config.
+ *  @param xml its text
+ *  @param file its path on the examined machine
+ *  @param siteFolder the folder of its site, for `|DataDirectory|`
+ *  @return one per `add`; one with protectedBy alone for an encrypted section */
+std::vector<IisConnectionString> parseConnectionStrings(const std::wstring& xml, const std::wstring& file,
+                                                        const std::wstring& siteFolder);
+
+/*! The connection strings of every web.config under the sites' folders, as
+ *  the collection copied them (working copy).
+ *  @param siteFolders the sites' folders (iisSources) */
+std::vector<IisConnectionString> readConnectionStrings(const std::vector<std::wstring>& siteFolders);
+
+/*! The database files the connection strings name outside the sites' folders,
+ *  each once: those the copy of the sites does not bring. */
+std::vector<std::wstring> externalDatabases(const std::vector<IisConnectionString>& connections,
+                                            const std::vector<std::wstring>& siteFolders);
+
+/*! The scheme a password hash names by its form: its prefix ($2y$ bcrypt, $P$
+ *  phpass, pbkdf2_sha256$…), or, for a bare hexadecimal digest, its size.
+ *  @return the scheme; empty when the form names none */
+std::wstring passwordHashFormat(const std::wstring& value);
+
+/*! The account rows of an SQLite database: every table whose name says
+ *  accounts and that has a password column.
+ *  @param workingFile the database in the working copy
+ *  @param examinedFile its path on the examined machine
+ *  @return one JSON object per row; none for a file that is no SQLite database */
+std::vector<Json> readApplicationAccounts(const std::wstring& workingFile, const std::wstring& examinedFile);
+
 /*! The web server (web_server_*.json). */
 class WebServer {
 public:
 	HRESULT getData();          //!< @return ERROR_SUCCESS, even without IIS
 	HRESULT toJson();           //!< @return the result of the writes; the logs streamed
-	void clear();               //!< releases the configuration
+	void clear();               //!< releases what was read
 private:
 	IisConfiguration configuration_;
+	std::vector<IisConnectionString> connections_;
+	std::vector<Json> accounts_;   //!< the application's account rows
 };

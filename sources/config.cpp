@@ -113,6 +113,8 @@ namespace {
 
 //! Largest size a deleted file's options accept, in MiB: 1 TiB per file, 16 TiB in all.
 const int DELETED_FILE_MAX_MIB = 1 << 20, DELETED_TOTAL_MAX_MIB = 1 << 24;
+//! The largest database ceiling accepted: 1 TiB.
+const int DATABASE_MAX_MIB = 1 << 20;
 
 /*! A folder of `excluded_folders`: a path on each volume, from its root —
  *  "\\Windows\\WinSxS" —, without a drive, a "/", a ".." or a trailing "\\". */
@@ -157,13 +159,35 @@ bool readDeletedFiles(const YamlNode& node, AppliConf& conf, std::string& error)
 	return true;
 }
 
-//! The `artefacts:` section: one switch per artefact, a section of options for deleted_files.
+/*! The `web_server` entry of `artefacts:`: a switch, or a section —
+ *  `enabled`, `max_database_mib`. A missing option keeps its default. */
+bool readWebServer(const YamlNode& node, AppliConf& conf, std::string& error) {
+	const std::string key = "artefacts.web_server";
+	if (!node.mapping) return readBool(node, key, conf.artefacts.webServer, error);
+	for (const auto& [option, value] : node.children) {
+		const std::string name = key + "." + option;
+		if (option == "enabled") {
+			if (!readBool(*value, name, conf.artefacts.webServer, error)) return false;
+		}
+		else if (option == "max_database_mib") {
+			if (!readInt(*value, name, 1, DATABASE_MAX_MIB, conf.webServerSettings.maxDatabaseMib, error)) return false;
+		}
+		else return refuse(error, *value, text(Text::ConfigurationUnknownSetting, { wide(name) }));
+	}
+	return true;
+}
+
+//! The `artefacts:` section: one switch per artefact, a section of options for deleted_files and web_server.
 bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error) {
 	if (!section.mapping) return refuse(error, section, text(Text::ConfigurationArtefactsSection));
 	const std::vector<std::pair<std::string, bool*>> switches = artefactSwitches(conf);
 	for (const auto& [key, node] : section.children) {
 		if (key == "deleted_files") {
 			if (!readDeletedFiles(*node, conf, error)) return false;
+			continue;
+		}
+		if (key == "web_server") {
+			if (!readWebServer(*node, conf, error)) return false;
 			continue;
 		}
 		bool* found = nullptr;

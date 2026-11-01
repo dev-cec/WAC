@@ -466,6 +466,116 @@ HRESULT extractFiles(const std::vector<std::wstring>& files, const std::wstring&
 	return result;
 }
 
+/*! A folder the collection takes whole, or by extension, to a depth. */
+struct Tree {
+	std::wstring absolute;                 //!< the folder, with its letter or relative to the system volume
+	std::vector<std::wstring> extensions;  //!< filter, empty for every file
+	unsigned depth;                        //!< guard against an abnormal tree
+	const wchar_t* what;                   //!< for the investigation log
+	std::wstring skipped = L"";            //!< a subfolder another artefact extracts, same form as absolute; empty for none
+};
+
+/*! Extracts a tree by raw reading of its directory indexes, into the
+ *  exhibit store, recorded in the investigation log.
+ *  @param written the tree, its paths as Vista and later lay them out
+ *  @param total incremented by the files taken
+ *  @return S_OK, also for an absent folder (the nominal case); otherwise
+ *          its volume or its index failed — a part of the collection missing */
+HRESULT extractTree(const Tree& written, size_t& total) {
+	Tree tree = written;
+	tree.absolute = examinedLayout(written.absolute);   // as for the targets
+	tree.skipped = examinedLayout(written.skipped);
+	const std::wstring volume = volumeOfPath(tree.absolute), path = pathRelativeToVolume(tree.absolute);
+	size_t extractedFiles = 0;
+	std::vector<RawHiveExtraction> reading;
+	std::vector<std::wstring> skipped;
+	if (!tree.skipped.empty()) skipped.push_back(pathRelativeToVolume(tree.skipped));
+	const HRESULT hrTree = ExtractDirectoryTreeRaw(volume, path, exhibitTarget(tree.absolute),
+	                                               tree.extensions, &extractedFiles, tree.depth, &reading,
+	                                               skipped);
+	ExhibitStoreAdd(reading, L"Recursive raw NTFS reading (\\\\.\\"
+	                        + volume + L": — $MFT, directory indexes); "
+	                        L"no file opened by the system");
+	auditRecord(L"Raw extraction of the " + std::wstring(tree.what) + L" ("
+	            + std::to_wstring(extractedFiles) + L" file(s))",
+	            std::wstring(L"\\\\.\\") + volume + L":" + path,
+	            hrTree, Footprint::VOLUME_BRUT);
+	log(2, L"❇️" + path + L" : " + std::to_wstring(extractedFiles) + L" file(s)");
+	total += extractedFiles;
+	return hrTree;
+}
+
+/*! The pieces of a database a site names outside the sites' folders: the
+ *  file and its -wal and -journal, as its folder's index lists them, each
+ *  up to max_database_mib — a larger one is said, with its size, and not
+ *  copied: a very large base is taken on the operator's decision.
+ *  @param file the database, absolute
+ *  @return the pieces to take; none for a file absent */
+std::vector<std::wstring> databasePieces(const std::wstring& file) {
+	std::vector<std::wstring> pieces;
+	const std::wstring volume = volumeOfPath(file), path = pathRelativeToVolume(file);
+	const size_t slash = path.rfind(L'\\');
+	const std::wstring parent = path.substr(0, slash), name = toLower(path.substr(slash + 1));
+	std::vector<RawDirEntry> entries;
+	if (FAILED(ListDirectoryRaw(volume, parent.empty() ? L"\\" : parent, entries))) return pieces;
+	const uint64_t ceiling = (uint64_t)conf.webServerSettings.maxDatabaseMib << 20;
+	for (const RawDirEntry& e : entries) {
+		const std::wstring entry = toLower(e.name);
+		if (e.isDirectory || (entry != name && entry != name + L"-wal" && entry != name + L"-journal")) continue;
+		const std::wstring piece = file.substr(0, 2) + parent + L"\\" + e.name;
+		if (e.size > ceiling) {
+			auditRecord(L"Database a site names, not copied: " + std::to_wstring(e.size >> 20)
+			            + L" MiB, above max_database_mib (" + std::to_wstring(conf.webServerSettings.maxDatabaseMib) + L")",
+			            piece, ERROR_SUCCESS, Footprint::VOLUME_BRUT);
+			continue;
+		}
+		pieces.push_back(piece);
+	}
+	return pieces;
+}
+
+/*! IIS (web_server.h): its configuration first, raw — it names the sites'
+ *  folders and the logs'; then the sites, whole; then the databases their
+ *  web.config name elsewhere; then the logs and the configuration's
+ *  history. Each step reads what the one before took in its working copy,
+ *  made as soon as it is taken: the exhibit store is never read after its
+ *  copy. Without IIS, the folder is absent: nothing taken, nothing failed.
+ *  @param total incremented by the files taken
+ *  @return S_OK, S_FALSE if a part could not be taken */
+HRESULT extractIis(size_t& total) {
+	HRESULT global = S_OK;
+	const std::wstring configuration = iisConfigurationFile();
+	const std::wstring folder = configuration.substr(0, configuration.rfind(L'\\'));
+	size_t extracted = 0;
+	std::wstring diagnostic;
+	std::vector<RawHiveExtraction> reading;
+	const HRESULT hr = ExtractDirectoryRaw(volumeOfPath(folder), pathRelativeToVolume(folder), exhibitTarget(folder),
+	                                       { L"applicationHost.config", L"administration.config", L"redirection.config" },
+	                                       &extracted, &diagnostic, &reading);
+	ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volumeOfPath(folder)
+	                        + L": — $MFT, directory indexes, $DATA attribute); no file opened by the system");
+	auditRecord(L"Raw extraction of IIS's configuration (" + std::to_wstring(extracted) + L" file(s) — " + diagnostic + L")",
+	            L"\\\\.\\" + volumeOfPath(folder) + L":" + pathRelativeToVolume(folder), hr, Footprint::VOLUME_BRUT);
+	total += extracted;
+	if (hr != S_OK) global = S_FALSE;
+	if (storeToWorking() != S_OK) global = S_FALSE;
+	const IisSources iis = iisSources(readIisConfiguration());
+	//! Deepest folder walked in a site: far below any real site's tree.
+	const unsigned SITE_DEPTH = 32;
+	for (const std::wstring& site : iis.siteFolders)
+		if (extractTree({ site, {}, SITE_DEPTH, L"IIS site's content" }, total) != S_OK) global = S_FALSE;
+	// The sites' web.config, read in their working copy, name the databases kept elsewhere.
+	if (storeToWorking() != S_OK) global = S_FALSE;
+	std::vector<std::wstring> databases;
+	for (const std::wstring& file : externalDatabases(readConnectionStrings(iis.siteFolders), iis.siteFolders))
+		for (const std::wstring& piece : databasePieces(file)) databases.push_back(piece);
+	if (!databases.empty() && extractFiles(databases, L"databases named by the sites", total) != S_OK) global = S_FALSE;
+	for (const std::wstring& logs : iis.logFolders)
+		if (extractTree({ logs, { L".log" }, 3, L"IIS logs" }, total) != S_OK) global = S_FALSE;
+	if (extractTree({ iis.historyFolder, { L".config" }, 2, L"IIS configuration history" }, total) != S_OK) global = S_FALSE;
+	return global;
+}
+
 } // namespace
 
 HRESULT ExtractFileArtefactsRaw() {
@@ -617,43 +727,8 @@ HRESULT ExtractFileArtefactsRaw() {
 	   Error reports: one folder per report, Report.wer inside. */
 	//! Deepest folder walked for Thumbs.db: far below any folder a user browses.
 	const unsigned THUMBS_DB_DEPTH = 32;
-	struct Tree {
-		std::wstring absolute;                 //!< the folder, with its letter or relative to the system volume
-		std::vector<std::wstring> extensions;  //!< filter, empty for every file
-		unsigned depth;                        //!< guard against an abnormal tree
-		const wchar_t* what;                   //!< for the investigation log
-		std::wstring skipped = L"";            //!< a subfolder another artefact extracts, same form as absolute; empty for none
-	};
 	std::vector<Tree> trees;
-	/* IIS: its configuration first, raw — it names the folders of the
-	   sites and of the logs, taken next (web_server.h). Without IIS, the
-	   folder is absent: nothing taken, nothing failed. */
-	if (conf.artefacts.webServer) {
-		const std::wstring configuration = iisConfigurationFile();
-		const std::wstring folder = configuration.substr(0, configuration.rfind(L'\\'));
-		size_t extracted = 0;
-		std::wstring diagnostic;
-		std::vector<RawHiveExtraction> reading;
-		const HRESULT hr = ExtractDirectoryRaw(volumeOfPath(folder), pathRelativeToVolume(folder), exhibitTarget(folder),
-		                                       { L"applicationHost.config", L"administration.config", L"redirection.config" },
-		                                       &extracted, &diagnostic, &reading);
-		ExhibitStoreAdd(reading, L"Raw NTFS reading (\\\\.\\" + volumeOfPath(folder)
-		                        + L": — $MFT, directory indexes, $DATA attribute); no file opened by the system");
-		auditRecord(L"Raw extraction of IIS's configuration (" + std::to_wstring(extracted) + L" file(s) — " + diagnostic + L")",
-		            L"\\\\.\\" + volumeOfPath(folder) + L":" + pathRelativeToVolume(folder), hr, Footprint::VOLUME_BRUT);
-		total += extracted;
-		if (hr != S_OK) global = S_FALSE;
-		/* The configuration is read in its working copy, made now: the
-		   exhibit store is never read after its copy (it used to be read
-		   there — absent, the sites' folders were never taken). */
-		if (storeToWorking() != S_OK) global = S_FALSE;
-		const IisSources iis = iisSources(readIisConfiguration());
-		//! Deepest folder walked in a site: far below any real site's tree.
-		const unsigned SITE_DEPTH = 32;
-		for (const std::wstring& site : iis.siteFolders) trees.push_back({ site, {}, SITE_DEPTH, L"IIS site's content" });
-		for (const std::wstring& logs : iis.logFolders) trees.push_back({ logs, { L".log" }, 3, L"IIS logs" });
-		trees.push_back({ iis.historyFolder, { L".config" }, 2, L"IIS configuration history" });
-	}
+	if (conf.artefacts.webServer && extractIis(total) != S_OK) global = S_FALSE;
 	if (conf.artefacts.scheduledTasks)
 		trees.push_back({ L"\\Windows\\System32\\Tasks", {}, 8, L"scheduled task definitions" });
 	if (conf.artefacts.errorReports) {
@@ -786,32 +861,8 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.sysmon)
 		for (const SysmonInstallation& s : sysmonInstallations())
 			if (!s.archiveFolder.empty()) trees.push_back({ s.archiveFolder, {}, 2, L"Sysmon archives" });
-	for (const Tree& written : trees) {
-		Tree tree = written;
-		tree.absolute = examinedLayout(written.absolute);   // as for the targets above
-		tree.skipped = examinedLayout(written.skipped);
-		const std::wstring volume = volumeOfPath(tree.absolute), path = pathRelativeToVolume(tree.absolute);
-		size_t extractedFiles = 0;
-		std::vector<RawHiveExtraction> reading;
-		std::vector<std::wstring> skipped;
-		if (!tree.skipped.empty()) skipped.push_back(pathRelativeToVolume(tree.skipped));
-		const HRESULT hrTree = ExtractDirectoryTreeRaw(volume, path, exhibitTarget(tree.absolute),
-		                                               tree.extensions, &extractedFiles, tree.depth, &reading,
-		                                               skipped);
-		ExhibitStoreAdd(reading, L"Recursive raw NTFS reading (\\\\.\\"
-		                        + volume + L": — $MFT, directory indexes); "
-		                        L"no file opened by the system");
-		auditRecord(L"Raw extraction of the " + std::wstring(tree.what) + L" ("
-		            + std::to_wstring(extractedFiles) + L" file(s))",
-		            std::wstring(L"\\\\.\\") + volume + L":" + path,
-		            hrTree, Footprint::VOLUME_BRUT);
-		log(2, L"❇️" + path + L" : " + std::to_wstring(extractedFiles) + L" file(s)");
-		total += extractedFiles;
-		/* A tree that failed — its volume not opened, its index unreadable —
-		   is a part of the collection missing, as a partial one is; an absent
-		   folder is S_OK, the nominal case. */
-		if (hrTree != S_OK) global = S_FALSE;
-	}
+	for (const Tree& tree : trees)
+		if (extractTree(tree, total) != S_OK) global = S_FALSE;
 
 	for (const Target& target : targets) {
 		size_t extractedFiles = 0;

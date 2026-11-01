@@ -4,6 +4,7 @@
 #include "sqlite_reader.h"
 #include "consigne.h"
 #include "tools.h"
+#include <algorithm>
 #include <atomic>
 #include <cstring>
 #include <filesystem>
@@ -167,4 +168,16 @@ HRESULT SqliteDatabase::query(const char* sql, const std::function<void(const Sq
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	}
 	return ERROR_SUCCESS;
+}
+
+HRESULT SqliteDatabase::queryTable(const std::wstring& table, const std::function<void(const SqliteRow&)>& row) {
+	const bool plain = !table.empty() && table.size() <= 128
+	                   && std::all_of(table.begin(), table.end(), [](wchar_t c) {
+	                          return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9') || c == L'_'; });
+	if (!plain) {
+		log(2, L"🔈SQLite: table not read, its name is not plain letters, digits and _: " + table);
+		return HRESULT_FROM_WIN32(ERROR_INVALID_NAME);
+	}
+	const std::string sql = "SELECT * FROM \"" + std::string(table.begin(), table.end()) + "\"";
+	return query(sql.c_str(), row);
 }

@@ -147,6 +147,89 @@ void firewallLog() {
 	check(parseFirewallLog(L"2026-10-24 15:01:02 DROP TCP\r\n", L"x").empty(), "firewall log: no line without a #Fields: header");
 }
 
+/*! A site's web.config and database (B-035, lot 2): the database file each
+ *  connection string names, an encrypted section said and not decoded, the
+ *  scheme of a password hash told by its form, and the account rows of an
+ *  SQLite database — only the tables whose name says accounts and that have
+ *  a password column, an empty value left out, a table whose name could
+ *  carry SQL refused. */
+void iisApplicationData() {
+	const std::wstring site = L"C:\\inetpub\\wwwroot";
+	check(connectionDatabaseFile(L"Data Source=|DataDirectory|\\wac-app.db;Version=3;", site) == L"C:\\inetpub\\wwwroot\\App_Data\\wac-app.db"
+	      && connectionDatabaseFile(L"data source = \"D:\\data\\shop;v2.sqlite\" ; Pooling=true", site) == L"D:\\data\\shop;v2.sqlite"
+	      && connectionDatabaseFile(L"Driver={Microsoft Access Driver (*.mdb)};Dbq=C:\\db\\old.mdb;", site) == L"C:\\db\\old.mdb"
+	      && connectionDatabaseFile(L"Server=sql01;Database=shop;User ID=web;Password=secret;", site).empty()
+	      && connectionDatabaseFile(L"Data Source=app.db", site).empty()
+	      && connectionDatabaseFile(L"Data Source=\\\\files\\share\\app.db", site).empty(),
+	      "web.config: the database file of each connection string — |DataDirectory|, quoted with a ';', Access's Dbq; none for a server, a relative path, a share");
+	const std::vector<IisConnectionString> strings = parseConnectionStrings(
+		L"<?xml version=\"1.0\"?><configuration><connectionStrings>"
+		L"<add name=\"app\" connectionString=\"Data Source=|DataDirectory|\\wac-app.db\" providerName=\"System.Data.SQLite\" />"
+		L"<add name=\"shop\" connectionString=\"Server=sql01;Database=shop;Password=secret\" />"
+		L"</connectionStrings></configuration>", L"C:\\inetpub\\wwwroot\\web.config", site);
+	check(strings.size() == 2 && strings[0].name == L"app" && strings[0].providerName == L"System.Data.SQLite"
+	      && strings[0].databaseFile == L"C:\\inetpub\\wwwroot\\App_Data\\wac-app.db"
+	      && strings[1].connectionString == L"Server=sql01;Database=shop;Password=secret" && strings[1].databaseFile.empty(),
+	      "web.config: each connection string as written, its database file resolved");
+	const std::vector<IisConnectionString> sealed = parseConnectionStrings(
+		L"<configuration><connectionStrings configProtectionProvider=\"RsaProtectedConfigurationProvider\">"
+		L"<EncryptedData><CipherData><CipherValue>AAAA</CipherValue></CipherData></EncryptedData>"
+		L"</connectionStrings></configuration>", L"C:\\inetpub\\wwwroot\\web.config", site);
+	check(sealed.size() == 1 && sealed[0].protectedBy == L"RsaProtectedConfigurationProvider" && sealed[0].connectionString.empty(),
+	      "web.config: an encrypted section said by its provider, not decoded");
+	IisConnectionString neighbour;
+	neighbour.databaseFile = L"C:\\inetpub\\wwwroot2\\a.db";
+	check(externalDatabases(strings, { site }).empty() && externalDatabases({ neighbour }, { site }).size() == 1,
+	      "web.config: a database inside the site's folder comes with it; one in a folder of a similar name does not");
+
+	check(passwordHashFormat(L"$P$BZlPX7NIx8MYpXokBW2AGsN7i.aUOt0") == L"phpass"
+	      && passwordHashFormat(L"$2y$10$abcdefghijklmnopqrstuuJ1Xb0fYfXq3Ql2o1n3m4p5q6r7s8t9u") == L"bcrypt"
+	      && passwordHashFormat(L"$wp$2y$10$abcdefghijklmnopqrstuu") == L"bcrypt (WordPress 6.8)"
+	      && passwordHashFormat(L"pbkdf2_sha256$600000$salt$hash=") == L"PBKDF2-SHA256 (Django)"
+	      && passwordHashFormat(L"AQAAAAIAAYagAAAAEJ3b") == L"PBKDF2 (ASP.NET Core Identity v3)"
+	      && passwordHashFormat(L"5f4dcc3b5aa765d61d8327deb882cf99") == L"unsalted 128-bit digest (MD5?)"
+	      && passwordHashFormat(L"secret").empty() && passwordHashFormat(L"5f4dcc3b5aa765d61d8327deb882cf9").empty(),
+	      "password hash: the scheme told by its prefix, a bare digest by its size; anything else unnamed");
+
+	const std::filesystem::path root = std::filesystem::temp_directory_path() / L"wac-web-accounts-test";
+	std::error_code ec;
+	std::filesystem::remove_all(root, ec);
+	std::filesystem::create_directories(root / L"exhibit", ec);
+	conf._outputDir = (root / L"output").wstring();
+	const std::filesystem::path db = root / L"exhibit" / L"wac-app.db";
+	sqlite3* writer = nullptr;
+	sqlite3_open_v2(encodeText(db.wstring()).c_str(), &writer, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+	sqlite3_exec(writer,
+		"CREATE TABLE wp_users(ID INTEGER PRIMARY KEY, user_login TEXT, user_pass TEXT, user_email TEXT, user_registered TEXT);"
+		"INSERT INTO wp_users VALUES(1, 'admin', '$P$BZlPX7NIx8MYpXokBW2AGsN7i.aUOt0', 'admin@wac.invalid', '2026-10-31 12:00:00');"
+		"INSERT INTO wp_users VALUES(2, 'wacintruder', '$2y$10$abcdefghijklmnopqrstuu', '', NULL);"
+		"CREATE TABLE user_settings_user(id INTEGER, theme TEXT);"
+		"INSERT INTO user_settings_user VALUES(1, 'dark');"
+		"CREATE TABLE \"evil\"\"; DROP TABLE wp_users; --users\"(password TEXT);"
+		"INSERT INTO \"evil\"\"; DROP TABLE wp_users; --users\" VALUES('x');"
+		"CREATE TABLE posts(id INTEGER, password TEXT);"
+		"CREATE TABLE \"app users\"(login TEXT, password TEXT);"
+		"INSERT INTO \"app users\" VALUES('spaced', '$P$Bspaced');",
+		nullptr, nullptr, nullptr);
+	sqlite3_close(writer);
+	const std::vector<Json> rows = readApplicationAccounts(db.wstring(), L"C:\\inetpub\\wwwroot\\App_Data\\wac-app.db");
+	std::vector<std::wstring> texts;
+	for (const Json& r : rows) texts.push_back(r.dump());
+	auto has = [&](size_t i, const std::wstring& part) { return i < texts.size() && texts[i].find(part) != std::wstring::npos; };
+	check(rows.size() == 2 && has(0, L"\"Table\": \"wp_users\"") && has(0, L"\"PasswordColumn\": \"user_pass\"")
+	      && has(0, L"\"HashFormat\": \"phpass\"") && has(0, L"\"Column\": \"user_login\",\n\t\t\t\"Value\": \"admin\"")
+	      && has(0, L"\"Column\": \"ID\",\n\t\t\t\"Value\": 1")
+	      && has(0, L"\"Value\": \"2026-10-31 12:00:00\"") && has(1, L"\"HashFormat\": \"bcrypt\"")
+	      && !has(1, L"user_email") && !has(1, L"user_registered"),
+	      "accounts: the rows of the account table, hash and scheme, an empty or NULL value left out");
+	check(std::none_of(texts.begin(), texts.end(), [](const std::wstring& t) { return t.find(L"theme") != std::wstring::npos || t.find(L"evil") != std::wstring::npos
+	                                                                         || t.find(L"spaced") != std::wstring::npos; }),
+	      "accounts: a table without password column, or whose name could carry SQL, not read");
+	check(readApplicationAccounts((root / L"output").wstring() + L"\\none.db", L"C:\\none.db").empty(),
+	      "accounts: a file that is no SQLite database gives none");
+	std::filesystem::remove_all(root, ec);
+}
+
 /*! IIS's applicationHost.config, as IIS 10 writes it: a site whose root
  *  is written with a variable and logs with siteDefaults', a second whose
  *  own logFile names a directory and whose application is a volume's root;
@@ -2683,6 +2766,7 @@ int wmain(int argc, wchar_t** argv) {
 	setupapi();
 	firewallLog();
 	iisConfigurationAndLogs();
+	iisApplicationData();
 	partitionTables();
 	cmTraceLog();
 	internetShortcut();

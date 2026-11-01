@@ -256,7 +256,7 @@
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chromium and Firefox depend on the browser installed, not on Windows.} \\
 \addlinespace
 \texttt{web\_server} & Windows XP & \texttt{IIS 5.1 and 6: Windows\textbackslash{}System32\textbackslash{}inetsrv\textbackslash{}MetaBase.xml, W3SVC\textless{}n\textgreater{} logs} & IIS metabase XML & no \\
- & Windows Vista & \texttt{IIS 7 and later: Windows\textbackslash{}System32\textbackslash{}inetsrv\textbackslash{}config\textbackslash{}applicationHost.config, inetpub\textbackslash{}logs\textbackslash{}LogFiles} & XML; W3C text, UTC & yes \\
+ & Windows Vista & \texttt{IIS 7 and later: Windows\textbackslash{}System32\textbackslash{}inetsrv\textbackslash{}config\textbackslash{}applicationHost.config, inetpub\textbackslash{}logs\textbackslash{}LogFiles, each site's web.config and SQLite databases} & XML; W3C text, UTC; SQLite & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only where IIS is installed; Apache and nginx are not read yet.} \\
 \addlinespace
 \texttt{wmi} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}wbem\textbackslash{}Repository\textbackslash{}FS} & CIM repository of Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, in FS) & yes \\

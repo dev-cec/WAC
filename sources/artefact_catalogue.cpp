@@ -285,7 +285,7 @@ const std::vector<ArtefactEntry>& artefactCatalogue() {
 		{ "web_server", XP, 0, 0,
 		  { { XP, L"IIS 5.1 and 6: Windows\\System32\\inetsrv\\MetaBase.xml, W3SVC<n> logs", L"IIS metabase XML", false, {},
 		      L"Windows\\System32\\inetsrv\\MetaBase.xml" },
-		    { VISTA, L"IIS 7 and later: Windows\\System32\\inetsrv\\config\\applicationHost.config, inetpub\\logs\\LogFiles", L"XML; W3C text, UTC", true } },
+		    { VISTA, L"IIS 7 and later: Windows\\System32\\inetsrv\\config\\applicationHost.config, inetpub\\logs\\LogFiles, each site's web.config and SQLite databases", L"XML; W3C text, UTC; SQLite", true } },
 		  L"Present only where IIS is installed; Apache and nginx are not read yet." },
 		{ "wmi", XP, 0, XP,
 		  { { XP, L"Windows\\System32\\wbem\\Repository\\FS", L"CIM repository of Windows XP (INDEX.BTR, OBJECTS.DATA, MAPPING, in FS)", true },

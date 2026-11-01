@@ -173,6 +173,24 @@ int wmain(int argc, wchar_t** argv) {
 	refused("deleted-total.yml", "artefacts:\n  deleted_files:\n    max_total_mib: 99999999\n", 3, "between 1 and 16777216");
 	refused("deleted-drive.yml", "artefacts:\n  deleted_files:\n    excluded_folders:\n      - C:\\Windows\n", 3, "a folder from the volume's root");
 	refused("deleted-up.yml", "artefacts:\n  deleted_files:\n    excluded_folders:\n      - \\Windows\\..\\Users\n", 3, "a folder from the volume's root");
+	// web_server: a switch, or a section of its options (B-035, lot 2).
+	{
+		AppliConf c;
+		ConfigurationFile f;
+		std::string error;
+		const AppliConf::WebServerSettings defaults;
+		check(LoadConfiguration(file("web-switch.yml", "artefacts:\n  web_server: false\n"), c, f, error)
+		      && !c.artefacts.webServer && c.webServerSettings.maxDatabaseMib == defaults.maxDatabaseMib,
+		      "web_server: false not applied: " + error);
+		AppliConf d;
+		check(LoadConfiguration(file("web-section.yml", "artefacts:\n  web_server:\n    enabled: true\n    max_database_mib: 64\n"), d, f, error)
+		      && d.artefacts.webServer && d.webServerSettings.maxDatabaseMib == 64, "web_server options not applied: " + error);
+		AppliConf g;
+		check(LoadConfiguration(rawFile("reference-web.yml", DefaultConfiguration()), g, f, error) && g.artefacts.webServer
+		      && g.webServerSettings.maxDatabaseMib == defaults.maxDatabaseMib, "reference file: web_server differs from the defaults");
+	}
+	refused("web-unknown.yml", "artefacts:\n  web_server:\n    max_size: 8\n", 3, "unknown setting \"artefacts.web_server.max_size\"");
+	refused("web-ceiling.yml", "artefacts:\n  web_server:\n    max_database_mib: 0\n", 3, "between 1 and 1048576");
 	refused("deleted-scalar.yml", "artefacts:\n  deleted_files:\n    excluded_folders: \\Windows\n", 3, "a list expected");
 	refused("list.yml", "dump:\n  - true\n", 1, "takes a value, not a list");
 	refused("deleted-list.yml", "artefacts:\n  deleted_files:\n    - true\n", 2, "takes a value, not a list");

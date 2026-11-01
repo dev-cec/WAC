@@ -330,7 +330,15 @@ modules, declared 32-bit so that the 64-bit pool never loads it. Its
 references come from \texttt{appcmd}, IIS's own tool, not from the file
 \wac{} reads: sites (id, name, physical path of the root), pools and their
 identity, modules, the token's request in the logs (status, time within
-120~s) and the page's hash in the exhibit store's manifest.
+120~s) and the page's hash in the exhibit store's manifest. Two SQLite
+databases are made on the host (\fichier{lib/make-web-databases.py}), their
+accounts known there only: one in WordPress's manner (phpass and bcrypt hashes)
+in the site's \path|App_Data|, the other in ASP.NET Core Identity's, outside
+the site; a witness \fichier{web.config} names them, with a third string
+naming a server. Confronted: the connection strings as PowerShell reads the
+file, the database file of each (\texttt{|DataDirectory|} resolved, none for
+the server), the outer database in the manifest, and each account (login,
+hash, scheme named).
 
 \section{Checking the outputs}
 

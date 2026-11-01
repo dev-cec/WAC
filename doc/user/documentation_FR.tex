@@ -429,7 +429,9 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   user_shell_folders:      true   # où sont vraiment le Bureau, les Documents, les Téléchargements de chacun
   usn_journal:             true   # $UsnJrnl:$J : créations, renommages, suppressions
   web_client:              true   # navigateurs Chromium et Firefox : visites, téléchargements, recherches ; leurs bases copiées brutes
-  web_server:              true   # IIS : sites, pools d'applications, modules natifs, journaux des requêtes ; dossier de chaque site copié entier
+  web_server:                     # IIS : sites, pools, modules natifs, journaux, chaînes de connexion, comptes
+    enabled:               true   # false : rien n'est lu ; le dossier de chaque site copié entier
+    max_database_mib:      1024   # base désignée hors des sites, au-delà : signalée, pas copiée
   wmi:                     true   # dépôt WMI lu hors ligne : abonnements (filtres, consommateurs, liaisons)
   word_wheel_query:        true   # recherches de l'Explorateur
   zone_identifiers:        true   # flux Zone.Identifier : d'où viennent les fichiers téléchargés
@@ -1644,6 +1646,36 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \texttt{-} n'est pas émis ; un champ que WAC ne nomme pas garde son
         propre nom. Un journal dans un autre format (IIS, NCSA, personnalisé)
         est copié brut, non converti.
+  \item[\fichier{web\_server\_connection\_strings.json}] chaque chaîne de
+        connexion des \fichier{web.config} des sites, telle qu'écrite
+        (\champ{Name}, \champ{ConnectionString}, \champ{ProviderName},
+        \champ{File}) : son mot de passe y est en clair quand le site le
+        garde ainsi. \champ{DatabaseFile} donne le fichier de base qu'elle
+        désigne (\texttt{Data Source}, \texttt{AttachDbFilename},
+        \texttt{Dbq}, \texttt{Filename} ; \texttt{|DataDirectory|} est le
+        dossier \path|App_Data| du site), jamais pour un serveur, un partage
+        ou un chemin relatif. Une section chiffrée
+        (\texttt{aspnet\_regiis -pe}) est dite par son fournisseur
+        (\champ{ProtectedBy}), non déchiffrée. Une base désignée hors des
+        dossiers des sites est collectée avec son \texttt{-wal} et son
+        \texttt{-journal}, jusqu'à \texttt{max\_database\_mib} ; au-delà,
+        sa taille est consignée au journal d'investigation et elle n'est pas
+        copiée. Une base dans le dossier d'un site vient avec lui, entière.
+  \item[\fichier{web\_server\_accounts.json}] les comptes des applications
+        web : dans chaque base SQLite des sites ou désignée par eux, chaque
+        table dont le nom dit des comptes (\texttt{users},
+        \texttt{wp\_users}, \texttt{AspNetUsers}, \texttt{members}\ldots)
+        et qui a une colonne de mot de passe, une ligne par compte :
+        \champ{Table}, \champ{PasswordColumn}, \champ{PasswordHash},
+        \champ{HashFormat} --- le schéma que dit sa forme : bcrypt, phpass,
+        argon2, PBKDF2 (Django, ASP.NET Core Identity~v3), crypt ; un
+        condensat hexadécimal nu est dit par sa taille, l'algorithme n'étant
+        pas certain ---, les autres colonnes dans \champ{Fields}, chacune
+        \champ{Column} et \champ{Value} (identifiant, courriel, dates
+        telles qu'écrites : un nom venu de la base n'est jamais une clé), et
+        \champ{Database}. Un nom de
+        table qui n'est pas fait de lettres, de chiffres et de \texttt{\_}
+        n'est pas lu. Juger un mot de passe faible revient à l'analyse (WAE).
   \item[\fichier{dpapi\_master\_keys.json}] clés maîtresses DPAPI du système
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System}) et
         de chaque profil (\path|AppData\Roaming\Microsoft\Protect|,

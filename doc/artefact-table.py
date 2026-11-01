@@ -130,11 +130,12 @@ PHRASES = [
     ("XML, registry values", "XML, valeurs de registre"),
     ("VSS catalog and stores, 16 KiB blocks", "catalogue et magasins VSS, blocs de 16 Kio"),
     ("PowerShell script", "script PowerShell"),
+    (", each site's web.config and SQLite databases", ", web.config et bases SQLite de chaque site"),
     ("IIS 7 and later:", "IIS 7 et suivants :"),
     ("IIS 5.1 and 6:", "IIS 5.1 et 6 :"),
     ("W3SVC<n> logs", "journaux W3SVC<n>"),
     ("IIS metabase XML", "métabase d'IIS en XML"),
-    ("XML; W3C text, UTC", "XML ; texte W3C, UTC"),
+    ("XML; W3C text, UTC; SQLite", "XML ; texte W3C, UTC ; SQLite"),
 ]
 # Whole cells that are one word.
 WHOLE = {"files": "fichiers", "text": "texte", "observation": "observation"}

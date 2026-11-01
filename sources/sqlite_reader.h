@@ -89,6 +89,15 @@ public:
 	 *          prepared (schema of another version) or its reading fails */
 	HRESULT query(const char* sql, const std::function<void(const SqliteRow&)>& row);
 
+	/*! Reads every row of a table the database itself names (an account
+	 *  table found by its name). The one query a value of the database goes
+	 *  into: the name is put in only if it is made of ASCII letters, digits
+	 *  and "_", 1 to 128 of them — any other is refused, never escaped.
+	 *  @param table the table's name, as sqlite_master gives it
+	 *  @param row called with each row
+	 *  @return as query; ERROR_INVALID_NAME for a name refused, nothing read */
+	HRESULT queryTable(const std::wstring& table, const std::function<void(const SqliteRow&)>& row);
+
 private:
 	sqlite3* db_ = nullptr;         //!< the connection, on the copy
 	std::wstring copyFolder_;       //!< the private folder, deleted at the end

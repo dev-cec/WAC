@@ -243,6 +243,15 @@ struct AppliConf {
 			L"\\Windows\\Installer\\$PatchCache$", L"\\Windows\\System32\\catroot",
 			L"\\Windows\\System32\\catroot2", L"\\$Extend\\$RmMetadata" };
 	} deletedFilesSettings;
+	/*! The options of the web server (wac.yml, `artefacts:` → `web_server:`,
+	 *  a section or a switch; its `enabled` is artefacts.webServer). */
+	struct WebServerSettings {
+		/*! A database a site's web.config names outside the sites' folders,
+		 *  larger: said with its size, not copied — a very large base is
+		 *  taken on the operator's decision. One inside a site's folder
+		 *  comes with the site, whole (user decision of 2026-09-26). */
+		int maxDatabaseMib = 1024;
+	} webServerSettings;
 	/*! The version of the examined Windows, read in its SOFTWARE hive once it
 	 *  is open (applyArtefactCatalogue); build 0 until then, or if unreadable. */
 	WindowsVersion examinedVersion;

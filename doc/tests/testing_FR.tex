@@ -342,6 +342,15 @@ références viennent d'\texttt{appcmd}, l'outil d'IIS, et non du fichier que
 lit \wac{} : sites (identifiant, nom, chemin physique de la racine), pools et
 leur identité, modules, la requête du jeton dans les journaux (statut, heure
 à 120~s près) et l'empreinte de la page dans le manifeste de la consigne.
+Deux bases SQLite sont faites sur l'hôte (\fichier{lib/make-web-databases.py}),
+leurs comptes connus là seulement : l'une, à la manière de WordPress
+(condensats phpass et bcrypt), dans \path|App_Data| du site, l'autre, à la
+manière d'ASP.NET Core Identity, hors du site ; un \fichier{web.config} témoin
+les désigne, avec une troisième chaîne vers un serveur. Sont confrontés les
+chaînes de connexion telles que PowerShell lit le fichier, le fichier de base
+de chacune (\texttt{|DataDirectory|} résolu, aucun pour le serveur), la base
+extérieure dans le manifeste, et chaque compte (identifiant, condensat, schéma
+nommé).
 
 \section{Contrôler les sorties}
 

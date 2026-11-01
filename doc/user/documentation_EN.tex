@@ -426,7 +426,9 @@ artefacts:              # one key per artefact; a missing key is true
   user_shell_folders:      true   # where each user's desktop, documents, downloads really are (OneDrive, another disk, a share)
   usn_journal:             true   # $UsnJrnl:$J: creations, renames, deletions (usn_journal.json)
   web_client:              true   # browsers: visits, downloads, searches (Edge, Chrome, Brave, Vivaldi, Opera); their databases copied raw
-  web_server:              true   # IIS: sites, application pools, native modules, request logs; each site's folder copied whole
+  web_server:                     # IIS: sites, pools, native modules, logs, connection strings, accounts
+    enabled:               true   # false: nothing read; each site's folder copied whole
+    max_database_mib:      1024   # a database named outside the sites, larger: said, not copied
   wmi:                     true   # WMI repository: event subscriptions (filters, consumers, bindings), read offline
   word_wheel_query:        true   # terms searched in Explorer
   zone_identifiers:        true   # Zone.Identifier streams (Mark of the Web): where downloaded files came from
@@ -1592,6 +1594,34 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \champ{File} and \champ{Line}. A field IIS writes \texttt{-} is not
         emitted; a field WAC does not name keeps its own. A log in another
         format (IIS, NCSA, custom) is copied raw, not converted.
+  \item[\fichier{web\_server\_connection\_strings.json}] each connection
+        string of the sites' \fichier{web.config}, as written
+        (\champ{Name}, \champ{ConnectionString}, \champ{ProviderName},
+        \champ{File}): its password is in clear where the site keeps it so.
+        \champ{DatabaseFile} gives the database file it names
+        (\texttt{Data Source}, \texttt{AttachDbFilename}, \texttt{Dbq},
+        \texttt{Filename}; \texttt{|DataDirectory|} is the site's
+        \path|App_Data|), never for a server, a share or a relative path. An
+        encrypted section (\texttt{aspnet\_regiis -pe}) is said by its
+        provider (\champ{ProtectedBy}), not decrypted. A database named
+        outside the sites' folders is collected with its \texttt{-wal} and
+        \texttt{-journal}, up to \texttt{max\_database\_mib}; a larger one
+        has its size recorded in the investigation log and is not copied. A
+        database inside a site's folder comes with it, whole.
+  \item[\fichier{web\_server\_accounts.json}] the web applications'
+        accounts: in each SQLite database of the sites or named by them,
+        every table whose name says accounts (\texttt{users},
+        \texttt{wp\_users}, \texttt{AspNetUsers}, \texttt{members}\ldots)
+        and that has a password column, one row per account:
+        \champ{Table}, \champ{PasswordColumn}, \champ{PasswordHash},
+        \champ{HashFormat} --- the scheme its form names: bcrypt, phpass,
+        argon2, PBKDF2 (Django, ASP.NET Core Identity~v3), crypt; a bare
+        hexadecimal digest is named by its size, the algorithm not being
+        certain ---, the other columns in \champ{Fields}, each
+        \champ{Column} and \champ{Value} (login, e-mail, dates as written:
+        a name from the database is never a key), and \champ{Database}. A table name not made of
+        letters, digits and \texttt{\_} is not read. Judging a weak password
+        is the analysis's (WAE).
   \item[\fichier{dpapi\_master\_keys.json}] DPAPI master keys of the system
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System})
         and of each profile (\path|AppData\Roaming\Microsoft\Protect|,
