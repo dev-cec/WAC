@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (lot 1 IIS fait : d896111c ; lot 2 écrit et testé, cycle Server 2022 à passer ; lot 3 à faire) | P3 | fort |
+| en cours (lots 1 et 2 faits : d896111c, 746c22a4 ; lot 3 à faire) | P3 | fort |
 
 ## Pourquoi
 Sur un serveur web, la compromission passe par le site : un webshell déposé, une requête qui l'appelle, un compte ajouté à l'application. Les journaux disent qui a appelé quoi, le code montre ce qui a été déposé, la base de données dit qui pouvait se connecter (un compte ajouté, un mot de passe faible font passer une connexion pour légitime).
@@ -42,8 +42,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Lot 1 : journaux W3C (copie, conversion), lecteur commun avec firewall_log
 - [x] Lot 1 : code des sites
 - [x] Lot 1 : témoins IIS dans le harnais (rôle, page, requête, module, pool), cycle serveur vert
-- [ ] Lot 2 : bases de données (repérage, copie, seuil de taille), chaînes de connexion
-- [ ] Lot 2 : comptes de l'application
+- [x] Lot 2 : bases de données (repérage, copie, seuil de taille), chaînes de connexion
+- [x] Lot 2 : comptes de l'application
 - [ ] Lot 3 : Apache, nginx, moteurs de bases de données
 
 ## Journal
@@ -61,3 +61,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-01 : **lot 2 écrit, non commité.** `web.config` de chaque site (copie de travail) : chaînes de connexion telles qu'écrites, fichier de base résolu (Data Source, AttachDbFilename, Dbq, Filename ; `|DataDirectory|` = App_Data du site ; aucun pour un serveur, un partage, un chemin relatif), section chiffrée dite par son fournisseur, non décodée → `web_server_connection_strings.json`. Collecte : sites extraits dans le bloc IIS, copie de travail, puis bases désignées hors des sites prises avec -wal et -journal, taille lue dans l'index du dossier, au-delà de `max_database_mib` (wac.yml, 1024 par défaut ; `web_server:` devient une section) dite et non copiée (le site reste copié entier, décision du 2026-09-26). Comptes : dans chaque base SQLite des sites et désignée, les tables au nom de comptes (users, wp_users, AspNetUsers, members…) ayant une colonne de mot de passe, chaque ligne, le condensat et le schéma reconnu par sa forme (bcrypt, phpass, argon2, PBKDF2 Django et ASP.NET Identity v3, crypt ; un condensat hexadécimal nu dit par sa taille) → `web_server_accounts.json`. Lecture d'une table nommée par la base : seul nom admis lettres, chiffres, `_` (SqliteDatabase::queryTable), jamais échappé. Corps de la boucle des arbres extrait (extractTree), bloc IIS en fonction (extractIis). Tests : file_artefacts_test 310, config_test 71 ; mutants pris : nom de table non filtré, dossier voisin au nom proche pris pour le site. Harnais : deux bases SQLite faites sur l'hôte (lib/make-web-databases.py, comptes connus), une dans App_Data, une dans C:\wacdata, un web.config témoin (trois chaînes) ; check_web_server confronte chaînes, base externe au manifeste, comptes.
 - 2026-11-01 : **premier cycle Server 2022 du lot 2 : 502 ✅, 2 ❌.** Chaînes de connexion (trois, `|DataDirectory|` résolu, aucun fichier pour le serveur), base hors du site prise (manifeste), trois comptes et leurs schémas (phpass, bcrypt, ASP.NET Identity v3) trouvés. (1) Le contrôle plantait : une chaîne contient `|` (`|DataDirectory|`), la référence est coupée au premier seulement. (2) Clés `user_login`, `user_registered` hors convention : les noms de colonnes, venus de la base, étaient des clés de `Fields` → `Fields` devient une liste `{Column, Value}` (un nom venu de la base n'est jamais une clé). Second cycle en cours.
 - 2026-11-01 : incident hors WAC — le dossier `doc/` entier (2 387 fichiers suivis et les articles 3.0 non suivis) a été trouvé déplacé dans `build-windows/doc` (ignoré par git), vers 09 h 27 ; aucune commande de la session identifiée comme en cause. Chaque fichier suivi vérifié identique à HEAD (empreintes git), le dossier remis à la racine, articles 3.0 compris, intacts.
+- 2026-11-01 : **second cycle Server 2022 du lot 2 : 510 ✅, 0 ❌** (trois chaînes, base extérieure au manifeste, trois comptes et leurs schémas). Commités : 746c22a4 (feat, avec `bin/` et la documentation FR/EN), 30ba6f4b (test). Reste le lot 3 : Apache et nginx (configuration, journaux, racines), puis moteurs de bases (MySQL/MariaDB, PostgreSQL).
