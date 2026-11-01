@@ -63,11 +63,13 @@
 #                SHA-256 and what WAC must do of them -> deleted_files.json;
 #   slack        150 of 450 files moved from a folder to another: their former
 #                names in the released index blocks of the first -> deleted_files.json (level 2)
-#   iissite, iispool, iismodule, iispage, iisrequest  IIS, on a server only
+#   iissite, iispool, iismodule, iispage, iisrequest, iisconnection  IIS, on a server only
 #                (the Web-Server role installed once): the sites, pools and
 #                global modules appcmd lists, a witness module never loaded,
 #                a page of the default site with its SHA-256, and a request of
-#                it with the token, its instant in UTC -> web_server_*.json
+#                it with the token, its instant in UTC; the site's web.config
+#                and its connection strings, two witness SQLite databases
+#                (App_Data and C:\wacdata) -> web_server_*.json
 #                and the exhibit manifest
 #   shadowcopy, shadowfile  every shadow copy Windows lists for C: (identifier,
 #                set, creation in UTC), one made here by the harness — through
@@ -2121,8 +2123,34 @@ try { if (Wants 'web_server') {
         foreach ($m in ([xml](& $appcmd list config -section:system.webServer/globalModules /xml)).appcmd.CONFIG.'system.webServer-globalModules'.add) {
             Write-Output ("iismodule=" + $m.name + '|' + $m.image)
         }
+        # Lot 2: the application's databases, made on the host (run-wac-test.sh,
+        # their accounts known there), one in the site's App_Data, one
+        # elsewhere, both named by the site's web.config, with a third string
+        # naming a server (no file). Overwritten each cycle, never piled up.
+        if ((Test-Path 'C:\wactest\wac-app.db') -and (Test-Path 'C:\wactest\wac-outside.db')) {
+            New-Item -ItemType Directory -Force 'C:\inetpub\wwwroot\App_Data', 'C:\wacdata' | Out-Null
+            Move-Item -Force 'C:\wactest\wac-app.db' 'C:\inetpub\wwwroot\App_Data\wac-app.db'
+            Move-Item -Force 'C:\wactest\wac-outside.db' 'C:\wacdata\wac-outside.db'
+            $webConfig = 'C:\inetpub\wwwroot\web.config'
+            Set-Content -Path $webConfig -Encoding UTF8 -Value @'
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <connectionStrings>
+    <add name="WacApp" connectionString="Data Source=|DataDirectory|\wac-app.db;Version=3;" providerName="System.Data.SQLite" />
+    <add name="WacOutside" connectionString="Data Source=C:\wacdata\wac-outside.db" providerName="Microsoft.Data.Sqlite" />
+    <add name="WacServer" connectionString="Server=sql01;Database=shop;User ID=web;Password=wacwitness" providerName="System.Data.SqlClient" />
+  </connectionStrings>
+</configuration>
+'@
+            foreach ($c in ([xml](Get-Content -Raw $webConfig)).configuration.connectionStrings.add) {
+                Write-Output ("iisconnection=" + $c.name + '|' + $c.connectionString)
+            }
+        }
+        else { Write-Output 'witness_failed=web_server_accounts|the witness databases were not uploaded' }
     }
 } } catch { WitnessFailure 'web_server' $_ }
+# Uploaded for nothing where IIS is not (a workstation, a server before 2012): not left behind.
+Remove-Item -Force -ErrorAction SilentlyContinue 'C:\wactest\wac-app.db', 'C:\wactest\wac-outside.db'
 
 # 26 (end). B-031 — the names each source of program_usage.json holds in the
 #     live registry, read last: the steps after 26 launch programs as "wac"

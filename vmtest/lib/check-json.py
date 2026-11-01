@@ -3518,7 +3518,10 @@ def check_web_server(folder):
     modules, the witness module among them; the request of the witness page
     in web_server_logs.json with its token, status 200 and its instant in UTC
     within two minutes of the harness's; the page in the exhibit store with
-    its SHA-256. On a workstation, IIS is not installed: skipped."""
+    its SHA-256; the site's web.config connection strings, the database it
+    names outside the site taken, and the accounts of both witness
+    databases, written on the host (reference/web-accounts.txt). On a
+    workstation, IIS is not installed: skipped."""
     found = 0
     path = os.path.join(folder, "reference", "file-artefacts.txt")
     if not os.path.exists(path):
@@ -3579,6 +3582,40 @@ def check_web_server(folder):
         report(stored and all(str(o.get("SHA256", "")).upper() == sha256.upper() for o in stored),
                f"manifest: the site's witness page {page} stored with the SHA-256 of Get-FileHash",
                f"manifest: witness page {page}: {[(o.get('Result'), o.get('SHA256')) for o in stored] or 'not collected'}")
+    # Lot 2: the connection strings as PowerShell reads the web.config, the
+    # database each names resolved, the one outside the site taken, and the
+    # accounts the host wrote in both databases.
+    # A connection string holds "|" itself (|DataDirectory|): split at the first only.
+    connections = [l[len("iisconnection="):].split("|", 1) for l in lines if l.startswith("iisconnection=")]
+    if not skipped_unplaced(folder, "web_server_accounts", connections) and connections:
+        mine = load(folder, "web_server_connection_strings.json") or []
+        ours = {(c.get("Name"), c.get("ConnectionString")) for c in mine if isinstance(c, dict)}
+        files = {c.get("Name"): c.get("DatabaseFile") for c in mine if isinstance(c, dict)}
+        expected = {"WacApp": "C:\\inetpub\\wwwroot\\App_Data\\wac-app.db", "WacOutside": "C:\\wacdata\\wac-outside.db", "WacServer": None}
+        report({(n, c) for n, c in connections} <= ours and all(files.get(n) == f for n, f in expected.items()),
+               f"web_server_connection_strings.json: the {len(connections)} connection string(s) of the web.config, each database file resolved (|DataDirectory|), none for a server",
+               f"web_server_connection_strings.json: missing {sorted({(n, c) for n, c in connections} - ours)[:2]}, files {files}")
+        outside = [o for o in items if str(o.get("SourcePath", "")).lower() == "c:\\wacdata\\wac-outside.db"]
+        report(bool(outside) and all(o.get("Result") == "OK" or o.get("SHA256") for o in outside),
+               "manifest: the database the web.config names outside the site taken (C:\\wacdata\\wac-outside.db)",
+               "manifest: C:\\wacdata\\wac-outside.db, named by the web.config, not collected")
+        accounts = load(folder, "web_server_accounts.json") or []
+        def login(account):
+            return next((f.get("Value") for f in account.get("Fields") or []
+                         if isinstance(f, dict) and f.get("Column") in ("user_login", "UserName")), None)
+        ours = {(a.get("Database"), login(a), a.get("PasswordHash")) for a in accounts if isinstance(a, dict) and login(a)}
+        reference = os.path.join(folder, "reference", "web-accounts.txt")
+        theirs = set()
+        if os.path.exists(reference):
+            with open(reference, encoding="utf-8") as f:
+                for l in f:
+                    if l.startswith("account="):
+                        database, _, login, hashed = l.rstrip("\r\n")[len("account="):].split("|", 3)
+                        theirs.add((database, login, hashed))
+        formats = {a.get("PasswordHash"): a.get("HashFormat") for a in accounts if isinstance(a, dict)}
+        report(theirs and theirs <= ours and all(formats.get(h) for _, _, h in theirs),
+               f"web_server_accounts.json: the {len(theirs)} account(s) the host wrote in both databases, login and hash, each scheme named",
+               f"web_server_accounts.json: missing {sorted(theirs - ours)[:2]}, formats {[formats.get(h) for _, _, h in theirs]}")
     return found
 
 

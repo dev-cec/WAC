@@ -250,6 +250,20 @@ if wants scheduled_tasks; then
     && echo "   test GUIDs registered" || echo "   ⚠️ test GUIDs not registered"
 fi
 
+# The web applications' witnesses (B-035, lot 2): two SQLite databases made
+# here, their accounts known here — wp_users rows with phpass and bcrypt
+# hashes, an AspNetUsers row with an Identity v3 hash —, uploaded for
+# place-file-artefacts.ps1, which puts them in the site (a server only).
+# reference/web-accounts.txt holds what each must give.
+if wants web_server; then
+  WEB_DBS="$(mktemp -d)"
+  python3 -I "$HERE/lib/make-web-databases.py" "$WEB_DBS" "$OUTPUT/reference/web-accounts.txt"
+  $QGA write "$WEB_DBS/wac-app.db" 'C:\wactest\wac-app.db' >/dev/null \
+    && $QGA write "$WEB_DBS/wac-outside.db" 'C:\wactest\wac-outside.db' >/dev/null \
+    || echo "   ⚠️ web witness databases not uploaded"
+  rm -rf "$WEB_DBS"
+fi
+
 # The mail witness (B-017): no Outlook in the VM, so a PST of the public corpus
 # sources/pst_fixtures.sh pins (EDRM Enron, CC-BY 3.0 US), placed once in the
 # Outlook Files of "wac" — never piled up. check-json.py reads the same file
