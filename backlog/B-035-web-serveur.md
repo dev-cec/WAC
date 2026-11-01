@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (lots 1 et 2 faits : d896111c, 746c22a4 ; lot 3 commencé) | P3 | fort |
+| à commiter (lots 1 à 3 faits : d896111c, 746c22a4, 8c986542 ; manquent les PDF, faute de chaîne LaTeX) | P3 | fort |
 
 ## Pourquoi
 Sur un serveur web, la compromission passe par le site : un webshell déposé, une requête qui l'appelle, un compte ajouté à l'application. Les journaux disent qui a appelé quoi, le code montre ce qui a été déposé, la base de données dit qui pouvait se connecter (un compte ajouté, un mot de passe faible font passer une connexion pour légitime).
@@ -44,7 +44,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Lot 1 : témoins IIS dans le harnais (rôle, page, requête, module, pool), cycle serveur vert
 - [x] Lot 2 : bases de données (repérage, copie, seuil de taille), chaînes de connexion
 - [x] Lot 2 : comptes de l'application
-- [ ] Lot 3 : Apache, nginx, moteurs de bases de données
+- [x] Lot 3 : Apache, nginx, moteurs de bases de données
 
 ## Journal
 - 2026-09-26 : décision utilisateur, copier le code du site complet plutôt que trier.
@@ -67,3 +67,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-01 : demande de l'utilisateur — `max_database_mib` accepte `unlimited`, de même `max_file_mib` et `max_total_mib` des fichiers supprimés (carving compris), sans refaire de cycle en VM. Un fichier taillé reste vérifié en mémoire : 4 Gio au plus (1 Gio pour WAC32), manque de mémoire écarté sans arrêter la collecte ; `max_total_mib: unlimited` ne réserve plus d'espace au contrôle du support. Écrit dans `sources/`, à compiler après le cycle du lot 3.
 - 2026-11-01 : cycle du lot 3 suivant le correctif du témoin Default et le décodage des messages d'Apache interrompu à son début (témoin Sysmon), la VM arrêtée, l'hôte ayant changé de noyau : aucun contrôle passé, sans valeur. Relancé. Précédent cycle complet : 272 ✅, 1 ❌ (témoin Default hérité par le profil de NT SERVICE\MariaDB, harnais) et un chemin doublement échappé (Apache échappe les antislashs de ses messages, décodé depuis).
 - 2026-11-01 : **lot 3 vert sur Server 2022 : 548 ✅, 0 ❌** ; commités : 8c986542 (feat), 9d3d908a (`unlimited`, avec `bin/`), c149332a (test). L'hôte est passé à Ubuntu 26.04 pendant la journée (Python 3.14, libc 2.43) : les environnements Python du harnais ne trouvaient plus leurs paquets, restés sous 3.12 — un contrôle sans sa référence se saute au lieu d'échouer. Les dix reconstruits aux mêmes versions, imports vérifiés ; contrôles rejoués sur le même cycle : 0 ❌ (pypff, dissect.esedb confrontés). MiKTeX retiré par la mise à niveau (aucun paquet pour 26.04) : PDF non régénérables tant qu'une chaîne LaTeX n'est pas installée ; lignes du dossier de validation écrites, à commiter avec leurs PDF. Reste : non-régression Windows 11 et famille XP (code partagé changé), avant de clore.
+- 2026-11-01 : non-régression après le lot 3, environnements reconstruits : **Windows 11 567 ✅, 0 ❌** (libscca, pypff, dissect.esedb confrontés), **Server 2003 95 ✅, 0 ❌** (WAC32, carving à l'octet) ; `virsh` traduit depuis 26.04 corrigé dans le harnais (3495a722). Il ne manque que la définition de « fini » point 7 : lignes du dossier de validation et mesures du document des tests écrites, non commitées, PDF à régénérer dès qu'une chaîne LaTeX est installée (MiKTeX retiré par la mise à niveau). Puis déplacer cette fiche dans `archives/`. Limites assumées : `wp-config.php` et `.env` copiés avec le site, non lus ; modules Apache et nginx listés, non copiés (avec `--binary`, à étudier) ; IIS 6 et Apache sur un même 2003 : conversion remplacée par « format non décodé », les pièces collectées.
