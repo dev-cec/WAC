@@ -2,6 +2,7 @@
  *  \brief The web server of the examined machine: IIS (see web_server.h).
  */
 #include "web_server.h"
+#include "web_installations.h"
 #include "registry_common.h"
 #include "sqlite_reader.h"
 #include "xml_light.h"
@@ -115,12 +116,6 @@ bool hasExtension(const std::wstring& path, const std::vector<std::wstring>& ext
 	return std::find(extensions.begin(), extensions.end(), extension) != extensions.end();
 }
 
-//! Whether a path is a folder's or lies under it, case ignored.
-bool within(const std::wstring& path, const std::wstring& folderPath) {
-	const std::wstring p = toLower(path), f = toLower(folderPath);
-	return p == f || (p.size() > f.size() && p.compare(0, f.size(), f) == 0 && p[f.size()] == L'\\');
-}
-
 /*! The keys and values of a connection string, keys lower case with their
  *  spaces removed ("Data Source" → "datasource"); a value may be quoted. */
 std::vector<std::pair<std::wstring, std::wstring>> connectionKeys(const std::wstring& text) {
@@ -178,6 +173,40 @@ bool passwordColumn(const std::wstring& column) {
 	const std::wstring c = toLower(column);
 	return c.find(L"pass") != std::wstring::npos || c.find(L"hash") != std::wstring::npos
 	       || c.find(L"pwd") != std::wstring::npos;
+}
+
+//! The subfolders of a folder in the working copy.
+std::vector<std::wstring> workingSubfolders(const std::wstring& folder) {
+	std::vector<std::wstring> names;
+	std::error_code ec;
+	const std::filesystem::path copy = extractedPath(folder);
+	if (!std::filesystem::is_directory(copy, ec)) return names;
+	for (std::filesystem::directory_iterator it(copy, ec), end; !ec && it != end; it.increment(ec))
+		if (it->is_directory(ec)) names.push_back(it->path().filename().wstring());
+	return names;
+}
+
+/*! The lines of logs in the working copy, as JSON, one file at a time.
+ *  @param files their paths on the examined machine
+ *  @param parse reads a line: its text, its file, its number
+ *  @param out where they go */
+void writeTextLogs(const std::vector<std::wstring>& files,
+                   W3cLogEntry (*parse)(const std::wstring&, const std::wstring&, unsigned long long),
+                   JsonArrayWriter& out) {
+	for (const std::wstring& file : files) {
+		std::string bytes;
+		if (!readWholeFile(extractedPath(file), LOG_MAX, bytes)) {
+			log(2, L"🔥Web server log not converted (unreadable or larger than 512 MiB, kept raw): " + file);
+			continue;
+		}
+		const std::vector<std::wstring> lines = splitLines(decodeTextFile(bytes));
+		for (size_t i = 0; i < lines.size(); ++i) {
+			std::wstring line = lines[i];
+			if (!line.empty() && line.back() == L'\r') line.pop_back();
+			if (!line.empty()) out.add(parse(line, file, i + 1).toJson());
+		}
+		log(2, L"❇️" + file + L" : " + std::to_wstring(lines.size()) + L" line(s)");
+	}
 }
 
 //! Adds a folder once, case ignored.
@@ -391,7 +420,7 @@ std::vector<std::wstring> externalDatabases(const std::vector<IisConnectionStrin
 	for (const IisConnectionString& c : connections) {
 		if (c.databaseFile.empty()) continue;
 		const bool inSite = std::any_of(siteFolders.begin(), siteFolders.end(),
-		                                [&](const std::wstring& site) { return within(c.databaseFile, site); });
+		                                [&](const std::wstring& site) { return folderHolds(site, c.databaseFile); });
 		if (!inSite) addOnce(files, seen, c.databaseFile);
 	}
 	return files;
@@ -474,15 +503,27 @@ HRESULT WebServer::getData() {
 	configuration_ = readIisConfiguration();
 	const IisSources sources = iisSources(configuration_);
 	connections_ = readConnectionStrings(sources.siteFolders);
+	std::vector<std::wstring> folders = sources.siteFolders;
+	for (const WebCandidate& candidate : webCandidates(examinedServices(), workingSubfolders, conf.systemDrive.substr(0, 2))) {
+		WebInstallation installation = readWebInstallation(candidate);
+		if (installation.hosts.empty()) continue;   // the folder of its name holds no server
+		for (const WebHost& h : installation.hosts)
+			for (const std::wstring& root : h.documentRoots) folders.push_back(root);
+		installations_.push_back(std::move(installation));
+	}
+	engines_ = readDatabaseEngines();
 	/* The accounts of every SQLite database of the sites — copied with
 	   their folders — and of those their web.config name elsewhere. */
 	std::vector<std::wstring> databases;
-	for (const std::wstring& site : sources.siteFolders) {
+	std::set<std::wstring> seenDatabases;
+	for (const std::wstring& site : folders) {
 		const std::filesystem::path copy = extractedPath(site);
 		std::error_code ec;
 		for (const std::filesystem::path& f : filesUnder(copy, SITE_DEPTH, [](const std::filesystem::path& p) {
-			     return hasExtension(p.wstring(), SQLITE_EXTENSIONS); }))
-			databases.push_back(site + L"\\" + std::filesystem::relative(f, copy, ec).wstring());
+			     return hasExtension(p.wstring(), SQLITE_EXTENSIONS); })) {
+			const std::wstring file = site + L"\\" + std::filesystem::relative(f, copy, ec).wstring();
+			if (seenDatabases.insert(toLower(file)).second) databases.push_back(file);
+		}
 	}
 	for (const std::wstring& file : externalDatabases(connections_, sources.siteFolders))
 		if (hasExtension(file, SQLITE_EXTENSIONS)) databases.push_back(file);
@@ -492,7 +533,9 @@ HRESULT WebServer::getData() {
 	       + std::to_wstring(configuration_.pools.size()) + L" pool(s), "
 	       + std::to_wstring(configuration_.modules.size()) + L" global module(s), "
 	       + std::to_wstring(connections_.size()) + L" connection string(s), "
-	       + std::to_wstring(accounts_.size()) + L" application account(s)");
+	       + std::to_wstring(accounts_.size()) + L" application account(s), "
+	       + std::to_wstring(installations_.size()) + L" other web server(s), "
+	       + std::to_wstring(engines_.size()) + L" database engine(s)");
 	return ERROR_SUCCESS;
 }
 
@@ -512,6 +555,8 @@ HRESULT WebServer::toJson() {
 	Json accounts = Json::arr();
 	for (const Json& row : accounts_) accounts.push(row);
 	if (writeJsonFile("web_server_accounts.json", accounts) != ERROR_SUCCESS) result = E_FAIL;
+	if (writeList("web_server_installations.json", installations_) != ERROR_SUCCESS) result = E_FAIL;
+	if (writeList("web_server_database_engines.json", engines_) != ERROR_SUCCESS) result = E_FAIL;
 
 	/* The logs, one file at a time and one line at a time: a busy server
 	   keeps millions of requests, which are written and forgotten. */
@@ -532,12 +577,24 @@ HRESULT WebServer::toJson() {
 			log(2, L"❇️" + examined + L" : " + std::to_wstring(lines.size()) + L" line(s)");
 		}
 	}
-	if (out.close() != ERROR_SUCCESS) result = E_FAIL;
+	JsonArrayWriter errors("web_server_error_logs.json");
+	for (const WebInstallation& installation : installations_) {
+		std::vector<std::wstring> access, failures;
+		for (const WebHost& h : installation.hosts) {
+			access.insert(access.end(), h.accessLogs.begin(), h.accessLogs.end());
+			failures.insert(failures.end(), h.errorLogs.begin(), h.errorLogs.end());
+		}
+		writeTextLogs(rotatedLogs(access), parseAccessLogLine, out);
+		writeTextLogs(rotatedLogs(failures), parseErrorLogLine, errors);
+	}
+	if (out.close() != ERROR_SUCCESS || errors.close() != ERROR_SUCCESS) result = E_FAIL;
 	return result;
 }
 
 void WebServer::clear() {
 	configuration_ = IisConfiguration{};
+	installations_.clear();
+	engines_.clear();
 	connections_.clear();
 	accounts_.clear();
 }

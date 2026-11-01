@@ -340,6 +340,19 @@ file, the database file of each (\texttt{|DataDirectory|} resolved, none for
 the server), the outer database in the manifest, and each account (login,
 hash, scheme named).
 
+\fichier{install-web-servers.sh} installs once, on a server VM, the other
+servers and the engines. The versions are those the release notes say change
+the collection: Apache~2.2.25 and 2.4.69 (the error log's layout,
+\texttt{IncludeOptional} since 2.3.6), one nginx (1.28.0: \texttt{load\_module}
+is only one more directive), one MariaDB (11.4.5: the package has
+\fichier{mariadbd.exe} and \fichier{mysqld.exe}, unit tested), one PostgreSQL
+(16.9: \path|pg_log| and \path|pg_xlog| stay in the data folder, taken whole);
+each archive checked by its SHA-256. The harness asks each server for a page
+with a token, provokes an error, then confronts the installation and its modules
+(read again by PowerShell), the request and the error with their instant in UTC,
+the pages and a file of each data folder by their SHA-256, \fichier{ibdata1}
+which MariaDB holds open, and each file's uniqueness in the manifest.
+
 \section{Checking the outputs}
 
 \begin{lstlisting}

@@ -220,6 +220,12 @@ struct AppliConf {
 		 *  @return true if one of them is switched on */
 		bool needsEventLogs() const { return events || rdpServer; }
 	} artefacts;
+	/*! A ceiling in MiB of wac.yml written `unlimited`: no bound of WAC's own;
+	 *  the operator has decided, and the space is the medium's. */
+	static const int UNLIMITED_MIB = -1;
+	/*! @param mib a ceiling of wac.yml
+	 *  @return it in bytes; for UNLIMITED_MIB, more than any file or volume */
+	static uint64_t ceilingBytes(int mib) { return mib == UNLIMITED_MIB ? UINT64_MAX : (uint64_t)mib << 20; }
 	/*! The options of the deleted files' recovery (wac.yml, `artefacts:` →
 	 *  `deleted_files:`, a section where the other artefacts have a switch;
 	 *  its `enabled` is artefacts.deletedFiles). A missing option keeps its

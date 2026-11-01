@@ -1676,6 +1676,46 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{Database}. Un nom de
         table qui n'est pas fait de lettres, de chiffres et de \texttt{\_}
         n'est pas lu. Juger un mot de passe faible revient à l'analyse (WAE).
+  \item[\fichier{web\_server\_installations.json}] Apache et nginx, trouvés
+        sans rien exécuter : par leur service (\path|ImagePath|, ou
+        \path|Parameters\Application| pour un service enveloppé par NSSM), ou,
+        lancés à la main, par le dossier où leur archive se déplie : par
+        exemple \path|\Apache24|, \path|\xampp\apache|, le dossier
+        \path|Apache Software Foundation| ou \path|\nginx-1.28.0|. Chacun avec \champ{Product},
+        \champ{Source}, \champ{Root}, \champ{ConfigFile}, ses modules
+        (\champ{Modules} : \texttt{LoadModule}, \texttt{load\_module}, un
+        module ajouté voit chaque requête) et ses hôtes (\champ{Hosts} :
+        noms, adresses d'écoute, racines des documents, alias, journaux). La
+        configuration est lue telle qu'écrite, \texttt{Define} développé,
+        \texttt{Include} et \texttt{include} suivis ; une section
+        conditionnelle est lue aussi : ce qu'elle porte est sur le disque,
+        que la condition ait valu ou non. Une inclusion hors de la collecte
+        est dite (\champ{IncludesNotRead}). La collecte prend le dossier de
+        la configuration, chaque racine de documents entière (sauf la racine
+        d'un volume), et les journaux nommés avec leurs rotations. Les lignes
+        des journaux d'accès, aux formats \texttt{common} et
+        \texttt{combined}, rejoignent \fichier{web\_server\_logs.json} : la
+        date porte son décalage, elle est convertie exactement en UTC. Une
+        ligne d'un autre format est donnée telle quelle (\champ{Raw}), jamais
+        perdue.
+  \item[\fichier{web\_server\_error\_logs.json}] une ligne par erreur
+        d'Apache~2.2, d'Apache~2.4 et de nginx : \champ{Time} (la date locale
+        de la machine, sans décalage écrit, convertie avec son fuseau),
+        \champ{Level}, \champ{Module}, \champ{ProcessId}, \champ{ThreadId},
+        \champ{ClientAddress}, \champ{Message}, \champ{File} et \champ{Line}.
+        Une autre disposition (\texttt{ErrorLogFormat}) est donnée en
+        \champ{Raw}.
+  \item[\fichier{web\_server\_database\_engines.json}] les moteurs de bases
+        que nomment les services : MySQL et MariaDB (\fichier{mysqld.exe} ou
+        \fichier{mariadbd.exe}, le dossier de données lu dans le fichier
+        d'options, \texttt{datadir}), PostgreSQL (\texttt{pg\_ctl runservice
+        -D}). \champ{Product}, \champ{Service}, \champ{Binary},
+        \champ{ConfigFile}, \champ{DataFolder}, \champ{DataFolderCopied}. Le
+        dossier de données est pris brut, entier, jusqu'à
+        \texttt{max\_database\_mib} ; au-delà, seuls sa configuration et ses
+        journaux, et le journal d'investigation le dit. Un moteur en marche
+        ne bloque rien : le volume est lu directement. Ses fichiers ne sont
+        pas décodés.
   \item[\fichier{dpapi\_master\_keys.json}] clés maîtresses DPAPI du système
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System}) et
         de chaque profil (\path|AppData\Roaming\Microsoft\Protect|,

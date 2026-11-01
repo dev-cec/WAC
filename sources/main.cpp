@@ -1460,7 +1460,10 @@ void convertArtefacts(bool systemAvailable) {
 	                             { "web_server_modules.json", Text::ArtefactWebServerModules },
 	                             { "web_server_logs.json", Text::ArtefactWebServerLogs },
 	                             { "web_server_connection_strings.json", Text::ArtefactWebServerConnectionStrings },
-	                             { "web_server_accounts.json", Text::ArtefactWebServerAccounts } },
+	                             { "web_server_accounts.json", Text::ArtefactWebServerAccounts },
+	                             { "web_server_installations.json", Text::ArtefactWebServerInstallations },
+	                             { "web_server_database_engines.json", Text::ArtefactWebServerDatabaseEngines },
+	                             { "web_server_error_logs.json", Text::ArtefactWebServerErrorLogs } },
 	                           L"artefacts.web_server", Text::StepWebServer);
 	writeProcesses();   // if the names could not be loaded (SYSTEM hive unreadable)
 

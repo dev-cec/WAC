@@ -2397,6 +2397,7 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
             continue;
         }
         if (!extensionMatches(e.name, extensions)) continue;
+        if (isSkipped(base + L"\\" + e.name, skipped)) continue;
 
         if (!folderMade) { createFolders(outBase); folderMade = true; }
         RawHiveExtraction line;

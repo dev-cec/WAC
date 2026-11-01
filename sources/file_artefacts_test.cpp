@@ -27,7 +27,9 @@
 #include "powershell_history.h"
 #include "setupapi_log.h"
 #include "firewall_log.h"
+#include <map>
 #include "web_server.h"
+#include "web_installations.h"
 #include "boot_records.h"
 #include "intune_logs.h"
 #include "recycle_bin.h"
@@ -228,6 +230,146 @@ void iisApplicationData() {
 	check(readApplicationAccounts((root / L"output").wstring() + L"\\none.db", L"C:\\none.db").empty(),
 	      "accounts: a file that is no SQLite database gives none");
 	std::filesystem::remove_all(root, ec);
+}
+
+/*! Apache, nginx and the database engines (B-035, lot 3), from configurations
+ *  as those products ship them and log lines in their own documentation's
+ *  layouts: what services and folders name, Define and Include followed, a
+ *  loop stopped, each log's date. */
+void webInstallationsFromTheirFiles() {
+	check(commandWords(L"\"C:\\Apache24\\bin\\httpd.exe\" -k runservice") == std::vector<std::wstring>{ L"C:\\Apache24\\bin\\httpd.exe", L"-k", L"runservice" }
+	      && commandWords(L"mysqld.exe --defaults-file=\"C:\\a b\\my.ini\" MySQL80") == std::vector<std::wstring>{ L"mysqld.exe", L"--defaults-file=C:\\a b\\my.ini", L"MySQL80" },
+	      "service command: quotes out, a backslash literal, one word for --name=\"a b\"");
+	check(folderHolds(L"C:\\inetpub\\wwwroot", L"C:\\INETPUB\\wwwroot\\a.db") && folderHolds(L"C:\\a", L"C:\\a")
+	      && !folderHolds(L"C:\\inetpub\\wwwroot", L"C:\\inetpub\\wwwroot2\\a.db"), "a folder holds its own paths, not a neighbour's of a similar name");
+
+	const std::vector<WebServiceEntry> services = {
+		{ L"Apache2.4", L"\"C:\\Apache24\\bin\\httpd.exe\" -k runservice", L"" },
+		{ L"nginx", L"C:\\tools\\nssm.exe", L"C:\\srv\\nginx\\nginx.exe -p C:\\srv\\web" },
+		{ L"Spooler", L"%SystemRoot%\\System32\\spoolsv.exe", L"" } };
+	const WebFolderLister folders = [](const std::wstring& folder) -> std::vector<std::wstring> {
+		if (folder == L"C:\\") return { L"Apache24", L"nginx-1.28.0", L"xampp", L"Windows" };
+		if (folder == L"C:\\Program Files (x86)\\Apache Software Foundation") return { L"Apache2.2" };
+		return {};
+	};
+	const std::vector<WebCandidate> candidates = webCandidates(services, folders, L"C:");
+	auto rootOf = [&](size_t i) { return i < candidates.size() ? candidates[i].root : L""; };
+	check(candidates.size() == 5 && rootOf(0) == L"C:\\Apache24" && candidates[0].source == L"service Apache2.4"
+	      && candidates[0].configFile == L"C:\\Apache24\\conf\\httpd.conf"
+	      && rootOf(1) == L"C:\\srv\\web" && candidates[1].product == L"nginx" && candidates[1].configFile == L"C:\\srv\\web\\conf\\nginx.conf"
+	      && rootOf(2) == L"C:\\nginx-1.28.0" && candidates[2].source == L"folder"
+	      && rootOf(3) == L"C:\\xampp\\apache" && rootOf(4) == L"C:\\Program Files (x86)\\Apache Software Foundation\\Apache2.2",
+	      "web servers: by service (NSSM's Application, nginx's -p), by folder; a root once");
+
+	const std::vector<WebServiceEntry> engines = {
+		{ L"MariaDB", L"\"C:\\mariadb\\bin\\mariadbd.exe\" \"--defaults-file=C:\\mariadb\\data\\my.ini\" \"MariaDB\"", L"" },
+		{ L"MySQL57", L"C:\\mysql\\bin\\mysqld.exe MySQL57", L"" },
+		{ L"postgresql-x64-16", L"\"C:/pgsql/bin/pg_ctl.exe\" runservice -N \"postgresql-x64-16\" -D \"C:/pgsql/data\" -w", L"" } };
+	const std::vector<DatabaseEngine> found = databaseEngines(engines);
+	check(found.size() == 3 && found[0].product == L"MySQL or MariaDB" && found[0].configFile == L"C:\\mariadb\\data\\my.ini" && found[0].dataFolder.empty()
+	      && found[1].dataFolder == L"C:\\mysql\\data"
+	      && found[2].product == L"PostgreSQL" && found[2].dataFolder == L"C:\\pgsql\\data" && found[2].configFile == L"C:\\pgsql\\data\\postgresql.conf",
+	      "engines: mariadbd.exe and mysqld.exe alike, option file or default folder; pg_ctl's -D");
+	check(mysqlDataFolder(L"[client]\r\ndatadir=C:/wrong\r\n[mysqld]\r\nport=3306\r\ndatadir=C:/mariadb/data\r\n") == L"C:\\mariadb\\data"
+	      && mysqlDataFolder(L"[mysqld]\ndatadir = \"C:\\\\Program Files\\\\MariaDB\\\\data\\\\\"\n") == L"C:\\Program Files\\MariaDB\\data"
+	      && mysqlDataFolder(L"[client]\ndatadir=C:/wrong\n").empty(),
+	      "my.ini: datadir of the server's section only, slashes and doubled backslashes");
+
+	std::map<std::wstring, std::wstring> texts = {
+		{ L"C:\\Apache24\\conf\\httpd.conf",
+		  L"Define SRVROOT \"c:/Apache24\"\r\nServerRoot \"${SRVROOT}\"\r\nListen 8081\r\n# Listen 9999\r\n"
+		  L"LoadModule rewrite_module modules/mod_rewrite.so\r\nLoadModule evil_module \"C:/temp/mod_evil.so\"\r\n"
+		  L"ServerName www.wac.invalid:8081\r\nDocumentRoot \"${SRVROOT}/htdocs\"\r\n"
+		  L"ScriptAlias /cgi-bin/ \"${SRVROOT}/cgi-bin/\"\r\nErrorLog \"logs/error.log\"\r\n"
+		  L"<IfModule log_config_module>\r\n    CustomLog \"logs/access.log\" common\r\n    CustomLog \"|bin/rotatelogs.exe x\" common\r\n</IfModule>\r\n"
+		  L"Include conf/extra/*.conf\r\nIncludeOptional conf/none/*.conf\r\nInclude C:/elsewhere/gone.conf\r\n" },
+		{ L"C:\\Apache24\\conf\\extra\\vhosts.conf",
+		  L"<VirtualHost *:8081>\r\n  ServerName shop.wac.invalid\r\n  ServerAlias \\\r\n     a.wac.invalid b.wac.invalid\r\n"
+		  L"  DocumentRoot D:/shop\r\n  ErrorLog logs/shop-error.log\r\n  CustomLog logs/shop-access.log combined\r\n</VirtualHost>\r\n"
+		  L"Include conf/extra/vhosts.conf\r\n" },
+		{ L"C:\\nginx\\conf\\nginx.conf",
+		  L"load_module modules/ngx_evil.dll;\nerror_log logs/main-error.log;\nhttp {\n  include mime.types;\n"
+		  L"  access_log logs/main-access.log combined;\n  include sites/*.conf;\n  server {\n    listen 8083;\n    server_name a.wac.invalid \"b.wac.invalid\";\n"
+		  L"    # root C:/commented;\n    location / { root html; }\n    location /up/ { alias C:/uploads/; }\n"
+		  L"    access_log off;\n  }\n}\n" },
+		{ L"C:\\nginx\\conf\\mime.types", L"types { text/html html; }\n" },
+		{ L"C:\\nginx\\conf\\sites\\shop.conf", L"server { listen 8084; root D:/shop; error_log logs/shop.log warn; access_log syslog:server=x; }\n" } };
+	WebConfigFiles files;
+	files.read = [&](const std::wstring& path, std::wstring& text) {
+		// Case ignored, as on Windows: Apache's own httpd.conf writes "c:/Apache24".
+		for (const auto& [name, content] : texts)
+			if (toLower(name) == toLower(path)) { text = content; return true; }
+		return false;
+	};
+	files.matches = [&](const std::wstring& pattern) -> std::vector<std::wstring> {
+		if (toLower(pattern) == L"c:\\apache24\\conf\\extra\\*.conf") return { L"C:\\Apache24\\conf\\extra\\vhosts.conf" };
+		if (toLower(pattern) == L"c:\\apache24\\conf\\extra\\vhosts.conf") return { L"C:\\Apache24\\conf\\extra\\vhosts.conf" };
+		if (pattern == L"C:\\nginx\\conf\\mime.types") return { pattern };
+		if (pattern == L"C:\\nginx\\conf\\sites\\*.conf") return { L"C:\\nginx\\conf\\sites\\shop.conf" };
+		return {};
+	};
+	const WebInstallation apache = parseApacheConfiguration(WebCandidate{ L"Apache", L"C:\\Apache24", L"C:\\Apache24\\conf\\httpd.conf", L"folder" }, files);
+	check(apache.hosts.size() == 2 && apache.root == L"c:\\Apache24" && apache.hosts[0].listen == std::vector<std::wstring>{ L"8081" }
+	      && apache.hosts[0].documentRoots == std::vector<std::wstring>{ L"c:\\Apache24\\htdocs", L"c:\\Apache24\\cgi-bin" }
+	      && apache.hosts[0].accessLogs == std::vector<std::wstring>{ L"c:\\Apache24\\logs\\access.log" }
+	      && apache.hosts[0].errorLogs == std::vector<std::wstring>{ L"c:\\Apache24\\logs\\error.log" },
+	      "httpd.conf: Define expanded, a comment skipped, a pipe left out, a section's content read");
+	check(apache.modules.size() == 2 && apache.modules[1].first == L"evil_module" && apache.modules[1].second == L"C:\\temp\\mod_evil.so"
+	      && apache.notRead == std::vector<std::wstring>{ L"C:\\elsewhere\\gone.conf" },
+	      "httpd.conf: the modules and where they load from; an Include not in the collection said, an IncludeOptional's empty wildcard not");
+	check(apache.hosts.size() == 2 && apache.hosts[1].file == L"C:\\Apache24\\conf\\extra\\vhosts.conf" && apache.hosts[1].listen == std::vector<std::wstring>{ L"*:8081" }
+	      && apache.hosts[1].serverNames == std::vector<std::wstring>{ L"shop.wac.invalid", L"a.wac.invalid", L"b.wac.invalid" }
+	      && apache.hosts[1].documentRoots == std::vector<std::wstring>{ L"D:\\shop" } && apache.hosts[1].accessLogs == std::vector<std::wstring>{ L"c:\\Apache24\\logs\\shop-access.log" },
+	      "httpd.conf: a virtual host of an included file, a continued line; a file including itself read once");
+	const WebInstallation nginx = parseNginxConfiguration(WebCandidate{ L"nginx", L"C:\\nginx", L"C:\\nginx\\conf\\nginx.conf", L"folder" }, files);
+	check(nginx.hosts.size() == 3 && nginx.modules.size() == 1 && nginx.modules[0].second == L"C:\\nginx\\modules\\ngx_evil.dll"
+	      && nginx.hosts[0].errorLogs == std::vector<std::wstring>{ L"C:\\nginx\\logs\\main-error.log" } && nginx.hosts[0].accessLogs == std::vector<std::wstring>{ L"C:\\nginx\\logs\\main-access.log" },
+	      "nginx.conf: load_module, the logs of the http level");
+	check(nginx.hosts.size() == 3 && nginx.hosts[1].listen == std::vector<std::wstring>{ L"8084" } && nginx.hosts[1].documentRoots == std::vector<std::wstring>{ L"D:\\shop" }
+	      && nginx.hosts[1].errorLogs == std::vector<std::wstring>{ L"C:\\nginx\\logs\\shop.log" } && nginx.hosts[1].accessLogs.empty()
+	      && nginx.hosts[2].serverNames == std::vector<std::wstring>{ L"a.wac.invalid", L"b.wac.invalid" }
+	      && nginx.hosts[2].documentRoots == std::vector<std::wstring>{ L"C:\\nginx\\html", L"C:\\uploads" } && nginx.hosts[2].accessLogs.empty(),
+	      "nginx.conf: a server of an included file, locations' root and alias, a comment skipped, off and syslog left out");
+	check(parseApacheConfiguration(WebCandidate{ L"Apache", L"C:\\none", L"C:\\none\\conf\\httpd.conf", L"folder" }, files).hosts.empty(),
+	      "a folder of the right name without configuration holds no server");
+
+	FILETIME expected;
+	auto instant = [](const FILETIME& f) { return ((unsigned long long)f.dwHighDateTime << 32) | f.dwLowDateTime; };
+	auto text = [](const W3cLogEntry& e, const std::wstring& key) {
+		for (const auto& [k, v] : e.fields) if (k == key) return v;
+		return std::wstring();
+	};
+	const W3cLogEntry combined = parseAccessLogLine(L"10.0.2.2 - bob [01/Nov/2026:12:30:05 +0100] \"GET /a.php?id=1 HTTP/1.1\" 200 512 \"http://r.invalid/\" \"Mozilla \\\"x\\\"\"", L"f", 7);
+	check(iso8601UtcToFiletime(L"2026-11-01T11:30:05Z", expected) && instant(combined.time) == instant(expected) && combined.zone == W3cTime::Utc
+	      && text(combined, L"ClientAddress") == L"10.0.2.2" && text(combined, L"UserName") == L"bob" && text(combined, L"Identity").empty()
+	      && text(combined, L"Method") == L"GET" && text(combined, L"UriStem") == L"/a.php" && text(combined, L"UriQuery") == L"id=1"
+	      && text(combined, L"Status") == L"200" && text(combined, L"BytesSent") == L"512" && text(combined, L"Referer") == L"http://r.invalid/"
+	      && text(combined, L"UserAgent") == L"Mozilla \"x\"" && combined.line == 7,
+	      "access log, combined: the date to UTC by its own offset, an escaped quote, each field");
+	const W3cLogEntry common = parseAccessLogLine(L"::1 - - [01/Jul/2026:00:10:00 -0430] \"\\x16\\x03\" 400 -", L"f", 1);
+	check(iso8601UtcToFiletime(L"2026-07-01T04:40:00Z", expected) && instant(common.time) == instant(expected)
+	      && text(common, L"Status") == L"400" && text(common, L"BytesSent").empty() && !text(common, L"Request").empty(),
+	      "access log, common: a negative offset, a garbled request as it came, no size");
+	const W3cLogEntry other = parseAccessLogLine(L"{\"json\": true}", L"f", 2);
+	check(other.time.dwLowDateTime == 0 && text(other, L"Raw") == L"{\"json\": true}", "access log: another format given raw, never dropped");
+
+	const W3cLogEntry v22 = parseErrorLogLine(L"[Wed Oct 11 14:32:52 2000] [error] [client 127.0.0.1] client denied by server configuration: /a", L"f", 1);
+	check(iso8601UtcToFiletime(L"2000-10-11T14:32:52Z", expected) && instant(v22.time) == instant(expected) && v22.zone == W3cTime::Local
+	      && text(v22, L"Level") == L"error" && text(v22, L"ClientAddress") == L"127.0.0.1" && text(v22, L"Message") == L"client denied by server configuration: /a",
+	      "error log, Apache 2.2");
+	const W3cLogEntry v24 = parseErrorLogLine(L"[Fri Sep 09 10:42:29.902022 2011] [core:error] [pid 35708:tid 4328636416] [client 72.15.99.187] File does not exist: /a", L"f", 1);
+	check(iso8601UtcToFiletime(L"2011-09-09T10:42:29.902022Z", expected) && instant(v24.time) == instant(expected)
+	      && text(v24, L"Module") == L"core" && text(v24, L"Level") == L"error" && text(v24, L"ProcessId") == L"35708" && text(v24, L"ThreadId") == L"4328636416"
+	      && text(v24, L"ClientAddress") == L"72.15.99.187" && text(v24, L"Message") == L"File does not exist: /a",
+	      "error log, Apache 2.4: microseconds, module, process and thread");
+	const W3cLogEntry escaped = parseErrorLogLine(L"[Sun Nov 01 13:26:24.688874 2026] [core:notice] [pid 5152:tid 340] AH00094: Command line: 'C:\\\\Apache24\\\\bin\\\\httpd.exe \\\"x\\\" \\x0a'", L"f", 1);
+	check(text(escaped, L"Message") == L"AH00094: Command line: 'C:\\Apache24\\bin\\httpd.exe \"x\" \\x0a'",
+	      "error log, Apache: its escaping of backslashes and quotes undone, \\xHH as written");
+	const W3cLogEntry ngx = parseErrorLogLine(L"2026/11/01 12:30:05 [error] 1234#5678: *9 open() \"C:/nginx/html/x\" failed (2: not found), client: 10.0.2.2", L"f", 1);
+	check(iso8601UtcToFiletime(L"2026-11-01T12:30:05Z", expected) && instant(ngx.time) == instant(expected) && text(ngx, L"Level") == L"error"
+	      && text(ngx, L"ProcessId") == L"1234" && text(ngx, L"ThreadId") == L"5678" && text(ngx, L"Message").compare(0, 9, L"*9 open()") == 0,
+	      "error log, nginx");
+	check(text(parseErrorLogLine(L"PHP Warning: something", L"f", 3), L"Raw") == L"PHP Warning: something", "error log: another line given raw, never dropped");
 }
 
 /*! IIS's applicationHost.config, as IIS 10 writes it: a site whose root
@@ -2767,6 +2909,7 @@ int wmain(int argc, wchar_t** argv) {
 	firewallLog();
 	iisConfigurationAndLogs();
 	iisApplicationData();
+	webInstallationsFromTheirFiles();
 	partitionTables();
 	cmTraceLog();
 	internetShortcut();

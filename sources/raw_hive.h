@@ -486,10 +486,11 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
  *         NTFS index could loop); 0 = no descent
  *  @param reading (optional) receives a record per file, fingerprints included:
  *         it is the source of the exhibit store manifest
- *  @param skipped subdirectories not descended into, as paths on the volume
- *         (case ignored): those another artefact already extracts — the Start
- *         menu's Startup folder, extracted whole by the startup folders. Taken
- *         twice, a file would appear twice in the manifest.
+ *  @param skipped subdirectories not descended into and files not taken, as
+ *         paths on the volume (case ignored): those another artefact already
+ *         extracts — the Start menu's Startup folder, extracted whole by the
+ *         startup folders. Taken twice, a file would appear twice in the
+ *         manifest, and its exhibit be written again.
  *  @return ERROR_SUCCESS if the listing succeeded (even without files),
  *          S_FALSE if at least one file failed,
  *          an error code if the volume is inaccessible

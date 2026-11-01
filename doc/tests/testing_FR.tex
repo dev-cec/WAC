@@ -352,6 +352,20 @@ de chacune (\texttt{|DataDirectory|} résolu, aucun pour le serveur), la base
 extérieure dans le manifeste, et chaque compte (identifiant, condensat, schéma
 nommé).
 
+\fichier{install-web-servers.sh} installe une fois, sur une VM serveur, les
+autres serveurs et les moteurs. Les versions sont celles que les notes de
+version disent changer la collecte : Apache~2.2.25 et 2.4.69 (disposition du
+journal d'erreurs, \texttt{IncludeOptional} depuis 2.3.6), un seul nginx
+(1.28.0 : \texttt{load\_module} n'est qu'une directive de plus), un seul MariaDB
+(11.4.5 : le paquet porte \fichier{mariadbd.exe} et \fichier{mysqld.exe}, testés
+en unitaire), un seul PostgreSQL (16.9 : \path|pg_log| et \path|pg_xlog| restent
+dans le dossier de données, pris entier) ; chaque archive vérifiée par son
+SHA-256. Le harnais demande une page avec un jeton à chaque serveur, provoque
+une erreur, puis confronte l'installation et ses modules (relus par PowerShell),
+la requête et l'erreur avec leur instant en UTC, les pages et un fichier de
+chaque dossier de données par leur SHA-256, \fichier{ibdata1} que MariaDB tient
+ouvert, et l'unicité de chaque fichier au manifeste.
+
 \section{Contrôler les sorties}
 
 \begin{lstlisting}

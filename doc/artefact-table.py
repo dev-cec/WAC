@@ -140,8 +140,8 @@ PHRASES = [
 # Whole cells that are one word.
 WHOLE = {"files": "fichiers", "text": "texte", "observation": "observation"}
 NOTES = {
-    "Present only where IIS is installed; Apache and nginx are not read yet.":
-        "Présent seulement là où IIS est installé ; Apache et nginx ne sont pas encore lus.",
+    "Present only where a web server is installed. Also Apache and nginx, found by their service or folder, and the data folders of MySQL, MariaDB and PostgreSQL, taken raw.":
+        "Présent seulement là où un serveur web est installé. Aussi Apache et nginx, trouvés par leur service ou leur dossier, et les dossiers de données de MySQL, MariaDB et PostgreSQL, pris bruts.",
     "What a deleted file still holds depends on the disk: a solid-state drive that received TRIM returns zeros for the freed clusters, declared as such, never as the content.":
         "Ce qu'un fichier supprimé garde dépend du disque : un SSD qui a reçu TRIM rend des zéros pour les clusters libérés, déclarés comme tels, jamais comme le contenu.",
     "Still written by Windows 11 (measured, build 26200), though the Timeline is no longer shown. Server editions to be measured.":

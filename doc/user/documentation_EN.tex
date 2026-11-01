@@ -1622,6 +1622,42 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         a name from the database is never a key), and \champ{Database}. A table name not made of
         letters, digits and \texttt{\_} is not read. Judging a weak password
         is the analysis's (WAE).
+  \item[\fichier{web\_server\_installations.json}] Apache and nginx, found
+        without running anything: by their service (\path|ImagePath|, or
+        \path|Parameters\Application| for a service NSSM wraps), or, started
+        by hand, by the folder their archive unpacks to (\path|\Apache24|,
+        \path|\nginx-1.28.0|, \path|\xampp\apache|,
+        \path|Apache Software Foundation|). Each with \champ{Product},
+        \champ{Source}, \champ{Root}, \champ{ConfigFile}, its modules
+        (\champ{Modules}: \texttt{LoadModule}, \texttt{load\_module}, a module
+        added sees every request) and its hosts (\champ{Hosts}: names, listen
+        addresses, document roots, aliases, logs). The configuration is read
+        as written, \texttt{Define} expanded, \texttt{Include} and
+        \texttt{include} followed; a conditional section is read too: what it
+        holds is on the disk, whether or not the condition held. An include
+        outside the collection is said (\champ{IncludesNotRead}). The
+        collection takes the configuration's folder, each document root whole
+        (except a volume's root), and the logs named with their rotations.
+        The lines of the access logs, in the \texttt{common} and
+        \texttt{combined} formats, join \fichier{web\_server\_logs.json}: their
+        date carries its offset, and is converted to UTC exactly. A line in
+        another format is given as it is (\champ{Raw}), never lost.
+  \item[\fichier{web\_server\_error\_logs.json}] one line per error of
+        Apache~2.2, Apache~2.4 and nginx: \champ{Time} (the machine's local
+        date, no offset written, converted with its time zone), \champ{Level},
+        \champ{Module}, \champ{ProcessId}, \champ{ThreadId},
+        \champ{ClientAddress}, \champ{Message}, \champ{File} and \champ{Line}.
+        Another layout (\texttt{ErrorLogFormat}) is given as \champ{Raw}.
+  \item[\fichier{web\_server\_database\_engines.json}] the database engines
+        the services name: MySQL and MariaDB (\fichier{mysqld.exe} or
+        \fichier{mariadbd.exe}, the data folder read in the option file,
+        \texttt{datadir}), PostgreSQL (\texttt{pg\_ctl runservice -D}).
+        \champ{Product}, \champ{Service}, \champ{Binary}, \champ{ConfigFile},
+        \champ{DataFolder}, \champ{DataFolderCopied}. The data folder is taken
+        raw, whole, up to \texttt{max\_database\_mib}; above it, its
+        configuration and logs alone, and the investigation log says so. A
+        running engine locks nothing: the volume is read directly. Its files
+        are not decoded.
   \item[\fichier{dpapi\_master\_keys.json}] DPAPI master keys of the system
         (\path|System32\Microsoft\Protect|, \champ{Scope} \texttt{System})
         and of each profile (\path|AppData\Roaming\Microsoft\Protect|,

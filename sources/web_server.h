@@ -1,5 +1,7 @@
 /*! \file
- *  \brief The web server of the examined machine: IIS (backlog B-035, lots 1 and 2).
+ *  \brief The web server of the examined machine: IIS (backlog B-035, lots 1
+ *  and 2), and the artefact's whole conversion; Apache, nginx and the database
+ *  engines are read in web_installations.h (lot 3).
  *
  *  WHAT THE ARTEFACT PROVES. On a web server, a compromise goes through the
  *  site: a web shell dropped in its folder and the requests that call it, a
@@ -63,6 +65,7 @@
 #include <windows.h>
 #include "tools.h"
 #include "w3c_log.h"
+#include "web_installations.h"
 
 /*! An element of the configuration: its attributes as written, by their
  *  JSON key, and the elements read beneath it. */
@@ -182,4 +185,6 @@ private:
 	IisConfiguration configuration_;
 	std::vector<IisConnectionString> connections_;
 	std::vector<Json> accounts_;   //!< the application's account rows
+	std::vector<WebInstallation> installations_;  //!< Apache and nginx (web_installations.h)
+	std::vector<DatabaseEngine> engines_;         //!< the database engines
 };

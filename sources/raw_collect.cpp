@@ -31,6 +31,7 @@
 #include "sysmon.h"
 #include "firewall_log.h"
 #include "web_server.h"
+#include "web_installations.h"
 #include "intune_logs.h"
 #include "cloud_identity.h"
 #include <algorithm>
@@ -473,6 +474,7 @@ struct Tree {
 	unsigned depth;                        //!< guard against an abnormal tree
 	const wchar_t* what;                   //!< for the investigation log
 	std::wstring skipped = L"";            //!< a subfolder another artefact extracts, same form as absolute; empty for none
+	std::vector<std::wstring> taken = {};  //!< folders and files already taken, absolute: never taken twice
 };
 
 /*! Extracts a tree by raw reading of its directory indexes, into the
@@ -490,6 +492,7 @@ HRESULT extractTree(const Tree& written, size_t& total) {
 	std::vector<RawHiveExtraction> reading;
 	std::vector<std::wstring> skipped;
 	if (!tree.skipped.empty()) skipped.push_back(pathRelativeToVolume(tree.skipped));
+	for (const std::wstring& piece : tree.taken) skipped.push_back(pathRelativeToVolume(piece));
 	const HRESULT hrTree = ExtractDirectoryTreeRaw(volume, path, exhibitTarget(tree.absolute),
 	                                               tree.extensions, &extractedFiles, tree.depth, &reading,
 	                                               skipped);
@@ -505,24 +508,102 @@ HRESULT extractTree(const Tree& written, size_t& total) {
 	return hrTree;
 }
 
+/*! The pieces of a file: itself and what lies beside it under a name that
+ *  starts the same (a database's -wal and -journal, a log's rotations), as its
+ *  folder's index lists them.
+ *  @param file the file, absolute
+ *  @return the entries; none for a folder absent */
+std::vector<RawDirEntry> piecesBeside(const std::wstring& file) {
+	std::vector<RawDirEntry> pieces, entries;
+	const std::wstring volume = volumeOfPath(file), path = pathRelativeToVolume(file);
+	const size_t slash = path.rfind(L'\\');
+	const std::wstring parent = path.substr(0, slash), name = toLower(path.substr(slash + 1));
+	if (FAILED(ListDirectoryRaw(volume, parent.empty() ? L"\\" : parent, entries))) return pieces;
+	for (const RawDirEntry& e : entries)
+		if (!e.isDirectory && toLower(e.name).compare(0, name.size(), name) == 0) pieces.push_back(e);
+	return pieces;
+}
+
+/*! The size of a folder, its index walked to a depth.
+ *  @param volume its volume's letter
+ *  @param path the folder on the volume
+ *  @param depth levels left */
+uint64_t rawTreeSize(const std::wstring& volume, const std::wstring& path, unsigned depth) {
+	std::vector<RawDirEntry> entries;
+	uint64_t size = 0;
+	if (FAILED(ListDirectoryRaw(volume, path, entries))) return 0;
+	for (const RawDirEntry& e : entries) {
+		if (e.name == L"." || e.name == L"..") continue;
+		if (!e.isDirectory) size += e.size;
+		else if (depth > 0) size += rawTreeSize(volume, path + L"\\" + e.name, depth - 1);
+	}
+	return size;
+}
+
+//! The subfolders of a folder, by raw reading.
+std::vector<std::wstring> rawSubfolders(const std::wstring& folder) {
+	std::vector<std::wstring> names;
+	std::vector<RawDirEntry> entries;
+	const std::wstring path = pathRelativeToVolume(folder);
+	if (FAILED(ListDirectoryRaw(volumeOfPath(folder), path.empty() ? L"\\" : path, entries))) return names;
+	for (const RawDirEntry& e : entries)
+		if (e.isDirectory && e.name != L"." && e.name != L"..") names.push_back(e.name);
+	return names;
+}
+
+/*! What the collection of the web servers takes, each piece once. Two sites
+ *  can share a folder, a nested application lies in its site's, a log in a
+ *  document root, an option file in its data folder: taken a second time, an
+ *  exhibit would be written again and declared twice in the manifest, and
+ *  a store is never written again. */
+class WebPieces {
+public:
+	explicit WebPieces(size_t& total) : total_(total) {}
+
+	//! Takes a folder, whole or by extension, leaving out what is already taken.
+	HRESULT tree(const std::wstring& folder, const std::vector<std::wstring>& extensions, unsigned depth, const wchar_t* what) {
+		const std::wstring key = toLower(folder) + L"|" + std::to_wstring(extensions.size());
+		if (holds(folder) || !filtered_.insert(key).second) return S_OK;
+		Tree t{ folder, extensions, depth, what };
+		for (const std::wstring& piece : taken_)
+			if (folderHolds(folder, piece)) t.taken.push_back(piece);
+		const HRESULT hr = extractTree(t, total_);
+		if (extensions.empty()) taken_.push_back(folder);
+		return hr;
+	}
+
+	//! Takes files, those not already taken.
+	HRESULT files(const std::vector<std::wstring>& paths, const std::wstring& what) {
+		std::vector<std::wstring> wanted;
+		for (const std::wstring& path : paths)
+			if (!holds(path)) { wanted.push_back(path); taken_.push_back(path); }
+		return wanted.empty() ? S_OK : extractFiles(wanted, what, total_);
+	}
+
+	bool holds(const std::wstring& path) const {
+		return std::any_of(taken_.begin(), taken_.end(), [&](const std::wstring& t) { return folderHolds(t, path); });
+	}
+
+private:
+	size_t& total_;
+	std::vector<std::wstring> taken_;     //!< folders taken whole, and files
+	std::set<std::wstring> filtered_;     //!< the trees already asked for, by folder and filter
+};
+
 /*! The pieces of a database a site names outside the sites' folders: the
- *  file and its -wal and -journal, as its folder's index lists them, each
- *  up to max_database_mib — a larger one is said, with its size, and not
- *  copied: a very large base is taken on the operator's decision.
+ *  file and its -wal and -journal, each up to max_database_mib — a larger one
+ *  is said, with its size, and not copied: a very large base is taken on the
+ *  operator's decision.
  *  @param file the database, absolute
  *  @return the pieces to take; none for a file absent */
 std::vector<std::wstring> databasePieces(const std::wstring& file) {
 	std::vector<std::wstring> pieces;
-	const std::wstring volume = volumeOfPath(file), path = pathRelativeToVolume(file);
-	const size_t slash = path.rfind(L'\\');
-	const std::wstring parent = path.substr(0, slash), name = toLower(path.substr(slash + 1));
-	std::vector<RawDirEntry> entries;
-	if (FAILED(ListDirectoryRaw(volume, parent.empty() ? L"\\" : parent, entries))) return pieces;
-	const uint64_t ceiling = (uint64_t)conf.webServerSettings.maxDatabaseMib << 20;
-	for (const RawDirEntry& e : entries) {
+	const std::wstring parent = file.substr(0, file.rfind(L'\\')), name = toLower(file.substr(file.rfind(L'\\') + 1));
+	const uint64_t ceiling = AppliConf::ceilingBytes(conf.webServerSettings.maxDatabaseMib);
+	for (const RawDirEntry& e : piecesBeside(file)) {
 		const std::wstring entry = toLower(e.name);
-		if (e.isDirectory || (entry != name && entry != name + L"-wal" && entry != name + L"-journal")) continue;
-		const std::wstring piece = file.substr(0, 2) + parent + L"\\" + e.name;
+		if (entry != name && entry != name + L"-wal" && entry != name + L"-journal") continue;
+		const std::wstring piece = parent + L"\\" + e.name;
 		if (e.size > ceiling) {
 			auditRecord(L"Database a site names, not copied: " + std::to_wstring(e.size >> 20)
 			            + L" MiB, above max_database_mib (" + std::to_wstring(conf.webServerSettings.maxDatabaseMib) + L")",
@@ -540,9 +621,10 @@ std::vector<std::wstring> databasePieces(const std::wstring& file) {
  *  history. Each step reads what the one before took in its working copy,
  *  made as soon as it is taken: the exhibit store is never read after its
  *  copy. Without IIS, the folder is absent: nothing taken, nothing failed.
- *  @param total incremented by the files taken
+ *  @param pieces what is taken
+ *  @param total incremented by the files of its configuration
  *  @return S_OK, S_FALSE if a part could not be taken */
-HRESULT extractIis(size_t& total) {
+HRESULT extractIis(WebPieces& pieces, size_t& total) {
 	HRESULT global = S_OK;
 	const std::wstring configuration = iisConfigurationFile();
 	const std::wstring folder = configuration.substr(0, configuration.rfind(L'\\'));
@@ -563,16 +645,101 @@ HRESULT extractIis(size_t& total) {
 	//! Deepest folder walked in a site: far below any real site's tree.
 	const unsigned SITE_DEPTH = 32;
 	for (const std::wstring& site : iis.siteFolders)
-		if (extractTree({ site, {}, SITE_DEPTH, L"IIS site's content" }, total) != S_OK) global = S_FALSE;
+		if (pieces.tree(site, {}, SITE_DEPTH, L"IIS site's content") != S_OK) global = S_FALSE;
 	// The sites' web.config, read in their working copy, name the databases kept elsewhere.
 	if (storeToWorking() != S_OK) global = S_FALSE;
 	std::vector<std::wstring> databases;
 	for (const std::wstring& file : externalDatabases(readConnectionStrings(iis.siteFolders), iis.siteFolders))
 		for (const std::wstring& piece : databasePieces(file)) databases.push_back(piece);
-	if (!databases.empty() && extractFiles(databases, L"databases named by the sites", total) != S_OK) global = S_FALSE;
+	if (pieces.files(databases, L"databases named by the sites") != S_OK) global = S_FALSE;
 	for (const std::wstring& logs : iis.logFolders)
-		if (extractTree({ logs, { L".log" }, 3, L"IIS logs" }, total) != S_OK) global = S_FALSE;
-	if (extractTree({ iis.historyFolder, { L".config" }, 2, L"IIS configuration history" }, total) != S_OK) global = S_FALSE;
+		if (pieces.tree(logs, { L".log" }, 3, L"IIS logs") != S_OK) global = S_FALSE;
+	if (pieces.tree(iis.historyFolder, { L".config" }, 2, L"IIS configuration history") != S_OK) global = S_FALSE;
+	return global;
+}
+
+/*! Apache and nginx (web_installations.h): the folder of each one's
+ *  configuration, which names the rest; then its document roots, whole, and
+ *  its logs with their rotations. A folder of the right name without
+ *  configuration holds no server: nothing more is taken.
+ *  @param pieces what is taken
+ *  @return S_OK, S_FALSE if a part could not be taken */
+HRESULT extractWebInstallations(WebPieces& pieces) {
+	HRESULT global = S_OK;
+	const std::vector<WebCandidate> candidates = webCandidates(examinedServices(), rawSubfolders, conf.systemDrive.substr(0, 2));
+	for (const WebCandidate& c : candidates) {
+		const std::wstring folder = c.configFile.substr(0, c.configFile.rfind(L'\\'));
+		if (pieces.tree(folder, {}, 8, L"web server's configuration") != S_OK) global = S_FALSE;
+	}
+	if (!candidates.empty() && storeToWorking() != S_OK) global = S_FALSE;
+	const unsigned SITE_DEPTH = 32;
+	for (const WebCandidate& c : candidates) {
+		const WebInstallation installation = readWebInstallation(c);
+		std::vector<std::wstring> logs;
+		for (const WebHost& host : installation.hosts) {
+			for (const std::wstring& root : host.documentRoots) {
+				if (root.size() <= 3) {   // a volume's root is not a site: the whole volume would be copied
+					log(2, L"🔈Web server: document root not copied, a volume's root: " + root);
+					continue;
+				}
+				if (pieces.tree(root, {}, SITE_DEPTH, L"web site's content") != S_OK) global = S_FALSE;
+			}
+			for (const std::vector<std::wstring>* named : { &host.accessLogs, &host.errorLogs })
+				for (const std::wstring& file : *named)
+					for (const RawDirEntry& e : piecesBeside(file))
+						logs.push_back(file.substr(0, file.rfind(L'\\')) + L"\\" + e.name);
+		}
+		if (pieces.files(logs, L"web server's logs") != S_OK) global = S_FALSE;
+	}
+	return global;
+}
+
+/*! The database engines, raw (web_installations.h): the option file first
+ *  when the data folder depends on it; the data folder whole up to
+ *  max_database_mib; above it, said, its configuration and logs alone.
+ *  @param pieces what is taken
+ *  @return S_OK, S_FALSE if a part could not be taken */
+HRESULT extractDatabaseEngines(WebPieces& pieces) {
+	HRESULT global = S_OK;
+	const unsigned DATA_DEPTH = 16;
+	for (const DatabaseEngine& named : databaseEngines(examinedServices())) {
+		const bool configFirst = !named.configFile.empty() && (named.dataFolder.empty() || !folderHolds(named.dataFolder, named.configFile));
+		if (configFirst) {
+			if (pieces.files({ named.configFile }, L"database engine's configuration") != S_OK) global = S_FALSE;
+			if (storeToWorking() != S_OK) global = S_FALSE;
+		}
+	}
+	for (const DatabaseEngine& e : readDatabaseEngines()) {
+		if (e.dataFolder.size() <= 3) {
+			log(2, L"🔥" + e.product + L" (" + e.service + L"): data folder not known, or a volume's root: " + e.dataFolder);
+			continue;
+		}
+		const std::wstring path = pathRelativeToVolume(e.dataFolder);
+		const uint64_t size = rawTreeSize(volumeOfPath(e.dataFolder), path, DATA_DEPTH);
+		const int ceiling = conf.webServerSettings.maxDatabaseMib;
+		if (size <= AppliConf::ceilingBytes(ceiling)) {
+			if (pieces.tree(e.dataFolder, {}, DATA_DEPTH, L"database engine's data folder") != S_OK) global = S_FALSE;
+			continue;
+		}
+		auditRecord(L"Data folder of " + e.product + L" (" + e.service + L") not copied: " + std::to_wstring(size >> 20)
+		            + L" MiB, above max_database_mib (" + std::to_wstring(ceiling) + L"); its configuration and logs taken",
+		            e.dataFolder, ERROR_SUCCESS, Footprint::VOLUME_BRUT);
+		if (pieces.tree(e.dataFolder, { L".ini", L".cnf", L".conf", L".log", L".err" }, DATA_DEPTH, L"database engine's configuration and logs") != S_OK)
+			global = S_FALSE;
+	}
+	return global;
+}
+
+/*! Everything of the artefact web_server: IIS, the other web servers, the
+ *  database engines, each piece once.
+ *  @param total incremented by the files taken
+ *  @return S_OK, S_FALSE if a part could not be taken */
+HRESULT extractWebServers(size_t& total) {
+	WebPieces pieces(total);
+	HRESULT global = extractIis(pieces, total);
+	if (extractWebInstallations(pieces) != S_OK) global = S_FALSE;
+	if (extractDatabaseEngines(pieces) != S_OK) global = S_FALSE;
+	if (storeToWorking() != S_OK) global = S_FALSE;
 	return global;
 }
 
@@ -728,7 +895,7 @@ HRESULT ExtractFileArtefactsRaw() {
 	//! Deepest folder walked for Thumbs.db: far below any folder a user browses.
 	const unsigned THUMBS_DB_DEPTH = 32;
 	std::vector<Tree> trees;
-	if (conf.artefacts.webServer && extractIis(total) != S_OK) global = S_FALSE;
+	if (conf.artefacts.webServer && extractWebServers(total) != S_OK) global = S_FALSE;
 	if (conf.artefacts.scheduledTasks)
 		trees.push_back({ L"\\Windows\\System32\\Tasks", {}, 8, L"scheduled task definitions" });
 	if (conf.artefacts.errorReports) {
