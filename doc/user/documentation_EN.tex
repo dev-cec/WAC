@@ -371,6 +371,7 @@ artefacts:              # one key per artefact; a missing key is true
   fat_volumes:             true   # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
   firewall:                true   # firewall rules and profiles
   firewall_log:            true   # the firewall's log (pfirewall.log), when logging is on: connections allowed or dropped, addresses, ports, process
+  group_policies:          true   # domain controller: SYSVOL and its policies
   hosts:                   true   # the hosts file: names diverted to an address
   installed_programs:      true   # installed programs (Uninstall) of the machine and of each user
   internet_settings:       true   # each user's proxy and automatic configuration script
@@ -1596,8 +1597,30 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         (\champ{NTSecurityDescriptorSdId}); an object ACE gives the GUID of the
         right it is about (\champ{ObjectType}): the replication rights of a
         DCSync attack read there, on the domain's root.
+        On a controller, \fichier{users.json} and
+        \fichier{local\_groups.json} describe the SAM of the restore mode: the
+        domain's accounts and groups are here, and their SIDs are not named
+        elsewhere in the output (no \champ{SidName}): their name is found through
+        \champ{ObjectSid}.
         Measured on Server~2022; the format of Server~2003 is copied, not
         converted.
+  \item[\fichier{group\_policies.json}]
+        the group policies of a domain controller, read in the copy of
+        \path|SYSVOL\domain|; one element per folder \path|Policies\{GUID}|:
+        \champ{Id}, \champ{Path}, \champ{Version} and \champ{DisplayName} of
+        \fichier{GPT.INI}, \champ{RegistryValues} (\fichier{Registry.pol},
+        machine and user: \champ{Scope}, \champ{Key}, \champ{Value},
+        \champ{Type}, \champ{Data}), \champ{Scripts} (\fichier{scripts.ini},
+        \fichier{psscripts.ini}), \champ{ScheduledTasks} (tasks of the
+        preferences, immediate ones included), \champ{SecurityTemplate}
+        (\fichier{GptTmpl.inf}: rights, memberships) and \champ{Files}. One more
+        element per other non-empty folder of SYSVOL (\path|scripts|,
+        \path|DfsrPrivate|), with its files. A password stored in a preference
+        (\texttt{cpassword}) is reported by its file and element
+        (\champ{StoredPasswords}): its value is not written. A policy's name in
+        the directory and its links are in
+        \fichier{active\_directory\_objects.json} (\champ{DisplayName},
+        \champ{GPLink}).
   \item[\fichier{web\_server\_sites.json}, \fichier{web\_server\_application\_pools.json}, \fichier{web\_server\_modules.json}]
         the web server IIS (7 and later), read in its configuration
         \path|inetsrv\config\applicationHost.config|. Each site with its

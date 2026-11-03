@@ -365,7 +365,14 @@ compris, et \texttt{Get-ADReplicationAttributeMetadata}. Sont confrontés chaque
 objet (nom, classe, SID, compte, \texttt{userAccountControl},
 \texttt{adminCount}, SPN, création), chaque changement d'attribut de trois
 objets (date, version, contrôleur, USN), et les témoins. Le contrôle vérifie
-aussi qu'aucun attribut de secret ne figure dans la sortie.
+aussi qu'aucun attribut de secret ne figure dans la sortie. Une stratégie
+témoin, au lien désactivé pour n'être jamais appliquée, porte une valeur de
+registre, un script de démarrage, une tâche immédiate et un mot de passe de
+préférence fictif : \texttt{Get-GPO} et \texttt{Get-GPRegistryValue} donnent les
+références, et la valeur du mot de passe ne doit figurer nulle part. Sur un
+contrôleur, les contrôles des comptes locaux, des groupes locaux et des noms des
+SID du domaine sont sautés, et le disent : la SAM n'y est que celle du mode de
+restauration.
 
 \fichier{install-web-servers.sh} installe une fois, sur une VM serveur, les
 autres serveurs et les moteurs. Les versions sont celles que les notes de

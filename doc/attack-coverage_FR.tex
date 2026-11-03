@@ -5,14 +5,14 @@
 \textbf{Source de journal} & \textbf{WAC} \\
 \midrule\endhead
 \texttt{wineventlog:sysmon…} & \texttt{events}, \texttt{sysmon} \\
-\texttt{wineventlog:iis…} & rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0 \\
-\texttt{wineventlog:microsoft-iis…} & rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0 \\
-\texttt{wineventlog:adfs…} & rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0 \\
+\texttt{wineventlog:iis…} & rôle serveur (IIS, AD FS) : version 4.0 \\
+\texttt{wineventlog:microsoft-iis…} & rôle serveur (IIS, AD FS) : version 4.0 \\
+\texttt{wineventlog:adfs…} & rôle serveur (IIS, AD FS) : version 4.0 \\
 \texttt{wineventlog:…} & \texttt{events} \\
 \texttt{autoruns:registryscan…} & \texttt{persistence}, \texttt{run\_keys}, \texttt{services}, \texttt{scheduled\_tasks}, \texttt{startup\_folders} \\
 \texttt{windows firewall log…} & \texttt{firewall\_log} \\
 \texttt{applicationlog:intune…} & \texttt{intune\_logs}, \texttt{events} \\
-\texttt{applicationlog:iis…} & rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0 \\
+\texttt{applicationlog:iis…} & rôle serveur (IIS, AD FS) : version 4.0 \\
 \texttt{applicationlog:callrecords…} & service en nuage : dans les journaux du locataire ; le côté de la machine est pris (cloud\_identity, onedrive, intune\_logs) \\
 \texttt{etw…} & télémétrie vivante (ETW, appels d'API, compteurs) : lue par un consommateur à l'instant ; les fichiers de trace que Windows écrit sur son disque sont pris bruts (etw\_logs) \\
 \texttt{windows:perfmon…} & télémétrie vivante (ETW, appels d'API, compteurs) : lue par un consommateur à l'instant ; les fichiers de trace que Windows écrit sur son disque sont pris bruts (etw\_logs) \\
@@ -81,7 +81,7 @@ Named Pipe Metadata & — \\
 Application Log Content & \texttt{defender}, \texttt{setupapi}, \texttt{error\_reports}, \texttt{intune\_logs}, \texttt{onedrive}, \texttt{web\_server} \\
 Web Credential Creation & \texttt{web\_client}, \texttt{dpapi\_master\_keys}, \texttt{cloud\_identity} \\
 Firmware Modification & — \\
-Active Directory Object Modification & \texttt{active\_directory} \\
+Active Directory Object Modification & \texttt{active\_directory}, \texttt{group\_policies} \\
 Active Directory Object Access & — \\
 Active Directory Object Creation & — \\
 Active Directory Object Deletion & — \\
@@ -583,4 +583,4 @@ T1700 & AI-Enabled Exfiltration & oui & oui &  \\
 
 \noindent{\small ATT\&CK Enterprise 20.0 (2026-10-13, SHA-256 81113BA98AFA2928…) : 479 techniques et sous-techniques Windows ; 475 avec au moins une trace que WAC prélève, 4 dont toutes les sources sont hors du disque ; 6 (marquées *) n'ont pas d'analytique Windows dans ATT\&CK et sont décidées d'après la technique elle-même. \emph{Journaux} : un journal que WAC prend porte une trace de la technique ; \emph{Disque} : un artefact sur le disque en porte une, hors des journaux. Un journal d'événements n'est là que si la machine l'a tenu : WAC relève la configuration des canaux et la politique d'audit, qui le disent.}
 
-\noindent{\small Sources non prises, et pourquoi : ETW, télémétrie vivante (ETW, appels d'API, compteurs) : lue par un consommateur à l'instant ; les fichiers de trace que Windows écrit sur son disque sont pris bruts (etw\_logs) ; NSM, capture réseau : sur le réseau, pas sur la machine ; cloud, service en nuage : dans les journaux du locataire ; le côté de la machine est pris (cloud\_identity, onedrive, intune\_logs) ; EDR, télémétrie propre à un EDR : dans sa console ; le dossier local de Defender for Endpoint est pris brut (defender\_endpoint) ; firmware, micrologiciel : non lu, WAC lit le disque ; 4.0, rôle serveur (IIS, AD FS, contrôleur de domaine) : version 4.0 ; IA, comportement d'un modèle d'IA : ATT\&CK ne lui connaît aucune trace sous Windows}
+\noindent{\small Sources non prises, et pourquoi : ETW, télémétrie vivante (ETW, appels d'API, compteurs) : lue par un consommateur à l'instant ; les fichiers de trace que Windows écrit sur son disque sont pris bruts (etw\_logs) ; NSM, capture réseau : sur le réseau, pas sur la machine ; cloud, service en nuage : dans les journaux du locataire ; le côté de la machine est pris (cloud\_identity, onedrive, intune\_logs) ; EDR, télémétrie propre à un EDR : dans sa console ; le dossier local de Defender for Endpoint est pris brut (defender\_endpoint) ; firmware, micrologiciel : non lu, WAC lit le disque ; 4.0, rôle serveur (IIS, AD FS) : version 4.0 ; IA, comportement d'un modèle d'IA : ATT\&CK ne lui connaît aucune trace sous Windows}

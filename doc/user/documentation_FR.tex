@@ -374,6 +374,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   fat_volumes:             true   # volumes FAT et exFAT, clés USB du suspect comprises : entrées, supprimées aussi
   firewall:                true   # règles et profils du pare-feu
   firewall_log:            true   # journal du pare-feu (pfirewall.log), s'il est activé : connexions acceptées ou rejetées, adresses, ports, processus
+  group_policies:          true   # contrôleur de domaine : SYSVOL et ses stratégies
   hosts:                   true   # le fichier hosts : noms détournés vers une adresse
   installed_programs:      true   # programmes installés (Uninstall) de la machine et de chaque utilisateur
   internet_settings:       true   # proxy des utilisateurs
@@ -1646,8 +1647,30 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         (\champ{NTSecurityDescriptorSdId}) ; une ACE d'objet donne le GUID du
         droit visé (\champ{ObjectType}) : les droits de réplication d'une
         attaque DCSync se lisent là, sur la racine du domaine.
+        Sur un contrôleur, \fichier{users.json} et
+        \fichier{local\_groups.json} décrivent la SAM du mode de restauration :
+        les comptes et les groupes du domaine sont ici, et leurs SID ne sont pas
+        nommés ailleurs dans la sortie (\champ{SidName} absent) : leur nom se
+        retrouve par \champ{ObjectSid}.
         Mesuré sur Server~2022 ; le format de Server~2003 est copié, non
         converti.
+  \item[\fichier{group\_policies.json}]
+        les stratégies de groupe d'un contrôleur de domaine, lues dans la copie
+        de \path|SYSVOL\domain| ; un élément par dossier
+        \path|Policies\{GUID}| : \champ{Id}, \champ{Path}, \champ{Version} et
+        \champ{DisplayName} de \fichier{GPT.INI}, \champ{RegistryValues}
+        (\fichier{Registry.pol}, machine et utilisateur : \champ{Scope},
+        \champ{Key}, \champ{Value}, \champ{Type}, \champ{Data}), \champ{Scripts}
+        (\fichier{scripts.ini}, \fichier{psscripts.ini}), \champ{ScheduledTasks}
+        (tâches des préférences, immédiates comprises), \champ{SecurityTemplate}
+        (\fichier{GptTmpl.inf} : droits, appartenances) et \champ{Files}. Un
+        élément de plus par autre dossier non vide de SYSVOL (\path|scripts|,
+        \path|DfsrPrivate|), avec ses fichiers. Un mot de passe enregistré dans
+        une préférence (\texttt{cpassword}) est signalé par son fichier et son
+        élément (\champ{StoredPasswords}) : sa valeur n'est pas écrite. Le nom
+        d'une stratégie dans l'annuaire et ses liens sont dans
+        \fichier{active\_directory\_objects.json} (\champ{DisplayName},
+        \champ{GPLink}).
   \item[\fichier{web\_server\_sites.json}, \fichier{web\_server\_application\_pools.json}, \fichier{web\_server\_modules.json}]
         le serveur web IIS (7 et suivants) ; sa configuration est lue dans
         \path|inetsrv\config\applicationHost.config|. Chaque site avec ses

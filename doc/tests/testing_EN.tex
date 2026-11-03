@@ -353,7 +353,13 @@ included, and \texttt{Get-ADReplicationAttributeMetadata}. Confronted are every
 object (name, class, SID, account, \texttt{userAccountControl},
 \texttt{adminCount}, SPN, creation), every attribute change of three objects
 (date, version, controller, USN), and the witnesses. The check also verifies
-that no attribute holding a secret is in the output.
+that no attribute holding a secret is in the output. A witness policy, its link
+disabled so that it is never applied, carries a registry value, a startup
+script, an immediate task and a fictitious preference password:
+\texttt{Get-GPO} and \texttt{Get-GPRegistryValue} give the references, and the
+password's value must appear nowhere. On a controller, the checks of the local
+accounts, local groups and domain SIDs' names are skipped, and say so: its SAM
+is only the restore mode's.
 
 \fichier{install-web-servers.sh} installs once, on a server VM, the other
 servers and the engines. The versions are those the release notes say change

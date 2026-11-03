@@ -132,6 +132,8 @@ PHRASES = [
     ("PowerShell script", "script PowerShell"),
     (", each site's web.config and SQLite databases", ", web.config et bases SQLite de chaque site"),
     ("IIS 7 and later:", "IIS 7 et suivants :"),
+    ("SYSVOL\\domain, where Services\\Netlogon\\Parameters says", "SYSVOL\\domain, où le dit Services\\Netlogon\\Parameters"),
+    ("GPT.INI, Registry.pol, scripts.ini, XML of the preferences, GptTmpl.inf", "GPT.INI, Registry.pol, scripts.ini, XML des préférences, GptTmpl.inf"),
     ("Windows\\NTDS\\ntds.dit and its logs", "Windows\\NTDS\\ntds.dit et ses journaux"),
     ("ntds.dit and its logs, where Services\\NTDS\\Parameters says", "ntds.dit et ses journaux, où le dit Services\\NTDS\\Parameters"),
     ("ESE, records of the pre-Vista format", "ESE, enregistrements au format d'avant Vista"),
@@ -144,6 +146,7 @@ PHRASES = [
 # Whole cells that are one word.
 WHOLE = {"files": "fichiers", "text": "texte", "observation": "observation"}
 NOTES = {
+    "Present only on a domain controller. A password stored in a preference is reported, its value not written.": "Présent seulement sur un contrôleur de domaine. Un mot de passe enregistré dans une préférence est signalé, sa valeur n'est pas écrite.",
     "Present only on a domain controller. Its secrets are not read.": "Présent seulement sur un contrôleur de domaine. Ses secrets ne sont pas lus.",
     "Present only where a web server is installed. Also Apache and nginx, found by their service or folder, and the data folders of MySQL, MariaDB and PostgreSQL, taken raw.":
         "Présent seulement là où un serveur web est installé. Aussi Apache et nginx, trouvés par leur service ou leur dossier, et les dossiers de données de MySQL, MariaDB et PostgreSQL, pris bruts.",
