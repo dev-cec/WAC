@@ -336,6 +336,7 @@ log_level: 0
 dump: false
 language: fr            # fr | en: language of the console; the files stay in English
 artefacts:              # one key per artefact; a missing key is true
+  active_directory:        true   # domain controller: ntds.dit and its logs; no secret read
   activities_cache:        true   # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
   amcache:                 true   # Amcache.hve: applications, executables and drivers seen
   bam:                     true   # last execution of each program per user (Background Activity Moderator)
@@ -1562,6 +1563,41 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         converted to UTC with the offset in force at its date. The database is
         copied live with its logs: its last entries may be only there
         (\texttt{esentutl /r} replay by the analyst).
+  \item[\fichier{active\_directory\_*.json}]
+        the directory of a domain controller, read in the copy of
+        \path|ntds.dit|: the location of the database and of its logs comes
+        from the registry (\path|Services\NTDS\Parameters|), the reading is
+        raw, and the logs are replayed into the working copy before anything
+        is read, since recent objects are only there. On a machine that is no
+        controller, these files are empty. \textbf{The directory's secrets are
+        not read}: only a list of attributes is decoded, with no password or
+        key attribute among them, and a new attribute of the schema stays
+        unread until named there. The copy of \path|ntds.dit| remains a piece
+        of the collection: it holds these secrets encrypted, and is protected
+        as a hive is.
+        \fichier{active\_directory\_objects.json} gives one element per
+        object, deleted ones included: \champ{DistinguishedName}, rebuilt up
+        to the root, then each attribute under its LDAP name with a capital
+        initial and no hyphen (\champ{SAMAccountName},
+        \champ{MsDSAllowedToDelegateTo}); \champ{UserAccountControlFlags}
+        names the bits. The names come from the schema the database holds.
+        \fichier{active\_directory\_links.json} gives each value of a linked
+        attribute (\champ{Attribute}, such as \texttt{member}, \champ{Object},
+        \champ{Target}), a removed value staying there with \champ{RemovedUtc},
+        and, where the directory keeps them, its creation, last change and
+        controller of origin.
+        \fichier{active\_directory\_replication.json} gives, per object and
+        attribute, the content of \texttt{replPropertyMetaData}:
+        \champ{Attribute}, \champ{Version}, \champ{ChangedUtc},
+        \champ{OriginatingInvocationId}, \champ{OriginatingServer},
+        \champ{OriginatingUsn}, \champ{LocalUsn}.
+        \fichier{active\_directory\_security\_descriptors.json} gives each
+        descriptor once (\champ{SdId}), which objects refer to
+        (\champ{NTSecurityDescriptorSdId}); an object ACE gives the GUID of the
+        right it is about (\champ{ObjectType}): the replication rights of a
+        DCSync attack read there, on the domain's root.
+        Measured on Server~2022; the format of Server~2003 is copied, not
+        converted.
   \item[\fichier{web\_server\_sites.json}, \fichier{web\_server\_application\_pools.json}, \fichier{web\_server\_modules.json}]
         the web server IIS (7 and later), read in its configuration
         \path|inetsrv\config\applicationHost.config|. Each site with its

@@ -255,6 +255,10 @@
  & Windows 10 & \texttt{…and Chromium browsers, Firefox: History, places.sqlite, session files} & SQLite, SNSS, mozLz4 & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chromium and Firefox depend on the browser installed, not on Windows.} \\
 \addlinespace
+\texttt{active\_directory} & Windows XP & \texttt{Windows\textbackslash{}NTDS\textbackslash{}ntds.dit and its logs} & ESE, records of the pre-Vista format & no \\
+ & Windows Vista & \texttt{ntds.dit and its logs, where Services\textbackslash{}NTDS\textbackslash{}Parameters says} & ESE; columns named by the schema it holds & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only on a domain controller. Its secrets are not read.} \\
+\addlinespace
 \texttt{web\_server} & Windows XP & \texttt{IIS 5.1 and 6: Windows\textbackslash{}System32\textbackslash{}inetsrv\textbackslash{}MetaBase.xml, W3SVC\textless{}n\textgreater{} logs} & IIS metabase XML & no \\
  & Windows Vista & \texttt{IIS 7 and later: Windows\textbackslash{}System32\textbackslash{}inetsrv\textbackslash{}config\textbackslash{}applicationHost.config, inetpub\textbackslash{}logs\textbackslash{}LogFiles, each site's web.config and SQLite databases} & XML; W3C text, UTC; SQLite & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only where a web server is installed. Also Apache and nginx, found by their service or folder, and the data folders of MySQL, MariaDB and PostgreSQL, taken raw.} \\

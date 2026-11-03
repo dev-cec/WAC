@@ -40,7 +40,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - [x] Rejeu avec les journaux dans un autre dossier que la base
   - [x] Commit du lot (6be64175)
   - [ ] Cycle complet sur le contrôleur (en cours), puis non-régression Windows 11 (lecteur ESE et ACL touchés)
-  - [ ] Documentation FR et EN
+  - [x] Documentation FR et EN, PDF régénérés, 0 débordement (les mesures du cycle complet restent à y reporter)
 - [ ] Lot 2 : stratégies de groupe
 
 ## Journal
@@ -55,3 +55,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-03 : mutation : RID non retourné, compte annoncé non borné, ACE d'objet non reconnue : `active_directory_test` passe de 0 à 5 échecs. Incident : un appel interrompu avait déjà muté les sources, et la relance a sauvegardé ces sources mutées comme référence ; les trois mutations ont été défaites une à une, sans mutant dans `bin/` (`build-windows.sh` s'arrêtait avant la copie, sur le compte attendu d'`artefact_catalogue_test`, corrigé).
 - 2026-11-03 : journaux déplacés dans la VM (`ntdsutil`, `C:\NtdsLogs`, NTDS arrêté, harnais seulement) : `edb.chk` reste à côté de la base, et le rejeu ne le trouvait pas ; il le cherche maintenant aussi là. Mesuré : `edb*.log` rejoués, copie propre, 32 ✅ sans ❌. Journaux remis en place ; NTDS, ADWS, KDC et DNS en marche, l'annuaire répond, sans redémarrage de la VM.
 - 2026-11-03 : lot 1 commité (6be64175), harnais commité. Manuels FR et EN écrits, non commités, PDF à régénérer. Cycle complet lancé sur `srv2022dc-test` (08:37) ; pendant ce temps, documentation et PDF, sans toucher à `build-windows/`, `bin/` ni au harnais.
+- 2026-11-03 : manuels, guide des tests, dossier de validation, tables du catalogue et d'ATT&CK à jour (attack-coverage inchangé en nombre : 475 techniques couvertes sur 479). Cycle complet relancé (le premier lancement n'avait pas démarré : script introuvable dans le shell d'arrière-plan). Étude du lot 2 en cours, sans compiler tant que le cycle tourne.

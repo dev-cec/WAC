@@ -340,6 +340,21 @@ file, the database file of each (\texttt{|DataDirectory|} resolved, none for
 the server), the outer database in the manifest, and each account (login,
 hash, scheme named).
 
+On a domain controller (\fichier{install-domain-controller.sh}, forest
+\texttt{wac.test}), \fichier{guest/active-directory-witness.ps1} places the
+directory's witnesses once, never piling them up from one cycle to the next: a
+disabled account member of Domain Admins, named by its SID since the name
+follows the language of Windows, with an SPN, a constrained delegation, a
+resource-based delegation, and the \texttt{DS-Replication-Get-Changes-All}
+right on the domain's root; a membership removed; an account deleted. The
+references come from the tools of the running directory, not from the file
+\wac{} reads: \texttt{Get-ADObject} over every naming context, deleted objects
+included, and \texttt{Get-ADReplicationAttributeMetadata}. Confronted are every
+object (name, class, SID, account, \texttt{userAccountControl},
+\texttt{adminCount}, SPN, creation), every attribute change of three objects
+(date, version, controller, USN), and the witnesses. The check also verifies
+that no attribute holding a secret is in the output.
+
 \fichier{install-web-servers.sh} installs once, on a server VM, the other
 servers and the engines. The versions are those the release notes say change
 the collection: Apache~2.2.25 and 2.4.69 (the error log's layout,

@@ -66,9 +66,9 @@ WMI Creation & \texttt{wmi} \\
 Logon Session Creation & \texttt{users}, \texttt{rdp\_server} \\
 Logon Session Metadata & \texttt{users}, \texttt{sessions}, \texttt{rdp\_server} \\
 User Account Authentication & \texttt{users} \\
-User Account Creation & \texttt{users} \\
-User Account Modification & \texttt{users}, \texttt{local\_groups} \\
-User Account Deletion & — \\
+User Account Creation & \texttt{users}, \texttt{active\_directory} \\
+User Account Modification & \texttt{users}, \texttt{local\_groups}, \texttt{active\_directory} \\
+User Account Deletion & \texttt{active\_directory} \\
 User Account Metadata & \texttt{users}, \texttt{local\_groups}, \texttt{security} \\
 Group Enumeration & — \\
 Firewall Rule Modification & \texttt{firewall} \\
@@ -81,7 +81,7 @@ Named Pipe Metadata & — \\
 Application Log Content & \texttt{defender}, \texttt{setupapi}, \texttt{error\_reports}, \texttt{intune\_logs}, \texttt{onedrive}, \texttt{web\_server} \\
 Web Credential Creation & \texttt{web\_client}, \texttt{dpapi\_master\_keys}, \texttt{cloud\_identity} \\
 Firmware Modification & — \\
-Active Directory Object Modification & — \\
+Active Directory Object Modification & \texttt{active\_directory} \\
 Active Directory Object Access & — \\
 Active Directory Object Creation & — \\
 Active Directory Object Deletion & — \\
@@ -328,7 +328,7 @@ T1204.005 & Malicious Library & yes & yes &  \\
 T1205 & Traffic Signaling & yes & yes &  \\
 T1205.001 & Port Knocking & yes & yes &  \\
 T1205.002 & Socket Filters & yes & yes & NSM \\
-T1207 & Rogue Domain Controller & yes & — & cloud, NSM \\
+T1207 & Rogue Domain Controller & yes & yes & cloud, NSM \\
 T1210 & Exploitation of Remote Services & yes & yes & NSM \\
 T1211 & Exploitation for Stealth & yes & yes &  \\
 T1212 & Exploitation for Credential Access & yes & yes &  \\

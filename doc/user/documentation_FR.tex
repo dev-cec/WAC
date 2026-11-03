@@ -339,6 +339,7 @@ log_level: 0
 dump: false
 language: fr            # fr | en : langue de la console ; les fichiers restent en anglais
 artefacts:              # une clé par artefact ; une clé absente vaut true
+  active_directory:        true   # contrôleur de domaine : ntds.dit et ses journaux ; aucun secret lu
   activities_cache:        true   # Chronologie Windows : applications, fichiers, pages, presse-papiers (ActivitiesCache.db)
   amcache:                 true   # Amcache.hve : applications, exécutables et pilotes vus
   bam:                     true   # dernière exécution de chaque programme par utilisateur (BAM)
@@ -1612,6 +1613,41 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         convertie en UTC avec le décalage en vigueur à sa date. La base est
         copiée vivante avec ses journaux : ses dernières entrées peuvent n'être
         que dans ceux-ci (rejeu \texttt{esentutl /r} par l'analyste).
+  \item[\fichier{active\_directory\_*.json}]
+        l'annuaire d'un contrôleur de domaine, lu dans la copie de
+        \path|ntds.dit| : l'emplacement de la base et de ses journaux vient du
+        registre (\path|Services\NTDS\Parameters|), la lecture est brute, et
+        les journaux sont rejoués dans la copie de travail avant toute lecture,
+        car les objets récents ne sont que là. Sur une machine qui n'est pas
+        contrôleur, ces fichiers sont vides. \textbf{Les secrets de l'annuaire
+        ne sont pas lus} : seule une liste d'attributs est décodée, sans aucun
+        attribut de mot de passe ou de clé, et un attribut nouveau du schéma
+        reste non lu tant qu'il n'y est pas nommé. La copie de \path|ntds.dit|
+        reste une pièce de la collecte : elle contient ces secrets chiffrés,
+        et se protège comme une ruche.
+        \fichier{active\_directory\_objects.json} donne un élément par objet,
+        supprimés compris : \champ{DistinguishedName}, reconstruit jusqu'à la
+        racine, puis chaque attribut sous son nom LDAP avec une capitale
+        initiale et sans tiret (\champ{SAMAccountName},
+        \champ{MsDSAllowedToDelegateTo}) ; \champ{UserAccountControlFlags}
+        nomme les bits. Les noms viennent du schéma contenu dans la base.
+        \fichier{active\_directory\_links.json} donne chaque valeur d'un
+        attribut lié (\champ{Attribute}, par exemple \texttt{member},
+        \champ{Object}, \champ{Target}), une valeur retirée restant présente
+        avec \champ{RemovedUtc}, et, quand l'annuaire les garde, sa création,
+        sa dernière modification et son contrôleur d'origine.
+        \fichier{active\_directory\_replication.json} donne, par objet et par
+        attribut, le contenu de \texttt{replPropertyMetaData} :
+        \champ{Attribute}, \champ{Version}, \champ{ChangedUtc},
+        \champ{OriginatingInvocationId}, \champ{OriginatingServer},
+        \champ{OriginatingUsn}, \champ{LocalUsn}.
+        \fichier{active\_directory\_security\_descriptors.json} donne chaque
+        descripteur une seule fois (\champ{SdId}), repris par les objets
+        (\champ{NTSecurityDescriptorSdId}) ; une ACE d'objet donne le GUID du
+        droit visé (\champ{ObjectType}) : les droits de réplication d'une
+        attaque DCSync se lisent là, sur la racine du domaine.
+        Mesuré sur Server~2022 ; le format de Server~2003 est copié, non
+        converti.
   \item[\fichier{web\_server\_sites.json}, \fichier{web\_server\_application\_pools.json}, \fichier{web\_server\_modules.json}]
         le serveur web IIS (7 et suivants) ; sa configuration est lue dans
         \path|inetsrv\config\applicationHost.config|. Chaque site avec ses

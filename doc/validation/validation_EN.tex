@@ -781,6 +781,12 @@ accounts written on the host in two SQLite databases, connection strings read
   by PowerShell / \fichier{web\_server\_accounts.json},
   \fichier{web\_server\_connection\_strings.json} &
   check added with the artefact \\
+directory objects according to \texttt{Get-ADObject}, changes according to
+  \texttt{Get-ADReplicationAttributeMetadata}, witnesses of membership,
+  deletion, delegation and replication right /
+  \fichier{active\_directory\_*.json} &
+  the checkpoint left beside the database when the logs are moved: replay not
+  applied \\
 a request and an error provoked on Apache~2.2, 2.4 and nginx, with their
   instant / \fichier{web\_server\_logs.json},
   \fichier{web\_server\_error\_logs.json} &

@@ -132,6 +132,10 @@ PHRASES = [
     ("PowerShell script", "script PowerShell"),
     (", each site's web.config and SQLite databases", ", web.config et bases SQLite de chaque site"),
     ("IIS 7 and later:", "IIS 7 et suivants :"),
+    ("Windows\\NTDS\\ntds.dit and its logs", "Windows\\NTDS\\ntds.dit et ses journaux"),
+    ("ntds.dit and its logs, where Services\\NTDS\\Parameters says", "ntds.dit et ses journaux, où le dit Services\\NTDS\\Parameters"),
+    ("ESE, records of the pre-Vista format", "ESE, enregistrements au format d'avant Vista"),
+    ("ESE; columns named by the schema it holds", "ESE ; colonnes nommées par le schéma qu'il contient"),
     ("IIS 5.1 and 6:", "IIS 5.1 et 6 :"),
     ("W3SVC<n> logs", "journaux W3SVC<n>"),
     ("IIS metabase XML", "métabase d'IIS en XML"),
@@ -140,6 +144,7 @@ PHRASES = [
 # Whole cells that are one word.
 WHOLE = {"files": "fichiers", "text": "texte", "observation": "observation"}
 NOTES = {
+    "Present only on a domain controller. Its secrets are not read.": "Présent seulement sur un contrôleur de domaine. Ses secrets ne sont pas lus.",
     "Present only where a web server is installed. Also Apache and nginx, found by their service or folder, and the data folders of MySQL, MariaDB and PostgreSQL, taken raw.":
         "Présent seulement là où un serveur web est installé. Aussi Apache et nginx, trouvés par leur service ou leur dossier, et les dossiers de données de MySQL, MariaDB et PostgreSQL, pris bruts.",
     "What a deleted file still holds depends on the disk: a solid-state drive that received TRIM returns zeros for the freed clusters, declared as such, never as the content.":

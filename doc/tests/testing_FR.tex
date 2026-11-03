@@ -352,6 +352,21 @@ de chacune (\texttt{|DataDirectory|} résolu, aucun pour le serveur), la base
 extérieure dans le manifeste, et chaque compte (identifiant, condensat, schéma
 nommé).
 
+Sur un contrôleur de domaine (\fichier{install-domain-controller.sh}, forêt
+\texttt{wac.test}), \fichier{guest/active-directory-witness.ps1} pose une fois
+les témoins de l'annuaire, sans les empiler d'un cycle à l'autre : un compte
+désactivé membre d'Admins du domaine, visé par son SID car le nom suit la
+langue de Windows, avec un SPN, une délégation contrainte, une délégation basée
+sur la ressource, et le droit \texttt{DS-Replication-Get-Changes-All} sur la
+racine du domaine ; une appartenance retirée ; un compte supprimé. Les
+références viennent des outils de l'annuaire en marche, et non du fichier que
+lit \wac{} : \texttt{Get-ADObject} sur tous les contextes de nommage, supprimés
+compris, et \texttt{Get-ADReplicationAttributeMetadata}. Sont confrontés chaque
+objet (nom, classe, SID, compte, \texttt{userAccountControl},
+\texttt{adminCount}, SPN, création), chaque changement d'attribut de trois
+objets (date, version, contrôleur, USN), et les témoins. Le contrôle vérifie
+aussi qu'aucun attribut de secret ne figure dans la sortie.
+
 \fichier{install-web-servers.sh} installe une fois, sur une VM serveur, les
 autres serveurs et les moteurs. Les versions sont celles que les notes de
 version disent changer la collecte : Apache~2.2.25 et 2.4.69 (disposition du
