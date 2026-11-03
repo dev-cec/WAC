@@ -30,9 +30,17 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Les événements du contrôleur (Kerberos, 4662, Directory Service, DFS Replication) sont déjà pris par `events`, quel que soit leur canal : à vérifier par un témoin, pas de code attendu.
 
 ## Tâches
-- [ ] Étude des sources sur un contrôleur de test
-- [ ] Contrôleur de domaine dans le harnais (`install-domain-controller.sh`, écrit)
+- [x] Étude des sources sur un contrôleur de test
+- [x] Contrôleur de domaine dans le harnais (`install-domain-controller.sh`, écrit, à commiter)
 - [ ] Lot 1 : annuaire
+  - [x] Artefact `active_directory` écrit : `active_directory_objects`, `_links`, `_replication`, `_security_descriptors` (.json) ; clé de `wac.yml`, catalogue, textes FR et EN
+  - [x] Témoins (`guest/active-directory-witness.ps1`) et contrôle (`check_active_directory`)
+  - [x] Cycle court `--only=active_directory` vert sur `srv2022dc-test`
+  - [ ] Test unitaire vu échouer par mutation (en cours)
+  - [ ] Rejeu avec les journaux dans un autre dossier que la base : à mesurer
+  - [ ] Commit du lot
+  - [ ] Cycle complet sur le contrôleur, non-régression Windows 11 (lecteur ESE et ACL touchés)
+  - [ ] Documentation FR et EN
 - [ ] Lot 2 : stratégies de groupe
 
 ## Journal
@@ -40,3 +48,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-10-17 : décision utilisateur — version 4.0, avec les serveurs.
 - 2026-11-01 : reprise, B-035 et B-038 quasi closes ; contrôleur de domaine de test en création (`DOM=srv2022dc-test ./create-vm.sh srv2022`, puis promotion). Reprend le point `NTDS.dit` de B-038.
 - 2026-11-01 : contrôleur `srv2022dc-test` promu (forêt wac.test). Étude sur un `ntds.dit` réel : 3 518 lignes, 1 326 colonnes ; les objets récents ne sont que dans les journaux, le rejeu est indispensable ; les groupes intégrés ont un nom traduit (« Admins du domaine ») : les témoins les visent par SID.
+- 2026-11-01 : fiche recentrée à la demande de l'utilisateur : sans les secrets de l'annuaire (aab16023).
+- 2026-11-03 : lot 1 écrit, **non commité**. Seule une liste d'attributs est décodée : aucun attribut de secret, et un attribut nouveau du schéma reste non lu tant qu'il n'y est pas nommé. Noms des attributs et des classes lus dans le schéma de la base elle-même ; lecture en flux (`EseDatabase::forEachRecord`) pour une base de plusieurs Gio ; ACE d'objet décodées dans `aclToJson` (le GUID du droit, indispensable pour voir un droit de réplication) ; rejeu possible avec des journaux hors du dossier de la base, chemin non encore mesuré.
+- 2026-11-03 : cycle court vert sur `srv2022dc-test` (Server 2022, forêt wac.test), sans ❌ : les 3 700 objets listés par `Get-ADObject` sur les cinq contextes de nommage, supprimés compris, tous présents et 3 700 écrits ; nom, classe, SID, compte, `userAccountControl`, `adminCount`, SPN et création identiques ; 78 changements de `Get-ADReplicationAttributeMetadata` identiques (date, version, contrôleur, USN) ; témoins retrouvés : membre d'Admins du domaine (visé par SID), appartenance retirée avec sa date, objet supprimé avec son nom et son parent, délégations contrainte et basée sur la ressource, droit `DS-Replication-Get-Changes-All` sur la racine. Le rejeu des journaux s'applique : les objets récents sont là. Mesuré au passage : sans corbeille de l'annuaire, un objet supprimé n'a pas de `msDS-LastKnownRDN` (son dernier nom reste dans `name`).
+- 2026-11-03 : limites à ce stade : mesuré sur Server 2022 seul ; aucun `sIDHistory` réel dans le harnais (décodé comme `objectSid`, non confronté) ; `msDS-IntId` non lu, un attribut d'extension du schéma peut n'apparaître que par son `AttributeId` dans la réplication. Mutation en cours ; restent les étapes non cochées ci-dessus, puis le lot 2.
