@@ -108,7 +108,7 @@ $policyValue = Get-GPRegistryValue -Name $policyName -Key $witnessKey -ValueName
 $reference = @{
     objects = $objects; replication = $replication; policies = $policies
     policyWitness = @{
-        id = "$($gpo.Id)"; domain = $base; key = ($witnessKey -replace '^HKLM\\', ''); valueName = $policyValue.ValueName; valueData = "$($policyValue.Value)"
+        id = "$($gpo.Id)"; domain = $base; key = ($witnessKey -replace '^HKLM\\', ''); valueName = $policyValue.ValueName; valueData = "$($policyValue.Value)".TrimEnd([char]0)
         script = $witnessScript; scriptParameters = $witnessParameters; task = $witnessTask; taskCommand = $witnessCommand
         storedAccount = $storedAccount; storedValue = $storedValue
     }

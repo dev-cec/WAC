@@ -3639,6 +3639,10 @@ def check_group_policies(folder):
     preference's password reported, its value nowhere in the output."""
     path = os.path.join(folder, "reference", "active-directory.json")
     if not os.path.exists(path):
+        # The witnesses run with active_directory: --only=group_policies alone
+        # would otherwise look like a pass with nothing confronted.
+        if os.path.exists(os.path.join(folder, "group_policies.json")):
+            print("  ⏭️  group_policies.json: no directory reference (--only without active_directory): not confronted")
         return 0
     with open(path, encoding="utf-8") as f:
         reference = json.load(f)
