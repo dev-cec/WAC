@@ -41,7 +41,12 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - [x] Commit du lot (6be64175)
   - [ ] Cycle complet sur le contrôleur (en cours), puis non-régression Windows 11 (lecteur ESE et ACL touchés)
   - [x] Documentation FR et EN, PDF régénérés, 0 débordement (les mesures du cycle complet restent à y reporter)
-- [ ] Lot 2 : stratégies de groupe (commité ; cycle complet et non-régression à passer)
+- [ ] Lot 2 : stratégies de groupe
+  - [x] Artefact `group_policies` écrit et commité (7c1e307b), clé de `wac.yml`, catalogue, textes FR et EN
+  - [x] Témoins et contrôle (`check_group_policies`), cycle court
+  - [x] Test unitaire vu échouer par mutation, une mutation à la fois
+  - [x] Documentation FR et EN, tables régénérées, PDF sans débordement (c95a9428)
+  - [ ] Cycle complet sur le contrôleur (en cours, commun aux deux lots), puis non-régression Windows 11
 
 ## Journal
 - 2026-10-07 : créée à la demande de l'utilisateur — version 3.0, pour les serveurs.
@@ -62,3 +67,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-03 : cycle court des lots 1 et 2 sur le contrôleur : 41 ✅, 1 ❌ du harnais (clé de référence vide, corrigée) : les 3 705 objets identiques, les 3 stratégies de `Get-GPO` avec leur version et leur nom, valeur de registre, script, tâche immédiate et lien témoins retrouvés, mot de passe de préférence signalé et sa valeur absente de la sortie. Lot 2 et harnais commités. Mutation du lot 2 en cours, restauration par git ; documentation en cours d'écriture.
 - 2026-11-03 : mutation du lot 2, premier passage non concluant : les trois mutations appliquées ensemble, la borne retirée fait planter le test (défaut de page, code 5) et masque les deux autres. Sources et `bin/` restaurés par git, 14 contrôles sans échec. Relance une mutation à la fois.
 - 2026-11-03 : mutation du lot 2, une à la fois : borne de `parseRegistryPol` retirée, le test plante sur la lecture hors tampon (code 5, aucun bilan) ; `cpassword` non filtré, 1 contrôle en échec ; `clsid` non filtré, 1 contrôle en échec. Restauré par git : 14 contrôles, 0 échec, `bin/` identique. Documentation du lot 2 écrite, tables d'artefacts et de couverture régénérées, 6 PDF sans débordement. Cycle complet du contrôleur lancé ensuite.
+- 2026-11-03 : cycle complet des lots 1 et 2 sur le contrôleur : 561 ✅, 2 ❌, 44 ⏭️. Les 2 ❌ sont un seul écart, vu dans les deux conversions : `Get-GPRegistryValue` rend la valeur témoin avec le zéro final du `REG_SZ`, WAC sans ; WAC rend bien la valeur écrite par le témoin. Cet écart était déjà dans le ❌ du cycle court, masqué par la clé de référence vide : il n'avait pas une seule cause, contrairement à ce qui est noté plus haut. Référence corrigée (zéro final retiré), cycle court en cours. Avertissements restants : pas de paquet Store à copier sur ce serveur ; lecture témoin par Windows sans effet sur les dates, le contrôle d'innocuité n'y prouve que l'USN.
+- 2026-11-03 : le cycle court `--only=group_policies` (33 ✅, 0 ❌) n'a rien confronté : les témoins ne tournent qu'avec `active_directory`, et le contrôle sortait sans rien dire ; il annonce désormais le saut. La correction de la référence reste à vérifier avec `--only=active_directory,group_policies`. Non-régression Windows 11 suspendue à la demande de l'utilisateur.
