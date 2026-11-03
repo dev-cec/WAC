@@ -41,7 +41,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - [x] Commit du lot (6be64175)
   - [ ] Cycle complet sur le contrôleur (en cours), puis non-régression Windows 11 (lecteur ESE et ACL touchés)
   - [x] Documentation FR et EN, PDF régénérés, 0 débordement (les mesures du cycle complet restent à y reporter)
-- [ ] Lot 2 : stratégies de groupe
+- [ ] Lot 2 : stratégies de groupe (commité ; cycle complet et non-régression à passer)
 
 ## Journal
 - 2026-10-07 : créée à la demande de l'utilisateur — version 3.0, pour les serveurs.
@@ -59,3 +59,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-03 : lot 2 écrit, ni compilé ni testé (le cycle complet du contrôleur tourne) : artefact `group_policies`, `group_policies.json`, depuis la copie de `SYSVOL\domain` (`GPT.INI`, `Registry.pol`, `scripts.ini`, `ScheduledTasks.xml` des préférences, `GptTmpl.inf`, liste des fichiers). Un `cpassword` de préférence est signalé par son fichier et son élément, sa valeur n'est pas écrite. Branchement, témoins et contrôle : après le cycle.
 - 2026-11-03 : cycle complet du lot 1 sur `srv2022dc-test` (32 min) : 536 ✅, 14 ❌ pour 7 écarts distincts vus aux deux conversions, aucun sur le décodage de l'annuaire. Harnais : référence de l'annuaire prise avant les témoins qui le changent (SPN, `net accounts`, `wacpw`), reportée après ; deux bases témoins relevées puis déplacées. Sans objet sur un contrôleur, contrôles sautés et dits : hachés et questions de `wacpw`, groupes locaux (la SAM n'y est que celle du mode restauration). **Limite de WAC, ouverte :** sur un contrôleur, les SID du domaine ne sont pas nommés par la table de noms (`SidName`, propriétaires…) ; le nom est dans `active_directory_objects.json`.
 - 2026-11-03 : lot 2 branché : clé `group_policies`, test `group_policies_test`, politique témoin (valeur de registre, script de démarrage, tâche immédiate, mot de passe de préférence fictif, lien désactivé) et `check_group_policies`. Non commité, cycle à passer.
+- 2026-11-03 : cycle court des lots 1 et 2 sur le contrôleur : 41 ✅, 1 ❌ du harnais (clé de référence vide, corrigée) : les 3 705 objets identiques, les 3 stratégies de `Get-GPO` avec leur version et leur nom, valeur de registre, script, tâche immédiate et lien témoins retrouvés, mot de passe de préférence signalé et sa valeur absente de la sortie. Lot 2 et harnais commités. Mutation du lot 2 en cours, restauration par git ; documentation en cours d'écriture.
