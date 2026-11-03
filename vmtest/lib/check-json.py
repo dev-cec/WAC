@@ -511,6 +511,7 @@ def cross_checks(folder):
     found += guarded(check_third_party_chains, folder)
     found += guarded(check_vulnerable_driver, folder)
     found += guarded(check_web_client, folder)
+    found += guarded(check_active_directory, folder)
     found += guarded(check_web_server, folder)
     found += guarded(check_web_installations, folder)
     found += guarded(check_activities_cache, folder)
@@ -3511,6 +3512,109 @@ def check_browser_sessions(folder, store, records):
         found += 0 if ok else 1
     if not checked:
         print("  ⏭️  no session, favicon or predictor file fetched: what was open not confronted")
+    return found
+
+
+def check_active_directory(folder):
+    """ntds.dit, read by WAC in its copy, against what the directory says of
+    itself through its own tools while it runs (active-directory-witness.ps1):
+    every object of every naming context with its name, classes, SID, account
+    and dates; the witness's privileged membership, delegations and SPN; a
+    membership removed and an object deleted, with their dates; the changes
+    of three objects' attributes, date and controller of origin; the
+    replication right granted on the domain. And no attribute holding a
+    secret among what is written. On a machine that is no controller: skipped."""
+    path = os.path.join(folder, "reference", "active-directory.json")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8") as f:
+        reference = json.load(f)
+    found = 0
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  {'✅' if ok else '❌'} {success if ok else failure}")
+        found += 0 if ok else 1
+    objects = load(folder, "active_directory_objects.json") or []
+    links = load(folder, "active_directory_links.json") or []
+    changes = load(folder, "active_directory_replication.json") or []
+    descriptors = load(folder, "active_directory_security_descriptors.json") or []
+    def guid(text):
+        return (text or "").strip("{}").lower()
+    # Every object of the directory, by its identity.
+    mine = {guid(o.get("ObjectGUID")): o for o in objects}
+    theirs = reference["objects"]
+    absent = [t["dn"] for t in theirs if guid(t["guid"]) not in mine]
+    report(not absent, f"active_directory_objects.json: the {len(theirs)} object(s) the directory lists, all there ({len(objects)} written)",
+           f"active_directory_objects.json: {len(absent)} of {len(theirs)} absent: {absent[:3]}")
+    wrong = []
+    for t in theirs:
+        o = mine.get(guid(t["guid"]))
+        if not o:
+            continue
+        def differs(name, ours, its):
+            if ours != its:
+                wrong.append(f"{t['dn']} {name}: WAC {ours!r}, directory {its!r}")
+        def as_list(v):
+            return sorted(v if isinstance(v, list) else [v] if v not in (None, "") else [])
+        differs("dn", o.get("DistinguishedName", "").lower(), t["dn"].lower())
+        if t["class"] not in as_list(o.get("ObjectClass")):
+            wrong.append(f"{t['dn']} class: WAC {o.get('ObjectClass')!r}, directory {t['class']!r}")
+        differs("sid", o.get("ObjectSid"), t.get("sid") or None)
+        differs("account", o.get("SAMAccountName"), t.get("account") or None)
+        differs("control", o.get("UserAccountControl"), t.get("control"))
+        differs("adminCount", o.get("AdminCount"), t.get("adminCount"))
+        differs("spn", as_list(o.get("ServicePrincipalName")), as_list(t.get("spn")))
+        differs("created", o.get("WhenCreatedUtc", "")[:19], t["created"])
+    report(not wrong, f"active_directory_objects.json: name, classes, SID, account, control, adminCount, SPN and creation identical for the {len(theirs)} object(s)",
+           f"active_directory_objects.json: {len(wrong)} difference(s): {wrong[:4]}")
+    # The witnesses.
+    witness = reference["witness"]
+    user = mine.get(guid(witness["guid"]), {})
+    delegated = user.get("MsDSAllowedToDelegateTo")
+    report(delegated == witness["delegateTo"], f"witness: delegation to {witness['delegateTo']}", f"witness: delegation {delegated!r}")
+    report("MsDSAllowedToActOnBehalfOfOtherIdentitySdId" in user, "witness: resource-based delegation, its descriptor named",
+           "witness: resource-based delegation absent")
+    member = [l for l in links if l.get("Attribute") == "member" and l.get("Target", "").lower() == user.get("DistinguishedName", "?").lower()]
+    held = {l["Object"].lower(): l for l in member}
+    privileged = held.get(witness["privilegedGroup"].lower())
+    report(privileged is not None and "Removed" not in privileged, f"witness: member of {witness['privilegedGroup']}", f"witness: memberships {sorted(held)}")
+    removed = held.get(witness["removedGroup"].lower())
+    report(removed is not None and removed.get("RemovedUtc", "")[:19] == witness["removedAt"],
+           f"witness: membership removed at {witness['removedAt']}", f"witness: removed membership {removed!r}, expected at {witness['removedAt']}")
+    deleted = mine.get(guid(witness["deletedGuid"]), {})
+    report(deleted.get("IsDeleted") is True and deleted.get("Name", "").startswith(witness["deletedName"] + "\n")
+           and deleted.get("LastKnownParent", "").lower() == witness["deletedParent"].lower(),
+           f"witness: {witness['deletedName']} deleted, its last name and parent kept",
+           f"witness: deleted object {deleted.get('IsDeleted')!r} {deleted.get('Name')!r} {deleted.get('LastKnownParent')!r}")
+    # Replication metadata, attribute by attribute.
+    ours = {(c.get("DistinguishedName", "").lower(), c.get("Attribute")): c for c in changes}
+    wrong = []
+    for t in reference["replication"]:
+        c = ours.get((t["object"].lower(), t["attribute"]))
+        if not c:
+            wrong.append(f"{t['object']} {t['attribute']}: absent")
+        elif (c.get("ChangedUtc", "")[:19], c.get("Version"), guid(c.get("OriginatingInvocationId")), c.get("OriginatingUsn")) \
+                != (t["changed"], t["version"], guid(t["invocation"]), t["usn"]):
+            wrong.append(f"{t['object']} {t['attribute']}: WAC {c}, directory {t}")
+    report(not wrong, f"active_directory_replication.json: date, version, controller and USN of the {len(reference['replication'])} change(s) read from the directory",
+           f"active_directory_replication.json: {len(wrong)} difference(s): {wrong[:3]}")
+    named = [c for c in changes if c.get("OriginatingServer")]
+    report(len(named) == len(changes), f"active_directory_replication.json: the controller of origin named on all {len(changes)} row(s)",
+           f"active_directory_replication.json: {len(changes) - len(named)} row(s) of {len(changes)} without a server")
+    # The right a DCSync needs, granted on the domain.
+    root = mine.get(guid(witness["domainGuid"]), {})
+    descriptor = next((d for d in descriptors if d.get("SdId") == root.get("NTSecurityDescriptorSdId")), {})
+    granted = [a for a in descriptor.get("Dacl", []) if a.get("Type") == "AllowObject" and a.get("Sid") == witness["sid"]
+               and guid(a.get("ObjectType")) == guid(witness["replicationRight"])]
+    report(bool(granted), "witness: replication right on the domain's root, in its descriptor", f"witness: right absent from descriptor {root.get('NTSecurityDescriptorSdId')!r}")
+    # Nothing of the secrets.
+    SECRETS = ("UnicodePwd", "DBCSPwd", "NtPwdHistory", "LmPwdHistory", "SupplementalCredentials", "PekList",
+               "CurrentValue", "PriorValue", "TrustAuthIncoming", "TrustAuthOutgoing", "MsDSManagedPassword",
+               "MsFVERecoveryPassword", "MsMcsAdmPwd", "MsLAPSPassword", "MsLAPSEncryptedPassword")
+    keys = {k for o in objects for k in o}
+    leaked = sorted(keys.intersection(SECRETS))
+    report(not leaked, f"active_directory_objects.json: none of the {len(SECRETS)} attributes holding a secret among its {len(keys)} field(s)",
+           f"active_directory_objects.json: secrets written: {leaked}")
     return found
 
 
