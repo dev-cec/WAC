@@ -264,21 +264,6 @@ if wants web_server; then
   rm -rf "$WEB_DBS"
 fi
 
-# The directory's witnesses (B-041), on a domain controller only: what the
-# directory itself says of them, through its own tools, while it runs —
-# reference/active-directory.json, which check-json.py confronts with ntds.dit.
-if wants active_directory; then
-  $QGA write "$HERE/guest/active-directory-witness.ps1" "$VMDIR\\active-directory-witness.ps1" >/dev/null
-  AD_STATE=$($QGA run --timeout 600 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\active-directory-witness.ps1" 2>&1 | tr -d '\r' | tail -1 || true)
-  if [[ "$AD_STATE" == placed ]]; then
-    $QGA read "$VMDIR\\active-directory.json" "$OUTPUT/reference/active-directory.json" >/dev/null \
-      && echo "   + reference/active-directory.json" || echo "   ⚠️ directory reference not read"
-  elif [[ "$AD_STATE" != "not a controller" ]]; then
-    echo "   ⚠️ directory witnesses not placed: $AD_STATE"
-  fi
-  $QGA run --shell "del $VMDIR\\active-directory-witness.ps1 $VMDIR\\active-directory.json 2>nul & exit /b 0" >/dev/null 2>&1 || true
-fi
-
 # The mail witness (B-017): no Outlook in the VM, so a PST of the public corpus
 # sources/pst_fixtures.sh pins (EDRM Enron, CC-BY 3.0 US), placed once in the
 # Outlook Files of "wac" — never piled up. check-json.py reads the same file
@@ -335,6 +320,24 @@ PARSE=$($QGA run -- powershell.exe -NoProfile -Command \
 $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\place-file-artefacts.ps1" \
   ${ONLY:+-Only} ${ONLY:+$ONLY} > "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null \
   && echo "   + reference/file-artefacts.txt" || echo "   ⚠️ file artefact witnesses not placed"
+
+# The directory's witnesses (B-041), on a domain controller only: what the
+# directory itself says of them, through its own tools, while it runs —
+# reference/active-directory.json, which check-json.py confronts with ntds.dit.
+# After the witnesses above: they change the directory on a controller (a
+# password policy, an account, IIS's SPN), and a reference older than they are
+# differs from what is collected.
+if wants active_directory; then
+  $QGA write "$HERE/guest/active-directory-witness.ps1" "$VMDIR\\active-directory-witness.ps1" >/dev/null
+  AD_STATE=$($QGA run --timeout 600 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\active-directory-witness.ps1" 2>&1 | tr -d '\r' | tail -1 || true)
+  if [[ "$AD_STATE" == placed ]]; then
+    $QGA read "$VMDIR\\active-directory.json" "$OUTPUT/reference/active-directory.json" >/dev/null \
+      && echo "   + reference/active-directory.json" || echo "   ⚠️ directory reference not read"
+  elif [[ "$AD_STATE" != "not a controller" ]]; then
+    echo "   ⚠️ directory witnesses not placed: $AD_STATE"
+  fi
+  $QGA run --shell "del $VMDIR\\active-directory-witness.ps1 $VMDIR\\active-directory.json 2>nul & exit /b 0" >/dev/null 2>&1 || true
+fi
 
 if ! full_cycle; then
   echo "== 3. skipped (--only) == ($(date +%H:%M:%S))"

@@ -37,6 +37,28 @@ if (-not $user) {
     Set-Acl "AD:\$base" $acl
 }
 
+# A policy of known content, its link disabled: never applied, even to this controller.
+$policyName = 'wacwitness-policy'
+$witnessKey = 'HKLM\Software\WacWitness'; $witnessValue = 'Marker'; $witnessData = 'wac-policy-witness'
+$witnessScript = 'wac-startup-witness.cmd'; $witnessParameters = '-witness'
+$witnessTask = 'wac-task-witness'; $witnessCommand = 'cmd.exe'
+$storedAccount = 'wacstored'; $storedValue = 'd2l0bmVzcy1ub3QtYS1wYXNzd29yZA'   # no password: only what must not come out
+Import-Module GroupPolicy
+$gpo = Get-GPO -Name $policyName -ErrorAction SilentlyContinue
+if (-not $gpo) {
+    $gpo = New-GPO -Name $policyName
+    Set-GPRegistryValue -Name $policyName -Key $witnessKey -ValueName $witnessValue -Type String -Value $witnessData | Out-Null
+    New-GPLink -Name $policyName -Target $base -LinkEnabled No | Out-Null
+    $root = "C:\Windows\SYSVOL\domain\Policies\{$($gpo.Id)}\Machine"
+    New-Item -ItemType Directory -Force "$root\Scripts\Startup", "$root\Preferences\ScheduledTasks", "$root\Preferences\Groups" | Out-Null
+    [IO.File]::WriteAllText("$root\Scripts\scripts.ini", "[Startup]`r`n0CmdLine=$witnessScript`r`n0Parameters=$witnessParameters`r`n", [Text.Encoding]::Unicode)
+    [IO.File]::WriteAllText("$root\Scripts\Startup\$witnessScript", "rem witness`r`n")
+    [IO.File]::WriteAllText("$root\Preferences\ScheduledTasks\ScheduledTasks.xml",
+        "<?xml version=`"1.0`" encoding=`"utf-8`"?><ScheduledTasks clsid=`"{CC63F200-7309-4ba0-B154-A71CD118DBCC}`"><ImmediateTaskV2 clsid=`"{9756B581-76EC-4169-9AFC-0CA8D43ADB5F}`" name=`"$witnessTask`" changed=`"2026-11-03 08:00:00`"><Properties action=`"C`" name=`"$witnessTask`" runAs=`"NT AUTHORITY\System`"><Task version=`"1.3`"><Actions><Exec><Command>$witnessCommand</Command><Arguments>/c rem</Arguments></Exec></Actions></Task></Properties></ImmediateTaskV2></ScheduledTasks>")
+    [IO.File]::WriteAllText("$root\Preferences\Groups\Groups.xml",
+        "<?xml version=`"1.0`" encoding=`"utf-8`"?><Groups clsid=`"{3125E937-EB16-4b4c-9934-544FC6D24D26}`"><User clsid=`"{DF5F1855-51E5-4d24-8B1A-D9BDE98BA1D1}`" name=`"$storedAccount`"><Properties action=`"U`" userName=`"$storedAccount`" cpassword=`"$storedValue`"/></User></Groups>")
+}
+
 function Utc($date) { if ($date) { ([datetime]$date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss') } }
 
 # Every object of every naming context, deleted ones included.
@@ -78,8 +100,18 @@ foreach ($dn in $witness.DistinguishedName, $privileged.DistinguishedName, $base
     }
 }
 
+$policies = @(Get-GPO -All | ForEach-Object {
+    @{ id = "$($_.Id)"; name = $_.DisplayName; computerVersion = $_.Computer.SysvolVersion; userVersion = $_.User.SysvolVersion }
+})
+$policyValue = Get-GPRegistryValue -Name $policyName -Key $witnessKey -ValueName $witnessValue
+
 $reference = @{
-    objects = $objects; replication = $replication
+    objects = $objects; replication = $replication; policies = $policies
+    policyWitness = @{
+        id = "$($gpo.Id)"; domain = $base; key = ($witnessKey -replace '^HKLM\\', ''); valueName = $policyValue.ValueName; valueData = "$($policyValue.Value)"
+        script = $witnessScript; scriptParameters = $witnessParameters; task = $witnessTask; taskCommand = $witnessCommand
+        storedAccount = $storedAccount; storedValue = $storedValue
+    }
     witness = @{
         guid = "$($witness.ObjectGUID)"; sid = $witness.SID.Value; delegateTo = $delegateTo
         privilegedGroup = $privileged.DistinguishedName; removedGroup = $removedGroup.DistinguishedName

@@ -512,6 +512,7 @@ def cross_checks(folder):
     found += guarded(check_vulnerable_driver, folder)
     found += guarded(check_web_client, folder)
     found += guarded(check_active_directory, folder)
+    found += guarded(check_group_policies, folder)
     found += guarded(check_web_server, folder)
     found += guarded(check_web_installations, folder)
     found += guarded(check_activities_cache, folder)
@@ -3515,6 +3516,18 @@ def check_browser_sessions(folder, store, records):
     return found
 
 
+def is_domain_controller(folder):
+    """True when the examined Windows is a domain controller (ProductType 2,
+    reference/windows-version.txt). Its SAM holds only the restore mode's
+    accounts: the domain's are in the directory, what Windows' tools list while
+    it runs, and what WAC reads of the SAM cannot be confronted with them."""
+    try:
+        with open(os.path.join(folder, "reference", "windows-version.txt"), encoding="utf-8", errors="replace") as f:
+            return f.read().strip().endswith("|2")
+    except OSError:
+        return False
+
+
 def check_active_directory(folder):
     """ntds.dit, read by WAC in its copy, against what the directory says of
     itself through its own tools while it runs (active-directory-witness.ps1):
@@ -3615,6 +3628,63 @@ def check_active_directory(folder):
     leaked = sorted(keys.intersection(SECRETS))
     report(not leaked, f"active_directory_objects.json: none of the {len(SECRETS)} attributes holding a secret among its {len(keys)} field(s)",
            f"active_directory_objects.json: secrets written: {leaked}")
+    return found
+
+
+def check_group_policies(folder):
+    """SYSVOL, read by WAC in its copy, against the directory's own tools
+    (active-directory-witness.ps1): every policy Get-GPO lists with its versions,
+    its name in the directory, its registry values as Get-GPRegistryValue gives
+    them; the witness policy's startup script, immediate task and link; a
+    preference's password reported, its value nowhere in the output."""
+    path = os.path.join(folder, "reference", "active-directory.json")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8") as f:
+        reference = json.load(f)
+    found = 0
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  {'✅' if ok else '❌'} {success if ok else failure}")
+        found += 0 if ok else 1
+    rows = load(folder, "group_policies.json") or []
+    mine = {(r.get("Id") or "").strip("{}").lower(): r for r in rows if r.get("Id")}
+    theirs = reference["policies"]
+    absent = [t["id"] for t in theirs if t["id"].lower() not in mine]
+    report(not absent and len(mine) == len(theirs), f"group_policies.json: the {len(theirs)} policies Get-GPO lists, no more",
+           f"group_policies.json: {len(mine)} policies, Get-GPO {len(theirs)}, absent {absent[:3]}")
+    wrong = []
+    for t in theirs:
+        r = mine.get(t["id"].lower(), {})
+        version = (t["userVersion"] << 16) + t["computerVersion"]
+        if r.get("Version") != str(version):
+            wrong.append(f"{t['name']}: version {r.get('Version')!r}, Get-GPO {version}")
+    report(not wrong, f"group_policies.json: the version of each policy, as Get-GPO gives it from SYSVOL", f"group_policies.json: {wrong[:3]}")
+    objects = load(folder, "active_directory_objects.json") or []
+    named = {(o.get("Name") or "").strip("{}").lower(): o.get("DisplayName") for o in objects}
+    wrong = [f"{t['id']}: {named.get(t['id'].lower())!r}, Get-GPO {t['name']!r}" for t in theirs if named.get(t["id"].lower()) != t["name"]]
+    report(not wrong, "active_directory_objects.json: the name of each policy, as Get-GPO gives it", f"active_directory_objects.json: {wrong[:3]}")
+    witness = reference["policyWitness"]
+    policy = mine.get(witness["id"].lower(), {})
+    value = next((v for v in policy.get("RegistryValues", []) if v.get("Value") == witness["valueName"]), {})
+    report(value.get("Data") == witness["valueData"] and value.get("Scope") == "Machine" and value.get("Key", "").lower() == witness["key"].lower(),
+           f"witness policy: {witness['valueName']} = {witness['valueData']}, as Get-GPRegistryValue gives it",
+           f"witness policy: registry value {value!r}, expected {witness}")
+    script = next((s for s in policy.get("Scripts", []) if s.get("Event") == "Startup"), {})
+    report(script.get("CommandLine") == witness["script"] and script.get("Parameters") == witness["scriptParameters"],
+           f"witness policy: startup script {witness['script']}", f"witness policy: script {script!r}")
+    task = next((t for t in policy.get("ScheduledTasks", []) if t.get("Name") == witness["task"]), {})
+    report(task.get("Kind") == "ImmediateTaskV2" and task.get("Command") == witness["taskCommand"],
+           f"witness policy: immediate task {witness['task']}, {witness['taskCommand']}", f"witness policy: task {task!r}")
+    stored = policy.get("StoredPasswords", [])
+    report([s.get("Element") for s in stored] == [witness["storedAccount"]],
+           f"witness policy: the password stored for {witness['storedAccount']} reported", f"witness policy: stored passwords {stored!r}")
+    with open(os.path.join(folder, "group_policies.json"), encoding="utf-8", errors="replace") as f:
+        text = f.read()
+    report(witness["storedValue"] not in text, "group_policies.json: the stored password's value written nowhere", "group_policies.json: the stored password's value is written")
+    domain = next((o for o in objects if o.get("DistinguishedName", "").lower() == witness["domain"].lower()), {})
+    report(witness["id"].lower() in (domain.get("GPLink") or "").lower(), "active_directory_objects.json: the witness policy's link on the domain, in gPLink",
+           f"active_directory_objects.json: gPLink {domain.get('GPLink')!r}")
     return found
 
 
@@ -5531,6 +5601,12 @@ def check_account_names(folder):
             parts = line.strip().split("|", 1)
             if len(parts) == 2 and parts[0].startswith("S-1-"):
                 expected[parts[0].upper()] = parts[1]
+    # On a controller, the accounts are the domain's: WAC names SIDs from the SAM
+    # and the hives, not yet from the directory (backlog B-041); the name of each
+    # is in active_directory_objects.json, confronted there.
+    if is_domain_controller(folder):
+        print(f"  ⏭️  SID names: on a controller, the domain's accounts are named in active_directory_objects.json, not by the table")
+        expected = {s: n for s, n in expected.items() if not s.startswith("S-1-5-21-")}
     pairs = set()
     def walk(o):
         if isinstance(o, dict):
@@ -5817,6 +5893,9 @@ def check_local_groups(folder):
     if not isinstance(groups, list) or not groups:
         print("  \u23ed\ufe0f  local_groups.json absent or empty: check skipped")
         return 0
+    if is_domain_controller(folder):
+        print("  \u23ed\ufe0f  local_groups.json: a controller's SAM is its restore mode's, Windows lists the domain's groups: not confronted")
+        return 0
     path = os.path.join(folder, "reference", "file-artefacts.txt")
     if not os.path.exists(path):
         print("  \u23ed\ufe0f  no reference: local groups not confronted")
@@ -5941,6 +6020,10 @@ def check_users(folder):
             # samhash=<name>|<current password>[|<previous password>]
             witnesses = [l.strip()[len("samhash="):].split("|")
                          for l in f if l.startswith("samhash=")]
+        # A controller makes its witnesses in the directory: its secrets are not read, its SAM does not hold them.
+        if is_domain_controller(folder):
+            print("  ⏭️  users.json: on a controller, the witness accounts are the domain's, not in the SAM: hashes not confronted")
+            witnesses = []
         by_name = {str(u.get("Name", "")).lower(): u for u in d}
         wrong = []
         for parts in witnesses:
@@ -5977,7 +6060,9 @@ def check_users(folder):
                 want = set()
             account = by_name.get("wacpw", {})
             got = {(q.get("Question"), q.get("Answer")) for q in account.get("SecurityQuestions") or []}
-            if want and got == want:
+            if is_domain_controller(folder):
+                print("  ⏭️  users.json: on a controller, wacpw is the domain's: its security questions not confronted")
+            elif want and got == want:
                 print(f"  ✅ users.json: {len(want)} security question(s) and answer(s) of wacpw read from ResetData")
             else:
                 print(f"  ❌ users.json: security questions of wacpw {sorted(got)}, expected {sorted(want)}")

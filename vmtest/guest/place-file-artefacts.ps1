@@ -1404,7 +1404,8 @@ try { if (Wants 'security_descriptors') {
     icacls $witness /setowner wac | Out-Null
     icacls $witness /grant '*S-1-1-0:(R)' | Out-Null
     Write-Output ("sdswitness=" + $witness + '|' + $wacSid)
-    $files = @(Get-ChildItem 'C:\Windows\System32\drivers\etc', 'C:\Users\wac\Documents', 'C:\wactest' -Force -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | Select-Object -First 40)
+    # The web witnesses' databases are left out: section 2132 moves them away before the collection.
+    $files = @(Get-ChildItem 'C:\Windows\System32\drivers\etc', 'C:\Users\wac\Documents', 'C:\wactest' -Force -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer -and $_.Name -notlike 'wac-*.db' } | Select-Object -First 40)
     foreach ($f in $files) {
         try { Write-Output ("sdsowner=" + $f.FullName + '|' + (Get-Acl -LiteralPath $f.FullName).GetOwner([Security.Principal.SecurityIdentifier]).Value) } catch {}
     }
