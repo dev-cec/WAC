@@ -85,7 +85,7 @@ std::vector<std::pair<std::string, bool*>> artefactSwitches(AppliConf& conf) {
 		{ "ntfs_volumes", &a.ntfsVolumes },
 		{ "dpapi_master_keys", &a.dpapiMasterKeys },
 		{ "user_shell_folders", &a.userShellFolders },
-		{ "active_directory", &a.activeDirectory }, { "web_client", &a.webClient }, { "web_server", &a.webServer },
+		{ "active_directory", &a.activeDirectory }, { "group_policies", &a.groupPolicies }, { "web_client", &a.webClient }, { "web_server", &a.webServer },
 		{ "zone_identifiers", &a.zoneIdentifiers }, { "security", &a.security },
 		{ "persistence", &a.persistence },
 		{ "office_trust_records", &a.officeTrustRecords }, { "typed_paths", &a.typedPaths }, { "word_wheel_query", &a.wordWheelQuery }, { "root_certificates", &a.rootCertificates }, { "internet_settings", &a.internetSettings }, { "intune_logs", &a.intuneLogs }, { "firewall", &a.firewall }, { "firewall_log", &a.firewallLog },

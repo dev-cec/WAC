@@ -159,6 +159,7 @@ struct AppliConf {
 		bool dpapiMasterKeys = true;  //!< DPAPI master keys of each profile and of the system, copied encrypted; their metadata
 		bool userShellFolders = true; //!< each user's shell folders (User Shell Folders): where desktop and documents really are
 		bool webClient = true;        //!< the browsers: visits, downloads, searches (Chromium History), their databases raw
+		bool groupPolicies = true;    //!< a domain controller: SYSVOL raw; its policies' registry values, scripts, tasks (group_policies.h)
 		bool activeDirectory = true;  //!< a domain controller: ntds.dit raw with its logs; objects, links, replication metadata (active_directory.h)
 		bool webServer = true;        //!< IIS: its configuration, logs and sites' content (web_server.h)
 		bool zoneIdentifiers = true;  //!< Zone.Identifier streams, read in the $MFT copy

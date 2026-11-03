@@ -45,6 +45,7 @@
 #include "firewall_log.h"
 #include "web_server.h"
 #include "active_directory.h"
+#include "group_policies.h"
 #include "intune_logs.h"
 #include "cloud_identity.h"
 #include "rdp_server.h"
@@ -1463,6 +1464,8 @@ void convertArtefacts(bool systemAvailable) {
 	                                   { "active_directory_replication.json", Text::ArtefactActiveDirectoryReplication },
 	                                   { "active_directory_security_descriptors.json", Text::ArtefactActiveDirectoryDescriptors } },
 	                                 L"artefacts.active_directory", Text::StepActiveDirectory);
+	convertArtefact<GroupPolicies>(conf.artefacts.groupPolicies, "group_policies.json", Text::ArtefactGroupPolicies,
+	                               L"artefacts.group_policies", Text::StepGroupPolicies);
 	convertArtefact<WebServer>(conf.artefacts.webServer,
 	                           { { "web_server_sites.json", Text::ArtefactWebServerSites },
 	                             { "web_server_application_pools.json", Text::ArtefactWebServerPools },

@@ -32,6 +32,7 @@
 #include "firewall_log.h"
 #include "web_server.h"
 #include "active_directory.h"
+#include "group_policies.h"
 #include "web_installations.h"
 #include "intune_logs.h"
 #include "cloud_identity.h"
@@ -907,6 +908,11 @@ HRESULT ExtractFileArtefactsRaw() {
 			trees.push_back({ folder, {}, 1, L"directory database" });
 			if (!logFolder.empty() && toLower(logFolder) != toLower(folder)) trees.push_back({ logFolder, {}, 1, L"directory database's logs" });
 		}
+	}
+	// SYSVOL's real folder, whole: a policy's scripts and what replication keeps of deleted ones.
+	if (conf.artefacts.groupPolicies) {
+		std::wstring sysvol;
+		if (sysvolDomainFolder(sysvol)) trees.push_back({ sysvol, {}, 32, L"group policies (SYSVOL)" });
 	}
 	if (conf.artefacts.scheduledTasks)
 		trees.push_back({ L"\\Windows\\System32\\Tasks", {}, 8, L"scheduled task definitions" });

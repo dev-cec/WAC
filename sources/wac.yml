@@ -65,6 +65,7 @@ artefacts:
   fat_volumes:             true   # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
   firewall:                true   # firewall rules and profiles
   firewall_log:            true   # the firewall's log (pfirewall.log), when logging is on: connections allowed or dropped, addresses, ports, process
+  group_policies:          true   # a domain controller: SYSVOL raw; the registry values, scripts, tasks and security templates of its policies
   hosts:                   true   # the hosts file: names diverted to an address
   installed_programs:      true   # installed programs (Uninstall) of the machine and of each user
   internet_settings:       true   # each user's proxy and automatic configuration script
