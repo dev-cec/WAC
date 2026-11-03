@@ -60,6 +60,14 @@ aux serveurs (web, Active Directory).
 | [B-038](B-038-compatibilite-windows-server.md) | Collecte compatible avec les versions serveur, de Server 2003 à 2026 (prérequis de B-035) | en cours | P3 | fort |
 | [B-041](B-041-active-directory.md) | Artefacts de compromission d'Active Directory (contrôleurs de domaine) | en cours | P2 | fort |
 
+### Clôture du projet
+
+À faire en dernier, quand toutes les autres fiches sont closes.
+
+| Fiche | Sujet | Statut | Priorité | Effort |
+|---|---|---|---|---|
+| [B-060](B-060-revue-securite-finale.md) | Revue de sécurité complète avant la clôture du projet | à faire (en dernier) | P1 | fort |
+
 ## Réalisé
 
 Dans [archives/](archives/) :
