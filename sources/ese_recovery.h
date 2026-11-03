@@ -49,8 +49,11 @@ struct EseReplay {
  *  @param workingDatabase the copy, in the working directory
  *  @param originalDatabase the database's path on the examined machine, as its
  *         logs name it (the exhibit's source path)
+ *  @param workingLogFolder the copy of its logs' folder, when not beside the
+ *         database (ntds.dit, whose logs an administrator may have moved)
  *  @return the outcome; the copy is left as it was when nothing is applied */
-EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstring& originalDatabase);
+EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstring& originalDatabase,
+                            const std::wstring& workingLogFolder = L"");
 
 /*! Opens the working copy of an ESE database once its logs are replayed into
  *  it (ReplayEseLogsOnce): every ESE artefact goes through here, none reads a
@@ -58,5 +61,7 @@ EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstr
  *  @param database receives the opened database
  *  @param workingDatabase the copy, in the working directory
  *  @param originalDatabase its path on the examined machine
+ *  @param workingLogFolder the copy of its logs' folder, empty when beside it
  *  @return the result of EseDatabase::open */
-HRESULT OpenRecoveredEseDatabase(EseDatabase& database, const std::wstring& workingDatabase, const std::wstring& originalDatabase);
+HRESULT OpenRecoveredEseDatabase(EseDatabase& database, const std::wstring& workingDatabase, const std::wstring& originalDatabase,
+                                 const std::wstring& workingLogFolder = L"");

@@ -395,7 +395,11 @@ Json aclToJson(const BYTE* sd, size_t size, size_t offset) {
 		if (aceSize < ACE_HEADER || aceSize > end - at) break;
 		Json ace = Json::obj();
 		static const wchar_t* TYPES[] = { L"Allow", L"Deny", L"Audit", L"Alarm" };
-		ace.add(L"Type", type < 4 ? Json::str(TYPES[type]) : Json::num((unsigned)type));
+		//! The object ACEs of a directory: the same four, numbered from 5 (ACCESS_ALLOWED_OBJECT_ACE…).
+		const BYTE OBJECT_ACE_FIRST = 5, OBJECT_ACE_LAST = 8;
+		const bool objectAce = type >= OBJECT_ACE_FIRST && type <= OBJECT_ACE_LAST;
+		ace.add(L"Type", type < 4 ? Json::str(TYPES[type])
+		                 : objectAce ? Json::str(std::wstring(TYPES[type - OBJECT_ACE_FIRST]) + L"Object") : Json::num((unsigned)type));
 		ace.add(L"Flags", Json::str(to_hex(flags)));
 		// Allow, Deny, Audit, Alarm: a mask then the SID; other kinds carry GUIDs first.
 		if (type < 4 && aceSize >= ACE_HEADER + 4) {
@@ -403,6 +407,29 @@ Json aclToJson(const BYTE* sd, size_t size, size_t offset) {
 			memcpy(&mask, sd + at + 4, 4);
 			ace.add(L"Mask", Json::str(L"0x" + to_hex(mask, 8)));
 			const std::wstring sid = sidToText(sd + at + 8, aceSize - 8);
+			ace.add(L"Sid", Json::str(sid));
+			if (!sid.empty()) ace.add(L"SidName", Json::str(getNameFromSid(sid)));
+		}
+		else if (objectAce && aceSize >= ACE_HEADER + 8) {
+			/* A mask, flags saying which GUIDs follow, then the SID: the right
+			   or attribute the ACE is about — the replication rights a DCSync
+			   needs are told by nothing else. */
+			const uint32_t OBJECT_TYPE_PRESENT = 1, INHERITED_OBJECT_TYPE_PRESENT = 2;
+			const size_t GUID_SIZE = 16;
+			uint32_t mask, objectFlags;
+			memcpy(&mask, sd + at + 4, 4);
+			memcpy(&objectFlags, sd + at + 8, 4);
+			ace.add(L"Mask", Json::str(L"0x" + to_hex(mask, 8)));
+			size_t next = ACE_HEADER + 8;
+			if ((objectFlags & OBJECT_TYPE_PRESENT) && next + GUID_SIZE <= aceSize) {
+				ace.add(L"ObjectType", Json::str(guid_to_wstring(sd + at + next)));
+				next += GUID_SIZE;
+			}
+			if ((objectFlags & INHERITED_OBJECT_TYPE_PRESENT) && next + GUID_SIZE <= aceSize) {
+				ace.add(L"InheritedObjectType", Json::str(guid_to_wstring(sd + at + next)));
+				next += GUID_SIZE;
+			}
+			const std::wstring sid = next < aceSize ? sidToText(sd + at + next, aceSize - next) : L"";
 			ace.add(L"Sid", Json::str(sid));
 			if (!sid.empty()) ace.add(L"SidName", Json::str(getNameFromSid(sid)));
 		}

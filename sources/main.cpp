@@ -44,6 +44,7 @@
 #include "sysmon.h"
 #include "firewall_log.h"
 #include "web_server.h"
+#include "active_directory.h"
 #include "intune_logs.h"
 #include "cloud_identity.h"
 #include "rdp_server.h"
@@ -1456,6 +1457,12 @@ void convertArtefacts(bool systemAvailable) {
 	                                  Text::StepUserShellFolders);
 	convertArtefact<WebClient>(conf.artefacts.webClient, "web_client.json", Text::ArtefactWebClient,
 	                           L"artefacts.web_client", Text::StepWebClient);
+	convertArtefact<ActiveDirectory>(conf.artefacts.activeDirectory,
+	                                 { { "active_directory_objects.json", Text::ArtefactActiveDirectoryObjects },
+	                                   { "active_directory_links.json", Text::ArtefactActiveDirectoryLinks },
+	                                   { "active_directory_replication.json", Text::ArtefactActiveDirectoryReplication },
+	                                   { "active_directory_security_descriptors.json", Text::ArtefactActiveDirectoryDescriptors } },
+	                                 L"artefacts.active_directory", Text::StepActiveDirectory);
 	convertArtefact<WebServer>(conf.artefacts.webServer,
 	                           { { "web_server_sites.json", Text::ArtefactWebServerSites },
 	                             { "web_server_application_pools.json", Text::ArtefactWebServerPools },

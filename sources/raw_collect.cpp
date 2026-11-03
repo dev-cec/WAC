@@ -31,6 +31,7 @@
 #include "sysmon.h"
 #include "firewall_log.h"
 #include "web_server.h"
+#include "active_directory.h"
 #include "web_installations.h"
 #include "intune_logs.h"
 #include "cloud_identity.h"
@@ -896,6 +897,17 @@ HRESULT ExtractFileArtefactsRaw() {
 	const unsigned THUMBS_DB_DEPTH = 32;
 	std::vector<Tree> trees;
 	if (conf.artefacts.webServer && extractWebServers(total) != S_OK) global = S_FALSE;
+	/* A domain controller's directory, wherever the registry says: open by
+	   the directory service, read raw, its logs and checkpoint with it —
+	   what the last minutes changed is only there (active_directory.h). */
+	if (conf.artefacts.activeDirectory) {
+		std::wstring database, logFolder;
+		if (directoryDatabaseLocation(database, logFolder)) {
+			const std::wstring folder = database.substr(0, database.rfind(L'\\'));
+			trees.push_back({ folder, {}, 1, L"directory database" });
+			if (!logFolder.empty() && toLower(logFolder) != toLower(folder)) trees.push_back({ logFolder, {}, 1, L"directory database's logs" });
+		}
+	}
 	if (conf.artefacts.scheduledTasks)
 		trees.push_back({ L"\\Windows\\System32\\Tasks", {}, 8, L"scheduled task definitions" });
 	if (conf.artefacts.errorReports) {

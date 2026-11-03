@@ -324,7 +324,7 @@ bool EseDatabase::readPage(uint32_t logical, std::vector<uint8_t>& page) {
 
 /*! Walks a tree from a page: a leaf gives its entries, a branch its children
  *  (the page number in each entry's data), each page once. */
-void EseDatabase::walk(uint32_t number, unsigned depth, std::vector<bool>& visited, std::vector<Entry>& out, uint32_t& lastLeaf) {
+void EseDatabase::walk(uint32_t number, unsigned depth, std::vector<bool>& visited, const EntrySink& sink, uint32_t& lastLeaf) {
 	if (depth > DEPTH_MAX || number >= visited.size() || visited[number]) return;
 	visited[number] = true;
 	std::vector<uint8_t> page;
@@ -366,17 +366,17 @@ void EseDatabase::walk(uint32_t number, unsigned depth, std::vector<bool>& visit
 		entry.data.assign(e + o, e + size);
 		if (leaf) {
 			entry.newFormat = (flags & PAGE_NEW_RECORD_FORMAT) != 0;
-			out.push_back(std::move(entry));
+			sink(std::move(entry));
 		}
-		else if (entry.data.size() >= 4) walk(readLittleEndian<uint32_t>(entry.data.data()), depth + 1, visited, out, lastLeaf);
+		else if (entry.data.size() >= 4) walk(readLittleEndian<uint32_t>(entry.data.data()), depth + 1, visited, sink, lastLeaf);
 	}
 	if (leaf) lastLeaf = number;
 }
 
-void EseDatabase::leaves(uint32_t root, std::vector<Entry>& out) {
+void EseDatabase::leaves(uint32_t root, const EntrySink& sink) {
 	std::vector<bool> visited(pageCount_, false);
 	uint32_t lastLeaf = 0;
-	walk(root, 0, visited, out, lastLeaf);
+	walk(root, 0, visited, sink, lastLeaf);
 	/* A database copied live may have leaves a branch does not reach yet: the
 	   last leaf's successors, as ESE chains them — only while they belong to
 	   this tree. A pointer to a page freed then reused by another table gave
@@ -389,7 +389,7 @@ void EseDatabase::leaves(uint32_t root, std::vector<Entry>& out) {
 		if (next == 0 || next >= visited.size() || visited[next]) break;
 		if (!readPage(next, page) || readLittleEndian<uint32_t>(page.data() + PAGE_TREE) != tree) break;
 		const uint32_t before = lastLeaf;
-		walk(next, 0, visited, out, lastLeaf);
+		walk(next, 0, visited, sink, lastLeaf);
 		if (lastLeaf == before) break;
 	}
 }
@@ -398,9 +398,7 @@ void EseDatabase::leaves(uint32_t root, std::vector<Entry>& out) {
 std::map<std::string, std::vector<uint8_t>> EseDatabase::longValueTree(const EseTable& table) {
 	std::map<std::string, std::vector<uint8_t>> out;
 	if (!table.longValueRoot) return out;
-	std::vector<Entry> entries;
-	leaves(table.longValueRoot, entries);
-	for (Entry& e : entries) out[std::string(e.key.begin(), e.key.end())] = std::move(e.data);
+	leaves(table.longValueRoot, [&](Entry&& e) { out[std::string(e.key.begin(), e.key.end())] = std::move(e.data); });
 	return out;
 }
 
@@ -448,12 +446,15 @@ bool assembleLongValue(const std::map<std::string, std::vector<uint8_t>>& tree, 
 } // namespace
 
 std::vector<EseRecord> EseDatabase::records(const EseTable& table) {
-	std::vector<Entry> entries;
-	leaves(table.root, entries);
+	std::vector<EseRecord> out;
+	forEachRecord(table, [&](EseRecord& record) { out.push_back(std::move(record)); });
+	return out;
+}
+
+void EseDatabase::forEachRecord(const EseTable& table, const std::function<void(EseRecord&)>& visit) {
 	std::map<std::string, std::vector<uint8_t>> tree;
 	bool treeRead = false;
-	std::vector<EseRecord> out;
-	for (const Entry& e : entries) {
+	leaves(table.root, [&](Entry&& e) {
 		EseRecord record = parseEseRecord(e.data, table.columns, pageSize_ <= 8192, e.newFormat);
 		for (EseCell& cell : record)
 			for (size_t i = 0; i < cell.values.size(); ++i) {
@@ -465,7 +466,6 @@ std::vector<EseRecord> EseDatabase::records(const EseTable& table) {
 				else if (scheme >= 0) cell.compressionScheme = scheme;
 				else cell.longValueMissing = true;
 			}
-		if (!record.empty()) out.push_back(std::move(record));
-	}
-	return out;
+		if (!record.empty()) visit(record);
+	});
 }

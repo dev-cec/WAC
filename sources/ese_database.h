@@ -41,6 +41,7 @@
 #include <cstdint>
 #include <optional>
 #include <fstream>
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -126,13 +127,20 @@ public:
 	 *  @param table a table of this database
 	 *  @return the records, in key order */
 	std::vector<EseRecord> records(const EseTable& table);
+	/*! The same, one record at a time: a database of several GiB (ntds.dit) is
+	 *  not held in memory. Only the columns the table lists are decoded: a caller
+	 *  may reduce them, and what it leaves out is neither decoded nor resolved.
+	 *  @param table a table of this database, its columns possibly reduced
+	 *  @param visit called on each record */
+	void forEachRecord(const EseTable& table, const std::function<void(EseRecord&)>& visit);
 
 private:
 	//! A leaf entry: its key and its data.
 	struct Entry { std::vector<uint8_t> key, data; bool newFormat = false; };
 	bool readPage(uint32_t logical, std::vector<uint8_t>& page);
-	void leaves(uint32_t root, std::vector<Entry>& out);
-	void walk(uint32_t page, unsigned depth, std::vector<bool>& visited, std::vector<Entry>& out, uint32_t& lastLeaf);
+	using EntrySink = std::function<void(Entry&&)>;
+	void leaves(uint32_t root, const EntrySink& sink);
+	void walk(uint32_t page, unsigned depth, std::vector<bool>& visited, const EntrySink& sink, uint32_t& lastLeaf);
 	std::map<std::string, std::vector<uint8_t>> longValueTree(const EseTable& table);
 
 	static const uint32_t CLEAN_SHUTDOWN = 3;

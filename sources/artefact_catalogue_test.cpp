@@ -237,9 +237,9 @@ int main(int argc, char** argv) {
 	      "PSReadLine's history: absent from Vista (PowerShell 2 at most), looked for and not expected on Windows 7");
 	const std::vector<std::string> onXp = absentAmong(keys, xp);
 	// Sysmon and OneDrive (Windows 7 and later), ETW trace files (Vista), Intune and Entra ID (Windows 10) among them.
-	check(onXp.size() == 21 && std::count(onXp.begin(), onXp.end(), "sysmon") == 1 && std::count(onXp.begin(), onXp.end(), "intune_logs") == 1
+	check(onXp.size() == 22 && std::count(onXp.begin(), onXp.end(), "active_directory") == 1 && std::count(onXp.begin(), onXp.end(), "sysmon") == 1 && std::count(onXp.begin(), onXp.end(), "intune_logs") == 1
 	      && std::count(onXp.begin(), onXp.end(), "etw_logs") == 1 && std::count(onXp.begin(), onXp.end(), "onedrive") == 1,
-	      "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 21 expected, Sysmon, OneDrive, ETW files and Intune among them");
+	      "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 22 expected, Active Directory, Sysmon, OneDrive, ETW files and Intune among them");
 	/* XP's Tasks folder holds no .job on a fresh install (desktop.ini, SA.DAT
 	   only, measured): absent, they are no finding. Vista's System32\Tasks
 	   always holds Microsoft's. */

@@ -75,11 +75,19 @@ bool readHeader(const std::filesystem::path& database, uint32_t& pageSize, uint3
 }
 
 /*! One replay, see ReplayEseLogsOnce. */
-EseReplay replay(const std::wstring& workingDatabase, const std::wstring& originalDatabase) {
+EseReplay replay(const std::wstring& workingDatabase, const std::wstring& originalDatabase, const std::wstring& workingLogFolder) {
 	EseReplay r;
 	const std::filesystem::path database(workingDatabase);
-	const std::filesystem::path folder = database.parent_path();
+	const std::filesystem::path folder = workingLogFolder.empty() ? database.parent_path() : std::filesystem::path(workingLogFolder);
+	/* Logs moved by ntdsutil leave their checkpoint beside the database
+	   (measured: edb.chk stays in NTDS, edb*.log go): the engine's system
+	   path is the checkpoint's folder, its log path the logs'. */
+	std::filesystem::path systemFolder = folder;
 	r.baseName = logBaseName(folder);
+	if (r.baseName.empty() && !workingLogFolder.empty()) {
+		systemFolder = database.parent_path();
+		r.baseName = logBaseName(systemFolder);
+	}
 	const std::filesystem::path current = folder / (r.baseName + L".log");
 	if (r.baseName.empty() || !pathExists(current.wstring())) {
 		r.detail = L"no checkpoint and current log beside the copy: nothing to replay";
@@ -115,16 +123,16 @@ EseReplay replay(const std::wstring& workingDatabase, const std::wstring& origin
 	}
 	r.attempted = true;
 	// The engine wants its folders with their trailing separator.
-	const std::wstring path = folder.wstring() + L"\\";
+	const std::wstring logPath = folder.wstring() + L"\\", systemPath = systemFolder.wstring() + L"\\";
 	JET_INSTANCE instance = 0;
 	JET_ERR err = engine.setParameter(nullptr, 0, JET_paramDatabasePageSize, pageSize, nullptr);
 	if (err >= 0) err = engine.setParameter(nullptr, 0, JET_paramDisablePerfmon, 1, nullptr);
 	if (err >= 0) err = engine.createInstance(&instance, L"WAC-replay", L"WAC replay of a copied database", 0);
 	if (err >= 0) {
 		const struct { unsigned long id; JET_API_PTR number; const wchar_t* text; } parameters[] = {
-			{ JET_paramSystemPath, 0, path.c_str() },
-			{ JET_paramLogFilePath, 0, path.c_str() },
-			{ JET_paramTempPath, 0, path.c_str() },
+			{ JET_paramSystemPath, 0, systemPath.c_str() },
+			{ JET_paramLogFilePath, 0, logPath.c_str() },
+			{ JET_paramTempPath, 0, systemPath.c_str() },
 			{ JET_paramBaseName, 0, r.baseName.c_str() },
 			{ JET_paramLogFileSize, (JET_API_PTR)(logSize / 1024), nullptr },
 			{ JET_paramRecovery, 0, L"On" },
@@ -165,7 +173,8 @@ EseReplay replay(const std::wstring& workingDatabase, const std::wstring& origin
 
 } // namespace
 
-EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstring& originalDatabase) {
+EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstring& originalDatabase,
+                            const std::wstring& workingLogFolder) {
 	/* One replay at a time: the engine's page size is a parameter of the
 	   process, and the artefacts are converted in parallel. */
 	static std::mutex lock;
@@ -174,7 +183,7 @@ EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstr
 	const std::wstring key = toLower(workingDatabase);
 	const auto found = done.find(key);
 	if (found != done.end()) return found->second;
-	EseReplay r = replay(workingDatabase, originalDatabase);
+	EseReplay r = replay(workingDatabase, originalDatabase, workingLogFolder);
 	log(2, (r.applied ? L"❇️" : L"🔥") + workingDatabase + L": " + r.detail);
 	if (r.attempted)
 		auditRecord(L"Replay of the transaction logs of a copied ESE database (" + r.baseName + L")",
@@ -184,8 +193,9 @@ EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstr
 	return r;
 }
 
-HRESULT OpenRecoveredEseDatabase(EseDatabase& database, const std::wstring& workingDatabase, const std::wstring& originalDatabase) {
-	const EseReplay replayed = ReplayEseLogsOnce(workingDatabase, originalDatabase);
+HRESULT OpenRecoveredEseDatabase(EseDatabase& database, const std::wstring& workingDatabase, const std::wstring& originalDatabase,
+                                 const std::wstring& workingLogFolder) {
+	const EseReplay replayed = ReplayEseLogsOnce(workingDatabase, originalDatabase, workingLogFolder);
 	if (replayed.attempted && !replayed.applied)
 		log(1, L"⚠️" + originalDatabase + L": transaction logs not replayed, its latest changes may be missing — " + replayed.detail);
 	return database.open(workingDatabase);
