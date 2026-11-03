@@ -105,6 +105,27 @@ $policies = @(Get-GPO -All | ForEach-Object {
 })
 $policyValue = Get-GPRegistryValue -Name $policyName -Key $witnessKey -ValueName $witnessValue
 
+# A replication requested, with what ships with Windows and no offensive tool: a
+# DirSync search needs DS-Replication-Get-Changes, audited as a 4662 on the
+# domain's root. Only cn is asked for: no secret is requested, and none comes
+# back. Without PublicDataOnly as well it was measured leaving that same right
+# and not Get-Changes-All (1131f6ad), so a real DCSync stays without a witness.
+# Each cycle adds this one event to the Security log, which rolls over by itself.
+Add-Type -AssemblyName System.DirectoryServices.Protocols
+$replicationStart = Get-Date
+$ldap = New-Object System.DirectoryServices.Protocols.LdapConnection 'localhost'
+$search = New-Object System.DirectoryServices.Protocols.SearchRequest($base, '(objectClass=domainDNS)', 'Subtree', @('cn'))
+[void]$search.Controls.Add((New-Object System.DirectoryServices.Protocols.DirSyncRequestControl($null, [System.DirectoryServices.Protocols.DirectorySynchronizationOptions]::PublicDataOnly, 100)))
+[void]$ldap.SendRequest($search)
+$ldap.Dispose()
+$replicationEvent = $null
+foreach ($attempt in 1..30) {
+    $replicationEvent = Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = 4662; StartTime = $replicationStart } -ErrorAction SilentlyContinue |
+        Where-Object { $_.ToXml() -match '1131f6aa' } | Select-Object -First 1
+    if ($replicationEvent) { break }
+    Start-Sleep -Seconds 1
+}
+
 # What Windows itself reads of the event logs, confronted with what WAC converts
 # from its raw copies: the witnesses' own traces, and the latest event of each
 # kind a controller adds, which shows the channel is taken. A log that has rolled
@@ -125,6 +146,7 @@ $controllerEvents = @(
 $reference = @{
     objects = $objects; replication = $replication; policies = $policies
     witnessEvents = $witnessEvents; controllerEvents = @($controllerEvents)
+    replicationEvent = $(if ($replicationEvent) { EventReference $replicationEvent })
     policyWitness = @{
         id = "$($gpo.Id)"; domain = $base; key = ($witnessKey -replace '^HKLM\\', ''); valueName = $policyValue.ValueName; valueData = "$($policyValue.Value)".TrimEnd([char]0)
         script = $witnessScript; scriptParameters = $witnessParameters; task = $witnessTask; taskCommand = $witnessCommand

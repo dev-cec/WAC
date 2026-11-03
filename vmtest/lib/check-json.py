@@ -3638,7 +3638,8 @@ def check_controller_events(folder):
     the directory's witnesses (4720, 4726, 4728, 4729), by record, with its date;
     the witness's entry into Domain Admins by its SIDs; the latest Kerberos and
     directory-access event, and of the Directory Service and DFS Replication
-    channels. Nothing here provokes a replication: a 4662 of DCSync is not witnessed."""
+    channels; the 4662 of a replication requested by DirSync. It uses
+    DS-Replication-Get-Changes, not Get-Changes-All: a real DCSync has no witness."""
     if not is_domain_controller(folder):
         return 0
     path = os.path.join(folder, "reference", "active-directory.json")
@@ -3649,11 +3650,22 @@ def check_controller_events(folder):
     with open(path, encoding="utf-8") as f:
         reference = json.load(f)
     by_record = {(e.get("EvtSystemChannel"), e.get("EvtSystemEventRecordId")): e for e in events}
+    # WAC reads the disk and never makes Windows flush: a record past the last one
+    # of its log was not written yet when a collection followed within seconds
+    # (measured: 4 s). It is said, and found by the later collection; a record
+    # missing inside the range stays a failure.
+    last_record = {}
+    for channel, record in by_record:
+        if record is not None and record > last_record.get(channel, -1):
+            last_record[channel] = record
+    unwritten = set()
     def mismatches(expected):
         wrong = []
         for r in expected:
             mine = by_record.get((r["log"], r["recordId"]))
-            if not mine:
+            if not mine and r["recordId"] > last_record.get(r["log"], -1):
+                unwritten.add(r["recordId"])
+            elif not mine:
                 wrong.append(f"{r['log']} record {r['recordId']} (event {r['id']}): absent")
             elif mine.get("EvtSystemEventID") != r["id"] or mine.get("EvtSystemTimeCreated") != r["time"]:
                 wrong.append(f"{r['log']} record {r['recordId']}: event {mine.get('EvtSystemEventID')} at {mine.get('EvtSystemTimeCreated')}, Get-WinEvent {r['id']} at {r['time']}")
@@ -3667,7 +3679,7 @@ def check_controller_events(folder):
     print(f"  {'❌' if wrong else '✅'} events.json: " + (str(wrong[:3]) if wrong else f"the {len(witness_events)} event(s) of the directory's witnesses, by record and date, as Get-WinEvent reads them"))
     found += bool(wrong)
     wrong = mismatches(reference.get("controllerEvents") or [])
-    print(f"  {'❌' if wrong else '✅'} events.json: " + (str(wrong[:3]) if wrong else f"the latest of {sorted({(e['log'], e['id']) for e in reference.get('controllerEvents') or []})}, as Get-WinEvent reads it"))
+    print(f"  {'❌' if wrong else '✅'} events.json: " + (str(wrong[:3]) if wrong else f"the latest of {sorted({(e['log'], e['id']) for e in reference.get('controllerEvents') or [] if e['recordId'] not in unwritten})}, as Get-WinEvent reads it"))
     found += bool(wrong)
     if 4728 in kept:
         def fields(event):
@@ -3676,6 +3688,20 @@ def check_controller_events(folder):
                    and (fields(e).get("TargetSid") or "").endswith("-512")]
         print(f"  {'✅' if entered else '❌'} events.json: the witness's entry into Domain Admins (4728), " + ("member's and group's SIDs in the event" if entered else "not found with its SIDs"))
         found += not entered
+    requested = reference.get("replicationEvent")
+    if not requested:
+        print("  ⏭️  events.json: the replication requested left no 4662 (audit off?): not confronted")
+        return found
+    wrong = mismatches([requested])
+    if requested["recordId"] in unwritten:
+        print(f"  ⏭️  events.json: record {requested['recordId']} of {requested['log']} not on the disk yet at this collection (last one {last_record.get(requested['log'])}): the replication requested not confronted here")
+        return found
+    mine = json.dumps(by_record.get((requested["log"], requested["recordId"]), {})).lower()
+    # DS-Replication-Get-Changes, on the domain's root: what shows a replication asked for.
+    if not wrong and not ("1131f6aa" in mine and reference["witness"]["domainGuid"].lower() in mine):
+        wrong = [f"record {requested['recordId']}: the right or the domain's GUID missing"]
+    print(f"  {'❌' if wrong else '✅'} events.json: " + (str(wrong[:3]) if wrong else "the replication requested (4662), its right on the domain's root, as Get-WinEvent reads it"))
+    found += bool(wrong)
     return found
 
 
