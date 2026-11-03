@@ -31,14 +31,14 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Étude des sources sur un contrôleur de test
-- [x] Contrôleur de domaine dans le harnais (`install-domain-controller.sh`, écrit, à commiter)
+- [x] Contrôleur de domaine dans le harnais (`install-domain-controller.sh`)
 - [ ] Lot 1 : annuaire
   - [x] Artefact `active_directory` écrit : `active_directory_objects`, `_links`, `_replication`, `_security_descriptors` (.json) ; clé de `wac.yml`, catalogue, textes FR et EN
   - [x] Témoins (`guest/active-directory-witness.ps1`) et contrôle (`check_active_directory`)
   - [x] Cycle court `--only=active_directory` vert sur `srv2022dc-test`
-  - [ ] Test unitaire vu échouer par mutation (en cours)
-  - [ ] Rejeu avec les journaux dans un autre dossier que la base : à mesurer
-  - [ ] Commit du lot
+  - [x] Test unitaire vu échouer par mutation
+  - [x] Rejeu avec les journaux dans un autre dossier que la base
+  - [x] Commit du lot (6be64175)
   - [ ] Cycle complet sur le contrôleur, non-régression Windows 11 (lecteur ESE et ACL touchés)
   - [ ] Documentation FR et EN
 - [ ] Lot 2 : stratégies de groupe
@@ -52,3 +52,6 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-03 : lot 1 écrit, **non commité**. Seule une liste d'attributs est décodée : aucun attribut de secret, et un attribut nouveau du schéma reste non lu tant qu'il n'y est pas nommé. Noms des attributs et des classes lus dans le schéma de la base elle-même ; lecture en flux (`EseDatabase::forEachRecord`) pour une base de plusieurs Gio ; ACE d'objet décodées dans `aclToJson` (le GUID du droit, indispensable pour voir un droit de réplication) ; rejeu possible avec des journaux hors du dossier de la base, chemin non encore mesuré.
 - 2026-11-03 : cycle court vert sur `srv2022dc-test` (Server 2022, forêt wac.test), sans ❌ : les 3 700 objets listés par `Get-ADObject` sur les cinq contextes de nommage, supprimés compris, tous présents et 3 700 écrits ; nom, classe, SID, compte, `userAccountControl`, `adminCount`, SPN et création identiques ; 78 changements de `Get-ADReplicationAttributeMetadata` identiques (date, version, contrôleur, USN) ; témoins retrouvés : membre d'Admins du domaine (visé par SID), appartenance retirée avec sa date, objet supprimé avec son nom et son parent, délégations contrainte et basée sur la ressource, droit `DS-Replication-Get-Changes-All` sur la racine. Le rejeu des journaux s'applique : les objets récents sont là. Mesuré au passage : sans corbeille de l'annuaire, un objet supprimé n'a pas de `msDS-LastKnownRDN` (son dernier nom reste dans `name`).
 - 2026-11-03 : limites à ce stade : mesuré sur Server 2022 seul ; aucun `sIDHistory` réel dans le harnais (décodé comme `objectSid`, non confronté) ; `msDS-IntId` non lu, un attribut d'extension du schéma peut n'apparaître que par son `AttributeId` dans la réplication. Mutation en cours ; restent les étapes non cochées ci-dessus, puis le lot 2.
+- 2026-11-03 : mutation : RID non retourné, compte annoncé non borné, ACE d'objet non reconnue : `active_directory_test` passe de 0 à 5 échecs. Incident : un appel interrompu avait déjà muté les sources, et la relance a sauvegardé ces sources mutées comme référence ; les trois mutations ont été défaites une à une, sans mutant dans `bin/` (`build-windows.sh` s'arrêtait avant la copie, sur le compte attendu d'`artefact_catalogue_test`, corrigé).
+- 2026-11-03 : journaux déplacés dans la VM (`ntdsutil`, `C:\NtdsLogs`, NTDS arrêté, harnais seulement) : `edb.chk` reste à côté de la base, et le rejeu ne le trouvait pas ; il le cherche maintenant aussi là. Mesuré : `edb*.log` rejoués, copie propre, 32 ✅ sans ❌. Journaux remis en place, VM redémarrée pour rétablir les services arrêtés avec NTDS.
+- 2026-11-03 : lot 1 commité (6be64175), harnais commité. Manuels FR et EN écrits, non commités, PDF à régénérer. Prochaine étape : repos de 20 minutes de la VM, puis cycle complet sur `srv2022dc-test`.
