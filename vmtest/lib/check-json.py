@@ -513,6 +513,7 @@ def cross_checks(folder):
     found += guarded(check_web_client, folder)
     found += guarded(check_active_directory, folder)
     found += guarded(check_group_policies, folder)
+    found += guarded(check_controller_events, folder)
     found += guarded(check_web_server, folder)
     found += guarded(check_web_installations, folder)
     found += guarded(check_activities_cache, folder)
@@ -3631,6 +3632,53 @@ def check_active_directory(folder):
     return found
 
 
+def check_controller_events(folder):
+    """The events a controller adds, read by WAC in its raw copies of the logs,
+    against what Get-WinEvent reads of them on the running system: each trace of
+    the directory's witnesses (4720, 4726, 4728, 4729), by record, with its date;
+    the witness's entry into Domain Admins by its SIDs; the latest Kerberos and
+    directory-access event, and of the Directory Service and DFS Replication
+    channels. Nothing here provokes a replication: a 4662 of DCSync is not witnessed."""
+    if not is_domain_controller(folder):
+        return 0
+    path = os.path.join(folder, "reference", "active-directory.json")
+    events = load(folder, "events.json")
+    if not os.path.exists(path) or not events:
+        print("  ⏭️  events.json: on a controller, without the directory reference or the events: its events not confronted")
+        return 0
+    with open(path, encoding="utf-8") as f:
+        reference = json.load(f)
+    by_record = {(e.get("EvtSystemChannel"), e.get("EvtSystemEventRecordId")): e for e in events}
+    def mismatches(expected):
+        wrong = []
+        for r in expected:
+            mine = by_record.get((r["log"], r["recordId"]))
+            if not mine:
+                wrong.append(f"{r['log']} record {r['recordId']} (event {r['id']}): absent")
+            elif mine.get("EvtSystemEventID") != r["id"] or mine.get("EvtSystemTimeCreated") != r["time"]:
+                wrong.append(f"{r['log']} record {r['recordId']}: event {mine.get('EvtSystemEventID')} at {mine.get('EvtSystemTimeCreated')}, Get-WinEvent {r['id']} at {r['time']}")
+        return wrong
+    found = 0
+    witness_events = reference.get("witnessEvents") or []
+    kept = {e["id"] for e in witness_events}
+    if {4720, 4726, 4728, 4729} - kept:
+        print(f"  ⏭️  events.json: the witnesses' events {sorted({4720, 4726, 4728, 4729} - kept)} no longer in the Security log (rolled over): not confronted")
+    wrong = mismatches(witness_events)
+    print(f"  {'❌' if wrong else '✅'} events.json: " + (str(wrong[:3]) if wrong else f"the {len(witness_events)} event(s) of the directory's witnesses, by record and date, as Get-WinEvent reads them"))
+    found += bool(wrong)
+    wrong = mismatches(reference.get("controllerEvents") or [])
+    print(f"  {'❌' if wrong else '✅'} events.json: " + (str(wrong[:3]) if wrong else f"the latest of {sorted({(e['log'], e['id']) for e in reference.get('controllerEvents') or []})}, as Get-WinEvent reads it"))
+    found += bool(wrong)
+    if 4728 in kept:
+        def fields(event):
+            return {d.get("Name"): d.get("Value") for d in event.get("EvtEventData") or [] if isinstance(d, dict)}
+        entered = [e for e in events if e.get("EvtSystemEventID") == 4728 and fields(e).get("MemberSid") == reference["witness"]["sid"]
+                   and (fields(e).get("TargetSid") or "").endswith("-512")]
+        print(f"  {'✅' if entered else '❌'} events.json: the witness's entry into Domain Admins (4728), " + ("member's and group's SIDs in the event" if entered else "not found with its SIDs"))
+        found += not entered
+    return found
+
+
 def check_group_policies(folder):
     """SYSVOL, read by WAC in its copy, against the directory's own tools
     (active-directory-witness.ps1): every policy Get-GPO lists with its versions,
@@ -3640,8 +3688,9 @@ def check_group_policies(folder):
     path = os.path.join(folder, "reference", "active-directory.json")
     if not os.path.exists(path):
         # The witnesses run with active_directory: --only=group_policies alone
-        # would otherwise look like a pass with nothing confronted.
-        if os.path.exists(os.path.join(folder, "group_policies.json")):
+        # would otherwise look like a pass with nothing confronted. An empty file is
+        # a machine with no policy to read, a workstation: nothing to say.
+        if load(folder, "group_policies.json"):
             print("  ⏭️  group_policies.json: no directory reference (--only without active_directory): not confronted")
         return 0
     with open(path, encoding="utf-8") as f:
@@ -4235,6 +4284,10 @@ def check_sysmon(folder):
                 ref[key] = value
     entries = load(folder, "sysmon.json")
     if not isinstance(entries, list):
+        # --only=events installs the witness too, for the events of Sysmon's channel.
+        if switched_off(folder, "sysmon.json"):
+            print("  ⏭️  sysmon.json not requested: its configuration and archives not confronted")
+            return 0
         print("  ❌ sysmon.json absent or unreadable, the witness installed")
         return 1
     service, driver = ref.get("sysmon_service", "|").split("|", 1)

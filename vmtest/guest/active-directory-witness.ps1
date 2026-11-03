@@ -105,8 +105,26 @@ $policies = @(Get-GPO -All | ForEach-Object {
 })
 $policyValue = Get-GPRegistryValue -Name $policyName -Key $witnessKey -ValueName $witnessValue
 
+# What Windows itself reads of the event logs, confronted with what WAC converts
+# from its raw copies: the witnesses' own traces, and the latest event of each
+# kind a controller adds, which shows the channel is taken. A log that has rolled
+# over simply gives nothing: the check then says so.
+function EventReference($record) {
+    @{
+        log = $record.LogName; id = $record.Id; recordId = $record.RecordId
+        time = $record.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffffff\Z', [Globalization.CultureInfo]::InvariantCulture)
+    }
+}
+$witnessEvents = @(Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = 4720, 4726, 4728, 4729 } -ErrorAction SilentlyContinue |
+    Where-Object { $_.ToXml() -match $userName } | ForEach-Object { EventReference $_ })
+$controllerEvents = @(
+    foreach ($id in 4768, 4769, 4662) { Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = $id } -MaxEvents 1 -ErrorAction SilentlyContinue }
+    foreach ($log in 'Directory Service', 'DFS Replication') { Get-WinEvent -LogName $log -MaxEvents 1 -ErrorAction SilentlyContinue }
+) | ForEach-Object { EventReference $_ }
+
 $reference = @{
     objects = $objects; replication = $replication; policies = $policies
+    witnessEvents = $witnessEvents; controllerEvents = @($controllerEvents)
     policyWitness = @{
         id = "$($gpo.Id)"; domain = $base; key = ($witnessKey -replace '^HKLM\\', ''); valueName = $policyValue.ValueName; valueData = "$($policyValue.Value)".TrimEnd([char]0)
         script = $witnessScript; scriptParameters = $witnessParameters; task = $witnessTask; taskCommand = $witnessCommand

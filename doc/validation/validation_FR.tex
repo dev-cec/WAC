@@ -821,6 +821,9 @@ objets de l'annuaire selon \texttt{Get-ADObject}, changements selon
 stratégies selon \texttt{Get-GPO}, valeur selon \texttt{Get-GPRegistryValue},
   script, tâche et mot de passe de préférence témoins /
   \fichier{group\_policies.json} & contrôle ajouté avec l'artefact \\
+événements des témoins de l'annuaire et dernier événement Kerberos, 4662,
+  Directory Service et DFS Replication, selon \texttt{Get-WinEvent} /
+  \fichier{events.json} & contrôle ajouté, aucun écart \\
 requête et erreur provoquées sur Apache~2.2, 2.4 et nginx, avec leur instant /
   \fichier{web\_server\_logs.json}, \fichier{web\_server\_error\_logs.json} &
   les antislashs qu'Apache échappe dans ses messages, rendus doublés \\

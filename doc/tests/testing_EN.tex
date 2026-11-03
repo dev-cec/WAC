@@ -357,7 +357,10 @@ that no attribute holding a secret is in the output. A witness policy, its link
 disabled so that it is never applied, carries a registry value, a startup
 script, an immediate task and a fictitious preference password:
 \texttt{Get-GPO} and \texttt{Get-GPRegistryValue} give the references, and the
-password's value must appear nowhere. On a controller, the checks of the local
+password's value must appear nowhere. The witnesses' events and the latest
+Kerberos, 4662, Directory Service and DFS Replication event are confronted with
+\texttt{Get-WinEvent}, record by record and with their date; as no replication
+is provoked, a DCSync 4662 has no witness. On a controller, the checks of the local
 accounts, local groups and domain SIDs' names are skipped, and say so: its SAM
 is only the restore mode's.
 
