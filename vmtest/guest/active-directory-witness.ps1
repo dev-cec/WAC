@@ -62,6 +62,9 @@ if (-not $gpo) {
 function Utc($date) { if ($date) { ([datetime]$date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss') } }
 
 # Every object of every naming context, deleted ones included.
+# The directory goes on living while the cycle runs: the check needs this instant
+# to tell what changed after these references from what WAC read wrong.
+$referenceTaken = Utc (Get-Date)
 $objects = New-Object System.Collections.ArrayList
 $properties = 'objectGUID', 'objectClass', 'objectSid', 'sAMAccountName', 'userAccountControl', 'adminCount', 'servicePrincipalName', 'whenCreated', 'isDeleted'
 $seen = @{}
@@ -144,6 +147,7 @@ $controllerEvents = @(
 ) | ForEach-Object { EventReference $_ }
 
 $reference = @{
+    takenAt = $referenceTaken
     objects = $objects; replication = $replication; policies = $policies
     witnessEvents = $witnessEvents; controllerEvents = @($controllerEvents)
     replicationEvent = $(if ($replicationEvent) { EventReference $replicationEvent })

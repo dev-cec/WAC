@@ -3561,12 +3561,23 @@ def check_active_directory(folder):
     report(not absent, f"active_directory_objects.json: the {len(theirs)} object(s) the directory lists, all there ({len(objects)} written)",
            f"active_directory_objects.json: {len(absent)} of {len(theirs)} absent: {absent[:3]}")
     wrong = []
+    # A later collection may read a directory that has moved on since the references
+    # (measured: SDProp set wacpw's adminCount 20 minutes into a cycle). Such a field
+    # is left out only if the directory's own metadata dates its change after them.
+    taken_at = reference.get("takenAt", "9999")
+    moved_on = {(guid(c.get("ObjectGUID")), c.get("Attribute")) for c in changes if c.get("ChangedUtc", "")[:19] >= taken_at}
+    attribute_of = {"account": "sAMAccountName", "control": "userAccountControl", "adminCount": "adminCount", "spn": "servicePrincipalName"}
+    left_out = []
     for t in theirs:
         o = mine.get(guid(t["guid"]))
         if not o:
             continue
         def differs(name, ours, its):
-            if ours != its:
+            if ours == its:
+                return
+            if (guid(t["guid"]), attribute_of.get(name)) in moved_on:
+                left_out.append(f"{t['dn']} {name}")
+            else:
                 wrong.append(f"{t['dn']} {name}: WAC {ours!r}, directory {its!r}")
         def as_list(v):
             return sorted(v if isinstance(v, list) else [v] if v not in (None, "") else [])
@@ -3581,6 +3592,8 @@ def check_active_directory(folder):
         differs("created", o.get("WhenCreatedUtc", "")[:19], t["created"])
     report(not wrong, f"active_directory_objects.json: name, classes, SID, account, control, adminCount, SPN and creation identical for the {len(theirs)} object(s)",
            f"active_directory_objects.json: {len(wrong)} difference(s): {wrong[:4]}")
+    if left_out:
+        print(f"  ℹ️  active_directory_objects.json: {len(left_out)} field(s) changed in the directory after the references, by its own metadata: {left_out[:4]}")
     # The witnesses.
     witness = reference["witness"]
     user = mine.get(guid(witness["guid"]), {})
