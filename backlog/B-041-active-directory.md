@@ -32,7 +32,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Tâches
 - [x] Étude des sources sur un contrôleur de test
 - [x] Contrôleur de domaine dans le harnais (`install-domain-controller.sh`)
-- [ ] Lot 1 : annuaire
+- [x] Lot 1 : annuaire
   - [x] Artefact `active_directory` écrit : `active_directory_objects`, `_links`, `_replication`, `_security_descriptors` (.json) ; clé de `wac.yml`, catalogue, textes FR et EN
   - [x] Témoins (`guest/active-directory-witness.ps1`) et contrôle (`check_active_directory`)
   - [x] Cycle court `--only=active_directory` vert sur `srv2022dc-test`
@@ -40,16 +40,16 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - [x] Rejeu avec les journaux dans un autre dossier que la base
   - [x] Commit du lot (6be64175)
   - [x] Cycle complet sur le contrôleur (écart de référence corrigé, cycle court vert)
-  - [ ] Non-régression Windows 11 (lecteur ESE et ACL touchés), suspendue à la demande de l'utilisateur
+  - [x] Non-régression Windows 11 (lecteur ESE et ACL touchés) : 582 ✅, 0 ❌
   - [x] Documentation FR et EN, PDF régénérés, 0 débordement (les mesures du cycle complet restent à y reporter)
 - [x] Événements du contrôleur : déjà pris par `events`, témoin `check_controller_events`
-- [ ] Lot 2 : stratégies de groupe
+- [x] Lot 2 : stratégies de groupe
   - [x] Artefact `group_policies` écrit et commité (7c1e307b), clé de `wac.yml`, catalogue, textes FR et EN
   - [x] Témoins et contrôle (`check_group_policies`), cycle court
   - [x] Test unitaire vu échouer par mutation, une mutation à la fois
   - [x] Documentation FR et EN, tables régénérées, PDF sans débordement (c95a9428)
   - [x] Cycle complet sur le contrôleur, commun aux deux lots
-  - [ ] Non-régression Windows 11, suspendue à la demande de l'utilisateur
+  - [x] Non-régression Windows 11, même cycle
 
 ## Journal
 - 2026-10-07 : créée à la demande de l'utilisateur — version 3.0, pour les serveurs.
