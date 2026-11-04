@@ -7,6 +7,7 @@
 #include "long_path.h"
 #include "system_library.h"
 #include "tools.h"
+#include <algorithm>
 #include <esent.h>
 #include <filesystem>
 #include <fstream>
@@ -48,18 +49,6 @@ bool loadEngine(Engine& engine) {
 	    && resolveExport(engine.module, "JetTerm2", engine.term);
 }
 
-/*! The logs' base name: the stem of the checkpoint file beside the database
- *  ("V01.chk" for the WebCache, "SRU.chk" for SRUM).
- *  @param folder the copy's folder
- *  @return the base name, empty if there is no checkpoint */
-std::wstring logBaseName(const std::filesystem::path& folder) {
-	std::error_code ec;
-	for (const std::filesystem::directory_entry& e : std::filesystem::directory_iterator(std::filesystem::path(extendedPath(folder.wstring())), ec))
-		if (e.is_regular_file(ec) && toLower(e.path().extension().wstring()) == L".chk")
-			return e.path().stem().wstring();
-	return L"";
-}
-
 /*! Two fields of the database's header.
  *  @param database the copy
  *  @param pageSize receives the page size
@@ -74,23 +63,15 @@ bool readHeader(const std::filesystem::path& database, uint32_t& pageSize, uint3
 	return true;
 }
 
-/*! One replay, see ReplayEseLogsOnce. */
-EseReplay replay(const std::wstring& workingDatabase, const std::wstring& originalDatabase, const std::wstring& workingLogFolder) {
+/*! One replay under one base name, see ReplayEseLogsOnce. */
+EseReplay replayUnder(const std::wstring& baseName, const std::filesystem::path& folder, const std::filesystem::path& systemFolder,
+                      const std::wstring& workingDatabase, const std::wstring& originalDatabase) {
 	EseReplay r;
 	const std::filesystem::path database(workingDatabase);
-	const std::filesystem::path folder = workingLogFolder.empty() ? database.parent_path() : std::filesystem::path(workingLogFolder);
-	/* Logs moved by ntdsutil leave their checkpoint beside the database
-	   (measured: edb.chk stays in NTDS, edb*.log go): the engine's system
-	   path is the checkpoint's folder, its log path the logs'. */
-	std::filesystem::path systemFolder = folder;
-	r.baseName = logBaseName(folder);
-	if (r.baseName.empty() && !workingLogFolder.empty()) {
-		systemFolder = database.parent_path();
-		r.baseName = logBaseName(systemFolder);
-	}
+	r.baseName = baseName;
 	const std::filesystem::path current = folder / (r.baseName + L".log");
-	if (r.baseName.empty() || !pathExists(current.wstring())) {
-		r.detail = L"no checkpoint and current log beside the copy: nothing to replay";
+	if (!pathExists(current.wstring())) {
+		r.detail = L"no current log " + r.baseName + L".log beside the copy: nothing to replay";
 		return r;
 	}
 	uint32_t pageSize = 0, state = 0;
@@ -171,7 +152,49 @@ EseReplay replay(const std::wstring& workingDatabase, const std::wstring& origin
 	return r;
 }
 
+/*! Replays a copy's logs, under each base name found until one applies.
+ *  A controller's NTDS folder has been measured holding two checkpoints: Api.chk,
+ *  left by the promotion on Server 2016, and edb.chk, the database's. Under the
+ *  wrong one the engine succeeds and leaves the copy dirty: the outcome, not the
+ *  name, tells them apart. */
+EseReplay replay(const std::wstring& workingDatabase, const std::wstring& originalDatabase, const std::wstring& workingLogFolder) {
+	const std::filesystem::path database(workingDatabase);
+	const std::filesystem::path folder = workingLogFolder.empty() ? database.parent_path() : std::filesystem::path(workingLogFolder);
+	/* Logs moved by ntdsutil leave their checkpoint beside the database
+	   (measured: edb.chk stays in NTDS, edb*.log go): the engine's system
+	   path is the checkpoint's folder, its log path the logs'. */
+	std::filesystem::path systemFolder = folder;
+	std::vector<std::wstring> baseNames = eseLogBaseNames(folder);
+	if (baseNames.empty() && !workingLogFolder.empty()) {
+		systemFolder = database.parent_path();
+		baseNames = eseLogBaseNames(systemFolder);
+	}
+	EseReplay outcome;
+	outcome.detail = L"no checkpoint beside the copy: nothing to replay";
+	for (const std::wstring& baseName : baseNames) {
+		EseReplay r = replayUnder(baseName, folder, systemFolder, workingDatabase, originalDatabase);
+		if (r.applied) return r;
+		if (r.attempted || !outcome.attempted) outcome = std::move(r);
+	}
+	return outcome;
+}
+
 } // namespace
+
+std::vector<std::wstring> eseLogBaseNames(const std::wstring& folder) {
+	std::vector<std::wstring> names;
+	std::error_code ec;
+	for (std::filesystem::directory_iterator it(std::filesystem::path(extendedPath(folder)), ec), end; !ec && it != end; it.increment(ec))
+		if (it->is_regular_file(ec) && toLower(it->path().extension().wstring()) == L".chk")
+			names.push_back(it->path().stem().wstring());
+	// The engine's default name first, then in a fixed order: the same outcome from one run to the next.
+	std::sort(names.begin(), names.end(), [](const std::wstring& a, const std::wstring& b) {
+		const std::wstring lowerA = toLower(a), lowerB = toLower(b);
+		const bool firstA = lowerA == L"edb", firstB = lowerB == L"edb";
+		return firstA != firstB ? firstA : lowerA < lowerB;
+	});
+	return names;
+}
 
 EseReplay ReplayEseLogsOnce(const std::wstring& workingDatabase, const std::wstring& originalDatabase,
                             const std::wstring& workingLogFolder) {

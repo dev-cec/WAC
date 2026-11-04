@@ -1622,7 +1622,10 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \path|ntds.dit| : l'emplacement de la base et de ses journaux vient du
         registre (\path|Services\NTDS\Parameters|), la lecture est brute, et
         les journaux sont rejoués dans la copie de travail avant toute lecture,
-        car les objets récents ne sont que là. Sur une machine qui n'est pas
+        car les objets récents ne sont que là. Un dossier peut porter les
+        journaux de plusieurs bases (\path|Api.chk| à côté de \path|edb.chk|
+        sur un Server 2016) : chacune est essayée jusqu'à ce que l'une
+        s'applique. Sur une machine qui n'est pas
         contrôleur, ces fichiers sont vides. \textbf{Les secrets de l'annuaire
         ne sont pas lus} : seule une liste d'attributs est décodée, sans aucun
         attribut de mot de passe ou de clé, et un attribut nouveau du schéma

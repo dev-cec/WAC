@@ -32,6 +32,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "ese_database.h"
 #include <windows.h>
 
@@ -43,6 +44,12 @@ struct EseReplay {
 	std::wstring baseName;    //!< the logs' base name (V01, SRU)
 	std::wstring detail;      //!< what was done or why not, for the log and the audit
 };
+
+/*! The logs' base names in a folder: the stems of its checkpoint files ("V01.chk"
+ *  for the WebCache, "SRU.chk" for SRUM), the engine's default "edb" first.
+ *  @param folder the copy's folder
+ *  @return the names in the order they are tried; empty without a checkpoint */
+std::vector<std::wstring> eseLogBaseNames(const std::wstring& folder);
 
 /*! Replays the transaction logs found beside a working copy of an ESE database,
  *  once per copy and per run: a second call returns the first outcome.

@@ -13,9 +13,12 @@
  */
 #include "bits_jobs.h"
 #include "ese_database.h"
+#include "ese_recovery.h"
 #include "srum.h"
 #include <algorithm>
 #include <cstdio>
+#include <filesystem>
+#include <fstream>
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references
 
@@ -360,7 +363,23 @@ void dump(const std::wstring& path) {
 
 } // namespace
 
+/*! A controller's NTDS folder holds Api.chk and edb.chk (measured, Server 2016):
+ *  the database's own logs must be tried first, not the alphabet's. */
+void logBaseNames() {
+	namespace fs = std::filesystem;
+	std::error_code ec;
+	const fs::path folder = fs::temp_directory_path(ec) / L"wac_ese_test_chk";
+	fs::remove_all(folder, ec);
+	fs::create_directories(folder, ec);
+	check(eseLogBaseNames(folder.wstring()).empty(), "log base names: none without a checkpoint");
+	for (const wchar_t* name : { L"Api.chk", L"edb.chk", L"Zed.chk", L"edb.log" }) std::ofstream(folder / name).put('x');
+	check(eseLogBaseNames(folder.wstring()) == std::vector<std::wstring>{ L"edb", L"Api", L"Zed" },
+	      "log base names: edb first, then in a fixed order");
+	fs::remove_all(folder, ec);
+}
+
 int wmain(int argc, wchar_t** argv) {
+	logBaseNames();
 	records();
 	cellIntegers();
 	sevenBit();

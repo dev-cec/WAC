@@ -1572,7 +1572,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \path|ntds.dit|: the location of the database and of its logs comes
         from the registry (\path|Services\NTDS\Parameters|), the reading is
         raw, and the logs are replayed into the working copy before anything
-        is read, since recent objects are only there. On a machine that is no
+        is read, since recent objects are only there. A folder can hold logs
+        of several bases (\path|Api.chk| next to \path|edb.chk| on a Server
+        2016): each is tried until one applies. On a machine that is no
         controller, these files are empty. \textbf{The directory's secrets are
         not read}: only a list of attributes is decoded, with no password or
         key attribute among them, and a new attribute of the schema stays
