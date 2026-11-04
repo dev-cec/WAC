@@ -390,7 +390,8 @@ with it.
   62,653 identical values; revealed the last character lost of UTF-16 text
   packed as 7-bit bytes. For 89 values, dissect.esedb decodes one more null
   character: the padding of the last byte, which the value's header
-  declares \\
+  declares. On the replayed \fichier{ntds.dit} of a domain controller under
+  Server~2022, 145,421 identical values, every table included \\
 \texttt{cim\_test} & hash of a name read in the VM's \fichier{INDEX.BTR};
   \texttt{Get-CimInstance} &
   class, ancestor and instance built as the format lays them out
@@ -791,8 +792,10 @@ policies according to \texttt{Get-GPO}, value according to
   \texttt{Get-GPRegistryValue}, witness script, task and preference password /
   \fichier{group\_policies.json} & check added with the artefact \\
 events of the directory's witnesses and latest Kerberos, 4662, Directory
-  Service and DFS Replication event, according to \texttt{Get-WinEvent} /
-  \fichier{events.json} & check added, no difference \\
+  Service and DFS Replication event, according to \texttt{Get-WinEvent}; 4662 of
+  a replication requested by DirSync / \fichier{events.json} & an event Windows
+  wrote less than 4~s before the collection is not on the disk yet: the check
+  says so, and the next collection finds it \\
 a request and an error provoked on Apache~2.2, 2.4 and nginx, with their
   instant / \fichier{web\_server\_logs.json},
   \fichier{web\_server\_error\_logs.json} &
@@ -868,7 +871,11 @@ two conversions of one collection & dates read on the working copy, rebuilt at
 
 Last cycle, 30 October 2026, on the code of version 3.0.1 (Windows~11 build
 26200, Paris time zone): 553 checks passed, no failure. On 29 October, on
-Windows~8.1, on the code of 3.0.0: 462 checks passed, no failure.
+Windows~8.1, on the code of 3.0.0: 462 checks passed, no failure. On the code
+of the coming 4.0: on 4 November, on a domain controller under Server~2022, 571
+checks passed, no failure, among them the 3,711 directory objects identical to
+\texttt{Get-ADObject}; on 3 November, on Windows~11, 582 checks passed, no
+failure.
 
 \begin{itemize}
   \item \textbf{collection then conversion} (\opt{collect} \opt{events}
@@ -968,6 +975,12 @@ they target are absent, on the data they have seen.
     files spread over several \fichier{\$MFT} records
     (\texttt{\$ATTRIBUTE\_LIST}), very large volumes. They are to be validated
     on real systems.
+  \item \textbf{Domain controller}: the directory is measured under Server~2022
+    only, on a forest with one controller. No real \texttt{sIDHistory} is
+    confronted. As \texttt{msDS-IntId} is not read, an attribute of a schema
+    extension may appear in the replication by its identifier only. The
+    replication witness uses the \texttt{DS-Replication-Get-Changes} right; a
+    real DCSync, which also asks for \texttt{Get-Changes-All}, has no witness.
   \item \textbf{Artefacts without a reference}: when no independent tool reads
     a format, its accuracy rests on the internal cross-checks and on the public
     documentation of the format.

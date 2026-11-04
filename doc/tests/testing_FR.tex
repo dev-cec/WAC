@@ -372,8 +372,10 @@ préférence fictif : \texttt{Get-GPO} et \texttt{Get-GPRegistryValue} donnent l
 références, et la valeur du mot de passe ne doit figurer nulle part. Les
 événements des témoins et le dernier événement Kerberos, 4662, Directory Service
 et DFS Replication sont confrontés à \texttt{Get-WinEvent}, enregistrement par
-enregistrement et avec leur date ; aucune réplication n'étant provoquée, un 4662
-de DCSync reste sans témoin. Sur un
+enregistrement et avec leur date. Une recherche DirSync, qui ne demande que
+\texttt{cn} et aucun secret, laisse un 4662 du droit
+\texttt{DS-Replication-Get-Changes} sur la racine du domaine, confronté de même ;
+un vrai DCSync, qui demande aussi \texttt{Get-Changes-All}, reste sans témoin. Sur un
 contrôleur, les contrôles des comptes locaux, des groupes locaux et des noms des
 SID du domaine sont sautés, et le disent : la SAM n'y est que celle du mode de
 restauration.

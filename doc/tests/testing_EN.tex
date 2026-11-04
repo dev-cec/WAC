@@ -359,8 +359,11 @@ script, an immediate task and a fictitious preference password:
 \texttt{Get-GPO} and \texttt{Get-GPRegistryValue} give the references, and the
 password's value must appear nowhere. The witnesses' events and the latest
 Kerberos, 4662, Directory Service and DFS Replication event are confronted with
-\texttt{Get-WinEvent}, record by record and with their date; as no replication
-is provoked, a DCSync 4662 has no witness. On a controller, the checks of the local
+\texttt{Get-WinEvent}, record by record and with their date. A DirSync search,
+asking for \texttt{cn} and no secret, leaves a 4662 of the
+\texttt{DS-Replication-Get-Changes} right on the domain's root, confronted
+likewise; a real DCSync, which also asks for \texttt{Get-Changes-All}, has no
+witness. On a controller, the checks of the local
 accounts, local groups and domain SIDs' names are skipped, and say so: its SAM
 is only the restore mode's.
 

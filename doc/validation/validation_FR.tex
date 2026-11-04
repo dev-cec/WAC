@@ -402,7 +402,9 @@ lui.
   de Windows~8.1 (texte compressé sur 7~bits), 62~653 valeurs identiques ; a
   révélé le dernier caractère perdu d'un texte UTF-16 rangé par octets de
   7~bits. Pour 89 valeurs, dissect.esedb décode un caractère nul de plus : le
-  bourrage du dernier octet, que l'en-tête de la valeur déclare \\
+  bourrage du dernier octet, que l'en-tête de la valeur déclare. Sur le
+  \fichier{ntds.dit} rejoué d'un contrôleur de domaine sous Server~2022, 145~421
+  valeurs identiques, toutes tables comprises \\
 \texttt{cim\_test} & condensat d'un nom relevé dans l'\fichier{INDEX.BTR}
   de la VM ; \texttt{Get-CimInstance} &
   classe, ancêtre et instance construits selon le format (défaut hérité,
@@ -822,8 +824,10 @@ stratégies selon \texttt{Get-GPO}, valeur selon \texttt{Get-GPRegistryValue},
   script, tâche et mot de passe de préférence témoins /
   \fichier{group\_policies.json} & contrôle ajouté avec l'artefact \\
 événements des témoins de l'annuaire et dernier événement Kerberos, 4662,
-  Directory Service et DFS Replication, selon \texttt{Get-WinEvent} /
-  \fichier{events.json} & contrôle ajouté, aucun écart \\
+  Directory Service et DFS Replication, selon \texttt{Get-WinEvent} ; 4662
+  d'une réplication demandée par DirSync / \fichier{events.json} & un événement
+  écrit par Windows moins de 4~s avant la collecte n'est pas encore sur le disque :
+  le contrôle le dit, et la collecte suivante le trouve \\
 requête et erreur provoquées sur Apache~2.2, 2.4 et nginx, avec leur instant /
   \fichier{web\_server\_logs.json}, \fichier{web\_server\_error\_logs.json} &
   les antislashs qu'Apache échappe dans ses messages, rendus doublés \\
@@ -901,6 +905,10 @@ deux conversions d'une même collecte & dates lues sur la copie de travail,
 Dernier cycle, le 30 octobre 2026, sur le code de la version 3.0.1
 (Windows~11 build 26200, fuseau de Paris) : 553 contrôles passés, aucun échec.
 Le 29 octobre, sous Windows~8.1, sur le code de la 3.0.0 : 462 contrôles passés, aucun échec.
+Sur le code de la 4.0 en préparation : le 4 novembre, sur un contrôleur de domaine
+sous Server~2022, 571 contrôles passés, aucun échec, dont les 3~711 objets de
+l'annuaire identiques à \texttt{Get-ADObject} ; le 3 novembre, sous Windows~11,
+582 contrôles passés, aucun échec.
 
 \begin{itemize}
   \item \textbf{collecte puis conversion} (\opt{collect} \opt{events}
@@ -1003,6 +1011,13 @@ qu'ils visent sont absents, sur les données qu'ils ont vues.
     appareils MTP, fichiers éclatés sur plusieurs enregistrements de la
     \fichier{\$MFT} (\texttt{\$ATTRIBUTE\_LIST}), très gros volumes. Ils sont à
     valider sur des systèmes réels.
+  \item \textbf{Contrôleur de domaine} : l'annuaire n'est mesuré que sous
+    Server~2022, sur une forêt à un seul contrôleur. Aucun \texttt{sIDHistory}
+    réel n'y est confronté. \texttt{msDS-IntId} n'étant pas lu, un attribut
+    d'extension du schéma peut n'apparaître dans la réplication que par son
+    identifiant. Le témoin de réplication use du droit
+    \texttt{DS-Replication-Get-Changes} ; un vrai DCSync, qui demande aussi
+    \texttt{Get-Changes-All}, reste sans témoin.
   \item \textbf{Artefacts sans référence} : quand aucun outil indépendant ne
     lit un format, sa justesse repose sur les recoupements internes et sur la
     documentation publique du format.
