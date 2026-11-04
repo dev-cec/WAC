@@ -117,6 +117,20 @@ HRESULT SqliteDatabase::open(const std::wstring& file) {
 		close();
 		return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
 	}
+	/* The database comes from the examined machine: its schema is hostile. WAC
+	   reads tables only, so its views and triggers never run (a view holds any
+	   SQL, an endless recursive query or the deep expressions of the stack
+	   exhaustions published against SQLite), and functions are not called from
+	   its schema. A refusal leaves the database closed. */
+	for (const int option : { SQLITE_DBCONFIG_ENABLE_VIEW, SQLITE_DBCONFIG_ENABLE_TRIGGER, SQLITE_DBCONFIG_TRUSTED_SCHEMA, SQLITE_DBCONFIG_DEFENSIVE }) {
+		const int wanted = option == SQLITE_DBCONFIG_DEFENSIVE ? 1 : 0;
+		int applied = -1;
+		if (sqlite3_db_config(db_, option, wanted, &applied) != SQLITE_OK || applied != wanted) {
+			log(2, L"🔥SQLite: protection " + std::to_wstring(option) + L" not applied, database not read: " + file);
+			close();
+			return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+		}
+	}
 	/* Windows Search declares collations of its own ("UNICODE_en-US_LINGUISTIC_
 	   IGNORECASE"), which SQLite does not know: a statement touching such a
 	   column would not even prepare. Each one is declared on demand as a

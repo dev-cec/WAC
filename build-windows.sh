@@ -103,7 +103,7 @@ for c in api reader scanner parser; do
 done
 FLAGS+=(-DYAML_DECLARE_STATIC -I"$YAML/include")
 
-# --- SQLite, the browsers' databases (third_party/sqlite-3.53.4) -------------
+# --- SQLite, the browsers' databases (third_party/sqlite-3.54.1) -------------
 # The amalgamation, UNMODIFIED, compiled as C (see its VENDORED.md). Options:
 # no thread safety (WAC reads one database at a time, from one thread), no
 # extension loading, no deprecated interfaces, double-quoted strings refused.
@@ -112,7 +112,7 @@ FLAGS+=(-DYAML_DECLARE_STATIC -I"$YAML/include")
 # unused (winUnfetch, the busy timeout); -Wno-unused-but-set-variable, for a
 # variable g++ 16 (MSYS2) finds set and never read (nIdx), g++ 13 not (B-024).
 echo "== SQLite =="
-SQLITE="$TP/sqlite-3.53.4"
+SQLITE="$TP/sqlite-3.54.1"
 SQLITE_OPTIONS=(-DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_OMIT_DEPRECATED
   -DSQLITE_DEFAULT_MEMSTATUS=0 -DSQLITE_DQS=0 -DSQLITE_OMIT_SHARED_CACHE)
 "$CC" -O2 -Wall -Wextra -Wno-unused-parameter -Wno-unused-but-set-variable "${SQLITE_OPTIONS[@]}" -c "$SQLITE/sqlite3.c" -o "$BUILD/sqlite3.o"

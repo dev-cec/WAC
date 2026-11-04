@@ -154,7 +154,7 @@ g++ -std=c++17 -g -fsanitize=address,undefined -I. artefact_catalogue.cpp artefa
 |---|---|
 | `compat-include/wac_mingw_compat.h` | Force-included: `<filesystem>`, and the constants the MinGW headers lack and WAC uses. |
 | `libyaml-0.2.5/` | Reading of `wac.yml`: the 4 parser files of libyaml 0.2.5, unmodified (origin and fingerprint in `VENDORED.md`). |
-| `sqlite-3.53.4/` | Reading of the browsers' databases: the SQLite 3.53.4 amalgamation, unmodified (origin, SHA3-256 and options in `VENDORED.md`); its one warning exclusion, `-Wno-unused-parameter`, is documented in `build-windows.sh`. |
+| `sqlite-3.54.1/` | Reading of the browsers' databases: the SQLite 3.54.1 amalgamation, unmodified (origin, SHA3-256 and options in `VENDORED.md`); its one warning exclusion, `-Wno-unused-parameter`, is documented in `build-windows.sh`. |
 
 ## Verified standalone
 `WAC.exe` imports only: `ADVAPI32, KERNEL32, msvcrt, Secur32, WTSAPI32` — what
