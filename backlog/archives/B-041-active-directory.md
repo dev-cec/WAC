@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (version 4.0) | P2 | fort |
+| fait (6be64175, 7c1e307b, doc d0eaa116) | P2 | fort |
 
 ## Pourquoi
 Sur un contrôleur de domaine, la compromission se joue dans l'annuaire : comptes ajoutés aux groupes privilégiés, réplication détournée pour lire les secrets (DCSync), tickets forgés, délégations abusives, stratégies de groupe modifiées pour se propager. Ces traces sont propres aux serveurs et n'existent sur aucun poste. Demande utilisateur du 2026-10-07 : pour les serveurs, la version 3.0 doit les relever.
@@ -41,11 +41,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
   - [x] Commit du lot (6be64175)
   - [x] Cycle complet sur le contrôleur (écart de référence corrigé, cycle court vert)
   - [x] Non-régression Windows 11 (lecteur ESE et ACL touchés) : 582 ✅, 0 ❌
-  - [x] Documentation FR et EN, PDF régénérés, 0 débordement (les mesures du cycle complet restent à y reporter)
+  - [x] Documentation FR et EN, PDF régénérés, 0 débordement (mesures reportées ensuite)
 - [x] Événements du contrôleur : déjà pris par `events`, témoin `check_controller_events`
 - [x] Confrontation de `ntds.dit` à `dissect.esedb`
 - [x] Témoin de réplication demandée (4662), droit `1131f6aa` seulement
-- [ ] Mesures reportées dans la documentation
+- [x] Mesures reportées dans la documentation
 - [x] Lot 2 : stratégies de groupe
   - [x] Artefact `group_policies` écrit et commité (7c1e307b), clé de `wac.yml`, catalogue, textes FR et EN
   - [x] Témoins et contrôle (`check_group_policies`), cycle court
@@ -86,3 +86,5 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-03 : cycle court du témoin de réplication : 103 ✅, 2 ❌ à la première collecte : le 4662 (23:31:29,98) n'était pas encore sur le disque quand la collecte a démarré 4 s plus tard (dernier enregistrement écrit : 3 s avant) ; WAC ne force jamais l'écriture. La seconde collecte le trouve, droit et domaine confrontés. Contrôle corrigé : au-delà du dernier enregistrement, saut annoncé ; trou dans la plage, ❌. Les deux cas vérifiés sur ce résultat. Cycle complet du contrôleur relancé, le précédent n'étant pas vert.
 - 2026-11-03 : validation et guide des tests FR et EN : `dissect.esedb` sur `ntds.dit`, témoin de réplication, délai d'écriture des événements, limites du contrôleur. Résultat de référence et PDF à la fin du cycle complet en cours.
 - 2026-11-04 : cycle complet du contrôleur : 571 ✅, 1 ❌, 44 ⏭️ ; témoin de réplication et événements verts dans les deux conversions. L'écart : `adminCount` de `wacpw`, 1 pour WAC à la seconde collecte, vide dans la référence. WAC a raison : SDProp l'a posé à 23:09:31 UTC, 9 s après le début de l'étape 7 (`Get-ADReplicationAttributeMetadata`), `wacpw` étant dans Administrateurs. Le contrôle supposait l'annuaire figé pendant le cycle : un champ n'est plus écarté que si les métadonnées de l'annuaire datent son changement après la référence (`takenAt`). Vérifié dans les deux sens sur ce résultat. Cycle complet relancé.
+- 2026-11-04 : cycle complet du contrôleur vert : 571 ✅, 0 ❌, 44 ⏭️ ; 3 711 objets identiques à `Get-ADObject`, 78 changements d'attributs, témoin de réplication et événements confrontés dans les deux conversions. SDProp n'a pas repassé sur un champ dans ce cycle : l'écartement d'un champ daté après la référence n'est testé que sur le résultat du cycle précédent. Non-régression Windows 11 du 2026-11-03 (582 ✅, 0 ❌) non repassée : seul le harnais a changé depuis, le code de WAC non, et le nouveau contrôle est sans effet hors contrôleur. Mesures reportées (doc d0eaa116).
+- 2026-11-04 : limites acceptées à l'archivage, écrites dans le dossier de validation : Server 2022 seul, à un contrôleur, les autres versions relevant de B-038 ; aucun `sIDHistory` réel ; `msDS-IntId` non lu ; témoin de réplication limité au droit `1131f6aa`, un vrai DCSync (`1131f6ad`) restant sans témoin. Le nombre d'objets monte entre cycles (3 705 à 3 711), cause non étudiée. Fiche archivée.
