@@ -8,12 +8,12 @@
 # its "binary:" key is set to none: KapeTriage copies no executable, and the
 # comparison then weighs the same work.
 #
-# Usage: ./kape-compare.sh [--no-binary] [KAPE target, KapeTriage by default]
+# Usage: [WAC_VM=<vm>] ./kape-compare.sh [--no-binary] [KAPE target, KapeTriage by default]
 # Output: results/kape/<target>-<date>/ (logs, manifest, timing.txt, compare.txt)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-QGA="python3 $HERE/lib/qga.py"
+QGA="python3 $HERE/lib/qga.py --dom ${WAC_VM:-win11-test}"
 NO_BINARY=false
 if [[ "${1:-}" == "--no-binary" ]]; then NO_BINARY=true; shift; fi
 TARGET="${1:-KapeTriage}"

@@ -2930,7 +2930,9 @@ def check_small_file_artefacts(folder):
         for guid, description, mac, ip, origin in live:
             a = mine.get(guid.upper(), {})
             adapter, ipv4, kernel = a.get("Adapter") or {}, a.get("Ipv4") or {}, a.get("Kernel") or {}
-            if adapter.get("DriverDesc") != description:
+            # Windows numbers a second card of the same model in its own list (" #2");
+            # the registry's DriverDesc, which WMI's Description gives too, does not.
+            if adapter.get("DriverDesc") != re.sub(r" #\d+$", "", description):
                 wrong.append(f"{guid}: description {adapter.get('DriverDesc')!r}, Windows {description!r}")
             if address_in_hives and kernel.get("CurrentAddress") != mac:
                 wrong.append(f"{guid}: hardware address {kernel.get('CurrentAddress')}, Windows {mac}")

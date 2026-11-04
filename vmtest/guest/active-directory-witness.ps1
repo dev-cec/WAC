@@ -45,6 +45,26 @@ if (-not @($acl.Access | Where-Object { $_.ObjectType -eq $replicationRight -and
     Set-Acl "AD:\$base" $acl
 }
 
+# An attribute of a schema extension, set on the witness: since Server 2003 such an
+# attribute has a number of its own, msDS-IntId, and not the one its OID maps to.
+# Under a private arc: nothing else will ever claim it.
+$schema = (Get-ADRootDSE).schemaNamingContext
+$extension = 'wacWitnessExtension'
+# The schema's cache learns a new attribute only when told, and a class cannot name it before.
+function Reload-Schema { $root = [ADSI]'LDAP://RootDSE'; $root.Put('schemaUpdateNow', 1); $root.SetInfo() }
+if (-not (Get-ADObject -SearchBase $schema -Filter "lDAPDisplayName -eq '$extension'")) {
+    New-ADObject -Name $extension -Type attributeSchema -Path $schema -OtherAttributes @{
+        attributeID = '1.3.6.1.4.1.32473.1.1'; lDAPDisplayName = $extension; attributeSyntax = '2.5.5.12'; oMSyntax = 64; isSingleValued = $true
+    }
+    Reload-Schema
+}
+$userClass = Get-ADObject -SearchBase $schema -Filter "lDAPDisplayName -eq 'user'" -Properties mayContain
+if ($userClass.mayContain -notcontains $extension) {
+    Set-ADObject -Identity $userClass.DistinguishedName -Add @{ mayContain = $extension }
+    Reload-Schema
+}
+Set-ADObject -Identity "CN=$userName,$usersFolder" -Replace @{ $extension = 'wac-extension-witness' }
+
 # A policy of known content, its link disabled: never applied, even to this controller.
 $policyName = 'wacwitness-policy'
 $witnessKey = 'HKLM\Software\WacWitness'; $witnessValue = 'Marker'; $witnessData = 'wac-policy-witness'
