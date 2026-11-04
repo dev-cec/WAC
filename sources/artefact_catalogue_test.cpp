@@ -65,7 +65,8 @@ std::string utf8(const wchar_t* text) {
 //! The name of the release a build starts or belongs to, client editions.
 std::string clientRelease(unsigned build) {
 	bool known = false;
-	return utf8(releaseOf(WindowsVersion{ build, false, false }, known).name);
+	// Build 3790 is a server only: as a client it would be named after the XP before it.
+	return utf8(releaseOf(WindowsVersion{ build, build == 3790, false }, known).name);
 }
 
 //! The table, one line per form: key, first and last release, expected since, form's release, location, format, decoded, note.
@@ -221,8 +222,9 @@ int main(int argc, char** argv) {
 	      && !undecodedOn("an_artefact_of_tomorrow", ten), "absent, converted or unknown: declared unconverted");
 	std::set<std::string> rawOnEightOne;
 	for (const std::string& key : keys) if (undecodedOn(key, eightOne)) rawOnEightOne.insert(key);
-	check(rawOnEightOne.empty(),
-	      "Windows 8.1: " + std::to_string(rawOnEightOne.size()) + " artefacts in an unconverted form, none measured");
+	// Hyper-V's machines are XML files there, taken raw: the only form not converted.
+	check(rawOnEightOne == std::set<std::string>{ "hyperv" },
+	      "Windows 8.1: " + std::to_string(rawOnEightOne.size()) + " artefacts in an unconverted form, Hyper-V's XML alone expected");
 
 	/* THE GUARD (absentAmong): everything asked for on a Windows 7, on an XP,
 	   on a Windows 11 — only what the version lacks is held back, and an
@@ -236,10 +238,11 @@ int main(int argc, char** argv) {
 	check(availabilityOf("powershell_history", vista) == Availability::AbsentFromThisVersion && !expectedOn("powershell_history", seven),
 	      "PSReadLine's history: absent from Vista (PowerShell 2 at most), looked for and not expected on Windows 7");
 	const std::vector<std::string> onXp = absentAmong(keys, xp);
-	// Sysmon and OneDrive (Windows 7 and later), ETW trace files (Vista), Intune and Entra ID (Windows 10) among them.
-	check(onXp.size() == 23 && std::count(onXp.begin(), onXp.end(), "active_directory") == 1 && std::count(onXp.begin(), onXp.end(), "sysmon") == 1 && std::count(onXp.begin(), onXp.end(), "intune_logs") == 1
+	// Sysmon and OneDrive (Windows 7 and later), ETW trace files (Vista), Intune and Entra ID (Windows 10),
+	// the server roles DNS, DHCP (Server 2003) and Hyper-V (Server 2008) among them.
+	check(onXp.size() == 26 && std::count(onXp.begin(), onXp.end(), "active_directory") == 1 && std::count(onXp.begin(), onXp.end(), "sysmon") == 1 && std::count(onXp.begin(), onXp.end(), "intune_logs") == 1
 	      && std::count(onXp.begin(), onXp.end(), "etw_logs") == 1 && std::count(onXp.begin(), onXp.end(), "onedrive") == 1,
-	      "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 23 expected, Active Directory, Sysmon, OneDrive, ETW files and Intune among them");
+	      "Windows XP: " + std::to_string(onXp.size()) + " artefacts held back, 26 expected, Active Directory, Sysmon, OneDrive, ETW files and Intune among them");
 	/* XP's Tasks folder holds no .job on a fresh install (desktop.ini, SA.DAT
 	   only, measured): absent, they are no finding. Vista's System32\Tasks
 	   always holds Microsoft's. */

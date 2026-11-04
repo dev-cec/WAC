@@ -361,6 +361,8 @@ artefacts:              # one key per artefact; a missing key is true
       - \Windows\System32\catroot2
       - \$Extend\$RmMetadata
   devices:                 true   # USB and SCSI devices with their dates, portable devices, volume labels per drive letter, device interfaces
+  dhcp_server:             true   # the DHCP Server role: settings (CalloutDlls included), scopes, leases of dhcp.mdb, audit logs
+  dns_server:              true   # the DNS Server role: settings (ServerLevelPluginDll included), zones, records of the zone files, debug log
   dpapi_master_keys:       true   # DPAPI master keys of each user and of the system, copied still encrypted; JSON: owner, GUID, dates, never the key
   emails:                  true   # Outlook (PST, OST) and Thunderbird (mbox): messages, recipients, times; bodies and attachments exported
   error_reports:           true   # Windows Error Reporting: programs that crashed, with their path
@@ -373,6 +375,7 @@ artefacts:              # one key per artefact; a missing key is true
   firewall_log:            true   # the firewall's log (pfirewall.log), when logging is on: connections allowed or dropped, addresses, ports, process
   group_policies:          true   # domain controller: SYSVOL and its policies
   hosts:                   true   # the hosts file: names diverted to an address
+  hyperv:                  true   # the Hyper-V role: each virtual machine's configuration and its disks' paths; disks, memory and state not taken
   installed_programs:      true   # installed programs (Uninstall) of the machine and of each user
   internet_settings:       true   # each user's proxy and automatic configuration script
   intune_logs:             true   # Intune Management Extension's logs: scripts and applications the tenant pushed and ran, their outcome
@@ -1621,6 +1624,60 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         the directory and its links are in
         \fichier{active\_directory\_objects.json} (\champ{DisplayName},
         \champ{GPLink}).
+  \item[\fichier{dns\_server\_configuration.json}, \fichier{dns\_server\_zones.json}, \fichier{dns\_server\_records.json}, \fichier{dns\_server\_log.json}]
+        the DNS Server role, where it is installed. The service's settings
+        (\path|Services\DNS\Parameters|, every value, among them
+        \texttt{Forwarders} and \texttt{ServerLevelPluginDll}: a plug-in DLL
+        named there is how a member of DnsAdmins runs code as the system);
+        each zone of the registry with its values. One object per record of
+        the zone files of \path|System32\dns| and its \path|backup| folder:
+        \champ{Zone}, \champ{Name} (absolute), \champ{Ttl}, \champ{Class},
+        \champ{Type}, \champ{Data} as written, \champ{File}, \champ{Line}. The
+        records of a zone stored in the directory are not in a file, and not
+        decoded: the zone is named, without its records. The debug log, off by
+        default, at the path its settings give (\texttt{LogFilePath}): one
+        object per line, \champ{TimeAsStored} as written, since its date
+        follows the machine's language, then \champ{Protocol},
+        \champ{Direction}, \champ{RemoteAddress}, \champ{QuestionType},
+        \champ{QuestionName}\ldots; a line of another form keeps its
+        \champ{Text}.
+  \item[\fichier{dhcp\_server\_configuration.json}, \fichier{dhcp\_server\_scopes.json}, \fichier{dhcp\_server\_leases.json}, \fichier{dhcp\_server\_log.json}]
+        the DHCP Server role, where it is installed. The service's settings
+        (\path|Services\DHCPServer\Parameters|, among them
+        \texttt{CalloutDlls}: a DLL named there is loaded by the service).
+        From \fichier{dhcp.mdb}, an ESE database copied with its logs: each
+        scope (\champ{Address}, \champ{SubnetMask}, \champ{Name}\ldots), each
+        lease or reservation (\champ{Table} \texttt{ClientTable},
+        \champ{Address}, \champ{ClientId}, \champ{HostName},
+        \champ{LeaseTerminates}), and the rows of \texttt{LeaseTable} (IPv6)
+        and \texttt{MCastClientTableVer3} with all their columns. The audit
+        logs \path|DhcpSrvLog-*.log| and \path|DhcpV6SrvLog-*.log|: one object
+        per event, by the position of its columns, the header being in the
+        machine's language: \champ{EventId}, \champ{Time} (local time of the
+        machine, converted to UTC; the source says no zone),
+        \champ{Description}, \champ{Address}, \champ{HostName},
+        \champ{HardwareAddress}\ldots A non-ASCII description is as the service
+        wrote it: on a French Server 2022 it writes \texttt{DÚmarrÚ} for
+        ``Démarré'' in the file itself. The backup folder is the same
+        data: not taken. A row of the scope file's \champ{Type} is the table's
+        own number, measured on Server 2022: 3 the scope, 5 its range, 7 a
+        reservation.
+  \item[\fichier{hyperv\_machines.json}]
+        the Hyper-V role, where it is installed: one object per configuration
+        in \path|ProgramData\Microsoft\Windows\Hyper-V| (\path|.vmcx|, Windows
+        10 and Server 2016 onwards): \champ{Id}, \champ{File}, \champ{Kind}
+        (\texttt{Machine}, \texttt{Snapshot}), \champ{DiskFiles} and
+        \champ{Strings}, each key with its text value. The format is
+        undocumented: WAC reads its pairs of a key and a text, not its tree, so
+        no value is singled out as the machine's name beyond its key. A machine
+        kept outside this folder is read in the copy the host caches
+        (\path|Virtual Machines Cache|, \champ{Kind} \texttt{CachedMachine},
+        \champ{RegisteredFile} its real file, not taken); one the host only
+        names in \path|data.vmcx| has \champ{Kind} \texttt{RegisteredElsewhere}.
+        Disks,
+        memory and saved state are never taken: \champ{DiskFiles} leads to
+        them. The \path|.xml| files of Server 2012 R2 and earlier are copied
+        raw, not converted, and not measured.
   \item[\fichier{web\_server\_sites.json}, \fichier{web\_server\_application\_pools.json}, \fichier{web\_server\_modules.json}]
         the web server IIS (7 and later), read in its configuration
         \path|inetsrv\config\applicationHost.config|. Each site with its

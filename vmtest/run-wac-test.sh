@@ -339,6 +339,21 @@ if wants active_directory; then
   $QGA run --shell "del $VMDIR\\active-directory-witness.ps1 $VMDIR\\active-directory.json 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fi
 
+# The server roles, on a machine that holds them (install-server-roles.sh): a
+# zone, a scope and lease, a virtual machine, and what each role says of them
+# through its own tools — reference/server-roles.json, which check-json.py
+# confronts with the role's files.
+if wants dns_server dhcp_server hyperv; then
+  $QGA write "$HERE/guest/server-roles-witness.ps1" "$VMDIR\\server-roles-witness.ps1" >/dev/null
+  if $QGA run --timeout 600 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\server-roles-witness.ps1" -Out "$VMDIR" >/dev/null 2>&1; then
+    $QGA read "$VMDIR\\server-roles-reference.json" "$OUTPUT/reference/server-roles.json" >/dev/null \
+      && echo "   + reference/server-roles.json" || echo "   ⚠️ server roles reference not read"
+  else
+    echo "   ⚠️ server roles witnesses not placed"
+  fi
+  $QGA run --shell "del $VMDIR\\server-roles-witness.ps1 $VMDIR\\server-roles-reference.json 2>nul & exit /b 0" >/dev/null 2>&1 || true
+fi
+
 if ! full_cycle; then
   echo "== 3. skipped (--only) == ($(date +%H:%M:%S))"
 else
@@ -505,7 +520,7 @@ fetch_results() {
   # without browsers nor Timeline): under pipefail that status ended the
   # whole harness before its checks — hence `|| true`.
   if [[ -s "$host/exhibits/LIST.txt" ]]; then
-    tr -d '\r' < "$host/exhibits/LIST.txt" | { grep -E '\\User Data\\[^\\]+\\(History|Login Data|Network\\Cookies|Favicons|Network Action Predictor)(-journal|-wal)?$|\\User Data\\[^\\]+\\Sessions\\[^\\]+$|\\WebCache\\WebCacheV01\.dat$|\\Profiles\\[^\\]+\\(places|favicons)\.sqlite(-wal|-journal)?$|\\Profiles\\[^\\]+\\(sessionstore\.jsonlz4|sessionstore-backups\\[^\\]+)$|\\ConnectedDevicesPlatform\\[^\\]+\\ActivitiesCache\.db(-wal|-journal)?$' || true; } | while read -r f; do
+    tr -d '\r' < "$host/exhibits/LIST.txt" | { grep -E '\\dhcp\\(dhcp\.mdb|Dhcp(V6)?SrvLog-[^\\]+\.log)$|\\dns\\dns\.log$|\\User Data\\[^\\]+\\(History|Login Data|Network\\Cookies|Favicons|Network Action Predictor)(-journal|-wal)?$|\\User Data\\[^\\]+\\Sessions\\[^\\]+$|\\WebCache\\WebCacheV01\.dat$|\\Profiles\\[^\\]+\\(places|favicons)\.sqlite(-wal|-journal)?$|\\Profiles\\[^\\]+\\(sessionstore\.jsonlz4|sessionstore-backups\\[^\\]+)$|\\ConnectedDevicesPlatform\\[^\\]+\\ActivitiesCache\.db(-wal|-journal)?$' || true; } | while read -r f; do
       local relative="${f#*\\exhibits\\}"
       mkdir -p "$host/exhibits/$(dirname "${relative//\\//}")"
       $QGA read "$f" "$host/exhibits/${relative//\\//}" >/dev/null 2>&1 && echo "   + exhibits/${relative//\\//}" \

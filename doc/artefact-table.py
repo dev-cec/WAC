@@ -130,6 +130,12 @@ PHRASES = [
     ("XML, registry values", "XML, valeurs de registre"),
     ("VSS catalog and stores, 16 KiB blocks", "catalogue et magasins VSS, blocs de 16 Kio"),
     ("PowerShell script", "script PowerShell"),
+    ("RFC 1035 master files, debug log text", "fichiers de zone RFC 1035, texte du journal de débogage"),
+    ("ESE, comma-separated text", "ESE, texte séparé par des virgules"),
+    ("XML, collected raw", "XML, prélevé brut"),
+    ("undocumented binary: key and text value pairs", "binaire non documenté : paires de clé et de valeur texte"),
+    ("or where Services\\DHCPServer\\Parameters says: dhcp.mdb and its logs", "ou là où le dit Services\\DHCPServer\\Parameters : dhcp.mdb et ses journaux"),
+    ("data.vmcx, Virtual Machines, Virtual Machines Cache and Snapshots", "data.vmcx, Virtual Machines, Virtual Machines Cache et Snapshots"),
     (", each site's web.config and SQLite databases", ", web.config et bases SQLite de chaque site"),
     ("IIS 7 and later:", "IIS 7 et suivants :"),
     ("SYSVOL\\domain, where Services\\Netlogon\\Parameters says", "SYSVOL\\domain, où le dit Services\\Netlogon\\Parameters"),
@@ -197,8 +203,14 @@ NOTES = {
         "Windows 8 et 8.1 ont un en-tête de 0x80 octets : ils se distinguent par la marque de leur première entrée, qui tient ici lieu de signature. Windows 8.1 mesuré sur le build 9600. Server 2003 et Vista partagent leur signature : la version choisit la forme ; Vista mesuré sur SP2 x86, Server 2003 sur le build 3790 x86.",
     "bcache22.bmc decoded (16 bits per pixel, measured on XP SP1); another .bmc is counted, its tiles not exported.":
         "bcache22.bmc décodé (16 bits par pixel, mesuré sous XP SP1) ; un autre .bmc est compté, ses tuiles non exportées.",
-    "Windows XP and Server 2003: events 528 and 682 of Security.evt, not converted.":
-        "Windows XP et Server 2003 : événements 528 et 682 de Security.evt, non convertis.",
+    "Windows XP and Server 2003: events 528 and 682 of Security.evt, not converted. A licensing server's TLSLic.edb is taken raw, not converted.":
+        "Windows XP et Server 2003 : événements 528 et 682 de Security.evt, non convertis. Le TLSLic.edb d'un serveur de licences est pris brut, non converti.",
+    "Present only where the role is installed; its debug log is off by default. A zone integrated with Active Directory is in the directory: its records are not decoded. Measured on Server 2022.":
+        "Présent seulement là où le rôle est installé ; son journal de débogage est éteint par défaut. Une zone intégrée à Active Directory est dans l'annuaire : ses enregistrements ne sont pas décodés. Mesuré sous Server 2022.",
+    "Present only where the role is installed. Measured on Server 2022; older versions' dhcp.mdb is read if its tables have the same names.":
+        "Présent seulement là où le rôle est installé. Mesuré sous Server 2022 ; le dhcp.mdb des versions antérieures est lu si ses tables portent les mêmes noms.",
+    "Present only where the role is installed. Disks, memory and state are not taken: the disks' paths lead to them. Measured on Server 2022.":
+        "Présent seulement là où le rôle est installé. Disques, mémoire et état ne sont pas pris : les chemins des disques y mènent. Mesuré sous Server 2022.",
     "Empty since Windows 10 1803 unless the backup task was switched back on. Copied raw: not converted.":
         "Vide depuis Windows 10 1803, sauf si la tâche de sauvegarde a été réactivée. Copié brut : non converti.",
     "Windows.edb converted with its 7-bit text (Windows 8.1 measured), and Windows 7's layout: its own table and column names, big-endian numbers, obfuscated text (measured); a value compressed otherwise (XPRESS) is said, not decoded. Windows XP: Windows Desktop Search, an optional install.":

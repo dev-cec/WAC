@@ -514,6 +514,7 @@ def cross_checks(folder):
     found += guarded(check_active_directory, folder)
     found += guarded(check_group_policies, folder)
     found += guarded(check_controller_events, folder)
+    found += guarded(check_server_roles, folder)
     found += guarded(check_web_server, folder)
     found += guarded(check_web_installations, folder)
     found += guarded(check_activities_cache, folder)
@@ -3529,6 +3530,153 @@ def is_domain_controller(folder):
         return False
 
 
+def check_server_roles(folder):
+    """The roles' files, read by WAC, against what each role says of itself
+    through its own tools while it runs (server-roles-witness.ps1): DNS zones,
+    records of the witness zone, forwarder and the plug-in value; DHCP scopes,
+    leases and callout value, and dhcp.mdb's rows read by dissect.esedb, written
+    independently of WAC's ESE reader; Hyper-V machines, their names and disks.
+    A role the machine does not hold is skipped, without a failure."""
+    path = os.path.join(folder, "reference", "server-roles.json")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8-sig") as f:
+        reference = json.load(f)
+    found = 0
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  {'✅' if ok else '❌'} {success if ok else failure}")
+        found += 0 if ok else 1
+    def as_list(value):
+        return value if isinstance(value, list) else [] if value is None else [value]
+
+    zones_reference = as_list(reference.get("DnsZones"))
+    if zones_reference:
+        zones = load(folder, "dns_server_zones.json") or []
+        names = {str(z.get("Name")).lower() for z in zones}
+        # The server makes 0, 127 and 255.in-addr.arpa itself, in memory: in neither registry nor file.
+        kept = [z for z in zones_reference if z.get("ZoneFile")]
+        missing = [z["ZoneName"] for z in kept if z["ZoneName"].lower() not in names]
+        report(kept and not missing, f"dns_server_zones.json: the {len(kept)} zone(s) with a file the server names",
+               f"dns_server_zones.json: zones missing {missing}")
+        records = load(folder, "dns_server_records.json") or []
+        read = {(str(r.get("Name")).lower(), r.get("Type"), r.get("Ttl")) for r in records
+                if str(r.get("Zone")).lower() == "wac-witness.test"}
+        # The server's tool names a record relative to its zone; WAC gives the absolute name.
+        expected = {("wac-witness.test" if r["Name"] == "@" else str(r["Name"]).lower() + ".wac-witness.test", r["Type"], r["Ttl"])
+                    for r in as_list(reference.get("DnsRecords"))}
+        report(expected and expected == read,
+               f"dns_server_records.json: the {len(expected)} record(s) of the witness zone, type and TTL as the server says",
+               f"dns_server_records.json: expected only {sorted(expected - read, key=str)}, read only {sorted(read - expected, key=str)}")
+        configuration = json.dumps(load(folder, "dns_server_configuration.json") or [])
+        forwarders = as_list(reference.get("DnsForwarders"))
+        report(forwarders and all(a in configuration for a in forwarders) and "wac-plugin-witness.dll" in configuration,
+               f"dns_server_configuration.json: forwarder(s) {forwarders} and ServerLevelPluginDll",
+               f"dns_server_configuration.json: forwarders {forwarders} or ServerLevelPluginDll absent")
+        check_dns_debug_log(folder, report)
+    else:
+        print("  ⏭️  no DNS server on this machine: role not confronted")
+
+    leases_reference = as_list(reference.get("DhcpLeases"))
+    if leases_reference:
+        leases = [l for l in (load(folder, "dhcp_server_leases.json") or []) if l.get("Table") == "ClientTable"]
+        by_address = {l.get("Address"): l for l in leases}
+        wrong = [l["Address"] for l in leases_reference
+                 if str(by_address.get(l["Address"], {}).get("ClientId")).lower() != l["ClientId"].lower()
+                 or str(by_address.get(l["Address"], {}).get("HostName")).lower() != l["HostName"].lower()]
+        wrong += [l["Address"] for l in leases_reference if l.get("ExpiresUtc")
+                  and not str(by_address.get(l["Address"], {}).get("LeaseTerminatesUtc")).startswith(l["ExpiresUtc"])]
+        report(not wrong, f"dhcp_server_leases.json: the {len(leases_reference)} lease(s) the server names, client, host and expiry as it says",
+               f"dhcp_server_leases.json: wrong or missing {wrong}")
+        scopes = load(folder, "dhcp_server_scopes.json") or []
+        scope_keys = {(s.get("Address"), s.get("Name")) for s in scopes}
+        missing = [s["ScopeId"] for s in as_list(reference.get("DhcpScopes")) if (s["ScopeId"], s["Name"]) not in scope_keys]
+        report(not missing, "dhcp_server_scopes.json: the server's scopes, address and name",
+               f"dhcp_server_scopes.json: missing {missing}")
+        report("wac-callout-witness.dll" in json.dumps(load(folder, "dhcp_server_configuration.json") or []),
+               "dhcp_server_configuration.json: CalloutDlls", "dhcp_server_configuration.json: CalloutDlls absent")
+        check_dhcp_database(folder, leases, report)
+        check_dhcp_audit_logs(folder, report)
+    else:
+        print("  ⏭️  no DHCP server on this machine: role not confronted")
+
+    if reference.get("RdsLicensingDatabase"):
+        listing = os.path.join(folder, store_folder(folder), "LIST.txt")
+        with open(listing, encoding="utf-8-sig", errors="replace") as f:
+            taken = "\\lserver\\tlslic.edb" in f.read().lower()
+        report(taken, "exhibits: TLSLic.edb of the licensing server", "exhibits: TLSLic.edb of the licensing server absent")
+
+    machines_reference = as_list(reference.get("HyperVMachines"))
+    if machines_reference:
+        entries = load(folder, "hyperv_machines.json") or []
+        machines = {str(m.get("Id")).lower(): m for m in entries}
+        wrong = []
+        for machine in machines_reference:
+            read = machines.get(machine["Id"].lower())
+            if (read is None or not any(s.get("Value") == machine["Name"] for s in read.get("Strings") or [])
+                    or {d.lower() for d in as_list(machine.get("Disks")) if d} - {str(d).lower() for d in read.get("DiskFiles") or []}):
+                wrong.append(machine["Name"])
+        kept = [m for m in entries if m.get("Kind") != "Snapshot"]
+        report(len(kept) == len(machines_reference), f"hyperv_machines.json: {len(kept)} machine(s), no other configuration taken for one",
+               f"hyperv_machines.json: {len(kept)} machine(s) for {len(machines_reference)}: {[m.get('File') for m in kept]}")
+        report(not wrong, f"hyperv_machines.json: the {len(machines_reference)} machine(s) Hyper-V names, one kept elsewhere among them, identifier, name and disks",
+               f"hyperv_machines.json: wrong or missing {wrong}")
+    else:
+        print("  ⏭️  no Hyper-V on this machine: role not confronted")
+    return found
+
+def check_dns_debug_log(folder, report):
+    """The witness's query in the debug log, and each dated line of the raw log with its record."""
+    records = load(folder, "dns_server_log.json") or []
+    report(any(r.get("QuestionName") == "host1.wac-witness.test" and r.get("RemoteAddress") == "127.0.0.1" for r in records),
+           "dns_server_log.json: the witness's query, its name and client",
+           "dns_server_log.json: the witness's query absent")
+    logs = glob.glob(os.path.join(folder, store_folder(folder), "**", "dns", "dns.log"), recursive=True)
+    if not logs:
+        report(False, "", "dns.log: not in the store")
+        return
+    with open(logs[0], encoding="latin-1") as f:
+        lines = sum(1 for line in f if line[:1].isdigit() and "/" in line[:10] and len(line.split()) >= 3)
+    report(len(records) == lines, f"dns_server_log.json: the {lines} dated line(s) of the debug log, each with its record",
+           f"dns_server_log.json: {len(records)} record(s) for {lines} dated line(s)")
+
+def check_dhcp_database(folder, leases, report):
+    """dhcp.mdb's ClientTable read by dissect.esedb against WAC's leases."""
+    venv = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "ese-venv",
+                                  "lib", "python*", "site-packages"))
+    sys.path.extend(p for p in venv if p not in sys.path)
+    try:
+        from dissect.esedb import EseDB
+    except ImportError:
+        print("  ⏭️  dissect.esedb not installed: dhcp.mdb not confronted")
+        return
+    store = os.path.join(folder, store_folder(folder))
+    databases = glob.glob(os.path.join(store, "**", "dhcp.mdb"), recursive=True)
+    if not databases:
+        report(False, "", "dhcp.mdb: not in the store")
+        return
+    with open(databases[0], "rb") as f:
+        rows = list(EseDB(f).table("ClientTable").records())
+        def dotted(row):
+            value = row.get("IpAddress") & 0xFFFFFFFF
+            return ".".join(str((value >> shift) & 0xFF) for shift in (24, 16, 8, 0))
+        independent = {dotted(row) for row in rows}
+    read = {l.get("Address") for l in leases}
+    report(independent and independent <= read,
+           f"dhcp.mdb: the {len(independent)} ClientTable row(s) dissect reads are among WAC's {len(read)}",
+           f"dhcp.mdb: dissect reads {sorted(independent)}, WAC {sorted(read, key=str)}")
+
+def check_dhcp_audit_logs(folder, report):
+    """Every event line of the raw audit logs in the store has its record."""
+    store = os.path.join(folder, store_folder(folder))
+    lines = 0
+    for path in glob.glob(os.path.join(store, "**", "Dhcp*SrvLog-*.log"), recursive=True):
+        with open(path, encoding="latin-1") as f:
+            lines += sum(1 for line in f if line.split(",", 1)[0].isdigit() and "," in line)
+    records = load(folder, "dhcp_server_log.json") or []
+    report(lines > 0 and len(records) == lines, f"dhcp_server_log.json: {lines} event line(s) of the audit logs, each with its record",
+           f"dhcp_server_log.json: {len(records)} record(s) for {lines} event line(s)")
+
 def check_active_directory(folder):
     """ntds.dit, read by WAC in its copy, against what the directory says of
     itself through its own tools while it runs (active-directory-witness.ps1):
@@ -4739,6 +4887,13 @@ def check_mft_timeline(folder):
                 v = volume_of(r)
                 latest[v] = max(latest.get(v, ""), r["CreatedUtc"])
         compared, wrong, renamed, newer, reused = 0, [], 0, 0, 0
+        first_extraction = min((str(i["ExtractedUtc"]) for i in items if i.get("ExtractedUtc")), default="~")
+        exhibit_paths = {str(i["ExhibitPath"]).lower() for i in items if i.get("ExhibitPath")}
+        def is_store_copy(record):
+            """True when a record's path is an exhibit of this store."""
+            name = str(record.get("Path", "")).lower()
+            index = name.find("\\exhibits\\")
+            return index >= 0 and name[index + 1:] in exhibit_paths
         for it in items:
             source = str(it.get("SourcePath") or "")
             entry = it.get("MftEntry")
@@ -4766,6 +4921,16 @@ def check_mft_timeline(folder):
             # working copy, on the same volume, takes the freed records. The
             # record's creation after the exhibit's extraction proves it.
             if r is not None and str(r.get("CreatedUtc") or "") > str(it.get("ExtractedUtc") or "~"):
+                reused += 1
+                continue
+            # The same reuse, a few milliseconds sooner than the timestamp above
+            # can tell: ExtractedUtc is taken once the copy is done, and the
+            # record freed by the rotation went to the exhibit copied just before
+            # (SRUtmp.log, record taken by the store's SRUres00002.jrs). A record
+            # that is itself an exhibit of this store, created during this
+            # collection, cannot be the source file.
+            if (r is not None and str(r.get("CreatedUtc") or "") >= first_extraction
+                    and is_store_copy(r)):
                 reused += 1
                 continue
             if r is None:

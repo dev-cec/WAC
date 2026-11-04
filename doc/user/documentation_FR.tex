@@ -364,6 +364,8 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
       - \Windows\System32\catroot2
       - \$Extend\$RmMetadata
   devices:                 true   # périphériques USB et SCSI et leurs dates, portables, noms de volumes
+  dhcp_server:             true   # rôle Serveur DHCP : réglages (dont CalloutDlls), étendues, baux de dhcp.mdb, journaux d'audit
+  dns_server:              true   # rôle Serveur DNS : réglages (dont ServerLevelPluginDll), zones, enregistrements des fichiers de zone, journal de débogage
   dpapi_master_keys:       true   # clés maîtresses DPAPI copiées chiffrées ; JSON : propriétaire, GUID, dates, jamais la clé
   emails:                  true   # Outlook (PST, OST) et Thunderbird (mbox) : messages, destinataires, dates ; corps et pièces jointes exportés
   error_reports:           true   # rapports d'erreurs (WER) : programmes plantés, avec leur chemin
@@ -376,6 +378,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   firewall_log:            true   # journal du pare-feu (pfirewall.log), s'il est activé : connexions acceptées ou rejetées, adresses, ports, processus
   group_policies:          true   # contrôleur de domaine : SYSVOL et ses stratégies
   hosts:                   true   # le fichier hosts : noms détournés vers une adresse
+  hyperv:                  true   # rôle Hyper-V : configuration de chaque machine virtuelle et chemins de ses disques ; ni disques, ni mémoire, ni état
   installed_programs:      true   # programmes installés (Uninstall) de la machine et de chaque utilisateur
   internet_settings:       true   # proxy des utilisateurs
   intune_logs:             true   # journaux de l'extension Intune : scripts et applications poussés par le locataire, leur résultat
@@ -1671,6 +1674,62 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         d'une stratégie dans l'annuaire et ses liens sont dans
         \fichier{active\_directory\_objects.json} (\champ{DisplayName},
         \champ{GPLink}).
+  \item[\fichier{dns\_server\_configuration.json}, \fichier{dns\_server\_zones.json}, \fichier{dns\_server\_records.json}, \fichier{dns\_server\_log.json}]
+        le rôle Serveur DNS, là où il est installé. Les réglages du service
+        (\path|Services\DNS\Parameters|, toutes les valeurs, dont
+        \texttt{Forwarders} et \texttt{ServerLevelPluginDll} : une DLL nommée
+        là est le moyen pour un membre de DnsAdmins d'exécuter du code comme le
+        système) ; chaque zone du registre avec ses valeurs. Un objet par
+        enregistrement des fichiers de zone de \path|System32\dns| et de son
+        dossier \path|backup| : \champ{Zone}, \champ{Name} (absolu),
+        \champ{Ttl}, \champ{Class}, \champ{Type}, \champ{Data} tel qu'écrit,
+        \champ{File}, \champ{Line}. Les enregistrements d'une zone stockée dans
+        l'annuaire ne sont pas dans un fichier et ne sont pas décodés : la zone
+        est nommée, sans ses enregistrements. Le journal de débogage, éteint
+        par défaut, au chemin que donnent ses réglages
+        (\texttt{LogFilePath}) : un objet par ligne, \champ{TimeAsStored} tel
+        qu'écrit, sa date suivant la langue de la machine, puis
+        \champ{Protocol}, \champ{Direction}, \champ{RemoteAddress},
+        \champ{QuestionType}, \champ{QuestionName}\ldots ; une ligne d'une
+        autre forme garde son \champ{Text}.
+  \item[\fichier{dhcp\_server\_configuration.json}, \fichier{dhcp\_server\_scopes.json}, \fichier{dhcp\_server\_leases.json}, \fichier{dhcp\_server\_log.json}]
+        le rôle Serveur DHCP, là où il est installé. Les réglages du service
+        (\path|Services\DHCPServer\Parameters|, dont \texttt{CalloutDlls} : le
+        service charge une DLL nommée là). De \fichier{dhcp.mdb}, base ESE
+        copiée avec ses journaux : chaque étendue (\champ{Address},
+        \champ{SubnetMask}, \champ{Name}\ldots), chaque bail ou réservation
+        (\champ{Table} \texttt{ClientTable}, \champ{Address}, \champ{ClientId},
+        \champ{HostName}, \champ{LeaseTerminates}), et les lignes de
+        \texttt{LeaseTable} (IPv6) et de \texttt{MCastClientTableVer3} avec
+        toutes leurs colonnes. Les journaux d'audit \path|DhcpSrvLog-*.log| et
+        \path|DhcpV6SrvLog-*.log| : un objet par événement, selon la position
+        de ses colonnes, l'en-tête étant dans la langue de la machine :
+        \champ{EventId}, \champ{Time} (heure locale de la machine, convertie en
+        UTC ; la source ne dit aucun fuseau), \champ{Description},
+        \champ{Address}, \champ{HostName}, \champ{HardwareAddress}\ldots Une
+        description non ASCII est telle que le service l'a écrite : sur un
+        Server 2022 français, il écrit \texttt{DÚmarrÚ} pour « Démarré » dans
+        le fichier lui-même. Le dossier de sauvegarde porte les mêmes données :
+        il n'est pas pris. Le \champ{Type} d'une ligne du fichier des étendues
+        est le numéro de la table, mesuré sur Server 2022 : 3 l'étendue, 5 sa
+        plage, 7 une réservation.
+  \item[\fichier{hyperv\_machines.json}]
+        le rôle Hyper-V, là où il est installé : un objet par configuration
+        dans \path|ProgramData\Microsoft\Windows\Hyper-V| (\path|.vmcx|, à
+        partir de Windows 10 et de Server 2016) : \champ{Id}, \champ{File},
+        \champ{Kind} (\texttt{Machine}, \texttt{Snapshot}),
+        \champ{DiskFiles} et \champ{Strings}, chaque clé avec sa valeur texte.
+        Le format n'est pas documenté : WAC en lit les paires d'une clé et d'un
+        texte, pas l'arbre, et ne distingue donc aucune valeur comme le nom de
+        la machine au-delà de sa clé. Une machine gardée hors de ce dossier est
+        lue dans la copie que l'hôte garde en cache
+        (\path|Virtual Machines Cache|, \champ{Kind} \texttt{CachedMachine},
+        \champ{RegisteredFile} son vrai fichier, non pris) ; celle que l'hôte
+        nomme seulement dans \path|data.vmcx| a le \champ{Kind}
+        \texttt{RegisteredElsewhere}. Disques,
+        mémoire et état enregistré ne sont jamais pris : \champ{DiskFiles} y
+        mène. Les fichiers \path|.xml| de Server 2012 R2 et antérieurs sont
+        copiés bruts, non convertis, et non mesurés.
   \item[\fichier{web\_server\_sites.json}, \fichier{web\_server\_application\_pools.json}, \fichier{web\_server\_modules.json}]
         le serveur web IIS (7 et suivants) ; sa configuration est lue dans
         \path|inetsrv\config\applicationHost.config|. Chaque site avec ses

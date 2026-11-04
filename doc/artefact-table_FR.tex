@@ -160,7 +160,7 @@
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape bcache22.bmc décodé (16 bits par pixel, mesuré sous XP SP1) ; un autre .bmc est compté, ses tuiles non exportées.} \\
 \addlinespace
 \texttt{rdp\_server} & Windows Vista & \texttt{Security.evtx, journaux TerminalServices-LocalSessionManager et RemoteConnectionManager} & événements EVTX & oui \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP et Server 2003 : événements 528 et 682 de Security.evt, non convertis.} \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Windows XP et Server 2003 : événements 528 et 682 de Security.evt, non convertis. Le TLSLic.edb d'un serveur de licences est pris brut, non converti.} \\
 \addlinespace
 \texttt{recent\_documents} & Windows XP & \texttt{\textless{}profile\textgreater{}\textbackslash{}Recent\textbackslash{}*.lnk} & raccourci & oui \\
  & Windows Vista & \texttt{Users\textbackslash{}\textless{}user\textgreater{}\textbackslash{}AppData\textbackslash{}Roaming\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Recent\textbackslash{}*.lnk} & raccourci & oui \\
@@ -208,7 +208,7 @@
  & Windows Vista & \texttt{UsrClass.dat\textbackslash{}Local Settings\textbackslash{}Software\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Shell, et NTUSER.DAT} & éléments de shell de BagMRU & oui \\
 \addlinespace
 \texttt{shimcache} & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatibility\textbackslash{}AppCompatCache} & en-tête 0xDEADBEEF, 96 entrées & oui \\
- & Windows XP & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatCache\textbackslash{}AppCompatCache} & en-tête 0xBADC0FFE, taille du fichier & oui \\
+ & Windows Server 2003 & \texttt{SYSTEM\textbackslash{}…\textbackslash{}Control\textbackslash{}Session Manager\textbackslash{}AppCompatCache\textbackslash{}AppCompatCache} & en-tête 0xBADC0FFE, taille du fichier & oui \\
  & Windows Vista & \texttt{la même valeur} & en-tête 0xBADC0FFE, entrées de 24 ou 32 octets & oui \\
  & Windows 7 & \texttt{la même valeur} & en-tête 0xBADC0FEE & oui \\
  & Windows 8 & \texttt{la même valeur} & en-tête 0x80, entrées ''00ts'' & oui \\
@@ -255,12 +255,22 @@
  & Windows 10 & \texttt{…et navigateurs Chromium, Firefox : History, places.sqlite, fichiers de session} & SQLite, SNSS, mozLz4 & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chromium et Firefox dépendent du navigateur installé, non de Windows.} \\
 \addlinespace
-\texttt{active\_directory} & Windows XP & \texttt{Windows\textbackslash{}NTDS\textbackslash{}ntds.dit et ses journaux} & ESE, enregistrements au format d'avant Vista & non \\
+\texttt{active\_directory} & Windows Server 2003 & \texttt{Windows\textbackslash{}NTDS\textbackslash{}ntds.dit et ses journaux} & ESE, enregistrements au format d'avant Vista & non \\
  & Windows Vista & \texttt{ntds.dit et ses journaux, où le dit Services\textbackslash{}NTDS\textbackslash{}Parameters} & ESE ; colonnes nommées par le schéma qu'il contient & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement sur un contrôleur de domaine. Ses secrets ne sont pas lus.} \\
 \addlinespace
-\texttt{group\_policies} & Windows XP & \texttt{SYSVOL\textbackslash{}domain, où le dit Services\textbackslash{}Netlogon\textbackslash{}Parameters} & GPT.INI, Registry.pol, scripts.ini, XML des préférences, GptTmpl.inf & oui \\
+\texttt{group\_policies} & Windows Server 2003 & \texttt{SYSVOL\textbackslash{}domain, où le dit Services\textbackslash{}Netlogon\textbackslash{}Parameters} & GPT.INI, Registry.pol, scripts.ini, XML des préférences, GptTmpl.inf & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement sur un contrôleur de domaine. Un mot de passe enregistré dans une préférence est signalé, sa valeur n'est pas écrite.} \\
+\addlinespace
+\texttt{dns\_server} & Windows Server 2003 & \texttt{SYSTEM\textbackslash{}CurrentControlSet\textbackslash{}Services\textbackslash{}DNS\textbackslash{}Parameters, SOFTWARE\textbackslash{}...\textbackslash{}DNS Server\textbackslash{}Zones, Windows\textbackslash{}System32\textbackslash{}dns} & valeurs de registre, fichiers de zone RFC 1035, texte du journal de débogage & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement là où le rôle est installé ; son journal de débogage est éteint par défaut. Une zone intégrée à Active Directory est dans l'annuaire : ses enregistrements ne sont pas décodés. Mesuré sous Server 2022.} \\
+\addlinespace
+\texttt{dhcp\_server} & Windows Server 2003 & \texttt{Windows\textbackslash{}System32\textbackslash{}dhcp, ou là où le dit Services\textbackslash{}DHCPServer\textbackslash{}Parameters : dhcp.mdb et ses journaux, DhcpSrvLog-*.log} & ESE, texte séparé par des virgules & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement là où le rôle est installé. Mesuré sous Server 2022 ; le dhcp.mdb des versions antérieures est lu si ses tables portent les mêmes noms.} \\
+\addlinespace
+\texttt{hyperv} & Windows Vista & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Hyper-V\textbackslash{}Virtual Machines\textbackslash{}*.xml} & XML, prélevé brut & non \\
+ & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Hyper-V: data.vmcx, Virtual Machines, Virtual Machines Cache et Snapshots\textbackslash{}*.vmcx} & binaire non documenté : paires de clé et de valeur texte & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement là où le rôle est installé. Disques, mémoire et état ne sont pas pris : les chemins des disques y mènent. Mesuré sous Server 2022.} \\
 \addlinespace
 \texttt{web\_server} & Windows XP & \texttt{IIS 5.1 et 6 : Windows\textbackslash{}System32\textbackslash{}inetsrv\textbackslash{}MetaBase.xml, journaux W3SVC\textless{}n\textgreater{}} & métabase d'IIS en XML & non \\
  & Windows Vista & \texttt{IIS 7 et suivants : Windows\textbackslash{}System32\textbackslash{}inetsrv\textbackslash{}config\textbackslash{}applicationHost.config, inetpub\textbackslash{}logs\textbackslash{}LogFiles, web.config et bases SQLite de chaque site} & XML ; texte W3C, UTC ; SQLite & oui \\

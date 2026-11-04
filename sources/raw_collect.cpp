@@ -32,6 +32,9 @@
 #include "firewall_log.h"
 #include "web_server.h"
 #include "active_directory.h"
+#include "dns_server.h"
+#include "dhcp_server.h"
+#include "hyperv.h"
 #include "group_policies.h"
 #include "web_installations.h"
 #include "intune_logs.h"
@@ -807,6 +810,25 @@ HRESULT ExtractFileArtefactsRaw() {
 			const std::wstring name = file.substr(file.rfind(L'\\') + 1);
 			addTarget(file.substr(0, file.rfind(L'\\')), { name, name + L".old" });
 		}
+	/* The server roles, where the examined registry puts their logs. Each
+	   folder filtered: the DHCP database's own folder is a tree of its own below. */
+	if (conf.artefacts.dnsServer) {
+		addTarget(L"\\Windows\\System32\\dns", { L".dns", L".log" });
+		addTarget(L"\\Windows\\System32\\dns\\backup", { L".dns" });
+		const std::wstring log = dnsServerLogFile();
+		addTarget(log.substr(0, log.rfind(L'\\')), { log.substr(log.rfind(L'\\') + 1) });
+	}
+	/* The Remote Desktop licensing server's database: the licences issued, to which
+	   machine and user. Taken raw, not converted: the table of the sessions and the
+	   logs already say who connected; WAE or an ESE tool reads it if it matters. */
+	if (conf.artefacts.rdpServer) addTarget(L"\\Windows\\System32\\lserver", { L"TLSLic.edb" });
+	if (conf.artefacts.hyperV) {
+		const std::wstring root = hyperVFolder();
+		addTarget(root, { L"data.vmcx" });
+		addTarget(root + L"\\Virtual Machines", { L".vmcx", L".xml" });
+		addTarget(root + L"\\Snapshots", { L".vmcx", L".xml" });
+		addTarget(root + L"\\Virtual Machines Cache", { L".vmcx" });
+	}
 	// IIS 5.1 and 6 (XP, Server 2003): their metabase, collected raw.
 	if (conf.artefacts.webServer) addTarget(L"\\Windows\\System32\\inetsrv", { L"MetaBase.xml", L"MBSchema.xml" });
 	// The Intune Management Extension's logs, where it is installed.
@@ -908,6 +930,16 @@ HRESULT ExtractFileArtefactsRaw() {
 			trees.push_back({ folder, {}, 1, L"directory database" });
 			if (!logFolder.empty() && toLower(logFolder) != toLower(folder)) trees.push_back({ logFolder, {}, 1, L"directory database's logs" });
 		}
+	}
+	/* The DHCP server's database with its logs and checkpoint, as the directory's:
+	   open by the service, read raw; a backup is left out, its copy is the same data. */
+	if (conf.artefacts.dhcpServer) {
+		std::wstring database;
+		std::vector<std::wstring> logs;
+		dhcpServerFolders(database, logs);
+		trees.push_back({ database, { L".mdb", L".log", L".chk", L".jfm" }, 1, L"DHCP server's database and logs" });
+		for (const std::wstring& folder : logs)
+			if (toLower(folder) != toLower(database)) trees.push_back({ folder, { L".log" }, 1, L"DHCP server's audit logs" });
 	}
 	// SYSVOL's real folder, whole: a policy's scripts and what replication keeps of deleted ones.
 	if (conf.artefacts.groupPolicies) {

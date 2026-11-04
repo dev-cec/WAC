@@ -26,7 +26,10 @@
 #include <vector>
 #include "active_directory.h"
 #include "audit.h"
+#include "dhcp_server.h"
+#include "dns_server.h"
 #include "group_policies.h"
+#include "hyperv.h"
 #include "guard_page.h"
 #include "raw_hive.h"
 #include "sqlite_reader.h"
@@ -240,6 +243,10 @@ const wchar_t TASKS[] = L"<ScheduledTasks clsid=\"{1}\"><TaskV2 clsid=\"{2}\" na
 const wchar_t WEB_CONFIG[] = L"<configuration><connectionStrings><add name=\"a\" connectionString=\"Data Source=|DataDirectory|\\a.db;Password='x'\" providerName=\"p\"/></connectionStrings></configuration>";
 const wchar_t HOST_CONFIG[] = L"<configuration><system.applicationHost><sites><site name=\"s\" id=\"1\"><bindings><binding protocol=\"http\" bindingInformation=\"*:80:\"/></bindings><application path=\"/\"><virtualDirectory path=\"/\" physicalPath=\"%SystemDrive%\\inetpub\\wwwroot\"/></application><logFile directory=\"C:\\l\"/></site></sites><applicationPools><add name=\"p\"><processModel identityType=\"x\"/></add></applicationPools></system.applicationHost></configuration>";
 
+const wchar_t DNS_ZONE[] = L"$TTL 60\r\n$ORIGIN a.test.\r\n@ IN SOA a. b. ( 1 2 3 4 5 ) ; c\r\nh 600 A 192.0.2.1\r\n  AAAA ::1\r\nt TXT ( \"x;\\\"y\" )\r\n";
+const wchar_t DNS_LOG[] = L"Key\r\n04/11/2026 09:04:07 F20 Note: x\r\n04/11/2026 09:05:43 0F28 PACKET  00 UDP Rcv 127.0.0.1 ee7a R Q [8085 A DR  NOERROR] A (5)host1(4)test(0)\r\n";
+const wchar_t DHCP_LOG[] = L"ID, Date\r\n10,11/04/26,10:00:00,Assign,192.0.2.1,h,00155D000002,,1234,0,,,,,,,,,0\r\n";
+
 //! Every text reader once on a mutated text: none may throw, none may hang.
 void textReaders(const std::wstring& seed, size_t kind) {
 	switch (kind) {
@@ -251,6 +258,9 @@ void textReaders(const std::wstring& seed, size_t kind) {
 	case 6: parsePolicyScripts(seed, L"Machine", L"Script"); parseIniText(seed); break;
 	case 7: parsePolicyTasks(seed, L"Machine"); storedPasswordElements(seed); break;
 	case 8: for (const IisConnectionString& c : parseConnectionStrings(seed, L"f", L"C:\\s")) c.toJson(); break;
+	case 9: for (const DnsZoneRecord& r : parseDnsZoneFile(seed, L"z", L"f")) r.toJson(); break;
+	case 10: for (const DnsLogEntry& e : parseDnsDebugLog(seed, L"f")) e.toJson(); break;
+	case 11: for (const DhcpLogEntry& e : parseDhcpAuditLog(seed, L"f", false)) e.toJson(); for (const DhcpLogEntry& e : parseDhcpAuditLog(seed, L"f", true)) e.toJson(); break;
 	default: { const IisConfiguration c = parseIisConfiguration(seed, L"f"); iisSources(c); for (const IisSite& s : c.sites) s.toJson(); break; }
 	}
 }
@@ -267,6 +277,8 @@ void binaryReaders(const std::vector<uint8_t>& seed, std::mt19937& random) {
 		parseReplicationMetadata(copy.data(), copy.size());
 		DirectoryChange change;
 		parseLinkMetadata(copy.data(), copy.size(), change);
+		readVmcxStrings(copy.data(), copy.size());
+		dhcpClientId(std::vector<uint8_t>(copy.data(), copy.data() + copy.size()));
 		std::vector<RawDirEntry> entries;
 		if (copy.size() >= 4) parseDirectoryIndexNode(copy.data(), copy.data() + copy.size(), entries);
 	}
@@ -275,7 +287,7 @@ void binaryReaders(const std::vector<uint8_t>& seed, std::mt19937& random) {
 /*! The mutation run.
  *  @param rounds mutations per input */
 void mutationRun(size_t rounds) {
-	const std::vector<std::wstring> seeds = { HTTPD, NGINX_CONF, W3C, ACCESS, ERRORS, NGINX_ERROR, SCRIPTS, TASKS, WEB_CONFIG, HOST_CONFIG };
+	const std::vector<std::wstring> seeds = { HTTPD, NGINX_CONF, W3C, ACCESS, ERRORS, NGINX_ERROR, SCRIPTS, TASKS, WEB_CONFIG, DNS_ZONE, DNS_LOG, DHCP_LOG, HOST_CONFIG };
 	std::mt19937 random(0x57414334);   // fixed: a failure reproduces
 	size_t done = 0;
 	for (size_t kind = 0; kind < seeds.size(); ++kind)

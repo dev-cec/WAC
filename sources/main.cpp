@@ -45,6 +45,9 @@
 #include "firewall_log.h"
 #include "web_server.h"
 #include "active_directory.h"
+#include "dns_server.h"
+#include "dhcp_server.h"
+#include "hyperv.h"
 #include "group_policies.h"
 #include "intune_logs.h"
 #include "cloud_identity.h"
@@ -1458,6 +1461,20 @@ void convertArtefacts(bool systemAvailable) {
 	                                  Text::StepUserShellFolders);
 	convertArtefact<WebClient>(conf.artefacts.webClient, "web_client.json", Text::ArtefactWebClient,
 	                           L"artefacts.web_client", Text::StepWebClient);
+	convertArtefact<DnsServer>(conf.artefacts.dnsServer,
+	                           { { "dns_server_configuration.json", Text::ArtefactDnsServerConfiguration },
+	                             { "dns_server_zones.json", Text::ArtefactDnsServerZones },
+	                             { "dns_server_records.json", Text::ArtefactDnsServerRecords },
+	                             { "dns_server_log.json", Text::ArtefactDnsServerLog } },
+	                           L"artefacts.dns_server", Text::StepDnsServer);
+	convertArtefact<DhcpServer>(conf.artefacts.dhcpServer,
+	                            { { "dhcp_server_configuration.json", Text::ArtefactDhcpServerConfiguration },
+	                              { "dhcp_server_scopes.json", Text::ArtefactDhcpServerScopes },
+	                              { "dhcp_server_leases.json", Text::ArtefactDhcpServerLeases },
+	                              { "dhcp_server_log.json", Text::ArtefactDhcpServerLog } },
+	                            L"artefacts.dhcp_server", Text::StepDhcpServer);
+	convertArtefact<HyperV>(conf.artefacts.hyperV, "hyperv_machines.json", Text::ArtefactHyperVMachines,
+	                        L"artefacts.hyperv", Text::StepHyperV);
 	convertArtefact<ActiveDirectory>(conf.artefacts.activeDirectory,
 	                                 { { "active_directory_objects.json", Text::ArtefactActiveDirectoryObjects },
 	                                   { "active_directory_links.json", Text::ArtefactActiveDirectoryLinks },
