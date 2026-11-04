@@ -3745,11 +3745,18 @@ def check_active_directory(folder):
         differs("control", o.get("UserAccountControl"), t.get("control"))
         differs("adminCount", o.get("AdminCount"), t.get("adminCount"))
         differs("spn", as_list(o.get("ServicePrincipalName")), as_list(t.get("spn")))
+        differs("sidHistory", as_list(o.get("SIDHistory")), as_list(t.get("sidHistory")))
         differs("created", o.get("WhenCreatedUtc", "")[:19], t["created"])
     report(not wrong, f"active_directory_objects.json: name, classes, SID, account, control, adminCount, SPN and creation identical for the {len(theirs)} object(s)",
            f"active_directory_objects.json: {len(wrong)} difference(s): {wrong[:4]}")
     if left_out:
         print(f"  ℹ️  active_directory_objects.json: {len(left_out)} field(s) changed in the directory after the references, by its own metadata: {left_out[:4]}")
+    histories = [t for t in reference["objects"] if t.get("sidHistory")]
+    if histories:
+        report(not [w for w in wrong if " sidHistory:" in w], f"active_directory_objects.json: the sIDHistory of {len(histories)} object(s), as the directory gives it",
+               "active_directory_objects.json: sIDHistory differs")
+    else:
+        print("  ⏭️  active_directory_objects.json: no sIDHistory in this directory: not confronted")
     # The witnesses.
     witness = reference["witness"]
     user = mine.get(guid(witness["guid"]), {})
@@ -3787,6 +3794,16 @@ def check_active_directory(folder):
     named = [c for c in changes if c.get("OriginatingServer")]
     report(len(named) == len(changes), f"active_directory_replication.json: the controller of origin named on all {len(changes)} row(s)",
            f"active_directory_replication.json: {len(changes) - len(named)} row(s) of {len(changes)} without a server")
+    # Each controller of origin, by the directory's own list of them.
+    names = {guid(c["invocation"]): c["name"].lower() for c in reference["controllers"]}
+    misnamed = [c for c in changes if guid(c.get("OriginatingInvocationId")) in names
+                and names[guid(c.get("OriginatingInvocationId"))] not in c.get("OriginatingServer", "").lower()]
+    report(not misnamed, f"active_directory_replication.json: the server of each of the {len(names)} controller(s) as the directory lists them",
+           f"active_directory_replication.json: {len(misnamed)} row(s) with the wrong server: {misnamed[:2]}")
+    if len(names) > 1:
+        origins = {guid(t["invocation"]) for t in reference["replication"]}
+        report(len(origins) > 1, f"active_directory_replication.json: changes of {len(origins)} controllers among the objects compared",
+               "active_directory_replication.json: the reference has one controller of origin although the domain has several")
     # The right a DCSync needs, granted on the domain.
     root = mine.get(guid(witness["domainGuid"]), {})
     descriptor = next((d for d in descriptors if d.get("SdId") == root.get("NTSecurityDescriptorSdId")), {})
@@ -3860,20 +3877,23 @@ def check_controller_events(folder):
                    and (fields(e).get("TargetSid") or "").endswith("-512")]
         print(f"  {'✅' if entered else '❌'} events.json: the witness's entry into Domain Admins (4728), " + ("member's and group's SIDs in the event" if entered else "not found with its SIDs"))
         found += not entered
-    requested = reference.get("replicationEvent")
-    if not requested:
-        print("  ⏭️  events.json: the replication requested left no 4662 (audit off?): not confronted")
-        return found
-    wrong = mismatches([requested])
-    if requested["recordId"] in unwritten:
-        print(f"  ⏭️  events.json: record {requested['recordId']} of {requested['log']} not on the disk yet at this collection (last one {last_record.get(requested['log'])}): the replication requested not confronted here")
-        return found
-    mine = json.dumps(by_record.get((requested["log"], requested["recordId"]), {})).lower()
-    # DS-Replication-Get-Changes, on the domain's root: what shows a replication asked for.
-    if not wrong and not ("1131f6aa" in mine and reference["witness"]["domainGuid"].lower() in mine):
-        wrong = [f"record {requested['recordId']}: the right or the domain's GUID missing"]
-    print(f"  {'❌' if wrong else '✅'} events.json: " + (str(wrong[:3]) if wrong else "the replication requested (4662), its right on the domain's root, as Get-WinEvent reads it"))
-    found += bool(wrong)
+    # What shows a replication asked for: the right, on the domain's root. Get-Changes
+    # by the witness's own search; Get-Changes-All, a DCSync's, by a second controller.
+    for key, right, label, absent in (("replicationEvent", "1131f6aa", "the replication requested", "left no 4662 (audit off?)"),
+                                      ("fullReplicationEvent", "1131f6ad", "a real replication, by a second controller", "none in the log (a lone controller?)")):
+        requested = reference.get(key)
+        if not requested:
+            print(f"  ⏭️  events.json: {label}: {absent}: not confronted")
+            continue
+        wrong = mismatches([requested])
+        if requested["recordId"] in unwritten:
+            print(f"  ⏭️  events.json: record {requested['recordId']} of {requested['log']} not on the disk yet at this collection (last one {last_record.get(requested['log'])}): {label} not confronted here")
+            continue
+        mine = json.dumps(by_record.get((requested["log"], requested["recordId"]), {})).lower()
+        if not wrong and not (right in mine and reference["witness"]["domainGuid"].lower() in mine):
+            wrong = [f"record {requested['recordId']}: the right or the domain's GUID missing"]
+        print(f"  {'❌' if wrong else '✅'} events.json: " + (str(wrong[:3]) if wrong else f"{label} (4662), its right on the domain's root, as Get-WinEvent reads it"))
+        found += bool(wrong)
     return found
 
 

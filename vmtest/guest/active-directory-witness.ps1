@@ -82,7 +82,7 @@ function ReplicationMetadata($dn, $attribute) {
 # to tell what changed after these references from what WAC read wrong.
 $referenceTaken = Utc (Get-Date)
 $objects = New-Object System.Collections.ArrayList
-$properties = 'objectGUID', 'objectClass', 'objectSid', 'sAMAccountName', 'userAccountControl', 'adminCount', 'servicePrincipalName', 'whenCreated', 'isDeleted'
+$properties = 'objectGUID', 'objectClass', 'objectSid', 'sAMAccountName', 'userAccountControl', 'adminCount', 'servicePrincipalName', 'whenCreated', 'isDeleted', 'sIDHistory'
 $seen = @{}
 foreach ($context in (Get-ADRootDSE).namingContexts) {
     foreach ($o in Get-ADObject -Filter * -SearchBase $context -IncludeDeletedObjects -Properties $properties) {
@@ -94,6 +94,7 @@ foreach ($context in (Get-ADRootDSE).namingContexts) {
             sid = $(if ($o.objectSid) { $o.objectSid.Value } else { '' }); account = "$($o.sAMAccountName)"
             control = $o.userAccountControl; adminCount = $o.adminCount
             spn = @($o.servicePrincipalName | Where-Object { $_ }); created = Utc $o.whenCreated
+            sidHistory = @($o.sIDHistory | Where-Object { $_ } | ForEach-Object { $_.Value })
         })
     }
 }
@@ -144,6 +145,12 @@ foreach ($attempt in 1..30) {
     Start-Sleep -Seconds 1
 }
 
+# A real replication, which only a second controller can ask for: its 4662 carries
+# DS-Replication-Get-Changes-All, as a DCSync's does, on the domain's root and not
+# on another naming context. Nothing on a lone controller.
+$fullReplicationEvent = Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = 4662 } -ErrorAction SilentlyContinue |
+    Where-Object { $xml = $_.ToXml(); $xml -match '1131f6ad' -and $xml -match "$($domain.ObjectGUID)" } | Select-Object -First 1
+
 # What Windows itself reads of the event logs, confronted with what WAC converts
 # from its raw copies: the witnesses' own traces, and the latest event of each
 # kind a controller adds, which shows the channel is taken. A log that has rolled
@@ -166,6 +173,8 @@ $reference = @{
     objects = $objects; replication = $replication; policies = $policies
     witnessEvents = $witnessEvents; controllerEvents = @($controllerEvents)
     replicationEvent = $(if ($replicationEvent) { EventReference $replicationEvent })
+    fullReplicationEvent = $(if ($fullReplicationEvent) { EventReference $fullReplicationEvent })
+    controllers = @(Get-ADDomainController -Filter * | ForEach-Object { @{ name = $_.Name; invocation = "$($_.InvocationId)" } })
     policyWitness = @{
         id = "$($gpo.Id)"; domain = $base; key = ($witnessKey -replace '^HKLM\\', ''); valueName = $policyValue.ValueName; valueData = "$($policyValue.Value)".TrimEnd([char]0)
         script = $witnessScript; scriptParameters = $witnessParameters; task = $witnessTask; taskCommand = $witnessCommand
