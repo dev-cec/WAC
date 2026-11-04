@@ -16,7 +16,7 @@ $QGA run --timeout 1800 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -Fi
 # It restarts to become a controller, a minute later; the directory takes a few more to answer.
 sleep 120
 for _ in $(seq 1 60); do
-  if $QGA run -- powershell.exe -NoProfile -Command "(Get-ADDomain).DNSRoot" 2>/dev/null | grep -q '^wac\.test'; then
+  if $QGA run -- powershell.exe -NoProfile -Command "Import-Module ActiveDirectory; (Get-ADDomain).DNSRoot" 2>/dev/null | grep -q '^wac\.test'; then
     $QGA run --shell "del $VMDIR\\install-domain-controller.ps1" >/dev/null
     echo "   domain controller of wac.test"
     exit 0

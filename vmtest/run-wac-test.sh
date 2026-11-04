@@ -329,13 +329,16 @@ $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\pla
 # differs from what is collected.
 if wants active_directory; then
   $QGA write "$HERE/guest/active-directory-witness.ps1" "$VMDIR\\active-directory-witness.ps1" >/dev/null
-  AD_STATE=$($QGA run --timeout 600 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\active-directory-witness.ps1" 2>&1 | tr -d '\r' | tail -1 || true)
+  # Its state on stdout alone: PowerShell 2 writes the module's progress to stderr, in CLIXML.
+  AD_ERRORS=$(mktemp)
+  AD_STATE=$($QGA run --timeout 600 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\active-directory-witness.ps1" 2>"$AD_ERRORS" | tr -d '\r' | tail -1 || true)
   if [[ "$AD_STATE" == placed ]]; then
     $QGA read "$VMDIR\\active-directory.json" "$OUTPUT/reference/active-directory.json" >/dev/null \
       && echo "   + reference/active-directory.json" || echo "   ⚠️ directory reference not read"
   elif [[ "$AD_STATE" != "not a controller" ]]; then
-    echo "   ⚠️ directory witnesses not placed: $AD_STATE"
+    echo "   ⚠️ directory witnesses not placed: $AD_STATE $(sed 's/<[^>]*>/ /g' "$AD_ERRORS" | tail -5)"
   fi
+  rm -f "$AD_ERRORS"
   $QGA run --shell "del $VMDIR\\active-directory-witness.ps1 $VMDIR\\active-directory.json 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fi
 

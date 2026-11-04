@@ -2,6 +2,8 @@
 # active_directory and writes what the directory says through its own tools in
 # C:\wactest\active-directory.json. Placed once: a tombstone or a removed value
 # re-made at each cycle would pile up. Prints "placed", or "not a controller".
+# Runs from PowerShell 2 (Server 2008 R2) on: neither ConvertTo-Json nor the
+# module's replication cmdlets, which arrive with Server 2012.
 $ErrorActionPreference = 'Stop'
 if ((Get-WmiObject Win32_OperatingSystem).ProductType -ne 2) { Write-Output 'not a controller'; exit 0 }
 Import-Module ActiveDirectory
@@ -13,6 +15,9 @@ $delegateTo = "cifs/$($domain.PDCEmulator)"
 $replicationRight = [Guid]'1131f6ad-9c07-11d1-f79f-00c04fc2dcd2'   # DS-Replication-Get-Changes-All
 
 function Find-Object($name) { Get-ADObject -Filter "sAMAccountName -eq '$name'" -SearchBase $base }
+
+# Resource-based delegation arrives with the schema of Server 2012.
+$resourceBased = [bool](Get-ADObject -SearchBase (Get-ADRootDSE).schemaNamingContext -Filter "lDAPDisplayName -eq 'msDS-AllowedToActOnBehalfOfOtherIdentity'")
 
 $user = Find-Object $userName
 if (-not $user) {
@@ -29,11 +34,14 @@ if (-not $user) {
     Remove-ADGroupMember -Identity $removedGroupName -Members $user.DistinguishedName -Confirm:$false
     New-ADUser -Name $deletedName -SamAccountName $deletedName -Path $usersFolder -Enabled $false
     Remove-ADUser -Identity $deletedName -Confirm:$false
-    Set-ADUser -Identity $userName -PrincipalsAllowedToDelegateToAccount (Get-ADUser -Identity "$($domain.DomainSID)-500")
+    if ($resourceBased) {
+        Set-ADUser -Identity $userName -PrincipalsAllowedToDelegateToAccount (Get-ADUser -Identity "$($domain.DomainSID)-500")
+    }
+}
+$acl = Get-Acl "AD:\$base"
+if (-not @($acl.Access | Where-Object { $_.ObjectType -eq $replicationRight -and "$($_.IdentityReference)" -match $userName }).Count) {
     $sid = (Get-ADUser -Identity $userName).SID
-    $rule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($sid, 'ExtendedRight', 'Allow', $replicationRight)
-    $acl = Get-Acl "AD:\$base"
-    $acl.AddAccessRule($rule)
+    $acl.AddAccessRule((New-Object System.DirectoryServices.ActiveDirectoryAccessRule($sid, 'ExtendedRight', 'Allow', $replicationRight)))
     Set-Acl "AD:\$base" $acl
 }
 
@@ -61,6 +69,14 @@ if (-not $gpo) {
 
 function Utc($date) { if ($date) { ([datetime]$date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss') } }
 
+# What the directory says of an object's changes, in the constructed attributes it
+# has offered since Server 2003: one XML fragment per value, dates already in UTC.
+function ReplicationMetadata($dn, $attribute) {
+    foreach ($value in (Get-ADObject -Identity $dn -Properties $attribute).$attribute) {
+        ([xml]($value -replace "`0", '')).DocumentElement
+    }
+}
+
 # Every object of every naming context, deleted ones included.
 # The directory goes on living while the cycle runs: the check needs this instant
 # to tell what changed after these references from what WAC read wrong.
@@ -85,20 +101,19 @@ foreach ($context in (Get-ADRootDSE).namingContexts) {
 $witness = Get-ADUser -Identity $userName
 $privileged = Get-ADGroup -Identity "$($domain.DomainSID)-512"
 $removedGroup = Get-ADGroup -Identity $removedGroupName
-$removedValue = Get-ADReplicationAttributeMetadata -Object $removedGroup.DistinguishedName -Server $env:COMPUTERNAME -ShowAllLinkedValues |
-    Where-Object { $_.AttributeName -eq 'member' -and $_.AttributeValue -eq $witness.DistinguishedName }
+$removedValue = ReplicationMetadata $removedGroup.DistinguishedName 'msDS-ReplValueMetaData' |
+    Where-Object { $_.pszAttributeName -eq 'member' -and $_.pszObjectDn -eq $witness.DistinguishedName }
 # A tombstone's name starts with its last one; msDS-LastKnownRDN needs the recycle bin.
 $deleted = Get-ADObject -Filter 'isDeleted -eq $true' -IncludeDeletedObjects -Properties lastKnownParent |
     Where-Object { $_.Name -like "$deletedName*" }
 
-# The changes of three objects, attribute by attribute: only plain attributes (a linked value has its own row).
+# The changes of three objects, attribute by attribute: plain attributes alone, a linked value has its own metadata.
 $replication = New-Object System.Collections.ArrayList
 foreach ($dn in $witness.DistinguishedName, $privileged.DistinguishedName, $base) {
-    foreach ($m in Get-ADReplicationAttributeMetadata -Object $dn -Server $env:COMPUTERNAME) {
-        if ($m.IsLinkValue) { continue }
+    foreach ($m in ReplicationMetadata $dn 'msDS-ReplAttributeMetaData') {
         [void]$replication.Add(@{
-            object = $dn; attribute = $m.AttributeName; version = $m.Version; changed = Utc $m.LastOriginatingChangeTime
-            invocation = "$($m.LastOriginatingChangeDirectoryServerInvocationId)"; usn = $m.LastOriginatingChangeUsn
+            object = $dn; attribute = $m.pszAttributeName; version = [int]$m.dwVersion; changed = $m.ftimeLastOriginatingChange.Substring(0, 19)
+            invocation = $m.uuidLastOriginatingDsaInvocationID; usn = [long]$m.usnOriginatingChange
         })
     }
 }
@@ -157,13 +172,32 @@ $reference = @{
         storedAccount = $storedAccount; storedValue = $storedValue
     }
     witness = @{
-        guid = "$($witness.ObjectGUID)"; sid = $witness.SID.Value; delegateTo = $delegateTo
+        guid = "$($witness.ObjectGUID)"; sid = $witness.SID.Value; delegateTo = $delegateTo; resourceBased = $resourceBased
         privilegedGroup = $privileged.DistinguishedName; removedGroup = $removedGroup.DistinguishedName
-        removedAt = Utc $removedValue.LastOriginatingDeleteTime
+        removedAt = $removedValue.ftimeDeleted.Substring(0, 19)
         deletedGuid = "$($deleted.ObjectGUID)"; deletedName = $deletedName; deletedParent = $deleted.lastKnownParent
         domainGuid = "$($domain.ObjectGUID)"; replicationRight = "$replicationRight"
     }
 }
-$text = $reference | ConvertTo-Json -Depth 5 -Compress
+
+# JSON by hand, ConvertTo-Json arriving with PowerShell 3; the serializer for the
+# escaping of strings alone, since it does not read PowerShell's wrapped values.
+Add-Type -AssemblyName System.Web.Extensions
+$serializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+function ToJson($value) {
+    if ($null -eq $value) { return 'null' }
+    if ($value -is [bool]) { return $(if ($value) { 'true' } else { 'false' }) }
+    if ($value -is [int] -or $value -is [long]) { return "$value" }
+    if ($value -is [Collections.IDictionary]) {
+        $members = foreach ($key in $value.Keys) { $serializer.Serialize("$key") + ':' + (ToJson $value[$key]) }
+        return '{' + (@($members) -join ',') + '}'
+    }
+    if ($value -is [Collections.IEnumerable] -and $value -isnot [string]) {
+        $items = foreach ($item in $value) { ToJson $item }
+        return '[' + (@($items) -join ',') + ']'
+    }
+    return $serializer.Serialize("$value")
+}
+$text = ToJson $reference
 [IO.File]::WriteAllText('C:\wactest\active-directory.json', $text, (New-Object Text.UTF8Encoding($false)))
 Write-Output 'placed'

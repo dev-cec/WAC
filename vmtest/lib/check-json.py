@@ -66,10 +66,13 @@ FAULTY_PATTERNS = (
 # working directory "C:\\tools\\kernrate" (its MOF escaped twice): wmic
 # shows it so under Windows 7 (2026-10-21).
 GENUINE_DOUBLED = {r"C:\\tools\\kernrate"}
+# A WMI-Activity event quotes the query it ran, and a WQL string doubles its
+# backslashes: Get-WinEvent shows it so under Server 2012 R2 (2026-11-04).
+WQL_QUERY = "IWbemServices::ExecQuery"
 
 def inconsistencies(value):
     """Returns the list of doubly escaped path patterns in the value."""
-    if value in GENUINE_DOUBLED:
+    if value in GENUINE_DOUBLED or WQL_QUERY in value:
         return []
     return [m.group(0) for pattern in FAULTY_PATTERNS for m in pattern.finditer(value)]
 
@@ -2678,7 +2681,9 @@ def check_small_file_artefacts(folder):
                     continue
                 mine = next((d.get("Value") for d in e.get("EvtEventData") or [] if isinstance(d, dict) and d.get("Name") == name), None)
                 compared += 1
-                if " ".join(str(mine or "").split()) != value:
+                rendered = " ".join(str(mine or "").split())
+                # A GUID's case carries nothing, and Windows changed its own: upper case on Server 2016.
+                if rendered != value and not (value.startswith("{") and rendered.lower() == value.lower()):
                     wrong.append(f"{channel} {record} {name}: WAC {mine!r}, Windows {value!r}")
             report(compared and not wrong, f"events.json: {compared} event value(s) rendered as Windows renders them",
                    f"events.json: {wrong[0] if wrong else 'no reference event found'}")
@@ -3185,6 +3190,9 @@ def check_examined_version(folder):
     statuses = {n: d.get("CollectionStatus") for n, d in statuses.items() if isinstance(d, dict)}
     absent = {n for n, status in statuses.items() if status == "AbsentFromThisVersion"}
     undecoded = {n for n, status in statuses.items() if status == "UnsupportedFormat"}
+    # A short cycle does not ask for every artefact: what it left out says nothing of the version.
+    not_asked = {n for n, status in statuses.items() if status == "NotRequested"}
+    expected_absent, expected_undecoded = set(expected_absent) - not_asked, set(expected_undecoded) - not_asked
     # The journal names the artefacts held back; on Windows 10 and 11 it names none.
     held_back = [s for s in stated if "absent from this version" in s]
     ok = (not wrong and absent == expected_absent and undecoded == expected_undecoded
@@ -3747,8 +3755,11 @@ def check_active_directory(folder):
     user = mine.get(guid(witness["guid"]), {})
     delegated = user.get("MsDSAllowedToDelegateTo")
     report(delegated == witness["delegateTo"], f"witness: delegation to {witness['delegateTo']}", f"witness: delegation {delegated!r}")
-    report("MsDSAllowedToActOnBehalfOfOtherIdentitySdId" in user, "witness: resource-based delegation, its descriptor named",
-           "witness: resource-based delegation absent")
+    if witness["resourceBased"]:
+        report("MsDSAllowedToActOnBehalfOfOtherIdentitySdId" in user, "witness: resource-based delegation, its descriptor named",
+               "witness: resource-based delegation absent")
+    else:
+        print("  ⏭️  witness: resource-based delegation, not in this schema (before Server 2012): not confronted")
     member = [l for l in links if l.get("Attribute") == "member" and l.get("Target", "").lower() == user.get("DistinguishedName", "?").lower()]
     held = {l["Object"].lower(): l for l in member}
     privileged = held.get(witness["privilegedGroup"].lower())
