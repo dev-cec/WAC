@@ -140,6 +140,8 @@ PHRASES = [
     ("IIS 7 and later:", "IIS 7 et suivants :"),
     ("SYSVOL\\domain, where Services\\Netlogon\\Parameters says", "SYSVOL\\domain, où le dit Services\\Netlogon\\Parameters"),
     ("GPT.INI, Registry.pol, scripts.ini, XML of the preferences, GptTmpl.inf", "GPT.INI, Registry.pol, scripts.ini, XML des préférences, GptTmpl.inf"),
+    ("Windows\\System32\\LogFiles\\Sum: SystemIdentity.mdb, Current.mdb, <GUID>.mdb and their logs", "Windows\\System32\\LogFiles\\Sum : SystemIdentity.mdb, Current.mdb, <GUID>.mdb et leurs journaux"),
+    ("ESE; dates as FILETIME in columns declared DateTime", "ESE ; dates en FILETIME dans des colonnes déclarées DateTime"),
     ("Windows\\NTDS\\ntds.dit and its logs", "Windows\\NTDS\\ntds.dit et ses journaux"),
     ("ntds.dit and its logs, where Services\\NTDS\\Parameters says", "ntds.dit et ses journaux, où le dit Services\\NTDS\\Parameters"),
     ("ESE, records of the pre-Vista format", "ESE, enregistrements au format d'avant Vista"),
@@ -209,6 +211,8 @@ NOTES = {
         "Présent seulement là où le rôle est installé ; son journal de débogage est éteint par défaut. Une zone intégrée à Active Directory est dans l'annuaire : ses enregistrements ne sont pas décodés. Mesuré sous Server 2022.",
     "Present only where the role is installed. Measured on Server 2022; older versions' dhcp.mdb is read if its tables have the same names.":
         "Présent seulement là où le rôle est installé. Mesuré sous Server 2022 ; le dhcp.mdb des versions antérieures est lu si ses tables portent les mêmes noms.",
+    "Present only on a server. Measured on Server 2022.":
+        "Présent seulement sur un serveur. Mesuré sous Server 2022.",
     "Present only where the role is installed. Disks, memory and state are not taken: the disks' paths lead to them. Measured on Server 2022.":
         "Présent seulement là où le rôle est installé. Disques, mémoire et état ne sont pas pris : les chemins des disques y mènent. Mesuré sous Server 2022.",
     "Empty since Windows 10 1803 unless the backup task was switched back on. Copied raw: not converted.":

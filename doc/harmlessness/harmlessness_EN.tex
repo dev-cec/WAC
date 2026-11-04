@@ -503,8 +503,11 @@ Windows~11 and under Windows~8.1. Under Windows~11, the read through Windows
 changed the access date: the check can fail. Windows~8.1 kept no access dates
 on the volume: there, the check proves the USN only.
 On 4 November 2026, on the code of 4.0, on a domain controller under
-Server~2022: witnesses unchanged; the read through Windows did not change the
-dates there, so the check proves the USN only.
+Server~2022, with access dates turned on for the measure
+(\texttt{fsutil behavior set disablelastaccess 0}, restored afterwards):
+witnesses unchanged, while one read through Windows changed the access date.
+The check can fail there too. On this controller as Windows leaves it, access
+dates are off and the check proves the USN only.
 The measurement under Sysmon, against KAPE, is still the one on the Windows~11
 workstation: it was not repeated on a server.
 

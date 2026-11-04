@@ -59,6 +59,7 @@
 #include "defender_history.h"
 #include "wmi_persistence.h"
 #include "srum.h"
+#include "user_access_log.h"
 #include "bits_jobs.h"
 #include "fat_volumes.h"
 #include "boot_records.h"
@@ -1475,6 +1476,8 @@ void convertArtefacts(bool systemAvailable) {
 	                            L"artefacts.dhcp_server", Text::StepDhcpServer);
 	convertArtefact<HyperV>(conf.artefacts.hyperV, "hyperv_machines.json", Text::ArtefactHyperVMachines,
 	                        L"artefacts.hyperv", Text::StepHyperV);
+	convertArtefact<UserAccessLog>(conf.artefacts.userAccessLog, "user_access_log.json", Text::ArtefactUserAccessLog,
+	                               L"artefacts.user_access_log", Text::StepUserAccessLog);
 	convertArtefact<ActiveDirectory>(conf.artefacts.activeDirectory,
 	                                 { { "active_directory_objects.json", Text::ArtefactActiveDirectoryObjects },
 	                                   { "active_directory_links.json", Text::ArtefactActiveDirectoryLinks },

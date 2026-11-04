@@ -27,7 +27,7 @@ const size_t CHROMIUM_ROOT_COUNT = sizeof(CHROMIUM_ROOTS) / sizeof(CHROMIUM_ROOT
 const std::vector<std::wstring> CHROMIUM_PROFILE_FILES = {
 	L"History", L"Login Data", L"Web Data", L"Shortcuts", L"Top Sites", L"Bookmarks",
 	L"Preferences", L"Secure Preferences", L"Cookies", L"Network\\Cookies",
-	L"Favicons", L"Network Action Predictor", L"Sessions\\*" };
+	L"Favicons", L"Network Action Predictor", L"Media History", L"Sessions\\*" };
 const std::vector<std::wstring> CHROMIUM_ROOT_FILES = { L"Local State" };
 const wchar_t WEBCACHE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Windows\\WebCache";
 const wchar_t INETCACHE_FOLDER[] = L"\\AppData\\Local\\Microsoft\\Windows\\INetCache\\IE";

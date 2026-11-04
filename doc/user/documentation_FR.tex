@@ -1716,6 +1716,20 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         il n'est pas pris. Le \champ{Type} d'une ligne du fichier des étendues
         est le numéro de la table, mesuré sur Server 2022 : 3 l'étendue, 5 sa
         plage, 7 une réservation.
+  \item[\fichier{user\_access\_log.json}]
+        le journal des accès utilisateurs (User Access Logging), qu'un serveur
+        tient seul à partir de Server~2012, sans rôle à installer, jusqu'à trois
+        ans : par rôle, compte et adresse du client, qui a joint ce serveur et
+        quels jours. Un élément par ligne des bases de
+        \path|Windows\System32\LogFiles\Sum|, copiées brutes avec leurs journaux,
+        qui sont rejoués : \champ{Database}, \champ{Table} et les colonnes par
+        leur nom. Dans \texttt{CLIENTS} : \champ{RoleGuid}, \champ{RoleName},
+        \champ{AuthenticatedUserName}, \champ{Address}, \champ{TotalAccesses},
+        \champ{InsertDateUtc}, \champ{LastAccessUtc}, et \champ{Days}, chacun avec
+        sa \champ{Date}, son \champ{DayOfYear} et ses \champ{Accesses}. Aussi
+        \texttt{ROLE\_ACCESS}, \texttt{DNS}, \texttt{VIRTUALMACHINES},
+        \texttt{SYSTEM\_IDENTITY} (la machine) et \texttt{CHAINED\_DATABASES} (le
+        fichier de chaque année passée).
   \item[\fichier{hyperv\_machines.json}]
         le rôle Hyper-V, là où il est installé : un objet par configuration
         dans \path|ProgramData\Microsoft\Windows\Hyper-V| (\path|.vmcx|, à

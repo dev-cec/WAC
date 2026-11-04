@@ -357,6 +357,20 @@ if wants dns_server dhcp_server hyperv; then
   $QGA run --shell "del $VMDIR\\server-roles-witness.ps1 $VMDIR\\server-roles-reference.json 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fi
 
+# User Access Logging: an access of known origin, then the databases as its service
+# leaves them when stopped, which check-json.py reads with dissect.esedb.
+if wants user_access_log; then
+  $QGA write "$HERE/guest/user-access-log-witness.ps1" "$VMDIR\\user-access-log-witness.ps1" >/dev/null
+  UAL_STATE=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\user-access-log-witness.ps1" 2>/dev/null | tr -d '\r' | tail -1 || true)
+  if [[ "$UAL_STATE" == placed ]]; then
+    $QGA read "$VMDIR\\user-access-log.zip" "$OUTPUT/reference/user-access-log.zip" >/dev/null \
+      && echo "   + reference/user-access-log.zip" || echo "   ⚠️ User Access Logging reference not read"
+  elif [[ "$UAL_STATE" != "no service" ]]; then
+    echo "   ⚠️ User Access Logging witness not placed: $UAL_STATE"
+  fi
+  $QGA run --shell "del $VMDIR\\user-access-log-witness.ps1 $VMDIR\\user-access-log.zip 2>nul & exit /b 0" >/dev/null 2>&1 || true
+fi
+
 if ! full_cycle; then
   echo "== 3. skipped (--only) == ($(date +%H:%M:%S))"
 else

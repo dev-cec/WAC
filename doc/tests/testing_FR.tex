@@ -361,7 +361,9 @@ sur la ressource, et le droit \texttt{DS-Replication-Get-Changes-All} sur la
 racine du domaine ; une appartenance retirée ; un compte supprimé. Les
 références viennent des outils de l'annuaire en marche, et non du fichier que
 lit \wac{} : \texttt{Get-ADObject} sur tous les contextes de nommage, supprimés
-compris, et \texttt{Get-ADReplicationAttributeMetadata}. Sont confrontés chaque
+compris, et ses métadonnées de réplication (\texttt{msDS-ReplAttributeMetaData},
+\texttt{msDS-ReplValueMetaData}, qui répondent dès Server~2008~R2, le témoin
+tournant dès PowerShell~2). Sont confrontés chaque
 objet (nom, classe, SID, compte, \texttt{userAccountControl},
 \texttt{adminCount}, SPN, création), chaque changement d'attribut de trois
 objets (date, version, contrôleur, USN), et les témoins. Le contrôle vérifie
@@ -375,7 +377,19 @@ et DFS Replication sont confrontés à \texttt{Get-WinEvent}, enregistrement par
 enregistrement et avec leur date. Une recherche DirSync, qui ne demande que
 \texttt{cn} et aucun secret, laisse un 4662 du droit
 \texttt{DS-Replication-Get-Changes} sur la racine du domaine, confronté de même ;
-un vrai DCSync, qui demande aussi \texttt{Get-Changes-All}, reste sans témoin. Sur un
+\fichier{install-replica-controller.sh} ajoute un second contrôleur, relié par
+un lien multicast privé : sa vraie réplication laisse un 4662 de
+\texttt{Get-Changes-All} sur la racine du domaine, comme un DCSync, et un
+changement fait sur lui doit le nommer contrôleur d'origine, tels que
+\texttt{Get-ADDomainController} les liste. Le témoin pose aussi un attribut
+d'extension du schéma, nommé par son \texttt{msDS-IntId}, et
+\fichier{add-sid-history.sh} écrit un \texttt{sIDHistory} hors ligne avec
+DSInternals (\texttt{vmtest/tools/dsinternals}), Windows n'en offrant aucun hors
+d'une migration. Sur un serveur à partir de 2012,
+\fichier{guest/user-access-log-witness.ps1} se connecte au \texttt{IPC\$} du
+serveur lui-même, puis copie les bases du journal des accès, son service arrêté :
+\texttt{dissect.esedb} y lit chaque ligne de \texttt{CLIENTS}, confrontée à
+\fichier{user\_access\_log.json}. Sur un
 contrôleur, les contrôles des comptes locaux, des groupes locaux et des noms des
 SID du domaine sont sautés, et le disent : la SAM n'y est que celle du mode de
 restauration.

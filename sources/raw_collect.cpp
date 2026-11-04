@@ -842,8 +842,11 @@ HRESULT ExtractFileArtefactsRaw() {
 	/* Defender's support folder: the MPLog text logs, converted, and the WPP
 	   traces (.bin), copied raw only — their format, ETW binary traces decoded
 	   with Microsoft's private symbols, is not documented. */
-	if (conf.artefacts.defender)
+	if (conf.artefacts.defender) {
 		addTarget(L"\\ProgramData\\Microsoft\\Windows Defender\\Support", { L".log", L".bin" });
+		// What MpCmdRun.exe was asked to do, a removal of the definitions among it. This one file of the folder, by name.
+		addTarget(L"\\Windows\\Temp", { L"MpCmdRun.log" });
+	}
 	// The WMI repository: INDEX.BTR, OBJECTS.DATA and the MAPPING files, open by WMI, read raw.
 	/* The repository's folder as the artefact table gives it for the examined
 	   Windows: Repository, or Repository\\FS on Windows XP. */
@@ -941,6 +944,9 @@ HRESULT ExtractFileArtefactsRaw() {
 		for (const std::wstring& folder : logs)
 			if (toLower(folder) != toLower(database)) trees.push_back({ folder, { L".log" }, 1, L"DHCP server's audit logs" });
 	}
+	// User Access Logging, open by its service: the databases with their logs and checkpoints.
+	if (conf.artefacts.userAccessLog)
+		trees.push_back({ conf.systemDrive.substr(0, 2) + L"\\Windows\\System32\\LogFiles\\Sum", { L".mdb", L".log", L".chk", L".jfm" }, 1, L"User Access Logging" });
 	// SYSVOL's real folder, whole: a policy's scripts and what replication keeps of deleted ones.
 	if (conf.artefacts.groupPolicies) {
 		std::wstring sysvol;

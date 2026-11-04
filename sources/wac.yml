@@ -32,6 +32,7 @@ artefacts:
   dns_server:              true   # the DNS Server role: settings (ServerLevelPluginDll included), zones, records of the zone files, debug log
   dhcp_server:             true   # the DHCP Server role: settings (CalloutDlls included), scopes, leases of dhcp.mdb, audit logs
   hyperv:                  true   # the Hyper-V role: each virtual machine's configuration and its disks' paths; disks, memory and state not taken
+  user_access_log:         true   # User Access Logging of a server (LogFiles\Sum): who reached each role, from which address, day by day
   active_directory:        true   # a domain controller: ntds.dit raw with its logs; objects, memberships, replication metadata, security descriptors; no secret is read
   activities_cache:        true   # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
   amcache:                 true   # Amcache.hve: applications, executables and drivers seen

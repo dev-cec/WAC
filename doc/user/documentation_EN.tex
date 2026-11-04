@@ -1664,6 +1664,19 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         data: not taken. A row of the scope file's \champ{Type} is the table's
         own number, measured on Server 2022: 3 the scope, 5 its range, 7 a
         reservation.
+  \item[\fichier{user\_access\_log.json}]
+        User Access Logging, which a server keeps by itself from Server~2012 on,
+        with no role to install, for up to three years: per role, account and
+        client address, who reached this server and on which days. One element
+        per row of the databases of \path|Windows\System32\LogFiles\Sum|, copied
+        raw with their logs, which are replayed: \champ{Database}, \champ{Table}
+        and the columns by name. In \texttt{CLIENTS}: \champ{RoleGuid},
+        \champ{RoleName}, \champ{AuthenticatedUserName}, \champ{Address},
+        \champ{TotalAccesses}, \champ{InsertDateUtc}, \champ{LastAccessUtc}, and
+        \champ{Days}, each with its \champ{Date}, \champ{DayOfYear} and
+        \champ{Accesses}. Also \texttt{ROLE\_ACCESS}, \texttt{DNS},
+        \texttt{VIRTUALMACHINES}, \texttt{SYSTEM\_IDENTITY} (the machine) and
+        \texttt{CHAINED\_DATABASES} (each past year's file).
   \item[\fichier{hyperv\_machines.json}]
         the Hyper-V role, where it is installed: one object per configuration
         in \path|ProgramData\Microsoft\Windows\Hyper-V| (\path|.vmcx|, Windows

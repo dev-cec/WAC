@@ -268,6 +268,9 @@
 \texttt{dhcp\_server} & Windows Server 2003 & \texttt{Windows\textbackslash{}System32\textbackslash{}dhcp, ou là où le dit Services\textbackslash{}DHCPServer\textbackslash{}Parameters : dhcp.mdb et ses journaux, DhcpSrvLog-*.log} & ESE, texte séparé par des virgules & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement là où le rôle est installé. Mesuré sous Server 2022 ; le dhcp.mdb des versions antérieures est lu si ses tables portent les mêmes noms.} \\
 \addlinespace
+\texttt{user\_access\_log} & Windows 8 & \texttt{Windows\textbackslash{}System32\textbackslash{}LogFiles\textbackslash{}Sum : SystemIdentity.mdb, Current.mdb, \textless{}GUID\textgreater{}.mdb et leurs journaux} & ESE ; dates en FILETIME dans des colonnes déclarées DateTime & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement sur un serveur. Mesuré sous Server 2022.} \\
+\addlinespace
 \texttt{hyperv} & Windows Vista & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Hyper-V\textbackslash{}Virtual Machines\textbackslash{}*.xml} & XML, prélevé brut & non \\
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Hyper-V: data.vmcx, Virtual Machines, Virtual Machines Cache et Snapshots\textbackslash{}*.vmcx} & binaire non documenté : paires de clé et de valeur texte & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement là où le rôle est installé. Disques, mémoire et état ne sont pas pris : les chemins des disques y mènent. Mesuré sous Server 2022.} \\

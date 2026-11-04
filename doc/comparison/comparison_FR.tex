@@ -260,6 +260,18 @@ viennent, dans ce réglage, des empreintes de chaque module chargé, et les
 6\,s du jeu de confiance de son chargement. KAPE ne fait aucun de ces
 contrôles : il copie les fichiers de ses cibles sans les examiner.
 
+\section{Sur un serveur}
+KAPE a été lancé une fois sur un contrôleur de domaine sous Server~2022, le
+4~novembre 2026, après \wac{} et avec le réglage \texttt{binary} de \wac{} à
+\texttt{none} : 57\,s et 1,17\,Gio pour KAPE, 114\,s et 4,03\,Gio pour \wac{}, qui
+prend aussi l'annuaire que \texttt{KapeTriage} ne prend pas. Des 634 fichiers
+copiés par KAPE, 623 figurent chez \wac{}, dont 571 au même SHA-1 ; les autres ont
+changé entre les deux collectes. Cette comparaison a montré ce qui manquait à
+\wac{} : le journal des accès utilisateurs (\path|LogFiles\Sum|),
+\fichier{MpCmdRun.log} et le \fichier{Media History} du navigateur, pris depuis.
+Aucun autre fichier copié par KAPE ne manquait, hors \fichier{desktop.ini},
+classé sans valeur d'enquête.
+
 \section{Conversion et décodage}
 
 La conversion de \wac{} lit la consigne d'une collecte, sur le poste

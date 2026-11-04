@@ -520,8 +520,11 @@ Windows~11 et sous Windows~8.1. Sous Windows~11, la lecture par Windows a
 changé la date d'accès : le contrôle sait échouer. Windows~8.1 ne tenait pas
 les dates d'accès du volume : là, le contrôle ne prouve que le numéro USN.
 Le 4 novembre 2026, sur le code de la 4.0, sur un contrôleur de domaine sous
-Server~2022 : témoins inchangés ; la lecture par Windows n'y a pas changé les
-dates, le contrôle n'y prouve donc que le numéro USN.
+Server~2022, les dates d'accès activées pour la mesure
+(\texttt{fsutil behavior set disablelastaccess 0}, rétabli ensuite) : témoins
+inchangés, alors qu'une lecture par Windows a changé la date d'accès. Le
+contrôle sait donc y échouer aussi. Sur ce contrôleur tel que Windows le laisse,
+les dates d'accès sont éteintes et le contrôle ne prouve que le numéro USN.
 La mesure sous Sysmon, face à KAPE, reste celle du poste sous Windows~11 : elle
 n'a pas été refaite sur un serveur.
 

@@ -254,6 +254,17 @@ this setting, from the fingerprints of every loaded module, and the 6\,s of
 the trust set from its loading. KAPE makes none of these checks: it
 copies its targets' files without examining them.
 
+\section{On a server}
+KAPE was run once on a domain controller under Server~2022, on 4~November 2026,
+after \wac{} and with \wac{}'s \texttt{binary} set to \texttt{none}: 57\,s and
+1.17\,GiB for KAPE, 114\,s and 4.03\,GiB for \wac{}, which also takes the directory
+that \texttt{KapeTriage} does not. Of the 634 files KAPE copied, 623 are among
+\wac{}'s, 571 with the same SHA-1; the others changed between the two
+collections. This comparison showed what \wac{} was missing: User Access Logging
+(\path|LogFiles\Sum|), \fichier{MpCmdRun.log} and the browser's
+\fichier{Media History}, all taken since. No other file KAPE copied was missing
+but \fichier{desktop.ini}, classified as of no investigative value.
+
 \section{Conversion and decoding}
 
 \wac{}'s conversion reads the exhibit store of a collection, on the analysis

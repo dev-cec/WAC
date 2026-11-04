@@ -15,7 +15,7 @@ Non-zero exit if at least one file is invalid or inconsistent.
 """
 import ntpath
 import urllib.parse
-import hashlib, json, sys, glob, os, re, collections, uuid, datetime
+import hashlib, ipaddress, json, sys, glob, os, re, collections, uuid, datetime
 
 def md4(data):
     """MD4 (RFC 1320), pure Python: OpenSSL 3 drops it from hashlib, and the NT
@@ -518,6 +518,7 @@ def cross_checks(folder):
     found += guarded(check_group_policies, folder)
     found += guarded(check_controller_events, folder)
     found += guarded(check_server_roles, folder)
+    found += guarded(check_user_access_log, folder)
     found += guarded(check_web_server, folder)
     found += guarded(check_web_installations, folder)
     found += guarded(check_activities_cache, folder)
@@ -3649,6 +3650,71 @@ def check_dns_debug_log(folder, report):
         lines = sum(1 for line in f if line[:1].isdigit() and "/" in line[:10] and len(line.split()) >= 3)
     report(len(records) == lines, f"dns_server_log.json: the {lines} dated line(s) of the debug log, each with its record",
            f"dns_server_log.json: {len(records)} record(s) for {lines} dated line(s)")
+
+def check_user_access_log(folder):
+    """user_access_log.json against the databases as the service left them when
+    stopped, read by dissect.esedb: every row of CLIENTS with its role, account,
+    address, first date and days, the witness's connection among them; the roles'
+    names; the machine's identity. On a machine without the service: skipped."""
+    path = os.path.join(folder, "reference", "user-access-log.zip")
+    if not os.path.exists(path):
+        print("  ⏭️  user_access_log.json: no reference (no service on this machine): not confronted")
+        return 0
+    venv = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "ese-venv",
+                                  "lib", "python*", "site-packages"))
+    sys.path.extend(p for p in venv if p not in sys.path)
+    try:
+        from dissect.esedb import EseDB
+    except ImportError:
+        print("  ⏭️  dissect.esedb not installed: user_access_log.json not confronted")
+        return 0
+    import io, zipfile
+    mine = load(folder, "user_access_log.json") or []
+    found = 0
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  ✅ {success}" if ok else f"  ❌ {failure}")
+        found += not ok
+    def filetime(value):
+        return (datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=value // 10)).strftime("%Y-%m-%dT%H:%M:%S")
+    def address(value):
+        return ".".join(str(b) for b in value) if len(value) == 4 else ipaddress.ip_address(value).compressed
+    clients, names = [], {}
+    with zipfile.ZipFile(path) as z:
+        for name in z.namelist():
+            database = EseDB(io.BytesIO(z.read(name)))
+            tables = {t.name for t in database.tables()}
+            if "ROLE_IDS" in tables:
+                names = {str(r.get("RoleGuid")).lower(): r.get("RoleName") for r in database.table("ROLE_IDS").records()}
+                identity = next(iter(database.table("SYSTEM_IDENTITY").records()))
+            if "CLIENTS" in tables:
+                clients.extend(database.table("CLIENTS").records())
+    def key(role, user, where):
+        return (role.strip("{}").lower(), (user or "").lower(), where)
+    rows = {key(r.get("RoleGuid", ""), r.get("AuthenticatedUserName"), r.get("Address")): r for r in mine if r.get("Table") == "CLIENTS"}
+    wrong = []
+    for c in clients:
+        k = key(str(c.get("RoleGuid")), c.get("AuthenticatedUserName"), address(c.get("Address")))
+        r = rows.get(k)
+        days = {int(name[3:]): count for name, count in c.as_dict().items() if re.fullmatch(r"Day\d+", name) and count}
+        theirs = {d["DayOfYear"]: d["Accesses"] for d in (r or {}).get("Days", [])}
+        if not r:
+            wrong.append(f"{k}: absent")
+        elif r.get("InsertDateUtc", "")[:19] != filetime(c.get("InsertDate")) or r.get("RoleName") != names.get(k[0]):
+            wrong.append(f"{k}: WAC {r.get('InsertDateUtc')} {r.get('RoleName')!r}, dissect {filetime(c.get('InsertDate'))} {names.get(k[0])!r}")
+        elif r.get("TotalAccesses", 0) < c.get("TotalAccesses") or any(theirs.get(d, 0) < n for d, n in days.items()):
+            wrong.append(f"{k}: WAC {r.get('TotalAccesses')} {theirs}, dissect {c.get('TotalAccesses')} {days}")
+    report(clients and not wrong, f"user_access_log.json: the {len(clients)} row(s) of CLIENTS, role, account, address, first date and days, as dissect.esedb reads them",
+           f"user_access_log.json: {len(wrong)} difference(s) for {len(clients)} row(s): {wrong[:3]}")
+    witness = [r for r in rows.values() if r.get("Address") in ("127.0.0.1", "::1") and "wac" in r.get("AuthenticatedUserName", "").lower()]
+    dated = [d for r in witness for d in r.get("Days", []) if d.get("Date") == r.get("LastAccessUtc", "")[:10]]
+    report(witness and dated, "user_access_log.json: the witness's own connection, with the day of its last access",
+           f"user_access_log.json: the witness's connection not found or undated: {witness[:1]}")
+    machine = [r for r in mine if r.get("Table") == "SYSTEM_IDENTITY"]
+    report(machine and machine[0].get("SystemDNSHostName") == identity.get("SystemDNSHostName"), f"user_access_log.json: the machine's identity, {identity.get('SystemDNSHostName')}",
+           f"user_access_log.json: identity {machine[:1]}")
+    return found
+
 
 def check_dhcp_database(folder, leases, report):
     """dhcp.mdb's ClientTable read by dissect.esedb against WAC's leases."""

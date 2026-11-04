@@ -11,6 +11,7 @@
 #include "dhcp_server.h"
 #include "dns_server.h"
 #include "hyperv.h"
+#include "user_access_log.h"
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
 
@@ -173,6 +174,25 @@ void forgedSizes() {
 
 } // namespace
 
+//! User Access Logging: an address in any size a forged database can hold, a day of any year.
+void userAccess() {
+	check(userAccessAddressText({ 127, 0, 0, 1 }) == L"127.0.0.1", "an IPv4 address");
+	std::vector<uint8_t> loopback(16, 0);
+	loopback[15] = 1;
+	check(userAccessAddressText(loopback) == L"::1", "an IPv6 address");
+	check(userAccessAddressText({ 0xAB, 0x01, 0xFF }) == L"AB01FF", "a size of neither: hexadecimal");
+	check(userAccessAddressText({}).empty(), "no address: nothing");
+	check(userAccessDayDate(2026, 308) == L"2026-11-04", "day 308 of 2026, as measured on 4 November");
+	check(userAccessDayDate(2026, 1) == L"2026-01-01", "the first day");
+	check(userAccessDayDate(2026, 60) == L"2026-03-01", "day 60 of a common year");
+	check(userAccessDayDate(2024, 60) == L"2024-02-29", "day 60 of a leap year");
+	check(userAccessDayDate(2024, 366) == L"2024-12-31", "the last day of a leap year");
+	check(userAccessDayDate(2100, 366).empty(), "2100 is not a leap year");
+	check(userAccessDayDate(2026, 366).empty(), "no day 366 in a common year");
+	check(userAccessDayDate(2026, 0).empty(), "no day 0");
+	check(userAccessDayDate(0, 10).empty(), "no year: no date");
+}
+
 int wmain() {
 	zoneFile();
 	zoneDirectives();
@@ -181,6 +201,7 @@ int wmain() {
 	leaseColumns();
 	vmcx();
 	forgedSizes();
+	userAccess();
 	printf("%u checks, %u failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

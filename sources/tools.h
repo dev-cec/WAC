@@ -162,6 +162,7 @@ struct AppliConf {
 		bool groupPolicies = true;    //!< a domain controller: SYSVOL raw; its policies' registry values, scripts, tasks (group_policies.h)
 		bool dnsServer = true;        //!< the DNS Server role: settings, zones, records, debug log (dns_server.h)
 		bool dhcpServer = true;       //!< the DHCP Server role: settings, scopes, leases, audit log (dhcp_server.h)
+		bool userAccessLog = true;    //!< User Access Logging of a server: who reached each role, from where, day by day (user_access_log.h)
 		bool hyperV = true;           //!< the Hyper-V role: the configuration of each virtual machine, not its disks (hyperv.h)
 		bool activeDirectory = true;  //!< a domain controller: ntds.dit raw with its logs; objects, links, replication metadata (active_directory.h)
 		bool webServer = true;        //!< IIS: its configuration, logs and sites' content (web_server.h)

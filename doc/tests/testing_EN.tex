@@ -349,7 +349,9 @@ resource-based delegation, and the \texttt{DS-Replication-Get-Changes-All}
 right on the domain's root; a membership removed; an account deleted. The
 references come from the tools of the running directory, not from the file
 \wac{} reads: \texttt{Get-ADObject} over every naming context, deleted objects
-included, and \texttt{Get-ADReplicationAttributeMetadata}. Confronted are every
+included, and its replication metadata (\texttt{msDS-ReplAttributeMetaData},
+\texttt{msDS-ReplValueMetaData}, which answer from Server~2008~R2 on, as the
+witness runs from PowerShell~2). Confronted are every
 object (name, class, SID, account, \texttt{userAccountControl},
 \texttt{adminCount}, SPN, creation), every attribute change of three objects
 (date, version, controller, USN), and the witnesses. The check also verifies
@@ -362,8 +364,18 @@ Kerberos, 4662, Directory Service and DFS Replication event are confronted with
 \texttt{Get-WinEvent}, record by record and with their date. A DirSync search,
 asking for \texttt{cn} and no secret, leaves a 4662 of the
 \texttt{DS-Replication-Get-Changes} right on the domain's root, confronted
-likewise; a real DCSync, which also asks for \texttt{Get-Changes-All}, has no
-witness. On a controller, the checks of the local
+likewise. \fichier{install-replica-controller.sh} adds a second controller,
+joined by a private multicast link: its real replication leaves a 4662 of
+\texttt{Get-Changes-All} on the domain's root, as a DCSync does, and a change made
+there must name it as the controller of origin, as
+\texttt{Get-ADDomainController} lists them. The witness also sets an attribute of
+a schema extension, named through its \texttt{msDS-IntId}, and
+\fichier{add-sid-history.sh} writes a \texttt{sIDHistory} offline with DSInternals
+(\texttt{vmtest/tools/dsinternals}), Windows offering none short of a migration.
+On a server from 2012 on, \fichier{guest/user-access-log-witness.ps1} connects to
+the server's own \texttt{IPC\$}, then copies User Access Logging's databases with
+its service stopped: \texttt{dissect.esedb} reads each row of \texttt{CLIENTS}
+there, confronted with \fichier{user\_access\_log.json}. On a controller, the checks of the local
 accounts, local groups and domain SIDs' names are skipped, and say so: its SAM
 is only the restore mode's.
 
