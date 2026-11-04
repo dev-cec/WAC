@@ -978,12 +978,13 @@ they target are absent, on the data they have seen.
     files spread over several \fichier{\$MFT} records
     (\texttt{\$ATTRIBUTE\_LIST}), very large volumes. They are to be validated
     on real systems.
-  \item \textbf{Domain controller}: the directory is measured under Server~2022
-    only, on a forest with one controller. No real \texttt{sIDHistory} is
-    confronted. As \texttt{msDS-IntId} is not read, an attribute of a schema
-    extension may appear in the replication by its identifier only. The
-    replication witness uses the \texttt{DS-Replication-Get-Changes} right; a
-    real DCSync, which also asks for \texttt{Get-Changes-All}, has no witness.
+  \item \textbf{Domain controller}: the directory is measured under Server~2008~R2,
+    2012~R2, 2016, 2022 and 2025; a controller under Server~2003, 2012 or 2019
+    is not. A second controller, a real \texttt{sIDHistory} and an attribute of
+    a schema extension are measured under Server~2022 only. The replication
+    witnessed is that of a real controller, with the
+    \texttt{Get-Changes-All} right a DCSync also asks for: an attacker's tool
+    itself is not run.
   \item \textbf{Artefacts without a reference}: when no independent tool reads
     a format, its accuracy rests on the internal cross-checks and on the public
     documentation of the format.

@@ -16,6 +16,7 @@ const wchar_t NTDS_PARAMETERS[] = L"Services\\NTDS\\Parameters";
 
 // The bootstrap: the only identifiers assumed, those that say all the others.
 const uint32_t ATTRIBUTE_ID = 131102;       //!< attributeID of an attributeSchema
+const uint32_t INTERNAL_ID = 591540;        //!< msDS-IntId: the number a schema extension's attribute goes by instead
 const uint32_t GOVERNS_ID = 131094;         //!< governsID of a classSchema
 const uint32_t LDAP_DISPLAY_NAME = 131532;  //!< lDAPDisplayName of both
 const uint32_t LINK_ID = 131122;            //!< linkID of a linked attributeSchema
@@ -255,7 +256,7 @@ HRESULT ActiveDirectory::getData() {
 
 /*! First pass over the rows: the tree, the schema's names, the controllers. */
 void ActiveDirectory::readNames(const EseTable& table) {
-	const std::set<uint32_t> needed = { ATTRIBUTE_ID, GOVERNS_ID, LDAP_DISPLAY_NAME, LINK_ID, OBJECT_NAME, INVOCATION_ID };
+	const std::set<uint32_t> needed = { ATTRIBUTE_ID, INTERNAL_ID, GOVERNS_ID, LDAP_DISPLAY_NAME, LINK_ID, OBJECT_NAME, INVOCATION_ID };
 	const EseTable reduced = reducedTo(table, [&](const EseColumn& c) {
 		uint32_t attribute = 0;
 		return (attributeOfColumn(c.name, attribute) && needed.count(attribute))
@@ -269,7 +270,7 @@ void ActiveDirectory::readNames(const EseTable& table) {
 		return static_cast<const EseColumn*>(nullptr);
 	};
 	const EseColumn* dnt = columnNamed(reduced, L"DNT_col"), * parent = columnNamed(reduced, L"PDNT_col"), * naming = columnNamed(reduced, L"RDNtyp_col");
-	const EseColumn* attributeId = attributeColumn(ATTRIBUTE_ID), * governsId = attributeColumn(GOVERNS_ID), * display = attributeColumn(LDAP_DISPLAY_NAME);
+	const EseColumn* attributeId = attributeColumn(ATTRIBUTE_ID), * internalId = attributeColumn(INTERNAL_ID), * governsId = attributeColumn(GOVERNS_ID), * display = attributeColumn(LDAP_DISPLAY_NAME);
 	const EseColumn* linkId = attributeColumn(LINK_ID), * name = attributeColumn(OBJECT_NAME), * invocation = attributeColumn(INVOCATION_ID);
 	database_.forEachRecord(reduced, [&](EseRecord& r) {
 		const uint32_t number = (uint32_t)numberIn(r, dnt);
@@ -284,6 +285,7 @@ void ActiveDirectory::readNames(const EseTable& table) {
 		if (!label) return;
 		const std::wstring text = textOf(label->values.front());
 		if (cellOf(r, attributeId)) attributeNames_[(uint32_t)numberIn(r, attributeId)] = text;
+		if (cellOf(r, internalId)) attributeNames_[(uint32_t)numberIn(r, internalId)] = text;
 		if (cellOf(r, governsId)) classNames_[(uint32_t)numberIn(r, governsId)] = text;
 		// A forward link's identifier is even, its back link's the next: both share link_base.
 		if (cellOf(r, linkId) && numberIn(r, linkId) % 2 == 0) linkNames_[(uint32_t)numberIn(r, linkId) / 2] = text;

@@ -1015,13 +1015,13 @@ qu'ils visent sont absents, sur les données qu'ils ont vues.
     appareils MTP, fichiers éclatés sur plusieurs enregistrements de la
     \fichier{\$MFT} (\texttt{\$ATTRIBUTE\_LIST}), très gros volumes. Ils sont à
     valider sur des systèmes réels.
-  \item \textbf{Contrôleur de domaine} : l'annuaire n'est mesuré que sous
-    Server~2022, sur une forêt à un seul contrôleur. Aucun \texttt{sIDHistory}
-    réel n'y est confronté. \texttt{msDS-IntId} n'étant pas lu, un attribut
-    d'extension du schéma peut n'apparaître dans la réplication que par son
-    identifiant. Le témoin de réplication use du droit
-    \texttt{DS-Replication-Get-Changes} ; un vrai DCSync, qui demande aussi
-    \texttt{Get-Changes-All}, reste sans témoin.
+  \item \textbf{Contrôleur de domaine} : l'annuaire est mesuré sous
+    Server~2008~R2, 2012~R2, 2016, 2022 et 2025 ; un contrôleur sous Server~2003,
+    2012 ou 2019 ne l'est pas. Un second contrôleur, un \texttt{sIDHistory} réel
+    et un attribut d'extension du schéma ne sont mesurés que sous Server~2022.
+    La réplication témoin est celle d'un vrai contrôleur, avec le droit
+    \texttt{Get-Changes-All} que demande aussi un DCSync : l'outil d'un
+    attaquant lui-même n'est pas lancé.
   \item \textbf{Artefacts sans référence} : quand aucun outil indépendant ne
     lit un format, sa justesse repose sur les recoupements internes et sur la
     documentation publique du format.
