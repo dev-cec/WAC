@@ -151,6 +151,20 @@ certificates, vulnerable driver lists (Microsoft, LOLDrivers) — and a binary
 whose signature holds is fingerprinted rather than copied, like a Microsoft
 one. Without a trust set, every third-party binary is collected.
 
+**On servers**, the same executables collect Server 2003 to 2025, and Server 2022
+Core. On a domain controller, `ntds.dit` and its logs are read raw, with no LDAP
+query: objects (deleted ones included), link values with their removal dates,
+replication metadata and security descriptors. **The directory's secrets are
+neither read nor written**: only a closed list of attributes is decoded; the copy
+of `ntds.dit` holds them encrypted and is protected like a hive. `SYSVOL` gives
+each group policy's registry values, scripts, tasks and security template; a
+`cpassword` is flagged, its value not written. On a web server (IIS, Apache,
+nginx): sites, pools, modules, logs and each site's folder; connection strings of
+`web.config`; the accounts of SQLite databases with their hash scheme; the data
+folders of MySQL, MariaDB and PostgreSQL. Measured on each server generation by
+the test cycle; the controller only under Server 2022, as the only controller of
+its forest. The limits are in the validation report.
+
 **What to collect is a file, not a command line.** `wac.yml`, next to
 `WAC.exe`, holds the procedure: binaries rule, and one switch per artefact. The file applied is recorded in `investigation.json`.
 
@@ -824,7 +838,7 @@ than cosmetic ones:
 
 ## 🧪 AUTOMATED TESTING
 
-`vmtest/` drives a Windows 11 VM through the **qemu-guest-agent**, with no
+`vmtest/` drives a Windows VM (Windows 11 by default, `WAC_VM` for another version) through the **qemu-guest-agent**, with no
 interaction at all: build on Linux → run as `NT AUTHORITY\SYSTEM` in the VM →
 JSON pulled back to the host and checked.
 

@@ -254,6 +254,14 @@ Boot records (\opt{boot\_records}) & Read raw through the device of each
 Entra ID token caches (\opt{cloud\_identity}) & Read by the raw reading and
   collected as they are, encrypted by DPAPI: \wac{} neither decrypts nor uses
   them; no cloud service is contacted. \\
+Directory and policies (\opt{active\_directory}, \opt{group\_policies}) & Read
+  by the raw reading: \fichier{ntds.dit}, its logs and \fichier{SYSVOL}. No LDAP
+  query, no replication: \fichier{WAC.exe} imports no LDAP library, so the
+  controller records no directory access on \wac{}'s behalf. The logs are
+  replayed on the working copy. \\
+Web servers (\opt{web\_server}) & Configuration, sites, logs and databases read
+  by the raw reading. Neither the web server nor any database engine is queried,
+  stopped or restarted; a live database is taken as the disk holds it. \\
 Binaries (\opt{binary}) & Read by the raw reading; signatures and catalogues
   verified in memory. No certificate store opened, no online revocation
   check. \\
@@ -494,6 +502,11 @@ The result is in the cycle's report (\fichier{harmlessness.txt}). On
 Windows~11 and under Windows~8.1. Under Windows~11, the read through Windows
 changed the access date: the check can fail. Windows~8.1 kept no access dates
 on the volume: there, the check proves the USN only.
+On 4 November 2026, on the code of 4.0, on a domain controller under
+Server~2022: witnesses unchanged; the read through Windows did not change the
+dates there, so the check proves the USN only.
+The measurement under Sysmon, against KAPE, is still the one on the Windows~11
+workstation: it was not repeated on a server.
 
 \section{Step 4: the log of a real collection}
 

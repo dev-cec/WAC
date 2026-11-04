@@ -261,6 +261,15 @@ Secteurs de démarrage (\opt{boot\_records}) & Lus en brut par le
 Caches de jetons Entra ID (\opt{cloud\_identity}) & Lus par la lecture directe
   et prélevés tels quels, chiffrés par DPAPI : \wac{} ne les déchiffre pas et
   ne s'en sert pas ; aucun service en nuage n'est contacté. \\
+Annuaire et stratégies (\opt{active\_directory}, \opt{group\_policies}) & Lus
+  par la lecture directe : \fichier{ntds.dit}, ses journaux et \fichier{SYSVOL}.
+  Aucune requête LDAP, aucune réplication : \fichier{WAC.exe} n'importe pas de
+  bibliothèque LDAP, et le contrôleur n'enregistre donc pas d'accès à l'annuaire
+  au nom de \wac{}. Le rejeu des journaux se fait sur la copie de travail. \\
+Serveurs web (\opt{web\_server}) & Configuration, sites, journaux et bases lus
+  par la lecture directe. Ni le serveur web ni aucun moteur de base n'est
+  interrogé, arrêté ou redémarré ; une base vivante est prise telle que le disque
+  la porte. \\
 Binaires (\opt{binary}) & Lus par la lecture directe ; signatures et
   catalogues vérifiés en mémoire. Aucun magasin de certificats ouvert, aucune
   vérification de révocation en ligne. \\
@@ -510,6 +519,11 @@ Le 29 octobre 2026, sur le code de la version 3.0.0 : témoins inchangés sous
 Windows~11 et sous Windows~8.1. Sous Windows~11, la lecture par Windows a
 changé la date d'accès : le contrôle sait échouer. Windows~8.1 ne tenait pas
 les dates d'accès du volume : là, le contrôle ne prouve que le numéro USN.
+Le 4 novembre 2026, sur le code de la 4.0, sur un contrôleur de domaine sous
+Server~2022 : témoins inchangés ; la lecture par Windows n'y a pas changé les
+dates, le contrôle n'y prouve donc que le numéro USN.
+La mesure sous Sysmon, face à KAPE, reste celle du poste sous Windows~11 : elle
+n'a pas été refaite sur un serveur.
 
 \section{Étape 4 : le journal d'une collecte réelle}
 

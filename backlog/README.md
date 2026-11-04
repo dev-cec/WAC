@@ -57,7 +57,7 @@ aux serveurs (web, Active Directory).
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-038](B-038-compatibilite-windows-server.md) | Collecte compatible avec les versions serveur, de Server 2003 à 2026 (prérequis de B-035) | en cours | P3 | fort |
+| [B-038](B-038-compatibilite-windows-server.md) | Collecte compatible avec les versions serveur, de Server 2003 à 2026 (prérequis de B-035) | en cours (générations et contrôleur couverts ; autres rôles à décider) | P3 | fort |
 
 ### Clôture du projet
 
