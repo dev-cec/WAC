@@ -880,9 +880,37 @@ std::wstring binaryPath(std::wstring imagePath) {
 	return imagePath;
 }
 
+/*! A path relative to a volume that cannot climb above it. The paths given here
+ *  come from the examined machine (a site's folder, an Include, a profile): a
+ *  `..` left in them would, once under the root, read the analyst's files at the
+ *  conversion, or write beside the store at the collection. Resolved as Windows
+ *  resolves it, stopping at the volume's root; a name of dots and spaces only
+ *  counts as what Windows would make of it. A path without any is returned as it
+ *  is.
+ *  @param relative the path, from the volume's root
+ *  @return the same without `.`, `..`, or a forward slash */
+static std::wstring withoutClimbing(const std::wstring& relative) {
+	bool unchanged = relative.find(L'/') == std::wstring::npos;
+	std::vector<std::wstring> levels;
+	size_t start = 0;
+	while (start <= relative.size()) {
+		const size_t end = std::min(relative.find_first_of(L"\\/", start), relative.size());
+		const std::wstring level = relative.substr(start, end - start);
+		start = end + 1;
+		if (level.empty()) continue;
+		if (level.find_first_not_of(L". ") != std::wstring::npos) { levels.push_back(level); continue; }
+		unchanged = false;
+		if (std::count(level.begin(), level.end(), L'.') >= 2 && !levels.empty()) levels.pop_back();
+	}
+	if (unchanged) return relative;
+	std::wstring path;
+	for (const std::wstring& level : levels) path += L"\\" + level;
+	return path;
+}
+
 std::wstring pathUnder(const std::wstring& root, const std::wstring& absolute) {
 	const std::wstring volume   = volumeOfPath(absolute);
-	const std::wstring relative  = pathRelativeToVolume(absolute);
+	const std::wstring relative  = withoutClimbing(pathRelativeToVolume(absolute));
 	const std::wstring system_  = conf.systemDrive.substr(0, 1);
 	if (toLower(volume) == toLower(system_))
 		return root + relative;                   // the common case: nothing changes

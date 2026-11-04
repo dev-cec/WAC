@@ -1651,8 +1651,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \champ{ClientAddress}, \champ{UserName}, \champ{UserAgent},
         \champ{Status}, \champ{TimeTakenMs}, \champ{Reason} (HTTPERR)\ldots,
         \champ{File} and \champ{Line}. A field IIS writes \texttt{-} is not
-        emitted; a field WAC does not name keeps its own. A log in another
-        format (IIS, NCSA, custom) is copied raw, not converted.
+        emitted; a field WAC does not name keeps its own. A field named like
+        a key already taken (\champ{File}, or the same one twice in
+        \texttt{\#Fields:}, which a forged log can write) goes to
+        \champ{OtherFields}, with its name and value. A log in another format
+        (IIS, NCSA, custom) is copied raw, not converted.
   \item[\fichier{web\_server\_connection\_strings.json}] each connection
         string of the sites' \fichier{web.config}, as written
         (\champ{Name}, \champ{ConnectionString}, \champ{ProviderName},

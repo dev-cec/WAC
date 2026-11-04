@@ -307,15 +307,23 @@ std::wstring ActiveDirectory::distinguishedName(uint32_t dnt) const {
 	return path;
 }
 
+Json directoryNumberToJson(DirectoryValueKind kind, const std::vector<uint8_t>& value) {
+	// A value too short for its kind is no value: a zero here would read as one the directory holds.
+	switch (kind) {
+	case K::Int32: return value.size() >= 4 ? Json::num((long long)(int32_t)readLittleEndian<uint32_t>(value.data())) : Json::str(L"");
+	case K::Int64: return value.size() >= 8 ? Json::num((long long)readLittleEndian<uint64_t>(value.data())) : Json::str(L"");
+	case K::Flag: return value.size() >= 4 ? Json::boolean(readLittleEndian<uint32_t>(value.data()) != 0) : Json::str(L"");
+	default: return Json::str(L"");
+	}
+}
+
 /*! One value of an attribute, by its kind.
  *  @param kind how it reads
  *  @param value the value
  *  @return the JSON value; a text empty, not emitted, if it cannot be read as that */
 Json ActiveDirectory::valueToJson(DirectoryValueKind kind, const std::vector<uint8_t>& value) const {
 	switch (kind) {
-	case K::Int32: return Json::num((long long)(int32_t)(value.size() >= 4 ? readLittleEndian<uint32_t>(value.data()) : 0));
-	case K::Int64: return Json::num((long long)(value.size() >= 8 ? readLittleEndian<uint64_t>(value.data()) : 0));
-	case K::Flag: return Json::boolean(value.size() >= 4 && readLittleEndian<uint32_t>(value.data()) != 0);
+	case K::Int32: case K::Int64: case K::Flag: return directoryNumberToJson(kind, value);
 	case K::Sid: return Json::str(directorySidToText(value));
 	case K::Guid: return Json::str(value.size() == GUID_SIZE ? guid_to_wstring(value.data()) : L"");
 	case K::ObjectName: return Json::str(value.size() >= 4 ? distinguishedName(readLittleEndian<uint32_t>(value.data())) : L"");

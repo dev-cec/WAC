@@ -156,6 +156,21 @@ void auditInit(const std::vector<std::wstring>& args) {
 	readContext();
 }
 
+bool runPhase(const std::wstring& phase, const std::function<void()>& work) {
+	std::string reason;
+	try {
+		work();
+		return true;
+	}
+	catch (const std::exception& e) { reason = e.what(); }
+	catch (...) { reason = "unknown exception"; }
+	log(1, L"🔥Phase stopped by an exception: " + phase);
+	auditRecord(L"Phase stopped by an exception, the rest of the phase is missing: " + phase
+	            + L" (" + std::wstring(reason.begin(), reason.end()) + L")",
+	            L"", ERROR_UNHANDLED_EXCEPTION, Footprint::NONE);
+	return false;
+}
+
 void auditRecord(const std::wstring& operation, const std::wstring& target,
                  HRESULT result, const wchar_t* footprint) {
 	Operation o;

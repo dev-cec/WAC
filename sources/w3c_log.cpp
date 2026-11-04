@@ -4,6 +4,7 @@
 #include "w3c_log.h"
 #include "registry_common.h"
 #include <algorithm>
+#include <set>
 
 namespace {
 
@@ -85,8 +86,20 @@ Json W3cLogEntry::toJson() const {
 	if (time.dwLowDateTime || time.dwHighDateTime)
 		addDate(o, L"Time", zone == W3cTime::Local ? suspectLocalToUtc(time) : time);
 	o.add(L"TimeAsStored", Json::str(timeAsStored));
-	for (const auto& [key, text] : fields) o.add(key, value(text));
 	o.add(L"File", Json::str(file));
 	o.add(L"Line", Json::num(line));
+	/* "#Fields:" is written by whoever writes the log: a field named "File"
+	   or twice the same would give two keys in one object, and a reader would
+	   keep the forged one. Such a field stays, under OtherFields, by its name. */
+	std::set<std::wstring> taken = { L"Time", L"TimeAsStored", L"File", L"Line" };
+	Json others = Json::arr();
+	for (const auto& [key, text] : fields) {
+		if (taken.insert(key).second) { o.add(key, value(text)); continue; }
+		Json other = Json::obj();
+		other.add(L"Name", Json::str(key));
+		other.add(L"Value", Json::str(text));
+		others.push(std::move(other));
+	}
+	o.add(L"OtherFields", std::move(others));
 	return o;
 }

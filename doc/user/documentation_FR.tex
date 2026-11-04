@@ -1703,8 +1703,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \champ{Status}, \champ{TimeTakenMs}, \champ{Reason}
         (HTTPERR)\ldots, \champ{File} et \champ{Line}. Un champ qu'IIS écrit
         \texttt{-} n'est pas émis ; un champ que WAC ne nomme pas garde son
-        propre nom. Un journal dans un autre format (IIS, NCSA, personnalisé)
-        est copié brut, non converti.
+        propre nom. Un champ nommé comme une clé déjà prise (\champ{File}, ou
+        deux fois le même dans \texttt{\#Fields:}, ce qu'un journal forgé peut
+        écrire) va dans \champ{OtherFields}, avec son nom et sa valeur. Un
+        journal dans un autre format (IIS, NCSA, personnalisé) est copié brut,
+        non converti.
   \item[\fichier{web\_server\_connection\_strings.json}] chaque chaîne de
         connexion des \fichier{web.config} des sites, telle qu'écrite
         (\champ{Name}, \champ{ConnectionString}, \champ{ProviderName},

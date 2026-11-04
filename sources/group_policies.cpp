@@ -223,7 +223,7 @@ std::vector<Json> parsePolicyScripts(const std::wstring& text, const std::wstrin
 		std::map<unsigned, std::pair<std::wstring, std::wstring>> numbered;
 		for (const auto& [key, value] : lines) {
 			size_t digits = 0;
-			while (digits < key.size() && std::iswdigit(key[digits])) ++digits;
+			while (digits < key.size() && key[digits] >= L'0' && key[digits] <= L'9') ++digits;   // ASCII: iswdigit admits other scripts, which stoul refuses
 			if (digits == 0 || digits > 6) continue;
 			const unsigned order = (unsigned)std::stoul(key.substr(0, digits));
 			const std::wstring name = toLower(key.substr(digits));

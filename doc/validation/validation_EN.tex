@@ -477,6 +477,9 @@ Each file is parsed whole, in its truncations, and in randomly corrupted copies
 
 Result: no read outside the buffer, no endless loop.
 
+\texttt{hostile\_input\_test}, on forged rather than real inputs, covers the readers
+4.0 added: 32,000 mutated inputs, no read outside the buffer, no escaped exception.
+
 % ============================================================ 4
 \chapter{The automatic cycle and its checks}\label{ch:cycle}
 

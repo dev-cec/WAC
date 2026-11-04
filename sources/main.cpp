@@ -1898,12 +1898,14 @@ int wmain(int argc, wchar_t* argv[])
 		if (hrControlSet != ERROR_SUCCESS)
 			log(2, L"🔥CurrentControlSet unavailable: moved event logs and Sysmon's archives not looked for", hrControlSet);
 	}
-	if (conf.mode != RunMode::Convert) extractProfileArtefacts();
+	// An exception ends its phase, never the run: the seal and the log below are what makes a collection usable.
+	bool complete = true;
+	if (conf.mode != RunMode::Convert) complete &= runPhase(L"extraction of the profiles' artefacts", [] { extractProfileArtefacts(); });
 
-	if (conf.mode == RunMode::Collect) collectForConversion();
+	if (conf.mode == RunMode::Collect) complete &= runPhase(L"collection", [] { collectForConversion(); });
 	else {
-		convertArtefacts(systemAvailable);
-		convertShadowCopies();
+		complete &= runPhase(L"conversion", [systemAvailable] { convertArtefacts(systemAvailable); });
+		complete &= runPhase(L"conversion of the shadow copies", [] { convertShadowCopies(); });
 	}
 
 	printHeading(Text::HeadingExhibitStore);
@@ -1959,5 +1961,5 @@ int wmain(int argc, wchar_t* argv[])
 	getchar();
 	CloseHandle(conf.hConsole);
 
-	return ERROR_SUCCESS;
+	return complete ? ERROR_SUCCESS : ERROR_UNHANDLED_EXCEPTION;
 }

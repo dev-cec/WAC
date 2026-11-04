@@ -63,6 +63,12 @@
 //! How a value of an attribute reads.
 enum class DirectoryValueKind { Text, Int32, Int64, Flag, Seconds, FileTime, Sid, ObjectName, ClassName, Guid, Descriptor };
 
+/*! A number or flag of the directory, read from its bytes.
+ *  @param kind Int32, Int64 or Flag
+ *  @param value the value's bytes
+ *  @return the JSON value; an empty text, not emitted, if the value is too short for its kind */
+Json directoryNumberToJson(DirectoryValueKind kind, const std::vector<uint8_t>& value);
+
 /*! One attribute's entry of replPropertyMetaData, or the metadata of a linked
  *  value: the state of the last change the controller knows. */
 struct DirectoryChange {

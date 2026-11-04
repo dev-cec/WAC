@@ -440,6 +440,15 @@ HRESULT ListDirectoryRaw(const std::wstring& volumeLetter,
                          const std::wstring& dirPathOnVolume,
                          std::vector<RawDirEntry>& out);
 
+/*! Decodes one node of a directory index ($I30), as ListDirectoryRaw does.
+ *  @param nodeHeader the node's header
+ *  @param limit the end of the node's bytes: nothing is read past it
+ *  @param out receives its entries */
+void parseDirectoryIndexNode(const uint8_t* nodeHeader, const uint8_t* limit, std::vector<RawDirEntry>& out);
+
+//! @return the directory entries left out so far because their name is no file name: a forged index
+size_t rawEntriesRefused();
+
 /*! Extracts the files of a directory by raw NTFS reading.
  *
  *  A missing directory is NOT an error: it is the nominal case during a

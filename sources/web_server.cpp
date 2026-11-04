@@ -460,7 +460,10 @@ std::vector<Json> readApplicationAccounts(const std::wstring& workingFile, const
 	SqliteDatabase db;
 	if (db.open(workingFile) != ERROR_SUCCESS) return rows;
 	std::vector<std::wstring> tables;
-	db.query("SELECT name FROM sqlite_master WHERE type = 'table'", [&](const SqliteRow& r) { tables.push_back(r.text(0)); });
+	if (db.query("SELECT name FROM sqlite_master WHERE type = 'table'", [&](const SqliteRow& r) { tables.push_back(r.text(0)); }) != ERROR_SUCCESS) {
+		log(2, L"🔥" + examinedFile + L": tables not listed");
+		return rows;
+	}
 	for (const std::wstring& table : tables) {
 		if (!accountTableName(table)) continue;
 		size_t read = 0;

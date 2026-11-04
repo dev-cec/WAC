@@ -7,6 +7,7 @@
  *  Built for hives/EVTX/Tasks: non-resident, medium-sized files.
  */
 #include "raw_hive.h"
+#include <atomic>
 #include "long_path.h"
 #include "conversions.h"
 #include <vector>
@@ -34,6 +35,9 @@
 #include "ntfs_boot_sector.h"
 
 namespace {
+
+//! Directory entries left out because their name is no file name: forged (see parseIndexNode).
+std::atomic<size_t> g_entriesRefused{ 0 };
 
 bool g_verbose = false;
 //! Trace of the NTFS parser on stderr, printed only in --debug mode.
@@ -1580,6 +1584,7 @@ private:
        Namespace 2 is an 8.3 short name: NTFS often stores TWO entries for one
        file (one DOS, one Win32). Pure DOS names are discarded, otherwise each
        file would be extracted twice, under two names. */
+public:
     static void parseIndexNode(const uint8_t* nodeHdr, const uint8_t* limit,
                                std::vector<RawDirEntry>& out){
         uint32_t firstOff = readLittleEndian<uint32_t>(nodeHdr);
@@ -1600,11 +1605,19 @@ private:
                         RawDirEntry entry;
                         entry.name.resize(nameLen);
                         for (uint8_t k = 0; k < nameLen; ++k) entry.name[k] = (wchar_t)readLittleEndian<uint16_t>(nm + 2 * k);
-                        entry.mftIndex    = ref.entry;
-                        entry.sequence    = ref.sequence;
-                        entry.isDirectory = (fileAttrs & 0x10000000u) != 0; // FILE_ATTRIBUTE_DIRECTORY
-                        entry.size        = entry.isDirectory ? 0 : realSize;
-                        out.push_back(std::move(entry));
+                        /* The name becomes part of the path a copy is written to:
+                           "..\\..\\WAC.exe" in a forged index would write outside the
+                           store, on the collection medium. NTFS itself admits none
+                           of these; the record stays in mft.json, with its name. */
+                        if (entry.name.empty() || entry.name.find_first_of(L"\\/:") != std::wstring::npos
+                            || entry.name.find_first_not_of(L". ") == std::wstring::npos) ++g_entriesRefused;
+                        else {
+                            entry.mftIndex    = ref.entry;
+                            entry.sequence    = ref.sequence;
+                            entry.isDirectory = (fileAttrs & 0x10000000u) != 0; // FILE_ATTRIBUTE_DIRECTORY
+                            entry.size        = entry.isDirectory ? 0 : realSize;
+                            out.push_back(std::move(entry));
+                        }
                     }
                 }
             }
@@ -2443,4 +2456,12 @@ HRESULT ExtractDirectoryTreeRaw(const std::wstring& volumeLetter,
     return extractTree(vol, dirIndex, dirPathOnVolume, outDir,
                                 extensions, extracted, maxDepth,
                                 volumeLetter, reading, skipped);
+}
+
+size_t rawEntriesRefused() {
+    return g_entriesRefused;
+}
+
+void parseDirectoryIndexNode(const uint8_t* nodeHeader, const uint8_t* limit, std::vector<RawDirEntry>& out) {
+    NtfsVolume::parseIndexNode(nodeHeader, limit, out);
 }

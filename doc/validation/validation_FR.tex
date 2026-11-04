@@ -493,6 +493,10 @@ corrompues au hasard (graine fixe : un échec se reproduit à l'identique).
 
 Résultat : aucune lecture hors tampon, aucune boucle sans fin.
 
+\texttt{hostile\_input\_test}, sur des entrées forgées et non réelles, couvre les
+lecteurs ajoutés par la 4.0 : 32~000 entrées mutées, aucune lecture hors tampon,
+aucune exception échappée.
+
 % ============================================================ 4
 \chapter{Le cycle automatique et ses contrôles}\label{ch:cycle}
 

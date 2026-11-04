@@ -1351,6 +1351,26 @@ de la page interdite :
 \end{longtable}
 
 % ============================================================ 6
+
+\section{Les entrées forgées : \texttt{hostile\_input\_test}}
+
+Construit par \texttt{build-windows.sh -{}-test}, lancé sous \texttt{wine}, avec
+en argument le nombre de mutations par entrée (2~000 par défaut). Chaque contrôle
+nommé tient un défaut trouvé par la revue de sécurité de la version~4.0 : un nom
+d'index NTFS qui sort de la consigne, un \texttt{..} de configuration qui sort de
+la collecte, une chaîne de \texttt{Define} d'Apache qui épuise la mémoire, un
+chiffre non ASCII dans \fichier{scripts.ini}, une vue d'une base SQLite forgée, un
+champ W3C nommé comme une clé de l'enregistrement, une exception qui terminait la
+collecte sans sceau ni journal.
+Puis les lecteurs ajoutés par cette version (Apache, nginx, W3C, stratégies,
+\fichier{web.config}, \fichier{applicationHost.config}, \fichier{Registry.pol},
+métadonnées de réplication, nœuds d'index) lisent des entrées mutées, graine fixe,
+les binaires contre une page de garde. Une exception qui s'échappe arrête le test,
+comme elle arrêterait une collecte. Référence : 16 contrôles, 32~000 entrées, aucun
+échec. Vu échouer : chacun des contrôles nommés sur le code d'avant la revue, la
+chaîne de \texttt{Define} montant à 26~Gio avant que le noyau ne tue le processus ;
+à lancer sous plafond de mémoire si cette borne est retirée.
+
 \chapter{Recouper sur une collecte réelle}
 
 Une VM fraîchement installée ne produit ni fragmentation, ni listes de sauts

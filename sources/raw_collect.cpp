@@ -1400,6 +1400,9 @@ HRESULT ExtractShadowCopiesRaw() {
 }
 
 HRESULT RepairWorkingHives() {
+	if (const size_t refused = rawEntriesRefused())
+		auditRecord(L"Directory entries left out, their name is no file name (a forged index; see mft.json): " + std::to_wstring(refused),
+		            L"", ERROR_INVALID_NAME, Footprint::VOLUME_BRUT);
 	/* The hives of the working copy, found by their names: the same set the
 	   collection extracts (system hives, and each profile's ntuser.dat and
 	   UsrClass.dat), whatever the profiles' paths. */

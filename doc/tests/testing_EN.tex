@@ -1298,6 +1298,24 @@ forbidden page:
 \end{longtable}
 
 % ============================================================ 6
+
+\section{Forged inputs: \texttt{hostile\_input\_test}}
+
+Built by \texttt{build-windows.sh -{}-test}, run under \texttt{wine}, with the
+number of mutations per input as its argument (2,000 by default). Each named check
+holds a defect found by the security review of version~4.0: an NTFS index name
+leaving the exhibit store, a \texttt{..} of a configuration leaving the collection,
+a chain of Apache \texttt{Define} exhausting the memory, a non-ASCII digit in
+\fichier{scripts.ini}, a view of a forged SQLite database, a W3C field named like
+a key of the record, an exception that ended a collection without seal or log. Then the readers this
+version added (Apache, nginx, W3C, policies, \fichier{web.config},
+\fichier{applicationHost.config}, \fichier{Registry.pol}, replication metadata,
+index nodes) read mutated inputs, fixed seed, the binary ones against a guard page.
+An exception that escapes ends the test, as it would end a collection. Reference:
+16 checks, 32,000 inputs, no failure. Seen failing: each named check on the code
+before the review, the chain of \texttt{Define} reaching 26~GiB before the kernel
+killed the process; run it under a memory ceiling if that bound is removed.
+
 \chapter{Cross-checking on a real collection}
 
 A freshly installed VM produces no fragmentation, no old jump lists, no exotic

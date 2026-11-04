@@ -16,6 +16,8 @@ const int INCLUDE_DEPTH = 16;
 const uintmax_t CONFIGURATION_MAX = 16ULL * 1024 * 1024;
 //! Folder depth an Apache `Include folder/` walks.
 const int INCLUDE_FOLDER_DEPTH = 8;
+//! Longest word once its variables are replaced: far above any path or name of a configuration.
+const size_t EXPANDED_MAX = 64 * 1024;
 
 const wchar_t* APACHE = L"Apache";
 const wchar_t* NGINX = L"nginx";
@@ -140,11 +142,16 @@ private:
 	std::set<std::wstring> seen_;
 	size_t host_ = 0;   //!< the host being read: an index, the list grows
 
+	/*! A word with its variables replaced. A chain of `Define`, each doubling the
+	 *  one before, reaches any size from a few lines: past the bound, the rest of
+	 *  the word stays as written. */
 	std::wstring expanded(std::wstring value) const {
 		for (const auto& [name, text] : defines_) {
 			const std::wstring marker = L"${" + name + L"}";
-			for (size_t at = value.find(marker); at != std::wstring::npos; at = value.find(marker, at + text.size()))
+			for (size_t at = value.find(marker); at != std::wstring::npos; at = value.find(marker, at + text.size())) {
+				if (value.size() - marker.size() + text.size() > EXPANDED_MAX) return value;
 				value.replace(at, marker.size(), text);
+			}
 		}
 		return value;
 	}

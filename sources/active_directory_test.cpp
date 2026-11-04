@@ -105,6 +105,15 @@ void accountFlags() {
 	check(text.find(L"0x08000000") != std::wstring::npos, "an unknown bit is said");
 }
 
+//! A value too short for its kind is not emitted, and never reads as a zero.
+void tooShortNumbers() {
+	const std::vector<uint8_t> three = { 1, 2, 3 }, seven = { 1, 2, 3, 4, 5, 6, 7 }, four = { 1, 0, 0, 0 };
+	check(directoryNumberToJson(DirectoryValueKind::Int32, three).isEmptyValue(), "three bytes are no Int32");
+	check(directoryNumberToJson(DirectoryValueKind::Int64, seven).isEmptyValue(), "seven bytes are no Int64");
+	check(directoryNumberToJson(DirectoryValueKind::Flag, three).isEmptyValue(), "three bytes are no flag");
+	check(directoryNumberToJson(DirectoryValueKind::Int32, four).dump() == L"1", "four bytes are an Int32");
+}
+
 } // namespace
 
 int wmain() {
@@ -114,6 +123,7 @@ int wmain() {
 	names();
 	objectAce();
 	accountFlags();
+	tooShortNumbers();
 	printf("%u checks, %u failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
 }

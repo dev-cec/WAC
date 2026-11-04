@@ -27,6 +27,7 @@
 #pragma once
 #include "json.h"
 #include <windows.h>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -97,6 +98,15 @@ void auditRecord(const std::wstring& operation,
                  const std::wstring& target,
                  HRESULT result,
                  const wchar_t* footprint);
+
+/*! Runs one phase of the run so that an exception ends that phase and not the
+ *  run: without this, a std::bad_alloc on a giant forged file ended the process
+ *  and left the collection without seal or investigation log. The stack is
+ *  unwound by then, so the memory it held is back for what follows.
+ *  @param phase what the phase does, for the log
+ *  @param work the phase
+ *  @return false if it stopped on an exception, which is recorded */
+bool runPhase(const std::wstring& phase, const std::function<void()>& work);
 
 /*! Records the configuration file the run applied (see config.h): the
  *  procedure is part of the evidence.
