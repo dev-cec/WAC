@@ -201,7 +201,7 @@ OLDER_VERSION_STATUSES = {
            set()),
     7601: ("Windows 7",
            {"activities_cache.json", "bams.json", "cloud_identity.json", "defender_detections.json", "defender_log.json",
-            "defender_quarantine.json", "intune_logs.json", "srum.json"},
+            "defender_quarantine.json", "intune_logs.json", "srum.json", "user_access_log.json"},
            set()),
 }
 
