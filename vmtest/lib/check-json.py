@@ -3688,20 +3688,21 @@ def check_user_access_log(folder):
                 names = {str(r.get("RoleGuid")).lower(): r.get("RoleName") for r in database.table("ROLE_IDS").records()}
                 identity = next(iter(database.table("SYSTEM_IDENTITY").records()))
             if "CLIENTS" in tables:
-                clients.extend(database.table("CLIENTS").records())
-    def key(role, user, where):
-        return (role.strip("{}").lower(), (user or "").lower(), where)
-    rows = {key(r.get("RoleGuid", ""), r.get("AuthenticatedUserName"), r.get("Address")): r for r in mine if r.get("Table") == "CLIENTS"}
+                clients.extend((name, c) for c in database.table("CLIENTS").records())
+    # The database is part of the key: Current.mdb and a year's <GUID>.mdb hold the same row, each its own counts.
+    def key(base, role, user, where):
+        return (base.lower(), role.strip("{}").lower(), (user or "").lower(), where)
+    rows = {key(r.get("Database", ""), r.get("RoleGuid", ""), r.get("AuthenticatedUserName"), r.get("Address")): r for r in mine if r.get("Table") == "CLIENTS"}
     wrong = []
-    for c in clients:
-        k = key(str(c.get("RoleGuid")), c.get("AuthenticatedUserName"), address(c.get("Address")))
+    for base, c in clients:
+        k = key(base, str(c.get("RoleGuid")), c.get("AuthenticatedUserName"), address(c.get("Address")))
         r = rows.get(k)
         days = {int(name[3:]): count for name, count in c.as_dict().items() if re.fullmatch(r"Day\d+", name) and count}
         theirs = {d["DayOfYear"]: d["Accesses"] for d in (r or {}).get("Days", [])}
         if not r:
             wrong.append(f"{k}: absent")
-        elif r.get("InsertDateUtc", "")[:19] != filetime(c.get("InsertDate")) or r.get("RoleName") != names.get(k[0]):
-            wrong.append(f"{k}: WAC {r.get('InsertDateUtc')} {r.get('RoleName')!r}, dissect {filetime(c.get('InsertDate'))} {names.get(k[0])!r}")
+        elif r.get("InsertDateUtc", "")[:19] != filetime(c.get("InsertDate")) or r.get("RoleName") != names.get(k[1]):
+            wrong.append(f"{k}: WAC {r.get('InsertDateUtc')} {r.get('RoleName')!r}, dissect {filetime(c.get('InsertDate'))} {names.get(k[1])!r}")
         elif r.get("TotalAccesses", 0) < c.get("TotalAccesses") or any(theirs.get(d, 0) < n for d, n in days.items()):
             wrong.append(f"{k}: WAC {r.get('TotalAccesses')} {theirs}, dissect {c.get('TotalAccesses')} {days}")
     report(clients and not wrong, f"user_access_log.json: the {len(clients)} row(s) of CLIENTS, role, account, address, first date and days, as dissect.esedb reads them",
