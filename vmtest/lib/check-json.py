@@ -4945,14 +4945,26 @@ def check_webcache(folder, records):
         local = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=ticks // 10)
         utc = local.replace(tzinfo=zone).astimezone(datetime.timezone.utc).replace(tzinfo=None)
         return utc.strftime("%Y-%m-%dT%H:%M:%S.%f") + str(ticks % 10) + "Z"
+    def entries_of(path):
+        db = EseDB(open(path, "rb"))
+        names = {t.name for t in db.tables()}
+        return {(c.get("ContainerId"), e.get("EntryId")) for c in db.table("Containers").records()
+                if f"Container_{c.get('ContainerId')}" in names
+                for e in db.table(f"Container_{c.get('ContainerId')}").records() if e.get("EntryId") is not None}
     found = 0
     for cache in caches:
         source = "C:\\" + os.path.relpath(cache, store).replace(os.sep, "\\")
+        # The copy is dirty, read by dissect as it is; WAC reads it after replaying its logs, which
+        # may delete entries (measured on Windows 11: a finished download's iedownload and Content
+        # entries). Such an entry is let through only if the later, independent copy of the second
+        # collection (split/) no longer holds it either.
+        later_path = os.path.join(folder, "split", os.path.relpath(cache, folder))
+        later = entries_of(later_path) if os.path.basename(os.path.normpath(folder)) != "split" and os.path.exists(later_path) else None
         mine = {(r.get("ContainerId"), r.get("EntryId")): r for r in records
                 if r.get("Type") == "CacheEntry" and (r.get("Source") or "").lower() == source.lower()}
         db = EseDB(open(cache, "rb"))
         names = {t.name for t in db.tables()}
-        theirs, wrong, local_checked, empty = 0, [], 0, 0
+        theirs, wrong, local_checked, empty, deleted = 0, [], 0, 0, 0
         for c in db.table("Containers").records():
             cid, name = c.get("ContainerId"), c.get("Name") or ""
             if f"Container_{cid}" not in names:
@@ -4963,6 +4975,9 @@ def check_webcache(folder, records):
                 # read its header — no entry, WAC rightly gives none.
                 if e.get("EntryId") is None:
                     empty += 1
+                    continue
+                if (cid, e.get("EntryId")) not in mine and later is not None and (cid, e.get("EntryId")) not in later:
+                    deleted += 1
                     continue
                 theirs += 1
                 r = mine.get((cid, e.get("EntryId")), {})
@@ -4977,6 +4992,7 @@ def check_webcache(folder, records):
         print(f"  {'✅' if ok else '❌'} web_client.json: {theirs} WebCache entr(ies) as dissect.esedb reads them "
               f"(WAC {len(mine)}, {empty} empty leaf entr(ies) left out), URL and times identical, "
               f"{local_checked} MSHist local time(s) converted by zoneinfo"
+              + (f", {deleted} deleted by the replayed logs (absent from the later copy too)" if deleted else "")
               + ("" if ok else f": {wrong[:3]}"))
         found += 0 if ok else 1
     return found
