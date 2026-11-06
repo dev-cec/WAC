@@ -8,6 +8,7 @@
 #include "ip_address.h"
 #include <algorithm>
 #include <cstring>
+#include <cwchar>
 #include <filesystem>
 #include <map>
 #include <utility>
@@ -144,6 +145,16 @@ void readRows(EseDatabase& database, const std::wstring& file, const RoleNames& 
 
 } // namespace
 
+bool userAccessDatabaseCandidate(const std::wstring& file) {
+	// The engine's own files beside the databases: transaction logs, reserve logs, checkpoint, flush map.
+	static const wchar_t* const ENGINE_EXTENSIONS[] = { L".log", L".jrs", L".chk", L".jfm" };
+	for (const wchar_t* extension : ENGINE_EXTENSIONS) {
+		const size_t size = wcslen(extension);
+		if (file.size() > size && file.compare(file.size() - size, size, extension) == 0) return false;
+	}
+	return !file.empty() && file.find(L'\\') == std::wstring::npos;
+}
+
 std::wstring userAccessAddressText(const std::vector<uint8_t>& address) {
 	if (address.size() == IPV4_SIZE) return Ipv4Text(address.data());
 	if (address.size() == IPV6_SIZE) return Ipv6Text(address.data());
@@ -179,7 +190,7 @@ HRESULT UserAccessLog::getData() {
 	for (const auto& [path, exhibit] : ExhibitStoreIndex()) {
 		if (path.compare(0, prefix.size(), prefix) != 0 || exhibit.workingFile.empty()) continue;
 		const std::wstring file = path.substr(prefix.size());
-		if (file.size() > 4 && file.compare(file.size() - 4, 4, L".mdb") == 0) files.emplace_back(file, &exhibit);
+		if (userAccessDatabaseCandidate(file)) files.emplace_back(file, &exhibit);
 	}
 	// The roles first: their names go on the rows of the other databases, read in any order.
 	std::stable_partition(files.begin(), files.end(), [](const auto& f) { return f.first == ROLES_DATABASE; });

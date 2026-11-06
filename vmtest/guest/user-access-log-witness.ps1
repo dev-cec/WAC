@@ -1,8 +1,11 @@
 # user-access-log-witness.ps1 — a connection to this server's file sharing, which
 # its User Access Logging records, then the databases as the service leaves them
-# once stopped: C:\wactest\user-access-log.zip. The harness may restart a service,
-# WAC never does. Prints "placed", or "no service" where the machine has none
-# (a client, a server before 2012).
+# once stopped: C:\wactest\user-access-log.zip, every file but the engine's own. On
+# Server 2016 a past period's database has a name of three random UTF-16 units, a
+# lone surrogate among them: it is stored under "u-" and its units in hexadecimal
+# ("u-6630-db1c-0239"), which check-json.py turns back into the name. The harness
+# may restart a service, WAC never does. Prints "placed", or "no service" where the
+# machine has none (a client, a server before 2012).
 $ErrorActionPreference = 'Stop'
 $service = Get-Service UALSVC -ErrorAction SilentlyContinue
 if (-not $service) { Write-Output 'no service'; exit 0 }
@@ -15,7 +18,11 @@ $copy = 'C:\wactest\user-access-log'
 Stop-Service UALSVC -Force
 try {
     New-Item -ItemType Directory -Force $copy | Out-Null
-    Copy-Item "$folder\*.mdb" $copy
+    Get-ChildItem $folder -File | Where-Object { $_.Extension -notin '.log', '.jrs', '.chk', '.jfm' } | ForEach-Object {
+        $name = $_.Name
+        if ($name -cnotmatch '^[\x20-\x7e]+$') { $name = 'u-' + (($name.ToCharArray() | ForEach-Object { '{0:x4}' -f [int]$_ }) -join '-') }
+        Copy-Item -LiteralPath $_.FullName (Join-Path $copy $name)
+    }
 } finally { Start-Service UALSVC }
 # Zipped by .NET: Compress-Archive arrives with PowerShell 5, Server 2012 has 3.
 Add-Type -AssemblyName System.IO.Compression.FileSystem

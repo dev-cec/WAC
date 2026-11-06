@@ -3655,7 +3655,8 @@ def check_user_access_log(folder):
     """user_access_log.json against the databases as the service left them when
     stopped, read by dissect.esedb: every row of CLIENTS with its role, account,
     address, first date and days, the witness's connection among them; the roles'
-    names; the machine's identity. On a machine without the service: skipped."""
+    names; every database holding rows, under its name; the machine's identity.
+    On a machine without the service: skipped."""
     path = os.path.join(folder, "reference", "user-access-log.zip")
     if not os.path.exists(path):
         print("  ⏭️  user_access_log.json: no reference (no service on this machine): not confronted")
@@ -3679,35 +3680,57 @@ def check_user_access_log(folder):
         return (datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=value // 10)).strftime("%Y-%m-%dT%H:%M:%S")
     def address(value):
         return ".".join(str(b) for b in value) if len(value) == 4 else ipaddress.ip_address(value).compressed
-    clients, names = [], {}
+    def stored_name(entry):
+        # The witness stores a name it cannot zip, three random UTF-16 units on Server 2016, as "u-" and their hex.
+        return "".join(chr(int(u, 16)) for u in entry[2:].split("-")) if entry.startswith("u-") else entry
+    clients, names, holding = [], {}, set()
     with zipfile.ZipFile(path) as z:
         for name in z.namelist():
-            database = EseDB(io.BytesIO(z.read(name)))
+            try:
+                database = EseDB(io.BytesIO(z.read(name)))
+            except Exception:
+                continue
             tables = {t.name for t in database.tables()}
             if "ROLE_IDS" in tables:
                 names = {str(r.get("RoleGuid")).lower(): r.get("RoleName") for r in database.table("ROLE_IDS").records()}
                 identity = next(iter(database.table("SYSTEM_IDENTITY").records()))
             if "CLIENTS" in tables:
-                clients.extend((name, c) for c in database.table("CLIENTS").records())
-    # The database is part of the key: Current.mdb and a year's <GUID>.mdb hold the same row, each its own counts.
-    def key(base, role, user, where):
-        return (base.lower(), role.strip("{}").lower(), (user or "").lower(), where)
-    rows = {key(r.get("Database", ""), r.get("RoleGuid", ""), r.get("AuthenticatedUserName"), r.get("Address")): r for r in mine if r.get("Table") == "CLIENTS"}
+                rows_here = list(database.table("CLIENTS").records())
+                clients.extend(rows_here)
+                if rows_here:
+                    holding.add(stored_name(name).lower())
+    # A row is matched by its role, account, address and first date, not by its database: on Server 2016 every
+    # stop of the service moves Current.mdb's rows into a new database, between the reference and the collection.
+    # Current.mdb and a past period's database may hold the same row, each its own counts: the reference's rows,
+    # largest count first, each take the smallest of WAC's rows that holds at least as many accesses.
+    def key(role, user, where, inserted):
+        return (role.strip("{}").lower(), (user or "").lower(), where, inserted)
+    mine_clients = [r for r in mine if r.get("Table") == "CLIENTS"]
+    rows = {}
+    for r in mine_clients:
+        rows.setdefault(key(r.get("RoleGuid", ""), r.get("AuthenticatedUserName"), r.get("Address"), r.get("InsertDateUtc", "")[:19]), []).append(r)
     wrong = []
-    for base, c in clients:
-        k = key(base, str(c.get("RoleGuid")), c.get("AuthenticatedUserName"), address(c.get("Address")))
-        r = rows.get(k)
+    for c in sorted(clients, key=lambda c: -(c.get("TotalAccesses") or 0)):
+        k = key(str(c.get("RoleGuid")), c.get("AuthenticatedUserName"), address(c.get("Address")), filetime(c.get("InsertDate")))
         days = {int(name[3:]): count for name, count in c.as_dict().items() if re.fullmatch(r"Day\d+", name) and count}
-        theirs = {d["DayOfYear"]: d["Accesses"] for d in (r or {}).get("Days", [])}
-        if not r:
-            wrong.append(f"{k}: absent")
-        elif r.get("InsertDateUtc", "")[:19] != filetime(c.get("InsertDate")) or r.get("RoleName") != names.get(k[1]):
-            wrong.append(f"{k}: WAC {r.get('InsertDateUtc')} {r.get('RoleName')!r}, dissect {filetime(c.get('InsertDate'))} {names.get(k[1])!r}")
-        elif r.get("TotalAccesses", 0) < c.get("TotalAccesses") or any(theirs.get(d, 0) < n for d, n in days.items()):
-            wrong.append(f"{k}: WAC {r.get('TotalAccesses')} {theirs}, dissect {c.get('TotalAccesses')} {days}")
+        def holds(r):
+            theirs = {d["DayOfYear"]: d["Accesses"] for d in r.get("Days", [])}
+            return r.get("TotalAccesses", 0) >= c.get("TotalAccesses") and all(theirs.get(d, 0) >= n for d, n in days.items())
+        candidates = sorted((r for r in rows.get(k, []) if holds(r)), key=lambda r: r.get("TotalAccesses", 0))
+        if not candidates:
+            wrong.append(f"{k}: absent or fewer accesses, WAC {[(r.get('Database'), r.get('TotalAccesses')) for r in rows.get(k, [])]}, dissect {c.get('TotalAccesses')} {days}")
+            continue
+        r = candidates[0]
+        rows[k].remove(r)
+        if r.get("RoleName") != names.get(k[0]):
+            wrong.append(f"{k}: WAC {r.get('RoleName')!r}, dissect {names.get(k[0])!r}")
     report(clients and not wrong, f"user_access_log.json: the {len(clients)} row(s) of CLIENTS, role, account, address, first date and days, as dissect.esedb reads them",
            f"user_access_log.json: {len(wrong)} difference(s) for {len(clients)} row(s): {wrong[:3]}")
-    witness = [r for r in rows.values() if r.get("Address") in ("127.0.0.1", "::1") and "wac" in r.get("AuthenticatedUserName", "").lower()]
+    # The databases that hold a row, under their names as the folder gives them, a name without extension among them.
+    theirs = {str(r.get("Database", "")).lower() for r in mine_clients}
+    report(holding and holding <= theirs, f"user_access_log.json: the {len(holding)} database(s) holding rows, under their names {sorted(ascii(n) for n in holding)[:4]}",
+           f"user_access_log.json: database(s) holding rows not read: {sorted(ascii(n) for n in holding - theirs)[:4]}")
+    witness = [r for r in mine_clients if r.get("Address") in ("127.0.0.1", "::1") and "wac" in r.get("AuthenticatedUserName", "").lower()]
     dated = [d for r in witness for d in r.get("Days", []) if d.get("Date") == r.get("LastAccessUtc", "")[:10]]
     report(witness and dated, "user_access_log.json: the witness's own connection, with the day of its last access",
            f"user_access_log.json: the witness's connection not found or undated: {witness[:1]}")

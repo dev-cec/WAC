@@ -268,8 +268,8 @@
 \texttt{dhcp\_server} & Windows Server 2003 & \texttt{Windows\textbackslash{}System32\textbackslash{}dhcp, or where Services\textbackslash{}DHCPServer\textbackslash{}Parameters says: dhcp.mdb and its logs, DhcpSrvLog-*.log} & ESE, comma-separated text & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only where the role is installed. Measured on Server 2022; older versions' dhcp.mdb is read if its tables have the same names.} \\
 \addlinespace
-\texttt{user\_access\_log} & Windows 8 & \texttt{Windows\textbackslash{}System32\textbackslash{}LogFiles\textbackslash{}Sum: SystemIdentity.mdb, Current.mdb, \textless{}GUID\textgreater{}.mdb and their logs} & ESE; dates as FILETIME in columns declared DateTime & yes \\
- & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only on a server. Measured on Server 2022.} \\
+\texttt{user\_access\_log} & Windows 8 & \texttt{Windows\textbackslash{}System32\textbackslash{}LogFiles\textbackslash{}Sum, every file: SystemIdentity.mdb, Current.mdb, a past period's database and their logs} & ESE; dates as FILETIME in columns declared DateTime & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only on a server. Measured on Server 2022 and 2016; on 2016 a past period's database is named with three random characters, without extension.} \\
 \addlinespace
 \texttt{hyperv} & Windows Vista & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Hyper-V\textbackslash{}Virtual Machines\textbackslash{}*.xml} & XML, collected raw & no \\
  & Windows 10 & \texttt{ProgramData\textbackslash{}Microsoft\textbackslash{}Windows\textbackslash{}Hyper-V: data.vmcx, Virtual Machines, Virtual Machines Cache and Snapshots\textbackslash{}*.vmcx} & undocumented binary: key and text value pairs & yes \\

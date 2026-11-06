@@ -12,7 +12,10 @@
  *    - SystemIdentity.mdb: SYSTEM_IDENTITY (the machine), ROLE_IDS (each role's
  *      GUID and name), CHAINED_DATABASES (the file of each past year);
  *    - Current.mdb, and <GUID>.mdb for a past year: CLIENTS, ROLE_ACCESS, DNS,
- *      VIRTUALMACHINES.
+ *      VIRTUALMACHINES. Measured on Server 2016: each restart of the service moves
+ *      Current.mdb's rows into a new database whose name is three random UTF-16
+ *      units, without extension, whatever CHAINED_DATABASES says; every file of
+ *      the folder but the engine's own is therefore read as a database.
  *  The folder holds three log bases (Api, Prv, Svc), which is why the replay
  *  tries each one (eseLogBaseNames).
  *
@@ -37,6 +40,14 @@
  *  @return IPv4 for four bytes, IPv6 for sixteen; hexadecimal for any other size,
  *          which a forged database can hold */
 std::wstring userAccessAddressText(const std::vector<uint8_t>& address);
+
+/*! @param file a file name of the folder, in lower case
+ *  @return true for a candidate database: anything but the engine's own files
+ *          (.log, .jrs, .chk, .jfm) and a subfolder's. Not ".mdb" alone: on Server
+ *          2016 a past period's database has a name of three random UTF-16 units,
+ *          without extension. A candidate that is no ESE database is refused by
+ *          EseDatabase::open, and said. */
+bool userAccessDatabaseCandidate(const std::wstring& file);
 
 /*! The date a column DayN stands for.
  *  @param year the year of the row

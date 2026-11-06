@@ -944,9 +944,12 @@ HRESULT ExtractFileArtefactsRaw() {
 		for (const std::wstring& folder : logs)
 			if (toLower(folder) != toLower(database)) trees.push_back({ folder, { L".log" }, 1, L"DHCP server's audit logs" });
 	}
-	// User Access Logging, open by its service: the databases with their logs and checkpoints.
+	/* User Access Logging, open by its service: every file of the folder, not a list of
+	   extensions. Measured on Server 2016: the service names each past period's database
+	   with three random UTF-16 units, no ".mdb", while CHAINED_DATABASES says
+	   {GUID}.mdb — the accesses moved there at each restart of the service. */
 	if (conf.artefacts.userAccessLog)
-		trees.push_back({ conf.systemDrive.substr(0, 2) + L"\\Windows\\System32\\LogFiles\\Sum", { L".mdb", L".log", L".chk", L".jfm" }, 1, L"User Access Logging" });
+		trees.push_back({ conf.systemDrive.substr(0, 2) + L"\\Windows\\System32\\LogFiles\\Sum", {}, 1, L"User Access Logging" });
 	// SYSVOL's real folder, whole: a policy's scripts and what replication keeps of deleted ones.
 	if (conf.artefacts.groupPolicies) {
 		std::wstring sysvol;

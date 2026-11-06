@@ -182,6 +182,14 @@ void userAccess() {
 	check(userAccessAddressText(loopback) == L"::1", "an IPv6 address");
 	check(userAccessAddressText({ 0xAB, 0x01, 0xFF }) == L"AB01FF", "a size of neither: hexadecimal");
 	check(userAccessAddressText({}).empty(), "no address: nothing");
+	check(userAccessDatabaseCandidate(L"current.mdb") && userAccessDatabaseCandidate(L"{830a41f6-7656-47af-a9d4-39217a905d06}.mdb"),
+	      "a database named .mdb is read");
+	check(userAccessDatabaseCandidate(std::wstring(L"\x6630") + L'\xDB1C' + L"\x0239"),
+	      "a database without extension, as Server 2016 names a past period's, is read");
+	check(!userAccessDatabaseCandidate(L"svc.log") && !userAccessDatabaseCandidate(L"svcres00001.jrs")
+	      && !userAccessDatabaseCandidate(L"svc.chk") && !userAccessDatabaseCandidate(L"current.jfm"),
+	      "the engine's own files are not read as databases");
+	check(!userAccessDatabaseCandidate(L"sub\\current.mdb") && !userAccessDatabaseCandidate(L""), "a subfolder's file, an empty name: not read");
 	check(userAccessDayDate(2026, 308) == L"2026-11-04", "day 308 of 2026, as measured on 4 November");
 	check(userAccessDayDate(2026, 1) == L"2026-01-01", "the first day");
 	check(userAccessDayDate(2026, 60) == L"2026-03-01", "day 60 of a common year");
