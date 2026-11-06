@@ -1,21 +1,33 @@
-# user-access-log-witness.ps1 — a connection to this server's file sharing, which
-# its User Access Logging records, then the databases as the service leaves them
-# once stopped: C:\wactest\user-access-log.zip, every file but the engine's own. On
-# Server 2016 a past period's database has a name of three random UTF-16 units, a
-# lone surrogate among them: it is stored under "u-" and its units in hexadecimal
-# ("u-6630-db1c-0239"), which check-json.py turns back into the name. The harness
-# may restart a service, WAC never does. Prints "placed", or "no service" where the
-# machine has none (a client, a server before 2012).
+# user-access-log-witness.ps1 — the User Access Logging reference, in two phases
+# around WAC's collection.
+#   -Phase access     a connection to this server's file sharing, which its User
+#                     Access Logging records, then the service stopped, which
+#                     writes it to the databases. The service stays stopped: on
+#                     Server 2012 R2 a restart loses the rows the stop wrote, so
+#                     WAC collects the very files the reference will hold.
+#   -Phase reference  after the collection: the databases copied into
+#                     C:\wactest\user-access-log.zip, every file but the engine's
+#                     own, then the service started again.
+# On Server 2016 a past period's database has a name of three random UTF-16 units,
+# a lone surrogate among them: it is stored under "u-" and its units in
+# hexadecimal ("u-6630-db1c-0239"), which check-json.py turns back into the name.
+# The harness may stop a service, WAC never does. Prints "stopped" then "placed",
+# or "no service" where the machine has none (a client, a server before 2012).
+param([Parameter(Mandatory)][ValidateSet('access', 'reference')][string]$Phase)
 $ErrorActionPreference = 'Stop'
 $service = Get-Service UALSVC -ErrorAction SilentlyContinue
 if (-not $service) { Write-Output 'no service'; exit 0 }
-if ($service.Status -ne 'Running') { Start-Service UALSVC }
+if ($Phase -eq 'access') {
+    if ($service.Status -ne 'Running') { Start-Service UALSVC }
+    # IPC$: the administrative shares refuse a local account over the network.
+    # Through cmd: PowerShell makes an error of anything net.exe writes to stderr.
+    & cmd.exe /c 'net use \\127.0.0.1\IPC$ /user:wac Wac-Server-2026! >nul 2>&1 & net use \\127.0.0.1\IPC$ /delete /y >nul 2>&1'
+    Stop-Service UALSVC -Force
+    Write-Output 'stopped'
+    exit 0
+}
 $folder = "$env:SystemRoot\System32\LogFiles\Sum"
 $copy = 'C:\wactest\user-access-log'
-# IPC$: the administrative shares refuse a local account over the network. Through
-# cmd: PowerShell makes an error of anything net.exe writes to stderr.
-& cmd.exe /c 'net use \\127.0.0.1\IPC$ /user:wac Wac-Server-2026! >nul 2>&1 & net use \\127.0.0.1\IPC$ /delete /y >nul 2>&1'
-Stop-Service UALSVC -Force
 try {
     New-Item -ItemType Directory -Force $copy | Out-Null
     Get-ChildItem $folder -File | Where-Object { $_.Extension -notin '.log', '.jrs', '.chk', '.jfm' } | ForEach-Object {

@@ -357,19 +357,33 @@ if wants dns_server dhcp_server hyperv; then
   $QGA run --shell "del $VMDIR\\server-roles-witness.ps1 $VMDIR\\server-roles-reference.json 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fi
 
-# User Access Logging: an access of known origin, then the databases as its service
-# leaves them when stopped, which check-json.py reads with dissect.esedb.
+# User Access Logging: an access of known origin, then the service stopped, which
+# writes it to the databases; it stays stopped through the collection, and the
+# reference is copied after it (user_access_log_reference), which check-json.py
+# reads with dissect.esedb. A restart before the collection lost the rows on
+# Server 2012 R2.
+UAL_STATE=""
 if wants user_access_log; then
   $QGA write "$HERE/guest/user-access-log-witness.ps1" "$VMDIR\\user-access-log-witness.ps1" >/dev/null
-  UAL_STATE=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\user-access-log-witness.ps1" 2>/dev/null | tr -d '\r' | tail -1 || true)
-  if [[ "$UAL_STATE" == placed ]]; then
+  UAL_STATE=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\user-access-log-witness.ps1" -Phase access 2>/dev/null | tr -d '\r' | tail -1 || true)
+  [[ "$UAL_STATE" == stopped || "$UAL_STATE" == "no service" ]] || echo "   ⚠️ User Access Logging witness not placed: $UAL_STATE"
+fi
+
+# The second phase, once WAC has collected: the databases copied, the service
+# started again — even when the first phase failed half-way, the service is
+# never left stopped.
+user_access_log_reference() {
+  [[ -n "$UAL_STATE" && "$UAL_STATE" != "no service" ]] || return 0
+  local state
+  state=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\user-access-log-witness.ps1" -Phase reference 2>/dev/null | tr -d '\r' | tail -1 || true)
+  if [[ "$UAL_STATE" == stopped && "$state" == placed ]]; then
     $QGA read "$VMDIR\\user-access-log.zip" "$OUTPUT/reference/user-access-log.zip" >/dev/null \
       && echo "   + reference/user-access-log.zip" || echo "   ⚠️ User Access Logging reference not read"
-  elif [[ "$UAL_STATE" != "no service" ]]; then
-    echo "   ⚠️ User Access Logging witness not placed: $UAL_STATE"
+  elif [[ "$state" != placed ]]; then
+    echo "   ⚠️ User Access Logging reference not copied: $state"
   fi
   $QGA run --shell "del $VMDIR\\user-access-log-witness.ps1 $VMDIR\\user-access-log.zip 2>nul & exit /b 0" >/dev/null 2>&1 || true
-fi
+}
 
 if ! full_cycle; then
   echo "== 3. skipped (--only) == ($(date +%H:%M:%S))"
@@ -472,6 +486,7 @@ $QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1
 if wants_registry_witness; then wait_registry_on_disk; fi
 $QGA run --timeout 3600 --shell "cd /d $VMDIR && WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
 [[ "$CODE" == "0" ]] && { $QGA run --timeout 3600 --shell "cd /d $VMDIR && WAC.exe --convert=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 >> run.log 2>&1" || CODE=$?; }
+user_access_log_reference
 $QGA read "$VMDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
 
 if [[ -f "$OUTPUT/run.log" ]] && grep -qaiE 'terminate called|Unhandled exception|Exception non gérée' "$OUTPUT/run.log"; then

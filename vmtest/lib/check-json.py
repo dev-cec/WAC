@@ -3665,61 +3665,15 @@ def check_dns_debug_log(folder, report):
     report(len(records) == lines, f"dns_server_log.json: the {lines} dated line(s) of the debug log, each with its record",
            f"dns_server_log.json: {len(records)} record(s) for {lines} dated line(s)")
 
-def check_user_access_log(folder):
-    """user_access_log.json against the databases as the service left them when
-    stopped, read by dissect.esedb: every row of CLIENTS with its role, account,
-    address, first date and days, the witness's connection among them; the roles'
-    names; every database holding rows, under its name; the machine's identity.
-    On a machine without the service: skipped."""
-    path = os.path.join(folder, "reference", "user-access-log.zip")
-    if not os.path.exists(path):
-        print("  ⏭️  user_access_log.json: no reference (no service on this machine): not confronted")
-        return 0
-    venv = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "ese-venv",
-                                  "lib", "python*", "site-packages"))
-    sys.path.extend(p for p in venv if p not in sys.path)
-    try:
-        from dissect.esedb import EseDB
-    except ImportError:
-        print("  ⏭️  dissect.esedb not installed: user_access_log.json not confronted")
-        return 0
-    import io, zipfile
-    mine = load(folder, "user_access_log.json") or []
-    found = 0
-    def report(ok, success, failure):
-        nonlocal found
-        print(f"  ✅ {success}" if ok else f"  ❌ {failure}")
-        found += not ok
-    def filetime(value):
-        return (datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=value // 10)).strftime("%Y-%m-%dT%H:%M:%S")
-    def address(value):
-        return ".".join(str(b) for b in value) if len(value) == 4 else ipaddress.ip_address(value).compressed
-    def stored_name(entry):
-        # The witness stores a name it cannot zip, three random UTF-16 units on Server 2016, as "u-" and their hex.
-        return "".join(chr(int(u, 16)) for u in entry[2:].split("-")) if entry.startswith("u-") else entry
-    clients, names, holding = [], {}, set()
-    with zipfile.ZipFile(path) as z:
-        for name in z.namelist():
-            try:
-                database = EseDB(io.BytesIO(z.read(name)))
-            except Exception:
-                continue
-            tables = {t.name for t in database.tables()}
-            if "ROLE_IDS" in tables:
-                names = {str(r.get("RoleGuid")).lower(): r.get("RoleName") for r in database.table("ROLE_IDS").records()}
-                identity = next(iter(database.table("SYSTEM_IDENTITY").records()))
-            if "CLIENTS" in tables:
-                rows_here = list(database.table("CLIENTS").records())
-                clients.extend(rows_here)
-                if rows_here:
-                    holding.add(stored_name(name).lower())
+def check_user_access_clients(clients, mine_clients, names, holding, filetime, address, report):
+    """CLIENTS against WAC's rows: each row of the reference with its role, account, address, first date and
+    days; the databases that hold rows, under their names; the witness's own connection."""
     # A row is matched by its role, account, address and first date, not by its database: on Server 2016 every
-    # stop of the service moves Current.mdb's rows into a new database, between the reference and the collection.
+    # stop of the service moves Current.mdb's rows into a new database, the witness's own stop among them.
     # Current.mdb and a past period's database may hold the same row, each its own counts: the reference's rows,
     # largest count first, each take the smallest of WAC's rows that holds at least as many accesses.
     def key(role, user, where, inserted):
         return (role.strip("{}").lower(), (user or "").lower(), where, inserted)
-    mine_clients = [r for r in mine if r.get("Table") == "CLIENTS"]
     rows = {}
     for r in mine_clients:
         rows.setdefault(key(r.get("RoleGuid", ""), r.get("AuthenticatedUserName"), r.get("Address"), r.get("InsertDateUtc", "")[:19]), []).append(r)
@@ -3748,6 +3702,74 @@ def check_user_access_log(folder):
     dated = [d for r in witness for d in r.get("Days", []) if d.get("Date") == r.get("LastAccessUtc", "")[:10]]
     report(witness and dated, "user_access_log.json: the witness's own connection, with the day of its last access",
            f"user_access_log.json: the witness's connection not found or undated: {witness[:1]}")
+
+
+def check_user_access_log(folder):
+    """user_access_log.json against the databases as the service left them when
+    stopped, read by dissect.esedb: every row of ROLE_ACCESS; every row of CLIENTS
+    with its role, account, address, first date and days, the witness's connection
+    among them, the roles' names, every database holding rows under its name — or,
+    where Windows recorded no client, none written; the machine's identity. On a
+    machine without the service: skipped."""
+    path = os.path.join(folder, "reference", "user-access-log.zip")
+    if not os.path.exists(path):
+        print("  ⏭️  user_access_log.json: no reference (no service on this machine): not confronted")
+        return 0
+    venv = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "ese-venv",
+                                  "lib", "python*", "site-packages"))
+    sys.path.extend(p for p in venv if p not in sys.path)
+    try:
+        from dissect.esedb import EseDB
+    except ImportError:
+        print("  ⏭️  dissect.esedb not installed: user_access_log.json not confronted")
+        return 0
+    import io, zipfile
+    mine = load(folder, "user_access_log.json") or []
+    found = 0
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  ✅ {success}" if ok else f"  ❌ {failure}")
+        found += not ok
+    def filetime(value):
+        return (datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=value // 10)).strftime("%Y-%m-%dT%H:%M:%S")
+    def address(value):
+        return ".".join(str(b) for b in value) if len(value) == 4 else ipaddress.ip_address(value).compressed
+    def stored_name(entry):
+        # The witness stores a name it cannot zip, three random UTF-16 units on Server 2016, as "u-" and their hex.
+        return "".join(chr(int(u, 16)) for u in entry[2:].split("-")) if entry.startswith("u-") else entry
+    clients, role_access, names, holding = [], [], {}, set()
+    with zipfile.ZipFile(path) as z:
+        for name in z.namelist():
+            try:
+                database = EseDB(io.BytesIO(z.read(name)))
+            except Exception:
+                continue
+            tables = {t.name for t in database.tables()}
+            if "ROLE_IDS" in tables:
+                names = {str(r.get("RoleGuid")).lower(): r.get("RoleName") for r in database.table("ROLE_IDS").records()}
+                identity = next(iter(database.table("SYSTEM_IDENTITY").records()))
+            if "ROLE_ACCESS" in tables:
+                role_access.extend(database.table("ROLE_ACCESS").records())
+            if "CLIENTS" in tables:
+                rows_here = list(database.table("CLIENTS").records())
+                clients.extend(rows_here)
+                if rows_here:
+                    holding.add(stored_name(name).lower())
+    # ROLE_ACCESS, a role's first and last use: by role and both dates, whichever database holds them.
+    seen = {(r.get("RoleGuid", "").strip("{}").lower(), r.get("FirstSeenUtc", "")[:19], r.get("LastSeenUtc", "")[:19])
+            for r in mine if r.get("Table") == "ROLE_ACCESS"}
+    uses = {(str(r.get("RoleGuid")).lower(), filetime(r.get("FirstSeen")), filetime(r.get("LastSeen"))) for r in role_access}
+    report(uses <= seen, f"user_access_log.json: the {len(uses)} row(s) of ROLE_ACCESS, role, first and last use",
+           f"user_access_log.json: ROLE_ACCESS row(s) not read: {sorted(uses - seen)[:3]}")
+    mine_clients = [r for r in mine if r.get("Table") == "CLIENTS"]
+    if not clients:
+        # Measured on Server 2012 R2: CLIENTS stays empty, the witness's connection included. Nothing then to
+        # confront, but WAC must not invent a row either.
+        report(not mine_clients, "user_access_log.json: no CLIENTS row in the databases (Windows recorded none), none written",
+               f"user_access_log.json: {len(mine_clients)} CLIENTS row(s) written, the databases hold none")
+        print("  ℹ️  user_access_log.json: the witness's connection is not in CLIENTS on this machine: not confronted")
+    else:
+        check_user_access_clients(clients, mine_clients, names, holding, filetime, address, report)
     machine = [r for r in mine if r.get("Table") == "SYSTEM_IDENTITY"]
     report(machine and machine[0].get("SystemDNSHostName") == identity.get("SystemDNSHostName"), f"user_access_log.json: the machine's identity, {identity.get('SystemDNSHostName')}",
            f"user_access_log.json: identity {machine[:1]}")
