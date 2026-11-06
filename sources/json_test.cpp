@@ -79,6 +79,24 @@ void roundTrip() {
 	check(back.find(L"Big") && back.find(L"Big")->text() == L"18446744073709551615", "round trip: a 64-bit number is altered");
 }
 
+/*! A name with a surrogate without its pair (User Access Logging's databases on
+ *  Server 2016): escaped as \\uXXXX, it is read back as it was; a full pair stays as it is. */
+void loneSurrogates() {
+	const std::wstring lone = std::wstring(L"\x6630") + L'\xDB1C' + L"\x0239", lowAlone = std::wstring(1, L'\xDC00') + L"x",
+	                   pair = std::wstring(L"a") + L'\xD83D' + L'\xDE00';
+	Json o = Json::obj();
+	o.add(L"Lone", Json::str(lone)).add(L"LowAlone", Json::str(lowAlone)).add(L"Pair", Json::str(pair));
+	const std::wstring text = o.dump(0);
+	check(text.find(L"\\udb1c") != std::wstring::npos && text.find(L"\\udc00x") != std::wstring::npos,
+	      "lone surrogate: not escaped");
+	check(text.find(pair) != std::wstring::npos, "surrogate pair: escaped or altered");
+	Json back = Json::null();
+	std::wstring error;
+	check(Json::parse(text, back, error) && back.find(L"Lone") && back.find(L"Lone")->text() == lone
+	      && back.find(L"LowAlone")->text() == lowAlone && back.find(L"Pair")->text() == pair,
+	      "lone surrogate: not read back as it was");
+}
+
 void realFile(const char* path) {
 	std::ifstream f(path, std::ios::binary);
 	std::stringstream ss;
@@ -152,6 +170,7 @@ void mutations() {
  * @return 0 if all passed */
 int main(int argc, char** argv) {
 	roundTrip();
+	loneSurrogates();
 	malformed();
 	mutations();
 	for (int i = 1; i < argc; ++i) realFile(argv[i]);

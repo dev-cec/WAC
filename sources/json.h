@@ -29,13 +29,29 @@
 #include <vector>
 #include <utility>
 
-/*! Escapes a string for use as a JSON value (\\ , " , controls < 0x20).
+/*! Escapes a string for use as a JSON value (\\ , " , controls < 0x20, and a
+ *  UTF-16 surrogate without its pair).
  *  @param s the raw string.
  *  @return the escaped string, without the surrounding quotes. */
 inline std::wstring jsonEscape(const std::wstring& s) {
+    static const wchar_t* hex = L"0123456789abcdef";
     std::wstring r;
     r.reserve(s.size() + 8);
-    for (wchar_t c : s) {
+    for (size_t i = 0; i < s.size(); ++i) {
+        const wchar_t c = s[i];
+        /* A lone surrogate, which an NTFS name may hold (measured: User Access
+           Logging's databases on Server 2016), has no UTF-8 form: converted, it
+           would become U+FFFD, two names alike. Escaped, it stays itself. */
+        const bool high = c >= 0xD800 && c <= 0xDBFF, low = c >= 0xDC00 && c <= 0xDFFF;
+        if (high && i + 1 < s.size() && s[i + 1] >= 0xDC00 && s[i + 1] <= 0xDFFF) {
+            r += c; r += s[++i];
+            continue;
+        }
+        if (high || low) {
+            r += L"\\u";
+            for (int shift = 12; shift >= 0; shift -= 4) r += hex[(c >> shift) & 0xF];
+            continue;
+        }
         switch (c) {
         case L'\\': r += L"\\\\"; break;
         case L'"':  r += L"\\\""; break;
@@ -46,8 +62,7 @@ inline std::wstring jsonEscape(const std::wstring& s) {
         case L'\t': r += L"\\t";  break;
         default:
             if (c < 0x20) {                       // other control characters
-                static const wchar_t* h = L"0123456789abcdef";
-                r += L"\\u00"; r += h[(c >> 4) & 0xF]; r += h[c & 0xF];
+                r += L"\\u00"; r += hex[(c >> 4) & 0xF]; r += hex[c & 0xF];
             }
             else r += c;
         }
