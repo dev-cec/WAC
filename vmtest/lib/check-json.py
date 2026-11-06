@@ -1565,7 +1565,15 @@ def check_events(folder):
                 if len(v) > 1 and not re.fullmatch(r"%%\d+", v):
                     m = m.replace(v, "")
             return m
-        references = [e for e in withMsg if re.search(r"%%\d", leftover(e))]
+        # An HRESULT of a facility other than Win32's (FACILITY_NULL 0, FACILITY_WIN32 7)
+        # has no text in the system's message table: measured on Server 2016,
+        # %%3239247874 (0xC1130002) of Service Control Manager's event 7023, which
+        # Windows renders with an empty message and FormatMessage calls unknown.
+        def textless(n):
+            n = int(n)
+            return n >= 0x80000000 and (n >> 16) & 0x7FF not in (0, 7)
+        references = [e for e in withMsg if any(not textless(n) for n in re.findall(r"%%(\d+)", leftover(e)))]
+        without_text = [e for e in withMsg if re.search(r"%%\d", leftover(e)) and e not in references]
         marks = [e for e in withMsg if re.search(r"(?<!%)%\d", leftover(e))]
         print(f"  ✅ events.json: {len(withMsg)} plain-text message(s) "
               f"({100*len(withMsg)/len(d):.0f}% of the events)")
@@ -1577,6 +1585,9 @@ def check_events(folder):
                   f"%%nnnn reference — the provider's parameter file "
                   f"{providers.most_common(2)}")
             found += 1
+        if without_text:
+            print(f"  ℹ️  events.json: {len(without_text)} message(s) keep an error code Windows has no text for "
+                  f"{sorted({m for e in without_text for m in re.findall(r'%%(\d+)', leftover(e))})[:3]}")
         # "%3" left as it is: the event does not carry the data. A fact, not a
         # defect — the mark is kept visible so that the sentence does not look
         # complete.
