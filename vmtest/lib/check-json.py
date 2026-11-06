@@ -1884,7 +1884,10 @@ def check_exhibit_store_content(folder, store, collected):
     present = {r for r in map(relative, lines) if r}
     present -= {f"{store}\\{n}" for n in ("manifest.json", "manifest.sha256",
                                           "manifeste.json", "manifeste.sha256")}
-    declared = {str(i.get("ExhibitPath") or "").lower() for i in collected}
+    # A lone surrogate of a name (User Access Logging's databases on Server 2016) has no UTF-8
+    # form: the listing, written in UTF-8 by .NET, holds U+FFFD in its place, which the
+    # manifest's name, escaped \\uXXXX, is brought to before the comparison.
+    declared = {re.sub("[\ud800-\udfff]", "\ufffd", str(i.get("ExhibitPath") or "")).lower() for i in collected}
     declared.discard("")
     outsideManifest = sorted(present - declared)
     missing = sorted(declared - present)
