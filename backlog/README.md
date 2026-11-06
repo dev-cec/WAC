@@ -57,15 +57,37 @@ aux serveurs (web, Active Directory).
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-038](B-038-compatibilite-windows-server.md) | Collecte compatible avec les versions serveur, de Server 2003 à 2026 (prérequis de B-035) | en cours (générations et contrôleur couverts ; autres rôles à décider) | P3 | fort |
+| [B-038](B-038-compatibilite-windows-server.md) | Collecte compatible avec les versions serveur, de Server 2003 à 2026 (prérequis de B-035) | en cours (série finale sur `1a05c822`) | P3 | fort |
 
-### Clôture du projet
+### Clôture de la 4.0.0
 
-À faire en dernier, quand toutes les autres fiches sont closes.
+Revue de sécurité du code de la 4.0.0, avant sa publication.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
 | [B-060](B-060-revue-securite-finale.md) | Revue de sécurité complète avant la clôture du projet | à faire (en dernier) | P1 | fort |
+
+### Version 5.0 — traces d'applications, clients et serveurs
+
+Décision utilisateur du 2026-11-05 : la 4.0.0 se clôt avec les serveurs ; ces
+artefacts passent en 5.0.0, avec une option `wac.yml` par produit, regroupées
+par type. Ils valent pour les clients comme pour les serveurs. Code mis de côté
+dans un `git stash` (voir B-062).
+
+| Fiche | Sujet | Statut | Priorité | Effort |
+|---|---|---|---|---|
+| [B-062](B-062-traces-applications-mecanisme.md) | Traces d'applications : mécanisme commun, une option `wac.yml` par produit | à faire (5.0.0, code mis de côté) | P1 | moyen |
+| [B-063](B-063-administration-a-distance.md) | `remote_administration` : outils d'administration à distance | à faire (5.0.0, code mis de côté) | P1 | moyen |
+| [B-064](B-064-antivirus-tiers.md) | `antivirus` : journaux des antivirus autres que Defender | à faire (5.0.0, code mis de côté) | P1 | moyen |
+| [B-065](B-065-messageries.md) | `messaging` : messageries | à faire (5.0.0, code mis de côté) | P2 | moyen |
+| [B-066](B-066-stockage-en-ligne.md) | `cloud_storage` : métadonnées du stockage en ligne | à faire (5.0.0, code mis de côté) | P2 | faible |
+| [B-067](B-067-transfert-de-fichiers.md) | `file_transfer` : outils de transfert de fichiers | à faire (5.0.0, code mis de côté) | P2 | faible |
+| [B-068](B-068-vpn.md) | `vpn` : clients VPN | à faire (5.0.0, code mis de côté) | P2 | faible |
+| [B-069](B-069-virtualisation.md) | `virtualisation` : VirtualBox, VMware Workstation, WSL | à faire (5.0.0, code mis de côté) | P2 | faible |
+| [B-070](B-070-openssh.md) | `ssh` : OpenSSH serveur et client | à faire (5.0.0, code mis de côté) | P1 | faible |
+| [B-071](B-071-applications-serveur-et-journaux.md) | `server_applications` et `server_logs` : applications et journaux de serveur | à faire (5.0.0, code mis de côté) | P1 | moyen |
+| [B-072](B-072-traces-systeme.md) | `system_traces` : ce que Windows garde en plus | à faire (5.0.0, code mis de côté) | P1 | moyen |
+| [B-073](B-073-registre-des-outils.md) | `application_registry` : PuTTY, WinSCP, WinRAR et 7-Zip dans le registre | à faire (5.0.0, code mis de côté) | P2 | faible |
 
 ## Réalisé
 
