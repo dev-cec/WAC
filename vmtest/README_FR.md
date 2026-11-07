@@ -14,7 +14,7 @@ en SYSTEM : droits admin, aucun UAC).
 |---|---|---|
 | `vmtest/` | `install-browsers.sh` | Installe Google Chrome (MSI entreprise) et Mozilla Firefox dans la VM, en silence, téléchargés par la VM elle-même (`guest/install-browsers.ps1`) ; idempotent. Nécessaire aux témoins de navigation réelle de `web_client` (B-016). |
 | `vmtest/` | `create-vm.sh` | Crée la VM de zéro, sans interaction : autounattend + UEFI Secure Boot + TPM 2.0 + canal guest-agent, déblocage du boot par injection de touches, puis attente que l'agent réponde ; ajoute le disque de données de 2 Go. |
-| `vmtest/` | `run-wac-test.sh` | Cycle de test complet : build → volume de données et clés USB virtuelles (`~/vms/wac-usb-test.img`, numéro de série `WACUSB0001`, et `wac-usb-exfat.img` ; suffixées du nom de la VM hors `win11-test`, une image attachée à une VM en marche étant verrouillée par elle) → envoi des binaires → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/` → contrôles. `--only=clé,…` le restreint à quelques artefacts. |
+| `vmtest/` | `run-wac-test.sh` | Cycle de test complet : build → volume de données et clés USB virtuelles (`~/vms/wac-usb-test.img`, numéro de série `WACUSB0001`, et `wac-usb-exfat.img` ; suffixées du nom de la VM hors `win11-test`, une image attachée à une VM en marche étant verrouillée par elle) → la clé de collecte (`~/vms/wac-kit.img`, numéro de série `WACUSB0003`, NTFS `WACKIT`), d'où WAC s'exécute et où il écrit, comme sur le terrain : rien de WAC sur le disque examiné → envoi des binaires sur la clé → validation `raw_hive` (extraction brute + `reg load`) → exécution de WAC → rapatriement du log et des JSON dans `results/<horodatage>/` → contrôles. `--only=clé,…` le restreint à quelques artefacts. |
 | `vmtest/` | `install-web-servers.sh` | Installe sur une VM serveur nginx, Apache 2.4 et 2.2, MariaDB et PostgreSQL, témoins de `web_server` (`guest/install-web-servers.ps1`), chaque archive prise sur l'hôte et vérifiée par son SHA-256 épinglé ; seules les versions dont les changements touchent la collecte. Idempotent. |
 | `vmtest/` | `install-server-roles.sh` | Installe sur une VM serveur les rôles DNS, DHCP, Hyper-V, Bureau à distance (hôte de session, licences, passerelle) et gestion des ressources du serveur de fichiers (`guest/install-server-roles.ps1`), puis la redémarre. Le cycle pose ensuite les témoins de `dns_server`, `dhcp_server` et `hyperv` (`guest/server-roles-witness.ps1`) : une zone, une étendue et des baux, une machine, et ce que chaque rôle en dit par ses propres outils, la référence `reference/server-roles.json`. Sans le rôle, ses contrôles sont sautés. |
 | `vmtest/` | `install-domain-controller.sh` | Fait d'une VM serveur le contrôleur de sa propre forêt, `wac.test` (`guest/install-domain-controller.ps1`), pour les témoins d'`active_directory` (`guest/active-directory-witness.ps1`). Une seule fois : un contrôleur le reste. |
@@ -240,7 +240,9 @@ se lit sur le port série (`<commande> > COM1`, gardé dans
 `~/vms/winxp-test.serial`). Sa clé de produit est lue sur le support
 d'installation, ou donnée par `XP_KEY` ; elle n'est jamais écrite dans le dépôt.
 Une fois installé, un disque de données de 2 Go lui est ajouté (IDE `hdd`), sur
-lequel `run-wac-test-xp.sh` formate W: pour les témoins du carving.
+lequel `run-wac-test-xp.sh` formate W: pour les témoins du carving. WAC32 s'exécute
+depuis la clé de collecte, `~/vms/wac-kit-<vm>.img`, un disque USB amovible formaté
+NTFS sur l'hôte (`mkntfs`), dont les résultats sont lus une fois la VM éteinte.
 
 Windows Server 2003 (profil `srv2003`, domaine `srv2003-test`) s'installe et se
 pilote de la même façon, depuis le kit d'évaluation de 180 jours de Microsoft

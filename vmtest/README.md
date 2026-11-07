@@ -14,7 +14,7 @@ administrator rights, no UAC).
 |---|---|---|
 | `vmtest/` | `install-browsers.sh` | Installs Google Chrome (enterprise MSI) and Mozilla Firefox in the VM, silently, downloaded by the VM itself (`guest/install-browsers.ps1`); idempotent. Needed by the real browsing witnesses of `web_client` (B-016). |
 | `vmtest/` | `create-vm.sh` | Creates the VM from scratch, unattended: autounattend + UEFI Secure Boot + TPM 2.0 + guest-agent channel, boot unblocked by key injection, then waits for the agent to answer; adds the 2 GB data disk. |
-| `vmtest/` | `run-wac-test.sh` | Full test cycle: build → data volume and virtual USB keys (`~/vms/wac-usb-test.img`, serial `WACUSB0001`, and `wac-usb-exfat.img`; suffixed with the VM's name other than `win11-test`, since an image attached to a running VM is locked by it) → send the binaries → `raw_hive` validation (raw extraction + `reg load`) → run WAC → bring the log and the JSON back into `results/<timestamp>/` → checks. `--only=key,…` restricts it to some artefacts. |
+| `vmtest/` | `run-wac-test.sh` | Full test cycle: build → data volume and virtual USB keys (`~/vms/wac-usb-test.img`, serial `WACUSB0001`, and `wac-usb-exfat.img`; suffixed with the VM's name other than `win11-test`, since an image attached to a running VM is locked by it) → the collection key (`~/vms/wac-kit.img`, serial `WACUSB0003`, NTFS `WACKIT`), from which WAC runs and on which it writes, as on the field: nothing of WAC's on the examined disk → send the binaries to the key → `raw_hive` validation (raw extraction + `reg load`) → run WAC → bring the log and the JSON back into `results/<timestamp>/` → checks. `--only=key,…` restricts it to some artefacts. |
 | `vmtest/` | `install-web-servers.sh` | Installs on a server VM nginx, Apache 2.4 and 2.2, MariaDB and PostgreSQL, the witnesses of `web_server` (`guest/install-web-servers.ps1`), each archive fetched on the host and checked by its pinned SHA-256; only the versions whose changes reach the collection. Idempotent. |
 | `vmtest/` | `install-server-roles.sh` | Installs on a server VM the roles DNS, DHCP, Hyper-V, Remote Desktop (session host, licensing, gateway) and file server resource management (`guest/install-server-roles.ps1`), restarts it. The cycle then places the witnesses of `dns_server`, `dhcp_server` and `hyperv` (`guest/server-roles-witness.ps1`): a zone, a scope and leases, a machine, and what each role says of them through its own tools, the reference `reference/server-roles.json`. Without a role, its checks are skipped. |
 | `vmtest/` | `install-domain-controller.sh` | Makes a server VM the controller of its own forest, `wac.test` (`guest/install-domain-controller.ps1`), for the witnesses of `active_directory` (`guest/active-directory-witness.ps1`). Once: a controller stays one. |
@@ -231,7 +231,9 @@ layout, clicks); a command's output is read on the serial port
 (`<command> > COM1`, kept in `~/vms/winxp-test.serial`). Its product key is read
 on the installation medium, or given as `XP_KEY`; it is never written to the
 repository. Once installed, a 2 GB data disk is added (IDE `hdd`), on which
-`run-wac-test-xp.sh` formats W: for the carving's witnesses.
+`run-wac-test-xp.sh` formats W: for the carving's witnesses. WAC32 runs from the
+collection key, `~/vms/wac-kit-<vm>.img`, a removable USB disk formatted NTFS on
+the host (`mkntfs`), whose results are read once the VM is off.
 
 Windows Server 2003 (profile `srv2003`, domain `srv2003-test`) is installed
 and driven the same way, from Microsoft's 180-day evaluation kit (part

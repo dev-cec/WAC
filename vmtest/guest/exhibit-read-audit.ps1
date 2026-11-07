@@ -59,12 +59,22 @@ if ($Stop) {
     auditpol /set /subcategory:$fileSystem /success:disable | Out-Null
     $from = [datetime]::Parse($Since, $null, [Globalization.DateTimeStyles]::AdjustToUniversal -bor [Globalization.DateTimeStyles]::AssumeUniversal)
     $prefix = $Stop.TrimEnd('\') + '\'
+    # On a removable disk (the collection key) the event names the file by its
+    # device path, \Device\HarddiskVolumeN\..., not by its letter (measured
+    # on 2026-11-07, Windows 11): that path is brought back to the letter.
+    Add-Type -Namespace Wac -Name Dos -MemberDefinition '[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] public static extern uint QueryDosDevice(string name, System.Text.StringBuilder target, uint size);'
+    $drive = $prefix.Substring(0, 2)
+    $target = New-Object Text.StringBuilder 1024
+    $device = $null
+    if ([Wac.Dos]::QueryDosDevice($drive, $target, 1024) -gt 0) { $device = $target.ToString() + '\' }
     $lines = foreach ($e in (Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = 4663; StartTime = $from.ToLocalTime() } -ErrorAction SilentlyContinue)) {
         $x = [xml]$e.ToXml()
         $data = @{}
         foreach ($d in $x.Event.EventData.Data) { $data[$d.Name] = $d.'#text' }
-        if ($data['ProcessName'] -like '*\WAC.exe' -and $data['ObjectName'] -like "$prefix*") {
-            $e.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffffff') + '|' + $data['ObjectName']
+        $object = $data['ObjectName']
+        if ($device -and $object -and $object.StartsWith($device, [StringComparison]::OrdinalIgnoreCase)) { $object = $drive + '\' + $object.Substring($device.Length) }
+        if ($data['ProcessName'] -like '*\WAC.exe' -and $object -like "$prefix*") {
+            $e.TimeCreated.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffffff') + '|' + $object
         }
     }
     # No read: $lines is $null, which @() counts as one element on PowerShell 2.

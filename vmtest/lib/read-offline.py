@@ -1,13 +1,14 @@
 """read-offline.py — copies files out of a test VM's disk while the VM is off,
-read-only: the first NTFS partition of its qcow2 image, through dissect
-(vmtest/tools/target-venv). For a Windows without guest agent (XP), whose
-results cannot be fetched while it runs (run-wac-test-xp.sh).
+read-only: the first NTFS partition of its qcow2 image, or a raw image (the
+collection key), partitioned or NTFS from its first sector, through dissect
+(vmtest/tools/target-venv). For a Windows without guest agent (XP, Server
+2003), whose results cannot be fetched while it runs (run-wac-test-xp.sh).
 
-Usage: read-offline.py <disk.qcow2> <output folder> <prefix> <path>...
-  <path>   a path on the volume, "/"-separated, without the drive ("wactest/xp/out/events.json");
+Usage: read-offline.py <disk.qcow2|key.img> <output folder> <prefix> <path>...
+  <path>   a path on the volume, "/"-separated, without the drive ("wac/xp/out/events.json");
            "<folder>/*.<ext>" takes the folder's files of that extension
-  <prefix> the part of each path left out under the output folder ("wactest/xp/out/"):
-           wactest/xp/out/exhibits/MANIFEST.json lands in <output>/exhibits/MANIFEST.json;
+  <prefix> the part of each path left out under the output folder ("wac/xp/out/"):
+           wac/xp/out/exhibits/MANIFEST.json lands in <output>/exhibits/MANIFEST.json;
            a path outside the prefix lands under its file name
 A path absent from the volume is said, not fatal: the checks say what it misses.
 """
@@ -22,6 +23,7 @@ from dissect.ntfs import NTFS
 
 MBR_FIRST_PARTITION = 0x1BE   # the first entry of the partition table
 SECTOR = 512
+NTFS_SIGNATURE = 3            # "NTFS    " in a volume's boot sector
 
 
 class Partition(io.RawIOBase):
@@ -52,9 +54,13 @@ class Partition(io.RawIOBase):
 def main():
     image, output, prefix, paths = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:]
     with open(image, "rb") as fh:
-        disk = QCow2(fh).open()
-        disk.seek(MBR_FIRST_PARTITION + 8)
-        start = struct.unpack("<I", disk.read(4))[0] * SECTOR
+        disk = QCow2(fh).open() if image.endswith(".qcow2") else fh
+        disk.seek(NTFS_SIGNATURE)
+        if disk.read(8) == b"NTFS    ":
+            start = 0   # a volume without partition table, as a key formatted whole
+        else:
+            disk.seek(MBR_FIRST_PARTITION + 8)
+            start = struct.unpack("<I", disk.read(4))[0] * SECTOR
         volume = NTFS(Partition(disk, start))
         wanted = []
         for path in paths:

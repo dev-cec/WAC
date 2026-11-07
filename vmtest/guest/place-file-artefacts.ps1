@@ -58,8 +58,9 @@
 #   shadowrun, shadowevent  a Run value and an event erased after the harness's
 #                copy -> shadow_copy_registry.json, shadow_copy_events.json
 #   deleted      files of known content written to the disk, then deleted —
-#                a resident one, a text of 300 KiB, an unsigned executable
-#                (WAC.exe) and a Microsoft one (notepad.exe) — with their
+#                a resident one, a text of 300 KiB, an executable of no
+#                publisher (notepad.exe, one letter changed) and a Microsoft
+#                one (notepad.exe) — with their
 #                SHA-256 and what WAC must do of them -> deleted_files.json;
 #   slack        150 of 450 files moved from a folder to another: their former
 #                names in the released index blocks of the first -> deleted_files.json (level 2)
@@ -1931,10 +1932,22 @@ try { if (Wants 'deleted_files') {
     New-Item -ItemType Directory -Force $folder | Out-Null
     $text = New-Object Text.StringBuilder
     foreach ($i in 1..6000) { [void]$text.Append("WAC deleted witness $token, line $i of 6000`r`n") }
+    # An executable of no publisher, as a suspect's tool would be: notepad.exe
+    # with one letter of its DOS stub changed — its structure intact, its
+    # signature no longer matching, so that WAC copies it. Not WAC.exe: WAC runs
+    # from its key and is never on the examined disk, and a store holding WAC
+    # itself was quarantined by Defender. $Letter picks the letter: the
+    # carving witness below is another variant, of another SHA-256.
+    function ToolVariant([int]$Letter) {
+        $bytes = [IO.File]::ReadAllBytes("$env:SystemRoot\System32\notepad.exe")
+        $stub = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(512, $bytes.Length)).IndexOf('This program')
+        if ($stub -ge 0) { $bytes[$stub + $Letter] = $bytes[$stub + $Letter] -bxor 0x20 }
+        ,$bytes
+    }
     $witnesses = @(
         @('deleted-resident.txt', [Text.Encoding]::ASCII.GetBytes("WAC deleted witness $token`r`n"), 'copied'),
         @('deleted-text.txt', [Text.Encoding]::ASCII.GetBytes($text.ToString()), 'copied'),
-        @('deleted-tool.exe', [IO.File]::ReadAllBytes('C:\wactest\WAC.exe'), 'copied'),
+        @('deleted-tool.exe', (ToolVariant 0), 'copied'),
         @('deleted-notepad.exe', [IO.File]::ReadAllBytes("$env:SystemRoot\System32\notepad.exe"), 'cleared'))
     # NTFS gives out the lowest free record first: a witness deleted before
     # the next was created gave it its record (Vista: all four in record
@@ -1954,13 +1967,10 @@ try { if (Wants 'deleted_files') {
     # a file written after a deletion takes the freed clusters, and two
     # witnesses on the same clusters test neither —, truncated to nothing and
     # deleted with them: their bytes in the free clusters only, their record
-    # naming no cluster. Contents of their own: the executable is WAC.exe with
-    # one letter of its DOS stub changed (its structure intact, its SHA-256
-    # not the level 1 witness's); the PDF is larger than a record holds
-    # (a small file is resident: no cluster to carve).
-    $exe = [IO.File]::ReadAllBytes('C:\wactest\WAC.exe')
-    $stub = [Text.Encoding]::ASCII.GetString($exe, 0, [Math]::Min(512, $exe.Length)).IndexOf('This program')
-    if ($stub -ge 0) { $exe[$stub] = [byte][char]'t' }
+    # naming no cluster. Contents of their own: the executable is another
+    # variant of the tool (its SHA-256 not the level 1 witness's); the PDF is
+    # larger than a record holds (a small file is resident: no cluster to carve).
+    $exe = ToolVariant 1
     $pdfText = "%PDF-1.4`n1 0 obj`n<< /Type /Catalog >>`nendobj`n% WAC carving witness $token`n" + ('%' + ('x' * 78) + "`n") * 100
     $xref = $pdfText.Length
     $pdfText += "xref`n0 2`n0000000000 65535 f `n0000000009 00000 n `ntrailer`n<< /Size 2 /Root 1 0 R >>`nstartxref`n$xref`n%%EOF`n"

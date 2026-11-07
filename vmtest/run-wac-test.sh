@@ -102,14 +102,11 @@ DATA_STATE=$($QGA run -- powershell.exe -NoProfile -Command '
 echo "   ${DATA_STATE:-no answer} (without the disk, the second-volume checks are skipped)"
 fi
 
-if wants usbstor mounted_devices devices setupapi fat_volumes; then
-echo "== 0b. USB keys == ($(date +%H:%M:%S))"
-# Two virtual USB keys, attached on every run, so that USBSTOR is populated on
-# any test VM — including one recreated from scratch by create-vm.sh — and the
-# USB artefacts are checked on every cycle: WACUSB0001 formatted FAT32,
-# WACUSB0002 exFAT by the witnesses (a suspect's keys, read raw). Attached
-# live only: the VM definition is left unchanged, and a VM restart simply gets
-# them attached again here.
+# Virtual USB keys, attached live: the VM definition is left unchanged, and a VM
+# restart simply gets them attached again here. One set of images per VM: an
+# image attached to a running VM is locked by it, and a second VM could not
+# attach it (the keys of win11-test keep their first names).
+USB_SUFFIX=""; [[ "$DOM" != "win11-test" ]] && USB_SUFFIX="-$DOM"
 CONN="qemu:///session"
 # $1 image file, $2 serial number, $3 target device of the definition.
 attach_usb_key() {
@@ -145,15 +142,37 @@ EOF
   done
   echo "   ⚠️ USB key $serial not seen by Windows"; return 1
 }
-# One pair of images per VM: an image attached to a running VM is locked by
-# it, and a second VM could not attach it (the keys of win11-test keep their
-# first names).
-USB_SUFFIX=""; [[ "$DOM" != "win11-test" ]] && USB_SUFFIX="-$DOM"
+if wants usbstor mounted_devices devices setupapi fat_volumes; then
+echo "== 0b. USB keys == ($(date +%H:%M:%S))"
+# Two virtual USB keys, attached on every run, so that USBSTOR is populated on
+# any test VM — including one recreated from scratch by create-vm.sh — and the
+# USB artefacts are checked on every cycle: WACUSB0001 formatted FAT32,
+# WACUSB0002 exFAT by the witnesses (a suspect's keys, read raw).
 USB_IMG="${WAC_USB_IMG:-$HOME/vms/wac-usb-test$USB_SUFFIX.img}"
 USB_EXFAT_IMG="${WAC_USB_EXFAT_IMG:-$HOME/vms/wac-usb-exfat$USB_SUFFIX.img}"
 attach_usb_key "$USB_IMG" WACUSB0001 sdz || true
 attach_usb_key "$USB_EXFAT_IMG" WACUSB0002 sdy || true
 fi
+
+echo "== 0c. Collection key == ($(date +%H:%M:%S))"
+# WAC runs from a USB key and writes its output there, as on the field: WACDIR,
+# on the key of serial WACUSB0003, holds WAC.exe, wac.yml, the trust set, the
+# outputs and the logs of every run. On the examined disk, WAC.exe and its
+# store left traces that real use never leaves — older WAC.exe recovered among
+# the deleted files, which Defender then quarantined from the store. NTFS, as
+# a collection key: a removable volume, which the deleted-files recovery of the
+# fixed volumes leaves alone. 32 GiB, sparse: a full collection with --binary
+# writes several GB. The witnesses of the examined machine stay in $VMDIR.
+KIT_IMG="${WAC_KIT_IMG:-$HOME/vms/wac-kit$USB_SUFFIX.img}"
+[[ -f "$KIT_IMG" ]] || truncate -s 32G "$KIT_IMG"
+attach_usb_key "$KIT_IMG" WACUSB0003 sdx || { echo "❌ collection key not attached"; exit 1; }
+$QGA run --shell "if not exist $VMDIR mkdir $VMDIR" >/dev/null
+$QGA write "$HERE/guest/prepare-wac-key.ps1" "$VMDIR\\prepare-wac-key.ps1" >/dev/null
+KIT_LETTER=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\prepare-wac-key.ps1" 2>/dev/null | tr -d '\r' | tail -1 || true)
+$QGA run --shell "del $VMDIR\\prepare-wac-key.ps1 2>nul & exit /b 0" >/dev/null 2>&1 || true
+[[ "$KIT_LETTER" =~ ^[A-Z]$ ]] || { echo "❌ collection key not ready: $KIT_LETTER"; exit 1; }
+WACDIR="$KIT_LETTER:\\wac"
+echo "   WAC runs from $WACDIR"
 
 if [[ $BUILD -eq 1 ]]; then
   echo "== 1. Build (Linux cross-compilation) == ($(date +%H:%M:%S))"
@@ -162,7 +181,7 @@ if [[ $BUILD -eq 1 ]]; then
 fi
 
 echo "== 2. Upload of the binaries into the VM == ($(date +%H:%M:%S))"
-$QGA run --shell "if not exist $VMDIR mkdir $VMDIR" >/dev/null
+$QGA run --shell "if not exist $WACDIR mkdir $WACDIR" >/dev/null
 
 # A previous run that was interrupted (Ctrl+C on the host, stuck collection,
 # crash) leaves WAC.exe running in the VM. Windows then locks the file and the
@@ -200,10 +219,10 @@ $QGA run --shell "reg unload HKLM\\WAC_TEST >nul 2>&1 & exit /b 0" >/dev/null 2>
 # under the usual names: every path of the harness stays the same.
 BITS_SUFFIX=""
 [[ "$($QGA run -- powershell.exe -NoProfile -Command '[IntPtr]::Size' 2>/dev/null | tr -d '\r')" == 4 ]] && BITS_SUFFIX=32
-$QGA write "$ROOT/build-windows/WAC$BITS_SUFFIX.exe" "$VMDIR\\WAC.exe"
+$QGA write "$ROOT/build-windows/WAC$BITS_SUFFIX.exe" "$WACDIR\\WAC.exe"
 # No configuration file left by an earlier cycle: the runs below give their
 # options, and must behave as without wac.yml (step 8 tests the file).
-$QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
+$QGA run --shell "del $WACDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
 # --only: every artefact of wac.yml switched off but those named. The keys come
 # from the reference wac.yml, so that a new artefact is switched off too.
 # --events would override `events: false`: it is given only when asked.
@@ -225,18 +244,18 @@ if [[ -n "$ONLY" ]]; then
       elif [[ ",$ONLY," == *",$k,"* ]]; then echo "  $k: true"; else echo "  $k: false"; fi
     done; } > "$OUTPUT/wac-only.yml"
   [[ ",$ONLY," == *",events,"* ]] || EVENTS_OPTION=""
-  $QGA write "$OUTPUT/wac-only.yml" "$VMDIR\\wac.yml" >/dev/null
+  $QGA write "$OUTPUT/wac-only.yml" "$WACDIR\\wac.yml" >/dev/null
   echo "   wac.yml: only $ONLY"
 fi
-full_cycle && $QGA write "$ROOT/build-windows/raw_hive_test$BITS_SUFFIX.exe" "$VMDIR\\raw_hive_test.exe"
+full_cycle && $QGA write "$ROOT/build-windows/raw_hive_test$BITS_SUFFIX.exe" "$WACDIR\\raw_hive_test.exe"
 
 # The trust set, as the analysis workstation prepares it before a collection:
 # --update-trust, into `trust` next to WAC.exe, where the collection reads it.
 # Here in the VM itself, which checks the download under Windows at each cycle.
 if full_cycle; then
-$QGA run --shell "cd /d $VMDIR && WAC.exe --update-trust > update-trust.log 2>&1" >/dev/null 2>&1 \
+$QGA run --shell "cd /d $WACDIR && WAC.exe --update-trust > update-trust.log 2>&1" >/dev/null 2>&1 \
   && echo "   trust set prepared (--update-trust)" || echo "   ⚠️ trust set not prepared"
-$QGA read "$VMDIR\\update-trust.log" "$OUTPUT/update-trust.log" >/dev/null 2>&1 || true
+$QGA read "$WACDIR\\update-trust.log" "$OUTPUT/update-trust.log" >/dev/null 2>&1 || true
 fi
 
 # GUIDs the reference table does not know, one per source WAC reads them from
@@ -400,23 +419,23 @@ echo "== 3. raw_hive validation (raw extraction + reg load) == ($(date +%H:%M:%S
 clean() { tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
 
 {
-  $QGA run --shell "cd /d $VMDIR && raw_hive_test.exe C \\Windows\\System32\\config\\SYSTEM $VMDIR\\SYSTEM_dirty.hiv > raw-dirty.log 2>&1" || true
-  WITHOUT=$($QGA run --shell "reg load HKLM\\WAC_TEST $VMDIR\\SYSTEM_dirty.hiv >nul 2>&1 && (echo LOADED & reg unload HKLM\\WAC_TEST >nul) || echo REFUSED" 2>/dev/null | clean || true)
+  $QGA run --shell "cd /d $WACDIR && raw_hive_test.exe C \\Windows\\System32\\config\\SYSTEM $WACDIR\\SYSTEM_dirty.hiv > raw-dirty.log 2>&1" || true
+  WITHOUT=$($QGA run --shell "reg load HKLM\\WAC_TEST $WACDIR\\SYSTEM_dirty.hiv >nul 2>&1 && (echo LOADED & reg unload HKLM\\WAC_TEST >nul) || echo REFUSED" 2>/dev/null | clean || true)
   if [[ "$WITHOUT" == "REFUSED" ]]; then
     echo "REG_LOAD_WITHOUT_PATCH=REFUSED (expected: the raw hive is dirty)"
   else
     echo "REG_LOAD_WITHOUT_PATCH=$WITHOUT (UNEXPECTED: the raw hive was already clean)"
   fi
 
-  $QGA run --shell "cd /d $VMDIR && raw_hive_test.exe C \\Windows\\System32\\config\\SYSTEM $VMDIR\\SYSTEM.hiv --fix > raw.log 2>&1" || true
-  WITH=$($QGA run --shell "reg load HKLM\\WAC_TEST $VMDIR\\SYSTEM.hiv >nul 2>&1 && (echo OK & reg unload HKLM\\WAC_TEST >nul) || echo FAILED" 2>/dev/null | clean || true)
+  $QGA run --shell "cd /d $WACDIR && raw_hive_test.exe C \\Windows\\System32\\config\\SYSTEM $WACDIR\\SYSTEM.hiv --fix > raw.log 2>&1" || true
+  WITH=$($QGA run --shell "reg load HKLM\\WAC_TEST $WACDIR\\SYSTEM.hiv >nul 2>&1 && (echo OK & reg unload HKLM\\WAC_TEST >nul) || echo FAILED" 2>/dev/null | clean || true)
   echo "REG_LOAD_WITH_PATCH=$WITH"
   [[ "$WITH" == "OK" ]] || echo "   ❌ the patched hive stays unreadable: a regression of raw_hive or hive_recover"
 
   # Directory listing: the building block of ExtractDirectoryRaw.
   # The filtering is done on the host: a `findstr` on the guest side, in a pipe
   # passed to cmd /c, returned nothing while the command alone works.
-  COUNT=$($QGA run --shell "cd /d $VMDIR && raw_hive_test.exe C \\Windows\\Prefetch x --list 2>&1" 2>/dev/null \
+  COUNT=$($QGA run --shell "cd /d $WACDIR && raw_hive_test.exe C \\Windows\\Prefetch x --list 2>&1" 2>/dev/null \
        | grep -a '^Total:' | clean || true)
   echo "LIST_PREFETCH=${COUNT:-(no output)}"
 
@@ -429,9 +448,9 @@ clean() { tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
     # Server Core has no explorer.exe: nothing to read there.
     PRESENT=$($QGA run --shell "if exist C:$f (echo PRESENT) else (echo ABSENT)" 2>/dev/null | clean || true)
     if [[ "$PRESENT" == ABSENT ]]; then echo "   ⏭️  $f absent from this Windows (Server Core): not read"; continue; fi
-    $QGA run --shell "cd /d $VMDIR && raw_hive_test.exe C $f $VMDIR\\hashcheck.bin > nul 2>&1" >/dev/null 2>&1 || true
+    $QGA run --shell "cd /d $WACDIR && raw_hive_test.exe C $f $WACDIR\\hashcheck.bin > nul 2>&1" >/dev/null 2>&1 || true
     SAME=$($QGA run -- powershell.exe -NoProfile -Command \
-      "if ((Get-FileHash 'C:$f').Hash -eq (Get-FileHash '$VMDIR\\hashcheck.bin').Hash) { 'SAME' } else { 'DIFFERENT' }" 2>/dev/null | clean || true)
+      "if ((Get-FileHash 'C:$f').Hash -eq (Get-FileHash '$WACDIR\\hashcheck.bin').Hash) { 'SAME' } else { 'DIFFERENT' }" 2>/dev/null | clean || true)
     echo "RAW_SHA256 $f=$SAME"
     [[ "$SAME" == "SAME" ]] || echo "   ❌ raw reading of $f differs from Windows' (Get-FileHash)"
   done
@@ -440,15 +459,15 @@ clean() { tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
   # Get-FileHash's SHA-256 — the check of the LZX decoder on real data.
   $QGA run --shell "mkdir $VMDIR\\lzx 2>nul & copy /y C:\\Windows\\System32\\ntoskrnl.exe $VMDIR\\lzx\\ >nul & copy /y C:\\Windows\\System32\\shell32.dll $VMDIR\\lzx\\ >nul & copy /y C:\\Windows\\System32\\drivers\\etc\\services $VMDIR\\lzx\\services.txt >nul & compact /c /exe:lzx $VMDIR\\lzx\\ntoskrnl.exe $VMDIR\\lzx\\shell32.dll $VMDIR\\lzx\\services.txt >nul" >/dev/null 2>&1 || true
   for f in ntoskrnl.exe shell32.dll services.txt; do
-    $QGA run --shell "cd /d $VMDIR && raw_hive_test.exe C \\wactest\\lzx\\$f $VMDIR\\hashcheck.bin > nul 2>&1" >/dev/null 2>&1 || true
+    $QGA run --shell "cd /d $WACDIR && raw_hive_test.exe C \\wactest\\lzx\\$f $WACDIR\\hashcheck.bin > nul 2>&1" >/dev/null 2>&1 || true
     SAME=$($QGA run -- powershell.exe -NoProfile -Command \
-      "if ((Get-FileHash '$VMDIR\\lzx\\$f').Hash -eq (Get-FileHash '$VMDIR\\hashcheck.bin').Hash) { 'SAME' } else { 'DIFFERENT' }" 2>/dev/null | clean || true)
+      "if ((Get-FileHash '$VMDIR\\lzx\\$f').Hash -eq (Get-FileHash '$WACDIR\\hashcheck.bin').Hash) { 'SAME' } else { 'DIFFERENT' }" 2>/dev/null | clean || true)
     echo "RAW_SHA256_LZX $f=$SAME"
     [[ "$SAME" == "SAME" ]] || echo "   ❌ raw reading of the LZX-compressed $f differs from Windows' (Get-FileHash)"
   done
-  $QGA run --shell "del $VMDIR\\hashcheck.bin 2>nul & echo." >/dev/null 2>&1 || true
+  $QGA run --shell "del $WACDIR\\hashcheck.bin 2>nul & echo." >/dev/null 2>&1 || true
 } | tee "$OUTPUT/raw-validation.txt"
-$QGA read "$VMDIR\\raw.log" "$OUTPUT/raw.log" >/dev/null 2>&1 || true
+$QGA read "$WACDIR\\raw.log" "$OUTPUT/raw.log" >/dev/null 2>&1 || true
 fi
 
 if [[ $RAWONLY -eq 1 ]]; then
@@ -467,7 +486,7 @@ CODE=0
 # WAC's log is opened in APPEND mode: without a purge it grows from one test to
 # the next (636 MiB seen after a series of runs), which makes fetching it
 # useless and hides the traces of the current run.
-$QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
+$QGA run --shell "del $WACDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
 # Removed through \\?\: the store holds paths past 260 characters (B-049), which
 # rmdir leaves behind otherwise — WAC then refused the next collection
 # (working folder not empty). split goes too, rebuilt at step 7: collected here
@@ -476,7 +495,7 @@ $QGA run --shell "del $VMDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || true
 # One hour for each run: the recovery of the deleted files read 2.6 GB at
 # 3.3 MB/s in the Vista VM (13 min), and the collection passed the agent's
 # 30 minutes (2026-10-23); 25 MB/s in the Windows 11 VM.
-$QGA run --timeout 3600 --shell "rmdir /s /q \\\\?\\$VMDIR\\out 2>nul & rmdir /s /q \\\\?\\$VMDIR\\split 2>nul & exit /b 0" >/dev/null 2>&1 || true
+$QGA run --timeout 3600 --shell "rmdir /s /q \\\\?\\$WACDIR\\out 2>nul & rmdir /s /q \\\\?\\$WACDIR\\split 2>nul & exit /b 0" >/dev/null 2>&1 || true
 # taskkill once the witnesses are placed and the previous stores removed: both
 # take minutes (real browsing, an RDP session, 3 min to remove a store with
 # its deleted files), and the BAM check expects an execution within 300 s of
@@ -484,10 +503,10 @@ $QGA run --timeout 3600 --shell "rmdir /s /q \\\\?\\$VMDIR\\out 2>nul & rmdir /s
 # wait (and the registry witnesses' with it).
 $QGA run --shell "taskkill /f /im WAC.exe >nul 2>&1 & exit /b 0" >/dev/null 2>&1 || true
 if wants_registry_witness; then wait_registry_on_disk; fi
-$QGA run --timeout 3600 --shell "cd /d $VMDIR && WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
-[[ "$CODE" == "0" ]] && { $QGA run --timeout 3600 --shell "cd /d $VMDIR && WAC.exe --convert=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 >> run.log 2>&1" || CODE=$?; }
+$QGA run --timeout 3600 --shell "cd /d $WACDIR && WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
+[[ "$CODE" == "0" ]] && { $QGA run --timeout 3600 --shell "cd /d $WACDIR && WAC.exe --convert=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 >> run.log 2>&1" || CODE=$?; }
 user_access_log_reference
-$QGA read "$VMDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
+$QGA read "$WACDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
 
 if [[ -f "$OUTPUT/run.log" ]] && grep -qaiE 'terminate called|Unhandled exception|Exception non gérée' "$OUTPUT/run.log"; then
     echo "   ❌ WAC ENDED ON AN EXCEPTION — incomplete collection:"
@@ -502,9 +521,9 @@ fi
 
 # Fetches the JSON files of a WAC output folder of the VM, the exhibit manifest
 # and its seal, and the list of the exhibit store.
-#   $1 folder in the VM (under $VMDIR)   $2 folder on the host
+#   $1 folder in the VM (under $WACDIR)   $2 folder on the host
 fetch_results() {
-  local vm="$VMDIR\\$1" host="$2" list="" attempt f
+  local vm="$WACDIR\\$1" host="$2" list="" attempt f
   mkdir -p "$host/exhibits"
   # The listing is retried: right after a long collection the guest agent has
   # once answered with an empty output while the JSON files were there, and the
@@ -629,7 +648,7 @@ fi
 if full_cycle; then
   $QGA write "$HERE/guest/hive-recovery-reference.ps1" "$VMDIR\\hive-recovery-reference.ps1" >/dev/null \
   && $QGA run --timeout 900 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\hive-recovery-reference.ps1" \
-       -Collection "$VMDIR\\out" -Keep "$VMDIR\\hive-kept" 2>/dev/null | tr -d '\r' > "$OUTPUT/reference/hive-recovery.txt" \
+       -Collection "$WACDIR\\out" -Keep "$WACDIR\\hive-kept" 2>/dev/null | tr -d '\r' > "$OUTPUT/reference/hive-recovery.txt" \
   && [[ -s "$OUTPUT/reference/hive-recovery.txt" ]] \
   && echo "   + reference/hive-recovery.txt" || echo "   ⚠️ hive recovery reference not read"
   # A hive whose two loads differ, kept as collected and as WAC replayed it
@@ -742,17 +761,17 @@ if [[ $SPLIT -eq 1 ]]; then
   # Runs WAC in the VM. $1 name of its console log, then its arguments.
   run_wac() {
     local label="$1" code=0; shift
-    $QGA run --timeout 3600 --shell "cd /d $VMDIR && WAC.exe $* > $label.log 2>&1" || code=$?
-    $QGA read "$VMDIR\\$label.log" "$OUTPUT/$label.log" >/dev/null 2>&1 || true
+    $QGA run --timeout 3600 --shell "cd /d $WACDIR && WAC.exe $* > $label.log 2>&1" || code=$?
+    $QGA read "$WACDIR\\$label.log" "$OUTPUT/$label.log" >/dev/null 2>&1 || true
     return $code
   }
-  json_count() { $QGA run --shell "dir /b $VMDIR\\split\\*.json 2>nul" 2>/dev/null | grep -c '\.json' || true; }
+  json_count() { $QGA run --shell "dir /b $WACDIR\\split\\*.json 2>nul" 2>/dev/null | grep -c '\.json' || true; }
 
-  $QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\split 2>nul & echo." >/dev/null
+  $QGA run --shell "cd /d $WACDIR && rmdir /s /q \\\\?\\$WACDIR\\split 2>nul & echo." >/dev/null
   # A fetch interrupted with the harness leaves its file open in qemu-ga until
   # the agent restarts: rmdir fails silently, and the collection below refuses
   # the folder (working folder not empty) — every Vista cycle of 2026-10-29.
-  $QGA run --shell "if exist $VMDIR\\split (exit /b 1) else (exit /b 0)" >/dev/null 2>&1 \
+  $QGA run --shell "if exist $WACDIR\\split (exit /b 1) else (exit /b 0)" >/dev/null 2>&1 \
     || echo "   ⚠️ split not removed: a file of it is held open in the VM (an interrupted fetch?) — restart the VM"
   if full_cycle; then
   # A copy of a signed Store package with one untouched, one modified and one
@@ -883,7 +902,7 @@ if [[ $SPLIT -eq 1 ]]; then
   $QGA write "$ROOT/sources/scripts/verify-exhibits.ps1" "$VMDIR\\verify-exhibits.ps1" >/dev/null
   code=0
   $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\verify-exhibits.ps1" \
-       -Output "$VMDIR\\split" > "$OUTPUT/verify-exhibits.log" 2>&1 || code=$?
+       -Output "$WACDIR\\split" > "$OUTPUT/verify-exhibits.log" 2>&1 || code=$?
   if [[ $code -eq 0 ]]; then
     echo "   ✅ verify-exhibits.ps1: $(grep -a 'verified,' "$OUTPUT/verify-exhibits.log" | tr -d '\r')"
   elif [[ $code -eq 2 ]]; then
@@ -903,8 +922,8 @@ if [[ $SPLIT -eq 1 ]]; then
     && echo "   + reference/third-party-signatures.txt" || echo "   ⚠️ third-party signatures reference not read"
 
   # A retouched snapshot: one byte appended. The conversion must refuse it.
-  LIVE="$VMDIR\\split\\exhibits\\live\\system-clock.json"
-  $QGA run --shell "copy /y $LIVE $VMDIR\\clock.bak >nul & echo x>> $LIVE" >/dev/null
+  LIVE="$WACDIR\\split\\exhibits\\live\\system-clock.json"
+  $QGA run --shell "copy /y $LIVE $WACDIR\\clock.bak >nul & echo x>> $LIVE" >/dev/null
   if run_wac convert-tampered --convert=split $EVENTS_OPTION $BINARY_FLAG; then
     echo "   ❌ conversion of a retouched collection ACCEPTED"
   elif [[ "$(json_count)" == "2" ]] && grep -qa "no longer match" "$OUTPUT/convert-tampered.log"; then
@@ -912,7 +931,7 @@ if [[ $SPLIT -eq 1 ]]; then
   else
     echo "   ❌ retouched exhibit refused, but without conversion.json or its reason"
   fi
-  $QGA run --shell "copy /y $VMDIR\\clock.bak $LIVE >nul & del $VMDIR\\clock.bak & del $VMDIR\\split\\conversion.json" >/dev/null
+  $QGA run --shell "copy /y $WACDIR\\clock.bak $LIVE >nul & del $WACDIR\\clock.bak & del $WACDIR\\split\\conversion.json" >/dev/null
 
   fi
 
@@ -921,7 +940,7 @@ if [[ $SPLIT -eq 1 ]]; then
   $QGA write "$HERE/guest/exhibit-read-audit.ps1" "$VMDIR\\exhibit-read-audit.ps1" >/dev/null
   # A failed start must not end the harness (set -e): said below, and the
   # audit it may have switched on is switched off again.
-  AUDIT_SINCE=$($QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Start "$VMDIR\\split\\exhibits" 2>/dev/null | tr -d '\r' | tail -1 || true)
+  AUDIT_SINCE=$($QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Start "$WACDIR\\split\\exhibits" 2>/dev/null | tr -d '\r' | tail -1 || true)
   [[ "$AUDIT_SINCE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]] || AUDIT_SINCE=""
   if run_wac convert --convert=split $EVENTS_OPTION $BINARY_FLAG --loglevel=2; then
     echo "   ✅ conversion went to the end"
@@ -934,7 +953,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # main conversion's copy time, and count them all as "after".
   if [[ -n "$AUDIT_SINCE" ]]; then
     mkdir -p "$SPLIT_OUT/reference"
-    $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Stop "$VMDIR\\split\\exhibits" -Since "$AUDIT_SINCE" -Output "$VMDIR\\exhibit-reads.txt" >/dev/null 2>&1 \
+    $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Stop "$WACDIR\\split\\exhibits" -Since "$AUDIT_SINCE" -Output "$VMDIR\\exhibit-reads.txt" >/dev/null 2>&1 \
       && $QGA read "$VMDIR\\exhibit-reads.txt" "$SPLIT_OUT/reference/exhibit-reads.txt" >/dev/null 2>&1 \
       && echo "   + reference/exhibit-reads.txt" || echo "   ⚠️ reads of the exhibit store not listed"
   else
@@ -974,7 +993,7 @@ fi
 remove_sysmon
 if [[ -n "$ONLY" ]]; then
   echo "== 8. skipped (--only) == ($(date +%H:%M:%S))"
-  $QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
+  $QGA run --shell "del $WACDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
 else
 echo "== 8. Collection driven by wac.yml, without any option == ($(date +%H:%M:%S))"
 # The procedure written in wac.yml next to WAC.exe, and WAC.exe run alone: the
@@ -1000,11 +1019,11 @@ artefacts:
     enabled: false
     max_file_mib: 8
 YML
-$QGA write "$OUTPUT/wac.yml" "$VMDIR\\wac.yml" >/dev/null
-$QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\configured 2>nul & WAC.exe > configured.log 2>&1" \
+$QGA write "$OUTPUT/wac.yml" "$WACDIR\\wac.yml" >/dev/null
+$QGA run --shell "cd /d $WACDIR && rmdir /s /q \\\\?\\$WACDIR\\configured 2>nul & WAC.exe > configured.log 2>&1" \
   && echo "   ✅ collection driven by wac.yml went to the end" || echo "   ❌ collection driven by wac.yml ended abnormally"
-$QGA read "$VMDIR\\configured.log" "$OUTPUT/configured.log" >/dev/null 2>&1 || true
-$QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
+$QGA read "$WACDIR\\configured.log" "$OUTPUT/configured.log" >/dev/null 2>&1 || true
+$QGA run --shell "del $WACDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fetch_results configured "$CONFIG_OUT" >/dev/null
 python3 "$HERE/lib/check-json.py" --configuration "$CONFIG_OUT" || echo "   ⚠️ the configured collection fails its checks (see above)"
 fi
@@ -1025,21 +1044,21 @@ MISSING_OUT="$OUTPUT/missing"
   for k in $(sed -n '/^artefacts:/,/^[^ #]/s/^  \([a-z_]*\):.*/\1/p' "$ROOT/sources/wac.yml"); do
     if [[ "$k" == hosts ]]; then echo "  $k: true"; else echo "  $k: false"; fi
   done; } > "$OUTPUT/wac-missing.yml"
-$QGA write "$OUTPUT/wac-missing.yml" "$VMDIR\\wac.yml" >/dev/null
+$QGA write "$OUTPUT/wac-missing.yml" "$WACDIR\\wac.yml" >/dev/null
 CODE=0
-$QGA run --shell "cd /d $VMDIR && rmdir /s /q \\\\?\\$VMDIR\\missing 2>nul & move /y $HOSTS $VMDIR\\hosts.aside >nul && WAC.exe > missing.log 2>&1" || CODE=$?
+$QGA run --shell "cd /d $WACDIR && rmdir /s /q \\\\?\\$WACDIR\\missing 2>nul & move /y $HOSTS $VMDIR\\hosts.aside >nul && WAC.exe > missing.log 2>&1" || CODE=$?
 restore_hosts && echo "   ✅ hosts file put back" || echo "   ❌ hosts file NOT put back: $VMDIR\\hosts.aside"
 if [[ "$CODE" == "0" ]]; then
-  $QGA run --shell "cd /d $VMDIR && WAC.exe --convert=missing >> missing.log 2>&1" || CODE=$?
+  $QGA run --shell "cd /d $WACDIR && WAC.exe --convert=missing >> missing.log 2>&1" || CODE=$?
 fi
 [[ "$CODE" == "0" ]] && echo "   ✅ collection without hosts, then conversion, went to the end" \
                      || echo "   ❌ collection without hosts, or its conversion, ended abnormally (code $CODE)"
-$QGA read "$VMDIR\\missing.log" "$OUTPUT/missing.log" >/dev/null 2>&1 || true
-$QGA run --shell "del $VMDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
+$QGA read "$WACDIR\\missing.log" "$OUTPUT/missing.log" >/dev/null 2>&1 || true
+$QGA run --shell "del $WACDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fetch_results missing "$MISSING_OUT" >/dev/null
 mkdir -p "$MISSING_OUT/reference" && cp "$OUTPUT/reference/windows-version.txt" "$MISSING_OUT/reference/" 2>/dev/null || true
 python3 "$HERE/lib/check-json.py" --expected-missing "$MISSING_OUT" || echo "   ⚠️ the expected-but-missing test fails its checks (see above)"
-$QGA run --shell "rmdir /s /q \\\\?\\$VMDIR\\missing 2>nul & del $VMDIR\\missing.log 2>nul & exit /b 0" >/dev/null 2>&1 || true
+$QGA run --shell "rmdir /s /q \\\\?\\$WACDIR\\missing 2>nul & del $WACDIR\\missing.log 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fi
 
 echo
