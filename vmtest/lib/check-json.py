@@ -3755,12 +3755,26 @@ def check_user_access_log(folder):
                 clients.extend(rows_here)
                 if rows_here:
                     holding.add(stored_name(name).lower())
-    # ROLE_ACCESS, a role's first and last use: by role and both dates, whichever database holds them.
-    seen = {(r.get("RoleGuid", "").strip("{}").lower(), r.get("FirstSeenUtc", "")[:19], r.get("LastSeenUtc", "")[:19])
-            for r in mine if r.get("Table") == "ROLE_ACCESS"}
-    uses = {(str(r.get("RoleGuid")).lower(), filetime(r.get("FirstSeen")), filetime(r.get("LastSeen"))) for r in role_access}
-    report(uses <= seen, f"user_access_log.json: the {len(uses)} row(s) of ROLE_ACCESS, role, first and last use",
-           f"user_access_log.json: ROLE_ACCESS row(s) not read: {sorted(uses - seen)[:3]}")
+    # ROLE_ACCESS, a role's first and last use: by role and first use, whichever database holds them, and a
+    # last use at least the reference's. The reference is copied after the main collection, the service then
+    # started again: a later collection (the separate one) finds the same row used since (Server 2022
+    # controller, 2026-11-07: 14:53:29 in the reference, 15:41:42 at that collection). Each row of the
+    # reference, latest first, takes the earliest of WAC's rows that is not older, as for CLIENTS.
+    seen = {}
+    for r in mine:
+        if r.get("Table") == "ROLE_ACCESS":
+            seen.setdefault((r.get("RoleGuid", "").strip("{}").lower(), r.get("FirstSeenUtc", "")[:19]), []).append(r.get("LastSeenUtc", "")[:19])
+    uses = sorted(((str(r.get("RoleGuid")).lower(), filetime(r.get("FirstSeen")), filetime(r.get("LastSeen"))) for r in role_access),
+                  key=lambda u: u[2], reverse=True)
+    unread = []
+    for role, first, last in uses:
+        later = sorted(l for l in seen.get((role, first), []) if l >= last)
+        if later:
+            seen[(role, first)].remove(later[0])
+        else:
+            unread.append((role, first, last))
+    report(not unread, f"user_access_log.json: the {len(uses)} row(s) of ROLE_ACCESS, role, first and last use",
+           f"user_access_log.json: ROLE_ACCESS row(s) not read: {sorted(unread)[:3]}")
     mine_clients = [r for r in mine if r.get("Table") == "CLIENTS"]
     if not clients:
         # Measured on Server 2012 R2: CLIENTS stays empty, the witness's connection included. Nothing then to

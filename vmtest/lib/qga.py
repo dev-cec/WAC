@@ -20,12 +20,19 @@ CONN = "qemu:///session"
 
 # Transient agent errors (service busy or restarting): retried.
 TRANSIENT = ("not responding", "not available", "not connected", "Broken pipe")
+# An agent that answered too late: retried only for a command made safe to send
+# again by its `before` (a read, by the seek before it). With the outputs on the
+# collection key, a USB disk, reads of 256 KiB went past virsh's 5 s: a
+# mft.json arrived cut, a dns.log not at all (Server 2022, 2026-11-07).
+TIMED_OUT = ("timed out",)
+# Seconds virsh waits for the agent's answer (its default is 5).
+AGENT_TIMEOUT = 30
 
 def send(dom, cmd):
     """Sends one qemu-agent-command, once.
     @return (True, its 'return' field) or (False, virsh's error)"""
     out = subprocess.run(
-        ["virsh", "-c", CONN, "qemu-agent-command", dom, json.dumps(cmd)],
+        ["virsh", "-c", CONN, "qemu-agent-command", "--timeout", str(AGENT_TIMEOUT), dom, json.dumps(cmd)],
         capture_output=True, text=True)
     if out.returncode == 0:
         return True, json.loads(out.stdout).get("return")
@@ -46,7 +53,7 @@ def qga(dom, cmd, attempts=6, fatal=True, before=None):
         else:
             return value
         last = value
-        if not any(t in last for t in TRANSIENT):
+        if not any(t in last for t in TRANSIENT + (TIMED_OUT if before else ())):
             if not fatal:
                 return None
             sys.exit(f"[qga] virsh error: {last}")
