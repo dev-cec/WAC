@@ -544,9 +544,15 @@ fetch_results() {
   # Exhibit manifest + its seal: small, and they are what identifies the exhibits.
   # Without them, check-json.py cannot check the exhibit store (the exhibits
   # themselves weigh hundreds of MiB and stay on the collection medium).
+  # Retried: the guest agent once failed in the middle of a 230 MB manifest
+  # (Server 2025, 2026-11-07), which arrived cut, and every check of the store
+  # failed with it; read again, the same file was whole and matched its seal.
   for f in MANIFEST.json MANIFEST.sha256; do
-    $QGA read "$vm\\exhibits\\$f" "$host/exhibits/$f" >/dev/null 2>&1 \
-      && echo "   + exhibits/$f" || echo "   ⚠️ exhibits/$f not fetched"
+    for attempt in 1 2 3; do
+      $QGA read "$vm\\exhibits\\$f" "$host/exhibits/$f" >/dev/null 2>&1 && break
+      rm -f "$host/exhibits/$f"; sleep 5
+    done
+    [[ -f "$host/exhibits/$f" ]] && echo "   + exhibits/$f" || echo "   ⚠️ exhibits/$f not fetched"
   done
   # List of the files really present in the exhibit store: without it, nothing
   # checks that every exhibit is in the manifest. An exhibit added after the
