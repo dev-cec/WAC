@@ -161,10 +161,10 @@ echo "== 0c. Collection key == ($(date +%H:%M:%S))"
 # store left traces that real use never leaves — older WAC.exe recovered among
 # the deleted files, which Defender then quarantined from the store. NTFS, as
 # a collection key: a removable volume, which the deleted-files recovery of the
-# fixed volumes leaves alone. 32 GiB, sparse: a full collection with --binary
-# writes several GB. The witnesses of the examined machine stay in $VMDIR.
+# fixed volumes leaves alone. 64 GiB, sparse: the outputs of a full cycle
+# filled 28 of 32 GiB on Server 2025. The witnesses of the examined machine stay in $VMDIR.
 KIT_IMG="${WAC_KIT_IMG:-$HOME/vms/wac-kit$USB_SUFFIX.img}"
-[[ -f "$KIT_IMG" ]] || truncate -s 32G "$KIT_IMG"
+[[ -f "$KIT_IMG" ]] || truncate -s 64G "$KIT_IMG"
 attach_usb_key "$KIT_IMG" WACUSB0003 sdx || { echo "❌ collection key not attached"; exit 1; }
 $QGA run --shell "if not exist $VMDIR mkdir $VMDIR" >/dev/null
 $QGA write "$HERE/guest/prepare-wac-key.ps1" "$VMDIR\\prepare-wac-key.ps1" >/dev/null
