@@ -914,6 +914,18 @@ sous Server~2022, 571 contrôles passés, aucun échec, dont les 3~711 objets de
 l'annuaire identiques à \texttt{Get-ADObject} ; le 3 novembre, sous Windows~11,
 582 contrôles passés, aucun échec.
 
+Série finale sur le code de la 4.0.0, du 7 au 8 novembre, \wac{} lancé depuis
+une clé USB comme sur le terrain, nombre de contrôles passés : Windows~11, 605 ;
+Server~2025, 566 ; 2022, 586 ; Core~2022, 534 ; 2019, 540 ; 2016, 521 ;
+2012~R2, 505 ; 2012, 497 ; 2008~R2, 431 ; Server~2003, 109 ; contrôleur 2022,
+609 ; rôles 2022, 583 ; contrôleurs 2008~R2, 2012~R2, 2016 et 2025 (annuaire,
+stratégies, événements), 100 à 106. Les échecs relevés venaient du harnais,
+corrigés, à deux exceptions près. Les scripts de vérification livrés refusaient
+un nom portant une demi-paire de substitution isolée (Server~2016) : corrigé.
+Une seconde conversion sur la VM des rôles, une sur 22, n'a pu effacer la copie
+de travail précédente, cause perdue : \wac{} en dit désormais l'erreur réelle et
+l'entrée qui résiste.
+
 \begin{itemize}
   \item \textbf{collecte puis conversion} (\opt{collect} \opt{events}
     \opt{binary}) : 84 fichiers JSON valides ; 53~885 dates locales

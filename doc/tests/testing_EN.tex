@@ -200,6 +200,14 @@ A second fixed disk of 2~GB (\fichier{create-vm.sh}) is formatted NTFS on the
 first cycle, label \texttt{WACDATA}: it holds the \path|$MFT| and journal of a
 volume other than the system's, with their witnesses.
 
+As in the field, \wac{} does not run on the examined disk: the harness attaches
+a virtual USB key (serial number \texttt{WACUSB0003}, sparse 64~GiB image
+\path|~/vms/wac-kit-<vm>.img|), formatted NTFS, label \texttt{WACKIT}, on its
+first use. \fichier{WAC.exe}, its \fichier{wac.yml}, its trust set and every
+output are there; \path|C:\wactest| holds only the witnesses. Under Windows~XP
+and Server~2003, the key is formatted on the host (\texttt{mkntfs}): their
+\texttt{diskpart} partitions no removable disk.
+
 The cycle chains: upload of \fichier{WAC.exe} and \fichier{raw\_hive\_test.exe}
 into the VM, validation of the raw extraction of a hive (\texttt{reg load} must
 refuse it until it is repaired, then accept it), a collection by \wac{} then the

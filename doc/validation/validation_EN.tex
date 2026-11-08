@@ -880,6 +880,17 @@ checks passed, no failure, among them the 3,711 directory objects identical to
 \texttt{Get-ADObject}; on 3 November, on Windows~11, 582 checks passed, no
 failure.
 
+Final series on the code of 4.0.0, 7 and 8 November, \wac{} started from a USB
+key as in the field, checks passed: Windows~11, 605; Server~2025, 566; 2022,
+586; Core~2022, 534; 2019, 540; 2016, 521; 2012~R2, 505; 2012, 497; 2008~R2,
+431; Server~2003, 109; domain controller 2022, 609; roles 2022, 583; domain
+controllers 2008~R2, 2012~R2, 2016 and 2025 (directory, policies, events), 100
+to 106. The failures met came from the harness, fixed, with two exceptions. The
+shipped verification scripts refused a name holding a lone half of a surrogate
+pair (Server~2016): fixed. A second conversion on the roles VM, one in 22,
+could not delete the previous working copy, its cause lost: \wac{} now gives
+the real error and the entry that holds.
+
 \begin{itemize}
   \item \textbf{collection then conversion} (\opt{collect} \opt{events}
     \opt{binary}): 84 valid JSON files; 53,885 local dates confronted with the
