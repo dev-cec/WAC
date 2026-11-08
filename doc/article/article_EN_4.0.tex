@@ -90,7 +90,7 @@ Identity), and the data folders of MySQL, MariaDB and PostgreSQL are collected.
 Not read: \fichier{wp-config.php} and \fichier{.env}.
 
 \section{Roles and accesses}
-DNS (settings, plug-in DLLs among them, zones, records, debug log), DHCP (scopes
+DNS (settings and plug-in DLLs, zones, debug log), DHCP (scopes
 and leases of \fichier{dhcp.mdb}, audit logs) and Hyper-V (machines and the
 paths of their disks) are confronted with what each role says of itself. User
 Access Logging (\path|LogFiles\Sum|), which a comparison with KAPE showed
@@ -106,21 +106,22 @@ controller's events against \texttt{Get-WinEvent}. A replication request through
 DirSync leaves a 4662 event for right \texttt{1131f6aa}, found in the collection.
 
 \section{What remains to be measured}
-The controller was tested only under Server~2022, alone in its forest, with no
-real \texttt{sIDHistory}. Right \texttt{1131f6ad} of a true DCSync has no witness.
-Server~2003's directory format is copied, not converted. On the controller,
-Windows does not update access dates: the witness check of harmlessness proves
-only the USN number there. The comparison with KAPE under Sysmon is still the
-workstation one of 3.0.
+The directory is measured under Server~2008~R2, 2012~R2, 2016, 2022 and 2025,
+not under 2003 (copied, not converted), 2012 or 2019. A second controller, a real \texttt{sIDHistory} and
+a schema extension attribute are measured under Server~2022 only. The witness
+replication is that of a true controller, with right \texttt{1131f6ad}, which a
+DCSync also asks for: an attacker's tool is not run. A controller's access
+dates are off: the harmlessness check proves only the USN number there. The
+comparison with KAPE under Sysmon is still the workstation one of 3.0.
 
 \section{In figures}
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.72\columnwidth}@{\hspace{0.5em}}r@{}}
 Artefacts collected (3.0: 80) & 87 \\
 Server generations measured & 2003 to 2025 \\
-Checks in the cycle, domain controller & 609 \\
+Checks in the cycle, controller & 609 \\
 Checks in the cycle, Windows~11 & 605 \\
-Directory objects identical to \texttt{Get-ADObject} & 3\,711 \\
-\fichier{ntds.dit} values identical to dissect & 145\,421 \\
+Objects identical to \texttt{Get-ADObject} & 3\,711 \\
+\fichier{ntds.dit} values equal to dissect & 145\,421 \\
 Directory secrets read or written & 0 \\
 \end{tabular}
 

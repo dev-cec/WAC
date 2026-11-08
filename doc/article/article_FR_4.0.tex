@@ -93,8 +93,7 @@ les comptes des bases SQLite en sont extraits avec le schéma de leur condensat
 et PostgreSQL sont prélevés. Non lus : \fichier{wp-config.php} et \fichier{.env}.
 
 \section{Les rôles et les accès}
-DNS (réglages, dont les DLL de greffon, zones, enregistrements, journal de
-débogage), DHCP (étendues et baux de \fichier{dhcp.mdb}, journaux d'audit) et
+DNS (réglages et DLL de greffon, zones, journal de débogage), DHCP (étendues et baux de \fichier{dhcp.mdb}, journaux d'audit) et
 Hyper-V (machines et chemins de leurs disques) sont confrontés à ce que chaque
 rôle dit de lui-même. Le journal des accès utilisateurs
 (\path|LogFiles\Sum|), qu'une comparaison à KAPE a montré manquant, dit par
@@ -111,21 +110,23 @@ DirSync laisse un événement 4662 du droit \texttt{1131f6aa}, retrouvé dans la
 collecte.
 
 \section{Ce qui reste à mesurer}
-Le contrôleur n'a été éprouvé que sous Server~2022, seul dans sa forêt, sans
-aucun \texttt{sIDHistory} réel. Le droit \texttt{1131f6ad} d'un vrai DCSync n'a pas
-de témoin. Le format de l'annuaire de Server~2003 est copié, non converti. Sur
-le contrôleur, Windows n'y met pas à jour les dates d'accès : le contrôle
-d'innocuité par témoins n'y prouve que le numéro USN. La comparaison à KAPE
+L'annuaire est mesuré sous Server~2008~R2, 2012~R2, 2016, 2022 et 2025, non
+sous 2003 (copié, non converti), 2012 ou 2019. Un second contrôleur, un
+\texttt{sIDHistory} réel et un attribut d'extension du schéma ne sont mesurés
+que sous Server~2022. La réplication témoin est celle d'un vrai contrôleur,
+avec le droit \texttt{1131f6ad} que demande aussi un DCSync : l'outil d'un
+attaquant n'est pas lancé. Les dates d'accès d'un contrôleur sont éteintes :
+le contrôle d'innocuité n'y prouve que le numéro USN. La comparaison à KAPE
 sous Sysmon reste celle du poste de la 3.0.
 
 \section{En chiffres}
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.72\columnwidth}@{\hspace{0.5em}}r@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.75\columnwidth}@{\hspace{0.5em}}r@{}}
 Artefacts prélevés (3.0 : 80) & 87 \\
 Générations de serveurs mesurées & 2003 à 2025 \\
-Contrôles du cycle, contrôleur de domaine & 609 \\
+Contrôles du cycle, contrôleur & 609 \\
 Contrôles du cycle, Windows~11 & 605 \\
-Objets de l'annuaire identiques à \texttt{Get-ADObject} & 3\,711 \\
-Valeurs de \fichier{ntds.dit} identiques à dissect & 145\,421 \\
+Objets identiques à \texttt{Get-ADObject} & 3\,711 \\
+Valeurs de \fichier{ntds.dit} égales à dissect & 145\,421 \\
 Secrets de l'annuaire lus ou émis & 0 \\
 \end{tabular}
 
