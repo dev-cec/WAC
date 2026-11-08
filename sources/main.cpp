@@ -60,6 +60,7 @@
 #include "wmi_persistence.h"
 #include "srum.h"
 #include "user_access_log.h"
+#include "application_registry.h"
 #include "bits_jobs.h"
 #include "fat_volumes.h"
 #include "boot_records.h"
@@ -990,6 +991,7 @@ void convertShadowCopies() {
 		convertQuietly<Mrus>(a.mru);
 		convertQuietly<MruApps>(a.mruApps);
 		convertQuietly<Persistence>(a.persistence);
+		convertQuietly<ApplicationRegistry>(a.applicationRegistry);
 		convertQuietly<TypedPaths>(a.typedPaths);
 		convertQuietly<InstalledPrograms>(a.installedPrograms);
 		convertQuietly<KnownNetworks>(a.knownNetworks);
@@ -1195,6 +1197,8 @@ void convertArtefacts(bool systemAvailable) {
 	                             L"artefacts.persistence", Text::StepPersistence);
 	convertArtefact<OfficeTrustRecords>(conf.artefacts.officeTrustRecords, "office_trust_records.json", Text::ArtefactOfficeTrustRecords,
 	                     L"artefacts.office_trust_records", Text::StepOfficeTrustRecords);
+	convertArtefact<ApplicationRegistry>(conf.artefacts.applicationRegistry, "application_registry.json", Text::ArtefactApplicationRegistry,
+	                     L"artefacts.application_registry", Text::StepApplicationRegistry);
 	convertArtefact<TypedPaths>(conf.artefacts.typedPaths, "typed_paths.json", Text::ArtefactTypedPaths,
 	                     L"artefacts.typed_paths", Text::StepTypedPaths);
 	convertArtefact<WordWheelQueries>(conf.artefacts.wordWheelQuery, "word_wheel_query.json", Text::ArtefactWordWheelQueries,

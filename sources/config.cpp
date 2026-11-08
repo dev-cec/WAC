@@ -2,6 +2,9 @@
  *  \brief The configuration file, wac.yml (see config.h).
  */
 #include "config.h"
+#include "application_registry.h"
+#include "application_traces.h"
+#include <algorithm>
 #include "sha.h"
 #include "yaml_light.h"
 #include "resource.h"
@@ -85,7 +88,7 @@ std::vector<std::pair<std::string, bool*>> artefactSwitches(AppliConf& conf) {
 		{ "ntfs_volumes", &a.ntfsVolumes },
 		{ "dpapi_master_keys", &a.dpapiMasterKeys },
 		{ "user_shell_folders", &a.userShellFolders },
-		{ "dns_server", &a.dnsServer }, { "dhcp_server", &a.dhcpServer }, { "hyperv", &a.hyperV }, { "user_access_log", &a.userAccessLog }, { "active_directory", &a.activeDirectory }, { "group_policies", &a.groupPolicies }, { "web_client", &a.webClient }, { "web_server", &a.webServer },
+		{ "dns_server", &a.dnsServer }, { "dhcp_server", &a.dhcpServer }, { "hyperv", &a.hyperV }, { "user_access_log", &a.userAccessLog }, { "application_registry", &a.applicationRegistry }, { "active_directory", &a.activeDirectory }, { "group_policies", &a.groupPolicies }, { "web_client", &a.webClient }, { "web_server", &a.webServer },
 		{ "zone_identifiers", &a.zoneIdentifiers }, { "security", &a.security },
 		{ "persistence", &a.persistence },
 		{ "office_trust_records", &a.officeTrustRecords }, { "typed_paths", &a.typedPaths }, { "word_wheel_query", &a.wordWheelQuery }, { "root_certificates", &a.rootCertificates }, { "internet_settings", &a.internetSettings }, { "intune_logs", &a.intuneLogs }, { "firewall", &a.firewall }, { "firewall_log", &a.firewallLog },
@@ -186,7 +189,33 @@ bool readWebServer(const YamlNode& node, AppliConf& conf, std::string& error) {
 	return true;
 }
 
-//! The `artefacts:` section: one switch per artefact, a section of options for deleted_files and web_server.
+/*! A group of application_traces.h, or application_registry: a switch for the whole
+ *  group, or a section of one switch per product. A missing product stays on.
+ *  @param key the group's key
+ *  @param products its products' keys
+ *  @param node its value
+ *  @param conf receives what is switched off
+ *  @param error receives the refusal
+ *  @return false if refused */
+bool readProductSwitches(const std::string& key, const std::vector<std::string>& products, const YamlNode& node, AppliConf& conf, std::string& error) {
+	const std::string name = "artefacts." + key;
+	bool on = true;
+	if (!node.mapping) {
+		if (!readBool(node, name, on, error)) return false;
+		if (!on) conf.traceProductsOff.insert(key);
+		return true;
+	}
+	for (const auto& [option, value] : node.children) {
+		if (std::find(products.begin(), products.end(), option) == products.end())
+			return refuse(error, *value, text(Text::ConfigurationUnknownSetting, { wide(name + "." + option) }));
+		on = true;
+		if (!readBool(*value, name + "." + option, on, error)) return false;
+		if (!on) conf.traceProductsOff.insert(key + "." + option);
+	}
+	return true;
+}
+
+//! The `artefacts:` section: one switch per artefact, a section of options for deleted_files, web_server and the groups of products.
 bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error) {
 	if (!section.mapping) return refuse(error, section, text(Text::ConfigurationArtefactsSection));
 	const std::vector<std::pair<std::string, bool*>> switches = artefactSwitches(conf);
@@ -197,6 +226,19 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 		}
 		if (key == "web_server") {
 			if (!readWebServer(*node, conf, error)) return false;
+			continue;
+		}
+		if (const TraceGroup* group = traceGroup(key)) {
+			std::vector<std::string> products;
+			for (const TraceProduct& product : group->products) products.push_back(product.key);
+			if (!readProductSwitches(key, products, *node, conf, error)) return false;
+			continue;
+		}
+		if (key == "application_registry") {
+			std::vector<std::string> products;
+			for (const RegistryProduct& product : registryProducts()) products.push_back(product.key);
+			if (!readProductSwitches(key, products, *node, conf, error)) return false;
+			conf.artefacts.applicationRegistry = conf.traceProductsOff.count(key) == 0;
 			continue;
 		}
 		bool* found = nullptr;

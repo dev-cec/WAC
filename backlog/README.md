@@ -74,7 +74,7 @@ dans un `git stash` (voir B-062).
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-062](B-062-traces-applications-mecanisme.md) | Traces d'applications : mécanisme commun, une option `wac.yml` par produit | à faire (5.0.0, code mis de côté) | P1 | moyen |
+| [B-062](B-062-traces-applications-mecanisme.md) | Traces d'applications : mécanisme commun, une option `wac.yml` par produit | en cours (compilé, tests verts) | P1 | moyen |
 | [B-063](B-063-administration-a-distance.md) | `remote_administration` : outils d'administration à distance | à faire (5.0.0, code mis de côté) | P1 | moyen |
 | [B-064](B-064-antivirus-tiers.md) | `antivirus` : journaux des antivirus autres que Defender | à faire (5.0.0, code mis de côté) | P1 | moyen |
 | [B-065](B-065-messageries.md) | `messaging` : messageries | à faire (5.0.0, code mis de côté) | P2 | moyen |

@@ -7,6 +7,7 @@
  *  Built for hives/EVTX/Tasks: non-resident, medium-sized files.
  */
 #include "raw_hive.h"
+#include "wildcard.h"
 #include <atomic>
 #include "long_path.h"
 #include "conversions.h"
@@ -2249,14 +2250,16 @@ HRESULT ExtractFileRaw(const std::wstring& volumeLetter,
 }
 
 /* Compares a name with the filter, case-insensitively (ASCII): an entry
-   starting with "." is an extension, any other a whole name ("Thumbs.db",
-   which Windows XP writes in every folder shown as thumbnails). */
+   starting with "." is an extension, one holding `*` a pattern ("connections*.txt"),
+   any other a whole name ("Thumbs.db", which Windows XP writes in every folder
+   shown as thumbnails). */
 static bool extensionMatches(const std::wstring& name, const std::vector<std::wstring>& extensions){
     if (extensions.empty()) return true;              // no filter: everything is kept
     const size_t point = name.rfind(L'.');
     const std::wstring ext = point == std::wstring::npos ? std::wstring() : name.substr(point);
     for (const std::wstring& expected : extensions)
-        if (!expected.empty() && expected[0] == L'.' ? iequals(ext, expected) : iequals(name, expected)) return true;
+        if (expected.find(L'*') != std::wstring::npos ? wildcardMatch(expected, name)
+            : !expected.empty() && expected[0] == L'.' ? iequals(ext, expected) : iequals(name, expected)) return true;
     return false;
 }
 
@@ -2272,8 +2275,9 @@ HRESULT ListDirectoryRaw(const std::wstring& volumeLetter,
     uint64_t index = 0;
     if (!vol.resolvePath(dirPathOnVolume, index))
         return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+    // There but unreadable: not the same answer as a folder absent (raw_collect.cpp, traceFolderPresent).
     if (!vol.listDir(index, out))
-        return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+        return HRESULT_FROM_WIN32(ERROR_READ_FAULT);
     return ERROR_SUCCESS;
 }
 

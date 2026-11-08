@@ -16,6 +16,7 @@
  *  Usage (runs under wine): config_test.exe `<scratch folder>`
  */
 #include "config.h"
+#include "application_traces.h"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -31,6 +32,15 @@ std::filesystem::path g_folder;
 void check(bool ok, const std::string& what) {
 	++g_checks;
 	if (!ok && ++g_failures <= 20) std::printf("  FAILED  %s\n", what.c_str());
+}
+
+/*! Records one check whose message ends with the refusal LoadConfiguration wrote.
+ *  The error is taken by reference and read here, once the check is evaluated:
+ *  built in the call ("…", error), its text was taken before LoadConfiguration
+ *  ran — C++ leaves the order of the arguments open — and a refusal read empty.
+ *  @param ok the verdict @param what the message @param error the refusal, read now */
+void check(bool ok, const std::string& what, const std::string& error) {
+	check(ok, what + error);
 }
 
 //! Writes `text` to a file of the scratch folder, as given. @return its path
@@ -84,7 +94,7 @@ int wmain(int argc, wchar_t** argv) {
 		const std::string text = "binary: all\nthreads: 3\noutput: case42\nlog_level: 2\ndump: true\nlanguage: en\n"
 		                         "artefacts:\n  amcache: false\n  events: false\n  prefetch: false\n  sessions: false\n"
 		                         "  network: false\n";
-		check(LoadConfiguration(file("all.yml", text), c, f, error), "all settings: refused: " + error);
+		check(LoadConfiguration(file("all.yml", text), c, f, error), "all settings: refused: ", error);
 		check(c.mode == RunMode::Collect && c.binary && c.binaryAll && c.threads == 3 && c._outputDir == L"case42"
 		      && c.loglevel == 2 && c._dump && c.language == Language::English, "top-level settings not applied");
 		check(!c.artefacts.amcache && !c.artefacts.events && !c.artefacts.prefetch && !c.artefacts.sessions
@@ -107,7 +117,7 @@ int wmain(int argc, wchar_t** argv) {
 		AppliConf c;
 		ConfigurationFile f;
 		std::string error;
-		check(LoadConfiguration(rawFile("reference.yml", DefaultConfiguration()), c, f, error), "reference file refused: " + error);
+		check(LoadConfiguration(rawFile("reference.yml", DefaultConfiguration()), c, f, error), "reference file refused: ", error);
 		check(c.mode == RunMode::Collect && c.binary && !c.binaryAll && c.artefacts.events && c.artefacts.users
 		      && c.language == Language::French, "reference file not applied as it says");
 	}
@@ -121,11 +131,11 @@ int wmain(int argc, wchar_t** argv) {
 		ConfigurationFile f;
 		std::string error;
 		check(!LoadConfiguration(rawFile("noversion.yml", "binary: none\n"), c, f, error)
-		      && error.find("wac_version missing") != std::string::npos, "file without wac_version: " + error);
+		      && error.find("wac_version missing") != std::string::npos, "file without wac_version: ", error);
 		// An earlier version's file, with a key gone since: the version is the reason given.
 		check(!LoadConfiguration(rawFile("earlier.yml", "artefacts:\n  registry: true\nwac_version: 0.9.9\n"), c, f, error)
 		      && error.find("line 3") == 0 && error.find("written for WAC 0.9.9") != std::string::npos,
-		      "earlier version's file: " + error);
+		      "earlier version's file: ", error);
 		const std::string reference = DefaultConfiguration();
 		check(reference.find("\nwac_version: " + encodeText(WacVersion()) + "\n") != std::string::npos
 		      && reference.find("@WAC_VERSION@") == std::string::npos, "--write-config: the version not written in");
@@ -149,14 +159,14 @@ int wmain(int argc, wchar_t** argv) {
 		const AppliConf::DeletedFilesSettings defaults;
 		check(LoadConfiguration(file("deleted-switch.yml", "artefacts:\n  deleted_files: false\n"), c, f, error)
 		      && !c.artefacts.deletedFiles && c.deletedFilesSettings.maxFileMib == defaults.maxFileMib,
-		      "deleted_files: false not applied: " + error);
+		      "deleted_files: false not applied: ", error);
 		AppliConf d;
 		const std::string text = "artefacts:\n  deleted_files:\n    enabled: true\n    level: 1\n    max_file_mib: 8\n"
 		                         "    max_total_mib: 1048576\n    excluded_folders:\n      - \\Windows\\Temp\n      - \\$Extend\n";
 		check(LoadConfiguration(file("deleted-section.yml", text), d, f, error) && d.artefacts.deletedFiles
 		      && d.deletedFilesSettings.level == 1 && d.deletedFilesSettings.maxFileMib == 8
 		      && d.deletedFilesSettings.maxTotalMib == 1048576 && d.deletedFilesSettings.excludedFolders.size() == 2
-		      && d.deletedFilesSettings.excludedFolders[0] == L"\\Windows\\Temp", "deleted_files options not applied: " + error);
+		      && d.deletedFilesSettings.excludedFolders[0] == L"\\Windows\\Temp", "deleted_files options not applied: ", error);
 		AppliConf e;
 		check(LoadConfiguration(file("deleted-partial.yml", "artefacts:\n  deleted_files:\n    max_file_mib: 16\n"), e, f, error)
 		      && e.artefacts.deletedFiles && e.deletedFilesSettings.maxFileMib == 16
@@ -181,14 +191,42 @@ int wmain(int argc, wchar_t** argv) {
 		const AppliConf::WebServerSettings defaults;
 		check(LoadConfiguration(file("web-switch.yml", "artefacts:\n  web_server: false\n"), c, f, error)
 		      && !c.artefacts.webServer && c.webServerSettings.maxDatabaseMib == defaults.maxDatabaseMib,
-		      "web_server: false not applied: " + error);
+		      "web_server: false not applied: ", error);
 		AppliConf d;
 		check(LoadConfiguration(file("web-section.yml", "artefacts:\n  web_server:\n    enabled: true\n    max_database_mib: 64\n"), d, f, error)
-		      && d.artefacts.webServer && d.webServerSettings.maxDatabaseMib == 64, "web_server options not applied: " + error);
+		      && d.artefacts.webServer && d.webServerSettings.maxDatabaseMib == 64, "web_server options not applied: ", error);
 		AppliConf g;
 		check(LoadConfiguration(rawFile("reference-web.yml", DefaultConfiguration()), g, f, error) && g.artefacts.webServer
 		      && g.webServerSettings.maxDatabaseMib == defaults.maxDatabaseMib, "reference file: web_server differs from the defaults");
 	}
+	// The applications' traces: a product switched off and its neighbour taken, a group
+	// switched off whole, the registry tools likewise, the reference file all on (B-062).
+	{
+		ConfigurationFile f;
+		std::string error;
+		AppliConf c;
+		check(LoadConfiguration(file("traces-product.yml", "artefacts:\n  messaging:\n    signal: false\n"), c, f, error)
+		      && !traceProductWanted(c.traceProductsOff, "messaging", "signal") && traceProductWanted(c.traceProductsOff, "messaging", "slack"),
+		      "a product switched off: not applied, or its neighbour switched off too: ", error);
+		AppliConf g;
+		check(LoadConfiguration(file("traces-group.yml", "artefacts:\n  antivirus: false\n"), g, f, error)
+		      && !traceProductWanted(g.traceProductsOff, "antivirus", "eset") && !traceProductWanted(g.traceProductsOff, "antivirus", "sophos")
+		      && traceProductWanted(g.traceProductsOff, "vpn", "wireguard"),
+		      "a group switched off: its products still taken, or another group switched off: ", error);
+		AppliConf r;
+		check(LoadConfiguration(file("registry-product.yml", "artefacts:\n  application_registry:\n    putty: false\n"), r, f, error)
+		      && r.artefacts.applicationRegistry && !traceProductWanted(r.traceProductsOff, "application_registry", "putty")
+		      && traceProductWanted(r.traceProductsOff, "application_registry", "winscp"),
+		      "application_registry: a product switched off not applied: ", error);
+		AppliConf o;
+		check(LoadConfiguration(file("registry-off.yml", "artefacts:\n  application_registry: false\n"), o, f, error)
+		      && !o.artefacts.applicationRegistry, "application_registry: false not applied: ", error);
+		AppliConf d;
+		check(LoadConfiguration(rawFile("reference-traces.yml", DefaultConfiguration()), d, f, error)
+		      && d.traceProductsOff.empty() && d.artefacts.applicationRegistry,
+		      "reference file: a product of the applications' traces switched off");
+	}
+	refused("traces-unknown.yml", "artefacts:\n  messaging:\n    icq: false\n", 3, "unknown setting \"artefacts.messaging.icq\"");
 	// `unlimited` for the ceilings in MiB; no other word, and not for a setting that is no ceiling.
 	{
 		AppliConf c;
@@ -197,7 +235,7 @@ int wmain(int argc, wchar_t** argv) {
 		check(LoadConfiguration(file("unlimited.yml", "artefacts:\n  web_server:\n    max_database_mib: unlimited\n"
 		                                              "  deleted_files:\n    max_file_mib: unlimited\n    max_total_mib: unlimited\n"), c, f, error)
 		      && c.webServerSettings.maxDatabaseMib == AppliConf::UNLIMITED_MIB && c.deletedFilesSettings.maxFileMib == AppliConf::UNLIMITED_MIB
-		      && c.deletedFilesSettings.maxTotalMib == AppliConf::UNLIMITED_MIB, "unlimited not applied: " + error);
+		      && c.deletedFilesSettings.maxTotalMib == AppliConf::UNLIMITED_MIB, "unlimited not applied: ", error);
 		check(AppliConf::ceilingBytes(AppliConf::UNLIMITED_MIB) == UINT64_MAX && AppliConf::ceilingBytes(1024) == 1ULL << 30,
 		      "a ceiling in bytes: 1024 MiB is 1 GiB, unlimited above any size");
 	}

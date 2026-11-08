@@ -95,6 +95,7 @@ struct AppliConf {
 	ORHKEY CurrentControlSet = { 0 }; //!< Reg Key to access Current Control Set Hive
 	ORHKEY System = { 0 }; //!< Reg Key to access to System Hive
 	ORHKEY Software = { 0 };//!< Reg Key to access CurrentControlSet/Software hive
+	std::set<std::string> traceProductsOff;  //!< the groups and "group.product" of application_traces.h and application_registry switched off in wac.yml
 	std::vector<std::tuple<std::wstring, std::wstring>> profiles;//!< vector to store SID and profiles of users present on the machine
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< handle of the console
 	std::ofstream log;//!< handle of the output log file, for the debug mode (UTF-8 bytes)
@@ -162,6 +163,7 @@ struct AppliConf {
 		bool groupPolicies = true;    //!< a domain controller: SYSVOL raw; its policies' registry values, scripts, tasks (group_policies.h)
 		bool dnsServer = true;        //!< the DNS Server role: settings, zones, records, debug log (dns_server.h)
 		bool dhcpServer = true;       //!< the DHCP Server role: settings, scopes, leases, audit log (dhcp_server.h)
+		bool applicationRegistry = true; //!< what remote and archive tools keep in each user's hive (application_registry.h)
 		bool userAccessLog = true;    //!< User Access Logging of a server: who reached each role, from where, day by day (user_access_log.h)
 		bool hyperV = true;           //!< the Hyper-V role: the configuration of each virtual machine, not its disks (hyperv.h)
 		bool activeDirectory = true;  //!< a domain controller: ntds.dit raw with its logs; objects, links, replication metadata (active_directory.h)
