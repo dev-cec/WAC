@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (4.0 : générations et contrôleur de domaine couverts ; autres rôles à décider, autres versions du contrôleur non mesurées) | P3 | fort |
+| fait (c2128d18, a26473a5, 4f993992 ; série finale du 2026-11-08) | P3 | fort |
 
 ## Pourquoi
 Les serveurs sont une cible de premier ordre (contrôleurs de domaine, serveurs web, de fichiers, d'applications), et beaucoup tournent sous des versions anciennes. WAC est développé et éprouvé sur Windows 10 et 11, des postes clients. Demande utilisateur du 2026-10-06 : la collecte doit fonctionner sur les versions serveur, de Windows Server 2003 à 2026. Les artefacts sont sensiblement les mêmes que ceux du client de la même génération. Prérequis de B-035 (web côté serveur).
@@ -34,7 +34,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Contrôleur de domaine : `NTDS.dit` (B-041, Server 2022 seul)
 
 ## Point ouvert
-Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et la compatibilité des API de B-037, qui est planifiée en dernier. À décider : avancer cette partie de B-037, ou traiter d'abord Server 2008 et suivants et faire suivre Server 2003 avec B-037.
+Résolu : Server 2003 est mesuré sur le serveur lui-même, par WAC32 (2026-10-31, puis 109 ✅, 0 ❌ sur la clé le 2026-11-08). Restent hors mesure, faute d'image officielle ou de version publiée : Server 2008 hors R2 et Server 2026.
 
 ## Journal
 - 2026-10-06 : créée à la demande de l'utilisateur — compatibilité avec les versions serveur de Windows, de 2003 à 2026, avant B-035 ; les artefacts sont sensiblement ceux du client de même génération.
@@ -119,3 +119,4 @@ Server 2003 a le noyau de XP (NT 5.2) : il demande la version 32 bits de WAC et 
 - 2026-11-08 : décision de l'utilisateur sur la seconde conversion refusée des rôles : WAC dit l'erreur réelle et l'entrée qui résiste, sans nouvel essai. `removeFolderTree` lit chaque `DeleteFileW`/`RemoveDirectoryW` et rend l'erreur Win32 et le chemin de la première entrée qui résiste ; la conversion les inscrit au journal d'audit et à la console, au lieu d'un `ERROR_ACCESS_DENIED` fixe (c2128d18). `long_path_test` (Wine) : 9 vérifications, la mutation qui ignore `DeleteFileW` en fait échouer 2. Compilation sans avertissement, tests unitaires verts, `bin/WAC.exe` identique à la compilation. Cycles en cours : 2012 R2 (même clé), 2016, Windows 11.
 - 2026-11-08 : **cycles de validation sur c2128d18 et a26473a5, tous à 0 ❌ : Server 2012 R2 505 ✅ (clé réutilisée, sortie précédente aux chemins longs vidée), Server 2016 521 ✅, Windows 11 605 ✅.** `user_access_log` vert aux deux collectes avec de vraies lignes : 2016, 15 lignes de `ROLE_ACCESS` et 5 de `CLIENTS` dans 5 bases, dont les noms aléatoires ; 2012 R2, 1 ligne de chaque dans `Current.mdb`, témoin retrouvé (jamais vu jusqu'ici sur cette version).
 - 2026-11-08 : **Server 2003 sur la clé : 109 ✅, 0 ❌** (90 ✅ le 2026-11-01, WAC sur le disque). Deux défauts du harnais XP corrigés avant : l'assistant d'activation du kit d'évaluation, ouvert à chaque session, cachait le bureau — fermé au clavier ; la clé de 8 Gio refusée par WAC au contrôle du support (il réserve deux fois son estimation, environ 12 Gio), portée à 64 Gio creux. À noter : l'assistant annonce 7 jours avant l'activation obligatoire, impossible pour Server 2003 ; la VM sera à recréer (`create-vm.sh srv2003`) si elle refuse ensuite la session. Série serveur close.
+- 2026-11-08 : **close.** Critères atteints : chaque génération verte sur le serveur lui-même (2003, 2008 R2, 2012, 2012 R2, 2016, 2019, 2022, 2025), Server Core 2022 vert, contrôleurs 2008 R2 à 2025 ; `system_conversions_test` sous Windows 11 : 10 134 985 comparaisons, 0 différence ; article, document des tests et dossier de validation FR/EN à jour (0807da0b, 328de0f1), 0 Overfull. VM retirées après la série, comme décidé le 2026-11-07 : restent 2003, 2008 R2, 2025, contrôleur 2025, rôles 2022 et Windows 11.

@@ -57,7 +57,6 @@ aux serveurs (web, Active Directory).
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-038](B-038-compatibilite-windows-server.md) | Collecte compatible avec les versions serveur, de Server 2003 à 2026 (prérequis de B-035) | en cours (série finale sur `1a05c822`) | P3 | fort |
 
 ### Clôture de la 4.0.0
 
@@ -65,7 +64,6 @@ Revue de sécurité du code de la 4.0.0, avant sa publication.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-060](B-060-revue-securite-finale.md) | Revue de sécurité complète avant la clôture du projet | à faire (en dernier) | P1 | fort |
 
 ### Version 5.0 — traces d'applications, clients et serveurs
 
