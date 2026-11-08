@@ -594,7 +594,7 @@ void addApplicationTraces(std::vector<Tree>& trees) {
 	const std::wstring mark = PROFILE_MARK;
 	for (const TraceGroup& group : applicationTraces())
 		for (const TraceProduct& product : group.products) {
-			if (!traceProductWanted(conf.traceProductsOff, group.key, product.key)) continue;
+			if (!traceProductWanted(conf.traceProducts, group.key, product.key, product.onByDefault)) continue;
 			for (const TracePiece& piece : product.pieces) {
 				std::vector<std::wstring> written;
 				if (piece.folder.compare(0, mark.size(), mark) != 0) written.push_back(piece.folder);

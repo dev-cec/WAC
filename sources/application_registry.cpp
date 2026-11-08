@@ -65,7 +65,7 @@ const std::vector<RegistryProduct>& registryProducts() {
 HRESULT ApplicationRegistry::getData() {
 	forEachProfileHive(L"\\ntuser.dat", [this](ORHKEY root, const std::wstring& sid) {
 		for (const RegistryProduct& product : registryProducts()) {
-			if (!traceProductWanted(conf.traceProductsOff, "application_registry", product.key)) continue;
+			if (!traceProductWanted(conf.traceProducts, "application_registry", product.key)) continue;
 			for (const wchar_t* path : product.paths) {
 				ORHKEY key = NULL;
 				if (OROpenKey(root, path, &key) != ERROR_SUCCESS) continue;

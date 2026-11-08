@@ -1,7 +1,9 @@
 /*! \file
  *  \brief Matching a name with a pattern where `*` stands for any run of
- *         characters: the filter of the raw folder reading (raw_hive.cpp) and
- *         of the applications' traces table (application_traces.cpp).
+ *         characters and `?` for one: the filter of the raw folder reading
+ *         (raw_hive.cpp), of the applications' traces table
+ *         (application_traces.cpp) and of the web servers' Include masks
+ *         (web_installations.cpp) — one function, where there were two.
  *
  *  A header of its own, inline and portable: the NTFS reader and the table
  *  both use it without depending on each other, and the table's test builds
@@ -17,7 +19,8 @@
 inline wchar_t wildcardFolded(wchar_t c) { return c >= L'A' && c <= L'Z' ? (wchar_t)(c + (L'a' - L'A')) : c; }
 
 /*! Compares a name with a pattern, case-insensitively (ASCII). `*` stands for any
- *  run of characters, none included; every other character for itself.
+ *  run of characters, none included; `?` for exactly one; every other character
+ *  for itself.
  *  Iterative: a forged name of any length costs at most pattern × name, never a
  *  deep recursion.
  *  @param pattern the pattern
@@ -27,7 +30,7 @@ inline bool wildcardMatch(const std::wstring& pattern, const std::wstring& name)
 	size_t p = 0, n = 0, star = std::wstring::npos, resume = 0;
 	while (n < name.size()) {
 		if (p < pattern.size() && pattern[p] == L'*') { star = p++; resume = n; }
-		else if (p < pattern.size() && wildcardFolded(pattern[p]) == wildcardFolded(name[n])) { ++p; ++n; }
+		else if (p < pattern.size() && (pattern[p] == L'?' || wildcardFolded(pattern[p]) == wildcardFolded(name[n]))) { ++p; ++n; }
 		else if (star != std::wstring::npos) { p = star + 1; n = ++resume; }
 		else return false;
 	}

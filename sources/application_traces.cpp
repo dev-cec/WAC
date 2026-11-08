@@ -303,16 +303,16 @@ std::vector<TraceProduct> serverLogs() {
 //! What Windows itself keeps, beyond the other artefacts.
 std::vector<TraceProduct> systemTraces() {
 	return {
-		{ "crash_dumps", L"Crash dumps of the programs", { { L"%profile%\\AppData\\Local\\CrashDumps", { L".dmp" }, 0 } } },
+		{ "crash_dumps", L"Crash dumps of the programs", { { L"%profile%\\AppData\\Local\\CrashDumps", { L".dmp" }, 0 } }, false },
 		{ "custom_shims", L"Custom application shims", {
 			{ L"\\Windows\\apppatch\\Custom", { L".sdb" }, 0 },
 			{ L"\\Windows\\apppatch\\Custom\\Custom64", { L".sdb" }, 0 } } },
 		{ "encapsulation_logging", L"Encapsulation logging", { { L"\\Windows\\appcompat\\Programs", { L"EncapsulationLogging.hve*" }, 0 } } },
 		{ "event_transcript", L"Diagnostic data store", { { L"\\ProgramData\\Microsoft\\Diagnosis\\EventTranscript", { L"EventTranscript.db*" }, 0 } } },
 		{ "microsoft_sccm", L"Configuration Manager client", { { L"\\Windows\\CCM\\Logs", { L".log", L".lo_" }, 0 } } },
-		{ "minidumps", L"Kernel crash dumps", { { L"\\Windows\\Minidump", { L".dmp" }, 0 } } },
+		{ "minidumps", L"Kernel crash dumps", { { L"\\Windows\\Minidump", { L".dmp" }, 0 } }, false },
 		{ "notifications", L"Windows notifications", { { L"%profile%\\AppData\\Local\\Microsoft\\Windows\\Notifications", { L"wpndatabase.db*", L"appdb.dat" }, 0 } } },
-		{ "office_cache", L"Office document cache", { { L"%profile%\\AppData\\Local\\Microsoft\\Office\\*\\OfficeFileCache", ALL, WHOLE } } },
+		{ "office_cache", L"Office document cache", { { L"%profile%\\AppData\\Local\\Microsoft\\Office\\*\\OfficeFileCache", ALL, WHOLE } }, false },
 		// Windows 11 22H2 and later: what the Program Compatibility Assistant saw run.
 		{ "pca", L"Program Compatibility Assistant", { { L"\\Windows\\appcompat\\pca", ALL, 0 } } },
 		{ "pcw_diagnostics", L"Program compatibility diagnostics", {
@@ -374,6 +374,8 @@ bool isPasswordValue(const std::wstring& name) {
 	return wildcardMatch(L"*password*", name);
 }
 
-bool traceProductWanted(const std::set<std::string>& off, const std::string& group, const std::string& product) {
-	return off.count(group) == 0 && off.count(group + "." + product) == 0;
+bool traceProductWanted(const ProductSwitches& switches, const std::string& group, const std::string& product, bool onByDefault) {
+	const std::string key = group + "." + product;
+	if (switches.off.count(group) || switches.off.count(key)) return false;
+	return onByDefault || switches.on.count(key) != 0;
 }

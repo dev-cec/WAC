@@ -35,15 +35,28 @@ void testWildcards() {
 	check(isPasswordValue(L"ProxyPassword") && isPasswordValue(L"Password") && isPasswordValue(L"TUNNELPASSWORD"), "a password value, whatever its case or place");
 	check(!isPasswordValue(L"HostName") && !isPasswordValue(L"UserName"), "the other values stay");
 	check(wildcardMatch(std::wstring(200, L'*') + L"z", std::wstring(5000, L'a') + L"z"), "long patterns and names end");
+	check(wildcardMatch(L"httpd-?.conf", L"HTTPD-a.conf") && !wildcardMatch(L"httpd-?.conf", L"httpd-.conf")
+	      && !wildcardMatch(L"httpd-?.conf", L"httpd-ab.conf"), "a question mark stands for exactly one character");
 }
 
-//! The switches: a product's, its group's, a neighbour's.
+//! The switches: a product's, its group's, a neighbour's, and the products off by default.
 void testSwitches() {
-	const std::set<std::string> off = { "messaging.telegram", "vpn" };
-	check(!traceProductWanted(off, "messaging", "telegram"), "a product switched off");
-	check(traceProductWanted(off, "messaging", "slack"), "its neighbour stays");
-	check(!traceProductWanted(off, "vpn", "openvpn"), "a group switched off takes its products");
-	check(traceProductWanted(off, "antivirus", "sophos"), "another group stays");
+	ProductSwitches switches;
+	switches.off = { "messaging.telegram", "vpn" };
+	switches.on = { "system_traces.minidumps" };
+	check(!traceProductWanted(switches, "messaging", "telegram"), "a product switched off");
+	check(traceProductWanted(switches, "messaging", "slack"), "its neighbour stays");
+	check(!traceProductWanted(switches, "vpn", "openvpn"), "a group switched off takes its products");
+	check(traceProductWanted(switches, "antivirus", "sophos"), "another group stays");
+	check(!traceProductWanted(switches, "system_traces", "crash_dumps", false), "a product off by default stays off");
+	check(traceProductWanted(switches, "system_traces", "minidumps", false), "a product off by default, switched on");
+	// Off by default: what holds the user's data or memory (decision of 2026-11-08), nothing else.
+	std::set<std::string> offByDefault;
+	for (const TraceGroup& group : applicationTraces())
+		for (const TraceProduct& product : group.products)
+			if (!product.onByDefault) offByDefault.insert(group.key + "." + product.key);
+	check(offByDefault == std::set<std::string>{ "system_traces.crash_dumps", "system_traces.minidumps", "system_traces.office_cache" },
+	      "the products off by default are the crash dumps and Office's document cache");
 }
 
 //! The table: keys unique and lower case; no filter that would take an SSH private key.

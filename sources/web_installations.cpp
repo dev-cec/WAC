@@ -2,6 +2,7 @@
  *  \brief Apache, nginx and the database engines (see web_installations.h).
  */
 #include "web_installations.h"
+#include "wildcard.h"
 #include "registry_common.h"
 #include <algorithm>
 #include <filesystem>
@@ -65,19 +66,6 @@ Json textList(const std::vector<std::wstring>& values) {
 	Json out = Json::arr();
 	for (const std::wstring& v : values) out.push(Json::str(v));
 	return out;
-}
-
-//! Whether a name matches a pattern of `*` and `?`, case ignored.
-bool wildcardMatch(const std::wstring& name, const std::wstring& pattern) {
-	size_t n = 0, p = 0, star = std::wstring::npos, mark = 0;
-	while (n < name.size()) {
-		if (p < pattern.size() && (pattern[p] == L'?' || towlower(pattern[p]) == towlower(name[n]))) { ++n; ++p; }
-		else if (p < pattern.size() && pattern[p] == L'*') { star = p++; mark = n; }
-		else if (star != std::wstring::npos) { p = star + 1; n = ++mark; }
-		else return false;
-	}
-	while (p < pattern.size() && pattern[p] == L'*') ++p;
-	return p == pattern.size();
 }
 
 //! The value of `--name=value`, or the word after `-n`, in a command.
@@ -762,7 +750,7 @@ WebInstallation readWebInstallation(const WebCandidate& candidate) {
 			const std::filesystem::path folderCopy = extractedPath(folder);
 			if (folder.find_first_of(L"*?") == std::wstring::npos && std::filesystem::is_directory(folderCopy, ec))
 				for (std::filesystem::directory_iterator it(folderCopy, ec), end; !ec && it != end; it.increment(ec))
-					if (it->is_regular_file(ec) && wildcardMatch(it->path().filename().wstring(), mask))
+					if (it->is_regular_file(ec) && wildcardMatch(mask, it->path().filename().wstring()))
 						found.push_back(folder + L"\\" + it->path().filename().wstring());
 		}
 		std::sort(found.begin(), found.end());

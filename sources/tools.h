@@ -19,6 +19,7 @@
 #include "conversions.h"
 #include "whole_file.h"
 #include "artefact_catalogue.h"
+#include "application_traces.h"
 #include <set>
 
 // global constants
@@ -95,7 +96,7 @@ struct AppliConf {
 	ORHKEY CurrentControlSet = { 0 }; //!< Reg Key to access Current Control Set Hive
 	ORHKEY System = { 0 }; //!< Reg Key to access to System Hive
 	ORHKEY Software = { 0 };//!< Reg Key to access CurrentControlSet/Software hive
-	std::set<std::string> traceProductsOff;  //!< the groups and "group.product" of application_traces.h and application_registry switched off in wac.yml
+	ProductSwitches traceProducts;  //!< what wac.yml switches off and on among the products of application_traces.h and application_registry
 	std::vector<std::tuple<std::wstring, std::wstring>> profiles;//!< vector to store SID and profiles of users present on the machine
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< handle of the console
 	std::ofstream log;//!< handle of the output log file, for the debug mode (UTF-8 bytes)

@@ -190,7 +190,9 @@ bool readWebServer(const YamlNode& node, AppliConf& conf, std::string& error) {
 }
 
 /*! A group of application_traces.h, or application_registry: a switch for the whole
- *  group, or a section of one switch per product. A missing product stays on.
+ *  group, or a section of one switch per product. A missing product keeps its
+ *  default (TraceProduct::onByDefault); `true` for the group leaves each product
+ *  at its own.
  *  @param key the group's key
  *  @param products its products' keys
  *  @param node its value
@@ -202,7 +204,7 @@ bool readProductSwitches(const std::string& key, const std::vector<std::string>&
 	bool on = true;
 	if (!node.mapping) {
 		if (!readBool(node, name, on, error)) return false;
-		if (!on) conf.traceProductsOff.insert(key);
+		if (!on) conf.traceProducts.off.insert(key);
 		return true;
 	}
 	for (const auto& [option, value] : node.children) {
@@ -210,7 +212,7 @@ bool readProductSwitches(const std::string& key, const std::vector<std::string>&
 			return refuse(error, *value, text(Text::ConfigurationUnknownSetting, { wide(name + "." + option) }));
 		on = true;
 		if (!readBool(*value, name + "." + option, on, error)) return false;
-		if (!on) conf.traceProductsOff.insert(key + "." + option);
+		(on ? conf.traceProducts.on : conf.traceProducts.off).insert(key + "." + option);
 	}
 	return true;
 }
@@ -238,7 +240,7 @@ bool readArtefacts(const YamlNode& section, AppliConf& conf, std::string& error)
 			std::vector<std::string> products;
 			for (const RegistryProduct& product : registryProducts()) products.push_back(product.key);
 			if (!readProductSwitches(key, products, *node, conf, error)) return false;
-			conf.artefacts.applicationRegistry = conf.traceProductsOff.count(key) == 0;
+			conf.artefacts.applicationRegistry = conf.traceProducts.off.count(key) == 0;
 			continue;
 		}
 		bool* found = nullptr;

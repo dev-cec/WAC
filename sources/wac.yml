@@ -118,14 +118,14 @@ artefacts:
     openssh_server:        true   # OpenSSH server
     openssh_client:        true   # OpenSSH client
   system_traces:                  # what Windows keeps beyond the artefacts above
-    crash_dumps:           true   # Crash dumps of the programs
+    crash_dumps:           false   # Crash dumps of the programs: off by default, may hold memory or the user's documents
     custom_shims:          true   # Custom application shims
     encapsulation_logging: true   # Encapsulation logging
     event_transcript:      true   # Diagnostic data store
     microsoft_sccm:        true   # Configuration Manager client
-    minidumps:             true   # Kernel crash dumps
+    minidumps:             false   # Kernel crash dumps: off by default, may hold memory or the user's documents
     notifications:         true   # Windows notifications
-    office_cache:          true   # Office document cache
+    office_cache:          false   # Office document cache: off by default, may hold memory or the user's documents
     pca:                   true   # Program Compatibility Assistant
     pcw_diagnostics:       true   # Program compatibility diagnostics
     power_diagnostics:     true   # Power efficiency diagnostics

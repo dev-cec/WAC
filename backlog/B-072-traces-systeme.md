@@ -33,3 +33,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062).
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
+- 2026-11-08 : décision de l'utilisateur : `crash_dumps`, `minidumps` et `office_cache` coupés par défaut (mémoire, documents de l'utilisateur), réactivables dans `wac.yml`.

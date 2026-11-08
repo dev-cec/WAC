@@ -206,25 +206,39 @@ int wmain(int argc, wchar_t** argv) {
 		std::string error;
 		AppliConf c;
 		check(LoadConfiguration(file("traces-product.yml", "artefacts:\n  messaging:\n    signal: false\n"), c, f, error)
-		      && !traceProductWanted(c.traceProductsOff, "messaging", "signal") && traceProductWanted(c.traceProductsOff, "messaging", "slack"),
+		      && !traceProductWanted(c.traceProducts, "messaging", "signal") && traceProductWanted(c.traceProducts, "messaging", "slack"),
 		      "a product switched off: not applied, or its neighbour switched off too: ", error);
 		AppliConf g;
 		check(LoadConfiguration(file("traces-group.yml", "artefacts:\n  antivirus: false\n"), g, f, error)
-		      && !traceProductWanted(g.traceProductsOff, "antivirus", "eset") && !traceProductWanted(g.traceProductsOff, "antivirus", "sophos")
-		      && traceProductWanted(g.traceProductsOff, "vpn", "wireguard"),
+		      && !traceProductWanted(g.traceProducts, "antivirus", "eset") && !traceProductWanted(g.traceProducts, "antivirus", "sophos")
+		      && traceProductWanted(g.traceProducts, "vpn", "wireguard"),
 		      "a group switched off: its products still taken, or another group switched off: ", error);
 		AppliConf r;
 		check(LoadConfiguration(file("registry-product.yml", "artefacts:\n  application_registry:\n    putty: false\n"), r, f, error)
-		      && r.artefacts.applicationRegistry && !traceProductWanted(r.traceProductsOff, "application_registry", "putty")
-		      && traceProductWanted(r.traceProductsOff, "application_registry", "winscp"),
+		      && r.artefacts.applicationRegistry && !traceProductWanted(r.traceProducts, "application_registry", "putty")
+		      && traceProductWanted(r.traceProducts, "application_registry", "winscp"),
 		      "application_registry: a product switched off not applied: ", error);
 		AppliConf o;
 		check(LoadConfiguration(file("registry-off.yml", "artefacts:\n  application_registry: false\n"), o, f, error)
 		      && !o.artefacts.applicationRegistry, "application_registry: false not applied: ", error);
 		AppliConf d;
 		check(LoadConfiguration(rawFile("reference-traces.yml", DefaultConfiguration()), d, f, error)
-		      && d.traceProductsOff.empty() && d.artefacts.applicationRegistry,
-		      "reference file: a product of the applications' traces switched off");
+		      && d.traceProducts.off == std::set<std::string>{ "system_traces.crash_dumps", "system_traces.minidumps", "system_traces.office_cache" }
+		      && d.traceProducts.on.size() == 97 - 3 + 4 && d.artefacts.applicationRegistry,
+		      "reference file: the products off are not exactly the crash dumps and Office's cache");
+		// Off by default without any wac.yml; switched on by its key; a group at true leaves them off.
+		AppliConf n;
+		check(!traceProductWanted(n.traceProducts, "system_traces", "crash_dumps", false), "no wac.yml: crash dumps taken");
+		AppliConf e;
+		check(LoadConfiguration(file("traces-on.yml", "artefacts:\n  system_traces:\n    office_cache: true\n"), e, f, error)
+		      && traceProductWanted(e.traceProducts, "system_traces", "office_cache", false)
+		      && !traceProductWanted(e.traceProducts, "system_traces", "crash_dumps", false),
+		      "office_cache: true not applied, or another product switched on with it: ", error);
+		AppliConf t;
+		check(LoadConfiguration(file("traces-group-on.yml", "artefacts:\n  system_traces: true\n"), t, f, error)
+		      && !traceProductWanted(t.traceProducts, "system_traces", "minidumps", false)
+		      && traceProductWanted(t.traceProducts, "system_traces", "pca", true),
+		      "system_traces: true switched on a product off by default: ", error);
 	}
 	refused("traces-unknown.yml", "artefacts:\n  messaging:\n    icq: false\n", 3, "unknown setting \"artefacts.messaging.icq\"");
 	// `unlimited` for the ceilings in MiB; no other word, and not for a setting that is no ceiling.

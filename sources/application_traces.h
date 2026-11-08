@@ -38,6 +38,10 @@ struct TraceProduct {
 	std::string key;                  //!< its key under its group
 	const wchar_t* name;              //!< for the investigation log
 	std::vector<TracePiece> pieces;   //!< what it writes
+	/*! Taken when wac.yml says nothing of it. False for what holds the user's
+	 *  data or memory rather than traces of a program (crash dumps, Office's
+	 *  document cache): decision of 2026-11-08, wac.yml switches it on. */
+	bool onByDefault = true;
 };
 
 /*! A group: one artefact, one section of wac.yml. */
@@ -58,8 +62,18 @@ const TraceGroup* traceGroup(const std::string& key);
  *  @return whether it holds a password, by its name: its content is not emitted (application_registry.h) */
 bool isPasswordValue(const std::wstring& name);
 
-/*! Whether a product's folder is taken: its switch and its group's are on.
- *  @param off the "group.product" keys switched off
+/*! The switches wac.yml gives the products of application_traces.h and of
+ *  application_registry: "group" or "group.product" switched off, and
+ *  "group.product" switched on. */
+struct ProductSwitches {
+	std::set<std::string> off;  //!< groups and products switched off
+	std::set<std::string> on;   //!< products switched on
+};
+
+/*! Whether a product is taken: its group is not switched off, nor itself, and
+ *  it is on by default or switched on.
+ *  @param switches what wac.yml says
  *  @param group,product their keys
- *  @return true unless switched off */
-bool traceProductWanted(const std::set<std::string>& off, const std::string& group, const std::string& product);
+ *  @param onByDefault the product's default (TraceProduct::onByDefault)
+ *  @return whether it is taken */
+bool traceProductWanted(const ProductSwitches& switches, const std::string& group, const std::string& product, bool onByDefault = true);
