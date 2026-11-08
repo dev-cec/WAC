@@ -61,6 +61,7 @@
 #include "srum.h"
 #include "user_access_log.h"
 #include "application_registry.h"
+#include "application_trace_files.h"
 #include "bits_jobs.h"
 #include "fat_volumes.h"
 #include "boot_records.h"
@@ -401,17 +402,17 @@ void reportUnread(const char* file, const std::wstring& artefact, const wchar_t*
  *  them. An artefact that could not be read says so in each of its files
  *  (reportUnread); one not asked for, likewise (requested).
  *  @tparam Collector the artefact's class: getData(), toJson(), clear()
+ *  @param collector the artefact, built by the caller
  *  @param wanted the configuration's switch
  *  @param outputs its JSON files, each with its name for the console and the file
  *  @param key its configuration key
  *  @param step the console's step */
 template <class Collector>
-void convertArtefact(bool wanted, std::initializer_list<std::pair<const char*, Text>> outputs,
-                     const wchar_t* key, Text step) {
+void convertArtefactWith(Collector& collector, bool wanted, std::initializer_list<std::pair<const char*, Text>> outputs,
+                         const wchar_t* key, Text step) {
 	bool asked = true;
 	for (const auto& [file, label] : outputs) asked = requested(wanted, file, label, key) && asked;
 	if (!asked) return;
-	Collector collector;
 	printStep(step);
 	HRESULT hresult = collector.getData();
 	if (hresult != ERROR_SUCCESS) {
@@ -423,6 +424,20 @@ void convertArtefact(bool wanted, std::initializer_list<std::pair<const char*, T
 	if (hresult != ERROR_SUCCESS) printError(hresult);
 	else printSuccess();
 	collector.clear();
+}
+
+/*! The same, for a collector built without argument — every artefact but the
+ *  groups of the applications' traces, built with their group.
+ *  @tparam Collector the artefact's class
+ *  @param wanted the configuration's switch
+ *  @param outputs its JSON files, each with its name for the console and the file
+ *  @param key its configuration key
+ *  @param step the console's step */
+template <class Collector>
+void convertArtefact(bool wanted, std::initializer_list<std::pair<const char*, Text>> outputs,
+                     const wchar_t* key, Text step) {
+	Collector collector;
+	convertArtefactWith(collector, wanted, outputs, key, step);
 }
 
 /*! The same, for an artefact written to a single JSON file — nearly all of them.
@@ -1050,6 +1065,29 @@ void convertShadowCopies() {
 	else printSuccess();
 }
 
+/*! The groups of the applications' traces, each in its JSON file (<group>.json):
+ *  the files the collection took for its products, converted generically
+ *  (application_trace_files.h). A group switched off in wac.yml says so in its
+ *  file, as any artefact. */
+void convertApplicationTraces() {
+	static const std::pair<const char*, Text> LABELS[] = {
+		{ "antivirus", Text::ArtefactTracesAntivirus }, { "cloud_storage", Text::ArtefactTracesCloudStorage },
+		{ "file_transfer", Text::ArtefactTracesFileTransfer }, { "messaging", Text::ArtefactTracesMessaging },
+		{ "remote_administration", Text::ArtefactTracesRemoteAdministration }, { "server_applications", Text::ArtefactTracesServerApplications },
+		{ "server_logs", Text::ArtefactTracesServerLogs }, { "ssh", Text::ArtefactTracesSsh },
+		{ "system_traces", Text::ArtefactTracesSystemTraces }, { "virtualisation", Text::ArtefactTracesVirtualisation },
+		{ "vpn", Text::ArtefactTracesVpn } };
+	for (const TraceGroup& group : applicationTraces()) {
+		const auto found = std::find_if(std::begin(LABELS), std::end(LABELS), [&](const auto& l) { return group.key == l.first; });
+		if (found == std::end(LABELS)) { log(2, L"🔥A group of the applications' traces without a label: " + std::wstring(group.key.begin(), group.key.end())); continue; }
+		const std::string file = group.key + ".json";
+		const std::wstring key = L"artefacts." + std::wstring(group.key.begin(), group.key.end());
+		ApplicationTraceFiles collector(group);
+		convertArtefactWith(collector, conf.traceProducts.off.count(group.key) == 0, { { file.c_str(), found->second } },
+		                    key.c_str(), found->second);
+	}
+}
+
 /*! Converts the artefacts into JSON, from the working copy: registry, files,
  *  event logs. Runs under --convert only; a collection stops before it (see
  *  RunMode).
@@ -1199,6 +1237,7 @@ void convertArtefacts(bool systemAvailable) {
 	                     L"artefacts.office_trust_records", Text::StepOfficeTrustRecords);
 	convertArtefact<ApplicationRegistry>(conf.artefacts.applicationRegistry, "application_registry.json", Text::ArtefactApplicationRegistry,
 	                     L"artefacts.application_registry", Text::StepApplicationRegistry);
+	convertApplicationTraces();
 	convertArtefact<TypedPaths>(conf.artefacts.typedPaths, "typed_paths.json", Text::ArtefactTypedPaths,
 	                     L"artefacts.typed_paths", Text::StepTypedPaths);
 	convertArtefact<WordWheelQueries>(conf.artefacts.wordWheelQuery, "word_wheel_query.json", Text::ArtefactWordWheelQueries,

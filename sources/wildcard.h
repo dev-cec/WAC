@@ -10,7 +10,9 @@
  *  natively as well as under MinGW.
  */
 #pragma once
+#include <cwctype>
 #include <string>
+#include <vector>
 
 /*! ASCII lower case: the names compared are NTFS names, whose accents Windows
  *  folds by a table no pattern here needs.
@@ -36,4 +38,28 @@ inline bool wildcardMatch(const std::wstring& pattern, const std::wstring& name)
 	}
 	while (p < pattern.size() && pattern[p] == L'*') ++p;
 	return p == pattern.size();
+}
+
+/*! Compares a file name with a filter, as the raw folder reading keeps a file
+ *  and the conversion finds it again: an entry starting with "." is an
+ *  extension, one holding `*` or `?` a pattern ("connections*.txt"), any other a
+ *  whole name ("Thumbs.db"). Extensions and whole names ignore case as Windows
+ *  does (towlower), patterns in ASCII (wildcardMatch).
+ *  @param name the file name
+ *  @param filter the entries; empty keeps every name
+ *  @return whether the name is kept */
+inline bool nameMatchesFilter(const std::wstring& name, const std::vector<std::wstring>& filter) {
+	if (filter.empty()) return true;
+	auto same = [](const std::wstring& a, const std::wstring& b) {
+		if (a.size() != b.size()) return false;
+		for (size_t i = 0; i < a.size(); ++i)
+			if (towlower(a[i]) != towlower(b[i])) return false;
+		return true;
+	};
+	const size_t point = name.rfind(L'.');
+	const std::wstring extension = point == std::wstring::npos ? std::wstring() : name.substr(point);
+	for (const std::wstring& expected : filter)
+		if (expected.find_first_of(L"*?") != std::wstring::npos ? wildcardMatch(expected, name)
+		    : !expected.empty() && expected[0] == L'.' ? same(extension, expected) : same(name, expected)) return true;
+	return false;
 }

@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| en cours (écrit, compilé, tests verts ; témoin et cycles à faire) | P1 | moyen |
 
 ## Pourquoi
 Décision de l'utilisateur du 2026-11-08 : les traces d'applications (B-062 à B-072) ne restent pas en copie brute sans JSON. Question de l'utilisateur : « dans quel format sont-ils ? s'ils sont au format texte, on peut faire un JSON simple avec date et message au lieu de parser tous les champs ». Relevé sur la table : la majorité des 97 produits écrivent des **journaux texte, une ligne par événement** (antivirus, TeamViewer, AnyDesk, journaux de serveur, OpenSSH, VPN, VirtualBox, `SchedLgU.txt`, transcriptions PowerShell…) ; une partie du **texte structuré** (XML, JSON, INI, configuration) ; le reste des bases SQLite, des formats que WAC décode déjà, des LevelDB, des binaires ou chiffrés.
@@ -29,13 +29,14 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Tests vus échouer par mutation (date, rattachement, masquage).
 
 ## Tâches
-- [ ] Rattachement d'un chemin source à son produit (`application_traces`)
-- [ ] Découpage en enregistrements et dates (portable), texte structuré en JSON, masquage
-- [ ] Convertisseur par groupe, branché dans `--convert`, libellés FR et EN
-- [ ] Catalogue : forme « convertie » au lieu de « copie brute »
-- [ ] Tests unitaires et mutations, `hostile_input_test`
+- [x] Rattachement d'un chemin source à son produit (`application_traces`)
+- [x] Découpage en enregistrements et dates (portable), texte structuré en JSON, masquage
+- [x] Convertisseur par groupe, branché dans `--convert`, libellés FR et EN
+- [x] Catalogue : forme « convertie » au lieu de « copie brute »
+- [x] Tests unitaires et mutations, `hostile_input_test`
 - [ ] Témoin et contrôle dans `check-json.py` (avec B-062)
 - [ ] Documentation FR et EN (avec B-075)
 
 ## Journal
 - 2026-11-08 : ouverte à la demande de l'utilisateur, en remplacement de la « copie brute sans JSON » prévue par B-062.
+- 2026-11-08 : écrit. `traceOwnerOf` (application_traces) : la pièce rattachée par son chemin source, profils de `\Users`, `\Documents and Settings`, système et services ; le filtre de la collecte partagé (`nameMatchesFilter`, wildcard.h, au lieu d'`extensionMatches` statique de raw_hive.cpp). `application_trace_files.{h,cpp}` : date en tête (`yyyy-MM-dd`, `/`, `.`, fraction, `Z`/`±hh:mm`), enregistrements avec leurs suites, format par extension puis par contenu (octet nul, caractères de contrôle), XML/JSON/INI en structure, `isPasswordValue` étendu (`passwd`, `pwd`, `secret`, `pass` entier : `<Pass>` de FileZilla). Borne : 64 Kio par enregistrement, 256 Mio par fichier (au-delà : dit, non converti). `convertArtefactWith` : le modèle de conversion reçoit un collecteur construit par l'appelant. Catalogue : les 11 groupes `decoded`, sans toucher `defender_endpoint`, `onedrive` ni la sauvegarde des ruches, vraiment bruts. Tests : `application_traces_test` 1 444, `application_trace_files_test` 36 (nouveau, Wine), `hostile_input_test` 23 avec les 4 lecteurs mutés. Mutations vues échouer : décalage inversé (3), secrets JSON gardés (1), profondeur ignorée (1), `pass` retiré (1). Deux objets orphelins d'anciennes sources retirés de `build-windows/`.

@@ -2249,20 +2249,6 @@ HRESULT ExtractFileRaw(const std::wstring& volumeLetter,
     return r.empty() ? E_FAIL : r[0];
 }
 
-/* Compares a name with the filter, case-insensitively (ASCII): an entry
-   starting with "." is an extension, one holding `*` a pattern ("connections*.txt"),
-   any other a whole name ("Thumbs.db", which Windows XP writes in every folder
-   shown as thumbnails). */
-static bool extensionMatches(const std::wstring& name, const std::vector<std::wstring>& extensions){
-    if (extensions.empty()) return true;              // no filter: everything is kept
-    const size_t point = name.rfind(L'.');
-    const std::wstring ext = point == std::wstring::npos ? std::wstring() : name.substr(point);
-    for (const std::wstring& expected : extensions)
-        if (expected.find(L'*') != std::wstring::npos ? wildcardMatch(expected, name)
-            : !expected.empty() && expected[0] == L'.' ? iequals(ext, expected) : iequals(name, expected)) return true;
-    return false;
-}
-
 HRESULT ListDirectoryRaw(const std::wstring& volumeLetter,
                          const std::wstring& dirPathOnVolume,
                          std::vector<RawDirEntry>& out){
@@ -2322,7 +2308,7 @@ HRESULT ExtractDirectoryRaw(const std::wstring& volumeLetter,
         if (e.isDirectory) continue;                       // not recursive
         if (e.name == L"." || e.name == L"..") continue;
         ++files;
-        if (!extensionMatches(e.name, extensions)) continue;
+        if (!nameMatchesFilter(e.name, extensions)) continue;
         ++kept;
 
         const std::wstring target = outDir + L"\\" + e.name;
@@ -2413,7 +2399,7 @@ HRESULT extractTree(NtfsVolume& vol, uint64_t dirIndex,
             if (h != S_OK) global = S_FALSE;
             continue;
         }
-        if (!extensionMatches(e.name, extensions)) continue;
+        if (!nameMatchesFilter(e.name, extensions)) continue;
         if (isSkipped(base + L"\\" + e.name, skipped)) continue;
 
         if (!folderMade) { createFolders(outBase); folderMade = true; }

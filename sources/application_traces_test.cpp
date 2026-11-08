@@ -90,10 +90,31 @@ void testTable() {
 
 } // namespace
 
+//! The product a file of the examined machine belongs to, as the collection took it.
+void testOwner() {
+	auto owner = [](const wchar_t* path) {
+		const TraceOwner o = traceOwnerOf(path);
+		return o.group ? o.group->key + "." + o.product->key : std::string();
+	};
+	check(owner(L"C:\\Users\\bob\\AppData\\Roaming\\TeamViewer\\Connections_incoming.txt") == "remote_administration.teamviewer", "a product in a profile");
+	check(owner(L"C:\\Program Files (x86)\\TeamViewer\\TeamViewer15_Logfile.log") == "remote_administration.teamviewer", "a folder with a star (Program Files*)");
+	check(owner(L"C:\\Documents and Settings\\bob\\.ssh\\known_hosts") == "ssh.openssh_client", "a profile of Windows XP");
+	check(owner(L"C:\\ProgramData\\ssh\\sshd_config") == "ssh.openssh_server", "a whole name of the filter");
+	check(owner(L"C:\\Windows\\debug\\netlogon.log") == "server_logs.netlogon", "a server's log");
+	check(owner(L"C:\\Users\\bob\\.ssh\\id_rsa").empty(), "a private key belongs to no product");
+	check(owner(L"C:\\ProgramData\\ssh\\logs\\deeper\\sshd.log").empty(), "deeper than the line allows");
+	check(owner(L"C:\\Users\\bob\\AppData\\Roaming\\TeamViewer\\notes.txt").empty(), "a name the filter does not keep");
+	check(owner(L"C:\\Windows\\System32\\cmd.exe").empty(), "a file of no product");
+	check(isPasswordValue(L"Pass") && isPasswordValue(L"UserPwd") && isPasswordValue(L"client_secret") && isPasswordValue(L"Passwd"),
+	      "every name of a secret is left out");
+	check(!isPasswordValue(L"Passive") && !isPasswordValue(L"Port") && !isPasswordValue(L"Host"), "the other names stay");
+}
+
 int main() {
 	testWildcards();
 	testSwitches();
 	testTable();
+	testOwner();
 	std::printf("%d checks, %d failed\n", checks, failures);
 	return failures ? 1 : 0;
 }

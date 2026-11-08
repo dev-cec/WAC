@@ -58,9 +58,30 @@ const std::vector<TraceGroup>& applicationTraces();
 //! @return the group of that key, nullptr if there is none
 const TraceGroup* traceGroup(const std::string& key);
 
-/*! @param name a registry value's name
- *  @return whether it holds a password, by its name: its content is not emitted (application_registry.h) */
+/*! Whether a value holds a secret, by its name: its content is not emitted —
+ *  a registry value (application_registry.h), a key or element of a product's
+ *  configuration file (application_trace_files.h). A name holding "password",
+ *  "passwd", "pwd" or "secret", or the whole name "pass" (FileZilla keeps a
+ *  site's password in <Pass>), case ignored.
+ *  @param name the value's name
+ *  @return whether its content is left out */
 bool isPasswordValue(const std::wstring& name);
+
+/*! The group and product of the table a file of the examined machine belongs to. */
+struct TraceOwner {
+	const TraceGroup* group = nullptr;      //!< null if no product takes the file
+	const TraceProduct* product = nullptr;  //!< its product
+};
+
+/*! The product that takes a file, as the collection took it: one of its
+ *  folders (its `*` components matching), the file at most `depth` levels below,
+ *  its name kept by the filter. A PROFILE_MARK folder stands for that folder in
+ *  any profile — \Users\<name>, \Documents and Settings\<name>, the system's and
+ *  the services' profiles. When two lines take the same file, the first of the
+ *  table wins: the order of the table decides, the same at every conversion.
+ *  @param sourcePath the file's path on the examined machine ("C:\…")
+ *  @return its group and product, or nulls */
+TraceOwner traceOwnerOf(const std::wstring& sourcePath);
 
 /*! The switches wac.yml gives the products of application_traces.h and of
  *  application_registry: "group" or "group.product" switched off, and

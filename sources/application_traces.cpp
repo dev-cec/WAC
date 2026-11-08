@@ -371,7 +371,58 @@ const TraceGroup* traceGroup(const std::string& key) {
 }
 
 bool isPasswordValue(const std::wstring& name) {
-	return wildcardMatch(L"*password*", name);
+	for (const wchar_t* pattern : { L"*password*", L"*passwd*", L"*pwd*", L"*secret*", L"pass" })
+		if (wildcardMatch(pattern, name)) return true;
+	return false;
+}
+
+namespace {
+
+//! The components of a path, separators left out ("\\a\\b" gives a, b).
+std::vector<std::wstring> pathComponents(const std::wstring& path) {
+	std::vector<std::wstring> parts;
+	size_t start = 0;
+	while (start <= path.size()) {
+		const size_t end = path.find(L'\\', start);
+		const std::wstring part = path.substr(start, end == std::wstring::npos ? std::wstring::npos : end - start);
+		if (!part.empty()) parts.push_back(part);
+		if (end == std::wstring::npos) break;
+		start = end + 1;
+	}
+	return parts;
+}
+
+//! Whether a file (its components, its name last) lies in a folder pattern, at most `depth` levels below.
+bool fileUnder(const std::vector<std::wstring>& file, const std::vector<std::wstring>& folder, unsigned depth) {
+	if (file.size() < folder.size() + 1 || file.size() - 1 - folder.size() > depth) return false;
+	for (size_t i = 0; i < folder.size(); ++i)
+		if (!wildcardMatch(folder[i], file[i])) return false;
+	return true;
+}
+
+//! The profiles a PROFILE_MARK folder may stand for, as the collection finds them (ProfileList).
+const wchar_t* const PROFILE_ROOTS[] = { L"\\Users\\*", L"\\Documents and Settings\\*",
+	L"\\Windows\\System32\\config\\systemprofile", L"\\Windows\\ServiceProfiles\\*" };
+
+} // namespace
+
+TraceOwner traceOwnerOf(const std::wstring& sourcePath) {
+	const std::wstring path = sourcePath.size() >= 2 && sourcePath[1] == L':' ? sourcePath.substr(2) : sourcePath;
+	const std::vector<std::wstring> file = pathComponents(path);
+	if (file.empty()) return {};
+	const std::wstring mark = PROFILE_MARK;
+	for (const TraceGroup& group : applicationTraces())
+		for (const TraceProduct& product : group.products)
+			for (const TracePiece& piece : product.pieces) {
+				if (!nameMatchesFilter(file.back(), piece.filter)) continue;
+				if (piece.folder.compare(0, mark.size(), mark) != 0) {
+					if (fileUnder(file, pathComponents(piece.folder), piece.depth)) return { &group, &product };
+					continue;
+				}
+				for (const wchar_t* root : PROFILE_ROOTS)
+					if (fileUnder(file, pathComponents(root + piece.folder.substr(mark.size())), piece.depth)) return { &group, &product };
+			}
+	return {};
 }
 
 bool traceProductWanted(const ProductSwitches& switches, const std::string& group, const std::string& product, bool onByDefault) {
