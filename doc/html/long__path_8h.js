@@ -10,5 +10,5 @@ var long__path_8h =
     [ "parentFolder", "long__path_8h.html#aed9379e5dce317386d52d487d3e193b9", null ],
     [ "pathBelow", "long__path_8h.html#a633b66d38af594f721607b98e995a23a", null ],
     [ "pathExists", "long__path_8h.html#a17288c2d981641814862dd893795436e", null ],
-    [ "removeFolderTree", "long__path_8h.html#a40170cfe13d65cbafcb3cfdbfc639c88", null ]
+    [ "removeFolderTree", "long__path_8h.html#a4c0128e7a96556be2c259f3e26e035cc", null ]
 ];

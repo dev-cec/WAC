@@ -1,15 +1,17 @@
 var searchData=
 [
   ['wasdirty_0',['wasDirty',['../structHiveFixInfo.html#a4a1e11b834a122a20c74f08167eed134',1,'HiveFixInfo']]],
-  ['webcache_5ffolder_1',['webcache_folder',['../web__client_8cpp.html#a60327df1abc040486d30115bc714f33c',1,'WEBCACHE_FOLDER:&#160;web_client.cpp'],['../web__client_8h.html#a60327df1abc040486d30115bc714f33c',1,'WEBCACHE_FOLDER:&#160;web_client.cpp']]],
+  ['webcache_5ffolder_1',['WEBCACHE_FOLDER',['../web__client_8cpp.html#a60327df1abc040486d30115bc714f33c',1,'WEBCACHE_FOLDER:&#160;web_client.cpp'],['../web__client_8h.html#a60327df1abc040486d30115bc714f33c',1,'WEBCACHE_FOLDER:&#160;web_client.cpp']]],
   ['webclient_2',['webClient',['../structAppliConf_1_1CollectedArtefacts.html#a69438eb3f87768263a1adb5108bb32c6',1,'AppliConf::CollectedArtefacts']]],
-  ['width_3',['width',['../structRdpCacheTile.html#aca621a18c6f35e98f2d3ce4740b3ce41',1,'RdpCacheTile::width'],['../structThumbcacheEntry.html#ab83f1dd9ac3190fbcf3b5cdbb693efc7',1,'ThumbcacheEntry::width'],['../structThumbsDbEntry.html#a3330cf55b6895a413ca879f2f87d718b',1,'ThumbsDbEntry::width']]],
-  ['windowsxp_4',['windowsXp',['../structUserAssist.html#ae7ce3d88f0cf0e83a6e13e9e525afae0',1,'UserAssist']]],
-  ['wininet_5flocal_5ffolders_5',['wininet_local_folders',['../web__client_8cpp.html#ae79b550b98388425a9c8db9a11273a28',1,'WININET_LOCAL_FOLDERS:&#160;web_client.cpp'],['../web__client_8h.html#ae79b550b98388425a9c8db9a11273a28',1,'WININET_LOCAL_FOLDERS:&#160;web_client.cpp']]],
-  ['wmi_6',['wmi',['../structAppliConf_1_1CollectedArtefacts.html#a49fdf483775308ef4f5de3bb667062b3',1,'AppliConf::CollectedArtefacts']]],
-  ['wordwheelquery_7',['wordWheelQuery',['../structAppliConf_1_1CollectedArtefacts.html#a5161dcfd30831100471cd0376ef3b681',1,'AppliConf::CollectedArtefacts']]],
-  ['workingdir_8',['workingDir',['../structAction.html#aad978d105e67835d43aa85d9c4ef9177',1,'Action']]],
-  ['workingdirectory_9',['workingDirectory',['../structRecentDoc.html#acd48e8314380f759b7b471c3d59294c7',1,'RecentDoc']]],
-  ['workingfile_10',['workingFile',['../structStoredExhibit.html#ab6f0edb9f7591a2b2b84efecc7686985',1,'StoredExhibit']]],
-  ['writtenutc_11',['writtenUtc',['../structEvtxRecord.html#a127107950963dc6fe6e75113919c3180',1,'EvtxRecord']]]
+  ['webserver_3',['webServer',['../structAppliConf_1_1CollectedArtefacts.html#ae75afd361a7071d3d73d08e00d078c42',1,'AppliConf::CollectedArtefacts']]],
+  ['webserversettings_4',['webServerSettings',['../structAppliConf.html#aebb09c9cd553516c92cc8009ade4de10',1,'AppliConf']]],
+  ['width_5',['width',['../structRdpCacheTile.html#aca621a18c6f35e98f2d3ce4740b3ce41',1,'RdpCacheTile::width'],['../structThumbcacheEntry.html#ab83f1dd9ac3190fbcf3b5cdbb693efc7',1,'ThumbcacheEntry::width'],['../structThumbsDbEntry.html#a3330cf55b6895a413ca879f2f87d718b',1,'ThumbsDbEntry::width']]],
+  ['windowsxp_6',['windowsXp',['../structUserAssist.html#ae7ce3d88f0cf0e83a6e13e9e525afae0',1,'UserAssist']]],
+  ['wininet_5flocal_5ffolders_7',['WININET_LOCAL_FOLDERS',['../web__client_8cpp.html#ae79b550b98388425a9c8db9a11273a28',1,'WININET_LOCAL_FOLDERS:&#160;web_client.cpp'],['../web__client_8h.html#ae79b550b98388425a9c8db9a11273a28',1,'WININET_LOCAL_FOLDERS:&#160;web_client.cpp']]],
+  ['wmi_8',['wmi',['../structAppliConf_1_1CollectedArtefacts.html#a49fdf483775308ef4f5de3bb667062b3',1,'AppliConf::CollectedArtefacts']]],
+  ['wordwheelquery_9',['wordWheelQuery',['../structAppliConf_1_1CollectedArtefacts.html#a5161dcfd30831100471cd0376ef3b681',1,'AppliConf::CollectedArtefacts']]],
+  ['workingdir_10',['workingDir',['../structAction.html#aad978d105e67835d43aa85d9c4ef9177',1,'Action']]],
+  ['workingdirectory_11',['workingDirectory',['../structRecentDoc.html#acd48e8314380f759b7b471c3d59294c7',1,'RecentDoc']]],
+  ['workingfile_12',['workingFile',['../structStoredExhibit.html#ab6f0edb9f7591a2b2b84efecc7686985',1,'StoredExhibit']]],
+  ['writtenutc_13',['writtenUtc',['../structEvtxRecord.html#a127107950963dc6fe6e75113919c3180',1,'EvtxRecord']]]
 ];

@@ -15,6 +15,7 @@ var main_8cpp =
     [ "entryIdentity", "main_8cpp.html#aa66dc169b97efdf98bb785ec20e080a1", null ],
     [ "extractProfileArtefacts", "main_8cpp.html#ac198b6a7ba23e0f645b02ef4b42dc4d8", null ],
     [ "extractSystemHives", "main_8cpp.html#abe4ba75075919666d6f8b6acd549c133", null ],
+    [ "installedPieceMissing", "main_8cpp.html#a4781944fa10e7364d4e7a8d3896ff994", null ],
     [ "loadTrustSet", "main_8cpp.html#a106329315ad98d43b1cd41255eec62e2", null ],
     [ "observeLiveState", "main_8cpp.html#a116d5d86f6d30fc1417bccf78e7535c9", null ],
     [ "openCurrentControlSet", "main_8cpp.html#aef028ea33fa0be434388e3fcc062b0fc", null ],

@@ -10,6 +10,7 @@ var defender__history_8h =
     [ "QuarantineEntry", "structQuarantineEntry.html", "structQuarantineEntry" ],
     [ "DefenderQuarantine", "classDefenderQuarantine.html", "classDefenderQuarantine" ],
     [ "defenderDecrypt", "defender__history_8h.html#af9cdd2deb7bbd4870b160335d3288d0d", null ],
+    [ "parseBag", "defender__history_8h.html#a214eaae09731bdfc22a36b33348ee984", null ],
     [ "parseDetectionHistory", "defender__history_8h.html#a2213270131ac0794fe1fc22435a07a26", null ],
     [ "parseQuarantineEntry", "defender__history_8h.html#a14a53ba99e37ad114ae62b00a694f1dc", null ],
     [ "quarantinedContent", "defender__history_8h.html#aed9797e97c1b655723bfecd70f4f3aa6", null ]

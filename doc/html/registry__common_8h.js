@@ -1,7 +1,7 @@
 var registry__common_8h =
 [
     [ "Subkey", "structSubkey.html", "structSubkey" ],
-    [ "NameValues", "registry__common_8h.html#a2abb077e169c7d2277a9b5f9341ae8a4", null ],
+    [ "NameValues", "registry__common_8h.html#ae2f6133077d26e3aff3109b75e080f79", null ],
     [ "lastWrite", "registry__common_8h.html#a1f8f4a91c0edba91faf44e55259233a4", null ],
     [ "pairs", "registry__common_8h.html#acbeab4aef470b1f58a7fa5d6c6e2e5ad", null ],
     [ "readAllValues", "registry__common_8h.html#a6ed987cbb01607f6346c96fcec91dd20", null ],

@@ -4,6 +4,7 @@ var tools_8h =
     [ "AppliConf", "structAppliConf.html", "structAppliConf" ],
     [ "AppliConf::CollectedArtefacts", "structAppliConf_1_1CollectedArtefacts.html", "structAppliConf_1_1CollectedArtefacts" ],
     [ "AppliConf::DeletedFilesSettings", "structAppliConf_1_1DeletedFilesSettings.html", "structAppliConf_1_1DeletedFilesSettings" ],
+    [ "AppliConf::WebServerSettings", "structAppliConf_1_1WebServerSettings.html", "structAppliConf_1_1WebServerSettings" ],
     [ "FatDateTime", "structFatDateTime.html", "structFatDateTime" ],
     [ "GuidV1", "structGuidV1.html", "structGuidV1" ],
     [ "JsonArrayWriter", "classJsonArrayWriter.html", "classJsonArrayWriter" ],

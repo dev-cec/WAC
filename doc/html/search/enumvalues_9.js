@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['manifestseal_0',['ManifestSeal',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ac9d6a5d6af274b8a260a812eca218c58',1,'translations.h']]],
-  ['millisecond_1',['Millisecond',['../tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a988bbeeb80e7e0a6b4651aab5a76b413',1,'tools.h']]],
-  ['minute_2',['Minute',['../tools_8h.html#ad1fbd6a28bdb0f04414d526ebeaed0e2a62902641c38f3a4a8eb3212454360e24',1,'tools.h']]]
+  ['local_0',['Local',['../w3c__log_8h.html#ab6fbced06c285a8139754a51d7fa5d50a509820290d57f333403f490dde7316f4',1,'w3c_log.h']]],
+  ['lower_1',['Lower',['../conversions_8h.html#a2d620cc94517351d3a467f847aa450edab75fcdd2d72d9e000beab48622402d93',1,'conversions.h']]]
 ];

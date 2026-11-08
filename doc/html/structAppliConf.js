@@ -2,6 +2,7 @@ var structAppliConf =
 [
     [ "CollectedArtefacts", "structAppliConf_1_1CollectedArtefacts.html", "structAppliConf_1_1CollectedArtefacts" ],
     [ "DeletedFilesSettings", "structAppliConf_1_1DeletedFilesSettings.html", "structAppliConf_1_1DeletedFilesSettings" ],
+    [ "WebServerSettings", "structAppliConf_1_1WebServerSettings.html", "structAppliConf_1_1WebServerSettings" ],
     [ "_debug", "structAppliConf.html#a151893a3524449a4011cf5fc98e6c7b0", null ],
     [ "_dump", "structAppliConf.html#ace615cfa782d49e40b9083dc7ce67ed2", null ],
     [ "_outputDir", "structAppliConf.html#ac6affafb9032a231ed3c74bcbbf9b74c", null ],
@@ -27,5 +28,6 @@ var structAppliConf =
     [ "systemDrive", "structAppliConf.html#a5f3076de7f30505010ae57b166e615e6", null ],
     [ "threads", "structAppliConf.html#a0f3dbf985286e179c8444dc5bc00a51a", null ],
     [ "timeZone", "structAppliConf.html#a5e4e7e6aee66141b1eb0ea2fea6c8eba", null ],
-    [ "undecodedOnVersion", "structAppliConf.html#a9487dcc12dee08b84f0fbcfd8414cc79", null ]
+    [ "undecodedOnVersion", "structAppliConf.html#a9487dcc12dee08b84f0fbcfd8414cc79", null ],
+    [ "webServerSettings", "structAppliConf.html#aebb09c9cd553516c92cc8009ade4de10", null ]
 ];

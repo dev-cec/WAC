@@ -5,5 +5,6 @@ var searchData=
   ['hivereplayinfo_2',['HiveReplayInfo',['../structHiveReplayInfo.html',1,'']]],
   ['hostsentry_3',['HostsEntry',['../structHostsEntry.html',1,'']]],
   ['hostsfile_4',['HostsFile',['../classHostsFile.html',1,'']]],
-  ['httpclient_5',['HttpClient',['../classHttpClient.html',1,'']]]
+  ['httpclient_5',['HttpClient',['../classHttpClient.html',1,'']]],
+  ['hyperv_6',['HyperV',['../classHyperV.html',1,'']]]
 ];

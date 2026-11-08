@@ -1,13 +1,22 @@
 var searchData=
 [
-  ['webclient_0',['WebClient',['../classWebClient.html',1,'']]],
-  ['webclientrecord_1',['WebClientRecord',['../structWebClientRecord.html',1,'']]],
-  ['wevtitem_2',['WevtItem',['../structWevtItem.html',1,'']]],
-  ['wevtmetadata_3',['WevtMetadata',['../classWevtMetadata.html',1,'']]],
-  ['wevtvaluemap_4',['WevtValueMap',['../structWevtValueMap.html',1,'']]],
-  ['windowsrelease_5',['WindowsRelease',['../structWindowsRelease.html',1,'']]],
-  ['windowsversion_6',['WindowsVersion',['../structWindowsVersion.html',1,'']]],
-  ['wmipersistence_7',['WmiPersistence',['../classWmiPersistence.html',1,'']]],
-  ['wmisubscriptionobject_8',['WmiSubscriptionObject',['../structWmiSubscriptionObject.html',1,'']]],
-  ['wordwheelqueries_9',['WordWheelQueries',['../classWordWheelQueries.html',1,'']]]
+  ['w3cfieldkey_0',['W3cFieldKey',['../structW3cFieldKey.html',1,'']]],
+  ['w3clogentry_1',['W3cLogEntry',['../structW3cLogEntry.html',1,'']]],
+  ['webcandidate_2',['WebCandidate',['../structWebCandidate.html',1,'']]],
+  ['webclient_3',['WebClient',['../classWebClient.html',1,'']]],
+  ['webclientrecord_4',['WebClientRecord',['../structWebClientRecord.html',1,'']]],
+  ['webconfigfiles_5',['WebConfigFiles',['../structWebConfigFiles.html',1,'']]],
+  ['webhost_6',['WebHost',['../structWebHost.html',1,'']]],
+  ['webinstallation_7',['WebInstallation',['../structWebInstallation.html',1,'']]],
+  ['webserver_8',['WebServer',['../classWebServer.html',1,'']]],
+  ['webserversettings_9',['WebServerSettings',['../structAppliConf_1_1WebServerSettings.html',1,'AppliConf']]],
+  ['webserviceentry_10',['WebServiceEntry',['../structWebServiceEntry.html',1,'']]],
+  ['wevtitem_11',['WevtItem',['../structWevtItem.html',1,'']]],
+  ['wevtmetadata_12',['WevtMetadata',['../classWevtMetadata.html',1,'']]],
+  ['wevtvaluemap_13',['WevtValueMap',['../structWevtValueMap.html',1,'']]],
+  ['windowsrelease_14',['WindowsRelease',['../structWindowsRelease.html',1,'']]],
+  ['windowsversion_15',['WindowsVersion',['../structWindowsVersion.html',1,'']]],
+  ['wmipersistence_16',['WmiPersistence',['../classWmiPersistence.html',1,'']]],
+  ['wmisubscriptionobject_17',['WmiSubscriptionObject',['../structWmiSubscriptionObject.html',1,'']]],
+  ['wordwheelqueries_18',['WordWheelQueries',['../classWordWheelQueries.html',1,'']]]
 ];

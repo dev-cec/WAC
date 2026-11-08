@@ -1,5 +1,6 @@
 var ese__recovery_8cpp =
 [
-    [ "OpenRecoveredEseDatabase", "ese__recovery_8cpp.html#a3e02d45567520f55719db925f799b151", null ],
-    [ "ReplayEseLogsOnce", "ese__recovery_8cpp.html#a02d1bc971194bc2ee651455d00892426", null ]
+    [ "eseLogBaseNames", "ese__recovery_8cpp.html#a17f911fab9a4908dec7e772e173e7eae", null ],
+    [ "OpenRecoveredEseDatabase", "ese__recovery_8cpp.html#a4f004b5c2249d7f231554fd54ffc3f94", null ],
+    [ "ReplayEseLogsOnce", "ese__recovery_8cpp.html#ae3c43b3edb81c6865f97929b20c97403", null ]
 ];

@@ -6,5 +6,6 @@ var classSqliteDatabase =
     [ "hasTable", "classSqliteDatabase.html#a47b83fcd48ae5376a3719488f1e06f0e", null ],
     [ "open", "classSqliteDatabase.html#ac50aa8c3df881abfb52e9f100604dc85", null ],
     [ "operator=", "classSqliteDatabase.html#aca98c63f6e38acdb4919b20240775707", null ],
-    [ "query", "classSqliteDatabase.html#ac24daffa2c0b6aa4ef4119f580c9580d", null ]
+    [ "query", "classSqliteDatabase.html#ac24daffa2c0b6aa4ef4119f580c9580d", null ],
+    [ "queryTable", "classSqliteDatabase.html#ae667b431d2352c3a766923630e221552", null ]
 ];

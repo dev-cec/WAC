@@ -61,26 +61,29 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "account__names_8cpp.html",
-"classDefenderLogs.html#a133631e6869ebd017701a7ca814501cd",
-"classSecurityHive.html",
-"des_8cpp.html",
-"functions_w.html",
-"mbox__mail_8h.html#abdf30895e79e77c1197f4e9e54ceed0b",
-"raw__hive__test_8cpp.html",
-"srum_8h_source.html",
-"structBeef0004.html#ac2561322b7baaed13baffec89f279b67",
-"structControlPanel.html#a42e805bf90e8130b50671c415f05d30e",
-"structEvent.html#a71b2b0695b5e13daced0283b8ddac925",
-"structIeIndexRecord.html",
-"structMruApp.html#a8c62f975edea40d235ff8b4ce8144658",
-"structPstSubnode.html",
-"structSPSValue.html#ab8cfefc421b0143036d04ad9849a3c10",
-"structSystemInfo.html",
-"structUserPropertyView0x10312005.html#aa3bad99bee6adcc3fee6d8a72e7e1b29",
-"system__library_8h.html#ae1ae913a2c327e4131b9502e14ce2185",
-"trans__id_8cpp.html#abbb45b588c0c3b3b50e689ee5461c9f7",
-"translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ae05e1b3479b08052f86936d60e02c8b5"
+"classCloudIdentity.html",
+"classPstFile.html#a27087f9aaae1fb9b1c3c0200bb49343f",
+"csv__reader__test_8cpp.html",
+"functions_c.html",
+"jumplist__automatic_8cpp.html",
+"pst__file_8h.html#a3b549b3a7e469b5736115e4b5528fce7",
+"sam__secrets_8h.html",
+"structAppliConf_1_1CollectedArtefacts.html#ab87e4c8139109b70f04fb5b22f675636",
+"structBinarySummary.html#a37b441c1b7b500db3ebc620b22d2c97d",
+"structDeniedSigner.html",
+"structEvtxSummary.html#a279b72d04f530520e4986b24b7bbfe11",
+"structInstalledProgram.html#a0a3ab95696bb437045e8a2c54e9111b1",
+"structMuicaches.html#a6e738361ffb7f1e716ed741b3feae16c",
+"structQuarantineResource.html#ab23bc33a7dd47b15537513e031aa0f65",
+"structScheduledTasks.html",
+"structSystemInfo.html#a837014882d4664c4b45c4b0fb375a769",
+"structUserPropertyViewDelegate.html#a857016e6a5fb68ce419efb4d2b18e5ad",
+"structoleParser.html#ad891bce6ce487bcd4c32ec3dc6a1c82e",
+"tools_8h.html#af3090b036c360d75cf1d37179cd99bee",
+"translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4abdc24a428d6f2a71d200534e7c69576a",
+"web__client_8h.html#ad22de2e7f057c692373f35ff0d0b8137"
 ];
 
-var SYNCONMSG = 'click to disable panel synchronisation';
-var SYNCOFFMSG = 'click to enable panel synchronisation';
+var SYNCONMSG = 'click to disable panel synchronization';
+var SYNCOFFMSG = 'click to enable panel synchronization';
+var LISTOFALLMEMBERS = 'List of all members';

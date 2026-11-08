@@ -14,8 +14,7 @@ var searchData=
   ['filevolumesource_11',['FileVolumeSource',['../classFileVolumeSource.html',1,'']]],
   ['firewall_12',['Firewall',['../classFirewall.html',1,'']]],
   ['firewalllog_13',['FirewallLog',['../classFirewallLog.html',1,'']]],
-  ['firewalllogentry_14',['FirewallLogEntry',['../structFirewallLogEntry.html',1,'']]],
-  ['firewallrule_15',['FirewallRule',['../structFirewallRule.html',1,'']]],
-  ['foldertypenames_16',['FolderTypeNames',['../structFolderTypeNames.html',1,'']]],
-  ['fsflags_17',['FsFlags',['../structFsFlags.html',1,'']]]
+  ['firewallrule_14',['FirewallRule',['../structFirewallRule.html',1,'']]],
+  ['foldertypenames_15',['FolderTypeNames',['../structFolderTypeNames.html',1,'']]],
+  ['fsflags_16',['FsFlags',['../structFsFlags.html',1,'']]]
 ];
