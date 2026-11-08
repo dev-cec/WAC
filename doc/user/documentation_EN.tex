@@ -426,6 +426,7 @@ artefacts:              # one key per artefact; a missing key is true
   thumbcache:              true   # Explorer's thumbnail and icon caches: what each user saw, even deleted since; images exported
   typed_paths:             true   # paths typed in Explorer's address bar
   usbstor:                 true   # USB mass storage devices (Enum\USBSTOR)
+  user_access_log:         true   # User Access Logging of a server (LogFiles\Sum): who reached each role, from which address, day by day
   userassist:              true   # programs each user launched from Explorer, with count and date
   users:                   true   # local accounts (SAM): logons, failures, flags, password hashes
   user_shell_folders:      true   # where each user's desktop, documents, downloads really are (OneDrive, another disk, a share)
@@ -838,7 +839,9 @@ store, the working directory and \fichier{investigation.json}.
         altered exhibit, and the conversion is \textbf{refused};
         \fichier{conversion.json} gives the reason.
   \item \textbf{Rebuild of the working directory} from the exhibit store: the
-        former one is deleted rather than trusted, the copies are verified
+        former one is deleted rather than trusted (if it cannot be, a file held
+        open by an antivirus scanning the key for instance, the conversion stops
+        and gives Windows' error and the file that holds), the copies are verified
         against the manifest and the hives repaired, as at collection time. The
         executables and the providers' resources are read in the exhibit store
         itself, without a copy.

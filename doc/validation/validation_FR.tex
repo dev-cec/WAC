@@ -906,14 +906,6 @@ deux conversions d'une même collecte & dates lues sur la copie de travail,
 
 \section{Résultat de référence}
 
-Dernier cycle, le 30 octobre 2026, sur le code de la version 3.0.1
-(Windows~11 build 26200, fuseau de Paris) : 553 contrôles passés, aucun échec.
-Le 29 octobre, sous Windows~8.1, sur le code de la 3.0.0 : 462 contrôles passés, aucun échec.
-Sur le code de la 4.0 en préparation : le 4 novembre, sur un contrôleur de domaine
-sous Server~2022, 571 contrôles passés, aucun échec, dont les 3~711 objets de
-l'annuaire identiques à \texttt{Get-ADObject} ; le 3 novembre, sous Windows~11,
-582 contrôles passés, aucun échec.
-
 Série finale sur le code de la 4.0.0, du 7 au 8 novembre, \wac{} lancé depuis
 une clé USB comme sur le terrain, nombre de contrôles passés : Windows~11, 605 ;
 Server~2025, 566 ; 2022, 586 ; Core~2022, 534 ; 2019, 540 ; 2016, 521 ;
@@ -925,6 +917,14 @@ un nom portant une demi-paire de substitution isolée (Server~2016) : corrigé.
 Une seconde conversion sur la VM des rôles, une sur 22, n'a pu effacer la copie
 de travail précédente, cause perdue : \wac{} en dit désormais l'erreur réelle et
 l'entrée qui résiste.
+
+Avant elle : le 30 octobre 2026, sur le code de la version 3.0.1 (Windows~11
+build 26200, fuseau de Paris), 553 contrôles passés, aucun échec ; le 29 octobre,
+sous Windows~8.1, sur le code de la 3.0.0, 462 ; sur le code de la 4.0, le
+4 novembre, sur un contrôleur de domaine sous Server~2022, 571, dont les 3~711
+objets de l'annuaire identiques à \texttt{Get-ADObject}, et le 3 novembre, sous
+Windows~11, 582, chaque fois sans échec. Le détail ci-dessous est celui du cycle
+Windows~11 du 30 octobre.
 
 \begin{itemize}
   \item \textbf{collecte puis conversion} (\opt{collect} \opt{events}

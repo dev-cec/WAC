@@ -232,7 +232,7 @@ layout, clicks); a command's output is read on the serial port
 on the installation medium, or given as `XP_KEY`; it is never written to the
 repository. Once installed, a 2 GB data disk is added (IDE `hdd`), on which
 `run-wac-test-xp.sh` formats W: for the carving's witnesses. WAC32 runs from the
-collection key, `~/vms/wac-kit-<vm>.img`, a removable USB disk formatted NTFS on
+collection key, `~/vms/wac-kit-<vm>.img` (64 GiB, sparse), a removable USB disk formatted NTFS on
 the host (`mkntfs`), whose results are read once the VM is off.
 
 Windows Server 2003 (profile `srv2003`, domain `srv2003-test`) is installed
@@ -243,8 +243,11 @@ and time: Enter to each (`virsh send-key srv2003-test KEY_ENTER`). A `.reg`
 on the answer floppy, imported at first logon, switches off what would take
 the keyboard from the harness: Manage Your Server, the Shutdown Event
 Tracker, the screen saver (a server's locks the console after 10 minutes,
-which then takes neither keys nor the ACPI power button).
-`./run-wac-test-xp.sh srv2003-test` runs its cycle.
+which then takes neither keys nor the ACPI power button). The kit's activation
+wizard opens at every logon, over the desktop: `run-wac-test-xp.sh` closes it by
+the keyboard before typing its command. The kit demands activation a few days
+after installation, and Server 2003's activation servers no longer answer: past
+that delay, create the VM again. `./run-wac-test-xp.sh srv2003-test` runs its cycle.
 
 The test cycle runs on `win11-test`, or on the machine `WAC_VM` names
 (`WAC_VM=win81-test ./run-wac-test.sh`). On a Windows older than 10:

@@ -161,9 +161,13 @@ each group policy's registry values, scripts, tasks and security template; a
 `cpassword` is flagged, its value not written. On a web server (IIS, Apache,
 nginx): sites, pools, modules, logs and each site's folder; connection strings of
 `web.config`; the accounts of SQLite databases with their hash scheme; the data
-folders of MySQL, MariaDB and PostgreSQL. Measured on each server generation by
-the test cycle; the controller only under Server 2022, as the only controller of
-its forest. The limits are in the validation report.
+folders of MySQL, MariaDB and PostgreSQL. The DNS, DHCP and Hyper-V roles give
+their settings (plug-in DLLs included), zones, leases, logs and virtual machines;
+User Access Logging (`LogFiles\Sum`) tells, by role, account and address, who
+reached the server and on which days. Measured on each server generation by the
+test cycle, on the server itself, with WAC started from a USB key; the directory
+under Server 2008 R2, 2012 R2, 2016, 2022 and 2025. The limits are in the
+validation report.
 
 **What to collect is a file, not a command line.** `wac.yml`, next to
 `WAC.exe`, holds the procedure: binaries rule, and one switch per artefact. The file applied is recorded in `investigation.json`.

@@ -429,6 +429,7 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   thumbcache:              true   # caches des miniatures et des icônes : ce que chacun a vu, même supprimé ; images exportées
   typed_paths:             true   # chemins tapés dans l'Explorateur
   usbstor:                 true   # périphériques de stockage USB (Enum\USBSTOR)
+  user_access_log:         true   # journal des accès utilisateurs d'un serveur (LogFiles\Sum) : qui a joint chaque rôle, depuis quelle adresse, jour par jour
   userassist:              true   # programmes lancés depuis l'Explorateur, avec compteur et date
   users:                   true   # comptes locaux (SAM) : connexions, échecs, indicateurs, condensats
   user_shell_folders:      true   # où sont vraiment le Bureau, les Documents, les Téléchargements de chacun
@@ -846,7 +847,10 @@ consigne scellée, le répertoire de travail et \fichier{investigation.json}.
         Une seule pièce altérée, et la conversion est \textbf{refusée} ;
         \fichier{conversion.json} en donne la raison.
   \item \textbf{Reconstruction du répertoire de travail} depuis la consigne :
-        l'ancien est supprimé plutôt que cru, les copies sont vérifiées contre
+        l'ancien est supprimé plutôt que cru (s'il ne peut l'être, par exemple
+        un fichier tenu ouvert par un antivirus qui analyse la clé, la
+        conversion s'arrête et dit l'erreur de Windows et le fichier qui
+        résiste), les copies sont vérifiées contre
         le manifeste et les ruches réparées, comme à la collecte. Les
         exécutables et les ressources des fournisseurs sont lus dans la
         consigne même, sans copie.

@@ -1229,6 +1229,109 @@ are checked with openssl: each one reads, and its issuer is the authority the
 CCADB associates with it (387 out of 387).
 
 % ============================================================ 5
+\section{Directory: \texttt{active\_directory\_test}}
+
+The decoders of \fichier{active\_directory.cpp} on values of known meaning, taken
+from a real \fichier{ntds.dit}: the header of \texttt{replPropertyMetaData} and a
+48-byte entry, a \texttt{link\_metadata}, an \texttt{objectSid} whose RID 500 is
+big-endian, and the object ACEs of security descriptors. The reading of a whole
+database is confronted with the directory itself by the cycle
+(\texttt{check\_active\_directory}). Under \texttt{wine}, no argument. Reference:
+29 checks, no failure.
+
+\section{Group policies: \texttt{group\_policies\_test}}
+
+The readers of a policy's files: a \fichier{Registry.pol} built here entry by
+entry, in the format Microsoft documents; scripts, tasks and a preference file.
+The real files of a policy are confronted with \texttt{Get-GPRegistryValue} by
+the cycle (\texttt{check\_group\_policies}). Under \texttt{wine}, no argument.
+Reference: 14 checks, no failure.
+
+\section{Server roles: \texttt{server\_roles\_test}}
+
+The readers of the DNS, DHCP and Hyper-V roles (\fichier{dns\_server.h},
+\fichier{dhcp\_server.h}, \fichier{hyperv.h}) and of User Access Logging, on the
+forms measured on a real Server~2022 and on what a forged file can hold. Under
+\texttt{wine}, no argument. Reference: 60 checks, no failure.
+
+\section{Removing a tree: \texttt{long\_path\_test}}
+
+\texttt{removeFolderTree} (\fichier{long\_path.h}), which empties the previous
+working copy before a conversion: a tree past 260 characters with a read-only
+file goes entirely; a file held open without sharing its deletion is named,
+with its own error (sharing violation), not an ``access denied'' written by the
+caller; an absent folder is no failure. Under \texttt{wine}, no argument.
+Reference: 9 checks, no failure. Seen failing: the mutation that ignores the
+result of \texttt{DeleteFileW} fails 2 checks.
+
+\section{WMI repository: \texttt{cim\_test}}
+
+A class, its ancestor and an instance built as the format lays them out, hostile
+variants (a count that lies, a record cut short, refused without reading
+beyond), the name hash against a key of a real repository; given a
+\fichier{Repository} folder, the subscriptions it holds. Under \texttt{wine}.
+Reference without argument: 15 checks, no failure.
+
+\section{ESE databases: \texttt{ese\_test}}
+
+Records built as the format lays them out (fixed, variable, tagged, multi-valued,
+null columns), hostile variants, the BITS blobs and SRUM's identities read
+through this reader; given a database, a dump of every table, to compare with
+\texttt{dissect.esedb} through \fichier{vmtest/lib/ese-compare.py}. Under
+\texttt{wine}. Reference without argument: 34 checks, no failure.
+
+\section{FAT and exFAT: \texttt{fat\_test}}
+
+The 8.3 checksum of a known name, hostile boot sectors and chains; given volume
+images, their entries (deleted ones included), to compare with
+\texttt{dissect.fat} through \fichier{vmtest/lib/fat-compare.py} and with what
+Windows wrote. Under \texttt{wine}. Reference without argument: 7 checks, no
+failure.
+
+\section{IP addresses: \texttt{ip\_address\_test}}
+
+The text of IP addresses confronted with Python's \texttt{ipaddress}: the
+reference, one ``hex bytes|text'' line per address, draws random addresses
+weighted towards the cases that go wrong (runs of zeros of every length and
+place, ties between runs, IPv4-mapped, loopback). One convention is aligned in
+the reference: an IPv4-mapped address is written \texttt{::ffff:a.b.c.d}, as
+Windows does. Built natively on Linux, with the error detectors (command in its
+header); the script that writes the reference is not in the repository.
+
+\section{Link tracking: \texttt{link\_tracking\_test}}
+
+The fields of shortcuts and jump lists confronted with the values Eric
+Zimmerman's JLECmd gives for the same exhibits of the VM: the instant and
+hardware address of a version-1 DROID, the ExtraData blocks of a \fichier{.lnk},
+the end of a URI shell item. Under \texttt{wine}, no argument. Reference:
+11 checks, no failure.
+
+\section{Shell items of an archive: \texttt{shell\_items\_test}}
+
+The content of an archive as Explorer sees it (ZIP, 7z, tar.gz; layouts of
+Windows~11 and XP, reference libfwsi and Eric Zimmerman's Lnk library): the
+entry's sizes are no longer read as dates. Each truncation of each item is read
+against a forbidden page. Under \texttt{wine}, no argument. Reference:
+685 checks, no failure.
+
+\section{Altered trust set: \texttt{trust\_set\_test}}
+
+From a set written by \opt{update-trust}, copies altered one way each, each
+refused for the reason expected: no manifest, a root certificate changed, the
+same with the manifest's fingerprint rewritten (refused by the SHA-1 of the
+signed list), \fichier{authroot.stl} changed (refused by its signature), a
+manifest naming a file outside the set. Under \texttt{wine}, with a trust set
+and a scratch folder as arguments.
+
+\section{XP equivalents: \texttt{xp\_imports\_test}}
+
+The functions \fichier{WAC32.exe} replaces where XP lacks them
+(\fichier{xp\_imports.cpp}), called directly on a Windows that also has the real
+ones, which serve as reference: ordinal string comparison, thread identifier,
+bounded copy, condition variable (one queue, four consumers, 20,000 items each
+received once, a wait timed out at the delay asked for). A 32-bit program, run
+in the VM: Wine lacks these functions.
+
 \chapter{The robustness harnesses}\label{ch:robustesse}
 
 \section{The principle}
@@ -1330,9 +1433,9 @@ a chain of Apache \texttt{Define} exhausting the memory, a non-ASCII digit in
 a key of the record, an exception that ended a collection without seal or log. Then the readers this
 version added (Apache, nginx, W3C, policies, \fichier{web.config},
 \fichier{applicationHost.config}, \fichier{Registry.pol}, replication metadata,
-index nodes) read mutated inputs, fixed seed, the binary ones against a guard page.
+index nodes, DNS zones and log, DHCP log, Hyper-V \fichier{.vmcx}) read mutated inputs, fixed seed, the binary ones against a guard page.
 An exception that escapes ends the test, as it would end a collection. Reference:
-16 checks, 32,000 inputs, no failure. Seen failing: each named check on the code
+23 checks, 38,000 inputs, no failure. Seen failing: each named check on the code
 before the review, the chain of \texttt{Define} reaching 26~GiB before the kernel
 killed the process; run it under a memory ceiling if that bound is removed.
 

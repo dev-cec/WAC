@@ -1283,6 +1283,113 @@ LOLDrivers. Les CRL se contrôlent par openssl : chacune se lit, et son
 émetteur est l'autorité que lui associe la CCADB (387 sur 387).
 
 % ============================================================ 5
+\section{Annuaire : \texttt{active\_directory\_test}}
+
+Les décodeurs de \fichier{active\_directory.cpp} sur des valeurs de sens connu,
+prises sur un vrai \fichier{ntds.dit} : l'en-tête de
+\texttt{replPropertyMetaData} et une entrée de 48~octets, un
+\texttt{link\_metadata}, un \texttt{objectSid} au RID 500 gros-boutiste, et les
+ACE objet des descripteurs de sécurité. La lecture d'une base entière est
+confrontée à l'annuaire lui-même par le cycle (\texttt{check\_active\_directory}).
+Sous \texttt{wine}, sans argument. Référence : 29 contrôles, aucun échec.
+
+\section{Stratégies de groupe : \texttt{group\_policies\_test}}
+
+Les lecteurs des fichiers d'une stratégie : un \fichier{Registry.pol} construit
+ici entrée par entrée, au format que documente Microsoft ; scripts, tâches et
+fichier de préférences. Les vrais fichiers d'une stratégie sont confrontés à
+\texttt{Get-GPRegistryValue} par le cycle (\texttt{check\_group\_policies}).
+Sous \texttt{wine}, sans argument. Référence : 14 contrôles, aucun échec.
+
+\section{Rôles d'un serveur : \texttt{server\_roles\_test}}
+
+Les lecteurs des rôles DNS, DHCP et Hyper-V (\fichier{dns\_server.h},
+\fichier{dhcp\_server.h}, \fichier{hyperv.h}) et du journal des accès
+utilisateurs, sur les formes mesurées sur un vrai Server~2022 et sur ce qu'un
+fichier forgé peut porter. Sous \texttt{wine}, sans argument. Référence :
+60 contrôles, aucun échec.
+
+\section{Suppression d'une arborescence : \texttt{long\_path\_test}}
+
+\texttt{removeFolderTree} (\fichier{long\_path.h}), qui vide la copie de travail
+précédente avant une conversion : une arborescence de plus de 260 caractères
+avec un fichier en lecture seule part en entier ; un fichier tenu ouvert sans
+partage de suppression est nommé, avec sa propre erreur (violation de partage),
+et non un « accès refusé » écrit par l'appelant ; un dossier absent n'est pas un
+échec. Sous \texttt{wine}, sans argument. Référence : 9 contrôles, aucun échec.
+Vu échouer : la mutation qui ignore le résultat de \texttt{DeleteFileW} fait
+échouer 2 contrôles.
+
+\section{Dépôt WMI : \texttt{cim\_test}}
+
+Une classe, son ancêtre et une instance construits comme le format les dispose,
+des variantes hostiles (un compte qui ment, un enregistrement tronqué, refusés
+sans lire au-delà), le hachage des noms contre une clé d'un vrai dépôt ; avec un
+dossier \fichier{Repository} en argument, les abonnements qu'il porte. Sous
+\texttt{wine}. Référence sans argument : 15 contrôles, aucun échec.
+
+\section{Bases ESE : \texttt{ese\_test}}
+
+Des enregistrements construits comme le format les dispose (colonnes fixes,
+variables, étiquetées, multivaluées, nulles), des variantes hostiles, les
+données BITS et les identités de SRUM lues par ce lecteur ; avec une base en
+argument, le vidage de chaque table, à comparer à \texttt{dissect.esedb} par
+\fichier{vmtest/lib/ese-compare.py}. Sous \texttt{wine}. Référence sans
+argument : 34 contrôles, aucun échec.
+
+\section{FAT et exFAT : \texttt{fat\_test}}
+
+La somme de contrôle 8.3 d'un nom connu, des secteurs d'amorçage et des chaînes
+hostiles ; avec des images de volumes en argument, leurs entrées (supprimées
+comprises), à comparer à \texttt{dissect.fat} par
+\fichier{vmtest/lib/fat-compare.py} et à ce que Windows a écrit. Sous
+\texttt{wine}. Référence sans argument : 7 contrôles, aucun échec.
+
+\section{Adresses IP : \texttt{ip\_address\_test}}
+
+Le texte des adresses IP confronté au module \texttt{ipaddress} de Python : la
+référence, une ligne « octets en hexadécimal|texte » par adresse, tire au hasard
+des adresses penchées vers les cas qui échouent (suites de zéros de toute
+longueur et place, égalités entre suites, IPv4 dans IPv6, bouclage). Une
+convention est alignée dans la référence : une adresse IPv4 dans IPv6 s'écrit
+\texttt{::ffff:a.b.c.d}, comme Windows. Compilé nativement sous Linux, avec les
+détecteurs d'erreurs (commande dans son en-tête) ; le script qui écrit la
+référence n'est pas dans le dépôt.
+
+\section{Suivi des liens : \texttt{link\_tracking\_test}}
+
+Les champs des raccourcis et des listes de sauts confrontés aux valeurs que
+donne JLECmd d'Eric Zimmerman pour les mêmes pièces de la VM : l'instant et
+l'adresse matérielle d'un DROID de version~1, les blocs ExtraData d'un
+\fichier{.lnk}, la fin d'un élément de shell URI. Sous \texttt{wine}, sans
+argument. Référence : 11 contrôles, aucun échec.
+
+\section{Éléments de shell d'une archive : \texttt{shell\_items\_test}}
+
+Le contenu d'une archive vu par l'Explorateur (ZIP, 7z, tar.gz ; dispositions de
+Windows~11 et de XP, référence libfwsi et la bibliothèque Lnk d'Eric Zimmerman) :
+les tailles de l'entrée ne sont plus lues comme des dates. Chaque troncature de
+chaque élément est lue contre une page interdite. Sous \texttt{wine}, sans
+argument. Référence : 685 contrôles, aucun échec.
+
+\section{Jeu de confiance altéré : \texttt{trust\_set\_test}}
+
+D'un jeu écrit par \opt{update-trust}, des copies altérées chacune d'une façon,
+chacune refusée pour la raison attendue : manifeste absent, certificat racine
+changé, le même avec l'empreinte du manifeste réécrite (refusé par le SHA-1 de la
+liste signée), \fichier{authroot.stl} changé (refusé par sa signature), manifeste
+nommant un fichier hors du jeu. Sous \texttt{wine}, avec un jeu de confiance et un
+dossier de travail en arguments.
+
+\section{Équivalents de XP : \texttt{xp\_imports\_test}}
+
+Les fonctions que \fichier{WAC32.exe} remplace là où XP ne les a pas
+(\fichier{xp\_imports.cpp}), appelées directement sur un Windows qui a aussi les
+vraies, qui servent de référence : comparaison ordinale de chaînes, identifiant
+de fil, copie bornée, variable de condition (une file, quatre consommateurs,
+20~000 éléments reçus chacun une fois, attente expirée au délai demandé). Programme
+32~bits, lancé dans la VM : Wine n'a pas ces fonctions.
+
 \chapter{Les harnais de robustesse}\label{ch:robustesse}
 
 \section{Le principe}
@@ -1387,9 +1494,10 @@ champ W3C nommé comme une clé de l'enregistrement, une exception qui terminait
 collecte sans sceau ni journal.
 Puis les lecteurs ajoutés par cette version (Apache, nginx, W3C, stratégies,
 \fichier{web.config}, \fichier{applicationHost.config}, \fichier{Registry.pol},
-métadonnées de réplication, nœuds d'index) lisent des entrées mutées, graine fixe,
+métadonnées de réplication, nœuds d'index, zones et journal DNS, journal DHCP,
+\fichier{.vmcx} de Hyper-V) lisent des entrées mutées, graine fixe,
 les binaires contre une page de garde. Une exception qui s'échappe arrête le test,
-comme elle arrêterait une collecte. Référence : 16 contrôles, 32~000 entrées, aucun
+comme elle arrêterait une collecte. Référence : 23 contrôles, 38~000 entrées, aucun
 échec. Vu échouer : chacun des contrôles nommés sur le code d'avant la revue, la
 chaîne de \texttt{Define} montant à 26~Gio avant que le noyau ne tue le processus ;
 à lancer sous plafond de mémoire si cette borne est retirée.
