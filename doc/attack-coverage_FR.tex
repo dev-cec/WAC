@@ -49,9 +49,9 @@ File Deletion & \texttt{usn\_journal}, \texttt{deleted\_files}, \texttt{recycle\
 File Access & \texttt{jump\_lists}, \texttt{recent\_documents}, \texttt{shortcuts}, \texttt{shellbags}, \texttt{explorer\_recent\_docs} \\
 File Metadata & \texttt{mft}, \texttt{security\_descriptors}, \texttt{zone\_identifiers} \\
 Network Connection Creation & \texttt{srum}, \texttt{network}, \texttt{firewall\_log}, \texttt{rdp\_client}, \texttt{bits}, \texttt{web\_client} \\
-Network Traffic Content & — \\
+Network Traffic Content & \texttt{dns\_server} \\
 Network Traffic Flow & \texttt{srum}, \texttt{firewall\_log} \\
-Network Share Access & \texttt{mount\_points}, \texttt{network\_shares}, \texttt{shellbags} \\
+Network Share Access & \texttt{mount\_points}, \texttt{network\_shares}, \texttt{shellbags}, \texttt{user\_access\_log} \\
 Windows Registry Key Modification & \texttt{run\_keys}, \texttt{persistence}, \texttt{services}, \texttt{registry\_backups}, \texttt{shadow\_copies} \\
 Windows Registry Key Creation & \texttt{run\_keys}, \texttt{persistence}, \texttt{services}, \texttt{registry\_backups}, \texttt{shadow\_copies} \\
 Windows Registry Key Access & — \\
@@ -64,7 +64,7 @@ Scheduled Job Modification & \texttt{scheduled\_tasks} \\
 Scheduled Job Metadata & \texttt{scheduled\_tasks} \\
 WMI Creation & \texttt{wmi} \\
 Logon Session Creation & \texttt{users}, \texttt{rdp\_server} \\
-Logon Session Metadata & \texttt{users}, \texttt{sessions}, \texttt{rdp\_server} \\
+Logon Session Metadata & \texttt{users}, \texttt{sessions}, \texttt{rdp\_server}, \texttt{user\_access\_log} \\
 User Account Authentication & \texttt{users} \\
 User Account Creation & \texttt{users}, \texttt{active\_directory} \\
 User Account Modification & \texttt{users}, \texttt{local\_groups}, \texttt{active\_directory} \\
@@ -98,7 +98,7 @@ Domain Registration & — \\
 \toprule
 \textbf{ID} & \textbf{Technique} & \textbf{Journaux} & \textbf{Disque} & \textbf{Sources non prises} \\
 \midrule\endhead
-T1001 & Data Obfuscation & — & — & NSM \\
+T1001 & Data Obfuscation & — & oui & NSM \\
 T1001.001 & Junk Data & oui & oui & NSM \\
 T1001.002 & Steganography & oui & oui & NSM \\
 T1001.003 & Protocol or Service Impersonation & oui & oui & NSM \\
@@ -108,7 +108,7 @@ T1003.002 & Security Account Manager & oui & oui &  \\
 T1003.003 & NTDS & oui & oui &  \\
 T1003.004 & LSA Secrets & oui & oui &  \\
 T1003.005 & Cached Domain Credentials & oui & oui &  \\
-T1003.006 & DCSync & oui & — & NSM \\
+T1003.006 & DCSync & oui & oui & NSM \\
 T1005 & Data from Local System & oui & oui &  \\
 T1006 & Direct Volume Access & oui & oui &  \\
 T1007 & System Service Discovery & oui & oui &  \\
@@ -581,6 +581,6 @@ T1700 & AI-Enabled Exfiltration & oui & oui &  \\
 \end{longtable}
 }
 
-\noindent{\small ATT\&CK Enterprise 20.0 (2026-10-13, SHA-256 81113BA98AFA2928…) : 479 techniques et sous-techniques Windows ; 475 avec au moins une trace que WAC prélève, 4 dont toutes les sources sont hors du disque ; 6 (marquées *) n'ont pas d'analytique Windows dans ATT\&CK et sont décidées d'après la technique elle-même. \emph{Journaux} : un journal que WAC prend porte une trace de la technique ; \emph{Disque} : un artefact sur le disque en porte une, hors des journaux. Un journal d'événements n'est là que si la machine l'a tenu : WAC relève la configuration des canaux et la politique d'audit, qui le disent.}
+\noindent{\small ATT\&CK Enterprise 20.0 (2026-10-13, SHA-256 81113BA98AFA2928…) : 479 techniques et sous-techniques Windows ; 476 avec au moins une trace que WAC prélève, 3 dont toutes les sources sont hors du disque ; 6 (marquées *) n'ont pas d'analytique Windows dans ATT\&CK et sont décidées d'après la technique elle-même. \emph{Journaux} : un journal que WAC prend porte une trace de la technique ; \emph{Disque} : un artefact sur le disque en porte une, hors des journaux. Un journal d'événements n'est là que si la machine l'a tenu : WAC relève la configuration des canaux et la politique d'audit, qui le disent.}
 
 \noindent{\small Sources non prises, et pourquoi : ETW, télémétrie vivante (ETW, appels d'API, compteurs) : lue par un consommateur à l'instant ; les fichiers de trace que Windows écrit sur son disque sont pris bruts (etw\_logs) ; NSM, capture réseau : sur le réseau, pas sur la machine ; cloud, service en nuage : dans les journaux du locataire ; le côté de la machine est pris (cloud\_identity, onedrive, intune\_logs) ; EDR, télémétrie propre à un EDR : dans sa console ; le dossier local de Defender for Endpoint est pris brut (defender\_endpoint) ; firmware, micrologiciel : non lu, WAC lit le disque ; 4.0, rôle serveur (IIS, AD FS) : version 4.0 ; IA, comportement d'un modèle d'IA : ATT\&CK ne lui connaît aucune trace sous Windows}

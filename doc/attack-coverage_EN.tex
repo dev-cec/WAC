@@ -49,9 +49,9 @@ File Deletion & \texttt{usn\_journal}, \texttt{deleted\_files}, \texttt{recycle\
 File Access & \texttt{jump\_lists}, \texttt{recent\_documents}, \texttt{shortcuts}, \texttt{shellbags}, \texttt{explorer\_recent\_docs} \\
 File Metadata & \texttt{mft}, \texttt{security\_descriptors}, \texttt{zone\_identifiers} \\
 Network Connection Creation & \texttt{srum}, \texttt{network}, \texttt{firewall\_log}, \texttt{rdp\_client}, \texttt{bits}, \texttt{web\_client} \\
-Network Traffic Content & — \\
+Network Traffic Content & \texttt{dns\_server} \\
 Network Traffic Flow & \texttt{srum}, \texttt{firewall\_log} \\
-Network Share Access & \texttt{mount\_points}, \texttt{network\_shares}, \texttt{shellbags} \\
+Network Share Access & \texttt{mount\_points}, \texttt{network\_shares}, \texttt{shellbags}, \texttt{user\_access\_log} \\
 Windows Registry Key Modification & \texttt{run\_keys}, \texttt{persistence}, \texttt{services}, \texttt{registry\_backups}, \texttt{shadow\_copies} \\
 Windows Registry Key Creation & \texttt{run\_keys}, \texttt{persistence}, \texttt{services}, \texttt{registry\_backups}, \texttt{shadow\_copies} \\
 Windows Registry Key Access & — \\
@@ -64,7 +64,7 @@ Scheduled Job Modification & \texttt{scheduled\_tasks} \\
 Scheduled Job Metadata & \texttt{scheduled\_tasks} \\
 WMI Creation & \texttt{wmi} \\
 Logon Session Creation & \texttt{users}, \texttt{rdp\_server} \\
-Logon Session Metadata & \texttt{users}, \texttt{sessions}, \texttt{rdp\_server} \\
+Logon Session Metadata & \texttt{users}, \texttt{sessions}, \texttt{rdp\_server}, \texttt{user\_access\_log} \\
 User Account Authentication & \texttt{users} \\
 User Account Creation & \texttt{users}, \texttt{active\_directory} \\
 User Account Modification & \texttt{users}, \texttt{local\_groups}, \texttt{active\_directory} \\
@@ -98,7 +98,7 @@ Domain Registration & — \\
 \toprule
 \textbf{ID} & \textbf{Technique} & \textbf{Logs} & \textbf{Disk} & \textbf{Sources not taken} \\
 \midrule\endhead
-T1001 & Data Obfuscation & — & — & NSM \\
+T1001 & Data Obfuscation & — & yes & NSM \\
 T1001.001 & Junk Data & yes & yes & NSM \\
 T1001.002 & Steganography & yes & yes & NSM \\
 T1001.003 & Protocol or Service Impersonation & yes & yes & NSM \\
@@ -108,7 +108,7 @@ T1003.002 & Security Account Manager & yes & yes &  \\
 T1003.003 & NTDS & yes & yes &  \\
 T1003.004 & LSA Secrets & yes & yes &  \\
 T1003.005 & Cached Domain Credentials & yes & yes &  \\
-T1003.006 & DCSync & yes & — & NSM \\
+T1003.006 & DCSync & yes & yes & NSM \\
 T1005 & Data from Local System & yes & yes &  \\
 T1006 & Direct Volume Access & yes & yes &  \\
 T1007 & System Service Discovery & yes & yes &  \\
@@ -581,6 +581,6 @@ T1700 & AI-Enabled Exfiltration & yes & yes &  \\
 \end{longtable}
 }
 
-\noindent{\small ATT\&CK Enterprise 20.0 (2026-10-13, SHA-256 81113BA98AFA2928…): 479 Windows techniques and sub-techniques; 475 with at least one trace WAC collects, 4 whose sources are all off the disk; 6 (marked *) have no Windows analytic in ATT\&CK and are decided from the technique itself. \emph{Logs}: a log WAC takes holds a trace of the technique; \emph{Disk}: an artefact on the disk does, beyond the logs. A Windows event log is only there if the machine kept it: WAC records the channels' configuration and the audit policy, which say so.}
+\noindent{\small ATT\&CK Enterprise 20.0 (2026-10-13, SHA-256 81113BA98AFA2928…): 479 Windows techniques and sub-techniques; 476 with at least one trace WAC collects, 3 whose sources are all off the disk; 6 (marked *) have no Windows analytic in ATT\&CK and are decided from the technique itself. \emph{Logs}: a log WAC takes holds a trace of the technique; \emph{Disk}: an artefact on the disk does, beyond the logs. A Windows event log is only there if the machine kept it: WAC records the channels' configuration and the audit policy, which say so.}
 
 \noindent{\small Sources not taken, and why: ETW, live telemetry (ETW, API calls, performance counters): read by a consumer as it happens; the trace files Windows writes to its disk are taken raw (etw\_logs); NSM, network capture: on the wire, not on the machine; cloud, cloud service: in the tenant's logs; the machine's side is taken (cloud\_identity, onedrive, intune\_logs); EDR, an EDR product's own telemetry: in its console; Defender for Endpoint's local folder is taken raw (defender\_endpoint); firmware, firmware: not read, WAC reads the disk; 4.0, server role (IIS, AD FS): version 4.0; AI, an AI model's behaviour: ATT\&CK names no trace of it on Windows}
