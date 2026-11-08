@@ -176,6 +176,19 @@ $QGA run --shell "del $VMDIR\\prepare-wac-key.ps1 2>nul & exit /b 0" >/dev/null 
 WACDIR="$KIT_LETTER:\\wac"
 echo "   WAC runs from $WACDIR"
 
+# The cmd commands that remove an output folder of WAC on the key ($1, its name
+# under $WACDIR), long paths included: rmdir /s /q, even given \\?\, stops at a
+# folder past 260 characters on Server 2012 R2 ("chemin trop long") and still
+# returns 0, which left the long-path witness of a previous cycle behind and made
+# WAC refuse the folder (2026-11-08). robocopy /MIR from an empty folder removes
+# every entry, long paths included, on every Windows this harness drives.
+# Within parentheses: cmd takes what follows "if … (…)" on the line, after an
+# "&", as part of the if — WAC was not run when the folder was absent.
+remove_store() {
+  local empty="$WACDIR\\empty-$1"
+  echo "(if exist $WACDIR\\$1 (mkdir $empty 2>nul & robocopy $empty $WACDIR\\$1 /MIR /R:0 /W:0 >nul & rmdir /s /q $WACDIR\\$1 & rmdir $empty)) 2>nul"
+}
+
 if [[ $BUILD -eq 1 ]]; then
   echo "== 1. Build (Linux cross-compilation) == ($(date +%H:%M:%S))"
   "$ROOT/build-windows.sh" --test >/dev/null
@@ -379,10 +392,12 @@ if wants dns_server dhcp_server hyperv; then
 fi
 
 # User Access Logging: an access of known origin, then the service stopped, which
-# writes it to the databases; it stays stopped through the collection, and the
-# reference is copied after it (user_access_log_reference), which check-json.py
-# reads with dissect.esedb. A restart before the collection lost the rows on
-# Server 2012 R2.
+# writes it to the databases; it stays stopped through both collections, that of
+# step 4 and the separate one of step 7, and the reference is copied between them
+# (user_access_log_reference), which check-json.py reads with dissect.esedb. A
+# restart before a collection lost the rows on Server 2012 R2, and moved them to
+# a database of another name on Server 2016: the service is started again only
+# after step 7 (user_access_log_restart).
 UAL_STATE=""
 if wants user_access_log; then
   $QGA write "$HERE/guest/user-access-log-witness.ps1" "$VMDIR\\user-access-log-witness.ps1" >/dev/null
@@ -391,8 +406,7 @@ if wants user_access_log; then
 fi
 
 # The second phase, once WAC has collected: the databases copied, the service
-# started again — even when the first phase failed half-way, the service is
-# never left stopped.
+# left stopped for the separate collection.
 user_access_log_reference() {
   [[ -n "$UAL_STATE" && "$UAL_STATE" != "no service" ]] || return 0
   local state
@@ -404,6 +418,15 @@ user_access_log_reference() {
     echo "   ⚠️ User Access Logging reference not copied: $state"
   fi
   $QGA run --shell "del $VMDIR\\user-access-log-witness.ps1 $VMDIR\\user-access-log.zip 2>nul & exit /b 0" >/dev/null 2>&1 || true
+}
+
+# The service started again once the separate collection is done — even when
+# the first phase failed half-way, the service is never left stopped.
+user_access_log_restart() {
+  [[ -n "$UAL_STATE" && "$UAL_STATE" != "no service" ]] || return 0
+  local state
+  state=$($QGA run -- powershell.exe -NoProfile -Command 'Start-Service UALSVC; (Get-Service UALSVC).Status' 2>/dev/null | tr -d '\r' | tail -1 || true)
+  [[ "$state" == Running ]] || echo "   ⚠️ User Access Logging service not started again: $state"
 }
 
 if ! full_cycle; then
@@ -497,7 +520,7 @@ $QGA run --shell "del $WACDIR\\WAC.exe.log 2>nul & echo." >/dev/null 2>&1 || tru
 # One hour for each run: the recovery of the deleted files read 2.6 GB at
 # 3.3 MB/s in the Vista VM (13 min), and the collection passed the agent's
 # 30 minutes (2026-10-23); 25 MB/s in the Windows 11 VM.
-$QGA run --timeout 3600 --shell "rmdir /s /q \\\\?\\$WACDIR\\out 2>nul & rmdir /s /q \\\\?\\$WACDIR\\split 2>nul & exit /b 0" >/dev/null 2>&1 || true
+$QGA run --timeout 3600 --shell "$(remove_store out) & $(remove_store split) & exit /b 0" >/dev/null 2>&1 || true
 # taskkill once the witnesses are placed and the previous stores removed: both
 # take minutes (real browsing, an RDP session, 3 min to remove a store with
 # its deleted files), and the BAM check expects an execution within 300 s of
@@ -775,7 +798,7 @@ if [[ $SPLIT -eq 1 ]]; then
   }
   json_count() { $QGA run --shell "dir /b $WACDIR\\split\\*.json 2>nul" 2>/dev/null | grep -c '\.json' || true; }
 
-  $QGA run --shell "cd /d $WACDIR && rmdir /s /q \\\\?\\$WACDIR\\split 2>nul & echo." >/dev/null
+  $QGA run --timeout 3600 --shell "$(remove_store split) & echo." >/dev/null
   # A fetch interrupted with the harness leaves its file open in qemu-ga until
   # the agent restarts: rmdir fails silently, and the collection below refuses
   # the folder (working folder not empty) — every Vista cycle of 2026-10-29.
@@ -998,6 +1021,7 @@ if [[ $SPLIT -eq 1 ]]; then
   fi
 fi
 
+user_access_log_restart
 remove_sysmon
 if [[ -n "$ONLY" ]]; then
   echo "== 8. skipped (--only) == ($(date +%H:%M:%S))"
@@ -1028,7 +1052,7 @@ artefacts:
     max_file_mib: 8
 YML
 $QGA write "$OUTPUT/wac.yml" "$WACDIR\\wac.yml" >/dev/null
-$QGA run --shell "cd /d $WACDIR && rmdir /s /q \\\\?\\$WACDIR\\configured 2>nul & WAC.exe > configured.log 2>&1" \
+$QGA run --shell "$(remove_store configured) & cd /d $WACDIR && WAC.exe > configured.log 2>&1" \
   && echo "   ✅ collection driven by wac.yml went to the end" || echo "   ❌ collection driven by wac.yml ended abnormally"
 $QGA read "$WACDIR\\configured.log" "$OUTPUT/configured.log" >/dev/null 2>&1 || true
 $QGA run --shell "del $WACDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
@@ -1054,7 +1078,7 @@ MISSING_OUT="$OUTPUT/missing"
   done; } > "$OUTPUT/wac-missing.yml"
 $QGA write "$OUTPUT/wac-missing.yml" "$WACDIR\\wac.yml" >/dev/null
 CODE=0
-$QGA run --shell "cd /d $WACDIR && rmdir /s /q \\\\?\\$WACDIR\\missing 2>nul & move /y $HOSTS $VMDIR\\hosts.aside >nul && WAC.exe > missing.log 2>&1" || CODE=$?
+$QGA run --shell "$(remove_store missing) & cd /d $WACDIR && move /y $HOSTS $VMDIR\\hosts.aside >nul && WAC.exe > missing.log 2>&1" || CODE=$?
 restore_hosts && echo "   ✅ hosts file put back" || echo "   ❌ hosts file NOT put back: $VMDIR\\hosts.aside"
 if [[ "$CODE" == "0" ]]; then
   $QGA run --shell "cd /d $WACDIR && WAC.exe --convert=missing >> missing.log 2>&1" || CODE=$?
@@ -1066,7 +1090,7 @@ $QGA run --shell "del $WACDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || tru
 fetch_results missing "$MISSING_OUT" >/dev/null
 mkdir -p "$MISSING_OUT/reference" && cp "$OUTPUT/reference/windows-version.txt" "$MISSING_OUT/reference/" 2>/dev/null || true
 python3 "$HERE/lib/check-json.py" --expected-missing "$MISSING_OUT" || echo "   ⚠️ the expected-but-missing test fails its checks (see above)"
-$QGA run --shell "rmdir /s /q \\\\?\\$WACDIR\\missing 2>nul & del $WACDIR\\missing.log 2>nul & exit /b 0" >/dev/null 2>&1 || true
+$QGA run --shell "$(remove_store missing) & del $WACDIR\\missing.log 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fi
 
 echo
