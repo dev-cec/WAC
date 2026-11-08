@@ -73,8 +73,21 @@ try {
     Add-Type -AssemblyName System.Web.Extensions
     $serializer = New-Object Web.Script.Serialization.JavaScriptSerializer
     $serializer.MaxJsonLength = [int]::MaxValue
-    $m = $serializer.DeserializeObject((Get-Content -Raw -Encoding UTF8 -LiteralPath $manifest))
+    # A name may hold a lone half of a surrogate pair, which WAC writes as
+    # \uXXXX (Server 2016 names its User Access Logging databases with three
+    # random UTF-16 units): the serializer turns it into U+FFFD, and the file
+    # was then not found (measured on 2026-11-08). Each surrogate escape is
+    # kept as U+0001 and its four digits, U+0001 being a character no file
+    # name holds, and put back in the path below. An escaped backslash before
+    # "u" (\\u) is text, not an escape: an even run of backslashes is skipped.
+    $json = [regex]::Replace((Get-Content -Raw -Encoding UTF8 -LiteralPath $manifest),
+        '(?<!\\)((?:\\\\)*)\\u([dD][89a-fA-F][0-9a-fA-F]{2})', '$1\u0001$2')
+    $m = $serializer.DeserializeObject($json)
 } catch { $m = $null }
+# A surrogate escape kept above, back to its UTF-16 unit.
+function Restore-Surrogates([string]$path) {
+    [regex]::Replace($path, "\x01([0-9a-fA-F]{4})", { param($x) [string][char][Convert]::ToInt32($x.Groups[1].Value, 16) })
+}
 if ($m -isnot [Collections.IDictionary] -or $m['Items'] -isnot [Collections.IList]) { Say Unreadable $manifest; Say Total 0 1; exit 1 }
 # The manifest comes from the examined machine: an exhibit path that leaves
 # the collection (.., absolute path, drive) is refused, never read. Checked on
@@ -108,7 +121,7 @@ $ok = 0; $ko = 0; $fingerprintOnly = 0
 foreach ($p in ($m.Items | Where-Object { $_.Result -eq 'OK' })) {
     # An authenticated binary that was not copied (--collect --binary): no file.
     if ($p.ContentStored -eq $false) { $fingerprintOnly++; continue }
-    $rel = ([string]$p.ExhibitPath) -replace '/', '\'
+    $rel = (Restore-Surrogates ([string]$p.ExhibitPath)) -replace '/', '\'
     if (-not $rel -or [IO.Path]::IsPathRooted($rel) -or $rel -match ':' -or ($rel -split '\\') -contains '..') {
         $ko++; Say Mismatch $p.ExhibitPath; continue
     }

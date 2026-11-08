@@ -175,18 +175,36 @@ inline bool forEachFileBelow(const std::wstring& folder, const std::function<voi
 }
 
 /*! Deletes a folder and everything below it, whatever the depth.
+ *  Every deletion is read: the first that fails gives its Win32 error and its
+ *  path. A bare "the folder still exists" told nothing of why — a conversion
+ *  refused on Server 2022 (2026-11-08) said only "access denied", a code
+ *  written by its caller, and the entry that held was lost.
  *  @param folder the folder
- *  @return true if it no longer exists afterwards */
-inline bool removeFolderTree(const std::wstring& folder) {
+ *  @param blocked receives, on a failure, the first entry that could not be
+ *         removed (below `folder`, or `folder` itself); may be null
+ *  @return S_OK if it no longer exists afterwards, otherwise that entry's
+ *          Win32 error as an HRESULT */
+inline HRESULT removeFolderTree(const std::wstring& folder, std::wstring* blocked = nullptr) {
 	const std::wstring root = extendedPath(folder);
-	if (GetFileAttributesW(root.c_str()) == INVALID_FILE_ATTRIBUTES) return true;
+	if (GetFileAttributesW(root.c_str()) == INVALID_FILE_ATTRIBUTES) return S_OK;
+	HRESULT first = S_OK;
+	// The first failure only: those after it (a parent not empty) follow from it.
+	auto failed = [&](const std::wstring& relative) {
+		if (SUCCEEDED(first)) {
+			first = HRESULT_FROM_WIN32(GetLastError());
+			if (blocked) *blocked = relative.empty() ? folder : folder + L"\\" + relative;
+		}
+	};
 	std::vector<std::wstring> folders{ L"" };   // in the order found: parents first
 	forEachFileBelow(folder, [&](const std::wstring& relative) {
 		const std::wstring file = extendedPath(root + L"\\" + relative);
-		SetFileAttributesW(file.c_str(), FILE_ATTRIBUTE_NORMAL);   // a read-only exhibit too
-		DeleteFileW(file.c_str());
+		// A read-only exhibit too. Its own failure is not read: the deletion
+		// right after says whether the file could go, with its own error.
+		SetFileAttributesW(file.c_str(), FILE_ATTRIBUTE_NORMAL);
+		if (!DeleteFileW(file.c_str())) failed(relative);
 	});
-	// The folders, listed parents first, removed children first.
+	// The folders, listed parents first, removed children first. A folder
+	// that cannot be listed is left: its removal below fails and says so.
 	for (size_t i = 0; i < folders.size(); ++i) {
 		const std::wstring here = extendedPath(folders[i].empty() ? root : root + L"\\" + folders[i]);
 		WIN32_FIND_DATAW found = {};
@@ -195,17 +213,25 @@ inline bool removeFolderTree(const std::wstring& folder) {
 		do {
 			const std::wstring name = found.cFileName;
 			if (name == L"." || name == L"..") continue;
+			const std::wstring child = folders[i].empty() ? name : folders[i] + L"\\" + name;
 			// A junction is removed as a folder, never entered: its target is not ours.
 			if ((found.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !(found.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
-				folders.push_back(folders[i].empty() ? name : folders[i] + L"\\" + name);
-			else if (found.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				RemoveDirectoryW(extendedPath(here + L"\\" + name).c_str());
+				folders.push_back(child);
+			else if ((found.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !RemoveDirectoryW(extendedPath(here + L"\\" + name).c_str()))
+				failed(child);
 		} while (FindNextFileW(h, &found));
 		FindClose(h);
 	}
 	for (size_t i = folders.size(); i-- > 0;)
-		RemoveDirectoryW(extendedPath(folders[i].empty() ? root : root + L"\\" + folders[i]).c_str());
-	return GetFileAttributesW(root.c_str()) == INVALID_FILE_ATTRIBUTES;
+		if (!RemoveDirectoryW(extendedPath(folders[i].empty() ? root : root + L"\\" + folders[i]).c_str()))
+			failed(folders[i]);
+	if (GetFileAttributesW(root.c_str()) == INVALID_FILE_ATTRIBUTES) return S_OK;
+	// Still there without a failure read: said as a folder not empty, of itself.
+	if (SUCCEEDED(first)) {
+		first = HRESULT_FROM_WIN32(ERROR_DIR_NOT_EMPTY);
+		if (blocked) *blocked = folder;
+	}
+	return first;
 }
 
 /*! The part of `path` below `folder` ("a\b.txt"), compared without case.

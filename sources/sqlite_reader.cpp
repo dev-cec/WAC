@@ -95,7 +95,11 @@ HRESULT SqliteDatabase::open(const std::wstring& file) {
 	/* The folders are numbered from 1 at each run: one left by an interrupted
 	   run is emptied first — its copy was kept (no overwrite), and its -wal
 	   replayed into another database copied beside it. */
-	if (!removeFolderTree(copyFolder_)) return HRESULT_FROM_WIN32(ERROR_CANNOT_MAKE);
+	std::wstring blocked;
+	if (const HRESULT removed = removeFolderTree(copyFolder_, &blocked); FAILED(removed)) {
+		log(2, L"🔥SQLite private copy of a previous run not deleted: " + blocked);
+		return removed;
+	}
 	std::error_code ec;
 	std::filesystem::create_directories(copyFolder_, ec);
 	if (ec) return HRESULT_FROM_WIN32(ERROR_CANNOT_MAKE);

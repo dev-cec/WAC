@@ -214,10 +214,14 @@ HRESULT prepareConversion() {
 
 	printStep(Text::StepRebuildWorkingCopy);
 	// Win32, whatever the depth: std::filesystem fails past MAX_PATH (long_path.h).
-	if (!removeFolderTree(workingFolder())) {
-		hr = HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
-		auditRecord(L"Deletion of the previous working copy", workingFolder(), hr, Footprint::USB_WRITE);
+	// Its own error and the entry that held, never a code of its own: a file
+	// kept open, a damaged folder and a denied access call for different acts.
+	std::wstring blocked;
+	hr = removeFolderTree(workingFolder(), &blocked);
+	if (FAILED(hr)) {
+		auditRecord(L"Deletion of the previous working copy", blocked, hr, Footprint::USB_WRITE);
 		printError(hr);
+		writeConsole(L"   " + blocked + L"\n");
 		return hr;
 	}
 	hr = ExhibitStoreCheckWorkingSpace(ExhibitStoreFreeSpace());
