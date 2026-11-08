@@ -14,9 +14,11 @@
 #   3. once the VM is off, the JSON and the manifest are read on the key,
 #      read-only (dissect.ntfs, vmtest/tools/target-venv), and checked.
 # The collection key, as on the field: WAC runs from a USB key and writes
-# there, never on the examined disk — a raw image (wac-kit-<vm>.img, 8 GiB,
-# sparse) attached as a removable USB disk of serial WACUSB0003, formatted
-# NTFS on the host (mkntfs, label WACKIT) when created: the diskpart of XP
+# there, never on the examined disk — a raw image (wac-kit-<vm>.img, 64 GiB,
+# sparse, as run-wac-test.sh's: WAC reserves twice its estimate, some 12 GiB
+# with the deleted files' 4 GiB, and refused 8 GiB on Server 2003, 2026-11-08)
+# attached as a removable USB disk of serial WACUSB0003, formatted NTFS on the
+# host (mkntfs, label WACKIT) when created: the diskpart of XP
 # and Server 2003 partitions no removable disk.
 # Few witnesses (no PowerShell): the checks confront what WAC gives with itself
 # and with the version's expectations; the decoders of XP's formats were
@@ -61,7 +63,7 @@ mkdir -p "$OUTPUT/reference"
 echo "== 0. Collection key == ($(date +%H:%M:%S))"
 KIT_IMG="$VMS/wac-kit-$DOM.img"
 if [[ ! -f "$KIT_IMG" ]]; then
-  truncate -s 8G "$KIT_IMG"
+  truncate -s 64G "$KIT_IMG"
   # Whole, without partition table, as many keys are; 512-byte sectors, no hidden sector.
   mkntfs -F -Q -L WACKIT -s 512 -p 0 -H 255 -S 63 "$KIT_IMG" >/dev/null
   echo "   key created and formatted NTFS"
@@ -133,6 +135,12 @@ $C start "$DOM" >/dev/null
 started=""
 for attempt in 1 2 3 4 5 6; do
   sleep 60
+  # Server 2003 from the evaluation kit opens its activation wizard at every
+  # logon, over the desktop: the Run box never had the focus (2026-11-08).
+  # "No, remind me" (Alt+O), then Next (Alt+N) — not Enter, which on a bare
+  # desktop opens the selected icon; neither key does anything there, nor on XP.
+  "${KEYS[@]}" key KEY_LEFTALT KEY_O >/dev/null; sleep 2
+  "${KEYS[@]}" key KEY_LEFTALT KEY_N >/dev/null; sleep 3
   "${KEYS[@]}" key KEY_LEFTMETA KEY_R >/dev/null; sleep 3
   "${KEYS[@]}" type 'cmd /c for %d in (D E F G H I) do if exist %d:\run-xp.cmd %d:\run-xp.cmd' >/dev/null
   "${KEYS[@]}" key KEY_ENTER >/dev/null
