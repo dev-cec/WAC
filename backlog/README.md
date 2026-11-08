@@ -86,6 +86,7 @@ dans un `git stash` (voir B-062).
 | [B-071](B-071-applications-serveur-et-journaux.md) | `server_applications` et `server_logs` : applications et journaux de serveur | à faire (5.0.0, code mis de côté) | P1 | moyen |
 | [B-072](B-072-traces-systeme.md) | `system_traces` : ce que Windows garde en plus | à faire (5.0.0, code mis de côté) | P1 | moyen |
 | [B-073](B-073-registre-des-outils.md) | `application_registry` : PuTTY, WinSCP, WinRAR et 7-Zip dans le registre | à faire (5.0.0, code mis de côté) | P2 | faible |
+| [B-074](B-074-revue-code-securite-5.0.md) | Revue de code et revue de sécurité de la 5.0.0 | à faire (en dernier) | P1 | fort |
 
 ## Réalisé
 
