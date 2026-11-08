@@ -42,6 +42,12 @@ struct TraceProduct {
 	 *  data or memory rather than traces of a program (crash dumps, Office's
 	 *  document cache): decision of 2026-11-08, wac.yml switches it on. */
 	bool onByDefault = true;
+	/*! Its logs write their date month first, "10/31/2026 01:04:23:981": read
+	 *  so for this product only — a date written so is two dates for any other. */
+	bool monthFirst = false;
+	/*! Its logs write UTC without saying so: measured by the harness, which
+	 *  compares a log's last line with the moment the file was last written. */
+	bool writesUtc = false;
 };
 
 /*! A group: one artefact, one section of wac.yml. */

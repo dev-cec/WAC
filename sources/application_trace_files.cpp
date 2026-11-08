@@ -3,6 +3,7 @@
  */
 #include "application_trace_files.h"
 #include "consigne.h"
+#include "conversions.h"
 #include "group_policies.h"
 #include "tools.h"
 #include "whole_file.h"
@@ -28,29 +29,11 @@ long long daysFromCivil(int year, unsigned month, unsigned day) {
 	return era * 146097 + static_cast<long long>(dayOfEra) - 719468;
 }
 
-//! The civil date of a count of days since 1970-01-01.
-void civilFromDays(long long days, int& year, unsigned& month, unsigned& day) {
-	days += 719468;
-	const long long era = (days >= 0 ? days : days - 146096) / 146097;
-	const unsigned dayOfEra = static_cast<unsigned>(days - era * 146097);
-	const unsigned yearOfEra = (dayOfEra - dayOfEra / 1460 + dayOfEra / 36524 - dayOfEra / 146096) / 365;
-	const unsigned dayOfYear = dayOfEra - (365 * yearOfEra + yearOfEra / 4 - yearOfEra / 100);
-	const unsigned monthIndex = (5 * dayOfYear + 2) / 153;
-	day = dayOfYear - (153 * monthIndex + 2) / 5 + 1;
-	month = monthIndex < 10 ? monthIndex + 3 : monthIndex - 9;
-	year = static_cast<int>(yearOfEra + era * 400) + (month <= 2);
-}
-
 //! Days of a month.
 unsigned daysInMonth(int year, unsigned month) {
 	static const unsigned DAYS[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	const bool leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
 	return DAYS[month - 1] + (month == 2 && leap ? 1 : 0);
-}
-
-//! Two digits, zero-padded.
-std::wstring twoDigits(unsigned value) {
-	return std::wstring(1, static_cast<wchar_t>(L'0' + value / 10)) + static_cast<wchar_t>(L'0' + value % 10);
 }
 
 //! Appends to a record, within TEXT_RECORD_MAX.
@@ -106,9 +89,35 @@ bool among(const std::wstring& extension, std::initializer_list<const wchar_t*> 
 	return false;
 }
 
+/*! An ISO 8601 time written to 100 ns ("…:SS.fffffff" then "Z" or an offset),
+ *  with exactly `digits` digits of fraction kept: those the source wrote.
+ *  @param iso the time, seven digits of fraction
+ *  @param digits the digits to keep, 0 to 7
+ *  @return the time, its fraction as the source gave it */
+std::wstring withFractionDigits(const std::wstring& iso, unsigned digits) {
+	const size_t point = iso.find(L'.', 19 < iso.size() ? 19 : iso.size());
+	if (point == std::wstring::npos || point + 8 > iso.size()) return iso;
+	return digits == 0 ? iso.substr(0, point) + iso.substr(point + 8) : iso.substr(0, point + 1 + digits) + iso.substr(point + 8);
+}
+
 } // namespace
 
-bool leadingTime(const std::wstring& line, WrittenTime& time) {
+void addRecordTimes(Json& row, const WrittenTime& time, bool writesUtc) {
+	if (time.asWritten.empty()) return;
+	const FILETIME written = filetimeFromTicks(time.ticks);
+	FILETIME utc = written;
+	if (time.hasOffset) utc = filetimeFromTicks(time.ticks - static_cast<int64_t>(time.offsetMinutes) * 600000000LL);
+	else if (!writesUtc) utc = suspectLocalToUtc(written);
+	if (utc.dwHighDateTime || utc.dwLowDateTime) {
+		row.add(L"Time", Json::str(withFractionDigits(utcTimeToIso8601Local(utc), time.fractionDigits)));
+		row.add(L"TimeUtc", Json::str(withFractionDigits(timeToIso8601Utc(utc), time.fractionDigits)));
+	}
+	if (!time.hasOffset) row.add(L"TimeZoneAssumed", Json::str(writesUtc ? L"UTC" : L"Local"));
+	if (time.fractionCut) row.add(L"TimePrecisionCut", Json::boolean(true));
+	row.add(L"TimeAsWritten", Json::str(time.asWritten));
+}
+
+bool leadingTime(const std::wstring& line, WrittenTime& time, bool monthFirst) {
 	size_t i = 0;
 	while (i < line.size() && (line[i] == L' ' || line[i] == L'\t')) ++i;
 	if (i < line.size() && (line[i] == L'[' || line[i] == L'<')) ++i;
@@ -124,57 +133,60 @@ bool leadingTime(const std::wstring& line, WrittenTime& time) {
 		i += count;
 		return true;
 	};
-	auto separator = [&](std::initializer_list<wchar_t> allowed, wchar_t& found) {
+	auto separator = [&](std::initializer_list<wchar_t> allowed) {
 		if (i >= line.size()) return false;
-		for (wchar_t c : allowed) if (line[i] == c) { found = c; ++i; return true; }
+		for (wchar_t c : allowed) if (line[i] == c) { ++i; return true; }
 		return false;
 	};
-	unsigned year, month, day, hour, minute, second;
-	wchar_t dateSeparator = 0, other = 0;
-	if (!number(4, year) || !separator({ L'-', L'/', L'.' }, dateSeparator) || !number(2, month)
-	    || !separator({ dateSeparator }, other) || !number(2, day) || !separator({ L' ', L'T' }, other)
-	    || !number(2, hour) || !separator({ L':' }, other) || !number(2, minute) || !separator({ L':' }, other)
-	    || !number(2, second)) return false;
+	unsigned year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
+	bool date = false;
+	if (monthFirst) date = number(2, month) && separator({ L'/' }) && number(2, day) && separator({ L'/' }) && number(4, year);
+	else {
+		date = number(4, year) && i < line.size() && (line[i] == L'-' || line[i] == L'/' || line[i] == L'.');
+		const wchar_t dateSeparator = date ? line[i++] : 0;
+		date = date && number(2, month) && separator({ dateSeparator }) && number(2, day);
+	}
+	if (!date || !separator({ L' ', L'T' }) || !number(2, hour) || !separator({ L':' }) || !number(2, minute)
+	    || !separator({ L':' }) || !number(2, second)) return false;
 	if (year < 1601 || year > 9999 || month < 1 || month > 12 || day < 1 || day > daysInMonth(static_cast<int>(year), month)
 	    || hour > 23 || minute > 59 || second > 59) return false;
-	std::wstring fraction;
-	if (i + 1 < line.size() && (line[i] == L'.' || line[i] == L',') && line[i + 1] >= L'0' && line[i + 1] <= L'9') {
+	// The fraction: "." or ","; ":" too where the product writes it so (NetSetup.log: 01:04:23:981).
+	unsigned fractionDigits = 0;
+	uint64_t fractionTicks = 0;
+	if (i + 1 < line.size() && (line[i] == L'.' || line[i] == L',' || (monthFirst && line[i] == L':'))
+	    && line[i + 1] >= L'0' && line[i + 1] <= L'9') {
 		size_t end = i + 1;
 		while (end < line.size() && end - i - 1 < 9 && line[end] >= L'0' && line[end] <= L'9') ++end;
-		fraction = line.substr(i + 1, end - i - 1);
+		fractionDigits = static_cast<unsigned>(end - i - 1);
+		for (size_t k = 0; k < 7; ++k)   // to 100 ns: seven digits, padded or cut
+			fractionTicks = fractionTicks * 10 + (k < fractionDigits ? static_cast<uint64_t>(line[i + 1 + k] - L'0') : 0);
 		i = end;
 	}
 	bool hasOffset = false;
-	long long offsetMinutes = 0;
+	int offsetMinutes = 0;
 	if (i < line.size() && line[i] == L'Z') { hasOffset = true; ++i; }
 	else if (i < line.size() && (line[i] == L'+' || line[i] == L'-')) {
 		const size_t signAt = i++;
 		unsigned hours = 0, minutes = 0;
-		wchar_t colon = 0;
-		if (number(2, hours) && (separator({ L':' }, colon), number(2, minutes)) && hours <= 14 && minutes <= 59) {
+		if (number(2, hours)) separator({ L':' });
+		if (hours <= 14 && number(2, minutes) && minutes <= 59) {
 			hasOffset = true;
-			offsetMinutes = (line[signAt] == L'-' ? -1 : 1) * static_cast<long long>(hours * 60 + minutes);
+			offsetMinutes = (line[signAt] == L'-' ? -1 : 1) * static_cast<int>(hours * 60 + minutes);
 		}
 		else i = signAt;   // not an offset: the time ends before the sign
 	}
+	// 134774 days from 1601-01-01 to 1970-01-01.
+	const long long days = daysFromCivil(static_cast<int>(year), month, day) + 134774;
 	time.asWritten = line.substr(start, i - start);
-	time.utc.clear();
-	if (hasOffset) {
-		const long long seconds = daysFromCivil(static_cast<int>(year), month, day) * 86400LL
-		                          + hour * 3600LL + minute * 60LL + second - offsetMinutes * 60;
-		long long days = seconds / 86400, rest = seconds % 86400;
-		if (rest < 0) { rest += 86400; --days; }
-		int y = 0;
-		unsigned m = 0, d = 0;
-		civilFromDays(days, y, m, d);
-		time.utc = std::to_wstring(y) + L"-" + twoDigits(m) + L"-" + twoDigits(d) + L"T" + twoDigits(static_cast<unsigned>(rest / 3600))
-		           + L":" + twoDigits(static_cast<unsigned>(rest % 3600 / 60)) + L":" + twoDigits(static_cast<unsigned>(rest % 60))
-		           + (fraction.empty() ? L"" : L"." + fraction) + L"Z";
-	}
+	time.ticks = static_cast<uint64_t>(days * 86400LL + hour * 3600LL + minute * 60LL + second) * 10000000ULL + fractionTicks;
+	time.hasOffset = hasOffset;
+	time.offsetMinutes = offsetMinutes;
+	time.fractionDigits = fractionDigits < 7 ? fractionDigits : 7;
+	time.fractionCut = fractionDigits > 7;
 	return true;
 }
 
-std::vector<TextRecord> textRecords(const std::wstring& text) {
+std::vector<TextRecord> textRecords(const std::wstring& text, bool monthFirst) {
 	std::vector<TextRecord> records;
 	size_t number = 0, position = 0;
 	while (position < text.size()) {
@@ -185,7 +197,7 @@ std::vector<TextRecord> textRecords(const std::wstring& text) {
 		if (!line.empty() && line.back() == L'\r') line.pop_back();
 		if (line.find_first_not_of(L" \t") == std::wstring::npos) continue;
 		WrittenTime time;
-		const bool dated = leadingTime(line, time);
+		const bool dated = leadingTime(line, time, monthFirst);
 		if (!dated && !records.empty() && !records.back().time.asWritten.empty()) {
 			appendBounded(records.back(), L"\n" + line);
 			continue;
@@ -291,13 +303,12 @@ HRESULT ApplicationTraceFiles::getData() {
 			}
 			log(2, L"🔥Malformed structured file, read as text: " + exhibit.sourcePath);
 		}
-		for (const TextRecord& record : textRecords(text)) {
+		for (const TextRecord& record : textRecords(text, owner.product->monthFirst)) {
 			Json row = Json::obj();
 			row.add(L"Product", Json::str(product));
 			row.add(L"File", Json::str(exhibit.sourcePath));
 			row.add(L"Line", Json::num(static_cast<unsigned long long>(record.line)));
-			row.add(L"TimeUtc", Json::str(record.time.utc));
-			row.add(L"TimeAsWritten", Json::str(record.time.asWritten));
+			addRecordTimes(row, record.time, owner.product->writesUtc);
 			row.add(L"Text", Json::str(record.text));
 			if (record.truncated) row.add(L"Truncated", Json::boolean(true));
 			rows_.push(std::move(row));

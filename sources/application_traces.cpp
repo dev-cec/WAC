@@ -291,9 +291,9 @@ std::vector<TraceProduct> serverLogs() {
 	return {
 		// A certification authority's database: who asked for which certificate. Open by its service: its logs with it.
 		{ "certificate_authority", L"Certification authority", { { L"\\Windows\\System32\\CertLog", { L".edb", L".log", L".chk", L".jfm", L".dat" }, 0 } } },
-		{ "dcpromo", L"Domain controller promotion", { { L"\\Windows\\debug", { L"dcpromo.log", L"dcpromoui*.log", L"dcpromo.bak", L"dcpromoui*.bak" }, 0 } } },
+		{ "dcpromo", L"Domain controller promotion", { { L"\\Windows\\debug", { L"dcpromo.log", L"dcpromoui*.log", L"dcpromo.bak", L"dcpromoui*.bak" }, 0 } }, true, true },
 		{ "netlogon", L"Netlogon", { { L"\\Windows\\debug", { L"netlogon.log", L"netlogon.bak" }, 0 } } },
-		{ "netsetup", L"Domain join", { { L"\\Windows\\debug", { L"NetSetup.log", L"NetSetup.LOG.*" }, 0 } } },
+		{ "netsetup", L"Domain join", { { L"\\Windows\\debug", { L"NetSetup.log", L"NetSetup.LOG.*" }, 0 } }, true, true },
 		// RADIUS: who connected through the VPN or the Wi-Fi.
 		{ "nps", L"Network Policy Server", { { L"\\Windows\\System32\\LogFiles", { L"IN*.log", L"IAS*.log" }, 0 } } },
 		{ "remote_access", L"Routing and Remote Access", { { L"\\Windows\\Tracing", { L".log" }, 0 } } },

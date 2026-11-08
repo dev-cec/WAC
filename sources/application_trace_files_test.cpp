@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <string>
 #include "application_trace_files.h"
+#include "conversions.h"
 #include "tools.h"
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
@@ -30,29 +31,68 @@ void check(bool ok, const char* what) {
 	if (!ok) { ++failures; std::printf("FAIL %s\n", what); }
 }
 
-//! The time read at the head of a line: "asWritten|utc", or "-" when none.
-std::wstring timeOf(const std::wstring& line) {
+//! The time read at the head of a line: "asWritten|clock|offset", the clock in
+//! ISO 8601 (no zone applied, written with a Z by timeToIso8601Utc), "-" when none.
+std::wstring timeOf(const std::wstring& line, bool monthFirst = false) {
 	WrittenTime time;
-	return leadingTime(line, time) ? time.asWritten + L"|" + time.utc : L"-";
+	if (!leadingTime(line, time, monthFirst)) return L"-";
+	return time.asWritten + L"|" + timeToIso8601Utc(filetimeFromTicks(time.ticks)) + L"|"
+	       + (time.hasOffset ? std::to_wstring(time.offsetMinutes) : std::wstring(L"none"));
+}
+
+//! The TimeUtc addRecordTimes writes for a line.
+std::wstring utcOf(const std::wstring& line, bool writesUtc) {
+	WrittenTime time;
+	leadingTime(line, time);
+	Json row = Json::obj();
+	addRecordTimes(row, time, writesUtc);
+	const Json* utc = row.find(L"TimeUtc");
+	const Json* assumed = row.find(L"TimeZoneAssumed");
+	return (utc ? utc->text() : L"") + L"|" + (assumed ? assumed->text() : L"");
 }
 
 void testTimes() {
-	check(timeOf(L"2026-11-08 14:03:21.457 Connection from 10.0.0.5") == L"2026-11-08 14:03:21.457|", "ISO without offset: as written, no UTC");
-	check(timeOf(L"2026-11-08T14:03:21Z sshd started") == L"2026-11-08T14:03:21Z|2026-11-08T14:03:21Z", "ISO in UTC");
-	check(timeOf(L"2026-11-08T14:03:21+01:00 x") == L"2026-11-08T14:03:21+01:00|2026-11-08T13:03:21Z", "an offset is applied");
-	check(timeOf(L"2026-01-01 00:30:00-0130 x") == L"2026-01-01 00:30:00-0130|2026-01-01T02:00:00Z", "a negative offset without colon");
-	check(timeOf(L"2026-03-01 00:15:00.5+02:00 x") == L"2026-03-01 00:15:00.5+02:00|2026-02-28T22:15:00.5Z", "a day back across a month");
-	check(timeOf(L"2026/11/08 14:03:21 [error] 123#456: open() failed") == L"2026/11/08 14:03:21|", "nginx's slashes");
-	check(timeOf(L"[2026-11-08 14:03:21,123] INFO x") == L"2026-11-08 14:03:21,123|", "a bracket and a comma before the fraction");
-	check(timeOf(L"  <2026.11.08 14:03:21> x") == L"2026.11.08 14:03:21|", "blanks, an angle bracket, dots");
+	check(timeOf(L"2026-11-08 14:03:21.457 Connection from 10.0.0.5") == L"2026-11-08 14:03:21.457|2026-11-08T14:03:21.4570000Z|none",
+	      "ISO without offset: its clock, no offset");
+	check(timeOf(L"2026-11-08T14:03:21Z sshd started") == L"2026-11-08T14:03:21Z|2026-11-08T14:03:21.0000000Z|0", "ISO in UTC");
+	check(timeOf(L"2026-11-08T14:03:21+01:00 x") == L"2026-11-08T14:03:21+01:00|2026-11-08T14:03:21.0000000Z|60", "an offset east");
+	check(timeOf(L"2026-01-01 00:30:00-0130 x") == L"2026-01-01 00:30:00-0130|2026-01-01T00:30:00.0000000Z|-90", "a negative offset without colon");
+	check(timeOf(L"2026/11/08 14:03:21 [error] 123#456: open() failed") == L"2026/11/08 14:03:21|2026-11-08T14:03:21.0000000Z|none", "nginx's slashes");
+	check(timeOf(L"[2026-11-08 14:03:21,123] INFO x") == L"2026-11-08 14:03:21,123|2026-11-08T14:03:21.1230000Z|none", "a bracket and a comma before the fraction");
+	check(timeOf(L"  <2026.11.08 14:03:21> x") == L"2026.11.08 14:03:21|2026-11-08T14:03:21.0000000Z|none", "blanks, an angle bracket, dots");
+	check(timeOf(L"2026-11-08 14:03:21.123456789 x") == L"2026-11-08 14:03:21.123456789|2026-11-08T14:03:21.1234567Z|none", "nine digits kept to 100 ns");
+	check(timeOf(L"10/31/2026 01:04:23:981 NetpDoDomainJoin", true) == L"10/31/2026 01:04:23:981|2026-10-31T01:04:23.9810000Z|none",
+	      "month first, for a product that declares it, its fraction after a colon");
+	check(timeOf(L"10/31/2026 01:04:23:981 NetpDoDomainJoin") == L"-", "month first, for any other product, is not read");
+	check(timeOf(L"2026-11-08 14:03:21 x", true) == L"-", "a product month first reads no other form");
 	check(timeOf(L"08/11/2026 14:03:21 x") == L"-", "a day-first or month-first date is not read");
 	check(timeOf(L"2026-02-30 10:00:00 x") == L"-", "an impossible day is not a time");
 	check(timeOf(L"2026-11-08 24:00:00 x") == L"-", "an impossible hour is not a time");
 	check(timeOf(L"2026-11-08 x") == L"-", "a date without a time is not read");
-	check(timeOf(L"2026-11-08 14:03:21 -connect") == L"2026-11-08 14:03:21|", "a sign that is no offset ends the time");
-	check(timeOf(L"2026-11-08 14:03:21+25:00") == L"2026-11-08 14:03:21|", "an impossible offset is not applied");
+	check(timeOf(L"2026-11-08 14:03:21 -connect") == L"2026-11-08 14:03:21|2026-11-08T14:03:21.0000000Z|none", "a sign that is no offset ends the time");
+	check(timeOf(L"2026-11-08 14:03:21+25:00") == L"2026-11-08 14:03:21|2026-11-08T14:03:21.0000000Z|none", "an impossible offset is not applied");
 	check(timeOf(L"Connection from 10.0.0.5") == L"-", "no time");
 	check(timeOf(L"") == L"-", "an empty line");
+	// The instant written: an offset applied, a product writing UTC taken as is.
+	check(utcOf(L"2026-11-08T14:03:21.123+01:00 x", false) == L"2026-11-08T13:03:21.123Z|", "an offset east, applied, nothing assumed");
+	check(utcOf(L"2026-03-01 00:15:00.5+02:00 x", false) == L"2026-02-28T22:15:00.5Z|", "an offset across a month, the one digit written, none invented");
+	check(utcOf(L"2026-01-01 00:30:00-0130 x", false) == L"2026-01-01T02:00:00Z|", "an offset west");
+	check(utcOf(L"2026-11-08 14:03:21 x", true) == L"2026-11-08T14:03:21Z|UTC", "a product writing UTC: its clock, said so");
+	{
+		WrittenTime time;
+		leadingTime(L"2026-11-08T14:03:21.123456789Z x", time);
+		Json row = Json::obj();
+		addRecordTimes(row, time, false);
+		const Json* utc = row.find(L"TimeUtc");
+		check(utc && utc->text() == L"2026-11-08T14:03:21.1234567Z" && row.find(L"TimePrecisionCut") && row.find(L"TimeAsWritten")
+		      && row.find(L"TimeAsWritten")->text() == L"2026-11-08T14:03:21.123456789Z", "past 100 ns: cut, said, the text kept");
+		WrittenTime exact;
+		leadingTime(L"2026-11-08T14:03:21.1234567Z x", exact);
+		Json kept = Json::obj();
+		addRecordTimes(kept, exact, false);
+		check(!kept.find(L"TimePrecisionCut") && kept.find(L"TimeUtc") && kept.find(L"TimeUtc")->text() == L"2026-11-08T14:03:21.1234567Z",
+		      "seven digits: all kept, nothing said");
+	}
 }
 
 void testRecords() {

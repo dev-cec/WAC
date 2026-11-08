@@ -1,14 +1,17 @@
 # application-traces-witness.ps1 — witnesses of the applications' traces
 # (application_traces.h, application_trace_files.h): files of known content
 # where products write them, which check-json.py finds again in <group>.json.
-#   - TeamViewer's log, a dated line without offset and its continuation, and
-#     beside it a decoy the product's filter does not take;
+#   - TeamViewer's log, a line dated NOW in local time, without offset — the
+#     conversion reads it as the machine's local time: its UTC, as Windows
+#     computes it here, is the reference —, its continuation, and beside it a
+#     decoy the product's filter does not take;
 #   - OpenSSH server's log, a line whose time carries its offset;
 #   - WinSCP.ini and FileZilla's sitemanager.xml, each holding a password the
 #     conversion must leave out;
 #   - a pCloud database, listed, not converted;
 #   - a crash dump, a product off by default: never taken.
-# The values are fixed: the reference is this script, copied into
+# The values are fixed but TeamViewer's time, the moment of the run: the
+# reference, with that time and its UTC, goes to
 # <Out>\application-traces-reference.json for check-json.py.
 # PowerShell 2 (Server 2008 R2): no cmdlet younger than it.
 param([Parameter(Mandatory = $true)][string]$Out)
@@ -20,9 +23,12 @@ function Put([string]$path, [string]$text) {
     New-Item -ItemType Directory -Force (Split-Path $path) | Out-Null
     [IO.File]::WriteAllText($path, $text, $utf8)
 }
+$now = Get-Date
+$written = $now.ToString('yyyy/MM/dd HH:mm:ss.fff', [Globalization.CultureInfo]::InvariantCulture)
+$expectedUtc = $now.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", [Globalization.CultureInfo]::InvariantCulture)
 $teamViewer = "$profilePath\AppData\Roaming\TeamViewer\TeamViewer15_Logfile.log"
 Put $teamViewer ("header of the witness log`r`n" +
-    "2026/11/08 14:03:21.457  4242  5150 S0   wac-trace-witness incoming connection from 10.0.0.5`r`n" +
+    "$written  4242  5150 S0   wac-trace-witness incoming connection from 10.0.0.5`r`n" +
     "   wac-trace-witness continuation`r`n")
 $decoy = "$profilePath\AppData\Roaming\TeamViewer\wac-trace-decoy.txt"
 Put $decoy "2026-11-08 14:03:21 wac-trace-decoy: TeamViewer's filter does not take this name`r`n"
@@ -42,6 +48,8 @@ New-Item -ItemType Directory -Force (Split-Path $dump) | Out-Null
 $reference = @"
 {
  "TeamViewerLog": "$($teamViewer.Replace('\', '\\'))",
+ "TeamViewerWritten": "$written",
+ "TeamViewerUtc": "$expectedUtc",
  "Decoy": "$($decoy.Replace('\', '\\'))",
  "SshLog": "$($ssh.Replace('\', '\\'))",
  "WinScp": "$($winscp.Replace('\', '\\'))",

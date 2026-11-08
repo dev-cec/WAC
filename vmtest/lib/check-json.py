@@ -519,6 +519,7 @@ def cross_checks(folder):
     found += guarded(check_controller_events, folder)
     found += guarded(check_server_roles, folder)
     found += guarded(check_application_traces, folder)
+    found += guarded(check_assumed_time_zones, folder)
     found += guarded(check_user_access_log, folder)
     found += guarded(check_web_server, folder)
     found += guarded(check_web_installations, folder)
@@ -3556,6 +3557,68 @@ def is_domain_controller(folder):
         return False
 
 
+def check_assumed_time_zones(folder):
+    """Every converted log whose time zone was assumed (TimeZoneAssumed): its
+    last record's instant against the moment its file was last written
+    (SourceModifiedUtc of the manifest, from $STANDARD_INFORMATION). A product
+    rightly read as local time ends within minutes of its write; one that
+    writes UTC, read as local, ends the machine's offset away — its products
+    are named, to be declared writesUtc (backlog B-077). Other gaps (a file
+    touched after its last line) say nothing either way."""
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    written = {str(i.get("SourcePath", "")).lower(): i.get("SourceModifiedUtc") for i in items if i.get("SourceModifiedUtc")}
+    if not written:
+        return 0
+    def instant(text):
+        m = re.match(r"(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:\.(\d+))?(Z|[+-]\d\d:\d\d)$", str(text or ""))
+        if not m:
+            return None
+        moment = datetime.datetime(*map(int, m.groups()[:6]), tzinfo=datetime.timezone.utc)
+        moment += datetime.timedelta(microseconds=int((m.group(7) or "0")[:6].ljust(6, "0")))
+        if m.group(8) != "Z":
+            sign = 1 if m.group(8)[0] == "+" else -1
+            moment -= sign * datetime.timedelta(hours=int(m.group(8)[1:3]), minutes=int(m.group(8)[4:6]))
+        return moment
+    def offset_of(text):
+        m = re.search(r"([+-])(\d\d):(\d\d)$", str(text or ""))
+        return (1 if m.group(1) == "+" else -1) * (int(m.group(2)) * 3600 + int(m.group(3)) * 60) if m else None
+    groups = ("antivirus", "cloud_storage", "file_transfer", "messaging", "remote_administration", "server_applications",
+              "server_logs", "ssh", "system_traces", "virtualisation", "vpn")
+    local, utc, unclear = {}, {}, {}
+    for group in groups:
+        data = load(folder, group + ".json")
+        last = {}
+        for row in data if isinstance(data, list) else []:
+            if row.get("TimeZoneAssumed") and row.get("TimeUtc"):
+                key = str(row.get("File", "")).lower()
+                if key not in last or row.get("Line", 0) > last[key].get("Line", 0):
+                    last[key] = row
+        for key, row in last.items():
+            modified, end, offset = instant(written.get(key)), instant(row["TimeUtc"]), offset_of(row.get("Time"))
+            if not modified or not end:
+                continue
+            gap = (modified - end).total_seconds()
+            product = f"{row.get('Product')} ({row.get('TimeZoneAssumed')})"
+            if -120 <= gap <= 1800:
+                local.setdefault(product, []).append(gap)
+            elif offset and abs(abs(gap) - abs(offset)) <= 300:
+                utc.setdefault(product, []).append((key, gap))
+            else:
+                unclear.setdefault(product, []).append((key, gap))
+    found = 0
+    if local:
+        print(f"  ✅ assumed time zones: the last record of {sum(len(v) for v in local.values())} log(s) within minutes "
+              f"of its file's last write — {sorted(local)}")
+    for product, files in sorted(utc.items()):
+        print(f"  ❌ assumed time zones: {product} ends the machine's offset away from its last write: it writes the other "
+              f"zone (B-077) — {[(f, round(g)) for f, g in files[:3]]}")
+        found += 1
+    for product, files in sorted(unclear.items()):
+        print(f"  ℹ️  assumed time zones: {product}, last record {[round(g / 60) for _, g in files[:3]]} min before the last write: not conclusive")
+    return found
+
+
 def check_application_traces(folder):
     """The applications' traces (application-traces-witness.ps1), found again in
     their group's JSON as the generic conversion writes them: TeamViewer's
@@ -3584,14 +3647,16 @@ def check_application_traces(folder):
     teamviewer = of(remote, reference["TeamViewerLog"])
     dated = [r for r in teamviewer if "incoming connection" in str(r.get("Text", ""))]
     report(len(dated) == 1 and dated[0].get("Product") == "TeamViewer" and dated[0].get("Line") == 2
-           and dated[0].get("TimeAsWritten") == "2026/11/08 14:03:21.457" and "TimeUtc" not in dated[0]
+           and dated[0].get("TimeAsWritten") == reference["TeamViewerWritten"] and dated[0].get("TimeUtc") == reference["TeamViewerUtc"]
+           and dated[0].get("TimeZoneAssumed") == "Local" and str(dated[0].get("Time", "")).startswith(reference["TeamViewerWritten"][:10].replace("/", "-"))
            and "wac-trace-witness continuation" in str(dated[0].get("Text", "")),
-           "remote_administration.json: TeamViewer's witness line, its time as written, no UTC, its continuation",
-           f"remote_administration.json: TeamViewer's witness line not as expected: {teamviewer[:3]}")
+           f"remote_administration.json: TeamViewer's witness line, written {reference['TeamViewerWritten']} local, "
+           f"{reference['TeamViewerUtc']} as Windows computes it, to the millisecond; its continuation",
+           f"remote_administration.json: TeamViewer's witness line not as expected (UTC {reference['TeamViewerUtc']}): {teamviewer[:3]}")
     report(not of(remote, reference["Decoy"]), "remote_administration.json: the decoy TeamViewer's filter does not take, absent",
            "remote_administration.json: the decoy was taken")
     ssh = of(rows("ssh"), reference["SshLog"])
-    report(len(ssh) == 1 and ssh[0].get("TimeUtc") == "2026-11-08T13:03:21.123Z",
+    report(len(ssh) == 1 and ssh[0].get("TimeUtc") == "2026-11-08T13:03:21.123Z" and "TimeZoneAssumed" not in ssh[0],
            "ssh.json: OpenSSH's witness line, its offset applied (13:03:21.123Z)",
            f"ssh.json: OpenSSH's witness line not as expected: {ssh[:2]}")
     transfer = rows("file_transfer")
