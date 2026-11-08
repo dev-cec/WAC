@@ -518,6 +518,7 @@ def cross_checks(folder):
     found += guarded(check_group_policies, folder)
     found += guarded(check_controller_events, folder)
     found += guarded(check_server_roles, folder)
+    found += guarded(check_application_traces, folder)
     found += guarded(check_user_access_log, folder)
     found += guarded(check_web_server, folder)
     found += guarded(check_web_installations, folder)
@@ -3553,6 +3554,67 @@ def is_domain_controller(folder):
             return f.read().strip().endswith("|2")
     except OSError:
         return False
+
+
+def check_application_traces(folder):
+    """The applications' traces (application-traces-witness.ps1), found again in
+    their group's JSON as the generic conversion writes them: TeamViewer's
+    witness line with its time as written, no UTC since it gives no offset, and
+    its continuation; the decoy beside it not taken; OpenSSH's line with its
+    instant in UTC; WinSCP.ini and FileZilla's sitemanager.xml as their
+    structure, their passwords nowhere in the file; a pCloud database listed,
+    not converted; a crash dump, off by default, absent from the manifest."""
+    path = os.path.join(folder, "reference", "application-traces.json")
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8-sig") as f:
+        reference = json.load(f)
+    found = 0
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  {'✅' if ok else '❌'} {success if ok else failure}")
+        found += 0 if ok else 1
+    def rows(group):
+        data = load(folder, group + ".json")
+        return data if isinstance(data, list) else []
+    def of(entries, file):
+        return [r for r in entries if str(r.get("File", "")).lower() == file.lower()]
+
+    remote = rows("remote_administration")
+    teamviewer = of(remote, reference["TeamViewerLog"])
+    dated = [r for r in teamviewer if "incoming connection" in str(r.get("Text", ""))]
+    report(len(dated) == 1 and dated[0].get("Product") == "TeamViewer" and dated[0].get("Line") == 2
+           and dated[0].get("TimeAsWritten") == "2026/11/08 14:03:21.457" and "TimeUtc" not in dated[0]
+           and "wac-trace-witness continuation" in str(dated[0].get("Text", "")),
+           "remote_administration.json: TeamViewer's witness line, its time as written, no UTC, its continuation",
+           f"remote_administration.json: TeamViewer's witness line not as expected: {teamviewer[:3]}")
+    report(not of(remote, reference["Decoy"]), "remote_administration.json: the decoy TeamViewer's filter does not take, absent",
+           "remote_administration.json: the decoy was taken")
+    ssh = of(rows("ssh"), reference["SshLog"])
+    report(len(ssh) == 1 and ssh[0].get("TimeUtc") == "2026-11-08T13:03:21.123Z",
+           "ssh.json: OpenSSH's witness line, its offset applied (13:03:21.123Z)",
+           f"ssh.json: OpenSSH's witness line not as expected: {ssh[:2]}")
+    transfer = rows("file_transfer")
+    transfer_text = json.dumps(transfer)
+    for name, key, secret, kept, form in (("WinSCP.ini", "WinScp", "wac-trace-secret-1", "witness.example", "INI"),
+                                          ("sitemanager.xml", "FileZilla", "wac-trace-secret-2", "wac-trace-witness.example", "XML")):
+        entry = of(transfer, reference[key])
+        report(len(entry) == 1 and entry[0].get("Format") == form and entry[0].get("HasPassword") is True
+               and kept in json.dumps(entry) and secret not in transfer_text,
+               f"file_transfer.json: {name} as {form}, its host kept, its password left out and said",
+               f"file_transfer.json: {name} not as expected, or its password written: {entry[:1]}")
+    cloud = of(rows("cloud_storage"), reference["PCloud"])
+    report(len(cloud) == 1 and cloud[0].get("Converted") is False and "database" in str(cloud[0].get("Reason", "")),
+           "cloud_storage.json: pCloud's witness database listed, not converted",
+           f"cloud_storage.json: pCloud's witness database not as expected: {cloud[:1]}")
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
+    if items:
+        taken = [i for i in items if str(i.get("SourcePath", "")).lower() == reference["CrashDump"].lower()]
+        report(not taken and not of(rows("system_traces"), reference["CrashDump"]),
+               "system_traces: the crash dump, off by default, neither collected nor converted",
+               "system_traces: the crash dump, off by default, was collected")
+    return found
 
 
 def check_server_roles(folder):

@@ -391,6 +391,21 @@ if wants dns_server dhcp_server hyperv; then
   $QGA run --shell "del $VMDIR\\server-roles-witness.ps1 $VMDIR\\server-roles-reference.json 2>nul & exit /b 0" >/dev/null 2>&1 || true
 fi
 
+# The applications' traces: files of known content where products write them
+# (application-traces-witness.ps1) — a dated log line and its continuation, a
+# line with its offset, configurations holding a password, a database, a crash
+# dump off by default. Left in place as witnesses, rewritten at each cycle.
+if wants remote_administration ssh file_transfer cloud_storage system_traces; then
+  $QGA write "$HERE/guest/application-traces-witness.ps1" "$VMDIR\\application-traces-witness.ps1" >/dev/null
+  if $QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\application-traces-witness.ps1" -Out "$VMDIR" >/dev/null 2>&1; then
+    $QGA read "$VMDIR\\application-traces-reference.json" "$OUTPUT/reference/application-traces.json" >/dev/null \
+      && echo "   + reference/application-traces.json" || echo "   ⚠️ applications' traces reference not read"
+  else
+    echo "   ⚠️ applications' traces witnesses not placed"
+  fi
+  $QGA run --shell "del $VMDIR\\application-traces-witness.ps1 $VMDIR\\application-traces-reference.json 2>nul & exit /b 0" >/dev/null 2>&1 || true
+fi
+
 # User Access Logging: an access of known origin, then the service stopped, which
 # writes it to the databases; it stays stopped through both collections, that of
 # step 4 and the separate one of step 7, and the reference is copied between them
