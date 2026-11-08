@@ -121,6 +121,14 @@ expect "sealed manifest without Items refused" "$WORK/noitems" 1 0 1
 make_collection "$WORK/itemsobject" 'items = {"a": items[0]}'
 expect "sealed manifest whose Items is no list refused" "$WORK/itemsobject" 1 0 1
 
+# A name holding a lone half of a surrogate pair, as Server 2016 names its User
+# Access Logging databases (U+6630 U+DB1C U+0239), written by WAC as \uXXXX: it
+# used to refuse the whole manifest. The file is named by the generalised UTF-8
+# of those units.
+make_collection "$WORK/surrogate" 'import hashlib; items.append({"ExhibitPath": "exhibits\\昰\udb1cȹ", "Result": "OK", "SHA256": hashlib.sha256(b"lone half\n").hexdigest().upper()})'
+printf 'lone half\n' > "$WORK/surrogate/exhibits/$(printf '\346\230\260\355\254\234\310\271')"
+expect "a name with a lone surrogate half verified" "$WORK/surrogate" 0 3 0
+
 # The seal written down at the collection: the same accepted, another refused —
 # a manifest and MANIFEST.sha256 rewritten together are caught by it alone.
 noted="$(head -c 64 "$WORK/intact/exhibits/MANIFEST.sha256")"

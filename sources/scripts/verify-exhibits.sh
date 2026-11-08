@@ -107,7 +107,12 @@ for item in items:
         continue
     sha = str(item.get("SHA256") or "").replace("\0", "")
     path = str(item.get("ExhibitPath") or "").replace("\0", "")
-    out.write(b"S\0" + sha.encode() + b"\0" + path.encode("utf-8", "surrogateescape") + b"\0")
+    # A lone half of a surrogate pair (Server 2016's User Access Logging
+    # databases) cannot be UTF-8: "surrogateescape" covers U+DC80-U+DCFF only,
+    # and any other half refused the whole manifest. Written as generalised
+    # UTF-8 ("surrogatepass"): only that exhibit then fails, when the system
+    # names the file otherwise.
+    out.write(b"S\0" + sha.encode() + b"\0" + path.encode("utf-8", "surrogatepass") + b"\0")
 PYTHON
 }
 
