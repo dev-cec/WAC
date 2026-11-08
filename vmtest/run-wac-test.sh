@@ -168,9 +168,11 @@ KIT_IMG="${WAC_KIT_IMG:-$HOME/vms/wac-kit$USB_SUFFIX.img}"
 attach_usb_key "$KIT_IMG" WACUSB0003 sdx || { echo "❌ collection key not attached"; exit 1; }
 $QGA run --shell "if not exist $VMDIR mkdir $VMDIR" >/dev/null
 $QGA write "$HERE/guest/prepare-wac-key.ps1" "$VMDIR\\prepare-wac-key.ps1" >/dev/null
-KIT_LETTER=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\prepare-wac-key.ps1" 2>/dev/null | tr -d '\r' | tail -1 || true)
+KIT_SAID=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\prepare-wac-key.ps1" 2>/dev/null | tr -d '\r' || true)
+KIT_LETTER=$(tail -1 <<< "$KIT_SAID")
 $QGA run --shell "del $VMDIR\\prepare-wac-key.ps1 2>nul & exit /b 0" >/dev/null 2>&1 || true
-[[ "$KIT_LETTER" =~ ^[A-Z]$ ]] || { echo "❌ collection key not ready: $KIT_LETTER"; exit 1; }
+# On failure, all the script said (diskpart's answer among it), not its verdict only.
+[[ "$KIT_LETTER" =~ ^[A-Z]$ ]] || { echo "❌ collection key not ready: $KIT_LETTER"; sed 's/^/     /' <<< "$KIT_SAID"; exit 1; }
 WACDIR="$KIT_LETTER:\\wac"
 echo "   WAC runs from $WACDIR"
 

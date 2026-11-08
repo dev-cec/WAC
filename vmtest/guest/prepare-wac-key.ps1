@@ -20,8 +20,9 @@ if (-not $volume) {
     Set-Content -Path $script -Encoding ASCII -Value @(
         "select disk $($disk.Index)", 'clean', 'create partition primary',
         "format fs=ntfs label=$label quick", "assign letter=$letter")
-    try { & diskpart.exe /s $script | Out-Null } finally { Remove-Item $script -ErrorAction SilentlyContinue }
+    try { $said = & diskpart.exe /s $script } finally { Remove-Item $script -ErrorAction SilentlyContinue }
     for ($i = 0; $i -lt 30 -and -not $volume; $i++) { Start-Sleep 2; $volume = KeyVolume }
-    if (-not $volume) { Write-Output 'not formatted'; exit 1 }
+    # What diskpart said, before the verdict: the reason of a failure.
+    if (-not $volume) { $said | Where-Object { $_ -match '\S' } | ForEach-Object { "diskpart: $_" }; Write-Output 'not formatted'; exit 1 }
 }
 Write-Output $volume.DriveLetter.Substring(0, 1)

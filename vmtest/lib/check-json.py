@@ -3695,9 +3695,16 @@ def check_user_access_clients(clients, mine_clients, names, holding, filetime, a
     report(clients and not wrong, f"user_access_log.json: the {len(clients)} row(s) of CLIENTS, role, account, address, first date and days, as dissect.esedb reads them",
            f"user_access_log.json: {len(wrong)} difference(s) for {len(clients)} row(s): {wrong[:3]}")
     # The databases that hold a row, under their names as the folder gives them, a name without extension among them.
+    # A later collection (the separate one) follows the restart of the service after the reference: on
+    # Server 2016 that stop moved Current.mdb's rows into a new database, absent from the reference
+    # (2026-11-07: the 4 rows found, Current.mdb's in "袰睥ɜ"). Current.mdb may then be missing,
+    # only when WAC reads a database the reference does not hold.
     theirs = {str(r.get("Database", "")).lower() for r in mine_clients}
-    report(holding and holding <= theirs, f"user_access_log.json: the {len(holding)} database(s) holding rows, under their names {sorted(ascii(n) for n in holding)[:4]}",
-           f"user_access_log.json: database(s) holding rows not read: {sorted(ascii(n) for n in holding - theirs)[:4]}")
+    unread = holding - theirs
+    if unread == {"current.mdb"} and theirs - holding:
+        unread = set()
+    report(holding and not unread, f"user_access_log.json: the {len(holding)} database(s) holding rows, under their names {sorted(ascii(n) for n in holding)[:4]}",
+           f"user_access_log.json: database(s) holding rows not read: {sorted(ascii(n) for n in unread)[:4]}")
     witness = [r for r in mine_clients if r.get("Address") in ("127.0.0.1", "::1") and "wac" in r.get("AuthenticatedUserName", "").lower()]
     dated = [d for r in witness for d in r.get("Days", []) if d.get("Date") == r.get("LastAccessUtc", "")[:10]]
     report(witness and dated, "user_access_log.json: the witness's own connection, with the day of its last access",
