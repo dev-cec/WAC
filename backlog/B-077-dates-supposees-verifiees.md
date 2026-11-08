@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire (avant la revue B-074) | P1 | moyen |
+| en cours (avant la revue B-074) | P1 | moyen |
 
 ## Pourquoi
 Demande de l'utilisateur (2026-11-08) : « l'exactitude des dates avec la précision maximale est la priorité absolue ». La conversion générique des traces d'applications (B-076) écrit toutes les dates sous la même forme (`Time` local avec décalage, `TimeUtc`), décision de l'utilisateur du même jour. Une date écrite sans fuseau y est **supposée** à l'heure locale de la machine examinée (`TimeZoneAssumed: Local`), ou UTC pour un produit mesuré comme tel (`TraceProduct::writesUtc`). Une supposition fausse place chaque événement du produit à côté d'une heure (ou plus) dans la chronologie, sans que rien ne le montre : la sortie reste valide. Chaque supposition doit donc être vérifiée par un test, pas seulement raisonnée.
@@ -33,8 +33,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Les produits non mesurables (absents des VM) listés comme tels dans la documentation, leur supposition marquée non vérifiée.
 
 ## Tâches
-- [ ] Contrôle automatique « dernier enregistrement contre dernière écriture » dans `check-json.py`, sur tous les journaux convertis
-- [ ] Précision exacte : chiffres écrits = chiffres de la source ; coupe au-delà de 100 ns dite
+- [x] Contrôle automatique « dernier enregistrement contre dernière écriture » dans `check-json.py`, sur tous les journaux convertis
+- [x] Précision exacte : chiffres écrits = chiffres de la source ; coupe au-delà de 100 ns dite
 - [ ] Mesure provoquée (OpenSSH, outils installables)
 - [ ] Cycle sur une VM à un autre fuseau
 - [ ] Témoins du changement d'heure
@@ -43,3 +43,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-11-08 : créée à la demande de l'utilisateur ; l'exactitude des dates, à la précision maximale, est la priorité absolue.
+- 2026-11-08 : mesure 1 en place (087d1652). Cycles ciblés, **Windows 11 61 ✅, 0 ❌ ; Server 2025 61 ✅, 0 ❌**. Témoin TeamViewer daté de l'heure d'exécution : 22:14:16.968 heure de Paris lu 21:14:16.968Z, l'UTC que Windows calcule, à la milliseconde (de même sur Server 2025). Heure locale confirmée (dernier enregistrement à quelques minutes de la dernière écriture) : Windows 11 — jonction au domaine (`NetSetup.log`, mois en premier), TeamViewer, journaux d'installation de Windows ; Server 2025 — TeamViewer, journaux d'installation. **Non concluant** : `NetSetup.log` de Server 2025, dernière ligne 480 min avant la dernière écriture du fichier — ni zéro, ni le décalage de la VM (60 min) : fichier touché après sa dernière ligne, ou lignes écrites avant le réglage du fuseau à l'installation (le fuseau par défaut d'une installation est celui du Pacifique). À examiner. Précision exacte faite dans le même commit.
