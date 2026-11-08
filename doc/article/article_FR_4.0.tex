@@ -8,7 +8,7 @@
 %
 % Every figure comes from the validation and harmlessness files
 % (doc/validation, doc/harmlessness) and the backlog, measured from 31 October
-% to 4 November 2026 on the code of 4.0. Backlog B-061.
+% to 8 November 2026 on the code of 4.0. Backlog B-061.
 
 \documentclass[10pt,a4paper,twocolumn]{article}
 \usepackage[french]{babel}
@@ -49,7 +49,8 @@
   volumes en brut, sans rien écrire sur la machine examinée, et couvre les
   postes de XP~SP1 à Windows~11. La version 4.0 passe aux serveurs : toutes les
   générations de Server~2003 à 2025, les annuaires des contrôleurs de domaine,
-  les stratégies de groupe et les serveurs web.}\par
+  les stratégies de groupe, les serveurs web et les rôles DNS, DHCP et
+  Hyper-V.}\par
   \vspace{0.9em}
 }]
 
@@ -60,7 +61,9 @@ le cycle de test sur le serveur lui-même, et ce passage a trouvé ce qu'un post
 ne montrait pas : un bloc LZX final de taille impaire qui faisait lire
 \fichier{shell32.dll} à moitié, des formats anciens de
 Defender, le ShimCache de Server~2003, désormais décodé. Server~2008 hors R2
-n'est pas mesuré, faute d'image officielle.
+n'est pas mesuré, faute d'image officielle. Les cycles tournent comme sur le
+terrain : \wac{} est lancé depuis une clé USB et y écrit, jamais sur le disque
+examiné.
 
 \section{L'annuaire, sans ses secrets}
 Sur un contrôleur de domaine, \fichier{ntds.dit} et ses journaux sont copiés par
@@ -89,6 +92,15 @@ les comptes des bases SQLite en sont extraits avec le schéma de leur condensat
 (phpass, bcrypt, ASP.NET Identity), et les dossiers de données de MySQL, MariaDB
 et PostgreSQL sont prélevés. Non lus : \fichier{wp-config.php} et \fichier{.env}.
 
+\section{Les rôles et les accès}
+DNS (réglages, dont les DLL de greffon, zones, enregistrements, journal de
+débogage), DHCP (étendues et baux de \fichier{dhcp.mdb}, journaux d'audit) et
+Hyper-V (machines et chemins de leurs disques) sont confrontés à ce que chaque
+rôle dit de lui-même. Le journal des accès utilisateurs
+(\path|LogFiles\Sum|), qu'une comparaison à KAPE a montré manquant, dit par
+rôle, compte et adresse qui a joint le serveur, et quels jours ; ses bases sont
+confrontées à \texttt{dissect.esedb}.
+
 \section{Vérifié contre l'annuaire vivant}
 Sur un contrôleur Server~2022, les 3\,711 objets rendus par \wac{} sont
 identiques à ceux de \texttt{Get-ADObject}. Le lecteur ESE de \wac{}, confronté à
@@ -108,10 +120,10 @@ sous Sysmon reste celle du poste de la 3.0.
 
 \section{En chiffres}
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.72\columnwidth}@{\hspace{0.5em}}r@{}}
-Artefacts prélevés (3.0 : 80) & 83 \\
+Artefacts prélevés (3.0 : 80) & 87 \\
 Générations de serveurs mesurées & 2003 à 2025 \\
-Contrôles du cycle, contrôleur de domaine & 571 \\
-Contrôles du cycle, Windows~11 & 582 \\
+Contrôles du cycle, contrôleur de domaine & 609 \\
+Contrôles du cycle, Windows~11 & 605 \\
 Objets de l'annuaire identiques à \texttt{Get-ADObject} & 3\,711 \\
 Valeurs de \fichier{ntds.dit} identiques à dissect & 145\,421 \\
 Secrets de l'annuaire lus ou émis & 0 \\
@@ -121,7 +133,7 @@ Secrets de l'annuaire lus ou émis & 0 \\
 Version 4.0.0, Windows~XP~SP1 à 11 et Server~2003 à 2025 (x86 et x64), licence
 GPL~3.0 : \url{https://github.com/dev-cec/WAC}. Manuels, dossiers de validation,
 d'innocuité et de comparaison en français et en anglais ; cycles serveurs du
-31 octobre au 4 novembre 2026.
+31 octobre au 8 novembre 2026.
 
 \vfill
 \begin{center}

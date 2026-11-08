@@ -8,7 +8,7 @@
 %
 % Every figure comes from the validation and harmlessness files
 % (doc/validation, doc/harmlessness) and the backlog, measured from 31 October
-% to 4 November 2026 on the code of 4.0. Backlog B-061.
+% to 8 November 2026 on the code of 4.0. Backlog B-061.
 
 \documentclass[10pt,a4paper,twocolumn]{article}
 \usepackage[english]{babel}
@@ -48,8 +48,8 @@
   Artefacts Collector): a free collector, in C++, that reads volumes raw, writes
   nothing on the examined machine, and covers workstations from XP~SP1 to
   Windows~11. Version 4.0 moves on to servers: every generation from Server~2003
-  to 2025, the directories of domain controllers, group policies and web
-  servers.}\par
+  to 2025, the directories of domain controllers, group policies, web servers
+  and the DNS, DHCP and Hyper-V roles.}\par
   \vspace{0.9em}
 }]
 
@@ -60,6 +60,8 @@ test cycle on the server itself, and that pass found what a workstation did not
 show: a final LZX block of odd size that left \fichier{shell32.dll} half read,
 older formats of Defender, and the ShimCache of Server~2003, now
 decoded. Server~2008 without R2 is not measured, for want of an official image.
+The cycles run as in the field: \wac{} is started from a USB key and writes
+there, never on the examined disk.
 
 \section{The directory, without its secrets}
 On a domain controller, \fichier{ntds.dit} and its logs are copied by raw reading,
@@ -87,6 +89,14 @@ databases are drawn from them with the scheme of their hash (phpass, bcrypt, ASP
 Identity), and the data folders of MySQL, MariaDB and PostgreSQL are collected.
 Not read: \fichier{wp-config.php} and \fichier{.env}.
 
+\section{Roles and accesses}
+DNS (settings, plug-in DLLs among them, zones, records, debug log), DHCP (scopes
+and leases of \fichier{dhcp.mdb}, audit logs) and Hyper-V (machines and the
+paths of their disks) are confronted with what each role says of itself. User
+Access Logging (\path|LogFiles\Sum|), which a comparison with KAPE showed
+missing, tells by role, account and address who reached the server, and on
+which days; its databases are confronted with \texttt{dissect.esedb}.
+
 \section{Checked against the live directory}
 On a Server~2022 controller, the 3\,711 objects \wac{} returns are identical to
 those of \texttt{Get-ADObject}. \wac{}'s ESE reader, set against
@@ -105,10 +115,10 @@ workstation one of 3.0.
 
 \section{In figures}
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.72\columnwidth}@{\hspace{0.5em}}r@{}}
-Artefacts collected (3.0: 80) & 83 \\
+Artefacts collected (3.0: 80) & 87 \\
 Server generations measured & 2003 to 2025 \\
-Checks in the cycle, domain controller & 571 \\
-Checks in the cycle, Windows~11 & 582 \\
+Checks in the cycle, domain controller & 609 \\
+Checks in the cycle, Windows~11 & 605 \\
 Directory objects identical to \texttt{Get-ADObject} & 3\,711 \\
 \fichier{ntds.dit} values identical to dissect & 145\,421 \\
 Directory secrets read or written & 0 \\
@@ -118,7 +128,7 @@ Directory secrets read or written & 0 \\
 Version 4.0.0, Windows~XP~SP1 to 11 and Server~2003 to 2025 (x86 and x64), GPL~3.0
 licence: \url{https://github.com/dev-cec/WAC}. Manuals, validation, harmlessness
 and comparison files in French and English; server cycles from 31 October to
-4 November 2026.
+8 November 2026.
 
 \vfill
 \begin{center}
