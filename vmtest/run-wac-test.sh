@@ -400,6 +400,14 @@ if wants remote_administration ssh file_transfer cloud_storage system_traces; th
   if $QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\application-traces-witness.ps1" -Out "$VMDIR" >/dev/null 2>&1; then
     $QGA read "$VMDIR\\application-traces-reference.json" "$OUTPUT/reference/application-traces.json" >/dev/null \
       && echo "   + reference/application-traces.json" || echo "   ⚠️ applications' traces reference not read"
+    # The witness changed the time zone, and the event log service writes its
+    # events to System.evtx a little later: WAC reads the file raw, from the
+    # disk, and a collection 6 s after the change found it missing. A minute
+    # lets the service write them, as hours do after an attack.
+    if grep -q '"ZoneLog"' "$OUTPUT/reference/application-traces.json" 2>/dev/null; then
+      echo "   … 60 s for the change of time zone to reach System.evtx on the disk"
+      sleep 60
+    fi
   else
     echo "   ⚠️ applications' traces witnesses not placed"
   fi

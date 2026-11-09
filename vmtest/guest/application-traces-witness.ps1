@@ -9,7 +9,16 @@
 #   - WinSCP.ini and FileZilla's sitemanager.xml, each holding a password the
 #     conversion must leave out;
 #   - a pCloud database, listed, not converted;
-#   - a crash dump, a product off by default: never taken.
+#   - a crash dump, a product off by default: never taken;
+#   - a second TeamViewer log whose lines straddle a change of time zone: one
+#     line written while India's zone (+05:30, no daylight saving) is in force,
+#     one after the machine's zone is back. A local time is that of the zone in
+#     force when it was written, which the System log keeps (Kernel-General 22);
+#     the conversion must apply that zone, not the current one. The change is
+#     made by tzutil and undone in a finally block; it stays written in the
+#     System log, as any change of zone — the trace the witness needs, six
+#     events per cycle. tzutil appears with Windows 7 and Server 2008 R2: on an
+#     older Windows the witness is not placed, and said.
 # The values are fixed but TeamViewer's time, the moment of the run: the
 # reference, with that time and its UTC, goes to
 # <Out>\application-traces-reference.json for check-json.py.
@@ -45,6 +54,62 @@ New-Item -ItemType Directory -Force (Split-Path $pcloud) | Out-Null
 $dump = "$profilePath\AppData\Local\CrashDumps\wac-trace-witness.dmp"
 New-Item -ItemType Directory -Force (Split-Path $dump) | Out-Null
 [IO.File]::WriteAllBytes($dump, [byte[]](77, 68, 77, 80, 0, 0))
+# Each time read from the system, not from .NET, which caches the zone it found
+# first: GetSystemTime, then SystemTimeToTzSpecificLocalTime with no zone given,
+# which converts by the zone active at the moment of the call.
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class WacWitnessClock {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SystemTime { public ushort Year, Month, DayOfWeek, Day, Hour, Minute, Second, Milliseconds; }
+    [DllImport("kernel32.dll")] static extern void GetSystemTime(out SystemTime time);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool SystemTimeToTzSpecificLocalTime(IntPtr zone, ref SystemTime utc, out SystemTime local);
+    static DateTime Of(SystemTime t) { return new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute, t.Second, t.Milliseconds); }
+    // The instant in UTC, the local time the active zone gives it, and their difference in minutes.
+    public static object[] Now() {
+        SystemTime utc, local;
+        GetSystemTime(out utc);
+        if (!SystemTimeToTzSpecificLocalTime(IntPtr.Zero, ref utc, out local)) throw new System.ComponentModel.Win32Exception();
+        DateTime u = Of(utc), l = Of(local);
+        return new object[] { u.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", System.Globalization.CultureInfo.InvariantCulture),
+                              l.ToString("yyyy/MM/dd HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture),
+                              (int)Math.Round((l - u).TotalMinutes) };
+    }
+}
+'@
+$zoneLog = "$profilePath\AppData\Roaming\TeamViewer\TeamViewer15_Logfile_zone.log"
+$zoneReference = ''
+if (Get-Command tzutil.exe -ErrorAction SilentlyContinue) {
+    $original = (& tzutil.exe /g | Out-String).Trim()
+    if (-not $original) { Write-Output 'zone not read'; exit 1 }
+    $other = 'India Standard Time'
+    try {
+        & tzutil.exe /s $other
+        if ($LASTEXITCODE -ne 0) { throw "tzutil /s ${other}: $LASTEXITCODE" }
+        Start-Sleep -Seconds 2
+        $during = [WacWitnessClock]::Now()
+        Start-Sleep -Seconds 2
+    } finally {
+        & tzutil.exe /s $original
+    }
+    if ($LASTEXITCODE -ne 0 -or (& tzutil.exe /g | Out-String).Trim() -ne $original) { Write-Output 'zone not restored'; exit 1 }
+    Start-Sleep -Seconds 2
+    $after = [WacWitnessClock]::Now()
+    if ($during[2] -ne 330) { Write-Output "zone change not effective: $($during[2]) min"; exit 1 }
+    Put $zoneLog ("$($during[1])  4242  5150 S0   wac-zone-witness written under +05:30`r`n" +
+        "$($after[1])  4242  5150 S0   wac-zone-witness written after the zone came back`r`n")
+    $zoneReference = @"
+,
+ "ZoneLog": "$($zoneLog.Replace('\', '\\'))",
+ "ZoneDuringWritten": "$($during[1])",
+ "ZoneDuringUtc": "$($during[0])",
+ "ZoneAfterWritten": "$($after[1])",
+ "ZoneAfterUtc": "$($after[0])",
+ "ZoneAfterOffset": $($after[2])
+"@
+}
 $reference = @"
 {
  "TeamViewerLog": "$($teamViewer.Replace('\', '\\'))",
@@ -55,7 +120,7 @@ $reference = @"
  "WinScp": "$($winscp.Replace('\', '\\'))",
  "FileZilla": "$($filezilla.Replace('\', '\\'))",
  "PCloud": "$($pcloud.Replace('\', '\\'))",
- "CrashDump": "$($dump.Replace('\', '\\'))"
+ "CrashDump": "$($dump.Replace('\', '\\'))"$zoneReference
 }
 "@
 [IO.File]::WriteAllText((Join-Path $Out 'application-traces-reference.json'), $reference, $utf8)

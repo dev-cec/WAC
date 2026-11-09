@@ -3669,6 +3669,57 @@ def check_assumed_time_zones(folder):
     return found
 
 
+def check_zone_change_witness(folder, reference, lines):
+    """The TeamViewer log whose lines straddle a change of time zone
+    (application-traces-witness.ps1): the line written while India's zone was in
+    force must come out at the UTC Windows gave it then, with TimeZoneInForce
+    +05:30 — the zone the System log says was in force, not the machine's
+    current one —; the line written after the zone came back, at its UTC with
+    no TimeZoneInForce. Skipped, said, where tzutil is missing (before Windows 7
+    and Server 2008 R2). Where Windows did not log the change (no offset of
+    -330 in reference/time-zone-history.txt, read by Get-WinEvent), WAC can only
+    apply the current zone's rules: said as the limit of that Windows, not
+    counted as a failure of WAC."""
+    if "ZoneLog" not in reference:
+        print("  ℹ️ change of time zone witness not placed (no tzutil on this Windows)")
+        return 0
+    history = os.path.join(folder, "reference", "time-zone-history.txt")
+    logged = False
+    if os.path.exists(history):
+        with open(history, encoding="utf-8") as f:
+            logged = any(line.strip().split("|")[-1] == "-330" for line in f if line.count("|") == 2)
+    if not logged:
+        print("  ℹ️ the change to +05:30 is not in the System log (Kernel-General): this Windows does not log it, "
+              "the witness line can only be read in the current zone")
+        return 0
+    found = 0
+    def report(ok, success, failure):
+        nonlocal found
+        print(f"  {'✅' if ok else '❌'} {success if ok else failure}")
+        found += 0 if ok else 1
+    def line_of(marker):
+        return [r for r in lines if marker in str(r.get("Text", ""))]
+    conversion = load(folder, "conversion.json") or {}
+    end = str(((conversion.get("Host") or {}).get("SuspectTimeZone") or {}).get("HistoryEndUtc", ""))
+    if end and end < reference["ZoneDuringUtc"]:
+        print(f"  ❌ the System log WAC copied ends at {end}, before the change of time zone: the service had not "
+              f"written it to the disk yet when WAC read it raw — wait longer before the collection")
+        return 1
+    during = line_of("written under +05:30")
+    report(len(during) == 1 and during[0].get("TimeAsWritten") == reference["ZoneDuringWritten"]
+           and during[0].get("TimeUtc") == reference["ZoneDuringUtc"] and during[0].get("TimeZoneInForce") == "+05:30"
+           and during[0].get("TimeZoneAssumed") == "Local",
+           f"remote_administration.json: line written under +05:30 ({reference['ZoneDuringWritten']}) dated "
+           f"{reference['ZoneDuringUtc']} as Windows computed it then, TimeZoneInForce +05:30",
+           f"remote_administration.json: line written under +05:30 not at {reference['ZoneDuringUtc']} with TimeZoneInForce +05:30: {during[:1]}")
+    after = line_of("after the zone came back")
+    report(len(after) == 1 and after[0].get("TimeAsWritten") == reference["ZoneAfterWritten"]
+           and after[0].get("TimeUtc") == reference["ZoneAfterUtc"] and "TimeZoneInForce" not in after[0],
+           f"remote_administration.json: line written after the zone came back dated {reference['ZoneAfterUtc']}, no TimeZoneInForce",
+           f"remote_administration.json: line written after the zone came back not at {reference['ZoneAfterUtc']}: {after[:1]}")
+    return found
+
+
 def check_application_traces(folder):
     """The applications' traces (application-traces-witness.ps1), found again in
     their group's JSON as the generic conversion writes them: TeamViewer's
@@ -3705,6 +3756,7 @@ def check_application_traces(folder):
            f"remote_administration.json: TeamViewer's witness line not as expected (UTC {reference['TeamViewerUtc']}): {teamviewer[:3]}")
     report(not of(remote, reference["Decoy"]), "remote_administration.json: the decoy TeamViewer's filter does not take, absent",
            "remote_administration.json: the decoy was taken")
+    found += check_zone_change_witness(folder, reference, of(remote, reference["ZoneLog"]) if "ZoneLog" in reference else [])
     ssh = of(rows("ssh"), reference["SshLog"])
     report(len(ssh) == 1 and ssh[0].get("TimeUtc") == "2026-11-08T13:03:21.123Z" and "TimeZoneAssumed" not in ssh[0],
            "ssh.json: OpenSSH's witness line, its offset applied (13:03:21.123Z)",
