@@ -2238,6 +2238,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
 
 \subsection{Event logs (\opt{events})}
 
+The logs are read raw, from the disk. The event log service writes an event
+to its file a little after the event: one written in the last seconds before
+the collection may be missing (measured: an event 6~s before the collection
+absent from the copy, present a minute later). \wac{} does not ask the
+service to write, which would change the examined disk; a collection made
+hours after the facts loses nothing of them.
+
 \fichier{events.json} holds one object per event, in the same form whatever
 the log's format: the \fichier{.evt} logs of Windows~XP and Server~2003 are
 read into the fields Windows renders for a classic source in an

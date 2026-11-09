@@ -2335,6 +2335,14 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
 
 \subsection{Journaux d'événements (\opt{events})}
 
+Les journaux sont lus en brut, sur le disque. Le service Journal
+d'événements écrit un événement dans son fichier un peu après l'événement :
+un événement des dernières secondes avant la collecte peut manquer (mesuré :
+un événement 6~s avant la collecte absent de la copie, présent une minute
+plus tard). \wac{} ne demande pas au service d'écrire, ce qui modifierait le
+disque examiné ; une collecte faite des heures après les faits n'en perd
+rien.
+
 \fichier{events.json} contient un objet par événement, de la même forme
 quel que soit le format du journal : les journaux \fichier{.evt} de
 Windows~XP et Server~2003 sont lus dans les champs que Windows rend pour une
