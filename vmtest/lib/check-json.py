@@ -519,6 +519,7 @@ def cross_checks(folder):
     found += guarded(check_controller_events, folder)
     found += guarded(check_server_roles, folder)
     found += guarded(check_application_traces, folder)
+    found += guarded(check_time_zone_history, folder)
     found += guarded(check_assumed_time_zones, folder)
     found += guarded(check_user_access_log, folder)
     found += guarded(check_web_server, folder)
@@ -3555,6 +3556,55 @@ def is_domain_controller(folder):
             return f.read().strip().endswith("|2")
     except OSError:
         return False
+
+
+def check_time_zone_history(folder):
+    """The offsets in force over time WAC read in the System log
+    (conversion.json, Host.SuspectTimeZone.History) against the same events read
+    through Windows' API (reference/time-zone-history.txt, Get-WinEvent):
+    rebuilt here by the same rule — in the order Windows wrote them, an
+    instant before an earlier one left out (a clock set back), an offset past
+    24 h left out, two alike in a row merged, nothing past the end of the
+    collected log. Every local time of the collection takes this history: an
+    offset wrong or missing shifts every line written then (backlog B-077)."""
+    path = os.path.join(folder, "reference", "time-zone-history.txt")
+    audit = load(folder, "conversion.json")
+    zone = ((audit or {}).get("Host") or {}).get("SuspectTimeZone") if isinstance(audit, dict) else None
+    if not os.path.exists(path) or not isinstance(zone, dict):
+        print("  ⏭️  time zones' history: no reference or no conversion.json, skipped")
+        return 0
+    wac = zone.get("History") or []
+    end = zone.get("HistoryEndUtc")
+    logged = []
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.strip().split("|")
+            if len(parts) == 3 and parts[0].isdigit() and re.match(r"-?\d+$", parts[2]):
+                logged.append((int(parts[0]), parts[1], int(parts[2])))
+    if not logged:
+        print("  ⏭️  time zones' history: no offset in the reference, skipped")
+        return 0
+    if not end:
+        print(f"  ❌ time zones' history: {len(logged)} offset(s) in the System log, none in conversion.json")
+        return 1
+    expected, latest = [], None
+    for record, instant, bias in sorted(logged):
+        # The ISO forms are of the same layout (7 digits, Z): compared as text.
+        if abs(bias) > 1440 or (latest and instant < latest) or instant > end:
+            continue
+        latest = instant
+        if expected and expected[-1][2] == bias:
+            continue
+        expected.append((record, instant, bias))
+    got = [(e.get("RecordId"), e.get("FromUtc"), e.get("Bias")) for e in wac]
+    if got == expected:
+        changes = [f"{i} {-b:+d} min" for _, i, b in expected]
+        print(f"  ✅ time zones' history: {len(got)} offset(s) in force, as Windows' API reads the System log — {changes[:6]}")
+        return 0
+    first = next((k for k in range(max(len(got), len(expected))) if k >= len(got) or k >= len(expected) or got[k] != expected[k]), 0)
+    print(f"  ❌ time zones' history: WAC {got[first:first + 2]} where the System log gives {expected[first:first + 2]} "
+          f"({len(got)} against {len(expected)})")
+    return 1
 
 
 def check_assumed_time_zones(folder):

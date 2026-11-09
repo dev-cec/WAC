@@ -435,6 +435,20 @@ user_access_log_reference() {
   $QGA run --shell "del $VMDIR\\user-access-log-witness.ps1 $VMDIR\\user-access-log.zip 2>nul & exit /b 0" >/dev/null 2>&1 || true
 }
 
+# The offsets the System log holds, read through Windows' own API
+# (Get-WinEvent), not WAC's parser: Kernel-General 1, 22 and 24, written at
+# each setting of the clock, each change of offset, each boot. check-json.py
+# rebuilds from them the history WAC wrote in conversion.json
+# (Host.SuspectTimeZone.History), which every local time of the collection takes. Read
+# once WAC has converted, printed by the agent: nothing written in the VM.
+time_zone_history_reference() {
+  mkdir -p "$OUTPUT/reference"
+  $QGA run --timeout 600 -- powershell.exe -NoProfile -Command "\$f = @{ '1' = 'TimeZoneBias'; '22' = 'NewBias'; '24' = 'CurrentBias' }; Get-WinEvent -FilterHashtable @{ LogName = 'System'; ProviderName = 'Microsoft-Windows-Kernel-General'; Id = 1, 22, 24 } -ErrorAction SilentlyContinue | ForEach-Object { \$name = \$f[[string]\$_.Id]; \$d = ([xml]\$_.ToXml()).Event.EventData.Data | Where-Object { \$_.Name -eq \$name }; if (\$d) { '{0}|{1}|{2}' -f \$_.RecordId, \$_.TimeCreated.ToUniversalTime().ToString('o'), \$d.'#text' } }" \
+    2>/dev/null | tr -d '\r' | grep -E '^[0-9]+\|' > "$OUTPUT/reference/time-zone-history.txt" || true
+  [[ -s "$OUTPUT/reference/time-zone-history.txt" ]] && echo "   + reference/time-zone-history.txt ($(wc -l < "$OUTPUT/reference/time-zone-history.txt") offset(s) logged)" \
+    || echo "   ℹ️ no offset in the System log (Kernel-General 1, 22, 24): its history not checked"
+}
+
 # The service started again once the separate collection is done — even when
 # the first phase failed half-way, the service is never left stopped.
 user_access_log_restart() {
@@ -546,6 +560,7 @@ if wants_registry_witness; then wait_registry_on_disk; fi
 $QGA run --timeout 3600 --shell "cd /d $WACDIR && WAC.exe --collect --output=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 > run.log 2>&1" || CODE=$?
 [[ "$CODE" == "0" ]] && { $QGA run --timeout 3600 --shell "cd /d $WACDIR && WAC.exe --convert=out $EVENTS_OPTION $BINARY_FLAG --loglevel=2 >> run.log 2>&1" || CODE=$?; }
 user_access_log_reference
+time_zone_history_reference
 $QGA read "$WACDIR\\run.log" "$OUTPUT/run.log" >/dev/null || echo "   ⚠️ run.log not fetched"
 
 if [[ -f "$OUTPUT/run.log" ]] && grep -qaiE 'terminate called|Unhandled exception|Exception non gérée' "$OUTPUT/run.log"; then
