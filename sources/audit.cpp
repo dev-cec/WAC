@@ -2,6 +2,7 @@
  *  \brief Implementation of the investigation log (see audit.h).
  */
 #include "audit.h"
+#include "conversions.h"
 #include <vector>
 #include "tools.h"
 
@@ -245,6 +246,24 @@ Json auditContext() {
 		// The sign is verifiable in this very file (StartLocal = StartUtc + offset).
 		suspect.add(L"UtcOffsetMinutes", Json::num((long long)-conf.timeZone.activeBiasMinutes));
 		suspect.add(L"Source", Json::str(L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation"));
+		/* The offsets in force over the period the System log covers, which every
+		   local time of the conversion took (time_zone_history.h): a change of
+		   zone in the machine's history shows here, with its instant. Same sign
+		   as Windows' bias: UTC = local + bias. Here, in the record of what the
+		   conversion applied, whatever artefacts were asked for. */
+		if (!conf.timeZone.history.changes.empty()) {
+			Json history = Json::arr();
+			for (const LoggedBias& change : conf.timeZone.history.changes) {
+				Json entry = Json::obj();
+				addUtcDate(entry, L"FromUtc", filetimeFromTicks((uint64_t)change.utc100ns));
+				entry.add(L"Bias", Json::num((long long)change.biasMinutes));
+				entry.add(L"RecordId", Json::num((long long)change.recordId));
+				history.push(std::move(entry));
+			}
+			suspect.add(L"History", std::move(history));
+			addUtcDate(suspect, L"HistoryEndUtc", filetimeFromTicks((uint64_t)conf.timeZone.history.endUtc100ns));
+			suspect.add(L"HistorySource", Json::str(L"System log (working copy), Kernel-General events 1, 22 and 24"));
+		}
 	}
 	else {
 		suspect.add(L"Source", Json::str(L"not read: fallback on the collecting machine's time zone"));

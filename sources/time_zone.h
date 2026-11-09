@@ -31,6 +31,7 @@
 #include <windows.h>
 #include <cstdint>
 #include <map>
+#include <vector>
 
 //! One rule: the REG_TZI_FORMAT structure of the registry.
 struct TimeZoneRule {
@@ -93,3 +94,68 @@ long biasAtUtc(const TimeZoneRules& rules, long long utc100ns);
  *  @param local100ns the local time, in hundreds of nanoseconds since 1601
  *  @return the bias in minutes: UTC = local + bias */
 long biasAtLocal(const TimeZoneRules& rules, long long local100ns);
+
+/*! An offset the examined machine wrote in its System log, at an instant:
+ *  Kernel-General 22 (NewBias, on every change of offset — a time zone set,
+ *  a daylight saving transition — while the machine runs), 24 (CurrentBias,
+ *  at each boot and each refresh) or 1 (TimeZoneBias, each time the clock is
+ *  set). Measured on Windows 11 and Server 2025, 2026-11-09: a time zone set
+ *  by tzutil writes 22, 24 and 1 at the same instant. */
+struct LoggedBias {
+	unsigned long long recordId = 0; //!< the record's number: the order Windows wrote them in
+	long long utc100ns = 0;          //!< the record's time, UTC
+	long biasMinutes = 0;            //!< the offset in force from then on: UTC = local + bias
+};
+
+/*! The offset in force over the period the System log covers.
+ *
+ *  WHY. A local time is right only with the offset of the zone in force WHEN
+ *  IT WAS WRITTEN. The rules of the current zone know the daylight saving
+ *  time of each date, not that the zone itself changed: an installation in
+ *  the default Pacific time, set to Paris afterwards (measured, Server 2025:
+ *  NetSetup.LOG written at UTC−7, read at UTC+1, 8 h off), a laptop that
+ *  travelled. Windows writes each change while it runs, and the offset at
+ *  each boot: within the log, the offset at any instant the machine ran is
+ *  known exactly. */
+struct TimeZoneHistory {
+	/*! From each instant on, its offset, until the next: ascending, no two
+	 *  consecutive alike. Empty: nothing logged, the rules alone apply. */
+	std::vector<LoggedBias> changes;
+	long long endUtc100ns = 0; //!< last instant the log covers: past it, the rules alone
+};
+
+/*! Builds the history from the offsets read, in any order.
+ *
+ *  THE CLOCK SET BACK. Taken in the order Windows wrote them (recordId), an
+ *  offset dated before one written earlier is left out: its clock was wrong.
+ *  Measured on Server 2025 during its installation: records dated 00:05:11Z
+ *  between two of 08:05, the clock set 8 h back for two seconds — taken, the
+ *  offset of 00:05 would have been the one of 08:05.
+ *  @param logged the offsets, as read
+ *  @param endUtc100ns the time of the last record of the log
+ *  @return the history */
+TimeZoneHistory timeZoneHistoryFrom(std::vector<LoggedBias> logged, long long endUtc100ns);
+
+//! The offset of a local time, and where it comes from.
+struct LocalBias {
+	long biasMinutes = 0;       //!< UTC = local + bias
+	bool fromHistory = false;   //!< the System log's offset, not the one the current zone's rules give
+};
+
+/*! The offset of a local time on the examined machine: the one in force WHEN
+ *  it was written, as its System log shows it, else the current zone's rules
+ *  (biasAtLocal).
+ *
+ *  A local time L belongs to a stretch of the history when L + its offset
+ *  falls within it. Several do (a clock set back: an hour lived twice): the
+ *  smallest offset, its first occurrence, as Windows chooses in autumn. None
+ *  does: the rules' offset if the log shows it within a second of that instant
+ *  (Windows logs a change a moment after making it); else, L within the log (a
+ *  clock set forward: an hour skipped), the offset in force before the change,
+ *  as Windows does in spring. L before the first offset logged, or after the
+ *  end of the log: the rules.
+ *  @param rules the current zone's rules
+ *  @param history what the System log shows
+ *  @param local100ns the local time, in hundreds of nanoseconds since 1601
+ *  @return the offset, and its source */
+LocalBias biasAtLocalLogged(const TimeZoneRules& rules, const TimeZoneHistory& history, long long local100ns);

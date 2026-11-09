@@ -1170,7 +1170,7 @@ std::wstring timeToIso8601Utc(const FILETIME& filetime, Precision precision) {
 std::wstring timeToIso8601Local(const FILETIME& filetime, Precision precision) {
 	if (nullDate(filetime)) return L"";
 	// The offset suspectLocalToUtc applies to the same local time: label and UTC agree.
-	return formatLocal(filetime, biasAtLocal(suspectRules(), ticksOf(filetime)), precision);
+	return formatLocal(filetime, suspectBiasAtLocal(filetime).biasMinutes, precision);
 }
 
 /* Each date takes the offset in force AT THAT DATE, from the suspect's rules
@@ -1184,7 +1184,14 @@ FILETIME utcToSuspectLocal(const FILETIME& filetimeUtc) {
 
 FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal) {
 	if (nullDate(filetimeLocal)) return FILETIME{ 0, 0 };
-	return shifted(filetimeLocal, biasAtLocal(suspectRules(), ticksOf(filetimeLocal)) * MINUTE_100NS);
+	return shifted(filetimeLocal, suspectBiasAtLocal(filetimeLocal).biasMinutes * MINUTE_100NS);
+}
+
+/* The zone in force when the time was written: an installation in the default
+   Pacific time, set to Paris afterwards, dated its first logs at UTC-7 — read
+   with the rules of Paris alone, 8 h off (time_zone.h, TimeZoneHistory). */
+LocalBias suspectBiasAtLocal(const FILETIME& filetimeLocal) {
+	return biasAtLocalLogged(suspectRules(), conf.timeZone.history, ticksOf(filetimeLocal));
 }
 
 bool iso8601UtcToFiletime(const std::wstring& text, FILETIME& filetime) {

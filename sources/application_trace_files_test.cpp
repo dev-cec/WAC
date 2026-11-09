@@ -150,6 +150,45 @@ void testStructured() {
 	      || structuredContent(TraceFormat::Xml, L"<a><b></a>", secret).kind() == Json::Kind::Obj, "a malformed XML is refused or read, never thrown");
 }
 
+/*! End to end: a log line written in the zone of the installation (Pacific,
+ *  UTC-7), read on a machine set to Paris since — the NetSetup.LOG of
+ *  Server 2025. Its System log shows the change; the line takes the offset in
+ *  force when it was written, and says it. */
+void testZoneInForce() {
+	TimeZoneRules paris;
+	paris.current.biasMinutes = -60;
+	paris.current.daylightBiasMinutes = -60;
+	paris.current.standardDate = SYSTEMTIME{ 0, 10, 0, 5, 3, 0, 0, 0 };
+	paris.current.daylightDate = SYSTEMTIME{ 0, 3, 0, 5, 2, 0, 0, 0 };
+	auto at = [](WORD day, WORD hour, WORD minute, WORD second) {
+		SYSTEMTIME st = { 2026, 10, 0, day, hour, minute, second, 0 };
+		FILETIME ft = {};
+		SystemTimeToFileTime(&st, &ft);
+		return (long long)ticksFromFiletime(ft);
+	};
+	conf.timeZone = TimeZoneInfo{};
+	conf.timeZone.valid = true;
+	conf.timeZone.rules = paris;
+	conf.timeZone.history = timeZoneHistoryFrom({ { 1, at(31, 8, 4, 5), 420 }, { 2, at(31, 8, 5, 11), -60 } }, at(31, 23, 0, 0));
+	WrittenTime time;
+	leadingTime(L"2026-10-31 01:04:24.014 NetpDoDomainJoin", time);
+	Json row = Json::obj();
+	addRecordTimes(row, time, false);
+	const Json* utc = row.find(L"TimeUtc");
+	const Json* local = row.find(L"Time");
+	const Json* inForce = row.find(L"TimeZoneInForce");
+	check(utc && utc->text() == L"2026-10-31T08:04:24.014Z", "a line written at UTC-7, the zone then: its instant");
+	check(local && local->text() == L"2026-10-31T09:04:24.014+01:00", "its Time in the current zone, as every date");
+	check(inForce && inForce->text() == L"-07:00", "the offset of the zone in force then, said");
+	WrittenTime later;
+	leadingTime(L"2026-10-31 12:00:00 x", later);
+	Json now = Json::obj();
+	addRecordTimes(now, later, false);
+	check(!now.find(L"TimeZoneInForce") && now.find(L"TimeUtc") && now.find(L"TimeUtc")->text() == L"2026-10-31T11:00:00Z",
+	      "after the change: the current zone, nothing said");
+	conf.timeZone = TimeZoneInfo{};
+}
+
 } // namespace
 
 int wmain() {
@@ -157,6 +196,7 @@ int wmain() {
 	testRecords();
 	testFormats();
 	testStructured();
+	testZoneInForce();
 	std::printf("%d check(s), %d failure(s)\n", checks, failures);
 	return failures ? 1 : 0;
 }

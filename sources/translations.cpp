@@ -63,6 +63,7 @@ constexpr Wording WORDINGS[] = {
 	{ Text::StepWriteLiveState,        L"Écriture des processus, sessions et réseau",    L"Writing PROCESS, SESSIONS and NETWORK" },
 	{ Text::StepOpenControlSet,        L"Ouverture de la sous-clé CurrentControlSet",    L"Opening the CurrentControlSet subkey" },
 	{ Text::StepSuspectTimeZone,       L"Fuseau horaire de la machine examinée (ruche SYSTEM)", L"Reading suspect time zone (SYSTEM hive)" },
+	{ Text::StepSuspectTimeZoneHistory, L"Fuseaux horaires en vigueur au fil du temps (journal Système)", L"Time zones in force over time (System log)" },
 	{ Text::StepSuspectCodePage,       L"Page de code ANSI de la machine examinée (ruche SYSTEM)", L"Reading suspect ANSI code page (SYSTEM hive)" },
 	{ Text::StepAccountNames,          L"Noms des comptes (SAM, services, profils)",     L"Naming the accounts (SAM, services, profiles)" },
 	{ Text::StepUsbstor,               L"Clés USBSTOR du registre",                      L"Extracting USBSTOR Registry Keys" },

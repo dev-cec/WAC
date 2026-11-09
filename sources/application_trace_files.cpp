@@ -113,6 +113,18 @@ void addRecordTimes(Json& row, const WrittenTime& time, bool writesUtc) {
 		row.add(L"TimeUtc", Json::str(withFractionDigits(timeToIso8601Utc(utc), time.fractionDigits)));
 	}
 	if (!time.hasOffset) row.add(L"TimeZoneAssumed", Json::str(writesUtc ? L"UTC" : L"Local"));
+	/* The local time read at the offset of a zone no longer in force, as the
+	   System log shows it then (time_zone_history.h): said, with that offset —
+	   Time itself stays in the current zone, as every date of the collection. */
+	if (!time.hasOffset && !writesUtc) {
+		const LocalBias bias = suspectBiasAtLocal(written);
+		if (bias.fromHistory) {
+			const long east = -bias.biasMinutes, minutes = east < 0 ? -east : east;
+			wchar_t offset[8];
+			swprintf(offset, 8, L"%lc%02ld:%02ld", east < 0 ? L'-' : L'+', minutes / 60, minutes % 60);
+			row.add(L"TimeZoneInForce", Json::str(offset));
+		}
+	}
 	if (time.fractionCut) row.add(L"TimePrecisionCut", Json::boolean(true));
 	row.add(L"TimeAsWritten", Json::str(time.asWritten));
 }

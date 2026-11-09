@@ -38,7 +38,7 @@ enum class Text : unsigned {
 	StepCopyBinaries, StepSealExhibitStore, ManifestSeal, StepEventResources, StepAllExecutables,
 	StepOpenSystemHive, StepOpenSoftwareHive, StepUserProfiles,
 	// Steps: registry
-	StepWriteLiveState, StepOpenControlSet, StepSuspectTimeZone,
+	StepWriteLiveState, StepOpenControlSet, StepSuspectTimeZone, StepSuspectTimeZoneHistory,
 	StepSuspectCodePage, StepAccountNames, StepUsbstor, StepMountedDevices, StepBam, StepMuiCache,
 	StepAmcache, StepUserAssist, StepRunKeys, StepShimcache,
 	StepShellbags, StepMru, StepMruApps, StepSystemInformation, StepServices, StepUsers, StepLocalGroups,

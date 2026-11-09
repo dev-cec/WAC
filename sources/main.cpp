@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include "asciiart.h"
 #include "tools.h"
+#include "time_zone_history.h"
 #include "audit.h"
 #include "raw_hive.h"
 #include "raw_collect.h"
@@ -138,6 +139,7 @@ HRESULT checkCollectionLocation() {
 	printStep(Text::StepCollectionMedium);
 	unsigned long long need = 250ULL * 1024 * 1024;           // hives
 	if (conf.artefacts.needsEventLogs()) need += 150ULL * 1024 * 1024;   // event logs
+	else need += 32ULL * 1024 * 1024;   // the System log alone, 20 MiB by default: the time zones' history
 	if (conf.binary)     need += 1024ULL * 1024 * 1024;          // cited binaries
 	// Shadow copies: only what differs from the newer version is stored — a few changed hives and logs per copy.
 	if (conf.artefacts.shadowCopies) need += 500ULL * 1024 * 1024;
@@ -1172,6 +1174,20 @@ void convertArtefacts(bool systemAvailable) {
 			auditRecord(L"Reading of the suspect's time zone",
 			            L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
 			            hresult, Footprint::HIVE_COPY);
+
+			/* The zone in force WHEN each local time was written, from the System
+			   log of the working copy: a zone changed in the machine's history
+			   (an installation in Pacific time, then Paris) shifted every local
+			   time written before by the difference. After loadSuspectTimeZone,
+			   which clears it; before any local time is converted. */
+			printStep(Text::StepSuspectTimeZoneHistory);
+			log(3, L"🔈loadSuspectTimeZoneHistory");
+			hresult = loadSuspectTimeZoneHistory();
+			if (FAILED(hresult)) printError(hresult);   // not blocking: the current zone's rules apply
+			else printSuccess();
+			auditRecord(L"Reading of the time zones in force over time",
+			            L"Windows\\System32\\winevt\\Logs\\System.evtx (working copy), Kernel-General 1, 22, 24",
+			            hresult, Footprint::NONE);
 
 			/* ANSI code page of the SUSPECT, for the same reason: shortcuts,
 			   shell items and DestList host names store text in the code page

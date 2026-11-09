@@ -53,6 +53,10 @@ struct TimeZoneInfo {
 	std::wstring standardName;     //!< name in standard time
 	std::wstring daylightName;     //!< name in daylight saving time
 	TimeZoneRules rules;           //!< daylight saving rules, year by year: the offset of EACH date
+	/*! The offset in force at each instant the System log covers, the zone's
+	 *  changes included (time_zone.h): loaded by loadSuspectTimeZoneHistory,
+	 *  in a conversion, from the working copy. Empty: the rules alone. */
+	TimeZoneHistory history;
 	int firstRuleYear = 0;         //!< first year of the rules per year ("Dynamic DST"), 0 if none
 	int lastRuleYear = 0;          //!< last year of the rules per year, 0 if none
 	long activeBiasMinutes = 0;    //!< offset at collection time: minutes to ADD to the local time to obtain UTC
@@ -879,6 +883,14 @@ FILETIME utcToSuspectLocal(const FILETIME& filetimeUtc);
 * @return the instant in UTC, or a null FILETIME (input null or out of range)
 */
 FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal);
+
+/*! The offset of a local time of the EXAMINED machine: the one in force when
+ *  it was written, as its System log shows it (conf.timeZone.history), else
+ *  its current zone's rules — the one suspectLocalToUtc and
+ *  timeToIso8601Local apply.
+ *  @param filetimeLocal the local time
+ *  @return the offset (UTC = local + bias), and whether the log gave it */
+LocalBias suspectBiasAtLocal(const FILETIME& filetimeLocal);
 
 /*! Reads the examined machine's time zone in the suspect's SYSTEM hive.
 *

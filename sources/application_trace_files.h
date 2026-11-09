@@ -63,7 +63,9 @@ bool leadingTime(const std::wstring& line, WrittenTime& time, bool monthFirst = 
  *  machine's local time with its offset, and TimeUtc. A time with its offset is
  *  that instant; one without is read as the examined machine's local time
  *  (suspectLocalToUtc, its rules for that date), or as UTC for a product that
- *  writes UTC — TimeZoneAssumed says which. TimeAsWritten keeps the text.
+ *  writes UTC — TimeZoneAssumed says which. A local time written while
+ *  another zone was in force, as the System log shows it, takes that zone's
+ *  offset, given in TimeZoneInForce. TimeAsWritten keeps the text.
  *  Exactly as many digits of fraction as the line wrote, none invented: an
  *  offset or a zone moves whole minutes, never the fraction. Past seven digits
  *  (100 ns), the cut is said (TimePrecisionCut). Nothing for a record without a time.
