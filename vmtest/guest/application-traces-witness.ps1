@@ -6,6 +6,14 @@
 #     computes it here, is the reference —, its continuation, and beside it a
 #     decoy the product's filter does not take;
 #   - OpenSSH server's log, a line whose time carries its offset;
+#   - sshd's own log, provoked: where Windows ships sshd (Server 2025), sshd.exe
+#     is run by hand — never its service — on 127.0.0.1:2222 with a temporary
+#     configuration (SyslogFacility LOCAL0: its file log) and host key, and one
+#     connection of an unknown user is refused; its instant, taken from the
+#     system clock before and after, is the reference of the line sshd writes
+#     ("<pid> yyyy-MM-dd HH:mm:ss.fff", local time: measured 2026-11-10). The
+#     temporary files go; sshd.log stays for the collection, removed by the
+#     next witness when it holds only the witness's lines — a real one is kept;
 #   - WinSCP.ini and FileZilla's sitemanager.xml, each holding a password the
 #     conversion must leave out;
 #   - a pCloud database, listed, not converted;
@@ -79,6 +87,48 @@ public static class WacWitnessClock {
     }
 }
 '@
+$openssh = "$env:windir\System32\OpenSSH"
+$sshdReference = ''
+if ((Test-Path "$openssh\sshd.exe") -and (Test-Path "$openssh\ssh.exe") -and (Test-Path "$openssh\ssh-keygen.exe")) {
+    $sshdLog = "$env:ProgramData\ssh\logs\sshd.log"
+    if (Test-Path $sshdLog) {
+        $foreign = @(Get-Content $sshdLog | Where-Object { $_ -notmatch '127\.0\.0\.1 port 2222|wacnobody' })
+        if ($foreign.Count -eq 0) { Remove-Item -Force $sshdLog }
+    }
+    $sshdWork = "$env:SystemDrive\wac-sshd-witness"
+    New-Item -ItemType Directory -Force $sshdWork | Out-Null
+    New-Item -ItemType Directory -Force (Split-Path $sshdLog) | Out-Null
+    $sshd = $null
+    try {
+        # sshd refuses a host key others may read.
+        & icacls.exe $sshdWork /inheritance:r /grant 'SYSTEM:(OI)(CI)F' 'Administrators:(OI)(CI)F' | Out-Null
+        & "$openssh\ssh-keygen.exe" -q -t ed25519 -N '""' -f "$sshdWork\host_key" | Out-Null
+        Set-Content -Encoding ascii "$sshdWork\sshd_config" @('Port 2222', 'ListenAddress 127.0.0.1',
+            "HostKey $sshdWork\host_key", 'SyslogFacility LOCAL0', 'LogLevel INFO', "PidFile $sshdWork\sshd.pid")
+        $sshd = Start-Process -FilePath "$openssh\sshd.exe" -ArgumentList @('-D', '-f', "$sshdWork\sshd_config") -PassThru -WindowStyle Hidden
+        Start-Sleep -Seconds 3
+        $sshdBefore = [WacWitnessClock]::Now()
+        # ssh writes its warnings on stderr: not an error of the witness.
+        $ErrorActionPreference = 'Continue'
+        & "$openssh\ssh.exe" -p 2222 -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL wacnobody@127.0.0.1 exit 2>&1 | Out-Null
+        $ErrorActionPreference = 'Stop'
+        $sshdAfter = [WacWitnessClock]::Now()
+        Start-Sleep -Seconds 2
+    } finally {
+        if ($sshd -and -not $sshd.HasExited) { Stop-Process -Id $sshd.Id -Force }
+        # The child that handled the connection, if it outlived it.
+        Get-Process sshd -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$openssh*" -and $_.StartTime -gt $now } | Stop-Process -Force
+        Start-Sleep -Seconds 1
+        Remove-Item -Recurse -Force $sshdWork -ErrorAction SilentlyContinue
+    }
+    if (-not (Select-String -Path $sshdLog -Pattern 'Invalid user wacnobody' -Quiet)) { Write-Output 'sshd wrote no refused connection'; exit 1 }
+    $sshdReference = @"
+,
+ "SshdLog": "$($sshdLog.Replace('\', '\\'))",
+ "SshdBeforeUtc": "$($sshdBefore[0])",
+ "SshdAfterUtc": "$($sshdAfter[0])"
+"@
+}
 $zoneLog = "$profilePath\AppData\Roaming\TeamViewer\TeamViewer15_Logfile_zone.log"
 $zoneReference = ''
 if (Get-Command tzutil.exe -ErrorAction SilentlyContinue) {
@@ -120,7 +170,7 @@ $reference = @"
  "WinScp": "$($winscp.Replace('\', '\\'))",
  "FileZilla": "$($filezilla.Replace('\', '\\'))",
  "PCloud": "$($pcloud.Replace('\', '\\'))",
- "CrashDump": "$($dump.Replace('\', '\\'))"$zoneReference
+ "CrashDump": "$($dump.Replace('\', '\\'))"$zoneReference$sshdReference
 }
 "@
 [IO.File]::WriteAllText((Join-Path $Out 'application-traces-reference.json'), $reference, $utf8)

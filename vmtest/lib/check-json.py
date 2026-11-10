@@ -3789,7 +3789,8 @@ def check_application_traces(folder):
     their group's JSON as the generic conversion writes them: TeamViewer's
     witness line with its time as written, no UTC since it gives no offset, and
     its continuation; the decoy beside it not taken; OpenSSH's line with its
-    instant in UTC; WinSCP.ini and FileZilla's sitemanager.xml as their
+    instant in UTC; the connection sshd refused, provoked (Server 2025), dated
+    within the instants the system clock gave before and after it; WinSCP.ini and FileZilla's sitemanager.xml as their
     structure, their passwords nowhere in the file; a pCloud database listed,
     not converted; a crash dump, off by default, absent from the manifest."""
     path = os.path.join(folder, "reference", "application-traces.json")
@@ -3825,6 +3826,23 @@ def check_application_traces(folder):
     report(len(ssh) == 1 and ssh[0].get("TimeUtc") == "2026-11-08T13:03:21.123Z" and "TimeZoneAssumed" not in ssh[0],
            "ssh.json: OpenSSH's witness line, its offset applied (13:03:21.123Z)",
            f"ssh.json: OpenSSH's witness line not as expected: {ssh[:2]}")
+    # sshd's own log, provoked: a refused connection, its instant bracketed by
+    # the system clock; sshd writes "<pid> yyyy-MM-dd HH:mm:ss.fff", local time.
+    if "SshdLog" not in reference:
+        print("  ℹ️ sshd's provoked witness not placed (no sshd.exe on this Windows)")
+    else:
+        refused = [r for r in of(rows("ssh"), reference["SshdLog"]) if "Invalid user wacnobody" in str(r.get("Text", ""))]
+        last = refused[-1] if refused else {}
+        utc = str(last.get("TimeUtc", ""))
+        report(bool(refused) and last.get("Product") == "OpenSSH server" and last.get("TimeZoneAssumed") == "Local"
+               and re.fullmatch(r"\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}", str(last.get("TimeAsWritten", "")))
+               and re.fullmatch(r"[0-9T:.-]+\.\d{3}Z", utc)
+               and reference["SshdBeforeUtc"] <= utc <= reference["SshdAfterUtc"],
+               f"ssh.json: the connection sshd refused, written {last.get('TimeAsWritten')} local after its process's "
+               f"identifier, dated {utc}, between {reference['SshdBeforeUtc']} and {reference['SshdAfterUtc']} "
+               f"as the system clock bracketed it, to the millisecond",
+               f"ssh.json: the connection sshd refused not between {reference['SshdBeforeUtc']} and "
+               f"{reference['SshdAfterUtc']}, or not to the millisecond: {refused[-1:] or 'no line'}")
     transfer = rows("file_transfer")
     transfer_text = json.dumps(transfer)
     for name, key, secret, kept, form in (("WinSCP.ini", "WinScp", "wac-trace-secret-1", "witness.example", "INI"),
