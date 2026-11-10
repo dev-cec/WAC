@@ -14,7 +14,11 @@
 #include <windows.h>
 #include <cstdio>
 #include <string>
+#include <memory>
+#include <vector>
 #include "time_zone.h"
+#include "time_zone_history.h"
+#include "xml_light.h"
 #include "tools.h"
 
 AppliConf conf; //!< WAC's global configuration, which tools.cpp references (empty here)
@@ -116,10 +120,141 @@ void loggedOffsets() {
 	check(biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 1, 15, 12, 0, 0)).biasMinutes == -60, L"no history: the rules");
 }
 
+/*! The rules of Pacific time as Windows stores them: daylight saving time from
+ *  the second Sunday of March at 02:00 to the first Sunday of November at 02:00. */
+TimeZoneRules pacificRules() {
+	TimeZoneRules rules;
+	rules.current.biasMinutes = 480;
+	rules.current.daylightBiasMinutes = -60;
+	rules.current.standardDate = SYSTEMTIME{ 0, 11, 0, 1, 2, 0, 0, 0 };
+	rules.current.daylightDate = SYSTEMTIME{ 0, 3, 0, 2, 2, 0, 0, 0 };
+	return rules;
+}
+
+/*! What a Windows before 10 logs of its zone (timeZoneHistoryFromObservations):
+ *  the cases measured on Server 2008 R2, 2026-11-10, and those of a change
+ *  whose instant the log does not give. */
+void observedZones() {
+	using Kind = ZoneObservation::Kind;
+	TimeZoneRules india;
+	india.current.biasMinutes = -330;
+	const std::vector<TimeZoneRules> zones = { europeanRules(-60), pacificRules(), india };
+	const std::vector<std::wstring> names = { L"Romance Standard Time", L"Pacific Standard Time", L"India Standard Time" };
+	const TimeZoneRules& paris = zones[0];
+	const long long minute = 600000000LL;
+	auto build = [&](std::vector<ZoneObservation> o, long long end) {
+		return timeZoneHistoryFromObservations(zones, names, 0, std::move(o), end);
+	};
+	auto read = [&](const TimeZoneHistory& h, long long local, long long& utc) {
+		const LocalBias b = biasAtLocalLogged(paris, h, local);
+		utc = local + b.biasMinutes * minute;
+		return b;
+	};
+	long long utc = 0;
+	/* The witness of Server 2008 R2: tzutil to India, then back to Paris —
+	   20001 at each, and Kernel-General 1 at the same instant; 6013 at the
+	   boot before and after. In the order WAC reads them: TZUtil's log before
+	   System.evtx, as their names sort — at an equal instant, 20001 first. */
+	const TimeZoneHistory witness = build({
+		{ Kind::NamedChange, instant(2026, 11, 9, 21, 19, 35, 5311250), 2 },
+		{ Kind::NamedChange, instant(2026, 11, 9, 21, 19, 39, 5467500), 0 },
+		{ Kind::InForce, instant(2026, 11, 9, 20, 57, 42), 0 },
+		{ Kind::UnnamedChange, instant(2026, 11, 9, 21, 19, 35, 5311250), -1 },
+		{ Kind::UnnamedChange, instant(2026, 11, 9, 21, 19, 39, 5467500), -1 },
+		{ Kind::InForce, instant(2026, 11, 10, 8, 56, 11), 0 } }, instant(2026, 11, 10, 9, 20, 40));
+	check(witness.uncertain.empty(), L"Server 2008 R2: tzutil's Kernel-General 1 is its 20001's change, not another");
+	LocalBias b = read(witness, instant(2026, 11, 10, 2, 49, 37, 5310000), utc);
+	check(utc == instant(2026, 11, 9, 21, 19, 37, 5310000) && b.fromHistory && b.biasMinutes == -330 && !b.uncertain,
+	      L"Server 2008 R2: a line written under India's zone, set by tzutil (20001), at its UTC");
+	b = read(witness, instant(2026, 11, 9, 22, 19, 41, 5460000), utc);
+	check(utc == instant(2026, 11, 9, 21, 19, 41, 5460000) && !b.fromHistory && !b.uncertain,
+	      L"Server 2008 R2: the line after the zone came back, by the current rules");
+	/* Installed in Pacific time, set to Paris through the API: 6013 before and
+	   after, the change at the one unnamed Kernel-General 1 between them. In
+	   October, Pacific daylight time: UTC-7, from its rules — 6013 gives 480. */
+	const TimeZoneHistory installed = build({
+		{ Kind::InForce, instant(2026, 10, 31, 7, 0, 0), 1 },
+		{ Kind::UnnamedChange, instant(2026, 10, 31, 8, 5, 11, 6933122), -1 },
+		{ Kind::InForce, instant(2026, 10, 31, 9, 0, 0), 0 } }, instant(2026, 11, 7, 0, 0, 0));
+	b = read(installed, instant(2026, 10, 31, 1, 4, 24, 140000), utc);
+	check(utc == instant(2026, 10, 31, 8, 4, 24, 140000) && b.biasMinutes == 420 && !b.uncertain,
+	      L"installed in Pacific time: UTC-7 in October by its rules, the change at the unnamed event");
+	check(installed.uncertain.empty() && installed.changes.size() == 2 && installed.changes[0].zone == names[1],
+	      L"installed in Pacific time: two stretches, each named by its zone");
+	// The same without the unnamed event: the instant of the change unknown.
+	const TimeZoneHistory unknown = build({
+		{ Kind::InForce, instant(2026, 10, 31, 7, 0, 0), 1 },
+		{ Kind::InForce, instant(2026, 10, 31, 9, 0, 0), 0 } }, instant(2026, 11, 7, 0, 0, 0));
+	b = read(unknown, instant(2026, 10, 31, 1, 4, 24, 140000), utc);
+	check(unknown.uncertain.size() == 1 && b.uncertain && b.biasMinutes == -60 && !b.fromHistory
+	      && b.uncertain->fromUtc100ns == instant(2026, 10, 31, 7, 0, 0) && b.uncertain->toUtc100ns == instant(2026, 10, 31, 9, 0, 0),
+	      L"a change between two 6013 with no event of its own: the current rules, the interval said");
+	b = read(unknown, instant(2026, 10, 30, 12, 0, 0), utc);
+	check(utc == instant(2026, 10, 30, 11, 0, 0) && !b.fromHistory && !b.uncertain,
+	      L"before the first observation: the current rules, as before the first offset logged");
+	// Away and back through the API between two 6013 of Paris: between the two changes, unknown.
+	const TimeZoneHistory away = build({
+		{ Kind::InForce, instant(2026, 11, 2, 8, 0, 0), 0 },
+		{ Kind::UnnamedChange, instant(2026, 11, 2, 10, 0, 0), -1 },
+		{ Kind::UnnamedChange, instant(2026, 11, 2, 11, 0, 0), -1 },
+		{ Kind::InForce, instant(2026, 11, 3, 8, 0, 0), 0 } }, instant(2026, 11, 4, 0, 0, 0));
+	check(away.uncertain.size() == 1 && read(away, instant(2026, 11, 2, 11, 30, 0), utc).uncertain
+	      && !read(away, instant(2026, 11, 2, 14, 0, 0), utc).uncertain,
+	      L"away and back between two 6013 of one zone: the interval between the two changes said, not after");
+	// One change alone between two 6013 of one zone: the same zone set again.
+	check(build({ { Kind::InForce, instant(2026, 11, 2, 8, 0, 0), 0 },
+	              { Kind::UnnamedChange, instant(2026, 11, 2, 10, 0, 0), -1 },
+	              { Kind::InForce, instant(2026, 11, 3, 8, 0, 0), 0 } }, instant(2026, 11, 4, 0, 0, 0)).uncertain.empty(),
+	      L"a single change between two 6013 of one zone: no interval");
+	/* An unnamed event at Paris's return to winter time is that transition:
+	   the change of zone is the other one. */
+	const TimeZoneHistory transition = build({
+		{ Kind::InForce, instant(2026, 10, 20, 0, 0, 0), 1 },
+		{ Kind::UnnamedChange, instant(2026, 10, 25, 1, 0, 0, 6783), -1 },
+		{ Kind::UnnamedChange, instant(2026, 10, 26, 10, 0, 0), -1 },
+		{ Kind::InForce, instant(2026, 10, 27, 0, 0, 0), 0 } }, instant(2026, 11, 4, 0, 0, 0));
+	b = read(transition, instant(2026, 10, 26, 2, 0, 0), utc);
+	check(transition.uncertain.empty() && utc == instant(2026, 10, 26, 9, 0, 0) && b.biasMinutes == 420,
+	      L"an unnamed event at a daylight saving transition is not the change of zone");
+	// Paris over its return to winter time: the transition from its rules.
+	const TimeZoneHistory autumn = build({ { Kind::InForce, instant(2026, 10, 20, 0, 0, 0), 0 } }, instant(2026, 10, 30, 0, 0, 0));
+	check(autumn.changes.size() == 2 && autumn.changes[1].utc100ns == instant(2026, 10, 25, 1, 0, 0)
+	      && autumn.changes[0].biasMinutes == -120 && autumn.changes[1].biasMinutes == -60,
+	      L"a stretch over a daylight saving transition: the offset changes at the transition, to 100 ns");
+	check(build({ { Kind::InForce, instant(2026, 10, 20, 0, 0, 0), 7 },
+	              { Kind::UnnamedChange, instant(2026, 10, 21, 0, 0, 0), -1 } }, instant(2026, 10, 30, 0, 0, 0)).changes.empty(),
+	      L"no zone known: no history, the rules");
+}
+
+/*! The zone in force an EventLog 6013 gives (zoneInForceOf): the event as
+ *  Server 2008 R2 wrote it, its Binary after the last datum. */
+void eventLog6013() {
+	const std::wstring head = L"<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System>"
+		L"<Provider Name='EventLog'/><EventID Qualifiers='32768'>6013</EventID><Level>4</Level>"
+		L"<TimeCreated SystemTime='2026-11-10T08:56:11.000000000Z'/><EventRecordID>1316</EventRecordID>"
+		L"<Channel>System</Channel></System><EventData><Data></Data><Data></Data><Data></Data><Data></Data>"
+		L"<Data>2</Data><Data>60</Data>";
+	long bias = 0;
+	std::wstring name;
+	auto read = [&](const std::wstring& xml) {
+		const std::unique_ptr<XmlNode> event = xmlParse(xml, true);
+		return event && zoneInForceOf(*event, bias, name);
+	};
+	check(read(head + L"<Data>-60 Romance Standard Time</Data><Binary>31002E00</Binary></EventData></Event>")
+	      && bias == -60 && name == L"Romance Standard Time",
+	      L"6013 of Server 2008 R2: the last datum, not the Binary after it");
+	check(read(head + L"<Data>-60 Paris, Madrid</Data></EventData></Event>") && name == L"Paris, Madrid",
+	      L"6013 of a French Windows: the standard name, with its comma");
+	check(!read(head + L"<Data>-6x0 Paris</Data></EventData></Event>") && !read(head + L"<Data>-60</Data></EventData></Event>"),
+	      L"6013 with a forged datum: no zone");
+}
+
 } // namespace
 
 int wmain() {
+	eventLog6013();
 	loggedOffsets();
+	observedZones();
 	std::printf("%d check(s), %d failure(s)\n", checks, failures);
 	return failures ? 1 : 0;
 }

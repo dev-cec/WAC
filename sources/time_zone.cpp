@@ -251,7 +251,10 @@ TimeZoneHistory timeZoneHistoryFrom(std::vector<LoggedBias> logged, long long en
 	return history;
 }
 
-LocalBias biasAtLocalLogged(const TimeZoneRules& rules, const TimeZoneHistory& history, long long local100ns) {
+namespace {
+
+//! The offset of a local time by the history's stretches, without the uncertain intervals (biasAtLocalLogged).
+LocalBias resolvedLocalBias(const TimeZoneRules& rules, const TimeZoneHistory& history, long long local100ns) {
 	const LocalBias byRules{ biasAtLocal(rules, local100ns), false };
 	const std::vector<LoggedBias>& changes = history.changes;
 	if (changes.empty() || local100ns < LLONG_MIN + SAFE_MARGIN_100NS || local100ns > LLONG_MAX - SAFE_MARGIN_100NS)
@@ -293,3 +296,143 @@ LocalBias biasAtLocalLogged(const TimeZoneRules& rules, const TimeZoneHistory& h
 	if (!found) return byRules;
 	return LocalBias{ chosen, chosen != byRules.biasMinutes };
 }
+
+//! One second, in hundreds of nanoseconds.
+const long long SECOND_100NS = 10000000LL;
+//! One day, in hundreds of nanoseconds: the step at which a stretch is searched for transitions.
+const long long DAY_100NS = 864000000000LL;
+//! At most this many days searched in one stretch (about 270 years): a forged date costs no more.
+const long long MAX_SCANNED_DAYS = 100000;
+
+/*! Appends a stretch of a zone to the history: its offset at its start, then
+ *  each daylight saving transition its rules place within it, found by days
+ *  and narrowed to 100 ns. An offset equal to the last one is not repeated.
+ *  @param changes the history's offsets, ascending
+ *  @param rules the zone's rules
+ *  @param zone its key name
+ *  @param from start of the stretch, UTC
+ *  @param to its end, excluded */
+void appendStretch(std::vector<LoggedBias>& changes, const TimeZoneRules& rules, const std::wstring& zone,
+                   long long from, long long to) {
+	auto push = [&](long long utc, long bias) {
+		if (!changes.empty() && changes.back().biasMinutes == bias) return;
+		changes.push_back({ 0, utc, bias, zone });
+	};
+	long bias = biasAtUtc(rules, from);
+	push(from, bias);
+	long long t = from;
+	for (long long days = 0; t < to && days < MAX_SCANNED_DAYS; ++days) {
+		const long long next = to - t > DAY_100NS ? t + DAY_100NS : to - 1;
+		if (next <= t) break;
+		if (biasAtUtc(rules, next) == bias) { t = next; continue; }
+		long long low = t, high = next;   // bias at low, another at high
+		while (high - low > 1) {
+			const long long middle = low + (high - low) / 2;
+			(biasAtUtc(rules, middle) == bias ? low : high) = middle;
+		}
+		bias = biasAtUtc(rules, high);
+		push(high, bias);
+		t = high;
+	}
+}
+
+//! A stretch of the history: a zone from an instant on, or an interval where it is unknown.
+struct ZoneStretch {
+	int zone = -1;           //!< index of its rules; the current zone's for an unknown one
+	long long fromUtc100ns = 0;
+	bool unknown = false;    //!< the zone changed somewhere inside, at an unknown instant
+};
+
+} // namespace
+
+LocalBias biasAtLocalLogged(const TimeZoneRules& rules, const TimeZoneHistory& history, long long local100ns) {
+	LocalBias result = resolvedLocalBias(rules, history, local100ns);
+	if (local100ns < LLONG_MIN + SAFE_MARGIN_100NS || local100ns > LLONG_MAX - SAFE_MARGIN_100NS) return result;
+	for (const UncertainZone& u : history.uncertain)
+		for (long bias : { result.biasMinutes, u.biasBefore, u.biasAfter }) {
+			const long long utc = local100ns + bias * MINUTE_100NS;
+			if (utc >= u.fromUtc100ns && utc < u.toUtc100ns) { result.uncertain = &u; return result; }
+		}
+	return result;
+}
+
+TimeZoneHistory timeZoneHistoryFromObservations(const std::vector<TimeZoneRules>& zones,
+                                                const std::vector<std::wstring>& zoneNames, int currentZone,
+                                                std::vector<ZoneObservation> observations, long long endUtc100ns) {
+	using Kind = ZoneObservation::Kind;
+	TimeZoneHistory history;
+	history.endUtc100ns = endUtc100ns;
+	if (currentZone < 0 || (size_t)currentZone >= zones.size() || zoneNames.size() != zones.size()) return history;
+	/* A time set back is no instant (timeZoneHistoryFrom), within each log:
+	   20001 is TZUtil's own, the others the System log's. */
+	std::vector<ZoneObservation> kept;
+	long long latestSystem = LLONG_MIN, latestTzUtil = LLONG_MIN;
+	bool anyZone = false;
+	for (const ZoneObservation& o : observations) {
+		if (o.kind != Kind::UnnamedChange && (o.zone < 0 || (size_t)o.zone >= zones.size())) continue;
+		if (o.utc100ns > endUtc100ns || o.utc100ns < LLONG_MIN + SAFE_MARGIN_100NS) continue;
+		long long& latest = o.kind == Kind::NamedChange ? latestTzUtil : latestSystem;
+		if (o.utc100ns < latest) continue;
+		latest = o.utc100ns;
+		anyZone = anyZone || o.kind != Kind::UnnamedChange;
+		kept.push_back(o);
+	}
+	if (!anyZone) return history;
+	/* tzutil writes Kernel-General 1 too, times equal, at the instant of its
+	   20001 (measured, Server 2008 R2): that change, not another. */
+	std::vector<long long> named;
+	for (const ZoneObservation& o : kept)
+		if (o.kind == Kind::NamedChange) named.push_back(o.utc100ns);
+	kept.erase(std::remove_if(kept.begin(), kept.end(), [&](const ZoneObservation& o) {
+		return o.kind == Kind::UnnamedChange && std::any_of(named.begin(), named.end(), [&](long long t) {
+			return o.utc100ns > t - SECOND_100NS && o.utc100ns < t + SECOND_100NS; });
+	}), kept.end());
+	std::stable_sort(kept.begin(), kept.end(),
+	                 [](const ZoneObservation& a, const ZoneObservation& b) { return a.utc100ns < b.utc100ns; });
+	kept.push_back({ Kind::InForce, endUtc100ns, currentZone });   // the end of the log: the zone of now
+
+	std::vector<ZoneStretch> stretches;
+	int zone = -1;
+	long long lastSeen = 0;
+	std::vector<long long> pending;   // unnamed changes since the last observation
+	auto start = [&](int z, long long from) { stretches.push_back({ z, from, false }); zone = z; };
+	auto unknown = [&](long long from, long long to) { if (from < to) stretches.push_back({ currentZone, from, true }); };
+	// A daylight saving transition of a zone, within a second: Windows sets its clock's offset then.
+	auto transition = [&](long long t, int z) {
+		return biasAtUtc(zones[z], t - SECOND_100NS) != biasAtUtc(zones[z], t + SECOND_100NS);
+	};
+	for (const ZoneObservation& o : kept) {
+		if (o.kind == Kind::UnnamedChange) { if (zone >= 0) pending.push_back(o.utc100ns); continue; }
+		if (zone < 0) { start(o.zone, o.utc100ns); lastSeen = o.utc100ns; continue; }
+		std::vector<long long> changes;
+		for (long long t : pending)
+			if (!transition(t, zone) && !transition(t, o.zone)) changes.push_back(t);
+		pending.clear();
+		if (o.kind == Kind::NamedChange) {
+			// Changes without a name before it: the zone between the first and it, unknown.
+			if (!changes.empty()) unknown(changes.front(), o.utc100ns);
+			start(o.zone, o.utc100ns);
+		}
+		else if (o.zone == zone) {
+			// One away, one back: between them, unknown. A single one set the same zone again.
+			if (changes.size() >= 2) { unknown(changes.front(), changes.back()); start(zone, changes.back()); }
+		}
+		else if (changes.empty()) { unknown(lastSeen, o.utc100ns); start(o.zone, o.utc100ns); }
+		// The new zone from the last change; between the first and the last, unknown — none for a single one.
+		else { unknown(changes.front(), changes.back()); start(o.zone, changes.back()); }
+		lastSeen = o.utc100ns;
+	}
+
+	for (size_t i = 0; i < stretches.size(); ++i) {
+		const long long from = stretches[i].fromUtc100ns;
+		const long long to = i + 1 < stretches.size() ? stretches[i + 1].fromUtc100ns : endUtc100ns;
+		if (to <= from) continue;
+		const int z = stretches[i].zone;
+		appendStretch(history.changes, zones[z], zoneNames[z], from, to);
+		if (stretches[i].unknown && i > 0 && i + 1 < stretches.size())
+			history.uncertain.push_back({ from, to, biasAtUtc(zones[stretches[i - 1].zone], from - 1),
+			                              biasAtUtc(zones[stretches[i + 1].zone], to) });
+	}
+	return history;
+}
+

@@ -965,6 +965,33 @@ bool readExactValue(ORHKEY key, PCWSTR subKey, PCWSTR name, void* out, DWORD siz
 	return ORGetValue(key, subKey, name, nullptr, out, &read) == ERROR_SUCCESS && read == size;
 }
 
+//! The examined machine's zones, in its SOFTWARE hive.
+const wchar_t TIME_ZONES_KEY[] = L"Microsoft\\Windows NT\\CurrentVersion\\Time Zones";
+
+/*! Reads a zone's rules per year, its "Dynamic DST" key in SOFTWARE, into
+ *  rules.byYear; nothing when it has none.
+ *  @param zone the zone's key name, from the hive
+ *  @param rules receives them */
+void readDynamicDst(const std::wstring& zone, TimeZoneRules& rules) {
+	// The key name comes from the hive: a separator in it would read another key.
+	if (!conf.Software || zone.empty() || zone.find(L'\\') != std::wstring::npos) return;
+	const std::wstring dynamic = std::wstring(TIME_ZONES_KEY) + L"\\" + zone + L"\\Dynamic DST";
+	DWORD first = 0, last = 0;
+	if (!readExactValue(conf.Software, dynamic.c_str(), L"FirstEntry", &first, 4)
+	    || !readExactValue(conf.Software, dynamic.c_str(), L"LastEntry", &last, 4)) return;
+	if (first < 1601 || last > 30827 || first > last || last - first > 1000) {
+		log(2, L"🔥Dynamic DST of " + zone + L": inconsistent years, ignored");
+		return;
+	}
+	for (DWORD year = first; year <= last; ++year) {
+		BYTE bytes[44] = {};
+		TimeZoneRule rule;
+		if (readExactValue(conf.Software, dynamic.c_str(), std::to_wstring(year).c_str(), bytes, sizeof(bytes))
+		    && parseTimeZoneRule(bytes, sizeof(bytes), rule))
+			rules.byYear[(int)year] = rule;
+	}
+}
+
 /*! Reads the daylight saving rules of the suspect's time zone into
  *  conf.timeZone.rules. The current rule comes from the values of
  *  TimeZoneInformation (parseTimeZoneInformation: beware their layout);
@@ -993,24 +1020,7 @@ void loadSuspectTimeZoneRules(PCWSTR key) {
 		log(2, L"❇️Rules per year disabled on the examined machine: its current rule applies to every year");
 		return;
 	}
-	// The key name comes from the hive: a separator in it would read another key.
-	const std::wstring& zone = conf.timeZone.keyName;
-	if (!conf.Software || zone.empty() || zone.find(L'\\') != std::wstring::npos) return;
-	const std::wstring dynamic = L"Microsoft\\Windows NT\\CurrentVersion\\Time Zones\\" + zone + L"\\Dynamic DST";
-	DWORD first = 0, last = 0;
-	if (!readExactValue(conf.Software, dynamic.c_str(), L"FirstEntry", &first, 4)
-	    || !readExactValue(conf.Software, dynamic.c_str(), L"LastEntry", &last, 4)) return;
-	if (first < 1601 || last > 30827 || first > last || last - first > 1000) {
-		log(2, L"🔥Dynamic DST of " + zone + L": inconsistent years, ignored");
-		return;
-	}
-	for (DWORD year = first; year <= last; ++year) {
-		BYTE bytes[44] = {};
-		TimeZoneRule rule;
-		if (readExactValue(conf.Software, dynamic.c_str(), std::to_wstring(year).c_str(), bytes, sizeof(bytes))
-		    && parseTimeZoneRule(bytes, sizeof(bytes), rule))
-			rules.byYear[(int)year] = rule;
-	}
+	readDynamicDst(conf.timeZone.keyName, rules);
 	if (!rules.byYear.empty()) {
 		conf.timeZone.firstRuleYear = rules.byYear.begin()->first;
 		conf.timeZone.lastRuleYear = rules.byYear.rbegin()->first;
@@ -1020,6 +1030,46 @@ void loadSuspectTimeZoneRules(PCWSTR key) {
 }
 
 } // namespace
+
+bool suspectZoneRules(const std::wstring& name, bool byStandardName, TimeZoneRules& rules, std::wstring& keyName) {
+	const std::wstring wanted = toLower(name);
+	if (wanted.empty()) return false;
+	// The current zone: its rules are those of the SYSTEM hive, the ones in force.
+	if (toLower(byStandardName ? conf.timeZone.standardName : conf.timeZone.keyName) == wanted) {
+		rules = conf.timeZone.rules;
+		keyName = conf.timeZone.keyName;
+		return true;
+	}
+	ORHKEY zones = nullptr;
+	if (!conf.Software || OROpenKey(conf.Software, TIME_ZONES_KEY, &zones) != ERROR_SUCCESS) return false;
+	std::wstring found;
+	bool ambiguous = false;
+	// At most a thousand zones: Windows holds about 140, a forged hive costs no more.
+	for (DWORD i = 0; i < 1000 && !ambiguous; ++i) {
+		wchar_t subKey[256] = L"";
+		DWORD length = 256;
+		if (OREnumKey(zones, i, subKey, &length, nullptr, nullptr, nullptr) != ERROR_SUCCESS) break;
+		const std::wstring key(subKey, wcsnlen(subKey, 256));
+		std::wstring standard;
+		const bool match = byStandardName
+			? getRegSzValue(zones, key.c_str(), L"Std", &standard) == ERROR_SUCCESS && toLower(standard) == wanted
+			: toLower(key) == wanted;
+		if (!match) continue;
+		if (!found.empty()) ambiguous = true;   // two zones of that name: neither is known to be the one
+		found = key;
+	}
+	BYTE tzi[44] = {};
+	TimeZoneRule rule;
+	const bool read = !found.empty() && !ambiguous && found.find(L'\\') == std::wstring::npos
+		&& readExactValue(zones, found.c_str(), L"TZI", tzi, sizeof(tzi)) && parseTimeZoneRule(tzi, sizeof(tzi), rule);
+	ORCloseKey(zones);
+	if (!read) return false;
+	rules = TimeZoneRules{};
+	rules.current = rule;
+	readDynamicDst(found, rules);
+	keyName = found;
+	return true;
+}
 
 HRESULT loadSuspectTimeZone() {
 	conf.timeZone = TimeZoneInfo{};       // starts again from a clean state

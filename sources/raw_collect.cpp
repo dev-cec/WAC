@@ -849,9 +849,11 @@ HRESULT ExtractFileArtefactsRaw() {
 	/* The System log alone otherwise, and always: a dependency of every local
 	   time of the collection. It tells the zone in force when each was written
 	   (time_zone_history.h) — an installation in Pacific time, set to Paris
-	   afterwards, dated its first logs 8 h off without it. Its archives too. */
+	   afterwards, dated its first logs 8 h off without it. Its archives too,
+	   and TZUtil's log: before Windows 10, the zones tzutil set are there. */
 	else if (!classicEventLogs(conf.examinedVersion))
-		addTarget(L"\\Windows\\System32\\winevt\\Logs", { L"System.evtx", L"Archive-System-*.evtx" });
+		addTarget(L"\\Windows\\System32\\winevt\\Logs",
+		          { L"System.evtx", L"Archive-System-*.evtx", L"Microsoft-Windows-TZUtil%4Operational.evtx" });
 	/* setupapi.dev.log and its rotations, with the other setup logs of the
 	   folder (a few, small): the folder the artefact table gives for the
 	   examined Windows — INF since Vista, Windows itself for XP's setupapi.log. */

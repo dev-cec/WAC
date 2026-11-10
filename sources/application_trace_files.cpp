@@ -124,6 +124,13 @@ void addRecordTimes(Json& row, const WrittenTime& time, bool writesUtc) {
 			swprintf(offset, 8, L"%lc%02ld:%02ld", east < 0 ? L'-' : L'+', minutes / 60, minutes % 60);
 			row.add(L"TimeZoneInForce", Json::str(offset));
 		}
+		/* Written perhaps while the zone changed at an unknown instant: the
+		   current zone's rules applied, and the interval of the change said,
+		   as an ISO 8601 interval — never an invented instant. */
+		if (bias.uncertain)
+			row.add(L"TimeZoneChangedBetween",
+			        Json::str(timeToIso8601Utc(filetimeFromTicks((uint64_t)bias.uncertain->fromUtc100ns)) + L"/"
+			                  + timeToIso8601Utc(filetimeFromTicks((uint64_t)bias.uncertain->toUtc100ns))));
 	}
 	if (time.fractionCut) row.add(L"TimePrecisionCut", Json::boolean(true));
 	row.add(L"TimeAsWritten", Json::str(time.asWritten));

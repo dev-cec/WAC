@@ -1103,6 +1103,19 @@ bool oleDateToSystemTime(double date, SYSTEMTIME& st);
 */
 HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring* ws);
 
+/*! The rules of one of the examined machine's zones, as its hives hold them:
+ *  the current zone's from SYSTEM (conf.timeZone.rules), another's from the
+ *  Time Zones key of SOFTWARE (TZI and Dynamic DST). Needed for a zone that was
+ *  in force earlier (time_zone_history.h). Loaded after loadSuspectTimeZone.
+ *  @param name the zone's key name ("Romance Standard Time", as tzutil writes
+ *         it), or its standard name in the language of the installation
+ *         ("Paris, Madrid", as EventLog 6013 writes it)
+ *  @param byStandardName `name` is the standard name
+ *  @param rules receives its rules
+ *  @param keyName receives its key name
+ *  @return false when no zone, or more than one, has that name, or its rule is unreadable */
+bool suspectZoneRules(const std::wstring& name, bool byStandardName, TimeZoneRules& rules, std::wstring& keyName);
+
 /*! Reads a FILETIME in the registry.
 * @param key the registry key
 * @param subKey the registry subkey

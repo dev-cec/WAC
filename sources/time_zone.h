@@ -31,6 +31,7 @@
 #include <windows.h>
 #include <cstdint>
 #include <map>
+#include <string>
 #include <vector>
 
 //! One rule: the REG_TZI_FORMAT structure of the registry.
@@ -102,9 +103,19 @@ long biasAtLocal(const TimeZoneRules& rules, long long local100ns);
  *  set). Measured on Windows 11 and Server 2025, 2026-11-09: a time zone set
  *  by tzutil writes 22, 24 and 1 at the same instant. */
 struct LoggedBias {
-	unsigned long long recordId = 0; //!< the record's number: the order Windows wrote them in
+	unsigned long long recordId = 0; //!< the record's number: the order Windows wrote them in; 0 for an offset a zone's rules gave
 	long long utc100ns = 0;          //!< the record's time, UTC
 	long biasMinutes = 0;            //!< the offset in force from then on: UTC = local + bias
+	std::wstring zone;               //!< the zone whose rules gave the offset (timeZoneHistoryFromObservations); empty when logged as such
+};
+
+/*! An interval where the zone in force is not known: it changed somewhere
+ *  inside, and nothing tells when (timeZoneHistoryFromObservations). */
+struct UncertainZone {
+	long long fromUtc100ns = 0;  //!< the last instant the zone before is known in force
+	long long toUtc100ns = 0;    //!< the first instant the zone after is known in force
+	long biasBefore = 0;         //!< the offset of the zone before, at fromUtc100ns
+	long biasAfter = 0;          //!< the offset of the zone after, at toUtc100ns
 };
 
 /*! The offset in force over the period the System log covers.
@@ -122,7 +133,58 @@ struct TimeZoneHistory {
 	 *  consecutive alike. Empty: nothing logged, the rules alone apply. */
 	std::vector<LoggedBias> changes;
 	long long endUtc100ns = 0; //!< last instant the log covers: past it, the rules alone
+	/*! Where a change happened at an unknown instant: the current zone's rules
+	 *  hold there in `changes`, and a time read there says so. Ascending. */
+	std::vector<UncertainZone> uncertain;
 };
+
+/*! What a Windows before Windows 10 logs of its time zone — it writes no
+ *  Kernel-General 22 nor 24. Measured on Server 2008 R2, 2026-11-10:
+ *  - EventLog 6013, at each boot and once a day: the zone in force, as its
+ *    STANDARD offset and standard name (the last datum, "-60 Paris, Madrid",
+ *    localized: Windows 11 in French). The standard offset, not the one in
+ *    force: -60 for Paris in October, in summer time — daylight saving comes
+ *    from the zone's rules;
+ *  - TZUtil/Operational 20001: a zone set by tzutil, its key name, at the
+ *    instant of the change;
+ *  - Kernel-General 1 with NewTime equal to OldTime: a zone set through the
+ *    API (SetDynamicTimeZoneInformation, as the Control Panel does), at the
+ *    instant of the change, without its name. A clock really set, or adjusted
+ *    at boot (by 0.125 ms, measured), changes the time: not one. tzutil
+ *    writes one too, with its 20001: within a second of a 20001, the same change. */
+struct ZoneObservation {
+	enum class Kind {
+		InForce,        //!< 6013: zone in force at that instant
+		NamedChange,    //!< 20001: zone set at that instant
+		UnnamedChange   //!< Kernel-General 1, times equal: a zone set at that instant, which one unknown
+	};
+	Kind kind = Kind::InForce;
+	long long utc100ns = 0;  //!< the record's time, UTC
+	int zone = -1;           //!< InForce and NamedChange: index of its rules in the zones given
+};
+
+/*! Builds the history from what a Windows before Windows 10 logs.
+ *
+ *  Between two observations of the same zone, it was in force — two unnamed
+ *  changes between them (one away, one back) leave the interval between those
+ *  two unknown. A named change starts its zone at its instant. Between two
+ *  observations of different zones, the change happened in between: at the
+ *  unnamed change if a single one lies there (one within a second of a
+ *  daylight saving transition of either zone is that transition, not a change
+ *  of zone); otherwise its instant is unknown — the interval goes to
+ *  `uncertain`, and the current zone's rules hold in it, never an invented
+ *  instant (decision of the user, 2026-11-10). The end of the log observes the
+ *  current zone. Each stretch takes its zone's rules: an offset at its start,
+ *  one at each daylight saving transition within it.
+ *  @param zones the rules of each zone observed, read in the examined SOFTWARE hive
+ *  @param zoneNames the key name of each, written with its offsets
+ *  @param currentZone index of the current zone in `zones`
+ *  @param observations as read, in the order Windows wrote each log
+ *  @param endUtc100ns the time of the last record of the log
+ *  @return the history */
+TimeZoneHistory timeZoneHistoryFromObservations(const std::vector<TimeZoneRules>& zones,
+                                                const std::vector<std::wstring>& zoneNames, int currentZone,
+                                                std::vector<ZoneObservation> observations, long long endUtc100ns);
 
 /*! Builds the history from the offsets read, in any order.
  *
@@ -140,6 +202,9 @@ TimeZoneHistory timeZoneHistoryFrom(std::vector<LoggedBias> logged, long long en
 struct LocalBias {
 	long biasMinutes = 0;       //!< UTC = local + bias
 	bool fromHistory = false;   //!< the System log's offset, not the one the current zone's rules give
+	/*! The time may have been written in an interval where the zone changed at
+	 *  an unknown instant (TimeZoneHistory::uncertain): that interval, else null. */
+	const UncertainZone* uncertain = nullptr;
 };
 
 /*! The offset of a local time on the examined machine: the one in force WHEN
@@ -153,7 +218,8 @@ struct LocalBias {
  *  (Windows logs a change a moment after making it); else, L within the log (a
  *  clock set forward: an hour skipped), the offset in force before the change,
  *  as Windows does in spring. L before the first offset logged, or after the
- *  end of the log: the rules.
+ *  end of the log: the rules. L read in an interval of `uncertain` — by its
+ *  offset, or by the zone before or after it —: that interval, said.
  *  @param rules the current zone's rules
  *  @param history what the System log shows
  *  @param local100ns the local time, in hundreds of nanoseconds since 1601

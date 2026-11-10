@@ -257,12 +257,29 @@ Json auditContext() {
 				Json entry = Json::obj();
 				addUtcDate(entry, L"FromUtc", filetimeFromTicks((uint64_t)change.utc100ns));
 				entry.add(L"Bias", Json::num((long long)change.biasMinutes));
-				entry.add(L"RecordId", Json::num((long long)change.recordId));
+				// Logged as such (Windows 10 and later), or given by the rules of the zone observed.
+				if (change.recordId != 0) entry.add(L"RecordId", Json::num((long long)change.recordId));
+				if (!change.zone.empty()) entry.add(L"Zone", Json::str(change.zone));
 				history.push(std::move(entry));
 			}
 			suspect.add(L"History", std::move(history));
 			addUtcDate(suspect, L"HistoryEndUtc", filetimeFromTicks((uint64_t)conf.timeZone.history.endUtc100ns));
-			suspect.add(L"HistorySource", Json::str(L"System log (working copy), Kernel-General events 1, 22 and 24"));
+			const bool logged = conf.timeZone.history.changes.front().recordId != 0;
+			suspect.add(L"HistorySource", Json::str(logged
+				? L"System log (working copy), Kernel-General events 1, 22 and 24"
+				: L"System log (working copy), EventLog 6013 and Kernel-General 1; TZUtil's log, 20001; the zones' rules, SOFTWARE hive"));
+			/* Where the zone changed at an unknown instant: the current zone's
+			   rules applied there, and each time read there says so. */
+			Json uncertain = Json::arr();
+			for (const UncertainZone& u : conf.timeZone.history.uncertain) {
+				Json entry = Json::obj();
+				addUtcDate(entry, L"FromUtc", filetimeFromTicks((uint64_t)u.fromUtc100ns));
+				addUtcDate(entry, L"ToUtc", filetimeFromTicks((uint64_t)u.toUtc100ns));
+				entry.add(L"BiasBefore", Json::num((long long)u.biasBefore));
+				entry.add(L"BiasAfter", Json::num((long long)u.biasAfter));
+				uncertain.push(std::move(entry));
+			}
+			if (!conf.timeZone.history.uncertain.empty()) suspect.add(L"ChangesAtUnknownInstant", std::move(uncertain));
 		}
 	}
 	else {
