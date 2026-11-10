@@ -8,11 +8,15 @@
  *  installation, came out 8 h off. The cases here are those the test VMs
  *  showed, 2026-11-09, and those of a zone set back or forward.
  *
- *  Usage: time_zone_history_test — built by `build-windows.sh --test`, runs
- *  under Wine. Exit code: 0 if all checks hold.
+ *  Usage: time_zone_history_test [<SYSTEM hive> <SOFTWARE hive>] — built by
+ *  `build-windows.sh --test`, runs under Wine. With the hives of a Windows
+ *  before Vista (Server 2003's, taken offline from its disk), also the
+ *  current zone's key name deduced from its StandardName: SYSTEM holds no
+ *  TimeZoneKeyName there. Exit code: 0 if all checks hold.
  */
 #include <windows.h>
 #include <cstdio>
+#include <cwchar>
 #include <string>
 #include <memory>
 #include <vector>
@@ -226,9 +230,9 @@ void observedZones() {
 	      L"no zone known: no history, the rules");
 }
 
-/*! The zone in force an EventLog 6013 gives (zoneInForceOf): the event as
- *  Server 2008 R2 wrote it, its Binary after the last datum. */
-void eventLog6013() {
+/*! The zone in force EventLog gives (zoneInForceOf): 6013 as Server 2008 R2
+ *  wrote it, its Binary after the last datum; 6005 and 6006 of Server 2003. */
+void eventLogZoneInForce() {
 	const std::wstring head = L"<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System>"
 		L"<Provider Name='EventLog'/><EventID Qualifiers='32768'>6013</EventID><Level>4</Level>"
 		L"<TimeCreated SystemTime='2026-11-10T08:56:11.000000000Z'/><EventRecordID>1316</EventRecordID>"
@@ -247,12 +251,66 @@ void eventLog6013() {
 	      L"6013 of a French Windows: the standard name, with its comma");
 	check(!read(head + L"<Data>-6x0 Paris</Data></EventData></Event>") && !read(head + L"<Data>-60</Data></EventData></Event>"),
 	      L"6013 with a forged datum: no zone");
+
+	/* Server 2003 writes no 6013: 6005 at each boot, 6006 at each shutdown,
+	   the same last datum — as evt.cpp renders its SysEvent.evt (measured,
+	   2026-11-10). */
+	auto classic = [](const wchar_t* id, const wchar_t* last) {
+		return std::wstring(L"<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System>"
+			L"<Provider Name='EventLog'/><EventID Qualifiers='32768'>") + id + L"</EventID><Level>4</Level>"
+			L"<TimeCreated SystemTime='2026-11-08T14:11:33.000000000Z'/><EventRecordID>120</EventRecordID>"
+			L"<Channel>System</Channel><Computer>WAC-SRV2003</Computer><Security/></System><EventData>"
+			L"<Data></Data><Data></Data><Data></Data><Data></Data><Data>25</Data><Data>60</Data><Data>" + last
+			+ L"</Data><Binary>31002E00310000003000</Binary></EventData></Event>";
+	};
+	name.clear();
+	check(read(classic(L"6005", L"-60 Romance Standard Time")) && bias == -60 && name == L"Romance Standard Time",
+	      L"6005 of Server 2003: the zone in force at boot");
+	name.clear();
+	check(read(classic(L"6006", L"-330 India Standard Time")) && bias == -330 && name == L"India Standard Time",
+	      L"6006 of Server 2003: the zone in force at shutdown");
+	check(!read(classic(L"6009", L"-60 Romance Standard Time")),
+	      L"another event of EventLog (6009), its datum alike: no zone");
+}
+
+/*! The current zone of a Windows before Vista (loadSuspectTimeZone): no
+ *  TimeZoneKeyName in SYSTEM, its key is the zone of SOFTWARE whose Std is
+ *  its StandardName — under it, its rules per year.
+ *  @param systemHive, softwareHive the hives of that Windows
+ *  @return false if they cannot be opened */
+bool keyNameBeforeVista(const wchar_t* systemHive, const wchar_t* softwareHive) {
+	ORHKEY system = nullptr, software = nullptr, controlSet = nullptr;
+	DWORD current = 0;
+	if (OROpenHive(systemHive, &system) != ERROR_SUCCESS || OROpenHive(softwareHive, &software) != ERROR_SUCCESS
+	    || getRegDwordValue(system, L"Select", L"Current", &current) != ERROR_SUCCESS || current > 999) {
+		std::printf("hives unreadable\n");
+		return false;
+	}
+	wchar_t name[16];
+	std::swprintf(name, 16, L"ControlSet%03lu", (unsigned long)current);
+	if (OROpenKey(system, name, &controlSet) != ERROR_SUCCESS) return false;
+	conf.CurrentControlSet = controlSet;
+	conf.Software = software;
+	std::wstring keyName;
+	const bool absent = getRegSzValue(controlSet, L"Control\\TimeZoneInformation", L"TimeZoneKeyName", &keyName) != ERROR_SUCCESS;
+	check(absent, L"Server 2003: no TimeZoneKeyName in SYSTEM");
+	check(loadSuspectTimeZone() == ERROR_SUCCESS && conf.timeZone.keyName == L"Romance Standard Time"
+	      && conf.timeZone.keyNameFromStandardName,
+	      L"Server 2003: the key name deduced from StandardName, and said so");
+	std::printf("rules per year: %zu\n", conf.timeZone.rules.byYear.size());
+	ORCloseKey(controlSet);
+	ORCloseHive(software);
+	ORCloseHive(system);
+	conf.CurrentControlSet = nullptr;
+	conf.Software = nullptr;
+	return true;
 }
 
 } // namespace
 
-int wmain() {
-	eventLog6013();
+int wmain(int argc, wchar_t** argv) {
+	if (argc == 3 && !keyNameBeforeVista(argv[1], argv[2])) return 1;
+	eventLogZoneInForce();
 	loggedOffsets();
 	observedZones();
 	std::printf("%d check(s), %d failure(s)\n", checks, failures);

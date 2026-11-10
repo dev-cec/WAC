@@ -240,6 +240,9 @@ Json auditContext() {
 	Json suspect = Json::obj();
 	if (conf.timeZone.valid) {
 		suspect.add(L"KeyName",      Json::str(conf.timeZone.keyName));
+		// Before Vista, SYSTEM has no TimeZoneKeyName: the key is the zone of that standard name.
+		if (conf.timeZone.keyNameFromStandardName)
+			suspect.add(L"KeyNameSource", Json::str(L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones, the zone whose Std is StandardName"));
 		suspect.add(L"StandardName", Json::str(conf.timeZone.standardName));
 		suspect.add(L"DaylightName", Json::str(conf.timeZone.daylightName));
 		// Minutes to ADD to UTC to obtain the local time: +120 = UTC+02:00.
@@ -267,7 +270,7 @@ Json auditContext() {
 			const bool logged = conf.timeZone.history.changes.front().recordId != 0;
 			suspect.add(L"HistorySource", Json::str(logged
 				? L"System log (working copy), Kernel-General events 1, 22 and 24"
-				: L"System log (working copy), EventLog 6013 and Kernel-General 1; TZUtil's log, 20001; the zones' rules, SOFTWARE hive"));
+				: L"System log (working copy), EventLog 6013, 6005, 6006 and Kernel-General 1; TZUtil's log, 20001; the zones' rules, SOFTWARE hive"));
 			/* Where the zone changed at an unknown instant: the current zone's
 			   rules applied there, and each time read there says so. */
 			Json uncertain = Json::arr();

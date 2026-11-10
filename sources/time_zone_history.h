@@ -17,6 +17,12 @@
  *  hive. A change seen only between two 6013 has no instant: the interval is
  *  said (timeZoneHistoryFromObservations).
  *
+ *  SERVER 2003 (and XP's family, .evt logs). No 6013 in the log (measured
+ *  2026-11-10, ten boots): the zone is in EventLog 6005 and 6006 instead —
+ *  the log service started, at each boot, and stopped, at each shutdown —,
+ *  in the same last datum. No TZUtil, no Kernel-General: a change between two
+ *  of them has no instant.
+ *
  *  READ IN THE WORKING COPY. The log is read from <output>\working, as every
  *  conversion reads a collected file; the exhibit store is never read.
  */
@@ -25,9 +31,10 @@
 #include <string>
 #include "xml_light.h"
 
-/*! The zone an EventLog 6013 says in force: its last datum, "<standard
- *  offset> <standard name>" ("-60 Romance Standard Time", "-60 Paris, Madrid"
- *  in French) — the Binary after it is not a datum (measured on Server 2008 R2).
+/*! The zone an EventLog 6013 (Server 2008 R2), 6005 or 6006 (Server 2003)
+ *  says in force: its last datum, "<standard offset> <standard name>" ("-60
+ *  Romance Standard Time", "-60 Paris, Madrid" in French) — the Binary after
+ *  it is not a datum (measured on both, 2026-11-10).
  *  @param event the event, parsed
  *  @param standardBias receives the standard offset, in minutes: UTC = local + bias
  *  @param standardName receives the standard name

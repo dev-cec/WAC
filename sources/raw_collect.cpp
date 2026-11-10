@@ -840,8 +840,7 @@ HRESULT ExtractFileArtefactsRaw() {
 	   collection and fill the medium with data the operator did not ask for.
 	   Reading them offline replaces the EventLog API (see events.h). */
 	// The event logs: for events.json, and for the incoming RDP connections read in them.
-	/* Before Vista they are the .evt files kept next to the hives: taken raw,
-	   WAC has no decoder for them yet (artefact_catalogue.h). */
+	/* Before Vista they are the .evt files kept next to the hives (evt.h). */
 	if (conf.artefacts.needsEventLogs()) {
 		if (classicEventLogs(conf.examinedVersion)) addTarget(L"\\Windows\\System32\\config", { L".evt" });
 		else addTarget(L"\\Windows\\System32\\winevt\\Logs", { L".evtx" });
@@ -850,8 +849,11 @@ HRESULT ExtractFileArtefactsRaw() {
 	   time of the collection. It tells the zone in force when each was written
 	   (time_zone_history.h) — an installation in Pacific time, set to Paris
 	   afterwards, dated its first logs 8 h off without it. Its archives too,
-	   and TZUtil's log: before Windows 10, the zones tzutil set are there. */
-	else if (!classicEventLogs(conf.examinedVersion))
+	   and TZUtil's log: before Windows 10, the zones tzutil set are there.
+	   XP and Server 2003: SysEvent.evt, whose 6005 and 6006 give the zone. */
+	else if (classicEventLogs(conf.examinedVersion))
+		addTarget(L"\\Windows\\System32\\config", { L"SysEvent.evt" });
+	else
 		addTarget(L"\\Windows\\System32\\winevt\\Logs",
 		          { L"System.evtx", L"Archive-System-*.evtx", L"Microsoft-Windows-TZUtil%4Operational.evtx" });
 	/* setupapi.dev.log and its rotations, with the other setup logs of the

@@ -50,6 +50,8 @@
 */
 struct TimeZoneInfo {
 	std::wstring keyName;          //!< TimeZoneKeyName, ex. "Romance Standard Time"
+	//! keyName deduced from standardName (before Vista, no TimeZoneKeyName)
+	bool keyNameFromStandardName = false;
 	std::wstring standardName;     //!< name in standard time
 	std::wstring daylightName;     //!< name in daylight saving time
 	TimeZoneRules rules;           //!< daylight saving rules, year by year: the offset of EACH date
@@ -1109,7 +1111,7 @@ HRESULT getRegSzValue(ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring*
  *  in force earlier (time_zone_history.h). Loaded after loadSuspectTimeZone.
  *  @param name the zone's key name ("Romance Standard Time", as tzutil writes
  *         it), or its standard name in the language of the installation
- *         ("Paris, Madrid", as EventLog 6013 writes it)
+ *         ("Paris, Madrid", as EventLog 6013, 6005 and 6006 write it)
  *  @param byStandardName `name` is the standard name
  *  @param rules receives its rules
  *  @param keyName receives its key name

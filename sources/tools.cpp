@@ -992,6 +992,47 @@ void readDynamicDst(const std::wstring& zone, TimeZoneRules& rules) {
 	}
 }
 
+/*! The subkey of SOFTWARE's Time Zones whose key name, or whose standard
+ *  name (its Std value), is the one given.
+ *  @param zones the Time Zones key, open
+ *  @param name the name looked for, case ignored
+ *  @param byStandardName `name` is a standard name
+ *  @return the subkey's name; empty when none, or more than one, has it —
+ *          two zones of that name: neither is known to be the one */
+std::wstring timeZoneKeyNamed(ORHKEY zones, const std::wstring& name, bool byStandardName) {
+	const std::wstring wanted = toLower(name);
+	std::wstring found;
+	// At most a thousand zones: Windows holds about 140, a forged hive costs no more.
+	for (DWORD i = 0; i < 1000 && !wanted.empty(); ++i) {
+		wchar_t subKey[256] = L"";
+		DWORD length = 256;
+		if (OREnumKey(zones, i, subKey, &length, nullptr, nullptr, nullptr) != ERROR_SUCCESS) break;
+		const std::wstring key(subKey, wcsnlen(subKey, 256));
+		std::wstring standard;
+		const bool match = byStandardName
+			? getRegSzValue(zones, key.c_str(), L"Std", &standard) == ERROR_SUCCESS && toLower(standard) == wanted
+			: toLower(key) == wanted;
+		if (!match) continue;
+		if (!found.empty()) return L"";
+		found = key;
+	}
+	return found;
+}
+
+/*! The current zone's key name before Windows Vista: SYSTEM holds no
+ *  TimeZoneKeyName there (measured on Server 2003, 2026-11-10), only its
+ *  StandardName — the zone of SOFTWARE's Time Zones whose Std is that name.
+ *  Its rules per year (Dynamic DST) are found under that key, and the zones
+ *  the System log names are compared with it (time_zone_history.h).
+ *  @return the key name; empty when no zone, or more than one, has that name */
+std::wstring timeZoneKeyOfStandardName(const std::wstring& standardName) {
+	ORHKEY zones = nullptr;
+	if (!conf.Software || OROpenKey(conf.Software, TIME_ZONES_KEY, &zones) != ERROR_SUCCESS) return L"";
+	std::wstring found = timeZoneKeyNamed(zones, standardName, true);
+	ORCloseKey(zones);
+	return found.find(L'\\') == std::wstring::npos ? found : L"";
+}
+
 /*! Reads the daylight saving rules of the suspect's time zone into
  *  conf.timeZone.rules. The current rule comes from the values of
  *  TimeZoneInformation (parseTimeZoneInformation: beware their layout);
@@ -1042,25 +1083,10 @@ bool suspectZoneRules(const std::wstring& name, bool byStandardName, TimeZoneRul
 	}
 	ORHKEY zones = nullptr;
 	if (!conf.Software || OROpenKey(conf.Software, TIME_ZONES_KEY, &zones) != ERROR_SUCCESS) return false;
-	std::wstring found;
-	bool ambiguous = false;
-	// At most a thousand zones: Windows holds about 140, a forged hive costs no more.
-	for (DWORD i = 0; i < 1000 && !ambiguous; ++i) {
-		wchar_t subKey[256] = L"";
-		DWORD length = 256;
-		if (OREnumKey(zones, i, subKey, &length, nullptr, nullptr, nullptr) != ERROR_SUCCESS) break;
-		const std::wstring key(subKey, wcsnlen(subKey, 256));
-		std::wstring standard;
-		const bool match = byStandardName
-			? getRegSzValue(zones, key.c_str(), L"Std", &standard) == ERROR_SUCCESS && toLower(standard) == wanted
-			: toLower(key) == wanted;
-		if (!match) continue;
-		if (!found.empty()) ambiguous = true;   // two zones of that name: neither is known to be the one
-		found = key;
-	}
+	const std::wstring found = timeZoneKeyNamed(zones, name, byStandardName);
 	BYTE tzi[44] = {};
 	TimeZoneRule rule;
-	const bool read = !found.empty() && !ambiguous && found.find(L'\\') == std::wstring::npos
+	const bool read = !found.empty() && found.find(L'\\') == std::wstring::npos
 		&& readExactValue(zones, found.c_str(), L"TZI", tzi, sizeof(tzi)) && parseTimeZoneRule(tzi, sizeof(tzi), rule);
 	ORCloseKey(zones);
 	if (!read) return false;
@@ -1113,6 +1139,13 @@ HRESULT loadSuspectTimeZone() {
 	getRegSzValue(conf.CurrentControlSet, key, L"TimeZoneKeyName", &conf.timeZone.keyName);
 	getRegSzValue(conf.CurrentControlSet, key, L"StandardName",    &conf.timeZone.standardName);
 	getRegSzValue(conf.CurrentControlSet, key, L"DaylightName",    &conf.timeZone.daylightName);
+	if (conf.timeZone.keyName.empty() && !conf.timeZone.standardName.empty()) {
+		conf.timeZone.keyName = timeZoneKeyOfStandardName(conf.timeZone.standardName);
+		conf.timeZone.keyNameFromStandardName = !conf.timeZone.keyName.empty();
+		if (conf.timeZone.keyName.empty())
+			log(2, L"🔥No TimeZoneKeyName, and no single zone of SOFTWARE named " + conf.timeZone.standardName
+			     + L": the rules per year are not read");
+	}
 	loadSuspectTimeZoneRules(key);
 	conf.timeZone.fromHive = true;
 	conf.timeZone.valid    = true;

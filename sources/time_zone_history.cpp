@@ -99,7 +99,7 @@ private:
 int systemLogTimeZone(const EvtxRecord& record, long& bias, ZoneObservation& observation, ObservedZones& zones) {
 	// Most records are neither: not parsed.
 	const bool kernel = record.xml.find(KERNEL_GENERAL) != std::wstring::npos;
-	if (!kernel && record.xml.find(L"6013") == std::wstring::npos) return 0;
+	if (!kernel && record.xml.find(L"EventLog") == std::wstring::npos) return 0;
 	const std::unique_ptr<XmlNode> event = xmlParse(record.xml, true);
 	const XmlNode* system = event ? event->child(L"System") : nullptr;
 	const XmlNode* provider = system ? system->child(L"Provider") : nullptr;
@@ -131,6 +131,12 @@ int systemLogTimeZone(const EvtxRecord& record, long& bias, ZoneObservation& obs
 	return rule.biasMinutes + rule.standardBiasMinutes == standard ? 2 : 0;
 }
 
+/*! Whether an event is one of EventLog's that give the zone in force: 6013
+ *  (Server 2008 R2), 6005 and 6006 (Server 2003). */
+bool isZoneInForceId(const std::wstring& eventId) {
+	return eventId == L"6013" || eventId == L"6005" || eventId == L"6006";
+}
+
 //! Whether a log is TZUtil's own: the zones tzutil set (Windows 7 and later).
 bool isTzUtilLog(const std::wstring& channel) {
 	const std::wstring c = toLower(channel);
@@ -143,7 +149,7 @@ bool zoneInForceOf(const XmlNode& event, long& standardBias, std::wstring& stand
 	const XmlNode* system = event.child(L"System");
 	const XmlNode* provider = system ? system->child(L"Provider") : nullptr;
 	const XmlNode* data = event.child(L"EventData");
-	if (!provider || !data || provider->attribute(L"Name") != L"EventLog" || system->textOf(L"EventID") != L"6013") return false;
+	if (!provider || !data || provider->attribute(L"Name") != L"EventLog" || !isZoneInForceId(system->textOf(L"EventID"))) return false;
 	// Its last datum — the Binary that follows is not one.
 	const XmlNode* last = nullptr;
 	for (const auto& item : data->children)

@@ -144,7 +144,8 @@ struct TimeZoneHistory {
  *    STANDARD offset and standard name (the last datum, "-60 Paris, Madrid",
  *    localized: Windows 11 in French). The standard offset, not the one in
  *    force: -60 for Paris in October, in summer time — daylight saving comes
- *    from the zone's rules;
+ *    from the zone's rules. Server 2003 writes none, but the same datum in
+ *    EventLog 6005 and 6006, at each boot and each shutdown (measured);
  *  - TZUtil/Operational 20001: a zone set by tzutil, its key name, at the
  *    instant of the change;
  *  - Kernel-General 1 with NewTime equal to OldTime: a zone set through the
@@ -154,7 +155,7 @@ struct TimeZoneHistory {
  *    writes one too, with its 20001: within a second of a 20001, the same change. */
 struct ZoneObservation {
 	enum class Kind {
-		InForce,        //!< 6013: zone in force at that instant
+		InForce,        //!< 6013, 6005, 6006: zone in force at that instant
 		NamedChange,    //!< 20001: zone set at that instant
 		UnnamedChange   //!< Kernel-General 1, times equal: a zone set at that instant, which one unknown
 	};
