@@ -243,6 +243,10 @@ Une fois installé, un disque de données de 2 Go lui est ajouté (IDE `hdd`), s
 lequel `run-wac-test-xp.sh` formate W: pour les témoins du carving. WAC32 s'exécute
 depuis la clé de collecte, `~/vms/wac-kit-<vm>.img` (64 Gio, creuse), un disque USB amovible formaté
 NTFS sur l'hôte (`mkntfs`), dont les résultats sont lus une fois la VM éteinte.
+Le journal Système que WAC a prélevé (`SysEvent.evt`, sa copie de travail) y est
+lu aussi, et décodé par `lib/evt-zone.py`, indépendamment de WAC : le fuseau en
+vigueur que disent ses EventLog 6005, 6006 et 6013, confronté à l'historique de
+`conversion.json`.
 
 Windows Server 2003 (profil `srv2003`, domaine `srv2003-test`) s'installe et se
 pilote de la même façon, depuis le kit d'évaluation de 180 jours de Microsoft

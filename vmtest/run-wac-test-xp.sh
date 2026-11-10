@@ -36,7 +36,7 @@
 # removes it first; the examined disk receives nothing of WAC's; W: keeps only
 # the free clusters of the witnesses, overwritten by the next.
 #
-# Usage: ./run-wac-test-xp.sh [winxp-test|winxpsp3-test]
+# Usage: [XP_WITHOUT_EVENTS=1] ./run-wac-test-xp.sh [winxp-test|winxpsp3-test|srv2003-test]
 set -euo pipefail
 # The tools' answers are read as text ("shut off", "Mounted … at …"), in English:
 # since Ubuntu 26.04, virsh answers in the session's language ("fermé").
@@ -81,7 +81,12 @@ cp "$ROOT/bin/WAC32.exe" "$WORK/iso/"
 # The output in <key>\wac\xp\out, beside WAC32.exe; the deleted files at
 # level 3, carving — never the default, asked for here to test it on the
 # oldest Windows; the rest as bin/ ships it.
-sed -e 's/^output:.*/output: out/' -e 's/^\(    level: *\)[0-9]/\13/' "$ROOT/bin/wac.yml" > "$WORK/iso/wac.yml"
+# XP_WITHOUT_EVENTS=1: the event logs not asked for (events and rdp_server
+# off), so that the System log WAC takes alone for the time zone is the one
+# read (B-077).
+NO_EVENTS=()
+[[ -n "${XP_WITHOUT_EVENTS:-}" ]] && NO_EVENTS=(-e 's/^\(  events: *\)true/\1false/' -e 's/^\(  rdp_server: *\)true/\1false/')
+sed -e 's/^output:.*/output: out/' -e 's/^\(    level: *\)[0-9]/\13/' "${NO_EVENTS[@]}" "$ROOT/bin/wac.yml" > "$WORK/iso/wac.yml"
 # The carving's witnesses: an executable and a PDF of known SHA-256, written
 # on the data disk (W:, formatted on first use), truncated to nothing, then
 # deleted — their bytes in the free clusters only. On W: and not C:: whatever
@@ -160,6 +165,14 @@ echo "== 4. Results read on the key, read-only == ($(date +%H:%M:%S))"
 "$HERE/tools/target-venv/bin/python" -I "$HERE/lib/read-offline.py" "$KIT_IMG" "$OUTPUT" wac/xp/out/ \
   'wac/xp/out/*.json' wac/xp/out/exhibits/MANIFEST.json wac/xp/out/exhibits/MANIFEST.sha256 \
   wac/xp/collect.log wac/xp/convert.log
+# The System log WAC collected (its working copy), decoded here independently
+# of WAC: the zone in force its EventLog 6005, 6006 and 6013 say (B-077).
+"$HERE/tools/target-venv/bin/python" -I "$HERE/lib/read-offline.py" "$KIT_IMG" "$OUTPUT/reference" wac/xp/out/working/ \
+  wac/xp/out/working/Windows/System32/config/SysEvent.evt
+if [[ -f "$OUTPUT/reference/Windows/System32/config/SysEvent.evt" ]]; then
+  python3 -I "$HERE/lib/evt-zone.py" "$OUTPUT/reference/Windows/System32/config/SysEvent.evt" > "$OUTPUT/reference/zone-in-force.txt" \
+    || echo "   ⚠️ the collected System log could not be decoded"
+fi
 # The version, as the profile installed it: build 2600, a workstation (ProductType 1).
 echo "windows=2600|1" > "$OUTPUT/reference/windows-version.txt"
 

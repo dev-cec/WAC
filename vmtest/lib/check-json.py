@@ -521,6 +521,7 @@ def cross_checks(folder):
     found += guarded(check_application_traces, folder)
     found += guarded(check_time_zone_history, folder)
     found += guarded(check_assumed_time_zones, folder)
+    found += guarded(check_zone_in_force, folder)
     found += guarded(check_user_access_log, folder)
     found += guarded(check_web_server, folder)
     found += guarded(check_web_installations, folder)
@@ -3606,6 +3607,63 @@ def check_time_zone_history(folder):
           f"({len(got)} against {len(expected)})")
     return 1
 
+
+def check_zone_in_force(folder):
+    """The zone a Windows before Vista says in force (XP, Server 2003: EventLog
+    6005 at each boot, 6006 at each shutdown, 6013), read in the System log
+    WAC collected by an independent decoder (lib/evt-zone.py,
+    reference/zone-in-force.txt), against the history WAC built
+    (conversion.json, Host.SuspectTimeZone.History): at each event's instant,
+    WAC's stretch must be that zone, at its standard offset or its daylight
+    one (the standard one less 60 min). Left out as WAC leaves them: an event
+    without a zone (written during the installation, "0 "), an instant before
+    an earlier one (a clock set back), one past the end of the log, one where
+    WAC says the change has no instant (ChangesAtUnknownInstant). The zone is
+    compared by name: the key name of an English Windows of that era is its
+    standard name (backlog B-077)."""
+    path = os.path.join(folder, "reference", "zone-in-force.txt")
+    audit = load(folder, "conversion.json")
+    zone = ((audit or {}).get("Host") or {}).get("SuspectTimeZone") if isinstance(audit, dict) else None
+    if not os.path.exists(path) or not isinstance(zone, dict):
+        return 0
+    observed, latest = [], None
+    with open(path, encoding="utf-8", errors="replace") as f:
+        rows = [line.rstrip("\n").split("|", 3) for line in f]
+    for record, instant, event, last in sorted((r for r in rows if len(r) == 4 and r[0].isdigit()), key=lambda r: int(r[0])):
+        m = re.match(r"(-?\d+) (.+)$", last)
+        if not m:
+            continue
+        if latest and instant < latest:
+            continue
+        latest = instant
+        observed.append((int(record), instant, event, int(m.group(1)), m.group(2)))
+    if not observed:
+        print("  ⏭️  zone in force (EventLog 6005, 6006, 6013): none in the System log, skipped")
+        return 0
+    history, end = zone.get("History") or [], zone.get("HistoryEndUtc") or ""
+    unknown = [(u.get("FromUtc", ""), u.get("ToUtc", "")) for u in zone.get("ChangesAtUnknownInstant") or []]
+    wrong, compared = [], 0
+    for record, instant, event, standard, name in observed:
+        if instant > end or any(a <= instant <= b for a, b in unknown):
+            continue
+        stretch = None
+        for entry in history:
+            if str(entry.get("FromUtc", "")) <= instant:
+                stretch = entry
+        compared += 1
+        if (not stretch or str(stretch.get("Zone", "")).lower() != name.lower()
+                or stretch.get("Bias") not in (standard, standard - 60)):
+            wrong.append((record, event, instant, f"{standard} {name}",
+                          (stretch or {}).get("Zone"), (stretch or {}).get("Bias")))
+    if not compared:
+        print(f"  ❌ zone in force: {len(observed)} event(s) of EventLog give a zone, WAC's history covers none")
+        return 1
+    if wrong:
+        print(f"  ❌ zone in force: {len(wrong)} of {compared} event(s) of EventLog against WAC's history — {wrong[:3]}")
+        return 1
+    print(f"  ✅ zone in force: the {compared} event(s) of EventLog (6005, 6006, 6013) that give one, as WAC's history "
+          f"— {sorted(set(n for *_, n in observed))}")
+    return 0
 
 def check_assumed_time_zones(folder):
     """Every converted log whose time zone was assumed (TimeZoneAssumed): its

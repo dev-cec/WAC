@@ -233,7 +233,10 @@ on the installation medium, or given as `XP_KEY`; it is never written to the
 repository. Once installed, a 2 GB data disk is added (IDE `hdd`), on which
 `run-wac-test-xp.sh` formats W: for the carving's witnesses. WAC32 runs from the
 collection key, `~/vms/wac-kit-<vm>.img` (64 GiB, sparse), a removable USB disk formatted NTFS on
-the host (`mkntfs`), whose results are read once the VM is off.
+the host (`mkntfs`), whose results are read once the VM is off. The System log
+WAC collected (`SysEvent.evt`, its working copy) is read there too and decoded
+by `lib/evt-zone.py`, independently of WAC: the zone in force its EventLog
+6005, 6006 and 6013 say, confronted with the history of `conversion.json`.
 
 Windows Server 2003 (profile `srv2003`, domain `srv2003-test`) is installed
 and driven the same way, from Microsoft's 180-day evaluation kit (part
