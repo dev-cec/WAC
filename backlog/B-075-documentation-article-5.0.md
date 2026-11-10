@@ -37,6 +37,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [ ] Contrôles mécaniques (clés, tests, versions, tableaux)
+- [ ] Le fuseau en vigueur au fil du temps (B-077) dans les manuels et le dossier de validation : `Host.SuspectTimeZone.History`, `ChangesAtUnknownInstant`, `TimeZoneInForce`, `TimeZoneChangedBetween` ; sources par version de Windows (Kernel-General 22/24 depuis Windows 10 ; 6013, 20001 et Kernel-General 1 avant) ; journal Système et journal TZUtil prélevés à chaque collecte
 - [ ] Relecture et mise à jour de chaque document
 - [ ] Article de la 5.0.0, FR et EN
 - [ ] PDF régénérés, 0 Overfull

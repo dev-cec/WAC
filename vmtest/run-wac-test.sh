@@ -455,6 +455,10 @@ time_zone_history_reference() {
     2>/dev/null | tr -d '\r' | grep -E '^[0-9]+\|' > "$OUTPUT/reference/time-zone-history.txt" || true
   [[ -s "$OUTPUT/reference/time-zone-history.txt" ]] && echo "   + reference/time-zone-history.txt ($(wc -l < "$OUTPUT/reference/time-zone-history.txt") offset(s) logged)" \
     || echo "   ℹ️ no offset in the System log (Kernel-General 1, 22, 24): its history not checked"
+  # Before Windows 10, the zones tzutil set: TZUtil's log, 20001 (Windows 7 and later).
+  $QGA run --timeout 300 -- powershell.exe -NoProfile -Command "Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-TZUtil/Operational'; Id = 20001 } -ErrorAction SilentlyContinue | ForEach-Object { '{0}|{1}|{2}' -f \$_.RecordId, \$_.TimeCreated.ToUniversalTime().ToString('o'), (([xml]\$_.ToXml()).Event.EventData.Data).'#text' }" \
+    2>/dev/null | tr -d '\r' | grep -E '^[0-9]+\|' > "$OUTPUT/reference/tzutil-changes.txt" || true
+  [[ -s "$OUTPUT/reference/tzutil-changes.txt" ]] && echo "   + reference/tzutil-changes.txt ($(wc -l < "$OUTPUT/reference/tzutil-changes.txt") zone(s) set by tzutil)" || true
 }
 
 # The service started again once the separate collection is done — even when

@@ -3677,7 +3677,8 @@ def check_zone_change_witness(folder, reference, lines):
     current one —; the line written after the zone came back, at its UTC with
     no TimeZoneInForce. Skipped, said, where tzutil is missing (before Windows 7
     and Server 2008 R2). Where Windows did not log the change (no offset of
-    -330 in reference/time-zone-history.txt, read by Get-WinEvent), WAC can only
+    -330 in reference/time-zone-history.txt, nor India's zone set in
+    reference/tzutil-changes.txt, both read by Get-WinEvent), WAC can only
     apply the current zone's rules: said as the limit of that Windows, not
     counted as a failure of WAC."""
     if "ZoneLog" not in reference:
@@ -3688,6 +3689,11 @@ def check_zone_change_witness(folder, reference, lines):
     if os.path.exists(history):
         with open(history, encoding="utf-8") as f:
             logged = any(line.strip().split("|")[-1] == "-330" for line in f if line.count("|") == 2)
+    # Before Windows 10: the zone tzutil set, in TZUtil's log (20001), read by Get-WinEvent.
+    tzutil = os.path.join(folder, "reference", "tzutil-changes.txt")
+    if not logged and os.path.exists(tzutil):
+        with open(tzutil, encoding="utf-8") as f:
+            logged = any(line.strip().split("|")[-1] == "India Standard Time" for line in f if line.count("|") == 2)
     if not logged:
         print("  ℹ️ the change to +05:30 is not in the System log (Kernel-General): this Windows does not log it, "
               "the witness line can only be read in the current zone")
@@ -6241,6 +6247,10 @@ def check_key_names(folder):
             for k, v in o.items():
                 # Names of Windows' own values, kept as Windows writes them.
                 if k in WINDOWS_VALUE_NAMES or re.fullmatch(r"[0-9A-F]{32}", k):
+                    continue
+                # The structure of an application's own XML, JSON or INI file
+                # (application_trace_files.h), its names as the file writes them.
+                if k == "Content" and "Format" in o:
                     continue
                 if not re.match(r"^[A-Z][A-Za-z0-9]*$", k) or re.match(r"^(Nb|Num|Tmp)[A-Z]", k) \
                         or re.search(r"(Locale|Nom|Chemin|Taille|Valeur|Fichier)", k):
