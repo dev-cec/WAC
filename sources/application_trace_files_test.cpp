@@ -33,9 +33,9 @@ void check(bool ok, const char* what) {
 
 //! The time read at the head of a line: "asWritten|clock|offset", the clock in
 //! ISO 8601 (no zone applied, written with a Z by timeToIso8601Utc), "-" when none.
-std::wstring timeOf(const std::wstring& line, bool monthFirst = false) {
+std::wstring timeOf(const std::wstring& line, const LineLayout& layout = {}) {
 	WrittenTime time;
-	if (!leadingTime(line, time, monthFirst)) return L"-";
+	if (!leadingTime(line, time, layout)) return L"-";
 	return time.asWritten + L"|" + timeToIso8601Utc(filetimeFromTicks(time.ticks)) + L"|"
 	       + (time.hasOffset ? std::to_wstring(time.offsetMinutes) : std::wstring(L"none"));
 }
@@ -61,10 +61,21 @@ void testTimes() {
 	check(timeOf(L"[2026-11-08 14:03:21,123] INFO x") == L"2026-11-08 14:03:21,123|2026-11-08T14:03:21.1230000Z|none", "a bracket and a comma before the fraction");
 	check(timeOf(L"  <2026.11.08 14:03:21> x") == L"2026.11.08 14:03:21|2026-11-08T14:03:21.0000000Z|none", "blanks, an angle bracket, dots");
 	check(timeOf(L"2026-11-08 14:03:21.123456789 x") == L"2026-11-08 14:03:21.123456789|2026-11-08T14:03:21.1234567Z|none", "nine digits kept to 100 ns");
-	check(timeOf(L"10/31/2026 01:04:23:981 NetpDoDomainJoin", true) == L"10/31/2026 01:04:23:981|2026-10-31T01:04:23.9810000Z|none",
+	check(timeOf(L"10/31/2026 01:04:23:981 NetpDoDomainJoin", { true }) == L"10/31/2026 01:04:23:981|2026-10-31T01:04:23.9810000Z|none",
 	      "month first, for a product that declares it, its fraction after a colon");
 	check(timeOf(L"10/31/2026 01:04:23:981 NetpDoDomainJoin") == L"-", "month first, for any other product, is not read");
-	check(timeOf(L"2026-11-08 14:03:21 x", true) == L"-", "a product month first reads no other form");
+	check(timeOf(L"2026-11-08 14:03:21 x", { true }) == L"-", "a product month first reads no other form");
+	// Win32-OpenSSH's sshd.log: the process's identifier, then the local time (measured on Server 2025).
+	const LineLayout sshd = { false, true };
+	check(timeOf(L"4464 2026-11-10 21:59:57.158 Invalid user wacnobody from 127.0.0.1 port 49802", sshd)
+	      == L"2026-11-10 21:59:57.158|2026-11-10T21:59:57.1580000Z|none",
+	      "sshd.log: the time after the process's identifier, to the millisecond");
+	check(timeOf(L"4464 2026-11-10 21:59:57.158 Invalid user", {}) == L"-",
+	      "a process's identifier first is read for the product that writes one only");
+	check(timeOf(L"2026-11-08T14:03:21.123+01:00 sshd[42]: x", sshd) == L"2026-11-08T14:03:21.123+01:00|2026-11-08T14:03:21.1230000Z|60",
+	      "a product with an identifier first still reads a line that starts with its time");
+	check(timeOf(L"4464 started", sshd) == L"-" && timeOf(L"12345678901 2026-11-10 21:59:57 x", sshd) == L"-",
+	      "an identifier not followed by a time, or longer than ten digits: no time");
 	check(timeOf(L"08/11/2026 14:03:21 x") == L"-", "a day-first or month-first date is not read");
 	check(timeOf(L"2026-02-30 10:00:00 x") == L"-", "an impossible day is not a time");
 	check(timeOf(L"2026-11-08 24:00:00 x") == L"-", "an impossible hour is not a time");

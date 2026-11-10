@@ -33,6 +33,20 @@ struct TracePiece {
 	unsigned depth;                   //!< levels below the folder: 0 for its own files
 };
 
+/*! How a product lays out the start of its log lines, where WAC reads their
+ *  time (leadingTime): what is particular to it only — read so for any other
+ *  product, the same text would be another date, or none. */
+struct LineLayout {
+	/*! Its dates month first, "10/31/2026 01:04:23:981": a date written so is
+	 *  two dates for any other product. */
+	bool monthFirst = false;
+	/*! The writing process's identifier before the time, "4464 2026-11-10
+	 *  21:59:57.158 Invalid user …": Win32-OpenSSH's file log (SyslogFacility
+	 *  LOCAL0), measured 2026-11-10. Optional: a line starting with its time
+	 *  is read as well. */
+	bool processIdFirst = false;
+};
+
 /*! A product: one switch of wac.yml. */
 struct TraceProduct {
 	std::string key;                  //!< its key under its group
@@ -42,9 +56,8 @@ struct TraceProduct {
 	 *  data or memory rather than traces of a program (crash dumps, Office's
 	 *  document cache): decision of 2026-11-08, wac.yml switches it on. */
 	bool onByDefault = true;
-	/*! Its logs write their date month first, "10/31/2026 01:04:23:981": read
-	 *  so for this product only — a date written so is two dates for any other. */
-	bool monthFirst = false;
+	LineLayout layout = {};           //!< how its log lines start
+
 	/*! Its logs write UTC without saying so: measured by the harness, which
 	 *  compares a log's last line with the moment the file was last written. */
 	bool writesUtc = false;

@@ -48,16 +48,18 @@ struct WrittenTime {
 
 /*! Reads the time a log line starts with, after blanks and one `[` or `<`:
  *  yyyy-MM-dd, yyyy/MM/dd or yyyy.MM.dd — or MM/dd/yyyy for a product that
- *  declares it (TraceProduct::monthFirst) —, a space or `T`, HH:mm:ss, an
+ *  declares it (LineLayout::monthFirst) —, a space or `T`, HH:mm:ss, an
  *  optional fraction (`.` or `,`, `:` month first, up to nine digits), an
  *  optional offset (`Z`, `±hh:mm`, `±hhmm`). Days of the month, hours, minutes
  *  and seconds within their range. A date day first, or month first for any
- *  other product, is not read: written 08/11/2026, it is two dates.
+ *  other product, is not read: written 08/11/2026, it is two dates. For a
+ *  product that declares it (LineLayout::processIdFirst), a process
+ *  identifier and one space may come first: the time is what follows.
  *  @param line the line
  *  @param time receives the time
- *  @param monthFirst the product writes its dates month first
+ *  @param layout how the product's lines start
  *  @return whether the line starts with a time */
-bool leadingTime(const std::wstring& line, WrittenTime& time, bool monthFirst = false);
+bool leadingTime(const std::wstring& line, WrittenTime& time, const LineLayout& layout = {});
 
 /*! Writes a record's time as every artefact does: Time, in the examined
  *  machine's local time with its offset, and TimeUtc. A time with its offset is
@@ -91,9 +93,9 @@ constexpr size_t TEXT_RECORD_MAX = 64 * 1024;
  *  line without a time that follows a dated record continues it, any other line
  *  is a record of its own. Blank lines are left out; "\r\n" and "\n" end a line.
  *  @param text the decoded text
- *  @param monthFirst the product writes its dates month first (leadingTime)
+ *  @param layout how the product's lines start (leadingTime)
  *  @return its records, in order */
-std::vector<TextRecord> textRecords(const std::wstring& text, bool monthFirst = false);
+std::vector<TextRecord> textRecords(const std::wstring& text, const LineLayout& layout = {});
 
 //! How a file of a product is read.
 enum class TraceFormat { Text, Xml, Json, Ini, Database, Binary };

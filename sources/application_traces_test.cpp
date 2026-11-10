@@ -103,6 +103,11 @@ void testOwner() {
 	check(owner(L"C:\\Windows\\debug\\netlogon.log") == "server_logs.netlogon", "a server's log");
 	check(owner(L"C:\\Users\\bob\\.ssh\\id_rsa").empty(), "a private key belongs to no product");
 	check(owner(L"C:\\ProgramData\\ssh\\logs\\deeper\\sshd.log").empty(), "deeper than the line allows");
+	const TraceOwner sshd = traceOwnerOf(L"C:\\ProgramData\\ssh\\logs\\sshd.log");
+	check(sshd.product && sshd.product->layout.processIdFirst && !sshd.product->layout.monthFirst,
+	      "sshd.log: its lines start with the process's identifier (measured)");
+	const TraceOwner join = traceOwnerOf(L"C:\\Windows\\debug\\NetSetup.log");
+	check(join.product && join.product->layout.monthFirst && !join.product->layout.processIdFirst, "NetSetup.log: month first");
 	check(owner(L"C:\\Users\\bob\\AppData\\Roaming\\TeamViewer\\notes.txt").empty(), "a name the filter does not keep");
 	check(owner(L"C:\\Windows\\System32\\cmd.exe").empty(), "a file of no product");
 	check(isPasswordValue(L"Pass") && isPasswordValue(L"UserPwd") && isPasswordValue(L"client_secret") && isPasswordValue(L"Passwd"),

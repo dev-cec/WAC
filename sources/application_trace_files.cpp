@@ -136,10 +136,18 @@ void addRecordTimes(Json& row, const WrittenTime& time, bool writesUtc) {
 	row.add(L"TimeAsWritten", Json::str(time.asWritten));
 }
 
-bool leadingTime(const std::wstring& line, WrittenTime& time, bool monthFirst) {
+bool leadingTime(const std::wstring& line, WrittenTime& time, const LineLayout& layout) {
+	const bool monthFirst = layout.monthFirst;
 	size_t i = 0;
 	while (i < line.size() && (line[i] == L' ' || line[i] == L'\t')) ++i;
 	if (i < line.size() && (line[i] == L'[' || line[i] == L'<')) ++i;
+	/* A process identifier first, for the product that writes one: up to ten
+	   digits and one space — "2026-11-08…" is a time, its digits end on "-". */
+	if (layout.processIdFirst) {
+		size_t end = i;
+		while (end < line.size() && end - i < 10 && line[end] >= L'0' && line[end] <= L'9') ++end;
+		if (end > i && end < line.size() && line[end] == L' ') i = end + 1;
+	}
 	const size_t start = i;
 	auto number = [&](size_t count, unsigned& value) {
 		if (i + count > line.size()) return false;
@@ -205,7 +213,7 @@ bool leadingTime(const std::wstring& line, WrittenTime& time, bool monthFirst) {
 	return true;
 }
 
-std::vector<TextRecord> textRecords(const std::wstring& text, bool monthFirst) {
+std::vector<TextRecord> textRecords(const std::wstring& text, const LineLayout& layout) {
 	std::vector<TextRecord> records;
 	size_t number = 0, position = 0;
 	while (position < text.size()) {
@@ -216,7 +224,7 @@ std::vector<TextRecord> textRecords(const std::wstring& text, bool monthFirst) {
 		if (!line.empty() && line.back() == L'\r') line.pop_back();
 		if (line.find_first_not_of(L" \t") == std::wstring::npos) continue;
 		WrittenTime time;
-		const bool dated = leadingTime(line, time, monthFirst);
+		const bool dated = leadingTime(line, time, layout);
 		if (!dated && !records.empty() && !records.back().time.asWritten.empty()) {
 			appendBounded(records.back(), L"\n" + line);
 			continue;
@@ -322,7 +330,7 @@ HRESULT ApplicationTraceFiles::getData() {
 			}
 			log(2, L"🔥Malformed structured file, read as text: " + exhibit.sourcePath);
 		}
-		for (const TextRecord& record : textRecords(text, owner.product->monthFirst)) {
+		for (const TextRecord& record : textRecords(text, owner.product->layout)) {
 			Json row = Json::obj();
 			row.add(L"Product", Json::str(product));
 			row.add(L"File", Json::str(exhibit.sourcePath));
