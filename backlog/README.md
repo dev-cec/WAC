@@ -87,7 +87,7 @@ dans un `git stash` (voir B-062).
 | [B-072](B-072-traces-systeme.md) | `system_traces` : ce que Windows garde en plus | à faire (5.0.0, code mis de côté) | P1 | moyen |
 | [B-073](B-073-registre-des-outils.md) | `application_registry` : PuTTY, WinSCP, WinRAR et 7-Zip dans le registre | à faire (5.0.0, code mis de côté) | P2 | faible |
 | [B-076](B-076-traces-applications-conversion.md) | Traces d'applications : conversion générique en JSON (journaux texte, texte structuré) | en cours (tests verts ; témoin et cycles à faire) | P1 | moyen |
-| [B-077](B-077-dates-supposees-verifiees.md) | Dates supposées : heure locale ou UTC vérifiée produit par produit, à la précision écrite | à faire (avant la revue) | P1 | moyen |
+| [B-077](B-077-dates-supposees-verifiees.md) | Dates supposées : heure locale ou UTC vérifiée produit par produit, à la précision écrite | faite (2026-11-11) | P1 | moyen |
 | [B-074](B-074-revue-code-securite-5.0.md) | Revue de code et revue de sécurité de la 5.0.0 | à faire (en dernier) | P1 | fort |
 | [B-075](B-075-documentation-article-5.0.md) | Documentation de la 5.0.0 à jour et article de la 5.0.0 | à faire (après B-074, avant la publication) | P1 | moyen |
 

@@ -2357,7 +2357,11 @@ follows from the format for FAT volumes, the DHCP log,
 \fichier{setupapi.dev.log} and \fichier{.job} tasks; the WebCache is
 cross-checked with an independent tool. One assumption only is not measured:
 the OLE date columns of ESE databases other than SRUM are read as UTC, which
-SRUM writes.
+SRUM writes. Among application traces, AnyDesk writes UTC, RustDesk and
+Tailscale write their offset; the products absent from the test machines are
+assumed local, unverified. UltraViewer's date follows the culture of the
+account writing it: it is not read, the line keeps its text without a date
+(the validation file gives the table product by product).
 
 \section{Account names}
 

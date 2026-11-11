@@ -904,6 +904,53 @@ deux conversions d'une même collecte & dates lues sur la copie de travail,
 \bottomrule
 \end{longtable}
 
+\section{Fuseau des dates écrites sans décalage}
+
+Un journal qui écrit l'heure sans fuseau laisse \wac{} supposer : heure locale
+de la machine examinée, ou UTC pour un produit mesuré comme tel. Une
+supposition fausse décale chaque ligne du produit sans que la sortie cesse
+d'être valide. Chaque supposition a donc été mesurée contre l'heure
+d'exécution, de quatre façons :
+\begin{itemize}
+  \item \textbf{à chaque cycle} : le dernier enregistrement de chaque journal
+    converti confronté à la dernière écriture de son fichier ; un écart égal
+    au décalage de la machine signale un produit qui écrit en UTC ;
+  \item \textbf{provoquée} : une action datée (connexion refusée, démarrage,
+    installation), encadrée par l'horloge système avant et après, puis la
+    ligne écrite confrontée à cet encadrement, à la précision écrite ;
+  \item \textbf{deux fuseaux} : un cycle complet sur Server~2025 réglé sur
+    New York (UTC$-5$) ; une supposition juste y donne le même instant UTC ;
+  \item \textbf{changement d'heure} : une ligne témoin dans l'heure répétée
+    d'octobre et une dans l'heure sautée de mars, par les règles du fuseau et
+    par l'historique du journal Système ; les deux lectures de chacune dites.
+\end{itemize}
+
+\begin{longtable}{@{}L{2.8cm}L{4.2cm}L{2.1cm}L{3.0cm}L{1.2cm}@{}}
+\toprule
+\textbf{Produit} & \textbf{Forme écrite} & \textbf{Fuseau} & \textbf{Mesure} & \textbf{Précision} \\
+\midrule
+\endhead
+TeamViewer & \texttt{2026/11/11 20:27:37.830} & local & témoin à chaque cycle ; fuseau changé ; changement d'heure & ms \\
+Jonction au domaine (\fichier{NetSetup.log}) & \texttt{10/31/2026 01:04:24:014}, mois d'abord & local, fuseau \textbf{en vigueur} à l'écriture & dernière ligne contre dernière écriture, à la milliseconde & ms \\
+Journaux d'installation de Windows & \texttt{2026-11-08 14:03:21} & local & dernière ligne contre dernière écriture & s \\
+OpenSSH, serveur (\fichier{sshd.log}) & \texttt{4464 2026-11-10 21:59:57.158}, PID d'abord & local & connexion refusée provoquée (Server~2025) & ms \\
+AnyDesk (\fichier{ad.trace}) & \texttt{info 2026-11-11 19:23:27.390}, niveau d'abord & \textbf{UTC} & démarrage provoqué (Windows~11) & ms \\
+RustDesk & \texttt{[2026-11-11 20:23:49.070579 +01:00]} & décalage écrit & démarrage provoqué & µs \\
+mRemoteNG & \texttt{2026-11-11 20:24:14,845} & local & démarrage provoqué & ms \\
+OpenVPN & \texttt{2026-11-11 20:24:46} & local & connexion provoquée & s \\
+Tailscale (service) & \texttt{2026-11-11T20:25:02.820+01:00} & décalage écrit & installation provoquée & ms \\
+UltraViewer (service) & \texttt{11/11/2026 20:25:51} & local, format de la culture & installation provoquée & \textbf{non lu} \\
+\bottomrule
+\end{longtable}
+
+La date d'UltraViewer suit la culture du compte qui l'écrit
+(\texttt{jj/mm/aaaa} en français, \texttt{m/j/aaaa} et AM/PM en anglais
+des États-Unis) : la lire « jour d'abord » sans cette culture daterait faux
+une autre machine. La ligne est donc rendue avec son texte, sans date. Les
+autres produits de la table des traces d'applications n'étaient pas présents
+dans les machines de test : leur heure est supposée locale, sans
+vérification.
+
 \section{Résultat de référence}
 
 Série finale sur le code de la 4.0.0, du 7 au 8 novembre, \wac{} lancé depuis

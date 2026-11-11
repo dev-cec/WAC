@@ -2459,7 +2459,12 @@ NetworkList ; il découle du format pour les volumes FAT, le journal DHCP,
 \fichier{setupapi.dev.log} et les tâches \fichier{.job} ; le WebCache est
 recoupé avec un outil indépendant. Une seule supposition n'est pas mesurée :
 les colonnes de date OLE des bases ESE autres que SRUM sont lues comme de
-l'UTC, ce que SRUM écrit.
+l'UTC, ce que SRUM écrit. Parmi les traces d'applications, AnyDesk écrit en
+UTC, RustDesk et Tailscale écrivent leur décalage ; les produits absents des
+machines de test sont supposés à l'heure locale, sans vérification. La date
+d'UltraViewer suit la culture du compte qui l'écrit : elle n'est pas lue, la
+ligne garde son texte sans date (le dossier de validation donne le tableau
+produit par produit).
 
 \section{Noms des comptes}
 

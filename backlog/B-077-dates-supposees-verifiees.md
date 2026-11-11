@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (avant la revue B-074) | P1 | moyen |
+| faite (2026-11-11) | P1 | moyen |
 
 ## Pourquoi
 Demande de l'utilisateur (2026-11-08) : « l'exactitude des dates avec la précision maximale est la priorité absolue ». La conversion générique des traces d'applications (B-076) écrit toutes les dates sous la même forme (`Time` local avec décalage, `TimeUtc`), décision de l'utilisateur du même jour. Une date écrite sans fuseau y est **supposée** à l'heure locale de la machine examinée (`TimeZoneAssumed: Local`), ou UTC pour un produit mesuré comme tel (`TraceProduct::writesUtc`). Une supposition fausse place chaque événement du produit à côté d'une heure (ou plus) dans la chronologie, sans que rien ne le montre : la sortie reste valide. Chaque supposition doit donc être vérifiée par un test, pas seulement raisonnée.
@@ -62,7 +62,7 @@ Seule supposition non mesurée : les colonnes DateTime des bases ESE autres que 
 - [x] Témoins du changement d'heure : heure répétée et heure sautée, par les règles (Server 2025) et par l'historique (Windows 11)
 - [x] Documentation : historique du fuseau, `AlsoPossibleUtc`, `LocalTimesLivedTwice`, limite de la copie brute, supposition ESE non mesurée (FR et EN)
 - [x] `writesUtc` posé d'après les mesures (AnyDesk)
-- [ ] Tableau de validation FR et EN
+- [x] Tableau de validation FR et EN (section « Fuseau des dates écrites sans décalage »), manuel complété
 - [x] Relevé des autres artefacts qui supposent un fuseau (tableau ci-dessus) ; une supposition non mesurée : colonnes DateTime ESE hors SRUM
 - [x] **Changement de fuseau dans l'histoire de la machine** : mesuré (événements Kernel-General 1, 22, 24) ; historique lu dans le journal Système de la copie de travail, appliqué à toute heure locale de WAC (`suspectLocalToUtc`, `timeToIso8601Local`) ; `TimeZoneInForce` dans les traces ; historique dans `conversion.json` (`Host.SuspectTimeZone.History`, écrit quels que soient les artefacts demandés) ; journal Système prélevé à chaque collecte ; tests et mutations
 - [x] Cycle Server 2025 : `NetSetup.LOG` daté juste, historique de WAC égal à celui de l'API de Windows (`check_time_zone_history`)
@@ -100,3 +100,4 @@ Seule supposition non mesurée : les colonnes DateTime des bases ESE autres que 
   | UltraViewer 6.6 (service) | `11/11/2026 20:25:51 : …` | local, format de la culture (`DateTime.ToString()`, fr-FR) | 19:25:25.860Z – 19:26:15.286Z |
 
   **Trois défauts trouvés** (cycle ciblé de l'ancien WAC) : AnyDesk — le niveau avant l'heure, aucune des 274 lignes datée ; RustDesk — l'espace avant `+01:00`, décalage non lu, l'heure prise pour locale (juste ici par chance, fausse après un changement de fuseau) ; Tailscale — quelques octets nuls dans des balises `[v\0JSON]` (5 sur 18 444), le fichier pris pour un binaire, non converti. Corrigés (192aadd9) : `LineLayout::levelFirst` et `writesUtc` pour AnyDesk, une espace admise avant un décalage écrit en entier, un octet nul compté comme un contrôle sous le seuil de 1 %. Cycle ciblé du nouveau WAC, 49 ✅, 0 ❌ : chaque ligne datée dans son encadrement, à la précision écrite ; AnyDesk entre dans le contrôle « dernier enregistrement contre dernière écriture », en UTC. Contrôle permanent `check_third_party_measured` (174ebbcf) : 0 ❌ sur le nouveau WAC, les 3 défauts sur l'ancien. **UltraViewer non lu, écart dit** : sa date suit la culture du compte du service, `jj/mm/aaaa` en fr-FR, `m/j/aaaa h:mm:ss AM` en en-US ; le 11/11 ne départage rien, et une lecture « jour d'abord » sans la culture daterait faux une machine en en-US — la ligne garde son texte, sans date. Harnais : un groupe coupé par `--only` ne fait plus attendre ses témoins (783b3dcd). Outils désinstallés (code 0), kit et scripts supprimés ; restent les journaux, témoins des cycles suivants, et les traces d'installation.
+- 2026-11-11 : **fiche faite.** Dossier de validation FR et EN : tableau produit par produit (forme écrite, fuseau, mesure, précision) et les quatre mesures ; manuel : AnyDesk en UTC, décalages écrits, produits absents des VM supposés locaux sans vérification, UltraViewer non lu. 0 débordement. Critères : chaque produit présent dans une VM confirmé ou corrigé ; mesures 2, 3 et 4 vues échouer (sshd lu en UTC, l'ancien WAC sur les outils tiers, sous New York, sur l'heure sautée) ; précision exacte ; produits non mesurés dits.

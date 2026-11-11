@@ -870,6 +870,52 @@ two conversions of one collection & dates read on the working copy, rebuilt at
 \bottomrule
 \end{longtable}
 
+\section{Time zone of the dates written without an offset}
+
+A log that writes the time without a zone leaves \wac{} to assume: the
+examined machine's local time, or UTC for a product measured as such. A
+wrong assumption shifts every line of the product while the output stays
+valid. Each assumption was therefore measured against the time of
+execution, four ways:
+\begin{itemize}
+  \item \textbf{at each cycle}: the last record of each converted log
+    against the last write of its file; a gap equal to the machine's offset
+    marks a product that writes UTC;
+  \item \textbf{provoked}: a dated action (a refused connection, a start, an
+    installation), bracketed by the system clock before and after, then the
+    line written confronted to that bracket, at the precision written;
+  \item \textbf{two zones}: a full cycle on Server~2025 set to New York
+    (UTC$-5$); a right assumption gives the same UTC instant there;
+  \item \textbf{daylight saving}: a witness line in the hour repeated in
+    October and one in the hour skipped in March, by the zone's rules and by
+    the history of the System log; both readings of each said.
+\end{itemize}
+
+\begin{longtable}{@{}L{2.8cm}L{4.2cm}L{2.1cm}L{3.0cm}L{1.2cm}@{}}
+\toprule
+\textbf{Product} & \textbf{Form written} & \textbf{Zone} & \textbf{Measurement} & \textbf{Precision} \\
+\midrule
+\endhead
+TeamViewer & \texttt{2026/11/11 20:27:37.830} & local & witness at each cycle; zone changed; daylight saving & ms \\
+Domain join (\fichier{NetSetup.log}) & \texttt{10/31/2026 01:04:24:014}, month first & local, the zone \textbf{in force} when written & last line against last write, to the millisecond & ms \\
+Windows setup logs & \texttt{2026-11-08 14:03:21} & local & last line against last write & s \\
+OpenSSH, server (\fichier{sshd.log}) & \texttt{4464 2026-11-10 21:59:57.158}, PID first & local & refused connection provoked (Server~2025) & ms \\
+AnyDesk (\fichier{ad.trace}) & \texttt{info 2026-11-11 19:23:27.390}, level first & \textbf{UTC} & start provoked (Windows~11) & ms \\
+RustDesk & \texttt{[2026-11-11 20:23:49.070579 +01:00]} & offset written & start provoked & µs \\
+mRemoteNG & \texttt{2026-11-11 20:24:14,845} & local & start provoked & ms \\
+OpenVPN & \texttt{2026-11-11 20:24:46} & local & connection provoked & s \\
+Tailscale (service) & \texttt{2026-11-11T20:25:02.820+01:00} & offset written & installation provoked & ms \\
+UltraViewer (service) & \texttt{11/11/2026 20:25:51} & local, the culture's format & installation provoked & \textbf{not read} \\
+\bottomrule
+\end{longtable}
+
+UltraViewer's date follows the culture of the account writing it
+(\texttt{dd/mm/yyyy} in French, \texttt{m/d/yyyy} and AM/PM in US
+English): reading it "day first" without that culture would date another
+machine wrong. The line is therefore given with its text, without a date. The
+other products of the application traces' table were not present on the test
+machines: their time is assumed local, unverified.
+
 \section{Reference result}
 
 Final series on the code of 4.0.0, 7 and 8 November, \wac{} started from a USB
