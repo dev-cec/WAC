@@ -145,7 +145,14 @@ def check_configuration(folder):
     # reads them — and only then. A key missing from the file is true.
     def asked(*keys):
         return any(settings.get("artefacts." + k) != "false" for k in keys)
-    dependencies = [("event logs", lambda p: p.endswith(".evtx"), asked("events", "rdp_server")),
+    # The System log (and TZUtil's) is the time zone's history: taken always,
+    # every local time of the collection reads it (time_zone_history.h).
+    def zone_log(p):
+        name = p.rsplit("\\", 1)[-1]
+        return name in ("system.evtx", "sysevent.evt", "microsoft-windows-tzutil%4operational.evtx") \
+            or name.startswith("archive-system-")
+    dependencies = [("event logs", lambda p: (p.endswith(".evtx") or p.endswith(".evt")) and not zone_log(p),
+                     asked("events", "rdp_server")),
                     ("user hives", lambda p: p.endswith("\\ntuser.dat"),
                      asked("muicache", "userassist", "run_keys", "shellbags", "mru", "mru_apps", "persistence",
                            "office_trust_records", "typed_paths", "word_wheel_query", "root_certificates",
@@ -156,6 +163,8 @@ def check_configuration(folder):
         if present != needed:
             wrong.append(f"{name}: {'collected' if present else 'absent'} although "
                          f"{'an' if needed else 'no'} artefact asked for reads them")
+    if items and not any(zone_log(p) for p in paths):
+        wrong.append("the System log, the time zone's history, absent")
     if not items:
         wrong.append("no exhibit store manifest")
     if wrong:
@@ -2573,8 +2582,16 @@ def check_small_file_artefacts(folder):
                 got, expected = ((e or {}).get("ModifiedAsStored") or (e or {}).get("Modified", ""))[:19], local[0]
             else:
                 got, expected = (e or {}).get("ModifiedUtc", "")[:19], modified
+            # A local time lived twice (the zone set back): WAC dates its first
+            # occurrence and says the others — each read here as the local time
+            # it shows, the chosen one's moved by the gap between the instants.
+            gots = [got] if got else []
+            if got and e and e.get("ModifiedAlsoPossibleUtc") and e.get("ModifiedUtc"):
+                chosen = instant(e["ModifiedUtc"])
+                gots += [(instant(got + "Z") + (instant(a) - chosen)).strftime("%Y-%m-%dT%H:%M:%S")
+                         for a in e["ModifiedAlsoPossibleUtc"]]
             # FAT keeps two seconds: a write at an odd second is rounded up.
-            close = got and abs((instant(got + "Z") - instant(expected + "Z")).total_seconds()) <= 2
+            close = any(abs((instant(g + "Z") - instant(expected + "Z")).total_seconds()) <= 2 for g in gots)
             if e is None or e.get("Size") != int(size) or not close:
                 wrong.append(f"{file}: {None if e is None else (e.get('Size'), got)} for ({size}, {expected})")
         # The winter file copied in summer: its UTC date exact, the copy said (FAT).
@@ -3559,6 +3576,86 @@ def is_domain_controller(folder):
         return False
 
 
+def reference_history(folder):
+    """The offsets in force the System log gives through Windows' API
+    (reference/time-zone-history.txt, Get-WinEvent), by WAC's rule: in the
+    order Windows wrote them, an instant before an earlier one left out (a
+    clock set back), an offset past 24 h left out, two alike in a row merged,
+    nothing past `end` when given. [(record, instant, bias)], or None."""
+    path = os.path.join(folder, "reference", "time-zone-history.txt")
+    if not os.path.exists(path):
+        return None
+    logged = []
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            parts = line.strip().split("|")
+            if len(parts) == 3 and parts[0].isdigit() and re.match(r"-?\d+$", parts[2]):
+                logged.append((int(parts[0]), parts[1], int(parts[2])))
+    conversion = load(folder, "conversion.json")
+    zone = ((conversion or {}).get("Host") or {}).get("SuspectTimeZone") if isinstance(conversion, dict) else None
+    end = (zone or {}).get("HistoryEndUtc") if isinstance(zone, dict) else None
+    expected, latest = [], None
+    for record, instant, bias in sorted(logged):
+        # The ISO forms are of the same layout (7 digits, Z): compared as text.
+        if abs(bias) > 1440 or (latest and instant < latest) or (end and instant > end):
+            continue
+        latest = instant
+        if expected and expected[-1][2] == bias:
+            continue
+        expected.append((record, instant, bias))
+    return expected
+
+
+TICKS_PER_MINUTE = 600000000
+
+
+def ticks_of(text):
+    """An ISO 8601 time, "Z" or none, to hundreds of nanoseconds since 1601: exact, unlike datetime."""
+    import datetime
+    m = re.match(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.(\d{1,7}))?Z?$", str(text))
+    if not m:
+        return None
+    whole = datetime.datetime.fromisoformat(m.group(1)) - datetime.datetime(1601, 1, 1)
+    return (whole.days * 86400 + whole.seconds) * 10000000 + int((m.group(2) or "0").ljust(7, "0"))
+
+
+def text_of(ticks, zone="Z"):
+    """Hundreds of nanoseconds since 1601 to ISO 8601, 7 digits of fraction, the suffix given."""
+    import datetime
+    t = datetime.datetime(1601, 1, 1) + datetime.timedelta(seconds=ticks // 10000000)
+    return t.strftime("%Y-%m-%dT%H:%M:%S") + f".{ticks % 10000000:07d}" + zone
+
+
+def reference_local_instants(history, end, local):
+    """The UTC instants (ticks) a local time (ticks) was lived at, by the
+    reference history: each offset whose stretch holds local + offset,
+    ascending — several when the zone was set back. None outside the history."""
+    if not history or not end:
+        return None
+    starts = [ticks_of(i) for _, i, _ in history] + [ticks_of(end)]
+    found = sorted({local + b * TICKS_PER_MINUTE for k, (_, _, b) in enumerate(history)
+                    if starts[k] <= local + b * TICKS_PER_MINUTE < starts[k + 1]})
+    return found or None
+
+
+def reference_lived_twice(history, end):
+    """The local times the reference history shows lived twice: for each two
+    stretches of different offsets, the overlap of their local times —
+    [(localFrom, localTo, firstBias, againBias)], as WAC's LocalTimesLivedTwice."""
+    starts = [ticks_of(i) for _, i, _ in history] + [ticks_of(end)]
+    out = []
+    for i in range(len(history)):
+        for j in range(i + 1, len(history)):
+            bi, bj = history[i][2], history[j][2]
+            if bi == bj:
+                continue
+            lo = max(starts[i] - bi * TICKS_PER_MINUTE, starts[j] - bj * TICKS_PER_MINUTE)
+            hi = min(starts[i + 1] - bi * TICKS_PER_MINUTE, starts[j + 1] - bj * TICKS_PER_MINUTE)
+            if lo < hi:
+                out.append((text_of(lo, ""), text_of(hi, ""), bi, bj))
+    return sorted(out, key=lambda t: ticks_of(t[0]) + t[2] * TICKS_PER_MINUTE)
+
+
 def check_time_zone_history(folder):
     """The offsets in force over time WAC read in the System log
     (conversion.json, Host.SuspectTimeZone.History) against the same events read
@@ -3576,32 +3673,26 @@ def check_time_zone_history(folder):
         return 0
     wac = zone.get("History") or []
     end = zone.get("HistoryEndUtc")
-    logged = []
-    with open(path, encoding="utf-8", errors="replace") as f:
-        for line in f:
-            parts = line.strip().split("|")
-            if len(parts) == 3 and parts[0].isdigit() and re.match(r"-?\d+$", parts[2]):
-                logged.append((int(parts[0]), parts[1], int(parts[2])))
-    if not logged:
+    expected = reference_history(folder)
+    if not expected:
         print("  ⏭️  time zones' history: no offset in the reference, skipped")
         return 0
     if not end:
-        print(f"  ❌ time zones' history: {len(logged)} offset(s) in the System log, none in conversion.json")
+        print(f"  ❌ time zones' history: {len(expected)} offset(s) in the System log, none in conversion.json")
         return 1
-    expected, latest = [], None
-    for record, instant, bias in sorted(logged):
-        # The ISO forms are of the same layout (7 digits, Z): compared as text.
-        if abs(bias) > 1440 or (latest and instant < latest) or instant > end:
-            continue
-        latest = instant
-        if expected and expected[-1][2] == bias:
-            continue
-        expected.append((record, instant, bias))
     got = [(e.get("RecordId"), e.get("FromUtc"), e.get("Bias")) for e in wac]
     if got == expected:
         changes = [f"{i} {-b:+d} min" for _, i, b in expected]
         print(f"  ✅ time zones' history: {len(got)} offset(s) in force, as Windows' API reads the System log — {changes[:6]}")
-        return 0
+        # The local times lived twice, rebuilt here from the reference: every
+        # date converted from one is ambiguous, WAC must say them all.
+        twice = reference_lived_twice(expected, end)
+        said = [(t.get("LocalFrom"), t.get("LocalTo"), t.get("FirstBias"), t.get("AgainBias"))
+                for t in zone.get("LocalTimesLivedTwice") or []]
+        ok = said == twice
+        print(f"  {'✅' if ok else '❌'} time zones' history: {len(twice)} interval(s) of local times lived twice, "
+              f"as the reference's offsets overlap" + (f" — {twice[:2]}" if ok else f": WAC {said[:2]}, expected {twice[:2]}"))
+        return 0 if ok else 1
     first = next((k for k in range(max(len(got), len(expected))) if k >= len(got) or k >= len(expected) or got[k] != expected[k]), 0)
     print(f"  ❌ time zones' history: WAC {got[first:first + 2]} where the System log gives {expected[first:first + 2]} "
           f"({len(got)} against {len(expected)})")
@@ -3777,11 +3868,27 @@ def check_zone_change_witness(folder, reference, lines):
            f"{reference['ZoneDuringUtc']} as Windows computed it then, TimeZoneInForce +05:30",
            f"remote_administration.json: line written under +05:30 not at {reference['ZoneDuringUtc']} with TimeZoneInForce +05:30: {during[:1]}")
     after = line_of("after the zone came back")
+    # Its time chosen, no TimeZoneInForce; or, lived twice, the instant said among the others.
     report(len(after) == 1 and after[0].get("TimeAsWritten") == reference["ZoneAfterWritten"]
-           and after[0].get("TimeUtc") == reference["ZoneAfterUtc"] and "TimeZoneInForce" not in after[0],
-           f"remote_administration.json: line written after the zone came back dated {reference['ZoneAfterUtc']}, no TimeZoneInForce",
+           and ((after[0].get("TimeUtc") == reference["ZoneAfterUtc"] and "TimeZoneInForce" not in after[0])
+                or reference["ZoneAfterUtc"] in instants_of(after[0])[1:]),
+           f"remote_administration.json: line written after the zone came back dated {reference['ZoneAfterUtc']}, "
+           f"no TimeZoneInForce{lived_twice_note(after[0]) if after else ''}",
            f"remote_administration.json: line written after the zone came back not at {reference['ZoneAfterUtc']}: {after[:1]}")
     return found
+
+
+def instants_of(row, key="Time"):
+    """The UTC instants a date of WAC may denote: <key>Utc, then those a local
+    time lived twice also gives (<key>AlsoPossibleUtc) — the zone set back."""
+    return [str(row.get(key + "Utc", ""))] + [str(x) for x in row.get(key + "AlsoPossibleUtc") or []]
+
+
+def lived_twice_note(row, key="Time"):
+    """How a check says a date WAC gave as lived twice: its first occurrence
+    chosen, the instant expected among the others said."""
+    return f" (lived twice: {row.get(key + 'AlsoPossibleUtc')} said beside {row.get(key + 'Utc')})" \
+        if row.get(key + "AlsoPossibleUtc") else ""
 
 
 def check_application_traces(folder):
@@ -3813,11 +3920,12 @@ def check_application_traces(folder):
     teamviewer = of(remote, reference["TeamViewerLog"])
     dated = [r for r in teamviewer if "incoming connection" in str(r.get("Text", ""))]
     report(len(dated) == 1 and dated[0].get("Product") == "TeamViewer" and dated[0].get("Line") == 2
-           and dated[0].get("TimeAsWritten") == reference["TeamViewerWritten"] and dated[0].get("TimeUtc") == reference["TeamViewerUtc"]
+           and dated[0].get("TimeAsWritten") == reference["TeamViewerWritten"] and reference["TeamViewerUtc"] in instants_of(dated[0])
            and dated[0].get("TimeZoneAssumed") == "Local" and str(dated[0].get("Time", "")).startswith(reference["TeamViewerWritten"][:10].replace("/", "-"))
            and "wac-trace-witness continuation" in str(dated[0].get("Text", "")),
            f"remote_administration.json: TeamViewer's witness line, written {reference['TeamViewerWritten']} local, "
-           f"{reference['TeamViewerUtc']} as Windows computes it, to the millisecond; its continuation",
+           f"{reference['TeamViewerUtc']} as Windows computes it, to the millisecond; its continuation"
+           f"{lived_twice_note(dated[0]) if dated else ''}",
            f"remote_administration.json: TeamViewer's witness line not as expected (UTC {reference['TeamViewerUtc']}): {teamviewer[:3]}")
     report(not of(remote, reference["Decoy"]), "remote_administration.json: the decoy TeamViewer's filter does not take, absent",
            "remote_administration.json: the decoy was taken")
@@ -3833,14 +3941,15 @@ def check_application_traces(folder):
     else:
         refused = [r for r in of(rows("ssh"), reference["SshdLog"]) if "Invalid user wacnobody" in str(r.get("Text", ""))]
         last = refused[-1] if refused else {}
-        utc = str(last.get("TimeUtc", ""))
+        # The instant WAC gives, or, lived twice, one of those it says beside it.
+        within = [u for u in instants_of(last) if reference["SshdBeforeUtc"] <= u <= reference["SshdAfterUtc"]]
+        utc = within[0] if within else str(last.get("TimeUtc", ""))
         report(bool(refused) and last.get("Product") == "OpenSSH server" and last.get("TimeZoneAssumed") == "Local"
                and re.fullmatch(r"\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}", str(last.get("TimeAsWritten", "")))
-               and re.fullmatch(r"[0-9T:.-]+\.\d{3}Z", utc)
-               and reference["SshdBeforeUtc"] <= utc <= reference["SshdAfterUtc"],
+               and all(re.fullmatch(r"[0-9T:.-]+\.\d{3}Z", u) for u in instants_of(last)) and bool(within),
                f"ssh.json: the connection sshd refused, written {last.get('TimeAsWritten')} local after its process's "
                f"identifier, dated {utc}, between {reference['SshdBeforeUtc']} and {reference['SshdAfterUtc']} "
-               f"as the system clock bracketed it, to the millisecond",
+               f"as the system clock bracketed it, to the millisecond{lived_twice_note(last)}",
                f"ssh.json: the connection sshd refused not between {reference['SshdBeforeUtc']} and "
                f"{reference['SshdAfterUtc']}, or not to the millisecond: {refused[-1:] or 'no line'}")
     transfer = rows("file_transfer")
@@ -5265,8 +5374,10 @@ def check_webcache(folder, records):
 
     Every entry of every Container_<n>, its URL and its UTC times identical;
     the modification time of the MSHist containers, written in local time,
-    converted here with the tz database (zoneinfo) for the VM's time zone —
-    not with WAC's rules. Skipped when dissect.esedb is in neither this Python
+    converted here at the offset the reference history (Get-WinEvent) gives
+    in force then — every instant it was lived at, the first in ModifiedUtc,
+    the others in ModifiedAlsoPossibleUtc —, outside it with the tz database
+    (zoneinfo) for the VM's time zone: not with WAC's rules. Skipped when dissect.esedb is in neither this Python
     nor vmtest/tools/ese-venv (pip install dissect.esedb).
     """
     # dissect.esedb (pure Python) lives in vmtest/tools/ese-venv, not in the
@@ -5290,12 +5401,22 @@ def check_webcache(folder, records):
             return None
         t = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=ticks // 10)
         return t.strftime("%Y-%m-%dT%H:%M:%S.%f") + str(ticks % 10) + "Z"
+    history = reference_history(folder)
+    conversion = load(folder, "conversion.json")
+    end = (((conversion or {}).get("Host") or {}).get("SuspectTimeZone") or {}).get("HistoryEndUtc") \
+        if isinstance(conversion, dict) else None
     def local_to_utc(ticks):
-        if not ticks or zone is None:
+        """[first instant, others…] a local time denotes, as text."""
+        if not ticks:
+            return None
+        lived = reference_local_instants(history, end, ticks)
+        if lived:
+            return [text_of(t) for t in lived]
+        if zone is None:
             return None
         local = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=ticks // 10)
         utc = local.replace(tzinfo=zone).astimezone(datetime.timezone.utc).replace(tzinfo=None)
-        return utc.strftime("%Y-%m-%dT%H:%M:%S.%f") + str(ticks % 10) + "Z"
+        return [utc.strftime("%Y-%m-%dT%H:%M:%S.%f") + str(ticks % 10) + "Z"]
     def entries_of(path):
         db = EseDB(open(path, "rb"))
         names = {t.name for t in db.tables()}
@@ -5332,17 +5453,21 @@ def check_webcache(folder, records):
                     continue
                 theirs += 1
                 r = mine.get((cid, e.get("EntryId")), {})
-                modified = local_to_utc(e.get("ModifiedTime")) if name.startswith("MSHist") else iso(e.get("ModifiedTime"))
+                lived = local_to_utc(e.get("ModifiedTime")) if name.startswith("MSHist") else None
+                modified = lived[0] if lived else (None if name.startswith("MSHist") else iso(e.get("ModifiedTime")))
                 local_checked += 1 if name.startswith("MSHist") and e.get("ModifiedTime") else 0
                 expected = {"Url": e.get("Url"), "AccessedUtc": iso(e.get("AccessedTime")),
-                            "ExpiryUtc": iso(e.get("ExpiryTime")), "ModifiedUtc": modified}
+                            "ExpiryUtc": iso(e.get("ExpiryTime")), "ModifiedUtc": modified,
+                            "ModifiedAlsoPossibleUtc": lived[1:] if lived and len(lived) > 1 else None}
                 for field, value in expected.items():
                     if value is not None and r.get(field) != value:
                         wrong.append(f"{name} {e.get('EntryId')} {field}: dissect {value}, WAC {r.get(field)}")
+                if lived and len(lived) == 1 and r.get("ModifiedAlsoPossibleUtc"):
+                    wrong.append(f"{name} {e.get('EntryId')}: lived once, WAC says {r.get('ModifiedAlsoPossibleUtc')} possible")
         ok = theirs == len(mine) and not wrong
         print(f"  {'✅' if ok else '❌'} web_client.json: {theirs} WebCache entr(ies) as dissect.esedb reads them "
               f"(WAC {len(mine)}, {empty} empty leaf entr(ies) left out), URL and times identical, "
-              f"{local_checked} MSHist local time(s) converted by zoneinfo"
+              f"{local_checked} MSHist local time(s) converted at the offset the reference history gives in force then"
               + (f", {deleted} deleted by the replayed logs (absent from the later copy too)" if deleted else "")
               + ("" if ok else f": {wrong[:3]}"))
         found += 0 if ok else 1
