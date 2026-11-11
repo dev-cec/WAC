@@ -270,16 +270,23 @@ LocalBias resolvedLocalBias(const TimeZoneRules& rules, const TimeZoneHistory& h
 		bias = std::prev(next)->biasMinutes;
 		return true;
 	};
-	bool found = false;
-	long chosen = 0;
+	std::vector<long> held;   // the offset of each stretch that holds L
 	for (size_t i = 0; i < changes.size(); ++i) {
 		const long long utc = utcIn(i);
-		if (utc >= changes[i].utc100ns && utc < end(i) && (!found || changes[i].biasMinutes < chosen)) {
-			chosen = changes[i].biasMinutes;
-			found = true;
-		}
+		if (utc >= changes[i].utc100ns && utc < end(i)
+		    && std::find(held.begin(), held.end(), changes[i].biasMinutes) == held.end())
+			held.push_back(changes[i].biasMinutes);
 	}
-	if (found) return LocalBias{ chosen, chosen != byRules.biasMinutes };
+	if (!held.empty()) {
+		// The first occurrence; the others as possible, said (LocalBias).
+		const auto first = std::min_element(held.begin(), held.end());
+		LocalBias result{ *first, *first != byRules.biasMinutes };
+		held.erase(first);
+		result.otherBiasesMinutes = std::move(held);
+		return result;
+	}
+	bool found = false;
+	long chosen = 0;
 	/* No stretch holds L. The rules confirmed by the log within a second: Windows
 	   writes its change a moment after making it (0.68 ms measured at the return
 	   to winter time), and in spring the first local times after the change
@@ -354,6 +361,31 @@ LocalBias biasAtLocalLogged(const TimeZoneRules& rules, const TimeZoneHistory& h
 			if (utc >= u.fromUtc100ns && utc < u.toUtc100ns) { result.uncertain = &u; return result; }
 		}
 	return result;
+}
+
+std::vector<LivedTwice> localTimesLivedTwice(const TimeZoneHistory& history, size_t limit) {
+	std::vector<LivedTwice> out;
+	const std::vector<LoggedBias>& changes = history.changes;
+	auto end = [&](size_t i) { return i + 1 < changes.size() ? changes[i + 1].utc100ns : history.endUtc100ns; };
+	/* Stretch i lives the local times [start - bias, end - bias). A later one
+	   overlaps it only if it starts within twice the largest offset of its
+	   end: the search stops there, a forged log of many changes costs no more. */
+	const long long reach = 2LL * MAX_OFFSET_MINUTES * MINUTE_100NS;
+	for (size_t i = 0; i < changes.size() && out.size() < limit; ++i) {
+		const long long fromI = changes[i].utc100ns - changes[i].biasMinutes * MINUTE_100NS;
+		const long long toI = end(i) - changes[i].biasMinutes * MINUTE_100NS;
+		for (size_t j = i + 1; j < changes.size() && changes[j].utc100ns <= end(i) + reach && out.size() < limit; ++j) {
+			if (changes[j].biasMinutes == changes[i].biasMinutes) continue;
+			const long long fromJ = changes[j].utc100ns - changes[j].biasMinutes * MINUTE_100NS;
+			const long long toJ = end(j) - changes[j].biasMinutes * MINUTE_100NS;
+			const long long from = std::max(fromI, fromJ), to = std::min(toI, toJ);
+			if (from < to) out.push_back({ from, to, changes[i].biasMinutes, changes[j].biasMinutes });
+		}
+	}
+	std::sort(out.begin(), out.end(), [](const LivedTwice& a, const LivedTwice& b) {
+		return a.localFrom100ns + a.firstBiasMinutes * MINUTE_100NS < b.localFrom100ns + b.firstBiasMinutes * MINUTE_100NS;
+	});
+	return out;
 }
 
 TimeZoneHistory timeZoneHistoryFromObservations(const std::vector<TimeZoneRules>& zones,

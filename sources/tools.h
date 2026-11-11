@@ -894,6 +894,27 @@ FILETIME suspectLocalToUtc(const FILETIME& filetimeLocal);
  *  @return the offset (UTC = local + bias), and whether the log gave it */
 LocalBias suspectBiasAtLocal(const FILETIME& filetimeLocal);
 
+/*! Adds the other UTC instants a local time denotes when it was lived twice
+ *  (LocalBias::otherBiasesMinutes), as the array `<key>AlsoPossibleUtc`:
+ *  the instant `<key>Utc` gives is its first occurrence, these as likely.
+ *  Nothing is written for a time lived once.
+ *  @param o the object
+ *  @param key the name of the date
+ *  @param local the local time, as written
+ *  @param bias its offset, as suspectBiasAtLocal gives it
+ *  @param precision the precision of the source: the digits of fraction written */
+void addAlsoPossibleUtc(Json& o, const std::wstring& key, const FILETIME& local, const LocalBias& bias,
+                        Precision precision = Precision::HundredNanoseconds);
+
+/*! Adds a date the source writes in the EXAMINED machine's local time: both
+ *  forms as addDate, at the offset in force when it was written
+ *  (suspectBiasAtLocal), and its other instants if it was lived twice
+ *  (addAlsoPossibleUtc). Nothing is written for a null date.
+ *  @param o the object
+ *  @param key the name of the local form
+ *  @param local the date, local */
+void addLocalDate(Json& o, const std::wstring& key, const FILETIME& local);
+
 /*! Reads the examined machine's time zone in the suspect's SYSTEM hive.
 *
 * Reads `Control\TimeZoneInformation` under `conf.CurrentControlSet` and fills

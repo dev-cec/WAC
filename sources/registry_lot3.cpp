@@ -334,17 +334,17 @@ namespace {
 
 /*! A NetworkList date: a SYSTEMTIME in the machine's LOCAL time — measured on
  *  the test VM, DateLastConnected 23:46:44 is the 21:46:44 UTC of the
- *  NetworkProfile event 10000 of that connection (+2 h). Converted to UTC with
- *  the offset in force at that date.
+ *  NetworkProfile event 10000 of that connection (+2 h). Converted to UTC at
+ *  output, with the offset in force when it was written (addLocalDate).
  *  @param data the value's 16 bytes
- *  @return the instant in UTC, or a null FILETIME */
+ *  @return the local time, or a null FILETIME */
 FILETIME networkListDate(const std::vector<BYTE>& data) {
 	FILETIME local = { 0, 0 };
 	if (data.size() < sizeof(SYSTEMTIME)) return local;
 	SYSTEMTIME st;
 	memcpy(&st, data.data(), sizeof(SYSTEMTIME));
 	if (!SystemTimeToFileTime(&st, &local)) return FILETIME{ 0, 0 };
-	return suspectLocalToUtc(local);
+	return local;
 }
 
 } // namespace
@@ -353,8 +353,8 @@ Json KnownNetwork::toJson() const {
 	Json o = Json::obj();
 	o.add(L"ProfileGuid", Json::str(profileGuid));
 	for (const auto& [name, value] : values) o.add(name, value);
-	addDate(o, L"DateCreated", createdUtc);
-	addDate(o, L"DateLastConnected", lastConnectedUtc);
+	addLocalDate(o, L"DateCreated", createdLocal);
+	addLocalDate(o, L"DateLastConnected", lastConnectedLocal);
 	addDate(o, L"KeyLastWrite", profileLastWriteUtc);
 	if (!signatures.empty()) {
 		Json list = Json::arr();
@@ -384,8 +384,8 @@ HRESULT KnownNetworks::getData() {
 			DWORD type = 0;
 			std::vector<BYTE> data;
 			if (enumRegistryValue(key, i, name, type, data) != ERROR_SUCCESS) break;
-			if (name == L"DateCreated") n.createdUtc = networkListDate(data);
-			else if (name == L"DateLastConnected") n.lastConnectedUtc = networkListDate(data);
+			if (name == L"DateCreated") n.createdLocal = networkListDate(data);
+			else if (name == L"DateLastConnected") n.lastConnectedLocal = networkListDate(data);
 			else n.values.emplace_back(registryNameToJsonKey(name), registryValueToJson(type, data));
 		}
 		ORCloseKey(key);

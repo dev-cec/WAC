@@ -85,6 +85,7 @@ struct ScheduledTask {
 	std::wstring state;                //!< "Enabled" / "Disabled"
 	bool         enabled = true;       //!< the same, as a boolean
 	FILETIME     lastRunTimeUtc = { 0 };   //!< last run, UTC, as DynamicInfo stores it
+	FILETIME     lastRunTimeLocal = { 0 }; //!< Windows XP: the .job's last run, local as written, for a time lived twice (addAlsoPossibleUtc)
 	std::optional<LONG> lastTaskResult;    //!< value the last run returned; none without a history (TaskCache, .job) — a 0 would read "succeeded"
 	std::wstring registrationDate;         //!< the XML's Date, as written
 	std::wstring sourceXml;                //!< path of the source XML, for traceability

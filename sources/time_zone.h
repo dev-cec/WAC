@@ -206,6 +206,12 @@ struct LocalBias {
 	/*! The time may have been written in an interval where the zone changed at
 	 *  an unknown instant (TimeZoneHistory::uncertain): that interval, else null. */
 	const UncertainZone* uncertain = nullptr;
+	/*! The other offsets whose stretch of the history also holds the time: a
+	 *  local time lived twice — the zone set back (measured, Server 2025 from
+	 *  Paris to New York: 16:45 local lived at 15:45Z, then at 21:45Z) or the
+	 *  hour of autumn. Each its own UTC instant, as likely as the one chosen:
+	 *  said, never dropped. Empty when the time was lived once. */
+	std::vector<long> otherBiasesMinutes;
 };
 
 /*! The offset of a local time on the examined machine: the one in force WHEN
@@ -214,7 +220,8 @@ struct LocalBias {
  *
  *  A local time L belongs to a stretch of the history when L + its offset
  *  falls within it. Several do (a clock set back: an hour lived twice): the
- *  smallest offset, its first occurrence, as Windows chooses in autumn. None
+ *  smallest offset, its first occurrence, as Windows chooses in autumn — the
+ *  others in otherBiasesMinutes, each a UTC instant as possible. None
  *  does: the rules' offset if the log shows it within a second of that instant
  *  (Windows logs a change a moment after making it); else, L within the log (a
  *  clock set forward: an hour skipped), the offset in force before the change,
@@ -226,3 +233,21 @@ struct LocalBias {
  *  @param local100ns the local time, in hundreds of nanoseconds since 1601
  *  @return the offset, and its source */
 LocalBias biasAtLocalLogged(const TimeZoneRules& rules, const TimeZoneHistory& history, long long local100ns);
+
+/*! Local times the history shows lived twice: the offset grew from one
+ *  stretch to a later one (the zone, or daylight saving, set back), and the
+ *  local times of the two overlap. */
+struct LivedTwice {
+	long long localFrom100ns = 0;  //!< first local time lived twice
+	long long localTo100ns = 0;    //!< end of them, excluded
+	long firstBiasMinutes = 0;     //!< the offset of their first occurrence: UTC = local + bias
+	long againBiasMinutes = 0;     //!< the offset of the second
+};
+
+/*! The local times lived twice within the history (LivedTwice), ascending by
+ *  their first occurrence. Every time converted from local within one is
+ *  ambiguous: the conversion says them all (conversion.json, SuspectTimeZone).
+ *  @param history what the System log shows
+ *  @param limit at most this many returned: a forged log costs no more
+ *  @return the intervals */
+std::vector<LivedTwice> localTimesLivedTwice(const TimeZoneHistory& history, size_t limit = 10000);

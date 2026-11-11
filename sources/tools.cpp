@@ -1277,6 +1277,23 @@ LocalBias suspectBiasAtLocal(const FILETIME& filetimeLocal) {
 	return biasAtLocalLogged(suspectRules(), conf.timeZone.history, ticksOf(filetimeLocal));
 }
 
+void addAlsoPossibleUtc(Json& o, const std::wstring& key, const FILETIME& local, const LocalBias& bias, Precision precision) {
+	if (bias.otherBiasesMinutes.empty() || nullDate(local)) return;
+	Json others = Json::arr();
+	for (long other : bias.otherBiasesMinutes) {
+		const std::wstring utc = timeToIso8601Utc(shifted(local, other * MINUTE_100NS), precision);
+		if (!utc.empty()) others.push(Json::str(utc));
+	}
+	o.add(key + L"AlsoPossibleUtc", std::move(others));
+}
+
+void addLocalDate(Json& o, const std::wstring& key, const FILETIME& local) {
+	if (nullDate(local)) return;
+	const LocalBias bias = suspectBiasAtLocal(local);
+	addDate(o, key, shifted(local, bias.biasMinutes * MINUTE_100NS));
+	addAlsoPossibleUtc(o, key, local, bias);
+}
+
 bool iso8601UtcToFiletime(const std::wstring& text, FILETIME& filetime) {
 	// Fixed layout: 20 characters, or 21 + 1 to 7 fraction digits.
 	if (text.size() < 20 || text.back() != L'Z') return false;

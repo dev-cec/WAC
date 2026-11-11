@@ -140,8 +140,8 @@ Json SetupApiSection::toJson() const {
 	Json o = Json::obj();
 	o.add(L"Operation", Json::str(operation));
 	o.add(L"Subject", Json::str(subject));
-	addDate(o, L"Start", suspectLocalToUtc(startLocal));
-	addDate(o, L"End", suspectLocalToUtc(endLocal));
+	addLocalDate(o, L"Start", startLocal);
+	addLocalDate(o, L"End", endLocal);
 	o.add(L"ExitStatus", Json::str(exitStatus));
 	o.add(L"File", Json::str(file));
 	o.add(L"Line", Json::num(line));

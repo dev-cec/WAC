@@ -83,8 +83,8 @@ std::vector<W3cLogEntry> parseW3cLog(const std::wstring& text, const std::wstrin
 
 Json W3cLogEntry::toJson() const {
 	Json o = Json::obj();
-	if (time.dwLowDateTime || time.dwHighDateTime)
-		addDate(o, L"Time", zone == W3cTime::Local ? suspectLocalToUtc(time) : time);
+	if (zone == W3cTime::Local) addLocalDate(o, L"Time", time);
+	else addDate(o, L"Time", time);
 	o.add(L"TimeAsStored", Json::str(timeAsStored));
 	o.add(L"File", Json::str(file));
 	o.add(L"Line", Json::num(line));

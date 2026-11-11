@@ -106,6 +106,32 @@ void loggedOffsets() {
 		{ 2, instant(2026, 11, 2, 12, 0, 0), 0 } }, instant(2026, 11, 9, 0, 0, 0));
 	check(utcOf(london, moved, instant(2026, 11, 2, 12, 30, 0), fromHistory) == instant(2026, 11, 2, 11, 30, 0) && fromHistory,
 	      L"an hour lived twice by a change of zone: its first occurrence");
+	check(biasAtLocalLogged(london, moved, instant(2026, 11, 2, 12, 30, 0)).otherBiasesMinutes == std::vector<long>{ 0 },
+	      L"an hour lived twice: its second occurrence said");
+	check(biasAtLocalLogged(london, moved, instant(2026, 11, 2, 13, 0, 0)).otherBiasesMinutes.empty(),
+	      L"the first local time past the hour lived twice: lived once");
+	const std::vector<LivedTwice> twice = localTimesLivedTwice(moved);
+	check(twice.size() == 1 && twice[0].localFrom100ns == instant(2026, 11, 2, 12, 0, 0) && twice[0].localTo100ns == instant(2026, 11, 2, 13, 0, 0)
+	      && twice[0].firstBiasMinutes == -60 && twice[0].againBiasMinutes == 0,
+	      L"the hour lived twice, 12:00 to 13:00 local, at -60 then at 0");
+	check(localTimesLivedTwice(installed).empty() && localTimesLivedTwice(spring).empty(),
+	      L"a zone set forward, a spring: no local time lived twice");
+	/* Server 2025, 2026-11-10: Paris until 21:36:21Z, then New York (UTC-5).
+	   16:45 local was lived at 15:45Z under Paris, again at 21:45Z: sshd.log
+	   wrote "16:45:10.735" at 21:45:10.735Z, measured. */
+	TimeZoneRules newYork;
+	newYork.current.biasMinutes = 300;
+	const TimeZoneHistory flown = timeZoneHistoryFrom({
+		{ 1, instant(2026, 10, 31, 8, 5, 11), -60 },
+		{ 2, instant(2026, 11, 10, 21, 36, 21, 927974), 300 } }, instant(2026, 11, 10, 21, 50, 0));
+	const LocalBias sshd = biasAtLocalLogged(newYork, flown, instant(2026, 11, 10, 16, 45, 10, 7350000));
+	check(sshd.biasMinutes == -60 && sshd.otherBiasesMinutes == std::vector<long>{ 300 },
+	      L"sshd.log under New York: Paris's 15:45:10.735Z first, New York's 21:45:10.735Z said as possible");
+	const std::vector<LivedTwice> flownTwice = localTimesLivedTwice(flown);
+	check(flownTwice.size() == 1 && flownTwice[0].localFrom100ns == instant(2026, 11, 10, 16, 36, 21, 927974)
+	      && flownTwice[0].localTo100ns == instant(2026, 11, 10, 16, 50, 0),
+	      L"Paris to New York: the local times from 16:36:21 to the end of the log, 16:50, lived twice");
+	check(localTimesLivedTwice(flown, 0).empty(), L"no more intervals than the limit");
 	check(utcOf(london, moved, instant(2026, 11, 1, 18, 0, 0), fromHistory) == instant(2026, 11, 1, 17, 0, 0) && fromHistory,
 	      L"before a change of zone: the former zone's offset");
 	check(utcOf(london, moved, instant(2026, 11, 3, 18, 0, 0), fromHistory) == instant(2026, 11, 3, 18, 0, 0) && !fromHistory,

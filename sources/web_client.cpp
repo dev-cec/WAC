@@ -511,7 +511,7 @@ HRESULT readIeIndexDat(const std::wstring& file, const WebClientRecord& base, st
 			   visit is the secondary, in LOCAL time; the downloads, the start. */
 			if (weekly) {
 				addDate(r.fields, L"IndexCreated", filetimeFromTicks(e.primaryTime));
-				addDate(r.fields, L"Accessed", suspectLocalToUtc(filetimeFromTicks(e.secondaryTime)));
+				addLocalDate(r.fields, L"Accessed", filetimeFromTicks(e.secondaryTime));
 			}
 			else if (container == L"iedownload") addDate(r.fields, L"Created", filetimeFromTicks(e.primaryTime));
 			else {
@@ -641,7 +641,8 @@ HRESULT readWebCache(const std::wstring& file, const WebClientRecord& base, std:
 			}
 			r.fields.add(L"AccessCount", Json::num((long long)cellInteger(e, *table, L"AccessCount")));
 			const FILETIME modified = cellTime(e, *table, L"ModifiedTime");
-			addDate(r.fields, L"Modified", localModified ? suspectLocalToUtc(modified) : modified);
+			if (localModified) addLocalDate(r.fields, L"Modified", modified);
+			else addDate(r.fields, L"Modified", modified);
 			addDate(r.fields, L"Accessed", cellTime(e, *table, L"AccessedTime"));
 			addDate(r.fields, L"Created", cellTime(e, *table, L"CreationTime"));
 			addDate(r.fields, L"Expiry", cellTime(e, *table, L"ExpiryTime"));

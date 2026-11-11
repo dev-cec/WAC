@@ -96,7 +96,7 @@ Json IntuneLogEntry::toJson() const {
 			addUtcDate(o, L"Time", filetimeFromTicks((uint64_t)ticks));
 			o.add(L"BiasMinutes", Json::num((long long)biasMinutes));
 		}
-		else addDate(o, L"Time", suspectLocalToUtc(timeLocal));
+		else addLocalDate(o, L"Time", timeLocal);
 	}
 	o.add(L"Message", Json::str(message));
 	o.add(L"Component", Json::str(component));

@@ -283,6 +283,24 @@ Json auditContext() {
 				uncertain.push(std::move(entry));
 			}
 			if (!conf.timeZone.history.uncertain.empty()) suspect.add(L"ChangesAtUnknownInstant", std::move(uncertain));
+			/* Where local times were lived twice (the zone or daylight saving
+			   set back): every date converted from one is ambiguous, its other
+			   instants said with it (<key>AlsoPossibleUtc). As written, no zone. */
+			Json twice = Json::arr();
+			for (const LivedTwice& t : localTimesLivedTwice(conf.timeZone.history)) {
+				Json entry = Json::obj();
+				auto asWritten = [](long long local) {
+					std::wstring text = timeToIso8601Utc(filetimeFromTicks((uint64_t)local));
+					if (!text.empty()) text.pop_back();   // the "Z": a local time
+					return text;
+				};
+				entry.add(L"LocalFrom", Json::str(asWritten(t.localFrom100ns)));
+				entry.add(L"LocalTo", Json::str(asWritten(t.localTo100ns)));
+				entry.add(L"FirstBias", Json::num((long long)t.firstBiasMinutes));
+				entry.add(L"AgainBias", Json::num((long long)t.againBiasMinutes));
+				twice.push(std::move(entry));
+			}
+			if (!twice.empty()) suspect.add(L"LocalTimesLivedTwice", std::move(twice));
 		}
 	}
 	else {

@@ -105,9 +105,11 @@ std::wstring withFractionDigits(const std::wstring& iso, unsigned digits) {
 void addRecordTimes(Json& row, const WrittenTime& time, bool writesUtc) {
 	if (time.asWritten.empty()) return;
 	const FILETIME written = filetimeFromTicks(time.ticks);
+	const bool local = !time.hasOffset && !writesUtc;
+	const LocalBias bias = local ? suspectBiasAtLocal(written) : LocalBias{};
 	FILETIME utc = written;
 	if (time.hasOffset) utc = filetimeFromTicks(time.ticks - static_cast<int64_t>(time.offsetMinutes) * 600000000LL);
-	else if (!writesUtc) utc = suspectLocalToUtc(written);
+	else if (local) utc = filetimeFromTicks(time.ticks + static_cast<int64_t>(bias.biasMinutes) * 600000000LL);
 	if (utc.dwHighDateTime || utc.dwLowDateTime) {
 		row.add(L"Time", Json::str(withFractionDigits(utcTimeToIso8601Local(utc), time.fractionDigits)));
 		row.add(L"TimeUtc", Json::str(withFractionDigits(timeToIso8601Utc(utc), time.fractionDigits)));
@@ -116,8 +118,7 @@ void addRecordTimes(Json& row, const WrittenTime& time, bool writesUtc) {
 	/* The local time read at the offset of a zone no longer in force, as the
 	   System log shows it then (time_zone_history.h): said, with that offset —
 	   Time itself stays in the current zone, as every date of the collection. */
-	if (!time.hasOffset && !writesUtc) {
-		const LocalBias bias = suspectBiasAtLocal(written);
+	if (local) {
 		if (bias.fromHistory) {
 			const long east = -bias.biasMinutes, minutes = east < 0 ? -east : east;
 			wchar_t offset[8];
@@ -131,6 +132,16 @@ void addRecordTimes(Json& row, const WrittenTime& time, bool writesUtc) {
 			row.add(L"TimeZoneChangedBetween",
 			        Json::str(timeToIso8601Utc(filetimeFromTicks((uint64_t)bias.uncertain->fromUtc100ns)) + L"/"
 			                  + timeToIso8601Utc(filetimeFromTicks((uint64_t)bias.uncertain->toUtc100ns))));
+		/* Lived twice (addAlsoPossibleUtc): its other instants, at the
+		   precision written — as TimeUtc. */
+		if (!bias.otherBiasesMinutes.empty()) {
+			Json others = Json::arr();
+			for (long other : bias.otherBiasesMinutes)
+				others.push(Json::str(withFractionDigits(
+					timeToIso8601Utc(filetimeFromTicks((uint64_t)(time.ticks + static_cast<int64_t>(other) * 600000000LL))),
+					time.fractionDigits)));
+			row.add(L"TimeAlsoPossibleUtc", std::move(others));
+		}
 	}
 	if (time.fractionCut) row.add(L"TimePrecisionCut", Json::boolean(true));
 	row.add(L"TimeAsWritten", Json::str(time.asWritten));

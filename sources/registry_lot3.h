@@ -161,8 +161,8 @@ struct KnownNetwork {
 	std::wstring profileGuid;   //!< the profile's key
 	FILETIME profileLastWriteUtc = { 0 };   //!< last write of the profile's key
 	std::vector<std::pair<std::wstring, Json>> values; //!< the profile's values but its dates (ProfileName, Category, NameType…)
-	FILETIME createdUtc = { 0 };        //!< DateCreated, a local SYSTEMTIME, converted
-	FILETIME lastConnectedUtc = { 0 };  //!< DateLastConnected, idem
+	FILETIME createdLocal = { 0 };        //!< DateCreated, a local SYSTEMTIME, converted at output (addLocalDate)
+	FILETIME lastConnectedLocal = { 0 };  //!< DateLastConnected, idem
 	struct Signature {
 		std::wstring kind;      //!< "Managed" or "Unmanaged"
 		std::vector<std::pair<std::wstring, Json>> values; //!< Description, DnsSuffix, FirstNetwork, Source…

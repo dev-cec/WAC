@@ -45,14 +45,18 @@ void addFatDate(Json& o, const wchar_t* name, const FILETIME& date, bool utc, in
 	const std::wstring key = name;
 	FILETIME instant = date;
 	if (utc) o.add(key + L"Offset", Json::str(offsetText(offset)));
-	else if (!writtenAt) instant = suspectLocalToUtc(date);
 	else {
-		// The offset in force when the entry was written, applied to the date kept.
-		const int64_t bias = (int64_t)ticksFromFiletime(*writtenAt) - (int64_t)ticksFromFiletime(suspectLocalToUtc(*writtenAt));
-		instant = filetimeFromTicks((uint64_t)((int64_t)ticksFromFiletime(date) - bias));
-		o.add(key + L"WrittenAt", Json::str(L"Copy"));
-		o.add(key + L"OffsetApplied", Json::str(offsetText((int)(bias / 600000000))));
-		o.add(key + L"AsStored", Json::str(timeToIso8601Utc(date, precision).substr(0, 19)));
+		/* The offset in force when the entry was written — a copy keeps the
+		   source's date, written at the copy's instant — applied to the date
+		   kept. Its moment lived twice: each offset gives an instant. */
+		const LocalBias bias = suspectBiasAtLocal(writtenAt ? *writtenAt : date);
+		instant = filetimeFromTicks((uint64_t)((int64_t)ticksFromFiletime(date) + (int64_t)bias.biasMinutes * 600000000LL));
+		if (writtenAt) {
+			o.add(key + L"WrittenAt", Json::str(L"Copy"));
+			o.add(key + L"OffsetApplied", Json::str(offsetText((int)-bias.biasMinutes)));
+			o.add(key + L"AsStored", Json::str(timeToIso8601Utc(date, precision).substr(0, 19)));
+		}
+		addAlsoPossibleUtc(o, key, date, bias, precision);
 	}
 	o.add(key + L"Utc", Json::str(timeToIso8601Utc(instant, precision)));
 	o.add(key, Json::str(utcTimeToIso8601Local(instant, precision)));

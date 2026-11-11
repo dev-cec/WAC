@@ -106,7 +106,7 @@ std::wstring dhcpClientId(const std::vector<uint8_t>& value) {
 Json DhcpLogEntry::toJson() const {
 	Json o = Json::obj();
 	o.add(L"EventId", Json::str(eventId));
-	if (time.dwLowDateTime || time.dwHighDateTime) addDate(o, L"Time", suspectLocalToUtc(time));
+	addLocalDate(o, L"Time", time);
 	o.add(L"TimeAsStored", Json::str(timeAsStored));
 	o.add(L"Description", Json::str(description));
 	o.add(L"Address", Json::str(address));

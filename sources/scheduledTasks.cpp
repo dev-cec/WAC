@@ -211,7 +211,10 @@ bool parseJobFile(const std::vector<uint8_t>& b, ScheduledTask& task) {
 	SYSTEMTIME run = {};
 	std::memcpy(&run, b.data() + JOB_RUN_DATE, sizeof run);
 	FILETIME local = {};
-	if (run.wYear && SystemTimeToFileTime(&run, &local)) task.lastRunTimeUtc = suspectLocalToUtc(local);
+	if (run.wYear && SystemTimeToFileTime(&run, &local)) {
+		task.lastRunTimeUtc = suspectLocalToUtc(local);
+		task.lastRunTimeLocal = local;
+	}
 	size_t at = JOB_FIXED + 2;   // after the running-instance count
 	Action exec;
 	exec.type = L"Exec";
@@ -257,6 +260,7 @@ Json ScheduledTask::toJson() const {
 	o.add(L"State",              Json::str(state));
 	o.add(L"LastRun",            Json::str(utcTimeToIso8601Local(lastRunTimeUtc)));
 	o.add(L"LastRunUtc",         Json::str(timeToIso8601Utc(lastRunTimeUtc)));
+	addAlsoPossibleUtc(o, L"LastRun", lastRunTimeLocal, suspectBiasAtLocal(lastRunTimeLocal));
 	if (lastTaskResult) o.add(L"LastTaskResult", Json::num((long long)*lastTaskResult));
 	o.add(L"RegistrationDate",   Json::str(registrationDate));
 	o.add(L"SourceXml",          Json::str(sourceXml));   // traceability of the source
