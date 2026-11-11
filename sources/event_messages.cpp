@@ -459,8 +459,8 @@ const SystemMessages& systemMessages() {
  *
  *  A value of the form "%%1234" is not a text but a REFERENCE to another
  *  message — that is how Windows encodes enumerated values: looked for in the
- *  parameter file first, as Windows does, then in the provider's own tables.
- *  Without that resolution the message would show "%%1234" instead of the
+ *  parameter file first, as Windows does, then in the provider's own tables;
+ *  an HRESULT of Win32's facility, by its Win32 code. Without that resolution the message would show "%%1234" instead of the
  *  label.
  *  @param messageTemplate the template, with its %1 %2… marks
  *  @param parameters the parameter file's table
@@ -473,9 +473,19 @@ std::wstring render(const std::wstring& messageTemplate, const TableMessages& pa
 	   several — the account-control flags of a 4720 are "%%2080 %%2082
 	   %%2084", one label per flag set. Resolving only a value that was a
 	   single reference left those raw (B-023). */
-	auto label = [&](uint32_t id) {
+	auto lookup = [&](uint32_t id) {
 		std::wstring t = parameters.text(id);
 		for (const TableMessages* table : own) if (t.empty()) t = table->text(id);
+		return t;
+	};
+	auto label = [&](uint32_t id) {
+		std::wstring t = lookup(id);
+		/* An HRESULT of Win32's facility (HRESULT_FROM_WIN32, 0x8007xxxx): Windows
+		   gives the text of its Win32 code — measured on Windows 11, the
+		   "%%2147943515" (0x8007045B) of Service Control Manager's 7024 rendered
+		   "Un arrêt système est en cours.", the text of 1115 in kernel32.dll,
+		   its parameter file. */
+		if (t.empty() && (id & 0xFFFF0000u) == 0x80070000u) t = lookup(id & 0xFFFFu);
 		/* A table label is a message of its own: "%0" ends it without a line
 		   break (Vista's Defender: "Windows Defender%0", which came out with
 		   its "%0" inside the sentence). */
