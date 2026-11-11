@@ -528,6 +528,7 @@ def cross_checks(folder):
     found += guarded(check_controller_events, folder)
     found += guarded(check_server_roles, folder)
     found += guarded(check_application_traces, folder)
+    found += guarded(check_third_party_measured, folder)
     found += guarded(check_time_zone_history, folder)
     found += guarded(check_assumed_time_zones, folder)
     found += guarded(check_zone_in_force, folder)
@@ -4069,6 +4070,54 @@ def check_application_traces(folder):
         report(not taken and not of(rows("system_traces"), reference["CrashDump"]),
                "system_traces: the crash dump, off by default, neither collected nor converted",
                "system_traces: the crash dump, off by default, was collected")
+    return found
+
+
+# The tools measured on win11-test (backlog B-077, 2026-11-11), installed,
+# their action bracketed by the system clock, then uninstalled: their logs
+# stay, and keep the line measured. (group, product, file, time as written,
+# instant expected, bracket from, bracket to): the instant within the
+# bracket, at the precision written.
+THIRD_PARTY_MEASURED = (
+    ("remote_administration", "AnyDesk", "ad.trace", "2026-11-11 19:23:27.390",
+     "2026-11-11T19:23:27.390Z", "2026-11-11T19:23:25.039Z", "2026-11-11T19:23:46.613Z"),
+    ("remote_administration", "RustDesk", "rustdesk_rCURRENT.log", "2026-11-11 20:23:49.070579 +01:00",
+     "2026-11-11T19:23:49.070579Z", "2026-11-11T19:23:47.536Z", "2026-11-11T19:24:08.032Z"),
+    ("remote_administration", "mRemoteNG", "mRemoteNG.log", "2026-11-11 20:24:14,845",
+     "2026-11-11T19:24:14.845Z", "2026-11-11T19:24:13.478Z", "2026-11-11T19:24:38.975Z"),
+    # To the second: the instant written, 19:24:46, is the truncated one of 19:24:46.114Z or later.
+    ("vpn", "OpenVPN", "wac-measure.log", "2026-11-11 20:24:46",
+     "2026-11-11T19:24:46Z", "2026-11-11T19:24:46.000Z", "2026-11-11T19:25:01.577Z"),
+    ("vpn", "Tailscale", "tailscale-service-20261111T202502-1794425102.txt", "2026-11-11T20:25:02.820+01:00",
+     "2026-11-11T19:25:02.820Z", "2026-11-11T19:25:01.719Z", "2026-11-11T19:25:25.768Z"),
+)
+
+
+def check_third_party_measured(folder):
+    """The lines of third-party tools whose time zone was measured (B-077):
+    each found again in its group's JSON, dated the instant measured — AnyDesk
+    in UTC, RustDesk and Tailscale by the offset written, mRemoteNG and
+    OpenVPN local —, within the bracket the system clock gave. A tool whose log
+    is not on this machine is said, not failed. Returns the number of failures."""
+    found, absent = 0, []
+    for group, product, name, written, expected, low, high in THIRD_PARTY_MEASURED:
+        if switched_off(folder, group + ".json"):
+            continue
+        data = load(folder, group + ".json")
+        rows = [r for r in (data if isinstance(data, list) else []) if r.get("Product") == product
+                and str(r.get("File", "")).lower().endswith("\\" + name.lower())]
+        if not rows:
+            absent.append(product)
+            continue
+        line = next((r for r in rows if r.get("TimeAsWritten") == written), {})
+        utc = str(line.get("TimeUtc", ""))
+        ok = utc == expected and ticks_of(low) <= ticks_of(utc) <= ticks_of(high)
+        print(f"  {'✅' if ok else '❌'} {group}.json: {product}'s line written {written!r} "
+              + (f"dated {utc}, within {low} - {high} as the system clock bracketed it" if ok
+                 else f"expected {expected}, WAC {utc or 'no such line'}"))
+        found += 0 if ok else 1
+    if absent:
+        print(f"  ℹ️  measured third-party logs not on this machine: {absent}")
     return found
 
 
