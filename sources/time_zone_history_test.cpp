@@ -148,6 +148,18 @@ void loggedOffsets() {
 	check(timeZoneHistoryFrom({ { 1, instant(2026, 1, 1, 0, 0, 0), 5000 } }, instant(2026, 2, 1, 0, 0, 0)).changes.empty(),
 	      L"a forged offset past 24 h is no offset");
 	check(biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 1, 15, 12, 0, 0)).biasMinutes == -60, L"no history: the rules");
+	/* No history, the rules alone: Paris, 25 October 2026, 03:00 summer time
+	   back to 02:00 — 02:30 lived at 00:30Z, then at 01:30Z; 29 March, 02:30
+	   skipped. */
+	const LocalBias autumn = biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 10, 25, 2, 30, 0));
+	check(autumn.biasMinutes == -120 && autumn.otherBiasesMinutes == std::vector<long>{ -60 },
+	      L"the rules, the hour repeated in autumn: 00:30Z first, 01:30Z said as possible");
+	check(biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 10, 25, 3, 0, 0)).otherBiasesMinutes.empty()
+	      && biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 10, 25, 1, 59, 59)).otherBiasesMinutes.empty(),
+	      L"the rules: the first second after the repeated hour, the last before it, lived once");
+	const LocalBias skipped = biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 3, 29, 2, 30, 0));
+	check(skipped.biasMinutes == -60 && skipped.otherBiasesMinutes.empty(),
+	      L"the rules, the hour skipped in spring: the offset before, nothing else possible");
 }
 
 /*! The rules of Pacific time as Windows stores them: daylight saving time from

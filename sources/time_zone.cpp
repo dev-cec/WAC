@@ -251,11 +251,27 @@ TimeZoneHistory timeZoneHistoryFrom(std::vector<LoggedBias> logged, long long en
 	return history;
 }
 
+std::vector<long> otherBiasesAtLocal(const TimeZoneRules& rules, long long local100ns) {
+	std::vector<long> out;
+	const int year = yearOf(local100ns);
+	if (year == 0 || local100ns > LLONG_MAX - SAFE_MARGIN_100NS || local100ns < LLONG_MIN + SAFE_MARGIN_100NS) return out;
+	// The candidates of biasAtLocal: each one the zone has at L + itself is an instant L was lived at.
+	const TimeZoneRule& r = rules.forYear(year);
+	const long chosen = biasAtLocal(rules, local100ns);
+	for (long b : { r.biasMinutes + r.standardBiasMinutes, r.biasMinutes + r.daylightBiasMinutes, endOfYearBias(rules, year - 1) })
+		if (b != chosen && std::find(out.begin(), out.end(), b) == out.end()
+		    && biasAtUtc(rules, local100ns + b * MINUTE_100NS) == b)
+			out.push_back(b);
+	std::sort(out.begin(), out.end());
+	return out;
+}
+
 namespace {
 
 //! The offset of a local time by the history's stretches, without the uncertain intervals (biasAtLocalLogged).
 LocalBias resolvedLocalBias(const TimeZoneRules& rules, const TimeZoneHistory& history, long long local100ns) {
-	const LocalBias byRules{ biasAtLocal(rules, local100ns), false };
+	// By the rules: the hour repeated in autumn says its second occurrence too.
+	const LocalBias byRules{ biasAtLocal(rules, local100ns), false, nullptr, otherBiasesAtLocal(rules, local100ns) };
 	const std::vector<LoggedBias>& changes = history.changes;
 	if (changes.empty() || local100ns < LLONG_MIN + SAFE_MARGIN_100NS || local100ns > LLONG_MAX - SAFE_MARGIN_100NS)
 		return byRules;

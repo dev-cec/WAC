@@ -96,6 +96,15 @@ long biasAtUtc(const TimeZoneRules& rules, long long utc100ns);
  *  @return the bias in minutes: UTC = local + bias */
 long biasAtLocal(const TimeZoneRules& rules, long long local100ns);
 
+/*! The other offsets a local wall-clock time has by the zone's rules: in the
+ *  hour repeated in autumn, the second occurrence's (biasAtLocal gives the
+ *  first) — each its own UTC instant, as possible. Empty for a time lived
+ *  once, or skipped.
+ *  @param rules the time zone's rules
+ *  @param local100ns the local time, in hundreds of nanoseconds since 1601
+ *  @return the biases in minutes, ascending: UTC = local + bias */
+std::vector<long> otherBiasesAtLocal(const TimeZoneRules& rules, long long local100ns);
+
 /*! An offset the examined machine wrote in its System log, at an instant:
  *  Kernel-General 22 (NewBias, on every change of offset — a time zone set,
  *  a daylight saving transition — while the machine runs), 24 (CurrentBias,
@@ -247,6 +256,8 @@ struct LivedTwice {
 /*! The local times lived twice within the history (LivedTwice), ascending by
  *  their first occurrence. Every time converted from local within one is
  *  ambiguous: the conversion says them all (conversion.json, SuspectTimeZone).
+ *  Outside the history, the hour repeated each autumn by the rules is not
+ *  listed — every year has one —, each time read there says it all the same.
  *  @param history what the System log shows
  *  @param limit at most this many returned: a forged log costs no more
  *  @return the intervals */
