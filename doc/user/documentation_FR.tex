@@ -2414,10 +2414,52 @@ ZIP (\champ{ModifiedAsWritten} ; une entrée ZIP garde l'heure d'horloge de la
 machine qui a fait l'archive — les archives que Windows~11 lit lui-même, 7z
 ou tar, portent au contraire un instant UTC, donné comme tel) et une date OLE d'un magasin de propriétés
 (\champ{AsWritten}). Les placer sur une chronologie demande de connaître
-leur origine : \wac{} ne l'invente pas. Pour une valeur que l'artefact
-enregistre en heure locale (volume FAT, \fichier{setupapi.dev.log}), l'heure répétée à l'automne est lue comme sa première occurrence, et
-l'heure sautée au printemps avec le décalage d'avant le changement, comme le
-fait Windows.
+leur origine : \wac{} ne l'invente pas.
+
+\paragraph{Heure locale écrite par la source.} Certaines sources n'écrivent
+que l'heure d'horloge, sans décalage : volumes FAT, \fichier{setupapi.dev.log},
+journaux DHCP et du pare-feu, journaux texte des applications (TeamViewer,
+OpenSSH\ldots), historique hebdomadaire du WebCache, NetworkList, tâches
+\fichier{.job}. \wac{} les convertit en UTC avec le fuseau \textbf{en vigueur
+quand la valeur a été écrite}, tel que la machine l'a consigné dans son
+journal Système : Windows~10 et suivants y écrivent chaque changement de
+décalage (Kernel-General 1, 22 et 24) ; les versions antérieures, le fuseau en
+vigueur au démarrage, à l'arrêt et chaque jour (EventLog 6005, 6006, 6013) et,
+depuis Windows~7, le fuseau posé par \texttt{tzutil} (TZUtil 20001).
+L'historique obtenu est écrit dans \fichier{conversion.json}
+(\champ{Host.SuspectTimeZone.History}) ; une ligne de trace écrite sous un
+autre fuseau que l'actuel porte \champ{TimeZoneInForce}. Avant le premier
+événement du journal, après sa fin, ou sans journal Système, les règles du
+fuseau actuel s'appliquent. Avant Windows~10, un changement dont aucun
+événement ne donne l'instant n'est pas inventé : l'intervalle est donné
+(\champ{ChangesAtUnknownInstant}, et \champ{TimeZoneChangedBetween} sur la
+ligne), les règles du fuseau actuel y valant. Le journal est lu dans sa copie
+brute : un changement fait quelques secondes avant la collecte peut ne pas y
+être encore écrit, le service du journal écrivant le fichier un peu après.
+
+\paragraph{Heure vécue deux fois, heure jamais vécue.} Une heure d'horloge
+peut désigner plusieurs instants : l'heure répétée à l'automne, ou les heures
+revécues après un recul du fuseau (une machine passée de Paris à New York revit
+six heures). Rien dans l'heure seule ne les départage : \champ{XUtc} donne la
+première occurrence, comme Windows, et \champ{XAlsoPossibleUtc} la liste des
+autres instants, aussi probables. L'heure sautée au printemps n'a jamais été
+vécue, et Windows lui-même la lit de deux façons : avec le décalage d'avant le
+changement (\texttt{TzSpecificLocalTimeToSystemTimeEx}), que suit
+\champ{XUtc}, ou avec celui d'après (\texttt{TzSpecificLocalTimeToSystemTime}),
+donné dans \champ{XAlsoPossibleUtc}. Les intervalles d'heure locale vécus deux
+fois d'après l'historique sont listés dans
+\champ{Host.SuspectTimeZone.LocalTimesLivedTwice}, avec le décalage de chaque
+occurrence ; les heures répétées des automnes hors de l'historique n'y
+figurent pas, mais chaque date qui y tombe porte \champ{XAlsoPossibleUtc}.
+
+\paragraph{Fuseau supposé, fuseau mesuré.} Le fuseau d'une source qui ne
+l'écrit pas a été mesuré contre l'heure d'exécution (une ligne provoquée,
+encadrée par l'horloge système) pour les traces d'applications et
+NetworkList ; il découle du format pour les volumes FAT, le journal DHCP,
+\fichier{setupapi.dev.log} et les tâches \fichier{.job} ; le WebCache est
+recoupé avec un outil indépendant. Une seule supposition n'est pas mesurée :
+les colonnes de date OLE des bases ESE autres que SRUM sont lues comme de
+l'UTC, ce que SRUM écrit.
 
 \section{Noms des comptes}
 

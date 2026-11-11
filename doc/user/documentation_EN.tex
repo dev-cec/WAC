@@ -2313,9 +2313,51 @@ saying so: the date of an item seen inside a ZIP archive
 that made the archive — the archives Windows~11 reads itself, 7z or tar,
 hold a UTC instant instead, given as such) and an OLE date of a property store
 (\champ{AsWritten}). Placing them on a timeline needs their origin: \wac{}
-does not make it up. For a value the artefact stores in local
-time (FAT volume, \fichier{setupapi.dev.log}), the hour repeated in autumn is read as its first occurrence, and the
-hour skipped in spring with the offset before the change, as Windows does.
+does not make it up.
+
+\paragraph{Local time written by the source.} Some sources write the clock
+time only, without an offset: FAT volumes, \fichier{setupapi.dev.log}, the
+DHCP and firewall logs, the text logs of applications (TeamViewer,
+OpenSSH\ldots), the weekly history of the WebCache, NetworkList, \fichier{.job}
+tasks. \wac{} converts them to UTC with the time zone \textbf{in force when the
+value was written}, as the machine recorded it in its System log: Windows~10
+and later write every change of offset there (Kernel-General 1, 22 and 24);
+earlier versions, the zone in force at boot, at shutdown and every day
+(EventLog 6005, 6006, 6013) and, since Windows~7, the zone set by
+\texttt{tzutil} (TZUtil 20001). The resulting history is written in
+\fichier{conversion.json} (\champ{Host.SuspectTimeZone.History}); a trace
+line written under another zone than the current one carries
+\champ{TimeZoneInForce}. Before the first event of the log, after its end, or
+without a System log, the current zone's rules apply. Before Windows~10, a
+change no event gives the instant of is not made up: the interval is given
+(\champ{ChangesAtUnknownInstant}, and \champ{TimeZoneChangedBetween} on the
+line), the current zone's rules applying within it. The log is read from its
+raw copy: a change made a few seconds before the collection may not be
+written in it yet, the event log service writing the file a little later.
+
+\paragraph{Time lived twice, time never lived.} A clock time may denote
+several instants: the hour repeated in autumn, or the hours lived again after
+the zone was set back (a machine moved from Paris to New York lives six hours
+again). Nothing in the time alone tells them apart: \champ{XUtc} gives the
+first occurrence, as Windows does, and \champ{XAlsoPossibleUtc} the list of
+the other instants, as likely. The hour skipped in spring was never lived, and
+Windows itself reads it two ways: with the offset before the change
+(\texttt{TzSpecificLocalTimeToSystemTimeEx}), which \champ{XUtc} follows, or
+with the one after (\texttt{TzSpecificLocalTimeToSystemTime}), given in
+\champ{XAlsoPossibleUtc}. The intervals of local time lived twice according to
+the history are listed in \champ{Host.SuspectTimeZone.LocalTimesLivedTwice},
+with the offset of each occurrence; the repeated hours of autumns outside the
+history are not, but every date falling in one carries
+\champ{XAlsoPossibleUtc}.
+
+\paragraph{Assumed zone, measured zone.} The zone of a source that does not
+write it was measured against the time of execution (a line provoked,
+bracketed by the system clock) for application traces and NetworkList; it
+follows from the format for FAT volumes, the DHCP log,
+\fichier{setupapi.dev.log} and \fichier{.job} tasks; the WebCache is
+cross-checked with an independent tool. One assumption only is not measured:
+the OLE date columns of ESE databases other than SRUM are read as UTC, which
+SRUM writes.
 
 \section{Account names}
 
