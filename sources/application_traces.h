@@ -45,6 +45,9 @@ struct LineLayout {
 	 *  LOCAL0), measured 2026-11-10. Optional: a line starting with its time
 	 *  is read as well. */
 	bool processIdFirst = false;
+	/*! A level word before the time, "   info 2026-11-11 19:23:27.390   hub …":
+	 *  AnyDesk's ad.trace, measured 2026-11-11. Optional as processIdFirst. */
+	bool levelFirst = false;
 };
 
 /*! A product: one switch of wac.yml. */

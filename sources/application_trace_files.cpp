@@ -9,6 +9,7 @@
 #include "whole_file.h"
 #include "xml_light.h"
 #include <filesystem>
+#include <cwctype>
 
 namespace {
 
@@ -152,6 +153,15 @@ bool leadingTime(const std::wstring& line, WrittenTime& time, const LineLayout& 
 	size_t i = 0;
 	while (i < line.size() && (line[i] == L' ' || line[i] == L'\t')) ++i;
 	if (i < line.size() && (line[i] == L'[' || line[i] == L'<')) ++i;
+	// A level word first, for the product that writes one: letters, then blanks.
+	if (layout.levelFirst) {
+		size_t end = i;
+		while (end < line.size() && end - i < 10 && iswalpha(line[end])) ++end;
+		if (end > i && end < line.size() && line[end] == L' ') {
+			while (end < line.size() && line[end] == L' ') ++end;
+			i = end;
+		}
+	}
 	/* A process identifier first, for the product that writes one: up to ten
 	   digits and one space — "2026-11-08…" is a time, its digits end on "-". */
 	if (layout.processIdFirst) {
@@ -202,6 +212,12 @@ bool leadingTime(const std::wstring& line, WrittenTime& time, const LineLayout& 
 	}
 	bool hasOffset = false;
 	int offsetMinutes = 0;
+	/* One blank before an offset written in full, "+01:00": RustDesk's
+	   "[2026-11-11 20:23:49.070579 +01:00]" (measured on Windows 11, 2026-11-11).
+	   Without its colon, a sign after a blank is the text's, not an offset. */
+	if (i + 6 < line.size() && line[i] == L' ' && (line[i + 1] == L'+' || line[i + 1] == L'-')
+	    && iswdigit(line[i + 2]) && iswdigit(line[i + 3]) && line[i + 4] == L':' && iswdigit(line[i + 5]) && iswdigit(line[i + 6]))
+		++i;
 	if (i < line.size() && line[i] == L'Z') { hasOffset = true; ++i; }
 	else if (i < line.size() && (line[i] == L'+' || line[i] == L'-')) {
 		const size_t signAt = i++;
@@ -261,7 +277,11 @@ TraceFormat traceFormatOf(const std::wstring& name, const std::string& bytes) {
 		const size_t probe = bytes.size() < TEXT_PROBE ? bytes.size() : TEXT_PROBE;
 		for (size_t i = 0; i < probe; ++i) {
 			const unsigned char c = static_cast<unsigned char>(bytes[i]);
-			if (c == 0) return TraceFormat::Binary;
+			/* A null byte is a control like the others, not a binary by itself:
+			   Tailscale's service log is text with a few "[v\0JSON]" markers (5
+			   nulls in 18,444 bytes, measured on Windows 11, 2026-11-11). A binary,
+			   compressed or encrypted file, or UTF-16 without its mark, holds far
+			   more than one in a hundred. */
 			if (c < 0x20 && c != '\t' && c != '\r' && c != '\n' && c != '\f') ++controls;
 		}
 		if (controls * 100 > probe) return TraceFormat::Binary;

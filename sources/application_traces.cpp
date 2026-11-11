@@ -20,7 +20,11 @@ std::vector<TraceProduct> remoteAdministration() {
 			{ L"\\ProgramData\\AnyDesk", { L".trace", L".conf", L"connection_trace.txt" }, 0 },
 			{ L"%profile%\\Videos\\AnyDesk", { L".anydesk" }, 0 },
 			{ L"\\Windows\\System32\\config\\systemprofile\\AppData\\Roaming\\AnyDesk", ALL, 0 },
-			{ L"\\Windows\\SysWOW64\\config\\systemprofile\\AppData\\Roaming\\AnyDesk", ALL, 0 } } },
+			{ L"\\Windows\\SysWOW64\\config\\systemprofile\\AppData\\Roaming\\AnyDesk", ALL, 0 } },
+		  /* ad.trace: "   info 2026-11-11 19:23:27.390   hub …", the level first, the time
+		     in UTC to the millisecond (measured on Windows 11, AnyDesk 9.8.3, 2026-11-11:
+		     19:23:27.390 written within 19:23:25.039Z-19:23:46.613Z, at UTC+1). */
+		  true, { false, false, true }, true },
 		{ "atera", L"Atera Agent", { { L"\\Program Files\\ATERA Networks\\AteraAgent", { L".ini", L".txt", L".db", L".config", L".cfg" }, WHOLE } } },
 		{ "kaseya", L"Kaseya", {
 			{ L"\\ProgramData\\Kaseya\\Log", ALL, WHOLE },

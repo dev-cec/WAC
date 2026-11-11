@@ -76,6 +76,19 @@ void testTimes() {
 	      "a product with an identifier first still reads a line that starts with its time");
 	check(timeOf(L"4464 started", sshd) == L"-" && timeOf(L"12345678901 2026-11-10 21:59:57 x", sshd) == L"-",
 	      "an identifier not followed by a time, or longer than ten digits: no time");
+	// AnyDesk's ad.trace: a level word, then the time (measured on Windows 11, in UTC).
+	const LineLayout anydesk = { false, false, true };
+	check(timeOf(L"   info 2026-11-11 19:23:27.390        hub   4984   4716   main - * AnyDesk Windows Startup *", anydesk)
+	      == L"2026-11-11 19:23:27.390|2026-11-11T19:23:27.3900000Z|none", "ad.trace: the time after its level word");
+	check(timeOf(L"   info 2026-11-11 19:23:27.390 hub") == L"-", "a level word first is read for the product that writes one only");
+	check(timeOf(L"2026-11-11 19:23:27.390 x", anydesk) != L"-" && timeOf(L"information about 2026-11-11 19:23:27", anydesk) == L"-",
+	      "a product with a level first still reads a line that starts with its time, and one word only");
+	// RustDesk: one blank before the offset (measured on Windows 11).
+	check(timeOf(L"[2026-11-11 20:23:49.070579 +01:00] INFO [src\\server.rs:780] try start server")
+	      == L"2026-11-11 20:23:49.070579 +01:00|2026-11-11T20:23:49.0705790Z|60", "an offset after one blank, written in full");
+	check(timeOf(L"2026-11-11 20:23:49 +12 items") == L"2026-11-11 20:23:49|2026-11-11T20:23:49.0000000Z|none"
+	      && timeOf(L"2026-11-11 20:23:49 +0100 x") == L"2026-11-11 20:23:49|2026-11-11T20:23:49.0000000Z|none",
+	      "after a blank, a sign without the full offset is the text's");
 	check(timeOf(L"08/11/2026 14:03:21 x") == L"-", "a day-first or month-first date is not read");
 	check(timeOf(L"2026-02-30 10:00:00 x") == L"-", "an impossible day is not a time");
 	check(timeOf(L"2026-11-08 24:00:00 x") == L"-", "an impossible hour is not a time");
@@ -131,7 +144,19 @@ void testFormats() {
 	check(traceFormatOf(L"Connections_incoming.txt", "2026-11-08 x\r\n") == TraceFormat::Text, "a text log");
 	check(traceFormatOf(L"main.db", "SQLite format 3") == TraceFormat::Database, "a database by its extension");
 	check(traceFormatOf(L"log.bin", "x") == TraceFormat::Binary, "a binary by its extension");
-	check(traceFormatOf(L"ad.trace", std::string("ab\0cd", 5)) == TraceFormat::Binary, "a null byte makes a binary");
+	check(traceFormatOf(L"ad.trace", std::string("ab\0cd", 5)) == TraceFormat::Binary, "a null byte in a few bytes makes a binary");
+	{
+		// Tailscale's service log: text, with a null in a marker now and then (measured on Windows 11).
+		std::string tailscale;
+		for (int k = 0; k < 40; ++k)
+			tailscale += "2026-11-11T20:25:04.409+01:00: monitor: got windows change event after 0s: evt=route\n";
+		tailscale += std::string("2026-11-11T20:25:02.821+01:00: [v\0JSON]1{\"SupportInfo\":{}}\n", 59);
+		check(traceFormatOf(L"tailscale-service-20261111T202502-1794425102.txt", tailscale) == TraceFormat::Text,
+		      "a few nulls in a text log: text");
+		std::string utf16;
+		for (char c : std::string("2026-11-11 20:25:04 started\r\n")) { utf16 += c; utf16 += '\0'; }
+		check(traceFormatOf(L"x.log", utf16) == TraceFormat::Binary, "UTF-16 without its mark: half nulls, a binary");
+	}
 	check(traceFormatOf(L"ERRORLOG", std::string("\xFF\xFE" "2\0" "0\0", 6)) == TraceFormat::Text, "UTF-16 with its mark is text");
 	check(traceFormatOf(L"sitemanager.xml", "<a/>") == TraceFormat::Xml && traceFormatOf(L"config.json", "{}") == TraceFormat::Json
 	      && traceFormatOf(L"WinSCP.ini", "[a]") == TraceFormat::Ini, "structured files by their extension");
