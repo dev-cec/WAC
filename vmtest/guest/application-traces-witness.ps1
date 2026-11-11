@@ -26,7 +26,13 @@
 #     made by tzutil and undone in a finally block; it stays written in the
 #     System log, as any change of zone — the trace the witness needs, six
 #     events per cycle. tzutil appears with Windows 7 and Server 2008 R2: on an
-#     older Windows the witness is not placed, and said.
+#     older Windows the witness is not placed, and said;
+#   - a third TeamViewer log, the changes of daylight saving time: one line in
+#     the local hour repeated in autumn (lived twice: its first occurrence
+#     dated, the second said possible), one in the hour skipped in spring, of
+#     the current year in the machine's zone; Windows' own conversion of each
+#     (TzSpecificLocalTimeToSystemTime) recorded beside. Not placed in a zone
+#     without daylight saving.
 # The values are fixed but TeamViewer's time, the moment of the run: the
 # reference, with that time and its UTC, goes to
 # <Out>\application-traces-reference.json for check-json.py.
@@ -74,7 +80,17 @@ public static class WacWitnessClock {
     [DllImport("kernel32.dll")] static extern void GetSystemTime(out SystemTime time);
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern bool SystemTimeToTzSpecificLocalTime(IntPtr zone, ref SystemTime utc, out SystemTime local);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool TzSpecificLocalTimeToSystemTime(IntPtr zone, ref SystemTime local, out SystemTime utc);
     static DateTime Of(SystemTime t) { return new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute, t.Second, t.Milliseconds); }
+    // The UTC instant Windows gives a local time of the active zone.
+    public static string ToUtc(DateTime l) {
+        SystemTime local = new SystemTime { Year = (ushort)l.Year, Month = (ushort)l.Month, Day = (ushort)l.Day,
+                                            Hour = (ushort)l.Hour, Minute = (ushort)l.Minute, Second = (ushort)l.Second };
+        SystemTime utc;
+        if (!TzSpecificLocalTimeToSystemTime(IntPtr.Zero, ref local, out utc)) throw new System.ComponentModel.Win32Exception();
+        return Of(utc).ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", System.Globalization.CultureInfo.InvariantCulture);
+    }
     // The instant in UTC, the local time the active zone gives it, and their difference in minutes.
     public static object[] Now() {
         SystemTime utc, local;
@@ -160,6 +176,32 @@ if (Get-Command tzutil.exe -ErrorAction SilentlyContinue) {
  "ZoneAfterOffset": $($after[2])
 "@
 }
+# The changes of daylight saving time of the current year: the first local
+# half hour that is ambiguous (repeated) and the first invalid (skipped),
+# searched by half hours in the machine's zone.
+$dstLog = "$profilePath\AppData\Roaming\TeamViewer\TeamViewer15_Logfile_dst.log"
+$dstReference = ''
+$zone = [TimeZoneInfo]::Local
+$repeated = $null; $skipped = $null
+$start = New-Object DateTime ((Get-Date).Year), 1, 1, 0, 30, 0
+for ($t = $start; $t.Year -eq $start.Year -and -not ($repeated -and $skipped); $t = $t.AddMinutes(30)) {
+    if (-not $repeated -and $zone.IsAmbiguousTime($t)) { $repeated = $t }
+    if (-not $skipped -and $zone.IsInvalidTime($t)) { $skipped = $t }
+}
+if ($repeated -and $skipped) {
+    $format = 'yyyy/MM/dd HH:mm:ss.fff'
+    $culture = [Globalization.CultureInfo]::InvariantCulture
+    Put $dstLog ("$($repeated.ToString($format, $culture))  4242  5150 S0   wac-dst-witness written in the repeated hour`r`n" +
+        "$($skipped.ToString($format, $culture))  4242  5150 S0   wac-dst-witness written in the skipped hour`r`n")
+    $dstReference = @"
+,
+ "DstLog": "$($dstLog.Replace('\', '\\'))",
+ "DstRepeatedWritten": "$($repeated.ToString($format, $culture))",
+ "DstRepeatedWindowsUtc": "$([WacWitnessClock]::ToUtc($repeated))",
+ "DstSkippedWritten": "$($skipped.ToString($format, $culture))",
+ "DstSkippedWindowsUtc": "$([WacWitnessClock]::ToUtc($skipped))"
+"@
+}
 $reference = @"
 {
  "TeamViewerLog": "$($teamViewer.Replace('\', '\\'))",
@@ -170,7 +212,7 @@ $reference = @"
  "WinScp": "$($winscp.Replace('\', '\\'))",
  "FileZilla": "$($filezilla.Replace('\', '\\'))",
  "PCloud": "$($pcloud.Replace('\', '\\'))",
- "CrashDump": "$($dump.Replace('\', '\\'))"$zoneReference$sshdReference
+ "CrashDump": "$($dump.Replace('\', '\\'))"$zoneReference$sshdReference$dstReference
 }
 "@
 [IO.File]::WriteAllText((Join-Path $Out 'application-traces-reference.json'), $reference, $utf8)

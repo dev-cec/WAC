@@ -3896,6 +3896,60 @@ def lived_twice_note(row, key="Time"):
         if row.get(key + "AlsoPossibleUtc") else ""
 
 
+def check_dst_witness(folder, reference, lines):
+    """The changes of daylight saving time (application-traces-witness.ps1): a
+    line in the local hour repeated in autumn, one in the hour skipped in
+    spring, of the machine's zone. The instants each local time was lived at,
+    rebuilt here without WAC: by the reference history (Get-WinEvent) where it
+    covers them, else by the tz database (zoneinfo, both folds). The repeated
+    one: its first occurrence in TimeUtc, the other in TimeAlsoPossibleUtc;
+    the skipped one: the offset before the change, as Windows, nothing said
+    possible. Windows' own answer (TzSpecificLocalTimeToSystemTime) must be
+    among them. Returns the number of failures."""
+    import datetime
+    try:
+        from zoneinfo import ZoneInfo
+    except ImportError:
+        print("  ⏭️  zoneinfo missing: daylight saving witnesses not confronted")
+        return 0
+    osj = load(folder, "OperatingSystem.json")
+    key = osj.get("CurrentTimeZoneId") if isinstance(osj, dict) else None
+    if key not in WINDOWS_TO_IANA:
+        print(f"  ⏭️  daylight saving witnesses: time zone {key} without an IANA name here, not confronted")
+        return 0
+    zone = ZoneInfo(WINDOWS_TO_IANA[key])
+    history = reference_history(folder)
+    conversion = load(folder, "conversion.json")
+    end = (((conversion or {}).get("Host") or {}).get("SuspectTimeZone") or {}).get("HistoryEndUtc") \
+        if isinstance(conversion, dict) else None
+    def lived(written):
+        """The UTC instants, as WAC writes them (milliseconds), a local time was lived at, ascending."""
+        local = datetime.datetime.strptime(written, "%Y/%m/%d %H:%M:%S.%f")
+        ticks = ticks_of(local.strftime("%Y-%m-%dT%H:%M:%S.%f"))
+        found = reference_local_instants(history, end, ticks)
+        if found:
+            return [text_of(t)[:23] + "Z" for t in found]
+        folds = sorted({local.replace(tzinfo=zone, fold=f).astimezone(datetime.timezone.utc) for f in (0, 1)})
+        # A skipped time has two folds too, neither of which it was lived at: the offset before, as Windows.
+        if local.replace(tzinfo=zone, fold=0).utcoffset() < local.replace(tzinfo=zone, fold=1).utcoffset():
+            folds = [local.replace(tzinfo=zone, fold=0).astimezone(datetime.timezone.utc)]
+        return [f.strftime("%Y-%m-%dT%H:%M:%S.%f")[:23] + "Z" for f in folds]
+    found = 0
+    for kind, marker in (("Repeated", "repeated hour"), ("Skipped", "skipped hour")):
+        written = reference[f"Dst{kind}Written"]
+        row = next((r for r in lines if marker in str(r.get("Text", ""))), {})
+        expected = lived(written)
+        ok = (row.get("TimeAsWritten") == written and instants_of(row) == expected
+              and reference[f"Dst{kind}WindowsUtc"] in expected
+              and (len(expected) > 1) == (kind == "Repeated"))
+        print(f"  {'✅' if ok else '❌'} remote_administration.json: line written {written} local, in the hour "
+              f"{kind.lower()} by daylight saving time, " + (f"dated {expected[0]}, also possible {expected[1:]}, "
+              f"Windows giving {reference[f'Dst{kind}WindowsUtc']}" if ok else
+              f"expected {expected} (Windows {reference[f'Dst{kind}WindowsUtc']}), WAC {instants_of(row) if row else 'no line'}"))
+        found += 0 if ok else 1
+    return found
+
+
 def check_application_traces(folder):
     """The applications' traces (application-traces-witness.ps1), found again in
     their group's JSON as the generic conversion writes them: TeamViewer's
@@ -3939,6 +3993,10 @@ def check_application_traces(folder):
     report(not of(remote, reference["Decoy"]), "remote_administration.json: the decoy TeamViewer's filter does not take, absent",
            "remote_administration.json: the decoy was taken")
     found += check_zone_change_witness(folder, reference, of(remote, reference["ZoneLog"]) if "ZoneLog" in reference else [])
+    if "DstLog" in reference:
+        found += check_dst_witness(folder, reference, of(remote, reference["DstLog"]))
+    else:
+        print("  ℹ️ daylight saving witnesses not placed (a zone without daylight saving time)")
     ssh = of(rows("ssh"), reference["SshLog"])
     report(len(ssh) == 1 and ssh[0].get("TimeUtc") == "2026-11-08T13:03:21.123Z" and "TimeZoneAssumed" not in ssh[0],
            "ssh.json: OpenSSH's witness line, its offset applied (13:03:21.123Z)",
