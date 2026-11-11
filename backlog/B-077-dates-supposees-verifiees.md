@@ -32,6 +32,27 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Aucune date écrite avec plus de chiffres que la source n'en donne ; une coupe au-delà de 100 ns dite.
 - Les produits non mesurables (absents des VM) listés comme tels dans la documentation, leur supposition marquée non vérifiée.
 
+## Relevé des autres artefacts qui supposent un fuseau (2026-11-11, lecture des sources)
+Toute heure locale passe par `suspectBiasAtLocal` (historique du journal System, sinon règles du fuseau ; une heure vécue deux fois dit ses autres instants, `<clé>AlsoPossibleUtc`).
+
+| Artefact | Forme écrite | Supposition | Fondement |
+|---|---|---|---|
+| Traces d'applications (`application_traces.h`) | heure sans fuseau | locale, ou UTC (`writesUtc`) par produit | mesures de cette fiche |
+| FAT, FAT32, exFAT sans décalage | locale | locale ; copie : décalage de l'instant de la copie | format ; témoins FAT |
+| Journal DHCP serveur | `MM/dd/yy HH:mm:ss` | locale | format (documentation Microsoft) |
+| W3C : pare-feu (`pfirewall.log`), journal d'erreurs Apache/nginx | sans fuseau | locale | format ; IIS : `#Fields`/`#Software` dit UTC ou local, sinon inconnu, non converti |
+| W3C : IIS, accès Apache/nginx | UTC, ou décalage écrit | UTC / décalage | écrit dans le fichier |
+| setupapi.dev.log, Intune (sans biais écrit) | locale | locale | format ; Intune avec biais : exact |
+| WebCache (MSHist hebdomadaires), index.dat hebdomadaires | FILETIME locale | locale | libmsiecf ; contrôlé contre dissect.esedb |
+| NetworkList (`DateCreated`, `DateLastConnected`) | SYSTEMTIME locale | locale | mesuré : NetworkProfile 10000 |
+| Tâche `.job` (XP), dernière exécution | SYSTEMTIME locale | locale | format |
+| Tâche XML, `RegistrationDate` | tel qu'écrit, avec ou sans décalage | aucune : texte tel quel | — |
+| Colonnes DateTime ESE génériques (date OLE) | date OLE | **UTC, non mesuré** | SRUM l'écrit en UTC ; une autre base non vérifiée |
+| Propriétés VT_DATE des listes d'identifiants, dates ZIP | sans fuseau | aucune : `AsWritten`, `TimeZone: None` | jamais rencontrées à mesurer |
+| MPLog de Defender, journaux d'événements, mbox | `Z`, FILETIME UTC, décalage écrit | écrit | format |
+
+Seule supposition non mesurée : les colonnes DateTime des bases ESE autres que SRUM, lues en UTC — à dire dans la documentation.
+
 ## Tâches
 - [x] Contrôle automatique « dernier enregistrement contre dernière écriture » dans `check-json.py`, sur tous les journaux convertis
 - [x] Précision exacte : chiffres écrits = chiffres de la source ; coupe au-delà de 100 ns dite
@@ -40,7 +61,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Cycle sur une VM à un autre fuseau : Server 2025 sous New York ; l'heure locale vécue deux fois trouvée, ses autres instants dits
 - [ ] Témoins du changement d'heure
 - [ ] `writesUtc` posé d'après les mesures ; tableau de validation FR et EN
-- [ ] Relevé des autres artefacts qui supposent un fuseau
+- [x] Relevé des autres artefacts qui supposent un fuseau (tableau ci-dessus) ; une supposition non mesurée : colonnes DateTime ESE hors SRUM
 - [x] **Changement de fuseau dans l'histoire de la machine** : mesuré (événements Kernel-General 1, 22, 24) ; historique lu dans le journal Système de la copie de travail, appliqué à toute heure locale de WAC (`suspectLocalToUtc`, `timeToIso8601Local`) ; `TimeZoneInForce` dans les traces ; historique dans `conversion.json` (`Host.SuspectTimeZone.History`, écrit quels que soient les artefacts demandés) ; journal Système prélevé à chaque collecte ; tests et mutations
 - [x] Cycle Server 2025 : `NetSetup.LOG` daté juste, historique de WAC égal à celui de l'API de Windows (`check_time_zone_history`)
 - [x] Témoin : une VM dont le fuseau change entre deux lignes d'un journal (cycle à fuseau changé)
