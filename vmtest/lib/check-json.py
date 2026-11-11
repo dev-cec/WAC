@@ -2599,13 +2599,18 @@ def check_small_file_artefacts(folder):
             copy = present.get((letter + "\\copied-winter.txt").lower())
             if copy is None:
                 continue
-            if (copy.get("ModifiedUtc") or "")[:19] != "2022-01-10T12:00:00":
-                wrong.append(f"{letter}\\copied-winter.txt: ModifiedUtc {copy.get('ModifiedUtc')} for 2022-01-10T12:00:00")
+            # Copied today: if today's local time was lived twice (the zone set
+            # back), the offset of its first occurrence applied, the true instant said beside.
+            if not any(u[:19] == "2022-01-10T12:00:00" for u in instants_of(copy, "Modified")):
+                wrong.append(f"{letter}\\copied-winter.txt: ModifiedUtc {copy.get('ModifiedUtc')} "
+                             f"(also possible {copy.get('ModifiedAlsoPossibleUtc')}) for 2022-01-10T12:00:00")
             if system == "FAT32" and copy.get("ModifiedWrittenAt") != "Copy":
                 wrong.append(f"{letter}\\copied-winter.txt: the copy not said")
+            # Modified is ModifiedUtc in the current zone, at the offset of that
+            # winter date: whole hours from UTC, the same instant.
             local = str(copy.get("Modified", ""))
-            if not (local.startswith("2022-01-10T13:00:00") and local.endswith("+01:00")):
-                wrong.append(f"{letter}\\copied-winter.txt: local date {copy.get('Modified')} for 2022-01-10T13:00:00+01:00")
+            if instant(local) != instant(copy.get("ModifiedUtc", "")) or not re.search(r"[+-]\d\d:00$", local):
+                wrong.append(f"{letter}\\copied-winter.txt: local date {local} not ModifiedUtc {copy.get('ModifiedUtc')}")
         # The program run from the key, fingerprinted there through the FAT reader (--binary).
         tool = next((l[8:].split("|") for l in lines if l.startswith("fattool=")), None)
         prefetch = load(folder, "prefetchs.json")
@@ -3921,7 +3926,11 @@ def check_application_traces(folder):
     dated = [r for r in teamviewer if "incoming connection" in str(r.get("Text", ""))]
     report(len(dated) == 1 and dated[0].get("Product") == "TeamViewer" and dated[0].get("Line") == 2
            and dated[0].get("TimeAsWritten") == reference["TeamViewerWritten"] and reference["TeamViewerUtc"] in instants_of(dated[0])
-           and dated[0].get("TimeZoneAssumed") == "Local" and str(dated[0].get("Time", "")).startswith(reference["TeamViewerWritten"][:10].replace("/", "-"))
+           and dated[0].get("TimeZoneAssumed") == "Local"
+           # Time is TimeUtc in the current zone: its date the one written, unless lived twice.
+           and instant(dated[0].get("Time", "")) == instant(dated[0].get("TimeUtc", ""))
+           and (dated[0].get("TimeAlsoPossibleUtc")
+                or str(dated[0].get("Time", "")).startswith(reference["TeamViewerWritten"][:10].replace("/", "-")))
            and "wac-trace-witness continuation" in str(dated[0].get("Text", "")),
            f"remote_administration.json: TeamViewer's witness line, written {reference['TeamViewerWritten']} local, "
            f"{reference['TeamViewerUtc']} as Windows computes it, to the millisecond; its continuation"
