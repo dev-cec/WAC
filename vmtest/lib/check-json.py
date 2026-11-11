@@ -3899,13 +3899,16 @@ def lived_twice_note(row, key="Time"):
 def check_dst_witness(folder, reference, lines):
     """The changes of daylight saving time (application-traces-witness.ps1): a
     line in the local hour repeated in autumn, one in the hour skipped in
-    spring, of the machine's zone. The instants each local time was lived at,
-    rebuilt here without WAC: by the reference history (Get-WinEvent) where it
-    covers them, else by the tz database (zoneinfo, both folds). The repeated
-    one: its first occurrence in TimeUtc, the other in TimeAlsoPossibleUtc;
-    the skipped one: the offset before the change, as Windows, nothing said
-    possible. Windows' own answer (TzSpecificLocalTimeToSystemTime) must be
-    among them. Returns the number of failures."""
+    spring, of the machine's zone. Both readings of each local time, rebuilt
+    here without WAC by the tz database (zoneinfo, both folds): the repeated
+    one, its first occurrence in TimeUtc, the second in TimeAlsoPossibleUtc;
+    the skipped one, never lived, by the offset before the change in TimeUtc
+    (TzSpecificLocalTimeToSystemTimeEx), by the one after in
+    TimeAlsoPossibleUtc (TzSpecificLocalTimeToSystemTime, the witness's own
+    answer, measured to differ). Windows' answer must be among them. Where the
+    reference history (Get-WinEvent) covers the change, it must show the
+    zone's offsets either side of it: else the zone then was another, not
+    confronted. Returns the number of failures."""
     import datetime
     try:
         from zoneinfo import ZoneInfo
@@ -3922,30 +3925,48 @@ def check_dst_witness(folder, reference, lines):
     conversion = load(folder, "conversion.json")
     end = (((conversion or {}).get("Host") or {}).get("SuspectTimeZone") or {}).get("HistoryEndUtc") \
         if isinstance(conversion, dict) else None
-    def lived(written):
-        """The UTC instants, as WAC writes them (milliseconds), a local time was lived at, ascending."""
+
+    def logged_bias(ticks):
+        """The offset the reference history shows at an instant (ticks), None outside it."""
+        if not history or not end or ticks >= ticks_of(end) or ticks < ticks_of(history[0][1]):
+            return None
+        return [b for _, i, b in history if ticks_of(i) <= ticks][-1]
+
+    def readings(written):
+        """The UTC instants, as WAC writes them (milliseconds): the one chosen
+        first, then the other; and whether the history contradicts the zone."""
         local = datetime.datetime.strptime(written, "%Y/%m/%d %H:%M:%S.%f")
-        ticks = ticks_of(local.strftime("%Y-%m-%dT%H:%M:%S.%f"))
-        found = reference_local_instants(history, end, ticks)
-        if found:
-            return [text_of(t)[:23] + "Z" for t in found]
-        folds = sorted({local.replace(tzinfo=zone, fold=f).astimezone(datetime.timezone.utc) for f in (0, 1)})
-        # A skipped time has two folds too, neither of which it was lived at: the offset before, as Windows.
-        if local.replace(tzinfo=zone, fold=0).utcoffset() < local.replace(tzinfo=zone, fold=1).utcoffset():
-            folds = [local.replace(tzinfo=zone, fold=0).astimezone(datetime.timezone.utc)]
-        return [f.strftime("%Y-%m-%dT%H:%M:%S.%f")[:23] + "Z" for f in folds]
+        f0, f1 = (local.replace(tzinfo=zone, fold=f) for f in (0, 1))
+        u0, u1 = (f.astimezone(datetime.timezone.utc).replace(tzinfo=None) for f in (f0, f1))
+        text = lambda u: u.strftime("%Y-%m-%dT%H:%M:%S.%f")[:23] + "Z"
+        # Python's fold 0 is the offset before the change, both for the hour repeated and the hour skipped.
+        before, after = -int(f0.utcoffset().total_seconds()) // 60, -int(f1.utcoffset().total_seconds()) // 60
+        second = 10_000_000
+        lo = ticks_of(text(min(u0, u1))) - second
+        hi = ticks_of(text(max(u0, u1))) + second
+        shown = (logged_bias(lo), logged_bias(hi))
+        contradicted = any(b is not None for b in shown) and shown != (before, after)
+        if u0 == u1:
+            return [text(u0)], contradicted
+        if f0.utcoffset() < f1.utcoffset():
+            return [text(u0), text(u1)], contradicted       # skipped: before, then after
+        return sorted([text(u0), text(u1)]), contradicted   # repeated: first occurrence first
     found = 0
     for kind, marker in (("Repeated", "repeated hour"), ("Skipped", "skipped hour")):
         written = reference[f"Dst{kind}Written"]
+        windows = reference[f"Dst{kind}WindowsUtc"]
         row = next((r for r in lines if marker in str(r.get("Text", ""))), {})
-        expected = lived(written)
+        expected, contradicted = readings(written)
+        if contradicted:
+            print(f"  ⏭️  remote_administration.json: line written {written} local, the history shows another zone "
+                  f"around the change of daylight saving time: not confronted")
+            continue
         ok = (row.get("TimeAsWritten") == written and instants_of(row) == expected
-              and reference[f"Dst{kind}WindowsUtc"] in expected
-              and (len(expected) > 1) == (kind == "Repeated"))
+              and windows in expected and len(expected) == 2)
         print(f"  {'✅' if ok else '❌'} remote_administration.json: line written {written} local, in the hour "
               f"{kind.lower()} by daylight saving time, " + (f"dated {expected[0]}, also possible {expected[1:]}, "
-              f"Windows giving {reference[f'Dst{kind}WindowsUtc']}" if ok else
-              f"expected {expected} (Windows {reference[f'Dst{kind}WindowsUtc']}), WAC {instants_of(row) if row else 'no line'}"))
+              f"Windows giving {windows}" if ok else
+              f"expected {expected} (Windows {windows}), WAC {instants_of(row) if row else 'no line'}"))
         found += 0 if ok else 1
     return found
 
