@@ -99,6 +99,30 @@ void loggedOffsets() {
 	      L"spring: 03:00:00.0003 local, before the change is logged, is 01:00:00.0003Z");
 	check(utcOf(paris, spring, instant(2026, 3, 29, 1, 59, 59), fromHistory) == instant(2026, 3, 29, 0, 59, 59) && !fromHistory,
 	      L"spring: the last second before the change");
+	/* The hour skipped, never lived: read by the offset before the change, as
+	   TzSpecificLocalTimeToSystemTimeEx, and by the one after, as
+	   TzSpecificLocalTimeToSystemTime (measured on Server 2025, 2026-11-11) —
+	   even at 02:00:00, which falls in the stretch before since the change is
+	   logged after it is made. */
+	const LocalBias skippedEdge = biasAtLocalLogged(paris, spring, instant(2026, 3, 29, 2, 0, 0));
+	check(skippedEdge.biasMinutes == -60 && skippedEdge.otherBiasesMinutes == std::vector<long>{ -120 },
+	      L"spring, 02:00:00 local: 01:00Z, 00:00Z said as possible");
+	const LocalBias skippedInside = biasAtLocalLogged(paris, spring, instant(2026, 3, 29, 2, 30, 0));
+	check(skippedInside.biasMinutes == -60 && skippedInside.otherBiasesMinutes == std::vector<long>{ -120 },
+	      L"spring, 02:30 local: 01:30Z, 00:30Z said as possible");
+	check(biasAtLocalLogged(paris, spring, instant(2026, 3, 29, 1, 59, 59)).otherBiasesMinutes.empty(),
+	      L"spring: the last second before the skipped hour, one reading");
+	/* Autumn, the change logged 0.68 ms after it is made: 02:00:00 local, lived
+	   at 00:00Z then at 01:00Z, falls in the first stretch only; the rules'
+	   second occurrence, the log confirming its change, said. */
+	const TimeZoneHistory autumnLogged = timeZoneHistoryFrom({
+		{ 1, instant(2026, 10, 20, 12, 0, 0), -120 },
+		{ 2, instant(2026, 10, 25, 1, 0, 0, 6783), -60 } }, instant(2026, 11, 10, 0, 0, 0));
+	const LocalBias repeatedEdge = biasAtLocalLogged(paris, autumnLogged, instant(2026, 10, 25, 2, 0, 0));
+	check(repeatedEdge.biasMinutes == -120 && repeatedEdge.otherBiasesMinutes == std::vector<long>{ -60 },
+	      L"autumn, 02:00:00 local: 00:00Z, 01:00Z said as possible");
+	check(biasAtLocalLogged(paris, autumnLogged, instant(2026, 10, 25, 1, 59, 59)).otherBiasesMinutes.empty(),
+	      L"autumn: the last second before the repeated hour, lived once");
 	/* A time zone set back an hour: Paris to London at 12:00Z — the local
 	   hour 12:00-13:00 lived twice; its first occurrence, as Windows in autumn. */
 	const TimeZoneHistory moved = timeZoneHistoryFrom({
@@ -143,6 +167,8 @@ void loggedOffsets() {
 		{ 2, instant(2026, 11, 2, 12, 0, 0), -60 } }, instant(2026, 11, 9, 0, 0, 0));
 	check(utcOf(paris, forward, instant(2026, 11, 2, 12, 30, 0), fromHistory) == instant(2026, 11, 2, 12, 30, 0) && fromHistory,
 	      L"an hour skipped by a change of zone: the offset before it");
+	check(biasAtLocalLogged(paris, forward, instant(2026, 11, 2, 12, 30, 0)).otherBiasesMinutes == std::vector<long>{ -60 },
+	      L"an hour skipped by a change of zone: the offset after it said as possible");
 	check(utcOf(paris, forward, instant(2027, 7, 1, 12, 0, 0), fromHistory) == instant(2027, 7, 1, 10, 0, 0) && !fromHistory,
 	      L"past the end of the log, in summer: the rules' daylight saving time, not the last offset logged");
 	check(timeZoneHistoryFrom({ { 1, instant(2026, 1, 1, 0, 0, 0), 5000 } }, instant(2026, 2, 1, 0, 0, 0)).changes.empty(),
@@ -158,8 +184,11 @@ void loggedOffsets() {
 	      && biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 10, 25, 1, 59, 59)).otherBiasesMinutes.empty(),
 	      L"the rules: the first second after the repeated hour, the last before it, lived once");
 	const LocalBias skipped = biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 3, 29, 2, 30, 0));
-	check(skipped.biasMinutes == -60 && skipped.otherBiasesMinutes.empty(),
-	      L"the rules, the hour skipped in spring: the offset before, nothing else possible");
+	check(skipped.biasMinutes == -60 && skipped.otherBiasesMinutes == std::vector<long>{ -120 },
+	      L"the rules, the hour skipped in spring: the offset before (01:30Z), the one after (00:30Z) said as possible");
+	check(biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 3, 29, 3, 0, 0)).otherBiasesMinutes.empty()
+	      && biasAtLocalLogged(paris, TimeZoneHistory{}, instant(2026, 3, 29, 1, 59, 59)).otherBiasesMinutes.empty(),
+	      L"the rules: the first second after the skipped hour, the last before it, one reading");
 }
 
 /*! The rules of Pacific time as Windows stores them: daylight saving time from

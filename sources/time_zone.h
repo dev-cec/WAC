@@ -19,7 +19,9 @@
  *  SAME ANSWERS AS WINDOWS. biasAtUtc follows SystemTimeToTzSpecificLocalTimeEx
  *  and biasAtLocal TzSpecificLocalTimeToSystemTimeEx, including for the local
  *  hour that does not exist (spring) or occurs twice (autumn); checked on every
- *  time zone of Windows by system_conversions_test.cpp.
+ *  time zone of Windows by system_conversions_test.cpp. Both readings of such
+ *  an hour are said (otherBiasesAtLocal): Windows' own functions differ on the
+ *  skipped one.
  *
  *  The functions are pure: the rules come in as parameters, read from the
  *  suspect's hives by loadSuspectTimeZone (tools.cpp). The bytes of a rule come
@@ -98,8 +100,10 @@ long biasAtLocal(const TimeZoneRules& rules, long long local100ns);
 
 /*! The other offsets a local wall-clock time has by the zone's rules: in the
  *  hour repeated in autumn, the second occurrence's (biasAtLocal gives the
- *  first) — each its own UTC instant, as possible. Empty for a time lived
- *  once, or skipped.
+ *  first); in the hour skipped in spring, never lived, the offset after the
+ *  change (biasAtLocal gives the one before), which Windows'
+ *  TzSpecificLocalTimeToSystemTime gives — each its own UTC instant, as
+ *  possible. Empty for a time lived once.
  *  @param rules the time zone's rules
  *  @param local100ns the local time, in hundreds of nanoseconds since 1601
  *  @return the biases in minutes, ascending: UTC = local + bias */
@@ -219,7 +223,9 @@ struct LocalBias {
 	 *  local time lived twice — the zone set back (measured, Server 2025 from
 	 *  Paris to New York: 16:45 local lived at 15:45Z, then at 21:45Z) or the
 	 *  hour of autumn. Each its own UTC instant, as likely as the one chosen:
-	 *  said, never dropped. Empty when the time was lived once. */
+	 *  said, never dropped. For a time never lived (an hour skipped), the
+	 *  offset after the change, a reading as possible as the one before
+	 *  (otherBiasesAtLocal). Empty when the time was lived once. */
 	std::vector<long> otherBiasesMinutes;
 };
 
@@ -234,8 +240,8 @@ struct LocalBias {
  *  does: the rules' offset if the log shows it within a second of that instant
  *  (Windows logs a change a moment after making it); else, L within the log (a
  *  clock set forward: an hour skipped), the offset in force before the change,
- *  as Windows does in spring. L before the first offset logged, or after the
- *  end of the log: the rules. L read in an interval of `uncertain` — by its
+ *  as Windows does in spring, the one after it in otherBiasesMinutes. L before
+ *  the first offset logged, or after the end of the log: the rules. L read in an interval of `uncertain` — by its
  *  offset, or by the zone before or after it —: that interval, said.
  *  @param rules the current zone's rules
  *  @param history what the System log shows

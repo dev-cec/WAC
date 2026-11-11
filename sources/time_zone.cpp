@@ -258,10 +258,22 @@ std::vector<long> otherBiasesAtLocal(const TimeZoneRules& rules, long long local
 	// The candidates of biasAtLocal: each one the zone has at L + itself is an instant L was lived at.
 	const TimeZoneRule& r = rules.forYear(year);
 	const long chosen = biasAtLocal(rules, local100ns);
-	for (long b : { r.biasMinutes + r.standardBiasMinutes, r.biasMinutes + r.daylightBiasMinutes, endOfYearBias(rules, year - 1) })
-		if (b != chosen && std::find(out.begin(), out.end(), b) == out.end()
-		    && biasAtUtc(rules, local100ns + b * MINUTE_100NS) == b)
-			out.push_back(b);
+	const long candidates[3] = { r.biasMinutes + r.standardBiasMinutes, r.biasMinutes + r.daylightBiasMinutes,
+	                             endOfYearBias(rules, year - 1) };
+	auto add = [&](long b) {
+		if (b != chosen && std::find(out.begin(), out.end(), b) == out.end()) out.push_back(b);
+	};
+	bool lived = false;
+	for (long b : candidates)
+		if (biasAtUtc(rules, local100ns + b * MINUTE_100NS) == b) { lived = true; add(b); }
+	/* A time never lived (the hour skipped in spring): Windows itself reads it
+	   two ways — TzSpecificLocalTimeToSystemTimeEx by the offset before the
+	   change, as biasAtLocal; TzSpecificLocalTimeToSystemTime with no zone
+	   given by the offset after it (measured on Server 2025, Paris, 29 March
+	   2026 02:00: 01:00Z and 00:00Z). The offsets on either side of the change,
+	   the one not chosen said. */
+	if (!lived)
+		for (long b : candidates) add(biasAtUtc(rules, local100ns + b * MINUTE_100NS));
 	std::sort(out.begin(), out.end());
 	return out;
 }
@@ -293,12 +305,31 @@ LocalBias resolvedLocalBias(const TimeZoneRules& rules, const TimeZoneHistory& h
 		    && std::find(held.begin(), held.end(), changes[i].biasMinutes) == held.end())
 			held.push_back(changes[i].biasMinutes);
 	}
+	// The log shows `bias` within a second of a UTC instant (LOGGED_CHANGE_DELAY_100NS).
+	auto confirmed = [&](long long utc, long bias) {
+		long logged = 0;
+		return (loggedAt(utc - LOGGED_CHANGE_DELAY_100NS, logged) && logged == bias)
+		    || (loggedAt(utc + LOGGED_CHANGE_DELAY_100NS, logged) && logged == bias);
+	};
 	if (!held.empty()) {
 		// The first occurrence; the others as possible, said (LocalBias).
 		const auto first = std::min_element(held.begin(), held.end());
 		LocalBias result{ *first, *first != byRules.biasMinutes };
 		held.erase(first);
 		result.otherBiasesMinutes = std::move(held);
+		/* The rules' other readings, where the log confirms their change: a time
+		   at the very edge of a daylight saving change falls in a single stretch
+		   since Windows logs the change a moment after making it — 02:00:00 the
+		   morning of the change, lived again at 01:00Z in autumn, read by the
+		   new offset too in spring (otherBiasesAtLocal). */
+		if (result.biasMinutes == byRules.biasMinutes) {
+			const long long chosenUtc = local100ns + result.biasMinutes * MINUTE_100NS;
+			for (long b : byRules.otherBiasesMinutes)
+				if (std::find(result.otherBiasesMinutes.begin(), result.otherBiasesMinutes.end(), b) == result.otherBiasesMinutes.end()
+				    && (confirmed(local100ns + b * MINUTE_100NS, b) || confirmed(chosenUtc, b)))
+					result.otherBiasesMinutes.push_back(b);
+			std::sort(result.otherBiasesMinutes.begin(), result.otherBiasesMinutes.end());
+		}
 		return result;
 	}
 	bool found = false;
@@ -307,17 +338,19 @@ LocalBias resolvedLocalBias(const TimeZoneRules& rules, const TimeZoneHistory& h
 	   writes its change a moment after making it (0.68 ms measured at the return
 	   to winter time), and in spring the first local times after the change
 	   would otherwise read as skipped. */
-	const long long byRulesUtc = local100ns + byRules.biasMinutes * MINUTE_100NS;
-	long logged = 0;
-	if ((loggedAt(byRulesUtc - LOGGED_CHANGE_DELAY_100NS, logged) && logged == byRules.biasMinutes)
-	    || (loggedAt(byRulesUtc + LOGGED_CHANGE_DELAY_100NS, logged) && logged == byRules.biasMinutes))
-		return byRules;
+	if (confirmed(local100ns + byRules.biasMinutes * MINUTE_100NS, byRules.biasMinutes)) return byRules;
 	// An hour skipped between two stretches: L is past the first, before the second.
+	long after = 0;
 	for (size_t i = 0; !found && i + 1 < changes.size(); ++i)
-		if (utcIn(i) >= end(i) && utcIn(i + 1) < changes[i + 1].utc100ns) { chosen = changes[i].biasMinutes; found = true; }
+		if (utcIn(i) >= end(i) && utcIn(i + 1) < changes[i + 1].utc100ns) {
+			chosen = changes[i].biasMinutes;
+			after = changes[i + 1].biasMinutes;
+			found = true;
+		}
 	// Before the first offset logged, or past the end of the log: nothing known, the rules.
 	if (!found) return byRules;
-	return LocalBias{ chosen, chosen != byRules.biasMinutes };
+	// Never lived: the offset after the change is a reading too (otherBiasesAtLocal), said.
+	return LocalBias{ chosen, chosen != byRules.biasMinutes, nullptr, { after } };
 }
 
 //! One second, in hundreds of nanoseconds.
