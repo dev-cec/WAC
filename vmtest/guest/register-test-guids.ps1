@@ -22,7 +22,8 @@ $module = 'C:\wactest\wac-test-handler.dll'
 
 # The classes of the autologon user "wac", loaded under HKEY_USERS while it is
 # logged on.
-$sid = (Get-LocalUser -Name 'wac').SID.Value
+# Translated by .NET: Get-LocalUser came with Windows 10 (PowerShell 5.1).
+$sid = (New-Object Security.Principal.NTAccount('wac')).Translate([Security.Principal.SecurityIdentifier]).Value
 $userClasses = "Registry::HKEY_USERS\${sid}_Classes"
 
 foreach ($t in $tests) {

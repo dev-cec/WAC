@@ -16,7 +16,7 @@
 # C:\wactest\ez\<artefact>.zip for the host, which compares them.
 #
 # Usage: ez-time.ps1 -Comparison <comparison> (see the table below)
-param([Parameter(Mandatory)][string]$Comparison)
+param([Parameter(Mandatory = $true)][string]$Comparison)
 $ErrorActionPreference = 'Stop'
 
 $store = 'C:\wactest\split\exhibits'

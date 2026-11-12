@@ -47,6 +47,20 @@ wants() { local k; for k in "$@"; do [[ -z "$ONLY" || ",$ONLY," == *",$k,"* ]] &
 # determinism) belongs to full cycles: a --only cycle runs only what its
 # artefacts need.
 full_cycle() { [[ -z "$ONLY" ]]; }
+
+# Writes guest/<script> into $VMDIR, then has the VM's own PowerShell parse it:
+# a construct of a later version (`-notin`, `[ordered]`, `Mandatory` without a
+# value are PowerShell 3) makes PowerShell 2 refuse the whole script, and every
+# check of its witnesses then has an empty reference (Server 2008 R2: four
+# witness scripts at once). Returns the status of the writing.
+put_guest_script() {
+  local name=$1 errors
+  $QGA write "$HERE/guest/$name" "$VMDIR\\$name" >/dev/null || return 1
+  errors=$($QGA run -- powershell.exe -NoProfile -Command \
+    "\$e = \$null; [void][System.Management.Automation.PSParser]::Tokenize((Get-Content '$VMDIR\\$name' | Out-String), [ref]\$e); @(\$e) | Select-Object -First 3 | ForEach-Object { 'line {0}: {1}' -f \$_.Token.StartLine, \$_.Message }" 2>/dev/null || true)
+  [[ -z "${errors//[$'\r\n ']/}" ]] || echo "   ❌ $name does not parse under this VM's PowerShell: ${errors//[$'\r\n']/ }"
+  return 0
+}
 # --only: no binaries collected — they are no artefact's.
 # The pseudo-key "binaries" keeps them: --only=fat_volumes,prefetch,binaries.
 if [[ -n "$ONLY" ]]; then
@@ -167,7 +181,7 @@ KIT_IMG="${WAC_KIT_IMG:-$HOME/vms/wac-kit$USB_SUFFIX.img}"
 [[ -f "$KIT_IMG" ]] || truncate -s 64G "$KIT_IMG"
 attach_usb_key "$KIT_IMG" WACUSB0003 sdx || { echo "❌ collection key not attached"; exit 1; }
 $QGA run --shell "if not exist $VMDIR mkdir $VMDIR" >/dev/null
-$QGA write "$HERE/guest/prepare-wac-key.ps1" "$VMDIR\\prepare-wac-key.ps1" >/dev/null
+put_guest_script prepare-wac-key.ps1
 KIT_SAID=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\prepare-wac-key.ps1" 2>/dev/null | tr -d '\r' || true)
 KIT_LETTER=$(tail -1 <<< "$KIT_SAID")
 $QGA run --shell "del $VMDIR\\prepare-wac-key.ps1 2>nul & exit /b 0" >/dev/null 2>&1 || true
@@ -277,7 +291,7 @@ fi
 # (see register-test-guids.ps1): the names it prints are those check-json.py
 # expects in ScheduledTasks.json.
 mkdir -p "$OUTPUT/reference"
-wants scheduled_tasks && $QGA write "$HERE/guest/register-test-guids.ps1" "$VMDIR\\register-test-guids.ps1" >/dev/null
+wants scheduled_tasks && put_guest_script register-test-guids.ps1
 if wants scheduled_tasks; then
   $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\register-test-guids.ps1" \
     > "$OUTPUT/reference/test-guids.txt" 2>/dev/null \
@@ -322,7 +336,7 @@ SYSMON_EXE=Sysmon64.exe; [[ "${BITS_SUFFIX:-}" == 32 ]] && SYSMON_EXE=Sysmon.exe
 SYSMON_PLACED=""
 if wants sysmon events && [[ -f "$HERE/tools/sysmon/bin/$SYSMON_EXE" ]] \
    && (( $($QGA run -- powershell.exe -NoProfile -Command '[Environment]::OSVersion.Version.Build' 2>/dev/null | tr -d '\r') >= 10240 )); then
-  $QGA write "$HERE/guest/sysmon-witness.ps1" "$VMDIR\\sysmon-witness.ps1" >/dev/null
+  put_guest_script sysmon-witness.ps1
   $QGA write "$HERE/tools/sysmon/bin/$SYSMON_EXE" "$VMDIR\\$SYSMON_EXE" >/dev/null
   if $QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\sysmon-witness.ps1" \
        -Action Install -Folder "$VMDIR" > "$OUTPUT/reference/sysmon.txt" 2>/dev/null; then
@@ -343,14 +357,7 @@ remove_sysmon() {
 # PowerShell history, a file sent to the recycle bin, a hosts entry, a startup
 # script, and the reference counts of setupapi and Defender (see
 # place-file-artefacts.ps1). check-json.py finds them in the JSON.
-$QGA write "$HERE/guest/place-file-artefacts.ps1" "$VMDIR\\place-file-artefacts.ps1" >/dev/null
-# Parsed first by the VM's own PowerShell: a construct of a later version
-# (`-in` is PowerShell 3) makes PowerShell 2 refuse the whole script, and every
-# check of its witnesses then failed on an empty reference (Server 2008 R2:
-# 30 of them for one line).
-PARSE=$($QGA run -- powershell.exe -NoProfile -Command \
-  "\$e = \$null; [void][System.Management.Automation.PSParser]::Tokenize((Get-Content '$VMDIR\\place-file-artefacts.ps1' | Out-String), [ref]\$e); @(\$e) | Select-Object -First 3 | ForEach-Object { 'line {0}: {1}' -f \$_.Token.StartLine, \$_.Message }" 2>/dev/null || true)
-[[ -z "${PARSE//[$'\r\n ']/}" ]] || echo "   ❌ place-file-artefacts.ps1 does not parse under this PowerShell: ${PARSE//[$'\r\n']/ }"
+put_guest_script place-file-artefacts.ps1
 $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\place-file-artefacts.ps1" \
   ${ONLY:+-Only} ${ONLY:+$ONLY} > "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null \
   && echo "   + reference/file-artefacts.txt" || echo "   ⚠️ file artefact witnesses not placed"
@@ -362,7 +369,7 @@ $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\pla
 # password policy, an account, IIS's SPN), and a reference older than they are
 # differs from what is collected.
 if wants active_directory; then
-  $QGA write "$HERE/guest/active-directory-witness.ps1" "$VMDIR\\active-directory-witness.ps1" >/dev/null
+  put_guest_script active-directory-witness.ps1
   # Its state on stdout alone: PowerShell 2 writes the module's progress to stderr, in CLIXML.
   AD_ERRORS=$(mktemp)
   AD_STATE=$($QGA run --timeout 600 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\active-directory-witness.ps1" 2>"$AD_ERRORS" | tr -d '\r' | tail -1 || true)
@@ -381,7 +388,7 @@ fi
 # through its own tools — reference/server-roles.json, which check-json.py
 # confronts with the role's files.
 if wants dns_server dhcp_server hyperv; then
-  $QGA write "$HERE/guest/server-roles-witness.ps1" "$VMDIR\\server-roles-witness.ps1" >/dev/null
+  put_guest_script server-roles-witness.ps1
   if $QGA run --timeout 600 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\server-roles-witness.ps1" -Out "$VMDIR" >/dev/null 2>&1; then
     $QGA read "$VMDIR\\server-roles-reference.json" "$OUTPUT/reference/server-roles.json" >/dev/null \
       && echo "   + reference/server-roles.json" || echo "   ⚠️ server roles reference not read"
@@ -396,7 +403,7 @@ fi
 # line with its offset, configurations holding a password, a database, a crash
 # dump off by default. Left in place as witnesses, rewritten at each cycle.
 if wants remote_administration ssh file_transfer cloud_storage system_traces antivirus messaging virtualisation server_logs application_registry; then
-  $QGA write "$HERE/guest/application-traces-witness.ps1" "$VMDIR\\application-traces-witness.ps1" >/dev/null
+  put_guest_script application-traces-witness.ps1
   if $QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\application-traces-witness.ps1" -Out "$VMDIR" >/dev/null 2>&1; then
     $QGA read "$VMDIR\\application-traces-reference.json" "$OUTPUT/reference/application-traces.json" >/dev/null \
       && echo "   + reference/application-traces.json" || echo "   ⚠️ applications' traces reference not read"
@@ -423,7 +430,7 @@ fi
 # after step 7 (user_access_log_restart).
 UAL_STATE=""
 if wants user_access_log; then
-  $QGA write "$HERE/guest/user-access-log-witness.ps1" "$VMDIR\\user-access-log-witness.ps1" >/dev/null
+  put_guest_script user-access-log-witness.ps1
   UAL_STATE=$($QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\user-access-log-witness.ps1" -Phase access 2>/dev/null | tr -d '\r' | tail -1 || true)
   [[ "$UAL_STATE" == stopped || "$UAL_STATE" == "no service" ]] || echo "   ⚠️ User Access Logging witness not placed: $UAL_STATE"
 fi
@@ -630,7 +637,7 @@ fetch_results() {
   # Listed by guest/list-tree.ps1 (FindFirstFileW on the \\?\ form): every
   # name as it is, and paths past MAX_PATH (B-049), on every Windows — the
   # script says why neither Get-ChildItem, dir nor robocopy does.
-  $QGA write "$HERE/guest/list-tree.ps1" "$VMDIR\\list-tree.ps1" >/dev/null \
+  put_guest_script list-tree.ps1 \
     && $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\list-tree.ps1" -Path "$vm\\exhibits" -Output "$VMDIR\\exhibit-list.txt" >/dev/null 2>&1 \
     && $QGA read "$VMDIR\\exhibit-list.txt" "$host/exhibits/LIST.txt" >/dev/null 2>&1 \
     && [[ -s "$host/exhibits/LIST.txt" ]] \
@@ -719,7 +726,7 @@ fi
 # step 4, loaded by Windows and walked whole — keys, values, and a digest of
 # them all. The script works in a folder it removes, and is removed after.
 if full_cycle; then
-  $QGA write "$HERE/guest/hive-recovery-reference.ps1" "$VMDIR\\hive-recovery-reference.ps1" >/dev/null \
+  put_guest_script hive-recovery-reference.ps1 \
   && $QGA run --timeout 900 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\hive-recovery-reference.ps1" \
        -Collection "$WACDIR\\out" -Keep "$WACDIR\\hive-kept" 2>/dev/null | tr -d '\r' > "$OUTPUT/reference/hive-recovery.txt" \
   && [[ -s "$OUTPUT/reference/hive-recovery.txt" ]] \
@@ -812,7 +819,7 @@ fi
 # event of the machine, the reference of events.json's messages (B-023). The
 # script only reads the logs; its output is fetched, then removed from the VM.
 if wants events; then
-  $QGA write "$HERE/guest/event-messages-reference.ps1" "$VMDIR\\event-messages-reference.ps1" >/dev/null \
+  put_guest_script event-messages-reference.ps1 \
   && $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\event-messages-reference.ps1" -Output "$VMDIR\\event-messages.txt" >/dev/null 2>&1 \
   && $QGA read "$VMDIR\\event-messages.txt" "$OUTPUT/reference/event-messages.txt" >/dev/null 2>&1 \
   && echo "   + reference/event-messages.txt" || echo "   ⚠️ event messages reference not read"
@@ -849,7 +856,7 @@ if [[ $SPLIT -eq 1 ]]; then
   if full_cycle; then
   # A copy of a signed Store package with one untouched, one modified and one
   # intruding script: the package verification must tell them apart.
-  $QGA write "$HERE/guest/make-fake-package.ps1" "$VMDIR\\make-fake-package.ps1" >/dev/null
+  put_guest_script make-fake-package.ps1
   $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\make-fake-package.ps1" \
     > "$OUTPUT/reference/fake-package.txt" 2>/dev/null \
     && echo "   + reference/fake-package.txt" || echo "   ⚠️ copy of a Store package not prepared"
@@ -902,7 +909,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # USN — WAC reads the volume raw, never through the file. Recorded by
   # harmlessness.ps1 before and after; see doc/harmlessness.
   WITNESSES=('C:\Users\wac\Documents\wac-macro-test.docm' 'C:\wactest\stomped\stomped.ps1')
-  $QGA write "$HERE/guest/harmlessness.ps1" "$VMDIR\\harmlessness.ps1" >/dev/null
+  put_guest_script harmlessness.ps1
   witness_state() {
     $QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\harmlessness.ps1" \
       "${WITNESSES[@]}" 2>/dev/null | tr -d '\r'
@@ -961,7 +968,7 @@ if [[ $SPLIT -eq 1 ]]; then
   # executables WAC authenticates in memory and does not copy, with the
   # catalog Windows finds for those it does not call Valid
   # (authenticode-reference.ps1, removed after).
-  $QGA write "$HERE/guest/authenticode-reference.ps1" "$VMDIR\\authenticode-reference.ps1" >/dev/null \
+  put_guest_script authenticode-reference.ps1 \
   && $QGA run --timeout 900 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\authenticode-reference.ps1" \
     > "$OUTPUT/reference/authenticode.txt" 2>/dev/null \
     && echo "   + reference/authenticode.txt" || echo "   ⚠️ authenticode reference not read"
@@ -1010,7 +1017,7 @@ if [[ $SPLIT -eq 1 ]]; then
 
   # Windows' audit of the reads of the exhibit store around the conversion
   # (B-040): it may read the store to check and copy it, never afterwards.
-  $QGA write "$HERE/guest/exhibit-read-audit.ps1" "$VMDIR\\exhibit-read-audit.ps1" >/dev/null
+  put_guest_script exhibit-read-audit.ps1
   # A failed start must not end the harness (set -e): said below, and the
   # audit it may have switched on is switched off again.
   AUDIT_SINCE=$($QGA run -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\exhibit-read-audit.ps1" -Start "$WACDIR\\split\\exhibits" 2>/dev/null | tr -d '\r' | tail -1 || true)

@@ -158,9 +158,16 @@ def with_compat_prelude(args):
         # A script and its arguments: called from a command, the prelude before it.
         i = lowered.index("-file")
         quote = lambda a: a if re.fullmatch(r"-[A-Za-z]+", a) else "'" + a.replace("'", "''") + "'"
-        # -File gives the script's exit code; a command gives 0 or 1 unless
-        # it exits with the script's own.
-        script = (prelude + "& " + quote(args[i + 1]) + "".join(" " + quote(a) for a in args[i + 2:])
+        # -File gives the script's exit code: its own `exit N`, 0 at its end,
+        # 1 on an error that stops it. Called, a script that ends leaves
+        # $LASTEXITCODE to its last native command: measured on Server 2008 R2,
+        # a script ending after a failed reg.exe query came out failed. It runs
+        # as a copy ending in `exit 0`, its bytes untouched; none of the
+        # guest's scripts reads its own path.
+        run = PS_DIR + "\\run.ps1"
+        script = (prelude + f"[IO.File]::WriteAllBytes('{run}', [byte[]]([IO.File]::ReadAllBytes({quote(args[i + 1])})"
+                  + " + [Text.Encoding]::ASCII.GetBytes(\"`r`nexit 0`r`n\"))); "
+                  + f"& '{run}'" + "".join(" " + quote(a) for a in args[i + 2:])
                   + "; exit $LASTEXITCODE")
         args = args[:i]
     else:

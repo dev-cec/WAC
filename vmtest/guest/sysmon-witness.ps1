@@ -22,8 +22,8 @@
 #                     trace kept in the VM.
 #
 # Usage: sysmon-witness.ps1 -Action Install|Remove -Folder C:\wactest
-param([Parameter(Mandatory)][ValidateSet('Install', 'Remove')][string]$Action,
-      [Parameter(Mandatory)][string]$Folder)
+param([Parameter(Mandatory = $true)][ValidateSet('Install', 'Remove')][string]$Action,
+      [Parameter(Mandatory = $true)][string]$Folder)
 $ErrorActionPreference = 'Stop'
 $channel = 'Microsoft-Windows-Sysmon/Operational'
 $archive = 'C:\WacSysmonArchive'

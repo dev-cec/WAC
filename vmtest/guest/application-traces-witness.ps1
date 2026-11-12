@@ -95,8 +95,10 @@ public static class WacWitnessClock {
     static DateTime Of(SystemTime t) { return new DateTime(t.Year, t.Month, t.Day, t.Hour, t.Minute, t.Second, t.Milliseconds); }
     // The UTC instant Windows gives a local time of the active zone.
     public static string ToUtc(DateTime l) {
-        SystemTime local = new SystemTime { Year = (ushort)l.Year, Month = (ushort)l.Month, Day = (ushort)l.Day,
-                                            Hour = (ushort)l.Hour, Minute = (ushort)l.Minute, Second = (ushort)l.Second };
+        // Field by field: PowerShell 2 compiles with C# 2, which has no object initialiser.
+        SystemTime local = new SystemTime();
+        local.Year = (ushort)l.Year; local.Month = (ushort)l.Month; local.Day = (ushort)l.Day;
+        local.Hour = (ushort)l.Hour; local.Minute = (ushort)l.Minute; local.Second = (ushort)l.Second;
         SystemTime utc;
         if (!TzSpecificLocalTimeToSystemTime(IntPtr.Zero, ref local, out utc)) throw new System.ComponentModel.Win32Exception();
         return Of(utc).ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", System.Globalization.CultureInfo.InvariantCulture);
@@ -191,6 +193,8 @@ if (Get-Command tzutil.exe -ErrorAction SilentlyContinue) {
 # searched by half hours in the machine's zone.
 $dstLog = "$profilePath\AppData\Roaming\TeamViewer\TeamViewer15_Logfile_dst.log"
 $dstReference = ''
+# TimeZoneInfo is in System.Core (.NET 3.5), which PowerShell 2 does not load.
+Add-Type -AssemblyName System.Core
 $zone = [TimeZoneInfo]::Local
 $repeated = $null; $skipped = $null
 $start = New-Object DateTime ((Get-Date).Year), 1, 1, 0, 30, 0

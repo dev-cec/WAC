@@ -96,7 +96,19 @@ if (-not (Get-Command New-ScheduledTaskPrincipal -ErrorAction SilentlyContinue))
 if (-not (Get-Command Register-ScheduledTask -ErrorAction SilentlyContinue)) {
     function Register-ScheduledTask {
         [CmdletBinding()]
-        param([string]$TaskName, $Action, $Principal, [switch]$Force)
+        param([string]$TaskName, [string]$TaskPath, $Action, $Principal, [string]$Xml, [switch]$Force)
+        # A task given whole (-Xml), in its folder (-TaskPath): through a file
+        # in UTF-16, the encoding its declaration names.
+        if ($Xml) {
+            $name = $(if ($TaskPath) { $TaskPath.TrimEnd('\') + '\' + $TaskName } else { $TaskName })
+            $file = [IO.Path]::GetTempFileName()
+            try {
+                [IO.File]::WriteAllText($file, $Xml, [Text.Encoding]::Unicode)
+                $output = & cmd.exe /c "schtasks.exe /create /tn `"$name`" /xml `"$file`" /f 2>&1"
+                if ($LASTEXITCODE -ne 0) { throw "schtasks /create $name failed: $output" }
+            } finally { Remove-Item -Force $file -ErrorAction SilentlyContinue }
+            return New-Object PSObject -Property @{ TaskName = $TaskName; TaskPath = $TaskPath }
+        }
         $command = $Action.Execute + $(if ($Action.Arguments) { ' ' + $Action.Arguments } else { '' })
         # /it: run only while that user is logged on, in that session — no password asked.
         # Through cmd: schtasks warns on its error stream that 00:00 is past, which

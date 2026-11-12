@@ -15,7 +15,7 @@
 # hexadecimal ("u-6630-db1c-0239"), which check-json.py turns back into the name.
 # The harness may stop a service, WAC never does. Prints "stopped" then "placed",
 # or "no service" where the machine has none (a client, a server before 2012).
-param([Parameter(Mandatory)][ValidateSet('access', 'reference')][string]$Phase)
+param([Parameter(Mandatory = $true)][ValidateSet('access', 'reference')][string]$Phase)
 $ErrorActionPreference = 'Stop'
 $service = Get-Service UALSVC -ErrorAction SilentlyContinue
 if (-not $service) { Write-Output 'no service'; exit 0 }
@@ -31,7 +31,8 @@ if ($Phase -eq 'access') {
 $folder = "$env:SystemRoot\System32\LogFiles\Sum"
 $copy = 'C:\wactest\user-access-log'
 New-Item -ItemType Directory -Force $copy | Out-Null
-Get-ChildItem $folder -File | Where-Object { $_.Extension -notin '.log', '.jrs', '.chk', '.jfm' } | ForEach-Object {
+# Without -File and -notin (PowerShell 3): PowerShell 2 parses the whole script.
+Get-ChildItem $folder | Where-Object { -not $_.PSIsContainer -and @('.log', '.jrs', '.chk', '.jfm') -notcontains $_.Extension } | ForEach-Object {
     $name = $_.Name
     if ($name -cnotmatch '^[\x20-\x7e]+$') { $name = 'u-' + (($name.ToCharArray() | ForEach-Object { '{0:x4}' -f [int]$_ }) -join '-') }
     Copy-Item -LiteralPath $_.FullName (Join-Path $copy $name)
