@@ -2824,7 +2824,8 @@ def check_small_file_artefacts(folder):
             n = mine.get(guid, {})
             if n.get("ProfileName") != name:
                 wrong.append(f"{guid}: name {n.get('ProfileName')!r}, registry {name!r}")
-            ours = sorted(sig.get("DefaultGatewayMac", "") for sig in n.get("Signatures") or [])
+            # A signature without a gateway (a tunnel's adapter) has no MAC: not emitted, not counted.
+            ours = sorted(sig["DefaultGatewayMac"] for sig in n.get("Signatures") or [] if sig.get("DefaultGatewayMac"))
             if ours != sorted(m for m in macs.split(",") if m):
                 wrong.append(f"{guid}: gateways {ours}, registry {macs}")
             if name in connected and n.get("DateLastConnectedUtc"):
@@ -4097,7 +4098,7 @@ def check_application_traces(folder):
         print("  ℹ️ PowerShell transcript witness not placed (Start-Transcript failed)")
     if "WacSid" in reference and wanted("application_registry"):
         keys = [k for k in (load(folder, "application_registry.json") or []) if isinstance(k, dict)
-                and k.get("Sid") == reference["WacSid"] and str(k.get("Key", "")).endswith("\\wac-trace-witness")]
+                and k.get("SID") == reference["WacSid"] and str(k.get("SIDName", "")).lower() == "wac" and str(k.get("Key", "")).endswith("\\wac-trace-witness")]
         text = json.dumps(load(folder, "application_registry.json") or [])
         def session(product, host):
             return [k for k in keys if k.get("Product") == product and host in json.dumps(k.get("Values"))]
