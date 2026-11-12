@@ -26,9 +26,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Table écrite
-- [ ] Témoins en VM
+- [x] Témoins en VM
 - [ ] Vérifier les chemins de Tailscale et de WireGuard dans leur documentation
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062). Tailscale et WireGuard ne sont pas des cibles de KAPE : chemins écrits de mémoire, non vérifiés à ce jour.
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
+- 2026-11-12 : témoins : OpenVPN et Tailscale installés et mesurés le 2026-11-11 (B-077), leurs journaux confrontés à chaque cycle ; le chemin de Tailscale vérifié par son journal réel (`C:\ProgramData\Tailscale`). WireGuard ni installé ni mesuré : son chemin reste celui de sa documentation.

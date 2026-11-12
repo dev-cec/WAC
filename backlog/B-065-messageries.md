@@ -27,9 +27,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Table écrite
-- [ ] Témoins en VM
+- [x] Témoins en VM
 - [ ] Mesurer le volume ajouté sur `win11-test`
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062). Telegram : `tdata` et les téléchargements, entiers. Les clés de session de `tdata` y sont : à dire dans la revue B-060.
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
+- 2026-11-12 : témoin : un journal de Zoom d'une ligne datée, retrouvé dans `messaging.json` ; un témoin par groupe dans `guest/application-traces-witness.ps1`, confronté par `check_application_traces` (67b22c22). Cycle ciblé sur `win11-test` : 75 ✅, 0 ❌. Le volume ajouté reste à mesurer : aucune messagerie n'est installée sur `win11-test`, la mesure n'y dirait rien.

@@ -26,9 +26,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Table écrite
-- [ ] Témoins en VM
-- [ ] Dire la limite pour RustDesk : chemin de mémoire, à vérifier dans sa documentation
+- [x] Témoins en VM
+- [x] Dire la limite pour RustDesk : chemin de mémoire, à vérifier dans sa documentation
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062). Chemin de RustDesk écrit de mémoire : pas une cible de KAPE, non vérifié à ce jour.
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
+- 2026-11-12 : témoins faits. TeamViewer (ligne datée, suite, leurre, changement de fuseau, heures d'été) depuis le 2026-11-08 ; AnyDesk, RustDesk et mRemoteNG installés et mesurés le 2026-11-11 (B-077), leurs journaux restés dans `win11-test` confrontés à chaque cycle. Le chemin de RustDesk n'est plus de mémoire : son journal réel a été écrit à `%APPDATA%\RustDesk\log` et pris par WAC. Cycle ciblé sur `win11-test` : 75 ✅, 0 ❌.

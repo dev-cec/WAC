@@ -27,9 +27,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Table et règle du test natif
-- [ ] Mesure réelle en VM
+- [x] Mesure réelle en VM
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062).
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
 - 2026-11-08 : décision de l'utilisateur : clés privées exclues (le test de la table le garantit).
+- 2026-11-12 : mesure réelle faite le 2026-11-10 : sshd lancé à la main sur Server 2025 (jamais le service), une connexion refusée, sa ligne datée dans l'encadrement de l'horloge système, à la milliseconde ; témoin rejoué à chaque cycle.

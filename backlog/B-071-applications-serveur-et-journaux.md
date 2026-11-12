@@ -27,9 +27,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Tâches
 - [x] Table écrite
 - [ ] Rôle AD CS en VM
-- [ ] Témoins en VM
+- [x] Témoins en VM
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062). `CertLog` et `netlogon.log` ne sont pas dans les cibles de KAPE retenues.
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
 - 2026-11-08 : décision de l'utilisateur : la base de l'autorité de certification reste copiée brute pour la 5.0.0, sans JSON propre.
+- 2026-11-12 : témoin écrit pour `server_logs` : la dernière ligne du vrai `netlogon.log` d'un contrôleur de domaine, lue par le témoin, à retrouver dans `server_logs.json`. À passer sur `srv2025dc-test`. `server_applications` sans témoin de produit réel (aucun SQL Server, Exchange… dans les VM). Le rôle AD CS reste à décider : l'installer modifie durablement la VM.

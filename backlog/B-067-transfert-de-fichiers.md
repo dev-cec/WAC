@@ -26,8 +26,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Table écrite
-- [ ] Témoins en VM
+- [x] Témoins en VM
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062). La configuration de WinSCP dans le registre relève de B-073.
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
+- 2026-11-12 : témoins faits depuis le 2026-11-08 : `WinSCP.ini` et `sitemanager.xml` de FileZilla en structure, l'hôte gardé, le mot de passe absent et signalé ; confrontés à chaque cycle complet.

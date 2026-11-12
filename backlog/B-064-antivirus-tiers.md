@@ -26,8 +26,9 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Table écrite
-- [ ] Témoins en VM
+- [x] Témoins en VM
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062). Chemins issus des cibles de KAPE.
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
+- 2026-11-12 : témoin : un rapport Emsisoft (`scan_*.txt`) d'une ligne datée, retrouvé dans `antivirus.json`, l'heure telle qu'écrite, supposée locale ; un témoin par groupe dans `guest/application-traces-witness.ps1`, confronté par `check_application_traces` (67b22c22). Cycle ciblé sur `win11-test` : 75 ✅, 0 ❌. Aucun antivirus tiers installé : le format réel de chaque produit n'est pas mesuré, la conversion générique le lit ligne à ligne.

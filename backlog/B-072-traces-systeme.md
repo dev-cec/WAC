@@ -27,10 +27,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Table écrite
-- [ ] Témoins en VM
+- [x] Témoins en VM
 - [ ] Mesurer le volume de `windows_old` et d'`office_cache`
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062).
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
 - 2026-11-08 : décision de l'utilisateur : `crash_dumps`, `minidumps` et `office_cache` coupés par défaut (mémoire, documents de l'utilisateur), réactivables dans `wac.yml`.
+- 2026-11-12 : témoins : un transcript écrit par `Start-Transcript` lui-même, retrouvé dans `system_traces.json` ligne à ligne ; le vidage de plantage, coupé par défaut, jamais pris. Cycle ciblé sur `win11-test` : 75 ✅, 0 ❌. `windows_old` : aucune VM n'a de `Windows.old`, volume non mesurable ici ; `office_cache` coupé par défaut.

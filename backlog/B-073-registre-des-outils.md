@@ -29,9 +29,10 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Tâches
 - [x] Lecteur écrit, non compilé
 - [x] Règle du mot de passe au test natif
-- [ ] Témoins en VM
-- [ ] Contrôle dans `check-json.py`
+- [x] Témoins en VM
+- [x] Contrôle dans `check-json.py`
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062).
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
+- 2026-11-12 : témoins : une session PuTTY et une session WinSCP (avec un mot de passe) écrites dans la ruche de `wac` ; contrôle : les deux retrouvées, au SID de `wac`, le mot de passe absent du JSON et signalé (`HasPassword`). Premier cycle : 0 entrée — **défaut** : `application_registry` (et `cloud_identity`) manquaient à `needsUserHives`, les ruches n'étaient pas copiées quand aucun autre lecteur n'était demandé ; un cycle complet le masquait. Corrigé (92e04fdc), `config_test` active chaque lecteur seul (vu échouer avant). Cycle ciblé : 75 ✅, 0 ❌.
