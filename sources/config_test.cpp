@@ -253,6 +253,22 @@ int wmain(int argc, wchar_t** argv) {
 		check(AppliConf::ceilingBytes(AppliConf::UNLIMITED_MIB) == UINT64_MAX && AppliConf::ceilingBytes(1024) == 1ULL << 30,
 		      "a ceiling in bytes: 1024 MiB is 1 GiB, unlimited above any size");
 	}
+	/* The users' hives are a dependency: each artefact that reads them, asked
+	   for alone, has them copied. application_registry and cloud_identity were
+	   missing, and alone gave an empty JSON read as "nothing found". */
+	for (const char* reader : { "muicache", "userassist", "run_keys", "shellbags", "mru", "mru_apps", "persistence",
+	                            "office_trust_records", "typed_paths", "word_wheel_query", "root_certificates",
+	                            "internet_settings", "installed_programs", "explorer_recent_docs", "mount_points",
+	                            "program_usage", "user_shell_folders", "web_client", "rdp_client", "shortcuts",
+	                            "application_registry", "cloud_identity" }) {
+		AppliConf c;
+		bool known = false;
+		for (auto& [key, value] : artefactSwitches(c)) {
+			*value = key == reader;
+			known = known || key == reader;
+		}
+		check(known && c.artefacts.needsUserHives(), std::string(reader) + " alone: the users' hives not copied");
+	}
 	refused("unlimited-word.yml", "artefacts:\n  web_server:\n    max_database_mib: illimited\n", 3, "a number expected");
 	refused("unlimited-level.yml", "artefacts:\n  deleted_files:\n    level: unlimited\n", 3, "a number expected");
 	refused("web-unknown.yml", "artefacts:\n  web_server:\n    max_size: 8\n", 3, "unknown setting \"artefacts.web_server.max_size\"");

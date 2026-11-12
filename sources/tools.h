@@ -226,7 +226,8 @@ struct AppliConf {
 			    || rootCertificates || internetSettings || installedPrograms || explorerRecentDocs || mountPoints || programUsages
 			    || userShellFolders || webClient   // web client: TypedURLs
 			    || rdpClient   // the servers reached, in NTUSER.DAT
-			    || shortcuts;   // a desktop redirected elsewhere is read in NTUSER.DAT (user_shell_folders.h)
+			    || shortcuts   // a desktop redirected elsewhere is read in NTUSER.DAT (user_shell_folders.h)
+			    || applicationRegistry || cloudIdentity;   // PuTTY, WinSCP…; WorkplaceJoin
 		}
 
 		/*! Whether an artefact asked for reads the event logs: they are a
