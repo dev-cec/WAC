@@ -4107,15 +4107,20 @@ def check_application_traces(folder):
                and "wac-trace-secret-3" not in text and bool(winscp[0].get("KeyLastWrite")),
                "application_registry.json: PuTTY's and WinSCP's witness sessions in wac's hive, WinSCP's password left out and said",
                f"application_registry.json: the witness sessions not as expected, or the password written: {keys[:2]}")
+    if "Netlogon" not in reference and wanted("server_logs") and is_domain_controller(folder):
+        print("  ℹ️ netlogon.log not on this controller, nor written by its debug flags: not confronted")
     if "Netlogon" in reference and wanted("server_logs"):
         entry = of(rows("server_logs"), reference["Netlogon"])
         report(bool(entry) and all(r.get("Product") == "Netlogon" for r in entry)
                # Its text, the time the line begins with taken off or not.
                and any(len(t) >= 10 and (t in reference["NetlogonLastLine"] or reference["NetlogonLastLine"] in t)
-                       for t in (str(r.get("Text", "")).strip() for r in entry)),
-               f"server_logs.json: the real netlogon.log, {len(entry)} lines, the last one the witness read among them",
+                       for t in (str(r.get("Text", "")).strip() for r in entry))
+               # Its lines carry no year: dated, an instant would be invented.
+               and not any(r.get("TimeUtc") for r in entry),
+               f"server_logs.json: the real netlogon.log, {len(entry)} lines, the last one the witness read among them, "
+               "none dated (no year written)",
                f"server_logs.json: netlogon.log's line {reference['NetlogonLastLine']!r} not found: {entry[-2:]}")
-    manifest =load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
     items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
     if items:
         taken = [i for i in items if str(i.get("SourcePath", "")).lower() == reference["CrashDump"].lower()]

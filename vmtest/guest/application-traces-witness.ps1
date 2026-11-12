@@ -259,8 +259,30 @@ try {
 }
 # Netlogon's log, a real one where the machine keeps it (a domain controller):
 # its last line now, which the collection must give.
+# Netlogon writes it only with its debug flags set: on a controller of the
+# harness without one, the flags are set (nltest, no restart of the service),
+# a discovery of the domain makes it write, and the flags are put back to 0.
+# The file stays, as a real one would. Its lines carry no year ("MM/DD
+# HH:MM:SS"): they must stay undated.
 $netlogon = "$env:windir\debug\netlogon.log"
 $netlogonReference = ''
+$nltest = "$env:windir\System32\nltest.exe"
+# A controller keeps an empty one (its byte order mark) from its promotion.
+$netlogonLines = (Test-Path $netlogon) -and @(Get-Content $netlogon | Where-Object { $_.Trim() }).Count -gt 0
+if (-not $netlogonLines -and (Test-Path $nltest) -and (Get-Service NTDS -ErrorAction SilentlyContinue)) {
+    # SYSTEM, through the guest agent, has no USERDNSDOMAIN: the machine's domain.
+    $domain = (Get-WmiObject Win32_ComputerSystem).Domain
+    $ErrorActionPreference = 'Continue'
+    & $nltest /dbflag:0x2080ffff 2>&1 | Out-Null
+    try {
+        & $nltest "/dsgetdc:$domain" /force 2>&1 | Out-Null
+        & $nltest "/sc_query:$domain" 2>&1 | Out-Null
+        Start-Sleep -Seconds 5
+    } finally {
+        & $nltest /dbflag:0x0 2>&1 | Out-Null
+    }
+    $ErrorActionPreference = 'Stop'
+}
 if (Test-Path $netlogon) {
     $last = @(Get-Content $netlogon -ErrorAction SilentlyContinue | Where-Object { $_.Trim() }) | Select-Object -Last 1
     if ($last) {
