@@ -16,7 +16,8 @@
 #     next witness when it holds only the witness's lines — a real one is kept;
 #   - WinSCP.ini and FileZilla's sitemanager.xml, each holding a password the
 #     conversion must leave out;
-#   - a pCloud database, listed, not converted;
+#   - a pCloud database, listed, not converted; a user's file in Google
+#     Drive's cache beside, never taken;
 #   - a crash dump, a product off by default: never taken;
 #   - one product of each group left: an Emsisoft report, a Zoom log, a
 #     VirtualBox machine (XML), a PowerShell transcript written by
@@ -70,6 +71,10 @@ Put $filezilla ('<?xml version="1.0" encoding="UTF-8"?><FileZilla3><Servers><Ser
 $pcloud = "$profilePath\AppData\Local\pCloud\wac-trace-witness.db"
 New-Item -ItemType Directory -Force (Split-Path $pcloud) | Out-Null
 [IO.File]::WriteAllBytes($pcloud, [byte[]](83, 81, 76, 105, 116, 101, 0, 1, 2, 3))
+# A user's file Google Drive keeps in its cache, under a name without
+# extension: the filter takes the databases and logs, never this.
+$driveDecoy = "$profilePath\AppData\Local\Google\DriveFS\4242\content_cache\d42\d42\4242"
+Put $driveDecoy "wac-trace-decoy: a user's file in Google Drive's cache`r`n"
 $dump = "$profilePath\AppData\Local\CrashDumps\wac-trace-witness.dmp"
 New-Item -ItemType Directory -Force (Split-Path $dump) | Out-Null
 [IO.File]::WriteAllBytes($dump, [byte[]](77, 68, 77, 80, 0, 0))
@@ -276,6 +281,7 @@ $reference = @"
  "WinScp": "$($winscp.Replace('\', '\\'))",
  "FileZilla": "$($filezilla.Replace('\', '\\'))",
  "PCloud": "$($pcloud.Replace('\', '\\'))",
+ "DriveDecoy": "$($driveDecoy.Replace('\', '\\'))",
  "CrashDump": "$($dump.Replace('\', '\\'))"$zoneReference$sshdReference$dstReference
 }
 "@

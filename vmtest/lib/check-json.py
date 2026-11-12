@@ -4066,6 +4066,10 @@ def check_application_traces(folder):
         report(len(cloud) == 1 and cloud[0].get("Converted") is False and "database" in str(cloud[0].get("Reason", "")),
                "cloud_storage.json: pCloud's witness database listed, not converted",
                f"cloud_storage.json: pCloud's witness database not as expected: {cloud[:1]}")
+        if "DriveDecoy" in reference:
+            report(not of(rows("cloud_storage"), reference["DriveDecoy"]),
+                   "cloud_storage.json: the user's file in Google Drive's cache, a decoy, not taken",
+                   "cloud_storage.json: the user's file in Google Drive's cache was taken")
     # One product of each group left, a line or a structure of known content.
     for group, key, product, marker, written in (
             ("antivirus", "Antivirus", "Emsisoft", "detected Trojan.Witness", "2026-11-08 14:03:21"),
