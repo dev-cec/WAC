@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire (en dernier, avant la publication de la 5.0.0) | P1 | fort |
+| en cours | P1 | fort |
 
 ## Pourquoi
 Demande de l'utilisateur (2026-11-08) : la 5.0.0 se clôt, comme la 4.0.0 (B-060), par une revue de code et une revue de sécurité. Les traces d'applications prélèvent des fichiers qui portent des secrets (sessions de messageries, configurations d'outils de transfert, vidages de plantage), écrits par des produits tiers dont le format change : un défaut y coûte plus cher qu'ailleurs, et ce code a été écrit hors des cycles, compilé tard.
@@ -34,7 +34,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [ ] Vérifier que B-062 à B-073 sont closes
-- [ ] Choisir les outils et fixer la méthode
+- [x] Choisir les outils et fixer la méthode
 - [ ] Revue de code, par point du périmètre
 - [ ] Revue de sécurité, par point du périmètre
 - [ ] Correctifs et leurs tests
@@ -43,3 +43,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Journal
 - 2026-11-08 : créée à la demande de l'utilisateur, à faire en dernier dans la 5.0.0, sur le modèle de B-060.
+- 2026-11-12 : **outils et premiers passages, pendant la série de cycles.** cppcheck 2.19 et detect-secrets 1.5 (installés hors du dépôt, l'hôte mis à niveau ne les avait plus). cppcheck sur les 23 sources modifiées depuis `4.0.0` : 5 erreurs `returnDanglingLifetime` (`event_messages.cpp`, pointeur lu avant que l'objet passe au cache, qui le garde), 1 avertissement d'indice (`time_zone.cpp`, gardé par le ternaire), 3 conditions « toujours vraies » (valeurs rendues par pointeur), `%lc` d'un `wchar_t` (promu en `wint_t`) : faux positifs, relus un à un ; le reste est du style. detect-secrets sur les lignes ajoutées depuis `4.0.0` : 0 constat ; motifs (mot de passe, jeton, clé privée, AWS, GitHub) : seulement les secrets factices des tests et des témoins. Constat : `localTimeToIso8601Utc` (tools.cpp) n'est appelée que par `system_conversions_test` — code mort, à retirer avec ses contrôles.
