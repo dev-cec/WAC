@@ -9,7 +9,7 @@
  *  WHAT IS LEFT OUT. A value whose name holds "password": WinSCP keeps a session's
  *  password there, merely obfuscated. WAC says that the session has one, not what.
  *
- *  OUTPUT. One object per key: Sid, Product, Key, KeyLastWrite, Values.
+ *  OUTPUT. One object per key: SID and SIDName (addUser), Product, Key, KeyLastWrite, Values.
  */
 #pragma once
 

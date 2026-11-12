@@ -33,7 +33,7 @@ void walkKey(ORHKEY key, const std::wstring& path, const FILETIME& lastWrite, co
 	}
 	if (hasValue) {
 		Json o = Json::obj();
-		o.add(L"Sid", Json::str(sid));
+		addUser(o, sid);   // its SID and the name the shared table gives it, as every per-user artefact
 		o.add(L"Product", Json::str(product));
 		o.add(L"Key", Json::str(path));
 		addDate(o, L"KeyLastWrite", lastWrite);
