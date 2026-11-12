@@ -18,6 +18,11 @@
 #     conversion must leave out;
 #   - a pCloud database, listed, not converted;
 #   - a crash dump, a product off by default: never taken;
+#   - one product of each group left: an Emsisoft report, a Zoom log, a
+#     VirtualBox machine (XML), a PowerShell transcript written by
+#     Start-Transcript itself, PuTTY's and WinSCP's sessions in wac's hive
+#     (WinSCP's password left out), and on a domain controller the last line
+#     of its real netlogon.log;
 #   - a second TeamViewer log whose lines straddle a change of time zone: one
 #     line written while India's zone (+05:30, no daylight saving) is in force,
 #     one after the machine's zone is back. A local time is that of the zone in
@@ -202,8 +207,67 @@ if ($repeated -and $skipped) {
  "DstSkippedWindowsUtc": "$([WacWitnessClock]::ToUtc($skipped))"
 "@
 }
+# The groups the witnesses above leave alone, one product each: an antivirus
+# report (Emsisoft), a messaging log (Zoom), a virtual machine's configuration
+# (VirtualBox), XML whose name the conversion must keep.
+$antivirus = "$env:ProgramData\Emsisoft\Reports\scan_wac-trace-witness.txt"
+Put $antivirus "2026-11-08 14:03:21 wac-trace-witness detected Trojan.Witness in C:\witness.exe`r`n"
+$zoom = "$profilePath\AppData\Roaming\Zoom\logs\wac-trace-witness.log"
+Put $zoom "2026-11-08 14:03:21 wac-trace-witness joined meeting 4242`r`n"
+$vbox = "$profilePath\VirtualBox VMs\wac-trace-witness\wac-trace-witness.vbox"
+Put $vbox ('<?xml version="1.0"?><VirtualBox xmlns="http://www.virtualbox.org/" version="1.19-windows">' +
+    '<Machine uuid="{00000000-0000-0000-0000-000000004242}" name="wac-trace-witness-machine" OSType="Ubuntu_64"/></VirtualBox>')
+# A PowerShell transcript, written by PowerShell itself (Start-Transcript),
+# under the name and in the folder it gives one by default.
+$transcript = "$profilePath\Documents\PowerShell_transcript.WAC.wac-trace-witness.txt"
+$transcriptReference = ''
+try {
+    New-Item -ItemType Directory -Force (Split-Path $transcript) | Out-Null
+    Start-Transcript -Path $transcript -Force | Out-Null
+    Write-Output 'wac-trace-witness transcript line'
+    Stop-Transcript | Out-Null
+    if (Select-String -Path $transcript -Pattern 'wac-trace-witness transcript line' -Quiet) {
+        $transcriptReference = ",`r`n `"Transcript`": `"$($transcript.Replace('\', '\\'))`""
+    }
+} catch { }
+# What PuTTY and WinSCP keep in the hive of wac: a session each, WinSCP's with
+# a password the conversion must leave out. The hive is loaded while wac's
+# session is open (autologon); otherwise loaded for the time of the writing.
+$sid = (New-Object Security.Principal.NTAccount('wac')).Translate([Security.Principal.SecurityIdentifier]).Value
+$hive = "HKU\$sid"
+$loaded = $false
+if (-not (Test-Path "Registry::HKEY_USERS\$sid")) {
+    $hive = 'HKU\WacTraceWitness'
+    & reg.exe load $hive "$profilePath\NTUSER.DAT" | Out-Null
+    if ($LASTEXITCODE -ne 0) { Write-Output 'hive of wac not loaded'; exit 1 }
+    $loaded = $true
+}
+try {
+    foreach ($value in @(@('Software\SimonTatham\PuTTY\Sessions\wac-trace-witness', 'HostName', 'putty-witness.example'),
+                         @('Software\Martin Prikryl\WinSCP 2\Sessions\wac-trace-witness', 'HostName', 'winscp-witness.example'),
+                         @('Software\Martin Prikryl\WinSCP 2\Sessions\wac-trace-witness', 'Password', 'wac-trace-secret-3'))) {
+        & reg.exe add "$hive\$($value[0])" /v $value[1] /t REG_SZ /d $value[2] /f | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "reg add $($value[0])" }
+    }
+} finally {
+    if ($loaded) { [GC]::Collect(); & reg.exe unload $hive | Out-Null }
+}
+# Netlogon's log, a real one where the machine keeps it (a domain controller):
+# its last line now, which the collection must give.
+$netlogon = "$env:windir\debug\netlogon.log"
+$netlogonReference = ''
+if (Test-Path $netlogon) {
+    $last = @(Get-Content $netlogon -ErrorAction SilentlyContinue | Where-Object { $_.Trim() }) | Select-Object -Last 1
+    if ($last) {
+        $netlogonReference = ",`r`n `"Netlogon`": `"$($netlogon.Replace('\', '\\'))`",`r`n `"NetlogonLastLine`": `"$($last.Trim().Replace('\', '\\').Replace('"', '\"'))`""
+    }
+}
 $reference = @"
 {
+ "Antivirus": "$($antivirus.Replace('\', '\\'))",
+ "Messaging": "$($zoom.Replace('\', '\\'))",
+ "VirtualBox": "$($vbox.Replace('\', '\\'))",
+ "WacSid": "$sid"$transcriptReference$netlogonReference,
  "TeamViewerLog": "$($teamViewer.Replace('\', '\\'))",
  "TeamViewerWritten": "$written",
  "TeamViewerUtc": "$expectedUtc",

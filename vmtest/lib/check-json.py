@@ -3980,7 +3980,10 @@ def check_application_traces(folder):
     instant in UTC; the connection sshd refused, provoked (Server 2025), dated
     within the instants the system clock gave before and after it; WinSCP.ini and FileZilla's sitemanager.xml as their
     structure, their passwords nowhere in the file; a pCloud database listed,
-    not converted; a crash dump, off by default, absent from the manifest."""
+    not converted; a crash dump, off by default, absent from the manifest; an
+    Emsisoft and a Zoom line, a VirtualBox machine as XML, the transcript
+    Start-Transcript wrote, PuTTY's and WinSCP's sessions in wac's hive
+    without WinSCP's password, and a domain controller's real netlogon.log."""
     path = os.path.join(folder, "reference", "application-traces.json")
     if not os.path.exists(path):
         return 0
@@ -4063,7 +4066,51 @@ def check_application_traces(folder):
         report(len(cloud) == 1 and cloud[0].get("Converted") is False and "database" in str(cloud[0].get("Reason", "")),
                "cloud_storage.json: pCloud's witness database listed, not converted",
                f"cloud_storage.json: pCloud's witness database not as expected: {cloud[:1]}")
-    manifest = load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
+    # One product of each group left, a line or a structure of known content.
+    for group, key, product, marker, written in (
+            ("antivirus", "Antivirus", "Emsisoft", "detected Trojan.Witness", "2026-11-08 14:03:21"),
+            ("messaging", "Messaging", "Zoom", "joined meeting 4242", "2026-11-08 14:03:21")):
+        if key not in reference or not wanted(group):
+            continue
+        entry = [r for r in of(rows(group), reference[key]) if marker in str(r.get("Text", ""))]
+        report(len(entry) == 1 and entry[0].get("Product") == product and entry[0].get("TimeAsWritten") == written
+               and entry[0].get("TimeZoneAssumed") == "Local",
+               f"{group}.json: {product}'s witness line, its time as written, local",
+               f"{group}.json: {product}'s witness line not as expected: {of(rows(group), reference[key])[:2]}")
+    if "VirtualBox" in reference and wanted("virtualisation"):
+        entry = of(rows("virtualisation"), reference["VirtualBox"])
+        report(len(entry) == 1 and entry[0].get("Product") == "VirtualBox" and entry[0].get("Format") == "XML"
+               and "wac-trace-witness-machine" in json.dumps(entry[0].get("Content")),
+               "virtualisation.json: VirtualBox's witness machine as XML, its name kept",
+               f"virtualisation.json: VirtualBox's witness machine not as expected: {entry[:1]}")
+    if "Transcript" in reference and wanted("system_traces"):
+        entry = of(rows("system_traces"), reference["Transcript"])
+        report(any("wac-trace-witness transcript line" in str(r.get("Text", "")) for r in entry)
+               and all(r.get("Product") == "PowerShell transcripts" for r in entry),
+               f"system_traces.json: the transcript Start-Transcript wrote, its {len(entry)} lines, the witness's among them",
+               f"system_traces.json: the witness's transcript not as expected: {entry[:3]}")
+    elif wanted("system_traces"):
+        print("  ℹ️ PowerShell transcript witness not placed (Start-Transcript failed)")
+    if "WacSid" in reference and wanted("application_registry"):
+        keys = [k for k in (load(folder, "application_registry.json") or []) if isinstance(k, dict)
+                and k.get("Sid") == reference["WacSid"] and str(k.get("Key", "")).endswith("\\wac-trace-witness")]
+        text = json.dumps(load(folder, "application_registry.json") or [])
+        def session(product, host):
+            return [k for k in keys if k.get("Product") == product and host in json.dumps(k.get("Values"))]
+        putty, winscp = session("PuTTY", "putty-witness.example"), session("WinSCP", "winscp-witness.example")
+        report(len(putty) == 1 and "HasPassword" not in putty[0] and len(winscp) == 1 and winscp[0].get("HasPassword") is True
+               and "wac-trace-secret-3" not in text and bool(winscp[0].get("KeyLastWrite")),
+               "application_registry.json: PuTTY's and WinSCP's witness sessions in wac's hive, WinSCP's password left out and said",
+               f"application_registry.json: the witness sessions not as expected, or the password written: {keys[:2]}")
+    if "Netlogon" in reference and wanted("server_logs"):
+        entry = of(rows("server_logs"), reference["Netlogon"])
+        report(bool(entry) and all(r.get("Product") == "Netlogon" for r in entry)
+               # Its text, the time the line begins with taken off or not.
+               and any(len(t) >= 10 and (t in reference["NetlogonLastLine"] or reference["NetlogonLastLine"] in t)
+                       for t in (str(r.get("Text", "")).strip() for r in entry)),
+               f"server_logs.json: the real netlogon.log, {len(entry)} lines, the last one the witness read among them",
+               f"server_logs.json: netlogon.log's line {reference['NetlogonLastLine']!r} not found: {entry[-2:]}")
+    manifest =load(os.path.join(folder, store_folder(folder)), "MANIFEST.json")
     items = (manifest or {}).get("Items") or [] if isinstance(manifest, dict) else []
     if items:
         taken = [i for i in items if str(i.get("SourcePath", "")).lower() == reference["CrashDump"].lower()]

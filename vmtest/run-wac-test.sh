@@ -395,7 +395,7 @@ fi
 # (application-traces-witness.ps1) — a dated log line and its continuation, a
 # line with its offset, configurations holding a password, a database, a crash
 # dump off by default. Left in place as witnesses, rewritten at each cycle.
-if wants remote_administration ssh file_transfer cloud_storage system_traces; then
+if wants remote_administration ssh file_transfer cloud_storage system_traces antivirus messaging virtualisation server_logs application_registry; then
   $QGA write "$HERE/guest/application-traces-witness.ps1" "$VMDIR\\application-traces-witness.ps1" >/dev/null
   if $QGA run --timeout 300 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\application-traces-witness.ps1" -Out "$VMDIR" >/dev/null 2>&1; then
     $QGA read "$VMDIR\\application-traces-reference.json" "$OUTPUT/reference/application-traces.json" >/dev/null \
