@@ -670,10 +670,16 @@ de processus, EDR) : inévitables, et décrites dans le dossier d'innocuité.
 \end{description}
 
 \begin{attention}
-Ce que KAPE prend sans que \wac{} le prenne, ce sont surtout des fichiers
-d'applications dans les profils (chapitre~\ref{chap:prelevement}). Ils ne
-correspondent à aucun artefact que \wac{} décode : leur intérêt dépend de
-l'enquête.
+Depuis la 5.0.0, \wac{} prend aussi les traces d'applications : une table de
+produits (administration à distance, antivirus, messageries, stockage en
+ligne, transfert de fichiers, VPN, virtualisation, journaux de serveur), dont
+la plupart des dossiers viennent des cibles d'applications de KAPE, au-delà de
+\texttt{KapeTriage}. KAPE copie ces fichiers ; \wac{} les copie et les
+convertit : un journal ligne à ligne et daté, XML, JSON et INI en structure,
+les secrets écartés. Deux écarts voulus : \wac{} ne prend jamais une clé
+privée SSH, que KAPE prend, et laisse coupés par défaut les vidages de
+plantage et le cache des documents Office. La comparaison mesurée ci-dessus,
+du 29 octobre 2026, est antérieure : elle n'a pas été refaite avec ces cibles.
 \end{attention}
 
 % ============================================================ 7

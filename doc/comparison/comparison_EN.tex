@@ -645,9 +645,15 @@ the harmlessness file.
 \end{description}
 
 \begin{attention}
-What KAPE takes and \wac{} does not is mostly application files in the
-profiles (chapter~\ref{chap:taken}). They match no artefact \wac{}
-decodes: their worth depends on the investigation.
+Since 5.0.0, \wac{} also takes the applications' traces: a table of products
+(remote administration, antivirus, messaging, online storage, file transfer,
+VPN, virtualisation, server logs), most of whose folders come from KAPE's
+application targets, beyond \texttt{KapeTriage}. KAPE copies these files;
+\wac{} copies and converts them: a log line by line and dated, XML, JSON and
+INI as their structure, secrets left out. Two differences on purpose: \wac{}
+never takes an SSH private key, which KAPE takes, and leaves crash dumps and
+the Office document cache off by default. The measured comparison above, of
+29 October 2026, came before: it was not repeated with these targets.
 \end{attention}
 
 % ============================================================ 7
