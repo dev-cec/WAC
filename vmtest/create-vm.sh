@@ -73,7 +73,7 @@ PROFILE="${1:-win11}"
 case "$PROFILE" in
   win11)
     DOM="${DOM:-win11-test}"; OSINFO=win11; MEMORY=6144
-    ISO_WIN="${ISO_WIN:-$HOME/Téléchargements/Win11_25H2_French_x64_v2.iso}"
+    ISO_WIN="${ISO_WIN:-$HERE/tools/isos/Windows11_Client_x64_fr-fr_26300_9457.iso}"
     IMAGE='<Key>/IMAGE/NAME</Key><Value>Windows 11 Pro</Value>'; KEY=VK7JG-NPHTM-C97JM-9MPGT-3V66T
     MEDIA_LANGUAGE=fr-FR; GA_DRIVERS=""; OOBE_ENTER=0; BIOS=0; OOBE7=0; ARCH=amd64; CPU=host-passthrough; MACHINE=q35
     ISO_VIRTIO="${ISO_VIRTIO:-$VMS/virtio-win.iso}"

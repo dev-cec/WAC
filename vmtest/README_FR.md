@@ -183,7 +183,7 @@ trouvé : c'est ce qui empêche la régression.
 ## Utilisation
 ```bash
 # Créer la VM (une fois, ~15-25 min, zéro interaction)
-ISO_WIN=~/Téléchargements/Win11_25H2_French_x64_v2.iso ./create-vm.sh
+./create-vm.sh                   # ISO de Windows 11 : tools/isos/Windows11_Client_x64_fr-fr_26300_9457.iso, ou ISO_WIN=…
 
 # Tester WAC (à chaque itération de code)
 ./run-wac-test.sh --build        # rebuild + test complet

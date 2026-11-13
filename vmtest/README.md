@@ -176,7 +176,7 @@ prevents regressions.
 ## Usage
 ```bash
 # Create the VM (once, ~15-25 min, no interaction)
-ISO_WIN=~/Downloads/Win11_25H2_French_x64_v2.iso ./create-vm.sh
+./create-vm.sh                   # Windows 11 ISO: tools/isos/Windows11_Client_x64_fr-fr_26300_9457.iso, or ISO_WIN=…
 
 # Test WAC (at every code iteration)
 ./run-wac-test.sh --build        # rebuild + full test
