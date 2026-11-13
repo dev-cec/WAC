@@ -4235,7 +4235,8 @@ def check_server_roles(folder):
     through its own tools while it runs (server-roles-witness.ps1): DNS zones,
     records of the witness zone, forwarder and the plug-in value; DHCP scopes,
     leases and callout value, and dhcp.mdb's rows read by dissect.esedb, written
-    independently of WAC's ESE reader; Hyper-V machines, their names and disks.
+    independently of WAC's ESE reader; Hyper-V machines, their names and disks;
+    a certification authority's database, where CertSvc's configuration puts it.
     A role the machine does not hold is skipped, without a failure."""
     path = os.path.join(folder, "reference", "server-roles.json")
     if not os.path.exists(path):
@@ -4305,6 +4306,16 @@ def check_server_roles(folder):
         with open(listing, encoding="utf-8-sig", errors="replace") as f:
             taken = "\\lserver\\tlslic.edb" in f.read().lower()
         report(taken, "exhibits: TLSLic.edb of the licensing server", "exhibits: TLSLic.edb of the licensing server absent")
+
+    # A certification authority (server_logs, certificate_authority): its database
+    # taken and listed, not converted, where CertSvc's configuration puts it.
+    if reference.get("CertificationAuthorityDatabase") and not switched_off(folder, "server_logs.json"):
+        database = reference["CertificationAuthorityDatabase"].lower()
+        rows = [r for r in (load(folder, "server_logs.json") or []) if str(r.get("File", "")).lower() == database]
+        report(len(rows) == 1 and rows[0].get("Product") == "Certification authority" and rows[0].get("Converted") is False
+               and "database" in str(rows[0].get("Reason", "")),
+               f"server_logs.json: the certification authority's database ({reference['CertificationAuthorityDatabase']}) taken, listed, not converted",
+               f"server_logs.json: the certification authority's database not as expected: {rows[:1]}")
 
     machines_reference = as_list(reference.get("HyperVMachines"))
     if machines_reference:

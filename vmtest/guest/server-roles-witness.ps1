@@ -61,6 +61,11 @@ if (Get-Service vmms -ErrorAction SilentlyContinue) {
 
 # The Remote Desktop licensing server's database, taken raw.
 $reference.RdsLicensingDatabase = Test-Path 'C:\Windows\System32\lserver\TLSLic.edb'
+# A certification authority: its database where CertSvc's configuration puts it.
+$ca = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\CertSvc\Configuration' -ErrorAction SilentlyContinue
+if ($ca -and $ca.Active -and $ca.DBDirectory) {
+    $reference.CertificationAuthorityDatabase = Join-Path $ca.DBDirectory "$($ca.Active).edb"
+}
 
 $file = Join-Path $Out 'server-roles-reference.json'
 if (Get-Command ConvertTo-Json -ErrorAction SilentlyContinue) {

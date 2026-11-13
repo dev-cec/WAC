@@ -387,7 +387,7 @@ fi
 # zone, a scope and lease, a virtual machine, and what each role says of them
 # through its own tools — reference/server-roles.json, which check-json.py
 # confronts with the role's files.
-if wants dns_server dhcp_server hyperv; then
+if wants dns_server dhcp_server hyperv server_logs; then
   put_guest_script server-roles-witness.ps1
   if $QGA run --timeout 600 -- powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$VMDIR\\server-roles-witness.ps1" -Out "$VMDIR" >/dev/null 2>&1; then
     $QGA read "$VMDIR\\server-roles-reference.json" "$OUTPUT/reference/server-roles.json" >/dev/null \
