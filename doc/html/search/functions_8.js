@@ -20,8 +20,9 @@ var searchData=
   ['iso8601utctofiletime_17',['iso8601UtcToFiletime',['../tools_8cpp.html#ad48ff1f0177182c63a18c27fae85c405',1,'iso8601UtcToFiletime(const std::wstring &amp;text, FILETIME &amp;filetime):&#160;tools.cpp'],['../tools_8h.html#ad48ff1f0177182c63a18c27fae85c405',1,'iso8601UtcToFiletime(const std::wstring &amp;text, FILETIME &amp;filetime):&#160;tools.cpp']]],
   ['isopen_18',['isOpen',['../classFileVolumeSource.html#a352eda4ae1523020d5849cdbdd520c15',1,'FileVolumeSource::isOpen()'],['../classPeResource.html#a81eabe906502ed86cc1f205ceab298c6',1,'PeResource::isOpen()'],['../classJsonArrayWriter.html#a399be161f168993211566f1b45e55f9c',1,'JsonArrayWriter::isOpen()']]],
   ['isoutputfoldername_19',['isOutputFolderName',['../tools_8cpp.html#ab46321ecb3e6f33f6a4351d808fca517',1,'isOutputFolderName(const std::wstring &amp;name):&#160;tools.cpp'],['../tools_8h.html#ab46321ecb3e6f33f6a4351d808fca517',1,'isOutputFolderName(const std::wstring &amp;name):&#160;tools.cpp']]],
-  ['ispe_20',['isPe',['../classPeAnalyser.html#a53b7dd7c59be097bb2aef804e2e3932f',1,'PeAnalyser']]],
-  ['ispowershellprofile_21',['isPowerShellProfile',['../powershell__profiles_8cpp.html#a7a9afd8beae90eabb29cc658ceadcdd9',1,'isPowerShellProfile(const std::wstring &amp;name):&#160;powershell_profiles.cpp'],['../powershell__profiles_8h.html#a7a9afd8beae90eabb29cc658ceadcdd9',1,'isPowerShellProfile(const std::wstring &amp;name):&#160;powershell_profiles.cpp']]],
-  ['isshownname_22',['isShownName',['../structMftEntry.html#a9b340e57676f7aee947a3ba78cc55bac',1,'MftEntry']]],
-  ['items_23',['items',['../classWevtMetadata.html#a16d0b998d5b64f529f52dc79af0f2c75',1,'WevtMetadata']]]
+  ['ispasswordvalue_20',['isPasswordValue',['../application__traces_8cpp.html#ae7d8cd6e65abaff4e285883573071d99',1,'isPasswordValue(const std::wstring &amp;name):&#160;application_traces.cpp'],['../application__traces_8h.html#ae7d8cd6e65abaff4e285883573071d99',1,'isPasswordValue(const std::wstring &amp;name):&#160;application_traces.cpp']]],
+  ['ispe_21',['isPe',['../classPeAnalyser.html#a53b7dd7c59be097bb2aef804e2e3932f',1,'PeAnalyser']]],
+  ['ispowershellprofile_22',['isPowerShellProfile',['../powershell__profiles_8cpp.html#a7a9afd8beae90eabb29cc658ceadcdd9',1,'isPowerShellProfile(const std::wstring &amp;name):&#160;powershell_profiles.cpp'],['../powershell__profiles_8h.html#a7a9afd8beae90eabb29cc658ceadcdd9',1,'isPowerShellProfile(const std::wstring &amp;name):&#160;powershell_profiles.cpp']]],
+  ['isshownname_23',['isShownName',['../structMftEntry.html#a9b340e57676f7aee947a3ba78cc55bac',1,'MftEntry']]],
+  ['items_24',['items',['../classWevtMetadata.html#a16d0b998d5b64f529f52dc79af0f2c75',1,'WevtMetadata']]]
 ];

@@ -18,5 +18,6 @@ var searchData=
   ['windowsversion_15',['WindowsVersion',['../structWindowsVersion.html',1,'']]],
   ['wmipersistence_16',['WmiPersistence',['../classWmiPersistence.html',1,'']]],
   ['wmisubscriptionobject_17',['WmiSubscriptionObject',['../structWmiSubscriptionObject.html',1,'']]],
-  ['wordwheelqueries_18',['WordWheelQueries',['../classWordWheelQueries.html',1,'']]]
+  ['wordwheelqueries_18',['WordWheelQueries',['../classWordWheelQueries.html',1,'']]],
+  ['writtentime_19',['WrittenTime',['../structWrittenTime.html',1,'']]]
 ];

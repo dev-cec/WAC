@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;4.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -117,10 +117,10 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a46b2045d21edab079255e569b7c25a5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">last write of the profile's key  <br /></td></tr>
 <tr class="memitem:a06dd6743a201cb8ec2fff959dbfbff20" id="r_a06dd6743a201cb8ec2fff959dbfbff20"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::pair&lt; std::wstring, <a class="el" href="classJson.html">Json</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a06dd6743a201cb8ec2fff959dbfbff20">values</a></td></tr>
 <tr class="memdesc:a06dd6743a201cb8ec2fff959dbfbff20"><td class="mdescLeft">&#160;</td><td class="mdescRight">the profile's values but its dates (ProfileName, Category, NameType…)  <br /></td></tr>
-<tr class="memitem:a479731cea3791743c10e2a1b9d23e38c" id="r_a479731cea3791743c10e2a1b9d23e38c"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a479731cea3791743c10e2a1b9d23e38c">createdUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:a479731cea3791743c10e2a1b9d23e38c"><td class="mdescLeft">&#160;</td><td class="mdescRight">DateCreated, a local SYSTEMTIME, converted.  <br /></td></tr>
-<tr class="memitem:a78e17a85a253156567e10ffe1d3d09ca" id="r_a78e17a85a253156567e10ffe1d3d09ca"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a78e17a85a253156567e10ffe1d3d09ca">lastConnectedUtc</a> = { 0 }</td></tr>
-<tr class="memdesc:a78e17a85a253156567e10ffe1d3d09ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">DateLastConnected, idem.  <br /></td></tr>
+<tr class="memitem:a0c0727dc43a4589be79767a35a1216dd" id="r_a0c0727dc43a4589be79767a35a1216dd"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0c0727dc43a4589be79767a35a1216dd">createdLocal</a> = { 0 }</td></tr>
+<tr class="memdesc:a0c0727dc43a4589be79767a35a1216dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">DateCreated, a local SYSTEMTIME, converted at output (addLocalDate).  <br /></td></tr>
+<tr class="memitem:ad029cf37377631b2d71bfc38e6e009f0" id="r_ad029cf37377631b2d71bfc38e6e009f0"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad029cf37377631b2d71bfc38e6e009f0">lastConnectedLocal</a> = { 0 }</td></tr>
+<tr class="memdesc:ad029cf37377631b2d71bfc38e6e009f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">DateLastConnected, idem.  <br /></td></tr>
 <tr class="memitem:a9c588df5f9c7d7d4999a22bfe07a2e4b" id="r_a9c588df5f9c7d7d4999a22bfe07a2e4b"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structKnownNetwork_1_1Signature.html">Signature</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9c588df5f9c7d7d4999a22bfe07a2e4b">signatures</a></td></tr>
 <tr class="memdesc:a9c588df5f9c7d7d4999a22bfe07a2e4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">the signatures pointing to this profile  <br /></td></tr>
 </table>
@@ -146,30 +146,30 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
-<a id="a479731cea3791743c10e2a1b9d23e38c" name="a479731cea3791743c10e2a1b9d23e38c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a479731cea3791743c10e2a1b9d23e38c">&#9670;&#160;</a></span>createdUtc</h2>
+<a id="a0c0727dc43a4589be79767a35a1216dd" name="a0c0727dc43a4589be79767a35a1216dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0c0727dc43a4589be79767a35a1216dd">&#9670;&#160;</a></span>createdLocal</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">FILETIME KnownNetwork::createdUtc = { 0 }</td>
+          <td class="memname">FILETIME KnownNetwork::createdLocal = { 0 }</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>DateCreated, a local SYSTEMTIME, converted. </p>
+<p>DateCreated, a local SYSTEMTIME, converted at output (addLocalDate). </p>
 
 </div>
 </div>
-<a id="a78e17a85a253156567e10ffe1d3d09ca" name="a78e17a85a253156567e10ffe1d3d09ca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a78e17a85a253156567e10ffe1d3d09ca">&#9670;&#160;</a></span>lastConnectedUtc</h2>
+<a id="ad029cf37377631b2d71bfc38e6e009f0" name="ad029cf37377631b2d71bfc38e6e009f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad029cf37377631b2d71bfc38e6e009f0">&#9670;&#160;</a></span>lastConnectedLocal</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">FILETIME KnownNetwork::lastConnectedUtc = { 0 }</td>
+          <td class="memname">FILETIME KnownNetwork::lastConnectedLocal = { 0 }</td>
         </tr>
       </table>
 </div><div class="memdoc">

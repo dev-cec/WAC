@@ -7,6 +7,7 @@ var structAppliConf =
     [ "_dump", "structAppliConf.html#ace615cfa782d49e40b9083dc7ce67ed2", null ],
     [ "_outputDir", "structAppliConf.html#ac6affafb9032a231ed3c74bcbbf9b74c", null ],
     [ "absentFromVersion", "structAppliConf.html#a65809c1f9c35ff1e788b96591faa8cca", null ],
+    [ "allUsersProfile", "structAppliConf.html#a99b993e667c60b863a724b063f3c26b1", null ],
     [ "ansiCodePage", "structAppliConf.html#a06bb5569569e4f33c4520d076995f35c", null ],
     [ "artefacts", "structAppliConf.html#aa236b490bd0b8e91fef9833629da8ade", null ],
     [ "binary", "structAppliConf.html#ade184923cc7733b8350179aa9af74ab3", null ],
@@ -28,6 +29,7 @@ var structAppliConf =
     [ "systemDrive", "structAppliConf.html#a5f3076de7f30505010ae57b166e615e6", null ],
     [ "threads", "structAppliConf.html#a0f3dbf985286e179c8444dc5bc00a51a", null ],
     [ "timeZone", "structAppliConf.html#a5e4e7e6aee66141b1eb0ea2fea6c8eba", null ],
+    [ "traceProducts", "structAppliConf.html#a4767fae9c0f49594fbabee079c247075", null ],
     [ "undecodedOnVersion", "structAppliConf.html#a9487dcc12dee08b84f0fbcfd8414cc79", null ],
     [ "webServerSettings", "structAppliConf.html#aebb09c9cd553516c92cc8009ade4de10", null ]
 ];

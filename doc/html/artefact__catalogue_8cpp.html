@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;4.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -124,7 +124,8 @@ Functions</h2></td></tr>
 <tr class="memitem:ac7cfec1945464a26ae2aa849bb6db7b7" id="r_ac7cfec1945464a26ae2aa849bb6db7b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPieceFormat.html">PieceFormat</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac7cfec1945464a26ae2aa849bb6db7b7">pieceFormat</a> (const std::string &amp;key, unsigned signature, const <a class="el" href="structWindowsVersion.html">WindowsVersion</a> &amp;version)</td></tr>
 <tr class="memitem:a9c35fe5e9f2161332cd069d4a5b107f0" id="r_a9c35fe5e9f2161332cd069d4a5b107f0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9c35fe5e9f2161332cd069d4a5b107f0">undecodedOn</a> (const std::string &amp;key, const <a class="el" href="structWindowsVersion.html">WindowsVersion</a> &amp;version)</td></tr>
 <tr class="memitem:ab257b7d0a138639e50cc3a6c5b9a2841" id="r_ab257b7d0a138639e50cc3a6c5b9a2841"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structArtefactForm.html">ArtefactForm</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab257b7d0a138639e50cc3a6c5b9a2841">formOf</a> (const <a class="el" href="structArtefactEntry.html">ArtefactEntry</a> &amp;entry, const <a class="el" href="structWindowsVersion.html">WindowsVersion</a> &amp;version)</td></tr>
-<tr class="memitem:ad90fcf1af9a5772249bc1e5b909eeb5a" id="r_ad90fcf1af9a5772249bc1e5b909eeb5a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad90fcf1af9a5772249bc1e5b909eeb5a">examinedFolderLayout</a> (const std::wstring &amp;path, const <a class="el" href="structWindowsVersion.html">WindowsVersion</a> &amp;version, const std::vector&lt; std::wstring &gt; &amp;profileRoots)</td></tr>
+<tr class="memitem:a8a097793699812c4f922a25899b7dde4" id="r_a8a097793699812c4f922a25899b7dde4"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8a097793699812c4f922a25899b7dde4">examinedFolderLayout</a> (const std::wstring &amp;path, const <a class="el" href="structWindowsVersion.html">WindowsVersion</a> &amp;version, const std::vector&lt; std::wstring &gt; &amp;profileRoots, const std::wstring &amp;allUsers)</td></tr>
+<tr class="memitem:a645b8d5ad788ef9e8d3f35b59ed0c94f" id="r_a645b8d5ad788ef9e8d3f35b59ed0c94f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a645b8d5ad788ef9e8d3f35b59ed0c94f">xpFolderLayout</a> (const std::wstring &amp;path, const std::vector&lt; std::wstring &gt; &amp;profileRoots, const std::wstring &amp;allUsers)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The table of the artefacts by version of Windows (see <a class="el" href="artefact__catalogue_8h.html" title="THE table of the artefacts by version of Windows: where each one exists, where it lies and in which f...">artefact_catalogue.h</a>). </p>
@@ -247,8 +248,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ad90fcf1af9a5772249bc1e5b909eeb5a" name="ad90fcf1af9a5772249bc1e5b909eeb5a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad90fcf1af9a5772249bc1e5b909eeb5a">&#9670;&#160;</a></span>examinedFolderLayout()</h2>
+<a id="a8a097793699812c4f922a25899b7dde4" name="a8a097793699812c4f922a25899b7dde4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8a097793699812c4f922a25899b7dde4">&#9670;&#160;</a></span>examinedFolderLayout()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -266,18 +267,24 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>profileRoots</em></span>&#160;)</td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>profileRoots</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>allUsers</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>A path written in the folder layout of Windows Vista and later, as it lies on the examined version.</p>
 <p>WHY. Every collector names its folders as Vista laid them out (<span class="tt">&lt;profile&gt;\\AppData\\Local\\…</span>, <span class="tt">\\ProgramData\\…</span>). Windows XP and Server 2003 keep the same data elsewhere: <span class="tt">Local Settings\\Application
 Data</span>, <span class="tt">Application Data</span>, <span class="tt">Recent</span>, <span class="tt">My Documents</span>, and the shared folders in <span class="tt">All <a class="el" href="structUsers.html">Users</a></span> next to the profiles. Translated here, in one place, for the collection and the conversion alike, rather than by each collector.</p>
-<p>A path under a profile is translated after that profile's folder; a path under <span class="tt">\\ProgramData</span> goes to <span class="tt">All <a class="el" href="structUsers.html">Users</a></span>, next to the first profile (the profiles folder of XP), or under <span class="tt">\\Documents and Settings</span> without one. From Vista on, or for a build not read (0), the path is returned as is. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>A path under a profile is translated after that profile's folder; a path under <span class="tt">\\ProgramData</span> goes to the machine's All <a class="el" href="structUsers.html">Users</a> folder, which its ProfileList names (ProfilesDirectory and AllUsersProfile). Deduced from the first profile before, it was wrong on Server 2003: the system's profile comes first, under <span class="tt">Windows\\system32\\config</span>. From Vista on, or for a build not read (0), the path is returned as is. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">path</td><td>absolute, with its letter or relative to the system volume </td></tr>
     <tr><td class="paramname">version</td><td>the examined Windows </td></tr>
     <tr><td class="paramname">profileRoots</td><td>the examined machine's profile folders, absolute </td></tr>
+    <tr><td class="paramname">allUsers</td><td>its All <a class="el" href="structUsers.html">Users</a> folder, with or without its letter </td></tr>
   </table>
   </dd>
 </dl>
@@ -474,6 +481,41 @@ Data</span>, <span class="tt">Application Data</span>, <span class="tt">Recent</
 </div><div class="memdoc">
 
 <p>The releases known, oldest first within clients then within servers. </p>
+
+</div>
+</div>
+<a id="a645b8d5ad788ef9e8d3f35b59ed0c94f" name="a645b8d5ad788ef9e8d3f35b59ed0c94f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a645b8d5ad788ef9e8d3f35b59ed0c94f">&#9670;&#160;</a></span>xpFolderLayout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring xpFolderLayout </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>path</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>profileRoots</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>allUsers</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The translation examinedFolderLayout applies before Vista, whatever the version: where Windows XP and Server 2003 keep a folder Vista lays out as given. Also used to recognise, at the conversion, a file collected in that layout (traceOwnerOf). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>absolute, with its letter or relative to the system volume </td></tr>
+    <tr><td class="paramname">profileRoots</td><td>the profile folders the path may lie in, absolute </td></tr>
+    <tr><td class="paramname">allUsers</td><td>the All <a class="el" href="structUsers.html">Users</a> folder, with or without its letter; a component may be a pattern (traceOwnerOf: <span class="tt">\\*\\All <a class="el" href="structUsers.html">Users</a></span>) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the path in the layout of XP, or as given when none applies </dd></dl>
 
 </div>
 </div>

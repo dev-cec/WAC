@@ -1,6 +1,8 @@
 var tools_8cpp =
 [
+    [ "addAlsoPossibleUtc", "tools_8cpp.html#a8d152e8031f4adef093ce90b4706fc56", null ],
     [ "addDate", "tools_8cpp.html#a14a494c66a3bc423ab60073dbcfd759a", null ],
+    [ "addLocalDate", "tools_8cpp.html#aa622860a017912d3fec6c6c491508e46", null ],
     [ "addUnsupportedFormat", "tools_8cpp.html#a5bf602921c25aac42031158e7f7c9775", null ],
     [ "addUtcDate", "tools_8cpp.html#ad8ef84e34cbf1dc51f28bb5466ab1fc4", null ],
     [ "binaryPath", "tools_8cpp.html#a30395273a71242bd8f62d969fc250085", null ],
@@ -36,7 +38,6 @@ var tools_8cpp =
     [ "loadSuspectAnsiCodePage", "tools_8cpp.html#a39f06ea897c5d9cfa9c5db5deb82bab0", null ],
     [ "loadSuspectTimeZone", "tools_8cpp.html#a33256dfbfef8ac9511a35835a5e5b29d", null ],
     [ "loadSystemDrive", "tools_8cpp.html#a64af952b26c2e734b7998bd37173b3dc", null ],
-    [ "localTimeToIso8601Utc", "tools_8cpp.html#af19df3a3f511ff3abd405ff4f64942ff", null ],
     [ "log", "tools_8cpp.html#a3fd0bef5fa02565cb2da3f612cf978b9", null ],
     [ "log", "tools_8cpp.html#aa2fb1cf5cd8710778ba5bad978bba540", null ],
     [ "luid_to_wstring", "tools_8cpp.html#aeeb4de502d09b004810269bf092a2686", null ],
@@ -70,7 +71,9 @@ var tools_8cpp =
     [ "sourceNotFound", "tools_8cpp.html#a2b9593ceb0de01fb209a559d612c726b", null ],
     [ "splitLines", "tools_8cpp.html#a45f9fd820885488926e162c9f91a8ec8", null ],
     [ "stepTimes", "tools_8cpp.html#a5fd368bea158e9a02d8954a0f8890b40", null ],
+    [ "suspectBiasAtLocal", "tools_8cpp.html#ae91f6e8ca8c6481585479ede27cd668d", null ],
     [ "suspectLocalToUtc", "tools_8cpp.html#a920d2d59405bf35238ca8e289cc8d85f", null ],
+    [ "suspectZoneRules", "tools_8cpp.html#a81fcb7b54403b84bc2ab7e8849934008", null ],
     [ "tab", "tools_8cpp.html#a238702c13cab5b487c46812cd980e7d6", null ],
     [ "textToSid", "tools_8cpp.html#ac40c001dc8ff1a35d94a53e88ff114a0", null ],
     [ "timeToIso8601Local", "tools_8cpp.html#aa0312e6483cd343a68056ad75af47ad1", null ],

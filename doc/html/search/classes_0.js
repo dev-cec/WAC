@@ -8,10 +8,12 @@ var searchData=
   ['amcache_5',['Amcache',['../structAmcache.html',1,'']]],
   ['amcacheentry_6',['AmcacheEntry',['../structAmcacheEntry.html',1,'']]],
   ['api_7',['Api',['../structHttpClient_1_1Api.html',1,'HttpClient']]],
-  ['appliconf_8',['AppliConf',['../structAppliConf.html',1,'']]],
-  ['archivefile_9',['ArchiveFile',['../structArchiveFile.html',1,'']]],
-  ['archivefilecontent_10',['ArchiveFileContent',['../structArchiveFileContent.html',1,'']]],
-  ['artefactentry_11',['ArtefactEntry',['../structArtefactEntry.html',1,'']]],
-  ['artefactform_12',['ArtefactForm',['../structArtefactForm.html',1,'']]],
-  ['automaticdestination_13',['AutomaticDestination',['../structAutomaticDestination.html',1,'']]]
+  ['applicationregistry_8',['ApplicationRegistry',['../classApplicationRegistry.html',1,'']]],
+  ['applicationtracefiles_9',['ApplicationTraceFiles',['../classApplicationTraceFiles.html',1,'']]],
+  ['appliconf_10',['AppliConf',['../structAppliConf.html',1,'']]],
+  ['archivefile_11',['ArchiveFile',['../structArchiveFile.html',1,'']]],
+  ['archivefilecontent_12',['ArchiveFileContent',['../structArchiveFileContent.html',1,'']]],
+  ['artefactentry_13',['ArtefactEntry',['../structArtefactEntry.html',1,'']]],
+  ['artefactform_14',['ArtefactForm',['../structArtefactForm.html',1,'']]],
+  ['automaticdestination_15',['AutomaticDestination',['../structAutomaticDestination.html',1,'']]]
 ];

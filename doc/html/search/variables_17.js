@@ -13,5 +13,6 @@ var searchData=
   ['workingdir_10',['workingDir',['../structAction.html#aad978d105e67835d43aa85d9c4ef9177',1,'Action']]],
   ['workingdirectory_11',['workingDirectory',['../structRecentDoc.html#acd48e8314380f759b7b471c3d59294c7',1,'RecentDoc']]],
   ['workingfile_12',['workingFile',['../structStoredExhibit.html#ab6f0edb9f7591a2b2b84efecc7686985',1,'StoredExhibit']]],
-  ['writtenutc_13',['writtenUtc',['../structEvtxRecord.html#a127107950963dc6fe6e75113919c3180',1,'EvtxRecord']]]
+  ['writesutc_13',['writesUtc',['../structTraceProduct.html#aa4c61319381412612feb2be29932a13a',1,'TraceProduct']]],
+  ['writtenutc_14',['writtenUtc',['../structEvtxRecord.html#a127107950963dc6fe6e75113919c3180',1,'EvtxRecord']]]
 ];

@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;4.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -104,6 +104,8 @@ $(function(){initNavTree('time__zone_8h.html','',''); });
 <div class="textblock"><code>#include &lt;windows.h&gt;</code><br />
 <code>#include &lt;cstdint&gt;</code><br />
 <code>#include &lt;map&gt;</code><br />
+<code>#include &lt;string&gt;</code><br />
+<code>#include &lt;vector&gt;</code><br />
 </div>
 <p><a href="time__zone_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -113,6 +115,13 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">One rule: the REG_TZI_FORMAT structure of the registry.  <a href="structTimeZoneRule.html#details">More...</a><br /></td></tr>
 <tr class="memitem:TimeZoneRules" id="r_TimeZoneRules"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTimeZoneRules.html">TimeZoneRules</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The rules of a time zone over the years.  <a href="structTimeZoneRules.html#details">More...</a><br /></td></tr>
+<tr class="memitem:LoggedBias" id="r_LoggedBias"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLoggedBias.html">LoggedBias</a></td></tr>
+<tr class="memitem:UncertainZone" id="r_UncertainZone"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUncertainZone.html">UncertainZone</a></td></tr>
+<tr class="memitem:TimeZoneHistory" id="r_TimeZoneHistory"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a></td></tr>
+<tr class="memitem:ZoneObservation" id="r_ZoneObservation"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structZoneObservation.html">ZoneObservation</a></td></tr>
+<tr class="memitem:LocalBias" id="r_LocalBias"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLocalBias.html">LocalBias</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The offset of a local time, and where it comes from.  <a href="structLocalBias.html#details">More...</a><br /></td></tr>
+<tr class="memitem:LivedTwice" id="r_LivedTwice"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLivedTwice.html">LivedTwice</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -120,12 +129,17 @@ Functions</h2></td></tr>
 <tr class="memitem:a0c7efcfaefffd17056736b1365e3283a" id="r_a0c7efcfaefffd17056736b1365e3283a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0c7efcfaefffd17056736b1365e3283a">parseTimeZoneInformation</a> (int32_t bias, int32_t standardBias, int32_t daylightBias, const BYTE(&amp;standardStart)[16], const BYTE(&amp;daylightStart)[16], <a class="el" href="structTimeZoneRule.html">TimeZoneRule</a> &amp;rule)</td></tr>
 <tr class="memitem:a384b6bf4432ee322038cd013600573fe" id="r_a384b6bf4432ee322038cd013600573fe"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a384b6bf4432ee322038cd013600573fe">biasAtUtc</a> (const <a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &amp;rules, long long utc100ns)</td></tr>
 <tr class="memitem:aee9e944ba7df3c29cdbf6a0ec01218b6" id="r_aee9e944ba7df3c29cdbf6a0ec01218b6"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aee9e944ba7df3c29cdbf6a0ec01218b6">biasAtLocal</a> (const <a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &amp;rules, long long local100ns)</td></tr>
+<tr class="memitem:a839e7ecf1b0277cefa6f6afb601e26bb" id="r_a839e7ecf1b0277cefa6f6afb601e26bb"><td class="memItemLeft" align="right" valign="top">std::vector&lt; long &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a839e7ecf1b0277cefa6f6afb601e26bb">otherBiasesAtLocal</a> (const <a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &amp;rules, long long local100ns)</td></tr>
+<tr class="memitem:a24d55b1065da78da818b43e5bf6362af" id="r_a24d55b1065da78da818b43e5bf6362af"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a24d55b1065da78da818b43e5bf6362af">timeZoneHistoryFromObservations</a> (const std::vector&lt; <a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &gt; &amp;zones, const std::vector&lt; std::wstring &gt; &amp;zoneNames, int currentZone, std::vector&lt; <a class="el" href="structZoneObservation.html">ZoneObservation</a> &gt; observations, long long endUtc100ns)</td></tr>
+<tr class="memitem:a9d6cc3c72703cb6dea5adfb2f01261f9" id="r_a9d6cc3c72703cb6dea5adfb2f01261f9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9d6cc3c72703cb6dea5adfb2f01261f9">timeZoneHistoryFrom</a> (std::vector&lt; <a class="el" href="structLoggedBias.html">LoggedBias</a> &gt; logged, long long endUtc100ns)</td></tr>
+<tr class="memitem:a7e9f14c01b9eb7bcd94c69640a85df0a" id="r_a7e9f14c01b9eb7bcd94c69640a85df0a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structLocalBias.html">LocalBias</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7e9f14c01b9eb7bcd94c69640a85df0a">biasAtLocalLogged</a> (const <a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &amp;rules, const <a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a> &amp;history, long long local100ns)</td></tr>
+<tr class="memitem:ae38b199acdfa3bd7942d8360f5d241a5" id="r_ae38b199acdfa3bd7942d8360f5d241a5"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structLivedTwice.html">LivedTwice</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae38b199acdfa3bd7942d8360f5d241a5">localTimesLivedTwice</a> (const <a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a> &amp;history, size_t limit=10000)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The daylight saving rules of a Windows time zone, and the offset they give at a given instant — in UTC or in local time. </p>
 <p>WHY. A local date is only right with the offset in force AT THAT DATE. WAC applied to every date the offset of the collection day (ActiveTimeBias): collected in summer, a winter date came out one hour off in local time and labelled "+02:00" instead of "+01:00" — a well-formed, wrong value, and in the other direction (a local time stored by the artefact, converted to UTC) a wrong UTC instant.</p>
 <p>THE RULES, AS WINDOWS STORES THEM. A rule is the REG_TZI_FORMAT structure: the base offset, the standard and daylight adjustments, and the two transition dates, most often "the n-th &lt;weekday&gt; of &lt;month&gt; at &lt;time&gt;". Windows keeps one rule per year where the rules changed (the "Dynamic DST" key: the United States in 2007, Russia in 2011 and 2014...); a year before the first entry takes the first, after the last takes the last.</p>
-<p>SAME ANSWERS AS WINDOWS. biasAtUtc follows SystemTimeToTzSpecificLocalTimeEx and biasAtLocal TzSpecificLocalTimeToSystemTimeEx, including for the local hour that does not exist (spring) or occurs twice (autumn); checked on every time zone of Windows by <a class="el" href="system__conversions__test_8cpp.html" title="Confronts WAC&#39;s own conversions with the Windows functions they replaced, which WAC no longer imports...">system_conversions_test.cpp</a>.</p>
+<p>SAME ANSWERS AS WINDOWS. biasAtUtc follows SystemTimeToTzSpecificLocalTimeEx and biasAtLocal TzSpecificLocalTimeToSystemTimeEx, including for the local hour that does not exist (spring) or occurs twice (autumn); checked on every time zone of Windows by <a class="el" href="system__conversions__test_8cpp.html" title="Confronts WAC&#39;s own conversions with the Windows functions they replaced, which WAC no longer imports...">system_conversions_test.cpp</a>. Both readings of such an hour are said (otherBiasesAtLocal): Windows' own functions differ on the skipped one.</p>
 <p>The functions are pure: the rules come in as parameters, read from the suspect's hives by loadSuspectTimeZone (<a class="el" href="tools_8cpp.html" title="Implementation of the shared tools (see tools.h).">tools.cpp</a>). The bytes of a rule come from the examined machine and are hostile input: an impossible transition date (month 13, 6th week) makes the rule one without daylight saving time, never an out-of-range computation. </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
 <a id="aee9e944ba7df3c29cdbf6a0ec01218b6" name="aee9e944ba7df3c29cdbf6a0ec01218b6"></a>
@@ -157,6 +171,42 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a7e9f14c01b9eb7bcd94c69640a85df0a" name="a7e9f14c01b9eb7bcd94c69640a85df0a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e9f14c01b9eb7bcd94c69640a85df0a">&#9670;&#160;</a></span>biasAtLocalLogged()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structLocalBias.html">LocalBias</a> biasAtLocalLogged </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>rules</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>history</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long</td>          <td class="paramname"><span class="paramname"><em>local100ns</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The offset of a local time on the examined machine: the one in force WHEN it was written, as its System log shows it, else the current zone's rules (biasAtLocal).</p>
+<p>A local time L belongs to a stretch of the history when L + its offset falls within it. Several do (a clock set back: an hour lived twice): the smallest offset, its first occurrence, as Windows chooses in autumn — the others in otherBiasesMinutes, each a UTC instant as possible. None does: the rules' offset if the log shows it within a second of that instant (Windows logs a change a moment after making it); else, L within the log (a clock set forward: an hour skipped), the offset in force before the change, as Windows does in spring, the one after it in otherBiasesMinutes. L before the first offset logged, or after the end of the log: the rules. L read in an interval of <span class="tt">uncertain</span> — by its offset, or by the zone before or after it —: that interval, said. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">rules</td><td>the current zone's rules </td></tr>
+    <tr><td class="paramname">history</td><td>what the System log shows </td></tr>
+    <tr><td class="paramname">local100ns</td><td>the local time, in hundreds of nanoseconds since 1601 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the offset, and its source </dd></dl>
+
+</div>
+</div>
 <a id="a384b6bf4432ee322038cd013600573fe" name="a384b6bf4432ee322038cd013600573fe"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a384b6bf4432ee322038cd013600573fe">&#9670;&#160;</a></span>biasAtUtc()</h2>
 
@@ -183,6 +233,64 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the bias in minutes: local = UTC - bias </dd></dl>
+
+</div>
+</div>
+<a id="ae38b199acdfa3bd7942d8360f5d241a5" name="ae38b199acdfa3bd7942d8360f5d241a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae38b199acdfa3bd7942d8360f5d241a5">&#9670;&#160;</a></span>localTimesLivedTwice()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="structLivedTwice.html">LivedTwice</a> &gt; localTimesLivedTwice </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>history</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>limit</em></span><span class="paramdefsep"> = </span><span class="paramdefval">10000</span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The local times lived twice within the history (<a class="el" href="structLivedTwice.html">LivedTwice</a>), ascending by their first occurrence. Every time converted from local within one is ambiguous: the conversion says them all (conversion.json, SuspectTimeZone). Outside the history, the hour repeated each autumn by the rules is not listed — every year has one —, each time read there says it all the same. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">history</td><td>what the System log shows </td></tr>
+    <tr><td class="paramname">limit</td><td>at most this many returned: a forged log costs no more </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the intervals </dd></dl>
+
+</div>
+</div>
+<a id="a839e7ecf1b0277cefa6f6afb601e26bb" name="a839e7ecf1b0277cefa6f6afb601e26bb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a839e7ecf1b0277cefa6f6afb601e26bb">&#9670;&#160;</a></span>otherBiasesAtLocal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; long &gt; otherBiasesAtLocal </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>rules</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long</td>          <td class="paramname"><span class="paramname"><em>local100ns</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The other offsets a local wall-clock time has by the zone's rules: in the hour repeated in autumn, the second occurrence's (biasAtLocal gives the first); in the hour skipped in spring, never lived, the offset after the change (biasAtLocal gives the one before), which Windows' TzSpecificLocalTimeToSystemTime gives — each its own UTC instant, as possible. Empty for a time lived once. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">rules</td><td>the time zone's rules </td></tr>
+    <tr><td class="paramname">local100ns</td><td>the local time, in hundreds of nanoseconds since 1601 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the biases in minutes, ascending: UTC = local + bias </dd></dl>
 
 </div>
 </div>
@@ -273,6 +381,84 @@ of October at 00:00", and every date between the two was dated one hour off: cau
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>false if the value is not 44 bytes long, or carries an offset beyond ±24 hours (a forged value) </dd></dl>
+
+</div>
+</div>
+<a id="a9d6cc3c72703cb6dea5adfb2f01261f9" name="a9d6cc3c72703cb6dea5adfb2f01261f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d6cc3c72703cb6dea5adfb2f01261f9">&#9670;&#160;</a></span>timeZoneHistoryFrom()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a> timeZoneHistoryFrom </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structLoggedBias.html">LoggedBias</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>logged</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long</td>          <td class="paramname"><span class="paramname"><em>endUtc100ns</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Builds the history from the offsets read, in any order.</p>
+<p>THE CLOCK SET BACK. Taken in the order Windows wrote them (recordId), an offset dated before one written earlier is left out: its clock was wrong. Measured on Server 2025 during its installation: records dated 00:05:11Z between two of 08:05, the clock set 8 h back for two seconds — taken, the offset of 00:05 would have been the one of 08:05. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">logged</td><td>the offsets, as read </td></tr>
+    <tr><td class="paramname">endUtc100ns</td><td>the time of the last record of the log </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the history </dd></dl>
+
+</div>
+</div>
+<a id="a24d55b1065da78da818b43e5bf6362af" name="a24d55b1065da78da818b43e5bf6362af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a24d55b1065da78da818b43e5bf6362af">&#9670;&#160;</a></span>timeZoneHistoryFromObservations()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a> timeZoneHistoryFromObservations </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>zones</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::wstring &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>zoneNames</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>currentZone</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structZoneObservation.html">ZoneObservation</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>observations</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long long</td>          <td class="paramname"><span class="paramname"><em>endUtc100ns</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Builds the history from what a Windows before Windows 10 logs.</p>
+<p>Between two observations of the same zone, it was in force — two unnamed changes between them (one away, one back) leave the interval between those two unknown. A named change starts its zone at its instant. Between two observations of different zones, the change happened in between: at the unnamed change if a single one lies there (one within a second of a daylight saving transition of either zone is that transition, not a change of zone); otherwise its instant is unknown — the interval goes to <span class="tt">uncertain</span>, and the current zone's rules hold in it, never an invented instant (decision of the user, 2026-11-10). The end of the log observes the current zone. Each stretch takes its zone's rules: an offset at its start, one at each daylight saving transition within it. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">zones</td><td>the rules of each zone observed, read in the examined SOFTWARE hive </td></tr>
+    <tr><td class="paramname">zoneNames</td><td>the key name of each, written with its offsets </td></tr>
+    <tr><td class="paramname">currentZone</td><td>index of the current zone in <span class="tt">zones</span> </td></tr>
+    <tr><td class="paramname">observations</td><td>as read, in the order Windows wrote each log </td></tr>
+    <tr><td class="paramname">endUtc100ns</td><td>the time of the last record of the log </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the history </dd></dl>
 
 </div>
 </div>

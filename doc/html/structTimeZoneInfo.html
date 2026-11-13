@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;4.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -104,13 +104,15 @@ $(function(){initNavTree('structTimeZoneInfo.html','','structTimeZoneInfo-member
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ab51ca62115058208fd496d3b55c18e1b" id="r_ab51ca62115058208fd496d3b55c18e1b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab51ca62115058208fd496d3b55c18e1b">keyName</a></td></tr>
-<tr class="memdesc:ab51ca62115058208fd496d3b55c18e1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">TimeZoneKeyName, ex. "Romance Standard Time".  <br /></td></tr>
+<tr class="memitem:a13d48ddfb04ad5d4801ad2ee97bed4a8" id="r_a13d48ddfb04ad5d4801ad2ee97bed4a8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a13d48ddfb04ad5d4801ad2ee97bed4a8">keyNameFromStandardName</a> = false</td></tr>
+<tr class="memdesc:a13d48ddfb04ad5d4801ad2ee97bed4a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">keyName deduced from standardName (before Vista, no TimeZoneKeyName)  <br /></td></tr>
 <tr class="memitem:a8b8099a3f18d5f396f78e47d2381f940" id="r_a8b8099a3f18d5f396f78e47d2381f940"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8b8099a3f18d5f396f78e47d2381f940">standardName</a></td></tr>
 <tr class="memdesc:a8b8099a3f18d5f396f78e47d2381f940"><td class="mdescLeft">&#160;</td><td class="mdescRight">name in standard time  <br /></td></tr>
 <tr class="memitem:a4f41832e74d50853c6493d67ac026109" id="r_a4f41832e74d50853c6493d67ac026109"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4f41832e74d50853c6493d67ac026109">daylightName</a></td></tr>
 <tr class="memdesc:a4f41832e74d50853c6493d67ac026109"><td class="mdescLeft">&#160;</td><td class="mdescRight">name in daylight saving time  <br /></td></tr>
 <tr class="memitem:a8ab26ddcdec8b7be84e534e9b6e2fd72" id="r_a8ab26ddcdec8b7be84e534e9b6e2fd72"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structTimeZoneRules.html">TimeZoneRules</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8ab26ddcdec8b7be84e534e9b6e2fd72">rules</a></td></tr>
 <tr class="memdesc:a8ab26ddcdec8b7be84e534e9b6e2fd72"><td class="mdescLeft">&#160;</td><td class="mdescRight">daylight saving rules, year by year: the offset of EACH date  <br /></td></tr>
+<tr class="memitem:abb9a5ed1c096706b110c9b0a09b67675" id="r_abb9a5ed1c096706b110c9b0a09b67675"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abb9a5ed1c096706b110c9b0a09b67675">history</a></td></tr>
 <tr class="memitem:a9a9c4cd39d5cb5ea511c9ce5273d2b06" id="r_a9a9c4cd39d5cb5ea511c9ce5273d2b06"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9a9c4cd39d5cb5ea511c9ce5273d2b06">firstRuleYear</a> = 0</td></tr>
 <tr class="memdesc:a9a9c4cd39d5cb5ea511c9ce5273d2b06"><td class="mdescLeft">&#160;</td><td class="mdescRight">first year of the rules per year ("Dynamic DST"), 0 if none  <br /></td></tr>
 <tr class="memitem:a10d1eae997224b011962a03eba93351e" id="r_a10d1eae997224b011962a03eba93351e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a10d1eae997224b011962a03eba93351e">lastRuleYear</a> = 0</td></tr>
@@ -211,6 +213,21 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="abb9a5ed1c096706b110c9b0a09b67675" name="abb9a5ed1c096706b110c9b0a09b67675"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abb9a5ed1c096706b110c9b0a09b67675">&#9670;&#160;</a></span>history</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structTimeZoneHistory.html">TimeZoneHistory</a> TimeZoneInfo::history</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The offset in force at each instant the System log covers, the zone's changes included (<a class="el" href="time__zone_8h.html" title="The daylight saving rules of a Windows time zone, and the offset they give at a given instant — in UT...">time_zone.h</a>): loaded by loadSuspectTimeZoneHistory, in a conversion, from the working copy. Empty: the rules alone. </p>
+
+</div>
+</div>
 <a id="ab51ca62115058208fd496d3b55c18e1b" name="ab51ca62115058208fd496d3b55c18e1b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab51ca62115058208fd496d3b55c18e1b">&#9670;&#160;</a></span>keyName</h2>
 
@@ -222,8 +239,23 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>TimeZoneKeyName, ex. "Romance Standard Time" </p>
 
-<p>TimeZoneKeyName, ex. "Romance Standard Time". </p>
+</div>
+</div>
+<a id="a13d48ddfb04ad5d4801ad2ee97bed4a8" name="a13d48ddfb04ad5d4801ad2ee97bed4a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13d48ddfb04ad5d4801ad2ee97bed4a8">&#9670;&#160;</a></span>keyNameFromStandardName</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool TimeZoneInfo::keyNameFromStandardName = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>keyName deduced from standardName (before Vista, no TimeZoneKeyName) </p>
 
 </div>
 </div>

@@ -1,5 +1,6 @@
 var searchData=
 [
   ['zipextract_0',['ZipExtract',['../zip_8cpp.html#aefd0d975a415ed48637f59c63f26bc88',1,'ZipExtract(const std::vector&lt; uint8_t &gt; &amp;archive, std::vector&lt; ArchiveFile &gt; &amp;files, std::string &amp;reason):&#160;zip.cpp'],['../zip_8h.html#aefd0d975a415ed48637f59c63f26bc88',1,'ZipExtract(const std::vector&lt; uint8_t &gt; &amp;archive, std::vector&lt; ArchiveFile &gt; &amp;files, std::string &amp;reason):&#160;zip.cpp']]],
-  ['zonename_1',['zoneName',['../zone__identifiers_8cpp.html#a3817655b343d414831cee3261a15d88c',1,'zoneName(const std::wstring &amp;zoneId):&#160;zone_identifiers.cpp'],['../zone__identifiers_8h.html#a3817655b343d414831cee3261a15d88c',1,'zoneName(const std::wstring &amp;zoneId):&#160;zone_identifiers.cpp']]]
+  ['zoneinforceof_1',['zoneInForceOf',['../time__zone__history_8cpp.html#af5e258a5b47d9d3bd3a6778a96c8244a',1,'zoneInForceOf(const XmlNode &amp;event, long &amp;standardBias, std::wstring &amp;standardName):&#160;time_zone_history.cpp'],['../time__zone__history_8h.html#af5e258a5b47d9d3bd3a6778a96c8244a',1,'zoneInForceOf(const XmlNode &amp;event, long &amp;standardBias, std::wstring &amp;standardName):&#160;time_zone_history.cpp']]],
+  ['zonename_2',['zoneName',['../zone__identifiers_8cpp.html#a3817655b343d414831cee3261a15d88c',1,'zoneName(const std::wstring &amp;zoneId):&#160;zone_identifiers.cpp'],['../zone__identifiers_8h.html#a3817655b343d414831cee3261a15d88c',1,'zoneName(const std::wstring &amp;zoneId):&#160;zone_identifiers.cpp']]]
 ];

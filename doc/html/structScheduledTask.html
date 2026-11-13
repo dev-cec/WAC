@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;4.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -127,6 +127,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:aba2ef89d590f909740d4c868428c71c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">the same, as a boolean  <br /></td></tr>
 <tr class="memitem:a47dd4c9ec9b5445e6be00b23125f7cc0" id="r_a47dd4c9ec9b5445e6be00b23125f7cc0"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a47dd4c9ec9b5445e6be00b23125f7cc0">lastRunTimeUtc</a> = { 0 }</td></tr>
 <tr class="memdesc:a47dd4c9ec9b5445e6be00b23125f7cc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">last run, UTC, as DynamicInfo stores it  <br /></td></tr>
+<tr class="memitem:ade1364574801a8e182074e22573e86b9" id="r_ade1364574801a8e182074e22573e86b9"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ade1364574801a8e182074e22573e86b9">lastRunTimeLocal</a> = { 0 }</td></tr>
+<tr class="memdesc:ade1364574801a8e182074e22573e86b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Windows XP: the .job's last run, local as written, for a time lived twice (addAlsoPossibleUtc).  <br /></td></tr>
 <tr class="memitem:a837339193b357633061aeb518d500f2c" id="r_a837339193b357633061aeb518d500f2c"><td class="memItemLeft" align="right" valign="top">std::optional&lt; LONG &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a837339193b357633061aeb518d500f2c">lastTaskResult</a></td></tr>
 <tr class="memdesc:a837339193b357633061aeb518d500f2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">value the last run returned; none without a history (TaskCache, .job) — a 0 would read "succeeded"  <br /></td></tr>
 <tr class="memitem:ad856049ffc53b4f7562b0a9101d8a822" id="r_ad856049ffc53b4f7562b0a9101d8a822"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad856049ffc53b4f7562b0a9101d8a822">registrationDate</a></td></tr>
@@ -260,6 +262,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Windows XP: the scheduler's status in the .job (HasNotRun, Ready…). </p>
+
+</div>
+</div>
+<a id="ade1364574801a8e182074e22573e86b9" name="ade1364574801a8e182074e22573e86b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ade1364574801a8e182074e22573e86b9">&#9670;&#160;</a></span>lastRunTimeLocal</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILETIME ScheduledTask::lastRunTimeLocal = { 0 }</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Windows XP: the .job's last run, local as written, for a time lived twice (addAlsoPossibleUtc). </p>
 
 </div>
 </div>

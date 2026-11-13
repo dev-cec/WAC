@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;4.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -111,6 +111,7 @@ $(function(){initNavTree('main_8cpp.html','',''); });
 <code>#include &lt;fcntl.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="asciiart_8h_source.html">asciiart.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="time__zone__history_8h_source.html">time_zone_history.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="audit_8h_source.html">audit.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="raw__hive_8h_source.html">raw_hive.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="raw__collect_8h_source.html">raw_collect.h</a>&quot;</code><br />
@@ -157,6 +158,8 @@ $(function(){initNavTree('main_8cpp.html','',''); });
 <code>#include &quot;<a class="el" href="wmi__persistence_8h_source.html">wmi_persistence.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="srum_8h_source.html">srum.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="user__access__log_8h_source.html">user_access_log.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="application__registry_8h_source.html">application_registry.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="application__trace__files_8h_source.html">application_trace_files.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="bits__jobs_8h_source.html">bits_jobs.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="fat__volumes_8h_source.html">fat_volumes.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="boot__records_8h_source.html">boot_records.h</a>&quot;</code><br />
@@ -209,6 +212,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a4781944fa10e7364d4e7a8d3896ff994" id="r_a4781944fa10e7364d4e7a8d3896ff994"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4781944fa10e7364d4e7a8d3896ff994">installedPieceMissing</a> (const std::string &amp;key)</td></tr>
 <tr class="memitem:a9608061026fdc57178c24546b4396b82" id="r_a9608061026fdc57178c24546b4396b82"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9608061026fdc57178c24546b4396b82">applyArtefactCatalogue</a> ()</td></tr>
 <tr class="memitem:a28002ee20501e507122ae92d8c9e2432" id="r_a28002ee20501e507122ae92d8c9e2432"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a28002ee20501e507122ae92d8c9e2432">reportUnread</a> (const char *file, const std::wstring &amp;artefact, const wchar_t *key, HRESULT hresult)</td></tr>
+<tr class="memitem:aabfbf19b30714b4485e488517e9e7325" id="r_aabfbf19b30714b4485e488517e9e7325"><td class="memTemplParams" colspan="2">template&lt;class Collector&gt; </td></tr>
+<tr class="memitem:aabfbf19b30714b4485e488517e9e7325 template"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aabfbf19b30714b4485e488517e9e7325">convertArtefactWith</a> (Collector &amp;collector, bool wanted, std::initializer_list&lt; std::pair&lt; const char *, <a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> &gt; &gt; outputs, const wchar_t *key, <a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> step)</td></tr>
 <tr class="memitem:ab1c9f0135d4c94f0e81bd30b2a7c82c8" id="r_ab1c9f0135d4c94f0e81bd30b2a7c82c8"><td class="memTemplParams" colspan="2">template&lt;class Collector&gt; </td></tr>
 <tr class="memitem:ab1c9f0135d4c94f0e81bd30b2a7c82c8 template"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab1c9f0135d4c94f0e81bd30b2a7c82c8">convertArtefact</a> (bool wanted, std::initializer_list&lt; std::pair&lt; const char *, <a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> &gt; &gt; outputs, const wchar_t *key, <a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> step)</td></tr>
 <tr class="memitem:aebe9e6a50965dcb2bcecbc9fd1d7b30b" id="r_aebe9e6a50965dcb2bcecbc9fd1d7b30b"><td class="memTemplParams" colspan="2">template&lt;class Collector&gt; </td></tr>
@@ -227,6 +232,7 @@ Functions</h2></td></tr>
 <tr class="memitem:a77935dd9c527137a0547e653510b4b89" id="r_a77935dd9c527137a0547e653510b4b89"><td class="memTemplParams" colspan="2">template&lt;class Collector&gt; </td></tr>
 <tr class="memitem:a77935dd9c527137a0547e653510b4b89 template"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a77935dd9c527137a0547e653510b4b89">convertQuietly</a> (bool wanted)</td></tr>
 <tr class="memitem:a339cf3c7654893f6b1e3291630837a59" id="r_a339cf3c7654893f6b1e3291630837a59"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a339cf3c7654893f6b1e3291630837a59">convertShadowCopies</a> ()</td></tr>
+<tr class="memitem:a46761b0116deccb1c24b335c9f7760f4" id="r_a46761b0116deccb1c24b335c9f7760f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a46761b0116deccb1c24b335c9f7760f4">convertApplicationTraces</a> ()</td></tr>
 <tr class="memitem:a177385e8857c5db1f20026a012c0c4ec" id="r_a177385e8857c5db1f20026a012c0c4ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a177385e8857c5db1f20026a012c0c4ec">convertArtefacts</a> (bool systemAvailable)</td></tr>
 <tr class="memitem:a2dd60886620db621029aa7487053c6e2" id="r_a2dd60886620db621029aa7487053c6e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2dd60886620db621029aa7487053c6e2">clearConsole</a> (HANDLE console)</td></tr>
 <tr class="memitem:af95d413610788be237442141636e1d42" id="r_af95d413610788be237442141636e1d42"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af95d413610788be237442141636e1d42">restoreConsoleCodePage</a> ()</td></tr>
@@ -358,6 +364,24 @@ version". One whose form on this version WAC has no decoder for (undecodedOn) is
 
 </div>
 </div>
+<a id="a46761b0116deccb1c24b335c9f7760f4" name="a46761b0116deccb1c24b335c9f7760f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46761b0116deccb1c24b335c9f7760f4">&#9670;&#160;</a></span>convertApplicationTraces()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void convertApplicationTraces </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The groups of the applications' traces, each in its JSON file (&lt;group&gt;.json): the files the collection took for its products, converted generically (<a class="el" href="application__trace__files_8h.html" title="The applications&#39; traces converted: each file the collection took for a product of application_traces...">application_trace_files.h</a>). A group switched off in wac.yml says so in its file, as any artefact. </p>
+
+</div>
+</div>
 <a id="aebe9e6a50965dcb2bcecbc9fd1d7b30b" name="aebe9e6a50965dcb2bcecbc9fd1d7b30b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aebe9e6a50965dcb2bcecbc9fd1d7b30b">&#9670;&#160;</a></span>convertArtefact() <span class="overload">[1/2]</span></h2>
 
@@ -442,9 +466,9 @@ template&lt;class Collector&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Converts one artefact read from the working copy — its files or the hives it lives in: getData, then its JSON files — the same sequence for each of them. An artefact that could not be read says so in each of its files (reportUnread); one not asked for, likewise (requested). </p><dl class="tparams"><dt>Template Parameters</dt><dd>
+<p>The same, for a collector built without argument — every artefact but the groups of the applications' traces, built with their group. </p><dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
-    <tr><td class="paramname">Collector</td><td>the artefact's class: getData(), toJson(), clear() </td></tr>
+    <tr><td class="paramname">Collector</td><td>the artefact's class </td></tr>
   </table>
   </dd>
 </dl>
@@ -477,6 +501,60 @@ template&lt;class Collector&gt; </div>
 <p>Converts the artefacts into JSON, from the working copy: registry, files, event logs. <a class="el" href="structRuns.html">Runs</a> under &ndash;convert only; a collection stops before it (see <a class="el" href="tools_8h.html#a3dfe11cf1a3a8121f6cd7fec4bf5947e">RunMode</a>). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">systemAvailable</td><td>the SYSTEM hive is open (conf.System) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aabfbf19b30714b4485e488517e9e7325" name="aabfbf19b30714b4485e488517e9e7325"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aabfbf19b30714b4485e488517e9e7325">&#9670;&#160;</a></span>convertArtefactWith()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class Collector&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void convertArtefactWith </td>
+          <td>(</td>
+          <td class="paramtype">Collector &amp;</td>          <td class="paramname"><span class="paramname"><em>collector</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>wanted</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::initializer_list&lt; std::pair&lt; const char *, <a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a> &gt; &gt;</td>          <td class="paramname"><span class="paramname"><em>outputs</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const wchar_t *</td>          <td class="paramname"><span class="paramname"><em>key</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4">Text</a></td>          <td class="paramname"><span class="paramname"><em>step</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Converts one artefact read from the working copy — its files or the hives it lives in: getData, then its JSON files — the same sequence for each of them. An artefact that could not be read says so in each of its files (reportUnread); one not asked for, likewise (requested). </p><dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">Collector</td><td>the artefact's class: getData(), toJson(), clear() </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">collector</td><td>the artefact, built by the caller </td></tr>
+    <tr><td class="paramname">wanted</td><td>the configuration's switch </td></tr>
+    <tr><td class="paramname">outputs</td><td>its JSON files, each with its name for the console and the file </td></tr>
+    <tr><td class="paramname">key</td><td>its configuration key </td></tr>
+    <tr><td class="paramname">step</td><td>the console's step </td></tr>
   </table>
   </dd>
 </dl>

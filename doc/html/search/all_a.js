@@ -5,7 +5,7 @@ var searchData=
   ['jobstatus_2',['jobStatus',['../structScheduledTask.html#a4c7a715a81af95a7f4c81255c121e597',1,'ScheduledTask']]],
   ['journal_3',['journal',['../structNtfsVolumeInfo.html#abe4112db3f1088c4ca1ea630ddec1497',1,'NtfsVolumeInfo']]],
   ['journalid_4',['journalId',['../structUsnJournalHeader.html#ab3a2ea133d162e3c6806a00c8c1f9d9a',1,'UsnJournalHeader']]],
-  ['json_5',['Json',['../classJson.html',1,'']]],
+  ['json_5',['Json',['../classJson.html',1,'Json'],['../application__trace__files_8h.html#a410a23bf00f6ac6aa86b91b31688806eaeed8d85b888a6c015834240885ee6333',1,'Json:&#160;application_trace_files.h']]],
   ['json_2eh_6',['json.h',['../json_8h.html',1,'']]],
   ['json_5ftest_2ecpp_7',['json_test.cpp',['../json__test_8cpp.html',1,'']]],
   ['jsonarraywriter_8',['JsonArrayWriter',['../classJsonArrayWriter.html',1,'JsonArrayWriter'],['../classJsonArrayWriter.html#a032ff1d8cf2be0f96e66128f7c14670a',1,'JsonArrayWriter::JsonArrayWriter()']]],

@@ -1,6 +1,13 @@
 var searchData=
 [
-  ['real_0',['Real',['../sqlite__reader_8h.html#a5c41670f18324eca0c2ea25882bfed61a7f80fcc452c2f1ed2bb51b39d0864df1',1,'sqlite_reader.h']]],
-  ['recovered_1',['Recovered',['../deleted__files_8h.html#af0cf9ba4202bce178c613da6ee53355ea5c4c4cf7bbab0d76fe61420aee14a5ca',1,'deleted_files.h']]],
-  ['referenceconfigurationmissing_2',['ReferenceConfigurationMissing',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a401c62736068baa8702d02650c62b30a',1,'translations.h']]]
+  ['partial_0',['Partial',['../deleted__files_8h.html#af0cf9ba4202bce178c613da6ee53355ea44ffd38a6dea695cbe2b34efdcc6cf27',1,'deleted_files.h']]],
+  ['pdf_1',['Pdf',['../carving_8h.html#ae0a9973b99c27d6196b7ab877e52d770ae4204641574e4827600356b4dcacd276',1,'carving.h']]],
+  ['pe_2',['Pe',['../carving_8h.html#ae0a9973b99c27d6196b7ab877e52d770aefa6bbcc81e1c9c099a2b741ce910860',1,'carving.h']]],
+  ['present_3',['Present',['../artefact__catalogue_8h.html#adfd5523d4b709d5e28349355e79255dbadd058df87f5c88e3285a28ad7406a3c6',1,'artefact_catalogue.h']]],
+  ['pressanykey_4',['PressAnyKey',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a1d232b8d1f4d55ffd7efbbe9bdcecd76',1,'translations.h']]],
+  ['progresshive_5',['ProgressHive',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4aacef50ca6b89e3fe0d1b7caac63b6070',1,'translations.h']]],
+  ['progresskibibytes_6',['ProgressKibibytes',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a4d0ab81286a54ac3ad9d36efaad13b86',1,'translations.h']]],
+  ['progresslevel_7',['ProgressLevel',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4ab240007496573acdf39d3563a51855ea',1,'translations.h']]],
+  ['progressrepair_8',['ProgressRepair',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a5db25de0dd9eecc3a1ac0f2761c3cb7f',1,'translations.h']]],
+  ['progressunit_9',['ProgressUnit',['../translations_8h.html#acc7082841e5456e12d5a73ab5197ebd4a7d9cea64e49f2505db1253bf2aba5934',1,'translations.h']]]
 ];

@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;4.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -118,6 +118,7 @@ $(function(){initNavTree('tools_8h.html','',''); });
 <code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="whole__file_8h_source.html">whole_file.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="artefact__catalogue_8h_source.html">artefact_catalogue.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="application__traces_8h_source.html">application_traces.h</a>&quot;</code><br />
 <code>#include &lt;set&gt;</code><br />
 </div>
 <p><a href="tools_8h_source.html">Go to the source code of this file.</a></p>
@@ -209,12 +210,14 @@ Functions</h2></td></tr>
 <tr class="memitem:a89cc7be3be8d6e85f9b70d4fabcab57b" id="r_a89cc7be3be8d6e85f9b70d4fabcab57b"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a89cc7be3be8d6e85f9b70d4fabcab57b">timeToIso8601Utc</a> (const FILETIME &amp;filetime, <a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
 <tr class="memitem:ad48ff1f0177182c63a18c27fae85c405" id="r_ad48ff1f0177182c63a18c27fae85c405"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad48ff1f0177182c63a18c27fae85c405">iso8601UtcToFiletime</a> (const std::wstring &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>, FILETIME &amp;filetime)</td></tr>
 <tr class="memitem:a339f3424e4771fcd9cd009e2e5a35f23" id="r_a339f3424e4771fcd9cd009e2e5a35f23"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a339f3424e4771fcd9cd009e2e5a35f23">timeToIso8601Local</a> (const FILETIME &amp;filetime, <a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
-<tr class="memitem:a57a8108b142ebeea349023b6170a00c2" id="r_a57a8108b142ebeea349023b6170a00c2"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a57a8108b142ebeea349023b6170a00c2">localTimeToIso8601Utc</a> (const FILETIME &amp;filetimeLocal, <a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
 <tr class="memitem:a0eab7996fa09bca54687f5a91454722d" id="r_a0eab7996fa09bca54687f5a91454722d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0eab7996fa09bca54687f5a91454722d">utcTimeToIso8601Local</a> (const FILETIME &amp;filetimeUtc, <a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
 <tr class="memitem:a14a494c66a3bc423ab60073dbcfd759a" id="r_a14a494c66a3bc423ab60073dbcfd759a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a14a494c66a3bc423ab60073dbcfd759a">addDate</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;key, const FILETIME &amp;utc)</td></tr>
 <tr class="memitem:ad8ef84e34cbf1dc51f28bb5466ab1fc4" id="r_ad8ef84e34cbf1dc51f28bb5466ab1fc4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad8ef84e34cbf1dc51f28bb5466ab1fc4">addUtcDate</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;key, const FILETIME &amp;utc)</td></tr>
 <tr class="memitem:a2db11fd993cf754bcb19e0731955b6ab" id="r_a2db11fd993cf754bcb19e0731955b6ab"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2db11fd993cf754bcb19e0731955b6ab">utcToSuspectLocal</a> (const FILETIME &amp;filetimeUtc)</td></tr>
 <tr class="memitem:a920d2d59405bf35238ca8e289cc8d85f" id="r_a920d2d59405bf35238ca8e289cc8d85f"><td class="memItemLeft" align="right" valign="top">FILETIME&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a920d2d59405bf35238ca8e289cc8d85f">suspectLocalToUtc</a> (const FILETIME &amp;filetimeLocal)</td></tr>
+<tr class="memitem:ae91f6e8ca8c6481585479ede27cd668d" id="r_ae91f6e8ca8c6481585479ede27cd668d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structLocalBias.html">LocalBias</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae91f6e8ca8c6481585479ede27cd668d">suspectBiasAtLocal</a> (const FILETIME &amp;filetimeLocal)</td></tr>
+<tr class="memitem:a3e99a390a2492319536cec109b899bd7" id="r_a3e99a390a2492319536cec109b899bd7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3e99a390a2492319536cec109b899bd7">addAlsoPossibleUtc</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;key, const FILETIME &amp;local, const <a class="el" href="structLocalBias.html">LocalBias</a> &amp;bias, <a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a> precision=<a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a>)</td></tr>
+<tr class="memitem:aa622860a017912d3fec6c6c491508e46" id="r_aa622860a017912d3fec6c6c491508e46"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa622860a017912d3fec6c6c491508e46">addLocalDate</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;key, const FILETIME &amp;local)</td></tr>
 <tr class="memitem:a33256dfbfef8ac9511a35835a5e5b29d" id="r_a33256dfbfef8ac9511a35835a5e5b29d"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a33256dfbfef8ac9511a35835a5e5b29d">loadSuspectTimeZone</a> ()</td></tr>
 <tr class="memitem:a4f0bdac0f58e2d621c497478f845c05c" id="r_a4f0bdac0f58e2d621c497478f845c05c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4f0bdac0f58e2d621c497478f845c05c">decodeText</a> (const std::string &amp;bytes, UINT codePage=0)</td></tr>
 <tr class="memitem:ae80bb623d22e7dbfaec467e00ff9f19e" id="r_ae80bb623d22e7dbfaec467e00ff9f19e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae80bb623d22e7dbfaec467e00ff9f19e">decodeTextFile</a> (const std::string &amp;bytes)</td></tr>
@@ -233,6 +236,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ac40c001dc8ff1a35d94a53e88ff114a0" id="r_ac40c001dc8ff1a35d94a53e88ff114a0"><td class="memItemLeft" align="right" valign="top">std::vector&lt; BYTE &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac40c001dc8ff1a35d94a53e88ff114a0">textToSid</a> (const std::wstring &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>)</td></tr>
 <tr class="memitem:a3946876af4fb5b1551872ff9bdf27887" id="r_a3946876af4fb5b1551872ff9bdf27887"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3946876af4fb5b1551872ff9bdf27887">oleDateToSystemTime</a> (double date, SYSTEMTIME &amp;st)</td></tr>
 <tr class="memitem:a4eb3a55c96fa93b7130be2bcd9702bab" id="r_a4eb3a55c96fa93b7130be2bcd9702bab"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4eb3a55c96fa93b7130be2bcd9702bab">getRegSzValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::wstring *ws)</td></tr>
+<tr class="memitem:a81fcb7b54403b84bc2ab7e8849934008" id="r_a81fcb7b54403b84bc2ab7e8849934008"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a81fcb7b54403b84bc2ab7e8849934008">suspectZoneRules</a> (const std::wstring &amp;name, bool byStandardName, <a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &amp;rules, std::wstring &amp;keyName)</td></tr>
 <tr class="memitem:aa71d2e8dd326f686a3685b082d498baf" id="r_aa71d2e8dd326f686a3685b082d498baf"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa71d2e8dd326f686a3685b082d498baf">getRegFiletimeValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, FILETIME *filetime)</td></tr>
 <tr class="memitem:ae9d97b8defedd15d154fba35ed742f9f" id="r_ae9d97b8defedd15d154fba35ed742f9f"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae9d97b8defedd15d154fba35ed742f9f">enumRegistryValue</a> (ORHKEY key, DWORD index, std::wstring &amp;name, DWORD &amp;type, std::vector&lt; BYTE &gt; &amp;data)</td></tr>
 <tr class="memitem:aa8619636828618c660a45dcf3ab5f420" id="r_aa8619636828618c660a45dcf3ab5f420"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa8619636828618c660a45dcf3ab5f420">getRegBinaryValue</a> (ORHKEY key, PCWSTR subKey, PCWSTR valueName, std::vector&lt; BYTE &gt; &amp;bytes)</td></tr>
@@ -460,6 +464,52 @@ Variables</h2></td></tr>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a3e99a390a2492319536cec109b899bd7" name="a3e99a390a2492319536cec109b899bd7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e99a390a2492319536cec109b899bd7">&#9670;&#160;</a></span>addAlsoPossibleUtc()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addAlsoPossibleUtc </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>o</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>key</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const FILETIME &amp;</td>          <td class="paramname"><span class="paramname"><em>local</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structLocalBias.html">LocalBias</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>bias</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a></td>          <td class="paramname"><span class="paramname"><em>precision</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds the other UTC instants a local time denotes when it was lived twice, or never (an hour skipped: read by the offset after the change too) (<a class="el" href="structLocalBias.html#a8ce786d58f0022a9992c83c1a45a6a58">LocalBias::otherBiasesMinutes</a>), as the array <span class="tt">&lt;key&gt;AlsoPossibleUtc</span>: the instant <span class="tt">&lt;key&gt;Utc</span> gives is its first occurrence, or the reading by the offset before the change, these as likely. Nothing is written for a time lived once. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>the object </td></tr>
+    <tr><td class="paramname">key</td><td>the name of the date </td></tr>
+    <tr><td class="paramname">local</td><td>the local time, as written </td></tr>
+    <tr><td class="paramname">bias</td><td>its offset, as suspectBiasAtLocal gives it </td></tr>
+    <tr><td class="paramname">precision</td><td>the precision of the source: the digits of fraction written </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a14a494c66a3bc423ab60073dbcfd759a" name="a14a494c66a3bc423ab60073dbcfd759a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a14a494c66a3bc423ab60073dbcfd759a">&#9670;&#160;</a></span>addDate()</h2>
 
@@ -488,6 +538,40 @@ Variables</h2></td></tr>
     <tr><td class="paramname">o</td><td>the object </td></tr>
     <tr><td class="paramname">key</td><td>the name of the local form; the UTC form is <span class="tt">key</span> + "Utc" </td></tr>
     <tr><td class="paramname">utc</td><td>the date, UTC </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa622860a017912d3fec6c6c491508e46" name="aa622860a017912d3fec6c6c491508e46"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa622860a017912d3fec6c6c491508e46">&#9670;&#160;</a></span>addLocalDate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addLocalDate </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>o</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>key</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const FILETIME &amp;</td>          <td class="paramname"><span class="paramname"><em>local</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds a date the source writes in the EXAMINED machine's local time: both forms as addDate, at the offset in force when it was written (suspectBiasAtLocal), and its other instants if it was lived twice or never (addAlsoPossibleUtc). Nothing is written for a null date. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>the object </td></tr>
+    <tr><td class="paramname">key</td><td>the name of the local form </td></tr>
+    <tr><td class="paramname">local</td><td>the date, local </td></tr>
   </table>
   </dd>
 </dl>
@@ -1578,35 +1662,6 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a57a8108b142ebeea349023b6170a00c2" name="a57a8108b142ebeea349023b6170a00c2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a57a8108b142ebeea349023b6170a00c2">&#9670;&#160;</a></span>localTimeToIso8601Utc()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::wstring localTimeToIso8601Utc </td>
-          <td>(</td>
-          <td class="paramtype">const FILETIME &amp;</td>          <td class="paramname"><span class="paramname"><em>filetimeLocal</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a></td>          <td class="paramname"><span class="paramname"><em>precision</em></span><span class="paramdefsep"> = </span><span class="paramdefval"><a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2a3556b6a8ecbc09c1e6cfddb59767503b">Precision::HundredNanoseconds</a></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Converts a FILETIME <b>expressed in local time</b> to UTC, then formats it as ISO 8601 with the "Z" suffix. For the dates really stored in local time: the dates of FAT volumes, setupapi.dev.log, OLE dates. Most Windows artefacts store UTC — BAM, <a class="el" href="structUserAssist.html">UserAssist</a>, USBSTOR, <a class="el" href="structAmcache.html">Amcache</a>, ShimCache, and the FAT-format dates of shell items (shortcuts, jump lists, shellbags) were all once read as local time by mistake, each shifted by the time-zone offset; each is now confronted with an independent source by check-json.py or the test VM. The offset is the suspect's (suspectLocalToUtc), not the running machine's. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">filetimeLocal</td><td>the instant, in the examined machine's local time </td></tr>
-    <tr><td class="paramname">precision</td><td>the precision of the source (see <a class="el" href="#ad1fbd6a28bdb0f04414d526ebeaed0e2">Precision</a>): the digits of fraction written </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>"YYYY-MM-DDTHH:MM:SSZ", or "" if the date is null </dd></dl>
-
-</div>
-</div>
 <a id="a3fd0bef5fa02565cb2da3f612cf978b9" name="a3fd0bef5fa02565cb2da3f612cf978b9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3fd0bef5fa02565cb2da3f612cf978b9">&#9670;&#160;</a></span>log() <span class="overload">[1/2]</span></h2>
 
@@ -2491,6 +2546,30 @@ conf.systemDrive)</span>, ignored the volume subfolder: a file coming from <span
 
 </div>
 </div>
+<a id="ae91f6e8ca8c6481585479ede27cd668d" name="ae91f6e8ca8c6481585479ede27cd668d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae91f6e8ca8c6481585479ede27cd668d">&#9670;&#160;</a></span>suspectBiasAtLocal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structLocalBias.html">LocalBias</a> suspectBiasAtLocal </td>
+          <td>(</td>
+          <td class="paramtype">const FILETIME &amp;</td>          <td class="paramname"><span class="paramname"><em>filetimeLocal</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The offset of a local time of the EXAMINED machine: the one in force when it was written, as its System log shows it (conf.timeZone.history), else its current zone's rules — the one suspectLocalToUtc and timeToIso8601Local apply. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">filetimeLocal</td><td>the local time </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the offset (UTC = local + bias), and whether the log gave it </dd></dl>
+
+</div>
+</div>
 <a id="a920d2d59405bf35238ca8e289cc8d85f" name="a920d2d59405bf35238ca8e289cc8d85f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a920d2d59405bf35238ca8e289cc8d85f">&#9670;&#160;</a></span>suspectLocalToUtc()</h2>
 
@@ -2514,6 +2593,47 @@ conf.systemDrive)</span>, ignored the volume subfolder: a file coming from <span
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the instant in UTC, or a null FILETIME (input null or out of range) </dd></dl>
+
+</div>
+</div>
+<a id="a81fcb7b54403b84bc2ab7e8849934008" name="a81fcb7b54403b84bc2ab7e8849934008"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81fcb7b54403b84bc2ab7e8849934008">&#9670;&#160;</a></span>suspectZoneRules()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool suspectZoneRules </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>name</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>byStandardName</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structTimeZoneRules.html">TimeZoneRules</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>rules</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>keyName</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The rules of one of the examined machine's zones, as its hives hold them: the current zone's from SYSTEM (conf.timeZone.rules), another's from the Time Zones key of SOFTWARE (TZI and Dynamic DST). Needed for a zone that was in force earlier (<a class="el" href="time__zone__history_8h.html" title="The examined machine&#39;s time zone over time, read in its System log: the offset in force when each loc...">time_zone_history.h</a>). Loaded after loadSuspectTimeZone. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>the zone's key name ("Romance Standard Time", as tzutil writes it), or its standard name in the language of the installation ("Paris, Madrid", as EventLog 6013, 6005 and 6006 write it) </td></tr>
+    <tr><td class="paramname">byStandardName</td><td><span class="tt">name</span> is the standard name </td></tr>
+    <tr><td class="paramname">rules</td><td>receives its rules </td></tr>
+    <tr><td class="paramname">keyName</td><td>receives its key name </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false when no zone, or more than one, has that name, or its rule is unreadable </dd></dl>
 
 </div>
 </div>

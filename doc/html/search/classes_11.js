@@ -17,12 +17,13 @@ var searchData=
   ['recovery_14',['Recovery',['../structRecovery.html',1,'']]],
   ['recyclebin_15',['RecycleBin',['../classRecycleBin.html',1,'']]],
   ['recycledfile_16',['RecycledFile',['../structRecycledFile.html',1,'']]],
-  ['revocationlists_17',['RevocationLists',['../structRevocationLists.html',1,'']]],
-  ['rootcertificate_18',['RootCertificate',['../structRootCertificate.html',1,'']]],
-  ['rootcertificates_19',['RootCertificates',['../classRootCertificates.html',1,'']]],
-  ['rootfolder_20',['RootFolder',['../structRootFolder.html',1,'']]],
-  ['route_21',['Route',['../structRoute.html',1,'']]],
-  ['run_22',['Run',['../structRun.html',1,'']]],
-  ['runningmachine_23',['RunningMachine',['../structRunningMachine.html',1,'']]],
-  ['runs_24',['Runs',['../structRuns.html',1,'']]]
+  ['registryproduct_17',['RegistryProduct',['../structRegistryProduct.html',1,'']]],
+  ['revocationlists_18',['RevocationLists',['../structRevocationLists.html',1,'']]],
+  ['rootcertificate_19',['RootCertificate',['../structRootCertificate.html',1,'']]],
+  ['rootcertificates_20',['RootCertificates',['../classRootCertificates.html',1,'']]],
+  ['rootfolder_21',['RootFolder',['../structRootFolder.html',1,'']]],
+  ['route_22',['Route',['../structRoute.html',1,'']]],
+  ['run_23',['Run',['../structRun.html',1,'']]],
+  ['runningmachine_24',['RunningMachine',['../structRunningMachine.html',1,'']]],
+  ['runs_25',['Runs',['../structRuns.html',1,'']]]
 ];

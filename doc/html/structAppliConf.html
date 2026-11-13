@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;4.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -132,8 +132,12 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:abc7f350a870d4dc5e3a3ffbdc2634d3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reg Key to access to System Hive.  <br /></td></tr>
 <tr class="memitem:a7f9aa7e1f590f754b5952ccc15d7fee1" id="r_a7f9aa7e1f590f754b5952ccc15d7fee1"><td class="memItemLeft" align="right" valign="top">ORHKEY&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f9aa7e1f590f754b5952ccc15d7fee1">Software</a> = { 0 }</td></tr>
 <tr class="memdesc:a7f9aa7e1f590f754b5952ccc15d7fee1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reg Key to access CurrentControlSet/Software hive.  <br /></td></tr>
+<tr class="memitem:a4767fae9c0f49594fbabee079c247075" id="r_a4767fae9c0f49594fbabee079c247075"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structProductSwitches.html">ProductSwitches</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4767fae9c0f49594fbabee079c247075">traceProducts</a></td></tr>
+<tr class="memdesc:a4767fae9c0f49594fbabee079c247075"><td class="mdescLeft">&#160;</td><td class="mdescRight">what wac.yml switches off and on among the products of <a class="el" href="application__traces_8h.html" title="THE table of the applications&#39; traces: remote administration, antivirus, messaging,...">application_traces.h</a> and application_registry  <br /></td></tr>
 <tr class="memitem:acebd5e49e779376202a9766407664256" id="r_acebd5e49e779376202a9766407664256"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::tuple&lt; std::wstring, std::wstring &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acebd5e49e779376202a9766407664256">profiles</a></td></tr>
 <tr class="memdesc:acebd5e49e779376202a9766407664256"><td class="mdescLeft">&#160;</td><td class="mdescRight">vector to store SID and profiles of users present on the machine  <br /></td></tr>
+<tr class="memitem:a99b993e667c60b863a724b063f3c26b1" id="r_a99b993e667c60b863a724b063f3c26b1"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a99b993e667c60b863a724b063f3c26b1">allUsersProfile</a> = L&quot;\\Documents and Settings\\All Users&quot;</td></tr>
+<tr class="memdesc:a99b993e667c60b863a724b063f3c26b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">where XP and Server 2003 keep the shared folders (ProfileList: ProfilesDirectory and AllUsersProfile); their default when not read  <br /></td></tr>
 <tr class="memitem:a35d53149047512b1e19581415c79bdcd" id="r_a35d53149047512b1e19581415c79bdcd"><td class="memItemLeft" align="right" valign="top">HANDLE&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a35d53149047512b1e19581415c79bdcd">hConsole</a> = GetStdHandle(STD_OUTPUT_HANDLE)</td></tr>
 <tr class="memdesc:a35d53149047512b1e19581415c79bdcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">handle of the console  <br /></td></tr>
 <tr class="memitem:a269c6f349598300b84ac6941d349f74c" id="r_a269c6f349598300b84ac6941d349f74c"><td class="memItemLeft" align="right" valign="top">std::ofstream&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a269c6f349598300b84ac6941d349f74c">log</a></td></tr>
@@ -257,6 +261,22 @@ Static Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>The artefacts asked for that this version of Windows does not have (keys of wac.yml): switched off by applyArtefactCatalogue, never launched, and declared so in their file — not a failure, not a refusal of the configuration. </p>
+
+</div>
+</div>
+<a id="a99b993e667c60b863a724b063f3c26b1" name="a99b993e667c60b863a724b063f3c26b1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99b993e667c60b863a724b063f3c26b1">&#9670;&#160;</a></span>allUsersProfile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring AppliConf::allUsersProfile = L&quot;\\Documents and Settings\\All Users&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>where XP and Server 2003 keep the shared folders (ProfileList: ProfilesDirectory and AllUsersProfile); their default when not read </p>
 
 </div>
 </div>
@@ -583,6 +603,22 @@ Static Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>time zone of the examined machine (SYSTEM hive if available) </p>
+
+</div>
+</div>
+<a id="a4767fae9c0f49594fbabee079c247075" name="a4767fae9c0f49594fbabee079c247075"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4767fae9c0f49594fbabee079c247075">&#9670;&#160;</a></span>traceProducts</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structProductSwitches.html">ProductSwitches</a> AppliConf::traceProducts</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>what wac.yml switches off and on among the products of <a class="el" href="application__traces_8h.html" title="THE table of the applications&#39; traces: remote administration, antivirus, messaging,...">application_traces.h</a> and application_registry </p>
 
 </div>
 </div>

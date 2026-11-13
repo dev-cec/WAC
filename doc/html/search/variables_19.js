@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['zone_0',['zone',['../structDnsZoneRecord.html#a94e86c8c32adb41fd1ed40e880179a65',1,'DnsZoneRecord::zone'],['../structW3cLogEntry.html#a214bdcd2e92abe79be97650167f93577',1,'W3cLogEntry::zone']]],
+  ['zone_0',['zone',['../structDnsZoneRecord.html#a94e86c8c32adb41fd1ed40e880179a65',1,'DnsZoneRecord::zone'],['../structLoggedBias.html#a312be80e8c61c3ce5c82d5d9b86b45a8',1,'LoggedBias::zone'],['../structZoneObservation.html#aec7f2520f29632414035924ad144ef77',1,'ZoneObservation::zone'],['../structW3cLogEntry.html#a214bdcd2e92abe79be97650167f93577',1,'W3cLogEntry::zone']]],
   ['zoneidentifier_1',['zoneIdentifier',['../structMftEntry.html#ad29b3eb7532896f3dd4c5fc19cca02e1',1,'MftEntry']]],
   ['zoneidentifiercontent_2',['zoneIdentifierContent',['../structMftEntry.html#a5cf42c2c05f664a3686c094010f43f29',1,'MftEntry']]],
   ['zoneidentifierresident_3',['zoneIdentifierResident',['../structMftEntry.html#aa6aebdcae7f2cf484dbe2ea898b24b91',1,'MftEntry']]],

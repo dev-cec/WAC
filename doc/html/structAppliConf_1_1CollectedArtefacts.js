@@ -5,6 +5,7 @@ var structAppliConf_1_1CollectedArtefacts =
     [ "activeDirectory", "structAppliConf_1_1CollectedArtefacts.html#a1d4834ef7fd6a6ed16bf1d0368507cc5", null ],
     [ "activitiesCache", "structAppliConf_1_1CollectedArtefacts.html#a410dd47fe430bceec533f31c364b6c8d", null ],
     [ "amcache", "structAppliConf_1_1CollectedArtefacts.html#aeddcfea018a2026748880369c795402e", null ],
+    [ "applicationRegistry", "structAppliConf_1_1CollectedArtefacts.html#a411cf52877d79f17f005c91464a4b251", null ],
     [ "bam", "structAppliConf_1_1CollectedArtefacts.html#a10c7fb0c53340699d3fa3818b9bf30ae", null ],
     [ "bits", "structAppliConf_1_1CollectedArtefacts.html#af534a1eb2e769d8bccc7187cd29bb882", null ],
     [ "bootRecords", "structAppliConf_1_1CollectedArtefacts.html#af28781678aff08619d878e5eb190ecce", null ],
