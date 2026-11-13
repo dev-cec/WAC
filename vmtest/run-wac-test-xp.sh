@@ -103,6 +103,16 @@ for f in carve-witness.exe carve-witness.pdf; do
   kind=PE; [[ $f == *.pdf ]] && kind=PDF
   echo "carved=W:\\$f|$(stat -c %s "$WORK/iso/$f")|$(sha256sum "$WORK/iso/$f" | cut -c1-64 | tr a-f A-F)|$kind"
 done > "$OUTPUT/reference/carving.txt"
+# The applications' traces in the profile layout of XP and Server 2003 (B-062):
+# a Zoom log in the user's "Application Data" (Vista's AppData\Roaming) and an
+# Emsisoft report in All Users' "Application Data" (Vista's ProgramData), each a
+# line of known content and time. The line ends on a word: a digit just before
+# ">" would be read by cmd as a handle to redirect. check-json.py finds them in
+# messaging.json and antivirus.json, under "Documents and Settings".
+printf '%s\n' \
+  'messaging|\Application Data\Zoom\logs\wac-trace-xp.log|meeting 4242 joined by wac-trace-xp|Zoom' \
+  'antivirus|\All Users\Application Data\Emsisoft\Reports\scan_wac-trace-xp.txt|Trojan.Witness detected by wac-trace-xp|Emsisoft' \
+  > "$OUTPUT/reference/xp-traces.txt"
 # CRLF: cmd.exe of XP reads a batch file line by line on its line ends. A space
 # before ">COM1": "%errorlevel%> COM1" became "0> COM1", a redirection of the
 # handle 0, and nothing reached the serial port.
@@ -122,6 +132,10 @@ printf '%s\r\n' \
   'for %%f in (carve-witness.exe carve-witness.pdf) do copy /y "%~dp0%%f" W:\%%f >nul' \
   'fsutil volume dismount W: >nul' \
   'for %%f in (carve-witness.exe carve-witness.pdf) do (type nul > W:\%%f & del W:\%%f)' \
+  'mkdir "%USERPROFILE%\Application Data\Zoom\logs" 2>nul' \
+  'echo 2026-11-08 14:03:21 meeting 4242 joined by wac-trace-xp> "%USERPROFILE%\Application Data\Zoom\logs\wac-trace-xp.log"' \
+  'mkdir "%ALLUSERSPROFILE%\Application Data\Emsisoft\Reports" 2>nul' \
+  'echo 2026-11-08 14:03:21 Trojan.Witness detected by wac-trace-xp> "%ALLUSERSPROFILE%\Application Data\Emsisoft\Reports\scan_wac-trace-xp.txt"' \
   'cd /d %KIT%\wac\xp' \
   'WAC32.exe < nul > collect.log 2>&1' \
   'echo wac-xp-collected %errorlevel% >COM1' \

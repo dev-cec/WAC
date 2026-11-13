@@ -537,6 +537,7 @@ def cross_checks(folder):
     found += guarded(check_controller_events, folder)
     found += guarded(check_server_roles, folder)
     found += guarded(check_application_traces, folder)
+    found += guarded(check_xp_layout_traces, folder)
     found += guarded(check_third_party_measured, folder)
     found += guarded(check_time_zone_history, folder)
     found += guarded(check_assumed_time_zones, folder)
@@ -3981,6 +3982,29 @@ def check_dst_witness(folder, reference, lines):
         found += 0 if ok else 1
     return found
 
+
+def check_xp_layout_traces(folder):
+    """The applications' traces in the profile layout of Windows XP and Server
+    2003 (run-wac-test-xp.sh): a Zoom log in the user's "Application Data" and
+    an Emsisoft report in All Users' "Application Data", the folders the table
+    writes as Vista lays them out (AppData\\Roaming, ProgramData). Each line
+    found once, under "Documents and Settings", its time as written, local."""
+    path = os.path.join(folder, "reference", "xp-traces.txt")
+    if not os.path.exists(path):
+        return 0
+    found = 0
+    for line in open(path, encoding="utf-8").read().splitlines():
+        group, suffix, marker, product = line.split("|")
+        data = load(folder, group + ".json")
+        rows = [r for r in (data if isinstance(data, list) else [])
+                if str(r.get("File", "")).lower().endswith(suffix.lower()) and marker in str(r.get("Text", ""))]
+        ok = (len(rows) == 1 and rows[0].get("Product") == product
+              and "\\documents and settings\\" in str(rows[0].get("File", "")).lower()
+              and rows[0].get("TimeAsWritten") == "2026-11-08 14:03:21" and rows[0].get("TimeZoneAssumed") == "Local")
+        print(f"  {'✅' if ok else '❌'} {group}.json: {product}'s witness in the XP layout"
+              + (f" ({rows[0].get('File')}), its time as written, local" if ok else f" not as expected: {rows[:2]}"))
+        found += 0 if ok else 1
+    return found
 
 def check_application_traces(folder):
     """The applications' traces (application-traces-witness.ps1), found again in

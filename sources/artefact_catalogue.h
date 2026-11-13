@@ -220,3 +220,12 @@ const ArtefactForm& formOf(const ArtefactEntry& entry, const WindowsVersion& ver
  *  @return the path on that version */
 std::wstring examinedFolderLayout(const std::wstring& path, const WindowsVersion& version,
                                   const std::vector<std::wstring>& profileRoots);
+
+/*! The translation examinedFolderLayout applies before Vista, whatever the
+ *  version: where Windows XP and Server 2003 keep a folder Vista lays out as
+ *  given. Also used to recognise, at the conversion, a file collected in that
+ *  layout (traceOwnerOf).
+ *  @param path absolute, with its letter or relative to the system volume
+ *  @param profileRoots the profile folders the path may lie in, absolute
+ *  @return the path in the layout of XP, or as given when none applies */
+std::wstring xpFolderLayout(const std::wstring& path, const std::vector<std::wstring>& profileRoots);

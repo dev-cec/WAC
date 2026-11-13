@@ -8,7 +8,7 @@
  *  installation, came out 8 h off. The cases here are those the test VMs
  *  showed, 2026-11-09, and those of a zone set back or forward.
  *
- *  Usage: time_zone_history_test [<SYSTEM hive> <SOFTWARE hive>] — built by
+ *  Usage: time_zone_history_test `[<SYSTEM hive> <SOFTWARE hive>]` — built by
  *  `build-windows.sh --test`, runs under Wine. With the hives of a Windows
  *  before Vista (Server 2003's, taken offline from its disk), also the
  *  current zone's key name deduced from its StandardName: SYSTEM holds no

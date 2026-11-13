@@ -23,7 +23,7 @@
  *  in the same last datum. No TZUtil, no Kernel-General: a change between two
  *  of them has no instant.
  *
- *  READ IN THE WORKING COPY. The log is read from <output>\working, as every
+ *  READ IN THE WORKING COPY. The log is read from `<output>\working`, as every
  *  conversion reads a collected file; the exhibit store is never read.
  */
 #pragma once

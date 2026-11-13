@@ -100,6 +100,13 @@ void testOwner() {
 	check(owner(L"C:\\Users\\bob\\AppData\\Roaming\\TeamViewer\\Connections_incoming.txt") == "remote_administration.teamviewer", "a product in a profile");
 	check(owner(L"C:\\Program Files (x86)\\TeamViewer\\TeamViewer15_Logfile.log") == "remote_administration.teamviewer", "a folder with a star (Program Files*)");
 	check(owner(L"C:\\Documents and Settings\\bob\\.ssh\\known_hosts") == "ssh.openssh_client", "a profile of Windows XP");
+	// The folders XP and Server 2003 keep elsewhere: collected there, converted there.
+	check(owner(L"C:\\Documents and Settings\\bob\\Application Data\\Zoom\\logs\\x.log") == "messaging.zoom",
+	      "AppData\\Roaming of XP: Application Data");
+	check(owner(L"C:\\Documents and Settings\\bob\\Local Settings\\Application Data\\CrashDumps\\x.dmp") == "system_traces.crash_dumps",
+	      "AppData\\Local of XP: Local Settings\\Application Data");
+	check(owner(L"C:\\Documents and Settings\\All Users\\Application Data\\Emsisoft\\Reports\\scan_x.txt") == "antivirus.emsisoft",
+	      "ProgramData of XP: All Users\\Application Data");
 	check(owner(L"C:\\ProgramData\\ssh\\sshd_config") == "ssh.openssh_server", "a whole name of the filter");
 	check(owner(L"C:\\Windows\\debug\\netlogon.log") == "server_logs.netlogon", "a server's log");
 	check(owner(L"C:\\Users\\bob\\.ssh\\id_rsa").empty(), "a private key belongs to no product");

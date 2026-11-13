@@ -88,7 +88,7 @@ const TraceGroup* traceGroup(const std::string& key);
  *  a registry value (application_registry.h), a key or element of a product's
  *  configuration file (application_trace_files.h). A name holding "password",
  *  "passwd", "pwd" or "secret", or the whole name "pass" (FileZilla keeps a
- *  site's password in <Pass>), case ignored.
+ *  site's password in `<Pass>`), case ignored.
  *  @param name the value's name
  *  @return whether its content is left out */
 bool isPasswordValue(const std::wstring& name);
@@ -102,7 +102,7 @@ struct TraceOwner {
 /*! The product that takes a file, as the collection took it: one of its
  *  folders (its `*` components matching), the file at most `depth` levels below,
  *  its name kept by the filter. A PROFILE_MARK folder stands for that folder in
- *  any profile — \Users\<name>, \Documents and Settings\<name>, the system's and
+ *  any profile — `\Users\<name>`, `\Documents and Settings\<name>`, the system's and
  *  the services' profiles. When two lines take the same file, the first of the
  *  table wins: the order of the table decides, the same at every conversion.
  *  @param sourcePath the file's path on the examined machine ("C:\…")

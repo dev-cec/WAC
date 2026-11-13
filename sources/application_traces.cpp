@@ -2,6 +2,7 @@
  *  \brief The table of the applications' traces (see application_traces.h).
  */
 #include "application_traces.h"
+#include "artefact_catalogue.h"
 
 const wchar_t* const PROFILE_MARK = L"%profile%";
 
@@ -421,12 +422,20 @@ TraceOwner traceOwnerOf(const std::wstring& sourcePath) {
 		for (const TraceProduct& product : group.products)
 			for (const TracePiece& piece : product.pieces) {
 				if (!nameMatchesFilter(file.back(), piece.filter)) continue;
+				/* Each folder as the table writes it (Vista's layout), and as XP and
+				   Server 2003 keep it (xpFolderLayout): "Application Data" for
+				   AppData\Roaming, All Users for ProgramData. Without it, a piece
+				   collected there belonged to no product and left the JSON. */
+				auto holds = [&](const std::wstring& folder, const std::vector<std::wstring>& roots) {
+					return fileUnder(file, pathComponents(folder), piece.depth)
+					    || fileUnder(file, pathComponents(xpFolderLayout(folder, roots)), piece.depth);
+				};
 				if (piece.folder.compare(0, mark.size(), mark) != 0) {
-					if (fileUnder(file, pathComponents(piece.folder), piece.depth)) return { &group, &product };
+					if (holds(piece.folder, {})) return { &group, &product };
 					continue;
 				}
 				for (const wchar_t* root : PROFILE_ROOTS)
-					if (fileUnder(file, pathComponents(root + piece.folder.substr(mark.size())), piece.depth)) return { &group, &product };
+					if (holds(root + piece.folder.substr(mark.size()), { root })) return { &group, &product };
 			}
 	return {};
 }

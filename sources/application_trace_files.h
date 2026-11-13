@@ -1,6 +1,6 @@
 /*! \file
  *  \brief The applications' traces converted: each file the collection took for
- *         a product of application_traces.h, in its group's JSON (<group>.json).
+ *         a product of application_traces.h, in its group's JSON (`<group>.json`).
  *
  *  WHY A GENERIC CONVERSION. The 97 products write in their own formats, and
  *  change them; but most of what they leave is text, one event per line —
@@ -22,7 +22,7 @@
  *  cycle: a log's last line against the moment its file was last written.
  *  Lines with no time of their own that follow a dated one (a stack trace, a
  *  continuation) belong to it. A block of secret lines — a private key, an
- *  OpenVPN key, an .ovpn's <pkcs12> or <auth-user-pass> — is left out, its
+ *  OpenVPN key, an .ovpn's `<pkcs12>` or `<auth-user-pass>` — is left out, its
  *  opening line kept with HasPassword. One element per structured file (XML, JSON,
  *  INI): its Format and Content, its structure; a value named like a secret
  *  (isPasswordValue) is left out, HasPassword says so. One element for any
@@ -96,7 +96,7 @@ constexpr size_t TEXT_RECORD_MAX = 64 * 1024;
  *  line without a time that follows a dated record continues it, any other line
  *  is a record of its own. Blank lines are left out; "\r\n" and "\n" end a line.
  *  A block holding a secret — a private key, an OpenVPN key, an .ovpn's
- *  <pkcs12> or <auth-user-pass> — is left out up to its closing line, its
+ *  `<pkcs12>` or `<auth-user-pass>` — is left out up to its closing line, its
  *  opening line kept alone and marked (secretLeftOut).
  *  @param text the decoded text
  *  @param layout how the product's lines start (leadingTime)
@@ -123,7 +123,7 @@ TraceFormat traceFormatOf(const std::wstring& name, const std::string& bytes);
  *  @return the content, or a null Json when the text does not parse */
 Json structuredContent(TraceFormat format, const std::wstring& text, bool& hasPassword);
 
-//! A group of the applications' traces, converted (<group>.json).
+//! A group of the applications' traces, converted (`<group>.json`).
 class ApplicationTraceFiles {
 public:
 	explicit ApplicationTraceFiles(const TraceGroup& group) : group_(group) {}

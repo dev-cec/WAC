@@ -508,6 +508,10 @@ bool replaceFolder(std::wstring& rest, const std::pair<const wchar_t*, const wch
 std::wstring examinedFolderLayout(const std::wstring& path, const WindowsVersion& version,
                                   const std::vector<std::wstring>& profileRoots) {
 	if (version.build == 0 || version.build >= VISTA) return path;
+	return xpFolderLayout(path, profileRoots);
+}
+
+std::wstring xpFolderLayout(const std::wstring& path, const std::vector<std::wstring>& profileRoots) {
 	for (std::wstring root : profileRoots) {
 		while (!root.empty() && root.back() == L'\\') root.pop_back();
 		if (root.empty() || !startsWithFolder(path, root)) continue;

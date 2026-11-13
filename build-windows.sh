@@ -300,7 +300,7 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
   echo "== application_traces_test (native, run here) =="
   # The applications' traces table and its wildcards, portable C++ as well:
   # no private key taken, one key per product, the filter's patterns.
-  g++ -std=c++17 -Wall -Wextra -I"$SRC" "$SRC/application_traces.cpp" "$SRC/application_traces_test.cpp" \
+  g++ -std=c++17 -Wall -Wextra -I"$SRC" "$SRC/application_traces.cpp" "$SRC/artefact_catalogue.cpp" "$SRC/application_traces_test.cpp" \
     -o "$TESTS/application_traces_test"
   "$TESTS/application_traces_test" | tail -1 | sed 's/^/   /'
 fi
