@@ -4251,8 +4251,10 @@ def check_server_roles(folder):
     def as_list(value):
         return value if isinstance(value, list) else [] if value is None else [value]
 
+    # Each role confronted only when its artefact was collected (run-wac-test.sh --only):
+    # the witness runs for server_logs too, the certification authority's.
     zones_reference = as_list(reference.get("DnsZones"))
-    if zones_reference:
+    if zones_reference and not switched_off(folder, "dns_server_zones.json"):
         zones = load(folder, "dns_server_zones.json") or []
         names = {str(z.get("Name")).lower() for z in zones}
         # The server makes 0, 127 and 255.in-addr.arpa itself, in memory: in neither registry nor file.
@@ -4276,10 +4278,10 @@ def check_server_roles(folder):
                f"dns_server_configuration.json: forwarders {forwarders} or ServerLevelPluginDll absent")
         check_dns_debug_log(folder, report)
     else:
-        print("  ⏭️  no DNS server on this machine: role not confronted")
+        print("  ⏭️  no DNS server on this machine, or dns_server not collected: role not confronted")
 
     leases_reference = as_list(reference.get("DhcpLeases"))
-    if leases_reference:
+    if leases_reference and not switched_off(folder, "dhcp_server_leases.json"):
         leases = [l for l in (load(folder, "dhcp_server_leases.json") or []) if l.get("Table") == "ClientTable"]
         by_address = {l.get("Address"): l for l in leases}
         wrong = [l["Address"] for l in leases_reference
@@ -4299,9 +4301,9 @@ def check_server_roles(folder):
         check_dhcp_database(folder, leases, report)
         check_dhcp_audit_logs(folder, report)
     else:
-        print("  ⏭️  no DHCP server on this machine: role not confronted")
+        print("  ⏭️  no DHCP server on this machine, or dhcp_server not collected: role not confronted")
 
-    if reference.get("RdsLicensingDatabase"):
+    if reference.get("RdsLicensingDatabase") and not switched_off(folder, "rdp_server.json"):
         listing = os.path.join(folder, store_folder(folder), "LIST.txt")
         with open(listing, encoding="utf-8-sig", errors="replace") as f:
             taken = "\\lserver\\tlslic.edb" in f.read().lower()
@@ -4318,7 +4320,7 @@ def check_server_roles(folder):
                f"server_logs.json: the certification authority's database not as expected: {rows[:1]}")
 
     machines_reference = as_list(reference.get("HyperVMachines"))
-    if machines_reference:
+    if machines_reference and not switched_off(folder, "hyperv_machines.json"):
         entries = load(folder, "hyperv_machines.json") or []
         machines = {str(m.get("Id")).lower(): m for m in entries}
         wrong = []
