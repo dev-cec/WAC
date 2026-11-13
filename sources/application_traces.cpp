@@ -431,6 +431,35 @@ TraceOwner traceOwnerOf(const std::wstring& sourcePath) {
 	return {};
 }
 
+namespace {
+
+//! expandFolderPattern, its patterns looked for from `from` on: what comes before is already expanded.
+std::vector<std::wstring> expandFrom(const std::wstring& written, size_t from,
+                                     const std::function<std::vector<std::wstring>(const std::wstring&)>& subfolders) {
+	const size_t wild = written.find_first_of(L"*?", from);
+	if (wild == std::wstring::npos) return { written };
+	const size_t slash = written.rfind(L'\\', wild);
+	if (slash == std::wstring::npos) return {};
+	const size_t next = written.find(L'\\', wild);
+	const std::wstring parent = written.substr(0, slash);
+	const std::wstring pattern = written.substr(slash + 1, next == std::wstring::npos ? std::wstring::npos : next - slash - 1);
+	const std::wstring rest = next == std::wstring::npos ? L"" : written.substr(next);
+	std::vector<std::wstring> folders;
+	for (const std::wstring& name : subfolders(parent.empty() ? L"\\" : parent)) {
+		if (name.empty() || name == L"." || name == L".." || name.find(L'\\') != std::wstring::npos || !wildcardMatch(pattern, name)) continue;
+		const std::wstring expanded = parent + L"\\" + name;
+		for (std::wstring& folder : expandFrom(expanded + rest, expanded.size(), subfolders)) folders.push_back(std::move(folder));
+	}
+	return folders;
+}
+
+} // namespace
+
+std::vector<std::wstring> expandFolderPattern(const std::wstring& written,
+                                              const std::function<std::vector<std::wstring>(const std::wstring&)>& subfolders) {
+	return expandFrom(written, 0, subfolders);
+}
+
 bool traceProductWanted(const ProductSwitches& switches, const std::string& group, const std::string& product, bool onByDefault) {
 	const std::string key = group + "." + product;
 	if (switches.off.count(group) || switches.off.count(key)) return false;

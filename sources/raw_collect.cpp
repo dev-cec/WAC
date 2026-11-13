@@ -557,25 +557,6 @@ std::vector<std::wstring> rawSubfolders(const std::wstring& folder) {
 	return names;
 }
 
-/*! The folders a written path stands for, each `*` component looked up by raw reading.
- *  @param written the path, as Vista lays its folders out
- *  @return the folders that exist under the pattern's literal parts; the path itself when it holds no `*` */
-std::vector<std::wstring> expandTraceFolder(const std::wstring& written) {
-	const size_t star = written.find(L'*');
-	if (star == std::wstring::npos) return { written };
-	const size_t slash = written.rfind(L'\\', star);
-	if (slash == std::wstring::npos) return {};
-	const size_t next = written.find(L'\\', star);
-	const std::wstring parent = written.substr(0, slash);
-	const std::wstring pattern = written.substr(slash + 1, next == std::wstring::npos ? std::wstring::npos : next - slash - 1);
-	const std::wstring rest = next == std::wstring::npos ? L"" : written.substr(next);
-	std::vector<std::wstring> folders;
-	for (const std::wstring& name : rawSubfolders(examinedLayout(parent.empty() ? L"\\" : parent)))
-		if (wildcardMatch(pattern, name))
-			for (std::wstring& folder : expandTraceFolder(parent + L"\\" + name + rest)) folders.push_back(std::move(folder));
-	return folders;
-}
-
 /*! Whether a folder is there, to spare the investigation log a line per product a
  *  machine does not have. An index that cannot be read counts as there: its tree
  *  then reports the failure, a part of the collection missing.
@@ -601,7 +582,7 @@ void addApplicationTraces(std::vector<Tree>& trees) {
 				else for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles)
 					written.push_back(std::get<1>(profileEntry) + piece.folder.substr(mark.size()));
 				for (const std::wstring& each : written)
-					for (const std::wstring& folder : expandTraceFolder(each))
+					for (const std::wstring& folder : expandFolderPattern(each, [](const std::wstring& parent) { return rawSubfolders(examinedLayout(parent)); }))
 						if (traceFolderPresent(folder)) trees.push_back({ folder, piece.filter, piece.depth, product.name });
 			}
 		}

@@ -4,6 +4,7 @@
  *         Portable: built natively and under MinGW.
  */
 #include "application_traces.h"
+#include <map>
 #include <cstdio>
 #include <set>
 
@@ -115,11 +116,37 @@ void testOwner() {
 	check(!isPasswordValue(L"Passive") && !isPasswordValue(L"Port") && !isPasswordValue(L"Host"), "the other names stay");
 }
 
+//! The folders a pattern stands for, and a forged name that matched its own pattern without end.
+void testExpansion() {
+	std::map<std::wstring, std::vector<std::wstring>> disk = {
+		{ L"\\", { L"Program Files", L"Program Files (x86)", L"Windows" } },
+		{ L"\\Program Files", { L"TeamViewer" } },
+		{ L"\\Program Files (x86)", { L"TeamViewer", L"Other" } } };
+	size_t calls = 0;
+	auto lister = [&](const std::wstring& folder) {
+		++calls;
+		const auto found = disk.find(folder);
+		return found == disk.end() ? std::vector<std::wstring>() : found->second;
+	};
+	const std::vector<std::wstring> folders = expandFolderPattern(L"\\Program Files*\\TeamViewer", lister);
+	check(folders == std::vector<std::wstring>{ L"\\Program Files\\TeamViewer", L"\\Program Files (x86)\\TeamViewer" },
+	      "each folder the pattern stands for, its literal rest kept");
+	check(expandFolderPattern(L"\\Windows\\Temp", lister) == std::vector<std::wstring>{ L"\\Windows\\Temp" }, "a path without a pattern is itself");
+	// A forged index: a folder named like a pattern, which matches it.
+	disk[L"\\"] = { L"Program Files*x", L"..", L"a\\..\\b" };
+	calls = 0;
+	const std::vector<std::wstring> forged = expandFolderPattern(L"\\Program Files*\\TeamViewer", lister);
+	check(forged == std::vector<std::wstring>{ L"\\Program Files*x\\TeamViewer" } && calls == 1,
+	      "a name found on the disk is taken literally, never expanded again");
+	check(expandFolderPattern(L"\\*", lister) == std::vector<std::wstring>{ L"\\Program Files*x" }, "\"..\" and a name holding a separator left out");
+}
+
 int main() {
 	testWildcards();
 	testSwitches();
 	testTable();
 	testOwner();
+	testExpansion();
 	std::printf("%d checks, %d failed\n", checks, failures);
 	return failures ? 1 : 0;
 }

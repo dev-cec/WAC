@@ -21,6 +21,7 @@
  */
 #pragma once
 
+#include <functional>
 #include <set>
 #include <string>
 #include <vector>
@@ -104,6 +105,18 @@ struct TraceOwner {
  *  @param sourcePath the file's path on the examined machine ("C:\…")
  *  @return its group and product, or nulls */
 TraceOwner traceOwnerOf(const std::wstring& sourcePath);
+
+/*! The folders a written path stands for, each component holding `*` or `?`
+ *  matched against the subfolders the reading finds (raw_collect.cpp reads the
+ *  NTFS index). Only the table's own components are patterns: a name found on
+ *  the disk is taken literally — a forged index naming a folder
+ *  "Program Files*x" matched its own pattern again, and the expansion recursed
+ *  without end. A name holding a separator, ".", "..", is not a folder's, left out.
+ *  @param written the path, a pattern
+ *  @param subfolders the names of a folder's subfolders, none when it is absent
+ *  @return the folders that exist under the pattern; the path itself when it holds no pattern */
+std::vector<std::wstring> expandFolderPattern(const std::wstring& written,
+                                              const std::function<std::vector<std::wstring>(const std::wstring&)>& subfolders);
 
 /*! The switches wac.yml gives the products of application_traces.h and of
  *  application_registry: "group" or "group.product" switched off, and
