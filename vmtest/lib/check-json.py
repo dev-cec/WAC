@@ -70,6 +70,11 @@ GENUINE_DOUBLED = {r"C:\\tools\\kernrate"}
 # backslashes: Get-WinEvent shows it so under Server 2012 R2 (2026-11-04).
 WQL_QUERY = "IWbemServices::ExecQuery"
 
+# The groups of the applications' traces (application_traces.cpp): their Text is a
+# line as the product wrote it.
+TRACE_GROUPS = {"antivirus", "cloud_storage", "file_transfer", "messaging", "remote_administration",
+                "server_applications", "server_logs", "ssh", "system_traces", "virtualisation", "vpn"}
+
 def inconsistencies(value):
     """Returns the list of doubly escaped path patterns in the value."""
     if value in GENUINE_DOUBLED or WQL_QUERY in value:
@@ -370,7 +375,11 @@ def main():
             invalid += 1
             continue
 
+        # A line of an application's log, as the product wrote it (Tailscale's Go
+        # quotes its paths with doubled backslashes): its text is not WAC's.
+        verbatim = name[:-5] in TRACE_GROUPS
         faults = [(p, v, m) for p, v in walk(data)
+                            if not (verbatim and p == ".Text")
                             for m in [inconsistencies(v)] if m]
 
         if faults:
@@ -3982,7 +3991,8 @@ def check_application_traces(folder):
     within the instants the system clock gave before and after it; WinSCP.ini and FileZilla's sitemanager.xml as their
     structure, their passwords nowhere in the file; a pCloud database listed,
     not converted; a crash dump, off by default, absent from the manifest; an
-    Emsisoft and a Zoom line, a VirtualBox machine as XML, the transcript
+    Emsisoft and a Zoom line, a VirtualBox machine as XML, an OpenVPN profile
+    whose inline private key is left out, the transcript
     Start-Transcript wrote, PuTTY's and WinSCP's sessions in wac's hive
     without WinSCP's password, and a domain controller's real netlogon.log."""
     path = os.path.join(folder, "reference", "application-traces.json")
@@ -4001,34 +4011,35 @@ def check_application_traces(folder):
     def of(entries, file):
         return [r for r in entries if str(r.get("File", "")).lower() == file.lower()]
 
-    remote = rows("remote_administration")
-    teamviewer = of(remote, reference["TeamViewerLog"])
-    dated = [r for r in teamviewer if "incoming connection" in str(r.get("Text", ""))]
-    report(len(dated) == 1 and dated[0].get("Product") == "TeamViewer" and dated[0].get("Line") == 2
-           and dated[0].get("TimeAsWritten") == reference["TeamViewerWritten"] and reference["TeamViewerUtc"] in instants_of(dated[0])
-           and dated[0].get("TimeZoneAssumed") == "Local"
-           # Time is TimeUtc in the current zone: its date the one written, unless lived twice.
-           and instant(dated[0].get("Time", "")) == instant(dated[0].get("TimeUtc", ""))
-           and (dated[0].get("TimeAlsoPossibleUtc")
-                or str(dated[0].get("Time", "")).startswith(reference["TeamViewerWritten"][:10].replace("/", "-")))
-           and "wac-trace-witness continuation" in str(dated[0].get("Text", "")),
-           f"remote_administration.json: TeamViewer's witness line, written {reference['TeamViewerWritten']} local, "
-           f"{reference['TeamViewerUtc']} as Windows computes it, to the millisecond; its continuation"
-           f"{lived_twice_note(dated[0]) if dated else ''}",
-           f"remote_administration.json: TeamViewer's witness line not as expected (UTC {reference['TeamViewerUtc']}): {teamviewer[:3]}")
-    report(not of(remote, reference["Decoy"]), "remote_administration.json: the decoy TeamViewer's filter does not take, absent",
-           "remote_administration.json: the decoy was taken")
-    found += check_zone_change_witness(folder, reference, of(remote, reference["ZoneLog"]) if "ZoneLog" in reference else [])
-    if "DstLog" in reference:
-        found += check_dst_witness(folder, reference, of(remote, reference["DstLog"]))
-    else:
-        print("  ℹ️ daylight saving witnesses not placed (a zone without daylight saving time)")
     # A group switched off by wac.yml (run-wac-test.sh --only): its witnesses not looked for.
     def wanted(group):
         if switched_off(folder, group + ".json"):
             print(f"  ⏭️  {group}.json switched off by wac.yml: its witnesses not looked for")
             return False
         return True
+    if wanted("remote_administration"):
+        remote = rows("remote_administration")
+        teamviewer = of(remote, reference["TeamViewerLog"])
+        dated = [r for r in teamviewer if "incoming connection" in str(r.get("Text", ""))]
+        report(len(dated) == 1 and dated[0].get("Product") == "TeamViewer" and dated[0].get("Line") == 2
+               and dated[0].get("TimeAsWritten") == reference["TeamViewerWritten"] and reference["TeamViewerUtc"] in instants_of(dated[0])
+               and dated[0].get("TimeZoneAssumed") == "Local"
+               # Time is TimeUtc in the current zone: its date the one written, unless lived twice.
+               and instant(dated[0].get("Time", "")) == instant(dated[0].get("TimeUtc", ""))
+               and (dated[0].get("TimeAlsoPossibleUtc")
+                    or str(dated[0].get("Time", "")).startswith(reference["TeamViewerWritten"][:10].replace("/", "-")))
+               and "wac-trace-witness continuation" in str(dated[0].get("Text", "")),
+               f"remote_administration.json: TeamViewer's witness line, written {reference['TeamViewerWritten']} local, "
+               f"{reference['TeamViewerUtc']} as Windows computes it, to the millisecond; its continuation"
+               f"{lived_twice_note(dated[0]) if dated else ''}",
+               f"remote_administration.json: TeamViewer's witness line not as expected (UTC {reference['TeamViewerUtc']}): {teamviewer[:3]}")
+        report(not of(remote, reference["Decoy"]), "remote_administration.json: the decoy TeamViewer's filter does not take, absent",
+               "remote_administration.json: the decoy was taken")
+        found += check_zone_change_witness(folder, reference, of(remote, reference["ZoneLog"]) if "ZoneLog" in reference else [])
+        if "DstLog" in reference:
+            found += check_dst_witness(folder, reference, of(remote, reference["DstLog"]))
+        else:
+            print("  ℹ️ daylight saving witnesses not placed (a zone without daylight saving time)")
     if wanted("ssh"):
         ssh = of(rows("ssh"), reference["SshLog"])
         report(len(ssh) == 1 and ssh[0].get("TimeUtc") == "2026-11-08T13:03:21.123Z" and "TimeZoneAssumed" not in ssh[0],
@@ -4088,6 +4099,14 @@ def check_application_traces(folder):
                and "wac-trace-witness-machine" in json.dumps(entry[0].get("Content")),
                "virtualisation.json: VirtualBox's witness machine as XML, its name kept",
                f"virtualisation.json: VirtualBox's witness machine not as expected: {entry[:1]}")
+    if "Vpn" in reference and wanted("vpn"):
+        entry = of(rows("vpn"), reference["Vpn"])
+        opening = [r for r in entry if "BEGIN PRIVATE KEY" in str(r.get("Text", ""))]
+        report(len(opening) == 1 and opening[0].get("HasPassword") is True
+               and "wac-trace-secret-4" not in json.dumps(rows("vpn"))
+               and any(r.get("Text") == "verb 3" and r.get("Line") == 7 for r in entry),
+               "vpn.json: the OpenVPN profile's lines kept, its inline private key left out and said, the lines after it numbered",
+               f"vpn.json: the OpenVPN profile not as expected, or its private key written: {entry[:6]}")
     if "Transcript" in reference and wanted("system_traces"):
         entry = of(rows("system_traces"), reference["Transcript"])
         report(any("wac-trace-witness transcript line" in str(r.get("Text", "")) for r in entry)

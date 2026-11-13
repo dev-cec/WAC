@@ -20,7 +20,8 @@
 #     Drive's cache beside, never taken;
 #   - a crash dump, a product off by default: never taken;
 #   - one product of each group left: an Emsisoft report, a Zoom log, a
-#     VirtualBox machine (XML), a PowerShell transcript written by
+#     VirtualBox machine (XML), an OpenVPN profile with its private key
+#     inline (the key left out), a PowerShell transcript written by
 #     Start-Transcript itself, PuTTY's and WinSCP's sessions in wac's hive
 #     (WinSCP's password left out), and on a domain controller the last line
 #     of its real netlogon.log;
@@ -223,6 +224,11 @@ $antivirus = "$env:ProgramData\Emsisoft\Reports\scan_wac-trace-witness.txt"
 Put $antivirus "2026-11-08 14:03:21 wac-trace-witness detected Trojan.Witness in C:\witness.exe`r`n"
 $zoom = "$profilePath\AppData\Roaming\Zoom\logs\wac-trace-witness.log"
 Put $zoom "2026-11-08 14:03:21 wac-trace-witness joined meeting 4242`r`n"
+# An OpenVPN profile with its private key inline: the conversion keeps its
+# lines, the key's left out, its opening line said (HasPassword).
+$ovpn = "$profilePath\OpenVPN\config\wac-trace-witness.ovpn"
+Put $ovpn ("remote vpn-witness.example 1194`r`n<key>`r`n-----BEGIN PRIVATE KEY-----`r`n" +
+    "wac-trace-secret-4`r`n-----END PRIVATE KEY-----`r`n</key>`r`nverb 3`r`n")
 $vbox = "$profilePath\VirtualBox VMs\wac-trace-witness\wac-trace-witness.vbox"
 Put $vbox ('<?xml version="1.0"?><VirtualBox xmlns="http://www.virtualbox.org/" version="1.19-windows">' +
     '<Machine uuid="{00000000-0000-0000-0000-000000004242}" name="wac-trace-witness-machine" OSType="Ubuntu_64"/></VirtualBox>')
@@ -298,6 +304,7 @@ $reference = @"
  "Antivirus": "$($antivirus.Replace('\', '\\'))",
  "Messaging": "$($zoom.Replace('\', '\\'))",
  "VirtualBox": "$($vbox.Replace('\', '\\'))",
+ "Vpn": "$($ovpn.Replace('\', '\\'))",
  "WacSid": "$sid"$transcriptReference$netlogonReference,
  "TeamViewerLog": "$($teamViewer.Replace('\', '\\'))",
  "TeamViewerWritten": "$written",
