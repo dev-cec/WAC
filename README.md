@@ -169,6 +169,28 @@ test cycle, on the server itself, with WAC started from a USB key; the directory
 under Server 2008 R2, 2012 R2, 2016, 2022 and 2025. The limits are in the
 validation report.
 
+**Applications' traces.** The logs and settings that common products keep
+outside the event logs: remote administration tools (TeamViewer, AnyDesk,
+RustDesk, ScreenConnect…), antivirus other than Defender, messaging, online
+storage, file transfer, VPN, virtualisation, server applications and logs
+(Netlogon, NetSetup, NPS, a certification authority), and what Windows keeps
+besides (crash dumps, PowerShell transcripts, the previous Windows). A table of
+products, most folders from KAPE's targets, one switch per product in
+`wac.yml`; PuTTY, WinSCP, WinRAR and 7-Zip read from each user's hive. Copied
+raw, then converted generically: a log line by line with the time it starts
+with, XML, JSON and INI as their structure, a database or binary listed. A
+value named like a password, a private key block, is never written; SSH
+private keys are never taken; crash dumps and the Office cache are off by
+default.
+
+**The time zone in force when a time was written.** A source that writes the
+clock time without an offset (a FAT volume, a DHCP log, an application's log)
+is converted with the zone in force *then*, from the machine's System log:
+every change of offset since Windows 10, the zone observed at boot, shutdown
+and each day before. A change whose instant no event gives is an interval,
+never an invented instant; a local time lived twice gives its other possible
+instants.
+
 **What to collect is a file, not a command line.** `wac.yml`, next to
 `WAC.exe`, holds the procedure: binaries rule, and one switch per artefact. The file applied is recorded in `investigation.json`.
 
