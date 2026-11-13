@@ -247,7 +247,9 @@ const wchar_t HOST_CONFIG[] = L"<configuration><system.applicationHost><sites><s
 const wchar_t DNS_ZONE[] = L"$TTL 60\r\n$ORIGIN a.test.\r\n@ IN SOA a. b. ( 1 2 3 4 5 ) ; c\r\nh 600 A 192.0.2.1\r\n  AAAA ::1\r\nt TXT ( \"x;\\\"y\" )\r\n";
 const wchar_t DNS_LOG[] = L"Key\r\n04/11/2026 09:04:07 F20 Note: x\r\n04/11/2026 09:05:43 0F28 PACKET  00 UDP Rcv 127.0.0.1 ee7a R Q [8085 A DR  NOERROR] A (5)host1(4)test(0)\r\n";
 const wchar_t DHCP_LOG[] = L"ID, Date\r\n10,11/04/26,10:00:00,Assign,192.0.2.1,h,00155D000002,,1234,0,,,,,,,,,0\r\n";
-const wchar_t TRACE_LOG[] = L"header\r\n2026-11-08T14:03:21.457+01:00 Connection from 10.0.0.5\r\n   at A.B()\r\n[2026/11/08 14:03:22] next\r\n";
+// With secret blocks (application_trace_files.cpp, secretBlockEnd): a PEM key, an .ovpn's <pkcs12>.
+const wchar_t TRACE_LOG[] = L"header\r\n2026-11-08T14:03:21.457+01:00 Connection from 10.0.0.5\r\n   at A.B()\r\n[2026/11/08 14:03:22] next\r\n"
+                            L"<key>\r\n -----BEGIN PRIVATE KEY----- \r\nMIIE\r\n-----END PRIVATE KEY-----\r\n</key>\r\n<pkcs12>\r\nAAAA\r\n</pkcs12>\r\n";
 const wchar_t TRACE_XML[] = L"<FileZilla3><Servers><Server><Host>h</Host><Pass encoding=\"base64\">c2VjcmV0</Pass></Server></Servers></FileZilla3>";
 const wchar_t TRACE_JSON[] = L"{\"a\":[1,{\"password\":\"p\",\"b\":\"c\"}],\"d\":true}";
 const wchar_t TRACE_INI[] = L"[Sessions\\bob]\r\nHostName=h\r\nPassword=enc\r\n";
