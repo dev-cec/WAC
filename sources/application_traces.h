@@ -1,11 +1,14 @@
 /*! \file
- *  \brief THE table of the applications' traces copied raw: remote administration,
+ *  \brief THE table of the applications' traces: remote administration,
  *         antivirus, messaging, cloud storage, file transfer, VPN, virtualisation,
  *         server applications, and the system's and servers' own logs.
  *
- *  WHY A TABLE. Each is a few folders a known product writes, of formats WAC does
- *  not convert: a line here, rather than a collector each. wac.yml has one section
- *  per group (one artefact of the catalogue) and, under it, one switch per product.
+ *  WHY A TABLE. Each is a few folders a known product writes, of formats WAC has
+ *  no decoder of its own for: a line here, rather than a collector each. The files
+ *  are copied raw, then converted generically (application_trace_files.h): a log
+ *  line by line, XML, JSON and INI as their structure, the rest listed. wac.yml has
+ *  one section per group (one artefact of the catalogue) and, under it, one switch
+ *  per product.
  *
  *  THE SOURCE. KAPE's targets give most paths, an independent list of where these
  *  products write. A product is rarely installed on a test machine: a witness proves
