@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire (5.0.0, code mis de côté) | P1 | moyen |
+| fait (442a9074) | P1 | moyen |
 
 ## Pourquoi
 Propres aux rôles. Ce sont les deux seuls groupes surtout serveur ; ils restent inoffensifs sur un client, où SQL Server Express ou un poste joint au domaine (`NetSetup.log`, `netlogon.log`) en portent aussi.
@@ -26,7 +26,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 
 ## Tâches
 - [x] Table écrite
-- [ ] Rôle AD CS en VM
+- [x] Rôle AD CS en VM
 - [x] Témoins en VM
 
 ## Journal
@@ -36,3 +36,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-12 : témoin écrit pour `server_logs` : la dernière ligne du vrai `netlogon.log` d'un contrôleur de domaine, lue par le témoin, à retrouver dans `server_logs.json`. À passer sur `srv2025dc-test`. `server_applications` sans témoin de produit réel (aucun SQL Server, Exchange… dans les VM). Le rôle AD CS reste à décider : l'installer modifie durablement la VM.
 - 2026-11-12 : cycle complet sur `srv2025dc-test` : 672 ✅, 0 ❌, conversion déterministe. Le contrôleur n'avait qu'un `netlogon.log` vide (sa marque d'ordre des octets, depuis la promotion) : Netlogon n'écrit qu'avec ses drapeaux de débogage. Le témoin les pose (`nltest /dbflag`, sans redémarrer le service), fait découvrir le domaine, les remet à 0 (vérifié : `DBFlag` = `0x00000000`) ; le fichier reste. Cycle ciblé : 53 ✅, 0 ❌ — 16 lignes retrouvées, la dernière lue par le témoin parmi elles, **aucune datée** : Netlogon n'écrit pas l'année (`MM/DD HH:MM:SS`), WAC n'en invente pas.
 - 2026-11-13 : décision de l'utilisateur : rôle AD CS installé sur `srv2022roles-test` (durable). `install-server-roles.ps1` ajoute `ADCS-Cert-Authority` et configure une racine autonome `wac-test-ca` ; `server-roles-witness.ps1` lit l'emplacement de la base dans la configuration de CertSvc ; `check-json.py` la veut dans `server_logs.json`, listée et non convertie (8f8a0c15). Cycle ciblé `server_logs` : `C:\Windows\system32\CertLog\wac-test-ca.edb` pris, listé, non converti ✅ ; 26 ❌ du harnais (rôles confrontés sans avoir été collectés) corrigés (5694240f). Cycle complet en cours.
+- 2026-11-13 : **fait.** Cycle complet sur `srv2022roles-test`, autorité de certification installée : 654 ✅, 0 ❌ ; la base `wac-test-ca.edb` prise, listée, non convertie ; DNS, DHCP, Hyper-V toujours confrontés ; conversion déterministe, innocuité conforme. Témoins des autres journaux : `netlogon.log` réel d'un contrôleur (sans année, non daté), `dcpromo.log` et `NetSetup.log` lus mois en premier. Critères communs comme les autres fiches des traces (voir B-062, archivée).

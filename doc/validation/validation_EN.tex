@@ -953,11 +953,13 @@ machines: their time is assumed local, unverified.
 
 Final series on the code of 5.0.0, 12 and 13 November 2026, \wac{} started from
 a USB key, number of checks passed, no failure: Windows~11, 677; Server~2025
-domain controller, 682; these two cycles after the fixes of the code and
-security review, conversion identical byte for byte, harmlessness confirmed.
-On the code before the review: Server~2025, 624; 2022 roles, 647;
-Server~2008~R2, 489; Server~2003, 125, the applications' traces in XP's
-profile layout included. The failures met on the way came from two defects of
+domain controller, 682; 2022 roles with a certification authority, 654;
+Server~2003, 125, the applications' traces in XP's profile layout included;
+these four cycles after the fixes of the code and security review, and, but
+for Server~2003 whose harness has no agent, conversion identical byte for byte
+and harmlessness confirmed. On the code before the
+review: Server~2025, 624; Server~2008~R2, 489. The failures met on the way came
+from two defects of
 \wac{}, fixed and tested: under XP and Server~2003, the profiles' traces were
 collected but not converted, and All Users was looked for in the wrong place;
 and from the harness, four witness scripts refused by PowerShell~2.

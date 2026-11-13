@@ -63,12 +63,11 @@ aux serveurs (web, Active Directory).
 Décision utilisateur du 2026-11-05 : la 4.0.0 se clôt avec les serveurs ; ces
 artefacts passent en 5.0.0, avec une option `wac.yml` par produit, regroupées
 par type. Ils valent pour les clients comme pour les serveurs. Les traces
-(B-062 à B-070, B-072, B-073, B-076, B-077) sont faites et archivées ; restent la mesure du
-rôle AD CS, la revue et la documentation.
+(B-062 à B-073, B-076, B-077) sont faites et archivées ; restent la clôture de
+la revue et de la documentation, avec la publication.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-071](B-071-applications-serveur-et-journaux.md) | `server_applications` et `server_logs` : applications et journaux de serveur | en cours (rôle AD CS installé sur `srv2022roles-test`, cycle ciblé à passer) | P1 | moyen |
 | [B-074](B-074-revue-code-securite-5.0.md) | Revue de code et revue de sécurité de la 5.0.0 | en cours (revue faite, constats corrigés ; clôture avec la publication) | P1 | fort |
 | [B-075](B-075-documentation-article-5.0.md) | Documentation de la 5.0.0 à jour et article de la 5.0.0 | en cours (documents et article faits ; PDF joints à la release) | P1 | moyen |
 

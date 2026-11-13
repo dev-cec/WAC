@@ -988,11 +988,12 @@ vérification.
 
 Série finale sur le code de la 5.0.0, du 12 au 13 novembre 2026, \wac{} lancé
 depuis une clé USB, nombre de contrôles passés, aucun échec : Windows~11, 677 ;
-contrôleur de domaine Server~2025, 682 ; ces deux cycles après les correctifs
-de la revue de code et de sécurité, conversion identique octet pour octet,
-innocuité conforme. Sur le code d'avant la revue : Server~2025, 624 ; rôles
-2022, 647 ; Server~2008~R2, 489 ; Server~2003, 125, dont les traces
-d'applications dans la disposition des profils de XP. Les échecs relevés en
+contrôleur de domaine Server~2025, 682 ; rôles 2022 avec une autorité de
+certification, 654 ; Server~2003, 125, dont les traces d'applications dans la
+disposition des profils de XP ; ces quatre cycles après les correctifs de la
+revue de code et de sécurité, et, hors Server~2003 dont le harnais n'a pas
+d'agent, conversion identique octet pour octet et innocuité conforme. Sur le code d'avant la revue : Server~2025, 624 ;
+Server~2008~R2, 489. Les échecs relevés en
 chemin venaient de deux défauts de \wac{}, corrigés et testés : sous XP et
 Server~2003, les traces des profils étaient collectées mais pas converties, et
 All Users était cherché au mauvais endroit ; et du harnais, quatre scripts
