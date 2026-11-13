@@ -1390,6 +1390,46 @@ de fil, copie bornée, variable de condition (une file, quatre consommateurs,
 20~000 éléments reçus chacun une fois, attente expirée au délai demandé). Programme
 32~bits, lancé dans la VM : Wine n'a pas ces fonctions.
 
+\section{Table des traces d'applications : \texttt{application\_traces\_test}}
+
+La table des produits (\fichier{application\_traces.cpp}), sans Windows :
+chaque clé de groupe et de produit unique, en minuscules, chaque produit avec au moins un dossier, et aucun filtre du groupe \texttt{ssh} qui prenne une clé privée ;
+le rattachement d'un chemin de la machine examinée à son produit (profils de
+\path|\Users|, de \path|\Documents and Settings|, du système et des services ;
+motifs, profondeur, filtre ; la première ligne de la table l'emporte) ; les
+interrupteurs de \fichier{wac.yml} (groupe coupé, produit coupé ou rallumé,
+produit coupé par défaut) ; les noms de valeur pris pour un mot de passe ; et
+l'expansion d'un dossier à motif, lecteur de sous-dossiers simulé : un nom lu
+sur le disque est pris tel quel, si bien qu'un dossier forgé nommé
+\texttt{Program Files*x} ne relance pas l'expansion sans fin. Compilé et lancé
+en natif par \texttt{build-windows.sh -{}-test} : 1~450 contrôles.
+
+\section{Conversion des traces : \texttt{application\_trace\_files\_test}}
+
+Le découpage d'un journal texte en enregistrements (une ligne datée et ses
+suites, les lignes vides sautées, leur numéro gardé) ; la date en tête, telle
+qu'écrite (années, mois ou jour en premier, fraction, \texttt{Z} ou décalage,
+niveau ou numéro de processus avant elle), et sa conversion selon le fuseau
+supposé, avec exactement les chiffres de fraction écrits ; le format d'un
+fichier (texte, XML, JSON, INI, base, binaire) ; les valeurs nommées comme un
+mot de passe écartées de XML, JSON et INI ; les blocs secrets d'un texte (clé
+privée PEM, clé d'OpenVPN, \texttt{<pkcs12>}, \texttt{<auth-user-pass>})
+écartés, leur ligne d'ouverture marquée, un bloc jamais fermé cachant la suite.
+Sous \texttt{wine}, sans argument : 65 contrôles.
+
+\section{Fuseau en vigueur au fil du temps : \texttt{time\_zone\_history\_test}}
+
+L'historique des fuseaux tiré du journal Système
+(\fichier{time\_zone\_history.cpp}) : à partir de Windows~10, les changements
+de décalage que Kernel-General consigne ; avant, les observations (EventLog
+6013, 6005, 6006, TZUtil 20001, Kernel-General 1 sans nom) et les règles de
+chaque fuseau observé, lues dans SOFTWARE. Un changement sans instant donne un
+intervalle, jamais un instant inventé ; un événement sans nom à une transition
+d'heure d'été, ou à une seconde d'un 20001, n'est pas un changement ; les
+heures vécues deux fois et sautées sont nommées. Les cas mesurés sur Server 2008 R2
+et dans les autres VM de test y sont rejoués. Sous \texttt{wine}, sans argument : 49
+contrôles.
+
 \chapter{Les harnais de robustesse}\label{ch:robustesse}
 
 \section{Le principe}

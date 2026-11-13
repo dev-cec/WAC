@@ -1332,6 +1332,45 @@ bounded copy, condition variable (one queue, four consumers, 20,000 items each
 received once, a wait timed out at the delay asked for). A 32-bit program, run
 in the VM: Wine lacks these functions.
 
+\section{Table of the applications' traces: \texttt{application\_traces\_test}}
+
+The table of products (\fichier{application\_traces.cpp}), without Windows:
+each group and product key unique, in lower case, each product with at least one folder, and no filter of the \texttt{ssh} group that would take a private key; the
+attachment of a path of the examined machine to its product (profiles under
+\path|\Users|, \path|\Documents and Settings|, the system's and the
+services'; patterns, depth, filter; the first line of the table wins); the
+switches of \fichier{wac.yml} (group off, product off or back on, product off
+by default); the value names taken for a password; and the expansion of a
+folder with a pattern, the subfolder reading simulated: a name read on the
+disk is taken literally, so that a forged folder named
+\texttt{Program Files*x} does not restart the expansion without end. Built and
+run natively by \texttt{build-windows.sh -{}-test}: 1,450 checks.
+
+\section{Conversion of the traces: \texttt{application\_trace\_files\_test}}
+
+The cutting of a text log into records (a dated line and its continuations,
+blank lines skipped, their numbers kept); the time at the head, as written
+(year, month or day first, fraction, \texttt{Z} or offset, a level or process
+identifier before it), and its conversion by the zone assumed, with exactly
+the digits of fraction written; a file's format (text, XML, JSON, INI,
+database, binary); the values named like a password left out of XML, JSON and
+INI; the secret blocks of a text (PEM private key, OpenVPN key,
+\texttt{<pkcs12>}, \texttt{<auth-user-pass>}) left out, their opening line
+marked, a block never closed hiding the rest. Under \texttt{wine}, without
+argument: 65 checks.
+
+\section{Zone in force over time: \texttt{time\_zone\_history\_test}}
+
+The history of zones drawn from the System log
+(\fichier{time\_zone\_history.cpp}): from Windows~10 on, the changes of offset
+Kernel-General logs; before, the observations (EventLog 6013, 6005, 6006,
+TZUtil 20001, Kernel-General 1 without a name) and the rules of each zone
+observed, read in SOFTWARE. A change without an instant gives an interval,
+never an invented instant; an event without a name at a daylight saving
+transition, or within a second of a 20001, is not a change; the times lived
+twice and skipped are named. The cases measured on Server 2008 R2 and in the
+other test VMs are replayed. Under \texttt{wine}, without argument: 49 checks.
+
 \chapter{The robustness harnesses}\label{ch:robustesse}
 
 \section{The principle}
