@@ -1186,7 +1186,8 @@ void convertArtefacts(bool systemAvailable) {
 			if (FAILED(hresult)) printError(hresult);   // not blocking: the current zone's rules apply
 			else printSuccess();
 			auditRecord(L"Reading of the time zones in force over time",
-			            L"Windows\\System32\\winevt\\Logs\\System.evtx (working copy), Kernel-General 1, 22, 24",
+			            // What loadSuspectTimeZoneHistory reads, on every version: SysEvent.evt before Vista.
+			            L"System log and TZUtil's log (working copies): Kernel-General 1, 22, 24; EventLog 6005, 6006, 6013; TZUtil 20001",
 			            hresult, Footprint::NONE);
 
 			/* ANSI code page of the SUSPECT, for the same reason: shortcuts,
