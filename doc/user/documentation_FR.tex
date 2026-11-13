@@ -342,10 +342,19 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   active_directory:        true   # contrôleur de domaine : ntds.dit et ses journaux ; aucun secret lu
   activities_cache:        true   # Chronologie Windows : applications, fichiers, pages, presse-papiers (ActivitiesCache.db)
   amcache:                 true   # Amcache.hve : applications, exécutables et pilotes vus
+  antivirus:                    # antivirus autres que Defender : journaux, listes de quarantaine
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
+  application_registry:           # outils d'accès distant et d'archives dans le registre de chaque utilisateur ; une valeur nommée comme un mot de passe n'est pas écrite
+    putty:                 true   # PuTTY : sessions, clés d'hôtes SSH
+    seven_zip:             true   # 7-Zip : dossiers et archives utilisés
+    winrar:                true   # WinRAR : historique des archives
+    winscp:                true   # WinSCP : sessions, clés d'hôtes SSH, historique
   bam:                     true   # dernière exécution de chaque programme par utilisateur (BAM)
   bits:                    true   # qmgr.db : travaux BITS, URL, destinations, commandes de notification
   boot_records:            true   # ce qui s'exécute avant Windows : premier Mio de chaque disque (MBR, GPT), secteurs de démarrage, fichiers de la partition EFI
   cloud_identity:          true   # inscription Entra ID de la machine et comptes professionnels des utilisateurs ; caches de jetons copiés chiffrés
+  cloud_storage:                # clients de stockage en ligne : métadonnées, fichiers synchronisés, comptes
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
   defender:                true   # Defender : journaux (MPLog, traces WPP brutes), historique des détections, quarantaine (copiée chiffrée)
   defender_configuration:  true   # exclusions et réglages de protection de Microsoft Defender
   defender_endpoint:       true   # dossier local de Defender for Endpoint, là où il est inscrit (sorties de Live Response, données cyber), copie brute seule
@@ -374,6 +383,8 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   events:                  true   # journaux d'événements, avec leurs messages
   explorer_recent_docs:    true   # fichiers ouverts par chaque utilisateur (RecentDocs de l'Explorateur)
   fat_volumes:             true   # volumes FAT et exFAT, clés USB du suspect comprises : entrées, supprimées aussi
+  file_transfer:                # outils de transfert de fichiers : sites, files d'attente, journaux
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
   firewall:                true   # règles et profils du pare-feu
   firewall_log:            true   # journal du pare-feu (pfirewall.log), s'il est activé : connexions acceptées ou rejetées, adresses, ports, processus
   group_policies:          true   # contrôleur de domaine : SYSVOL et ses stratégies
@@ -386,6 +397,8 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   known_networks:          true   # réseaux auxquels la machine s'est connectée (NetworkList)
   local_groups:            true   # membres de chaque groupe local (SAM)
   log_file:                true   # $LogFile et $TxfLog : journaux de transactions NTFS et TxF, copie brute seule
+  messaging:                    # messageries : bases locales, sessions, journaux
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
   mft:                     true   # $MFT : chaque fichier, présent ou supprimé, et ses dates
   mounted_devices:         true   # volumes et lettres de lecteur connus de la machine (MountedDevices)
   mount_points:            true   # volumes et partages vus par chaque utilisateur (MountPoints2)
@@ -410,12 +423,18 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   recent_documents:        true   # Recent : raccourcis vers les fichiers ouverts par chaque utilisateur
   recycle_bin:             true   # $I des corbeilles : quoi, par qui, quand
   registry_backups:        true   # RegBack : anciennes ruches de la machine, copie brute seule
+  remote_administration:        # administration à distance : journaux de connexion, configuration
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
   root_certificates:       true   # certificats racines de la machine et des utilisateurs
   run_keys:                true   # clés Run et RunOnce de la machine et de chaque utilisateur
   scheduled_tasks:         true   # tâches planifiées : commandes, déclencheurs, auteurs, dates
   search_index:            true   # index de recherche Windows : chemin, dates, taille, résumé de chaque élément indexé
   security:                true   # ruche SECURITY : noms des secrets LSA, connexions en cache, audit
   security_descriptors:    true   # $Secure:$SDS : propriétaire et droits de chaque fichier, chaque descripteur une fois
+  server_applications:          # applications de serveur : journaux et configuration
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
+  server_logs:                  # journaux qu'un serveur garde hors des journaux d'événements
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
   services:                true   # services et pilotes
   sessions:                true   # en direct
   setupapi:                true   # setupapi.dev.log : installations de périphériques
@@ -424,8 +443,12 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   shimcache:               true   # cache de compatibilité des applications (AppCompatCache)
   shortcuts:               true   # raccourcis hors de Recent : menu Démarrer, Bureaux, Quick Launch, barre des tâches
   srum:                    true   # SRUDB.dat : réseau et ressources par application et utilisateur, 30 à 60 jours
+  ssh:                          # OpenSSH : configuration et journaux du serveur, hôtes connus ; clés privées jamais prises
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
   startup_folders:         true   # dossiers de démarrage : ce qui s'exécute à l'ouverture de session
   sysmon:                  true   # Sysmon s'il est installé : sa configuration (règles telles que stockées) et les fichiers supprimés qu'il a archivés ; son journal est dans events
+  system_traces:                # ce que Windows garde en plus des artefacts ci-dessus
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
   thumbcache:              true   # caches des miniatures et des icônes : ce que chacun a vu, même supprimé ; images exportées
   typed_paths:             true   # chemins tapés dans l'Explorateur
   usbstor:                 true   # périphériques de stockage USB (Enum\USBSTOR)
@@ -434,6 +457,10 @@ artefacts:              # une clé par artefact ; une clé absente vaut true
   users:                   true   # comptes locaux (SAM) : connexions, échecs, indicateurs, condensats
   user_shell_folders:      true   # où sont vraiment le Bureau, les Documents, les Téléchargements de chacun
   usn_journal:             true   # $UsnJrnl:$J : créations, renommages, suppressions
+  virtualisation:               # VirtualBox, VMware Workstation, WSL : machines et journaux ; disques non pris
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
+  vpn:                          # clients VPN : configuration et journaux
+    <produit>:             true   # un interrupteur par produit (section Traces d'applications)
   web_client:              true   # navigateurs Chromium et Firefox : visites, téléchargements, recherches ; leurs bases copiées brutes
   web_server:                     # IIS : sites, pools, modules natifs, journaux, chaînes de connexion, comptes
     enabled:               true   # false : rien n'est lu ; le dossier de chaque site copié entier
@@ -2333,6 +2360,72 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         octets en hexadécimal).
 \end{description}
 
+\subsection{Traces d'applications}\label{sec:traces}
+
+Des produits courants laissent leurs propres journaux, hors des journaux
+d'événements : outils d'administration à distance, antivirus autres que
+Defender, messageries, stockage en ligne, transfert de fichiers, VPN,
+virtualisation, applications et journaux de serveur, et ce que Windows garde
+en plus. \wac{} les prend par une table : pour chaque produit, les dossiers
+où il écrit (la plupart d'après les cibles de KAPE), un filtre de noms et une
+profondeur. Un groupe est un artefact, avec une clé de \fichier{wac.yml} et un
+interrupteur par produit ; \texttt{antivirus: false} coupe tout le groupe. Un
+produit rarement installé sur une machine de test : un témoin prouve que le
+chemin de la table est pris, pas que chaque version du produit écrit là.
+
+\begin{description}[style=nextline,leftmargin=1.2em]
+  \item[\fichier{remote\_administration.json}, \fichier{antivirus.json}, \fichier{messaging.json}, \fichier{cloud\_storage.json}, \fichier{file\_transfer.json}, \fichier{vpn.json}, \fichier{virtualisation.json}, \fichier{server\_applications.json}, \fichier{server\_logs.json}, \fichier{ssh.json}, \fichier{system\_traces.json}]
+        un fichier par groupe, chaque élément avec son \champ{Product} et son
+        \champ{File} (le chemin sur la machine examinée). Les fichiers sont
+        copiés bruts, puis convertis selon leur contenu :
+        \begin{itemize}
+          \item un \textbf{journal texte} (UTF-8, UTF-16 ou la page de code de
+            la machine) : un élément par enregistrement, \champ{Line} (le numéro
+            de sa première ligne) et \champ{Text} ; les lignes sans date qui
+            suivent une ligne datée (une pile d'appels, une suite) lui sont
+            rattachées. Une date reconnue en tête garde son texte
+            (\champ{TimeAsWritten}) et donne \champ{Time} et \champ{TimeUtc},
+            comme tout artefact, avec exactement les chiffres de fraction
+            écrits. Écrite sans décalage, elle est lue comme heure locale de la
+            machine examinée, ou comme UTC pour un produit mesuré écrivant en
+            UTC : \champ{TimeZoneAssumed} (\texttt{Local}, \texttt{UTC}) le
+            dit. Une heure locale vécue deux fois donne aussi
+            \champ{TimeAlsoPossibleUtc}, une heure écrite sous un fuseau qui
+            n'est plus celui de la machine \champ{TimeZoneInForce}, et une
+            heure écrite pendant un changement de fuseau d'instant inconnu
+            \champ{TimeZoneChangedBetween} (section~\ref{sec:fuseaux}). Un
+            enregistrement au-delà de 64~Kio est coupé et le dit
+            (\champ{Truncated}) ;
+          \item un fichier \textbf{XML, JSON ou INI} (\path|.conf|,
+            \path|.cfg|, \path|.toml| compris) : \champ{Format} et
+            \champ{Content}, sa structure ;
+          \item \textbf{autre chose} (une base SQLite, un binaire, un fichier
+            chiffré, au-delà de 256~Mio) : \champ{Converted} \texttt{false} et
+            sa \champ{Reason} ; le fichier reste dans la consigne.
+        \end{itemize}
+        \textbf{Secrets.} Une valeur dont le nom ressemble à un mot de passe
+        (\texttt{*password*}, \texttt{*pwd*}, \texttt{*secret*},
+        \texttt{Pass}) n'est pas émise, et \champ{HasPassword} le dit ; de même
+        pour un bloc secret d'un fichier texte (clé privée PEM, clé d'OpenVPN,
+        bloc \texttt{<pkcs12>} ou \texttt{<auth-user-pass>} d'un profil
+        \path|.ovpn|) : ses lignes sont écartées, sa ligne d'ouverture gardée
+        avec \champ{HasPassword}. Les clés privées SSH ne sont jamais prises.
+        Telegram est pris entier, \path|tdata| compris : ses clés de session y
+        sont. \textbf{Coupés par défaut}, parce qu'ils peuvent porter la
+        mémoire d'un programme ou les documents de l'utilisateur : les vidages
+        de plantage (\texttt{crash\_dumps}, \texttt{minidumps}) et le cache des
+        documents Office (\texttt{office\_cache}). Jamais pris : les fichiers
+        que l'utilisateur garde dans un dossier synchronisé (le cache de
+        contenu de Google Drive), les disques et la mémoire des machines
+        virtuelles.
+  \item[\fichier{application\_registry.json}]
+        ce que PuTTY, WinSCP, 7-Zip et WinRAR gardent dans la ruche de chaque
+        utilisateur : un élément par clé portant des valeurs, \champ{SID} et
+        \champ{SIDName}, \champ{Product}, \champ{Key}, \champ{KeyLastWrite} et
+        \champ{Values} ; le mot de passe d'une session WinSCP, à peine
+        masqué, n'est pas émis, \champ{HasPassword} le dit.
+\end{description}
+
 \subsection{Journaux d'événements (\opt{events})}
 
 Les journaux sont lus en brut, sur le disque. Le service Journal
@@ -2416,7 +2509,7 @@ ou tar, portent au contraire un instant UTC, donné comme tel) et une date OLE d
 (\champ{AsWritten}). Les placer sur une chronologie demande de connaître
 leur origine : \wac{} ne l'invente pas.
 
-\paragraph{Heure locale écrite par la source.} Certaines sources n'écrivent
+\paragraph{Heure locale écrite par la source.}\label{sec:fuseaux} Certaines sources n'écrivent
 que l'heure d'horloge, sans décalage : volumes FAT, \fichier{setupapi.dev.log},
 journaux DHCP et du pare-feu, journaux texte des applications (TeamViewer,
 OpenSSH\ldots), historique hebdomadaire du WebCache, NetworkList, tâches

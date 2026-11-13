@@ -339,10 +339,19 @@ artefacts:              # one key per artefact; a missing key is true
   active_directory:        true   # domain controller: ntds.dit and its logs; no secret read
   activities_cache:        true   # Windows Timeline: applications, files, pages, clipboard (ActivitiesCache.db)
   amcache:                 true   # Amcache.hve: applications, executables and drivers seen
+  antivirus:                    # logs and quarantine lists of antivirus other than Microsoft Defender
+    <product>:             true   # one switch per product (section Applications' traces)
+  application_registry:           # remote and archive tools in each user's registry; a value named like a password is not written
+    putty:                 true   # PuTTY: sessions, SSH host keys
+    seven_zip:             true   # 7-Zip: folders and archives used
+    winrar:                true   # WinRAR: archive history
+    winscp:                true   # WinSCP: sessions, SSH host keys, history
   bam:                     true   # last execution of each program per user (Background Activity Moderator)
   bits:                    true   # qmgr.db: BITS jobs — URLs, destinations, notification command lines
   boot_records:            true   # what runs before Windows: each disk's first MiB (MBR, GPT), each partition's boot sectors, the EFI system partition's files
   cloud_identity:          true   # Entra ID join of the machine and work accounts of its users; token caches copied still encrypted
+  cloud_storage:                # metadata of online storage clients: synchronised files, accounts
+    <product>:             true   # one switch per product (section Applications' traces)
   defender:                true   # Microsoft Defender: support logs (MPLog, raw WPP traces), detection history, quarantine (copied encrypted)
   defender_configuration:  true   # Microsoft Defender exclusions and protection settings, its own and by policy
   defender_endpoint:       true   # Defender for Endpoint's local folder, where it is onboarded (Live Response outputs, cyber data), raw copy only
@@ -371,6 +380,8 @@ artefacts:              # one key per artefact; a missing key is true
   events:                  true   # the event logs, with their messages
   explorer_recent_docs:    true   # files each user opened, by extension, most recent first (Explorer's RecentDocs)
   fat_volumes:             true   # FAT and exFAT volumes, a suspect's USB keys included: every entry, deleted ones too
+  file_transfer:                # file transfer tools: sites, transfer queues and logs
+    <product>:             true   # one switch per product (section Applications' traces)
   firewall:                true   # firewall rules and profiles
   firewall_log:            true   # the firewall's log (pfirewall.log), when logging is on: connections allowed or dropped, addresses, ports, process
   group_policies:          true   # domain controller: SYSVOL and its policies
@@ -383,6 +394,8 @@ artefacts:              # one key per artefact; a missing key is true
   known_networks:          true   # networks the machine joined: name, kind, gateway, first and last connection (NetworkList)
   local_groups:            true   # members of each local group (SAM)
   log_file:                true   # $LogFile and $TxfLog: NTFS and transactional NTFS journals, raw copy only
+  messaging:                    # messaging clients: local databases, sessions, logs
+    <product>:             true   # one switch per product (section Applications' traces)
   mft:                     true   # $MFT: every file, present or deleted, with its dates (mft.json)
   mounted_devices:         true   # volumes and drive letters the machine knew (MountedDevices)
   mount_points:            true   # volumes and network shares each user's Explorer saw, with their commands (MountPoints2)
@@ -407,12 +420,18 @@ artefacts:              # one key per artefact; a missing key is true
   recent_documents:        true   # Recent: shortcuts to the files each user opened
   recycle_bin:             true   # $I of every volume's recycle bin: what was deleted, by whom, when
   registry_backups:        true   # RegBack: the machine's older hives, raw copy only
+  remote_administration:        # remote administration tools: connection logs, configuration
+    <product>:             true   # one switch per product (section Applications' traces)
   root_certificates:       true   # root certificates of the machine and of each user
   run_keys:                true   # Run and RunOnce keys of the machine and of each user
   scheduled_tasks:         true   # scheduled tasks: commands, triggers, authors, dates
   search_index:            true   # Windows Search index: path, dates, size, owner, summary of each indexed item, deleted ones included
   security:                true   # SECURITY hive: LSA secrets' names and dates, cached logons, audit policy (never a secret)
   security_descriptors:    true   # $Secure:$SDS: owner and access rights of every file, each descriptor once (mft.json: SecurityId)
+  server_applications:          # server applications: logs and configuration
+    <product>:             true   # one switch per product (section Applications' traces)
+  server_logs:                  # logs Windows keeps on a server beyond the event logs
+    <product>:             true   # one switch per product (section Applications' traces)
   services:                true   # services and drivers
   sessions:                true   # live
   setupapi:                true   # setupapi.dev.log: device installations, first connection of a USB key
@@ -421,8 +440,12 @@ artefacts:              # one key per artefact; a missing key is true
   shimcache:               true   # application compatibility cache (AppCompatCache)
   shortcuts:               true   # shortcuts outside Recent: Start menu, desktops, Quick Launch, pinned task bar
   srum:                    true   # SRUDB.dat: bytes sent and received, resources used, per application and user, 30 to 60 days
+  ssh:                          # OpenSSH: server configuration and logs, known hosts; private keys never taken
+    <product>:             true   # one switch per product (section Applications' traces)
   startup_folders:         true   # startup folders: what runs at logon
   sysmon:                  true   # Sysmon where it runs: its configuration (rules as stored) and the deleted files it archived; its log is in events
+  system_traces:                # what Windows keeps beyond the artefacts above
+    <product>:             true   # one switch per product (section Applications' traces)
   thumbcache:              true   # Explorer's thumbnail and icon caches: what each user saw, even deleted since; images exported
   typed_paths:             true   # paths typed in Explorer's address bar
   usbstor:                 true   # USB mass storage devices (Enum\USBSTOR)
@@ -431,6 +454,10 @@ artefacts:              # one key per artefact; a missing key is true
   users:                   true   # local accounts (SAM): logons, failures, flags, password hashes
   user_shell_folders:      true   # where each user's desktop, documents, downloads really are (OneDrive, another disk, a share)
   usn_journal:             true   # $UsnJrnl:$J: creations, renames, deletions (usn_journal.json)
+  virtualisation:               # VirtualBox, VMware Workstation, WSL: machines and logs; disks not taken
+    <product>:             true   # one switch per product (section Applications' traces)
+  vpn:                          # VPN clients: configuration and logs
+    <product>:             true   # one switch per product (section Applications' traces)
   web_client:              true   # browsers: visits, downloads, searches (Edge, Chrome, Brave, Vivaldi, Opera); their databases copied raw
   web_server:                     # IIS: sites, pools, native modules, logs, connection strings, accounts
     enabled:               true   # false: nothing read; each site's folder copied whole
@@ -2236,6 +2263,68 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         hexadecimal).
 \end{description}
 
+\subsection{Applications' traces}\label{sec:traces}
+
+Common products keep their own logs, outside the event logs: remote
+administration tools, antivirus other than Defender, messaging, online
+storage, file transfer, VPN, virtualisation, server applications and logs, and
+what Windows keeps besides. \wac{} takes them through a table: for each
+product, the folders it writes to (most from KAPE's targets), a filter of
+names and a depth. A group is an artefact, with a \fichier{wac.yml} key and a
+switch per product; \texttt{antivirus: false} switches off the whole group. A
+product is rarely installed on a test machine: a witness proves that the
+table's path is taken, not that every version of the product writes there.
+
+\begin{description}[style=nextline,leftmargin=1.2em]
+  \item[\fichier{remote\_administration.json}, \fichier{antivirus.json}, \fichier{messaging.json}, \fichier{cloud\_storage.json}, \fichier{file\_transfer.json}, \fichier{vpn.json}, \fichier{virtualisation.json}, \fichier{server\_applications.json}, \fichier{server\_logs.json}, \fichier{ssh.json}, \fichier{system\_traces.json}]
+        one file per group, each element with its \champ{Product} and its
+        \champ{File} (the path on the examined machine). The files are copied
+        raw, then converted by their content:
+        \begin{itemize}
+          \item a \textbf{text log} (UTF-8, UTF-16 or the machine's code page):
+            one element per record, \champ{Line} (the number of its first
+            line) and \champ{Text}; the lines without a time that follow a
+            dated one (a stack trace, a continuation) belong to it. A time
+            found at the head keeps its text (\champ{TimeAsWritten}) and gives
+            \champ{Time} and \champ{TimeUtc}, as every artefact, with exactly
+            the digits of fraction written. Written without an offset, it is
+            read as the examined machine's local time, or as UTC for a product
+            measured writing UTC: \champ{TimeZoneAssumed} (\texttt{Local},
+            \texttt{UTC}) says which. A local time lived twice also gives
+            \champ{TimeAlsoPossibleUtc}, a time written under a zone the
+            machine no longer has \champ{TimeZoneInForce}, and a time written
+            while the zone changed at an unknown instant
+            \champ{TimeZoneChangedBetween} (section~\ref{sec:fuseaux}). A
+            record past 64~KiB is cut and says so (\champ{Truncated});
+          \item an \textbf{XML, JSON or INI} file (\path|.conf|, \path|.cfg|,
+            \path|.toml| included): \champ{Format} and \champ{Content}, its
+            structure;
+          \item \textbf{anything else} (an SQLite database, a binary, an
+            encrypted file, past 256~MiB): \champ{Converted} \texttt{false} and
+            its \champ{Reason}; the file stays in the exhibit store.
+        \end{itemize}
+        \textbf{Secrets.} A value whose name looks like a password
+        (\texttt{*password*}, \texttt{*pwd*}, \texttt{*secret*},
+        \texttt{Pass}) is not written, and \champ{HasPassword} says so; so is
+        a secret block of a text file (a PEM private key, an OpenVPN key, an
+        \path|.ovpn| profile's \texttt{<pkcs12>} or \texttt{<auth-user-pass>}
+        block): its lines are left out, its opening line kept with
+        \champ{HasPassword}. SSH private keys are never taken. Telegram is
+        taken whole, \path|tdata| included: its session keys are there.
+        \textbf{Off by default}, as they may hold a program's memory or the
+        user's documents: crash dumps (\texttt{crash\_dumps},
+        \texttt{minidumps}) and the Office document cache
+        (\texttt{office\_cache}). Never taken: the files a user keeps in a
+        synchronised folder (Google Drive's content cache), virtual machines'
+        disks and memory.
+  \item[\fichier{application\_registry.json}]
+        what PuTTY, WinSCP, 7-Zip and WinRAR keep in each user's hive: one
+        element per key holding values, \champ{SID} and \champ{SIDName},
+        \champ{Product}, \champ{Key}, \champ{KeyLastWrite} and
+        \champ{Values}; a WinSCP session's password, barely obfuscated, is not
+        written, \champ{HasPassword} says so.
+\end{description}
+
 \subsection{Event logs (\opt{events})}
 
 The logs are read raw, from the disk. The event log service writes an event
@@ -2315,7 +2404,7 @@ hold a UTC instant instead, given as such) and an OLE date of a property store
 (\champ{AsWritten}). Placing them on a timeline needs their origin: \wac{}
 does not make it up.
 
-\paragraph{Local time written by the source.} Some sources write the clock
+\paragraph{Local time written by the source.}\label{sec:fuseaux} Some sources write the clock
 time only, without an offset: FAT volumes, \fichier{setupapi.dev.log}, the
 DHCP and firewall logs, the text logs of applications (TeamViewer,
 OpenSSH\ldots), the weekly history of the WebCache, NetworkList, \fichier{.job}
