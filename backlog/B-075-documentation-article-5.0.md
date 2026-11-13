@@ -38,11 +38,12 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 ## Tâches
 - [x] Contrôles mécaniques (clés, tests, versions, tableaux)
 - [x] Le fuseau en vigueur au fil du temps (B-077) dans les manuels et le dossier de validation : `Host.SuspectTimeZone.History`, `ChangesAtUnknownInstant`, `TimeZoneInForce`, `TimeZoneChangedBetween` ; sources par version de Windows (Kernel-General 22/24 depuis Windows 10 ; 6013, 20001 et Kernel-General 1 avant) ; journal Système et journal TZUtil prélevés à chaque collecte
-- [ ] Relecture et mise à jour de chaque document
-- [ ] Article de la 5.0.0, FR et EN
-- [ ] PDF régénérés, 0 Overfull
+- [x] Relecture et mise à jour de chaque document
+- [x] Article de la 5.0.0, FR et EN
+- [x] PDF régénérés, 0 Overfull
 - [ ] PDF joints à la release
 
 ## Journal
 - 2026-11-08 : créée à la demande de l'utilisateur, après la revue B-074 et avant la publication de la 5.0.0.
 - 2026-11-13 : contrôles mécaniques. Clés de `wac.yml` : les 99 de `bin/wac.yml` dans la copie des manuels FR et EN (il manquait `application_registry` et les onze groupes de traces). Harnais : `application_traces_test`, `application_trace_files_test`, `time_zone_history_test` sans section dans le guide des tests, ajoutées (1 450, 65 et 49 contrôles). Versions : « 4.0.0 » ne reste qu'aux places que `bump-version.sh` réécrit, et dans les mesures datées. Tableaux : `artefact-table.py` traduit les textes des douze nouveaux artefacts (99 artefacts, 153 formes) ; `attack-coverage.py` les rattache (journaux d'applications, connexions, sessions, transcriptions PowerShell, stockage en ligne), 476 techniques sur 479 comme avant. Relu et mis à jour : manuels (sous-section des traces d'applications, `sec:fuseaux` ; le fuseau au fil du temps y était déjà), guide des tests, dossier de validation (contrôles des traces et du harnais, robustesse de la 5.0), dossier d'innocuité (mesure de la série de la 5.0.0), comparaison avec KAPE (encadré : les traces prises et converties, comparaison non refaite), README, README du harnais. Tous les PDF à 0 Overfull. Article de la 5.0.0 écrit en FR et EN, une page chacun ; à compléter du nombre de contrôles du cycle Windows 11 de validation. Reste : le résultat de référence du dossier de validation, `doc/html`, les PDF joints à la release.
+- 2026-11-13 : article de la 5.0.0 écrit, FR et EN, une page chacun, 0 Overfull (21f3bbdb). Dossier de validation : résultat de référence de la série de la 5.0.0, contrôles de la disposition XP, des clés SSH témoins et de l'autorité de certification, WireGuard mesuré ; manuels : limites des volumes non mesurés (e3c17236). Reste : `doc/html` régénéré, la version portée par `bump-version.sh`, les PDF joints à la release.
