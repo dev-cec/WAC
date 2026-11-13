@@ -494,8 +494,12 @@ corrompues au hasard (graine fixe : un échec se reproduit à l'identique).
 Résultat : aucune lecture hors tampon, aucune boucle sans fin.
 
 \texttt{hostile\_input\_test}, sur des entrées forgées et non réelles, couvre les
-lecteurs ajoutés par la 4.0 : 32~000 entrées mutées, aucune lecture hors tampon,
-aucune exception échappée.
+lecteurs ajoutés par la 4.0 et ceux des traces d'applications de la 5.0
+(journaux texte et leurs blocs secrets, XML, JSON, INI) : 46~000 entrées
+mutées, aucune lecture hors tampon, aucune exception échappée. L'expansion des
+dossiers à motif des traces est éprouvée à part, sur un index forgé nommant un
+dossier comme son propre motif : elle se termine
+(\texttt{application\_traces\_test}).
 
 % ============================================================ 4
 \chapter{Le cycle automatique et ses contrôles}\label{ch:cycle}
@@ -901,6 +905,24 @@ pièce retouchée / refus de la conversion & garde-fou de la vérification avant
   lecture \\
 deux conversions d'une même collecte & dates lues sur la copie de travail,
   refaite à chaque conversion \\
+\multicolumn{2}{@{}l}{\textit{Traces d'applications}} \\
+un témoin de valeur connue par groupe, cycle ciblé sur ce seul groupe
+  & \texttt{application\_registry} et \texttt{cloud\_identity} seuls ne
+  faisaient pas copier les ruches des utilisateurs : 0 élément \\
+\texttt{SID} et \texttt{SIDName} de chaque artefact par utilisateur
+  & \texttt{application\_registry.json} écrivait \texttt{Sid} sans nom \\
+mots de passe et clés des témoins (WinSCP, FileZilla, profil OpenVPN à clé
+  privée en ligne) / tout le JSON du groupe
+  & une clé privée d'un fichier texte serait sortie en clair (revue de la
+  5.0.0) \\
+vrai \fichier{netlogon.log} d'un contrôleur, ses lignes sans année
+  & garde-fou : une date sans année n'est pas complétée \\
+fichier d'utilisateur dans le cache de Google Drive & garde-fou : le contenu
+  synchronisé n'est pas pris \\
+\multicolumn{2}{@{}l}{\textit{Harnais}} \\
+chaque script poussé dans la VM analysé par son propre PowerShell
+  & quatre scripts témoins refusés entiers par PowerShell~2 (Server~2008~R2) :
+  leurs contrôles sans référence \\
 \bottomrule
 \end{longtable}
 

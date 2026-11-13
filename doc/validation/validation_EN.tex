@@ -478,7 +478,11 @@ Each file is parsed whole, in its truncations, and in randomly corrupted copies
 Result: no read outside the buffer, no endless loop.
 
 \texttt{hostile\_input\_test}, on forged rather than real inputs, covers the readers
-4.0 added: 32,000 mutated inputs, no read outside the buffer, no escaped exception.
+4.0 added and those of 5.0's applications' traces (text logs and their secret
+blocks, XML, JSON, INI): 46,000 mutated inputs, no read outside the buffer, no
+escaped exception. The expansion of the traces' folders with a pattern is tried
+apart, on a forged index naming a folder like its own pattern: it ends
+(\texttt{application\_traces\_test}).
 
 % ============================================================ 4
 \chapter{The automatic cycle and its checks}\label{ch:cycle}
@@ -867,6 +871,24 @@ retouched exhibit / refusal of the conversion & safeguard of the check before
   reading \\
 two conversions of one collection & dates read on the working copy, rebuilt at
   each conversion \\
+\multicolumn{2}{@{}l}{\textit{Applications' traces}} \\
+a witness of known value per group, a cycle aimed at that group alone
+  & \texttt{application\_registry} and \texttt{cloud\_identity} alone did not
+  have the users' hives copied: 0 elements \\
+\texttt{SID} and \texttt{SIDName} of every per-user artefact
+  & \texttt{application\_registry.json} wrote \texttt{Sid} without a name \\
+the witnesses' passwords and keys (WinSCP, FileZilla, an OpenVPN profile with
+  its private key inline) / the group's whole JSON
+  & a private key of a text file would have come out in clear (review of
+  5.0.0) \\
+a domain controller's real \fichier{netlogon.log}, its lines without a year
+  & safeguard: a date without a year is not completed \\
+a user's file in Google Drive's cache & safeguard: synchronised content is not
+  taken \\
+\multicolumn{2}{@{}l}{\textit{Harness}} \\
+each script pushed into the VM parsed by its own PowerShell
+  & four witness scripts refused whole by PowerShell~2 (Server~2008~R2): their
+  checks without a reference \\
 \bottomrule
 \end{longtable}
 
