@@ -90,6 +90,32 @@ bool among(const std::wstring& extension, std::initializer_list<const wchar_t*> 
 	return false;
 }
 
+/*! The line that closes a block of secret lines this line opens, empty when it
+ *  opens none: a private key in PEM ("-----BEGIN RSA PRIVATE KEY-----"), the
+ *  keys OpenVPN writes in PEM ("-----BEGIN OpenVPN Static key V1-----", its
+ *  tls-crypt-v2 keys), and the blocks of an .ovpn that hold a secret without PEM
+ *  (<pkcs12>, base64; <auth-user-pass>, a user and a password). A certificate,
+ *  public, is not one. The text conversion leaves such a block out, as the
+ *  structured one leaves out a value named like a password.
+ *  @param line a line, its "\r" removed
+ *  @return the closing line, without its blanks */
+std::wstring secretBlockEnd(const std::wstring& line) {
+	const size_t first = line.find_first_not_of(L" \t"), last = line.find_last_not_of(L" \t");
+	if (first == std::wstring::npos) return {};
+	const std::wstring trimmed = line.substr(first, last - first + 1);
+	const std::wstring begin = L"-----BEGIN ", dashes = L"-----";
+	if (trimmed.size() > begin.size() + dashes.size() && trimmed.compare(0, begin.size(), begin) == 0
+	    && trimmed.compare(trimmed.size() - dashes.size(), dashes.size(), dashes) == 0) {
+		const std::wstring label = trimmed.substr(begin.size(), trimmed.size() - begin.size() - dashes.size());
+		if (label.find(L"PRIVATE KEY") != std::wstring::npos || label.compare(0, 8, L"OpenVPN ") == 0)
+			return L"-----END " + label + dashes;
+		return {};
+	}
+	for (const wchar_t* tag : { L"pkcs12", L"auth-user-pass" })
+		if (trimmed == std::wstring(L"<") + tag + L">") return std::wstring(L"</") + tag + L">";
+	return {};
+}
+
 /*! An ISO 8601 time written to 100 ns ("…:SS.fffffff" then "Z" or an offset),
  *  with exactly `digits` digits of fraction kept: those the source wrote.
  *  @param iso the time, seven digits of fraction
@@ -243,6 +269,7 @@ bool leadingTime(const std::wstring& line, WrittenTime& time, const LineLayout& 
 std::vector<TextRecord> textRecords(const std::wstring& text, const LineLayout& layout) {
 	std::vector<TextRecord> records;
 	size_t number = 0, position = 0;
+	std::wstring secretEnd;   // the line closing the secret block being left out, empty outside one
 	while (position < text.size()) {
 		const size_t end = text.find(L'\n', position);
 		std::wstring line = text.substr(position, end == std::wstring::npos ? std::wstring::npos : end - position);
@@ -250,6 +277,23 @@ std::vector<TextRecord> textRecords(const std::wstring& text, const LineLayout& 
 		++number;
 		if (!line.empty() && line.back() == L'\r') line.pop_back();
 		if (line.find_first_not_of(L" \t") == std::wstring::npos) continue;
+		/* Inside a secret block, every line is left out, its closing one with it;
+		   a block never closed hides the rest of the file, never shows it. */
+		if (!secretEnd.empty()) {
+			const size_t first = line.find_first_not_of(L" \t"), last = line.find_last_not_of(L" \t");
+			if (line.compare(first, last - first + 1, secretEnd) == 0) secretEnd.clear();
+			continue;
+		}
+		secretEnd = secretBlockEnd(line);
+		if (!secretEnd.empty()) {
+			// Its opening line, a record of its own: where the secret was, and that it was.
+			TextRecord record;
+			record.line = number;
+			record.secretLeftOut = true;
+			appendBounded(record, line);
+			records.push_back(std::move(record));
+			continue;
+		}
 		WrittenTime time;
 		const bool dated = leadingTime(line, time, layout);
 		if (!dated && !records.empty() && !records.back().time.asWritten.empty()) {
@@ -369,6 +413,7 @@ HRESULT ApplicationTraceFiles::getData() {
 			addRecordTimes(row, record.time, owner.product->writesUtc);
 			row.add(L"Text", Json::str(record.text));
 			if (record.truncated) row.add(L"Truncated", Json::boolean(true));
+			if (record.secretLeftOut) row.add(L"HasPassword", Json::boolean(true));
 			rows_.push(std::move(row));
 		}
 	}

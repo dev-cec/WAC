@@ -140,6 +140,32 @@ void testRecords() {
 	check(textRecords(L"").empty(), "an empty text has no record");
 }
 
+//! The secret blocks of a text — private keys, OpenVPN's keys and inline blocks — left out, their opening line said.
+void testSecretBlocks() {
+	const std::vector<TextRecord> ovpn = textRecords(
+		L"client\r\n"
+		L"<ca>\r\n-----BEGIN CERTIFICATE-----\r\nMIIBcertificate\r\n-----END CERTIFICATE-----\r\n</ca>\r\n"
+		L"<key>\r\n  -----BEGIN PRIVATE KEY-----  \r\nMIIEvQprivate\r\n-----END PRIVATE KEY-----\r\n</key>\r\n"
+		L"<tls-crypt>\r\n-----BEGIN OpenVPN Static key V1-----\r\n0123abcdstatic\r\n-----END OpenVPN Static key V1-----\r\n</tls-crypt>\r\n"
+		L"<pkcs12>\r\nMIIKpkcs12base64\r\n</pkcs12>\r\n"
+		L"<auth-user-pass>\r\nalice\r\nhunter2\r\n</auth-user-pass>\r\n"
+		L"remote vpn.example 1194\r\n");
+	std::wstring all;
+	size_t marked = 0;
+	for (const TextRecord& r : ovpn) { all += r.text + L"\n"; if (r.secretLeftOut) ++marked; }
+	check(all.find(L"MIIEvQprivate") == std::wstring::npos && all.find(L"0123abcdstatic") == std::wstring::npos
+	      && all.find(L"MIIKpkcs12base64") == std::wstring::npos && all.find(L"hunter2") == std::wstring::npos
+	      && all.find(L"alice") == std::wstring::npos, "a private key, a static key, a PKCS#12 and a password left out");
+	check(marked == 4, "each secret block's opening line said");
+	check(all.find(L"MIIBcertificate") != std::wstring::npos && all.find(L"remote vpn.example 1194") != std::wstring::npos
+	      && all.find(L"</key>") != std::wstring::npos, "a certificate and the lines after a block kept");
+	bool numbered = false;
+	for (const TextRecord& r : ovpn) if (r.text == L"remote vpn.example 1194") numbered = r.line == 24;
+	check(numbered, "the lines after a block keep their number");
+	const std::vector<TextRecord> open = textRecords(L"-----BEGIN RSA PRIVATE KEY-----\nMIIEsecret\nnever closed\n");
+	check(open.size() == 1 && open[0].secretLeftOut, "a block never closed hides the rest of the file");
+}
+
 void testFormats() {
 	check(traceFormatOf(L"Connections_incoming.txt", "2026-11-08 x\r\n") == TraceFormat::Text, "a text log");
 	check(traceFormatOf(L"main.db", "SQLite format 3") == TraceFormat::Database, "a database by its extension");
@@ -230,6 +256,7 @@ void testZoneInForce() {
 int wmain() {
 	testTimes();
 	testRecords();
+	testSecretBlocks();
 	testFormats();
 	testStructured();
 	testZoneInForce();

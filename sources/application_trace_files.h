@@ -21,7 +21,9 @@
  *  which ("Local", "UTC"). The harness checks the assumption on every log of a
  *  cycle: a log's last line against the moment its file was last written.
  *  Lines with no time of their own that follow a dated one (a stack trace, a
- *  continuation) belong to it. One element per structured file (XML, JSON,
+ *  continuation) belong to it. A block of secret lines — a private key, an
+ *  OpenVPN key, an .ovpn's <pkcs12> or <auth-user-pass> — is left out, its
+ *  opening line kept with HasPassword. One element per structured file (XML, JSON,
  *  INI): its Format and Content, its structure; a value named like a secret
  *  (isPasswordValue) is left out, HasPassword says so. One element for any
  *  other file (a database, a binary, an encrypted store): Converted false and
@@ -84,6 +86,7 @@ struct TextRecord {
 	std::wstring text;       //!< its lines, joined by "\n"
 	WrittenTime time;        //!< the time of its first line
 	bool truncated = false;  //!< cut at TEXT_RECORD_MAX characters
+	bool secretLeftOut = false;  //!< the opening line of a secret block, whose lines are left out (HasPassword)
 };
 
 //! Longest record kept, in characters: a hostile line of any length costs no more.
@@ -92,6 +95,9 @@ constexpr size_t TEXT_RECORD_MAX = 64 * 1024;
 /*! Cuts a text into records: each line starting with a time opens one, each
  *  line without a time that follows a dated record continues it, any other line
  *  is a record of its own. Blank lines are left out; "\r\n" and "\n" end a line.
+ *  A block holding a secret — a private key, an OpenVPN key, an .ovpn's
+ *  <pkcs12> or <auth-user-pass> — is left out up to its closing line, its
+ *  opening line kept alone and marked (secretLeftOut).
  *  @param text the decoded text
  *  @param layout how the product's lines start (leadingTime)
  *  @return its records, in order */
