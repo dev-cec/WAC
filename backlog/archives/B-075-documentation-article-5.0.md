@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| fait (352386ea) | P1 | moyen |
 
 ## Pourquoi
 Demande de l'utilisateur (2026-11-08) : avant de publier la 5.0.0, toute la documentation est remise à jour et un article de la 5.0.0 est écrit, comme pour la 4.0.0 (B-061). À la clôture de la 4.0.0, une relecture document par document a trouvé des retards qu'aucune fiche n'avait relevés : README sans les rôles, dossier de validation encore sur la 3.0.1, douze harnais de test sans section, couverture ATT&CK sans les nouveaux artefacts, section des limites de l'article dépassée. Cette fiche en fait une étape à part, après la revue, sur le code qui sera livré.
@@ -41,10 +41,11 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Relecture et mise à jour de chaque document
 - [x] Article de la 5.0.0, FR et EN
 - [x] PDF régénérés, 0 Overfull
-- [ ] PDF joints à la release
+- [x] PDF joints à la release
 
 ## Journal
 - 2026-11-08 : créée à la demande de l'utilisateur, après la revue B-074 et avant la publication de la 5.0.0.
 - 2026-11-13 : contrôles mécaniques. Clés de `wac.yml` : les 99 de `bin/wac.yml` dans la copie des manuels FR et EN (il manquait `application_registry` et les onze groupes de traces). Harnais : `application_traces_test`, `application_trace_files_test`, `time_zone_history_test` sans section dans le guide des tests, ajoutées (1 450, 65 et 49 contrôles). Versions : « 4.0.0 » ne reste qu'aux places que `bump-version.sh` réécrit, et dans les mesures datées. Tableaux : `artefact-table.py` traduit les textes des douze nouveaux artefacts (99 artefacts, 153 formes) ; `attack-coverage.py` les rattache (journaux d'applications, connexions, sessions, transcriptions PowerShell, stockage en ligne), 476 techniques sur 479 comme avant. Relu et mis à jour : manuels (sous-section des traces d'applications, `sec:fuseaux` ; le fuseau au fil du temps y était déjà), guide des tests, dossier de validation (contrôles des traces et du harnais, robustesse de la 5.0), dossier d'innocuité (mesure de la série de la 5.0.0), comparaison avec KAPE (encadré : les traces prises et converties, comparaison non refaite), README, README du harnais. Tous les PDF à 0 Overfull. Article de la 5.0.0 écrit en FR et EN, une page chacun ; à compléter du nombre de contrôles du cycle Windows 11 de validation. Reste : le résultat de référence du dossier de validation, `doc/html`, les PDF joints à la release.
 - 2026-11-13 : article de la 5.0.0 écrit, FR et EN, une page chacun, 0 Overfull (21f3bbdb). Dossier de validation : résultat de référence de la série de la 5.0.0, contrôles de la disposition XP, des clés SSH témoins et de l'autorité de certification, WireGuard mesuré ; manuels : limites des volumes non mesurés (e3c17236). Reste : `doc/html` régénéré, la version portée par `bump-version.sh`, les PDF joints à la release.
 - 2026-11-13 : `doc/html` régénéré (0bb2e74b) ; `bump-version.sh --major` : version 5.0.0, binaires et dix PDF régénérés, 0 Overfull (352386ea). Reste : push, tag, release avec les PDF joints, sur demande de l'utilisateur.
+- 2026-11-13 : article relu en entier, FR et EN (99 artefacts, 97 produits en onze groupes recomptés dans le code) ; 5.0.0 publiée, tag 5.0.0 sur 352386ea, release GitHub avec les dix PDF et les deux articles joints. Close.

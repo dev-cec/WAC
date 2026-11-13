@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | fort |
+| fait (352386ea) | P1 | fort |
 
 ## Pourquoi
 Demande de l'utilisateur (2026-11-08) : la 5.0.0 se clôt, comme la 4.0.0 (B-060), par une revue de code et une revue de sécurité. Les traces d'applications prélèvent des fichiers qui portent des secrets (sessions de messageries, configurations d'outils de transfert, vidages de plantage), écrits par des produits tiers dont le format change : un défaut y coûte plus cher qu'ailleurs, et ce code a été écrit hors des cycles, compilé tard.
@@ -33,7 +33,7 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - Aucun secret réel dans l'historique ; s'il y en a un, il est renouvelé.
 
 ## Tâches
-- [ ] Vérifier que B-062 à B-073 sont closes
+- [x] Vérifier que B-062 à B-073 sont closes
 - [x] Choisir les outils et fixer la méthode
 - [x] Revue de code, par point du périmètre
 - [x] Revue de sécurité, par point du périmètre
@@ -50,3 +50,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-13 : **constat moyen, corrigé : un nom de dossier forgé faisait boucler l'expansion des dossiers des traces.** `expandTraceFolder` cherchait l'étoile depuis le début du chemin à chaque appel : un index NTFS forgé nommant un dossier « Program Files*x » correspondait à « Program Files* », puis à lui-même, sans fin — collecte tuée par débordement de pile (reproduit : erreur de segmentation, rc 139). Correctif : `expandFolderPattern` (application_traces.cpp), les motifs cherchés après la partie déjà développée, un nom lu sur le disque pris tel quel, « . », « .. » et un nom portant un séparateur écartés ; sortie de `raw_collect.cpp`, le lecteur de sous-dossiers passé en paramètre, testée en natif (`testExpansion`, 4 contrôles, 1 450 verts) (f17250c8). Cycle VM à passer.
 - 2026-11-13 : relu `main.cpp` et `audit.cpp` (historique des fuseaux dans `conversion.json`, conversion des groupes de traces). **Faible, corrigé** : l'enregistrement d'audit de la lecture de l'historique des fuseaux annonçait « System.evtx, Kernel-General 1, 22, 24 » sur toute machine, quand avant Windows 10 ce sont EventLog 6005, 6006, 6013 et TZUtil 20001, et avant Vista `SysEvent.evt` (6fe7b182). Revue du code faite sur tout le périmètre ; reste le cycle complet après correctifs, sur un client et un serveur.
 - 2026-11-13 : **cycles complets après les correctifs : Windows 11 677 ✅, contrôleur Server 2025 682 ✅, 0 ❌**, conversion identique octet pour octet, innocuité conforme ; témoin OpenVPN à clé en ligne retrouvé. **Code changé après la revue, revu à son tour** (règle de cette fiche) : en vérifiant les critères des fiches B-063 à B-073 avant leur clôture, deux défauts de la disposition XP — traces des profils collectées mais non converties (`traceOwnerOf`, e342567a), All Users cherché à côté du profil du système (`xpFolderLayout` et `ProfileList`, 442a9074). Relus : traduction unique (une seule fonction, pas de copie), entrée de la ruche bornée (`getRegSzValue`, valeur vide refusée), motif `\\*\\All Users` d'une seule composante. Cycle `srv2003-test` 125 ✅, cycle ciblé `ssh,vpn` sur `win11-test` 53 ✅ ; cycle complet de `srv2022roles-test` (autorité de certification installée) en cours. Reste à cocher : B-071, close après son cycle ; la clôture de cette fiche suit la publication.
+- 2026-11-13 : B-062 à B-073, B-076 et B-077 closes et archivées ; cycle complet de `srv2022roles-test` avec l'autorité de certification 654 ✅, 0 ❌. 5.0.0 publiée : master poussé, tag 5.0.0 sur 352386ea, release GitHub avec binaires et PDF. Close.
