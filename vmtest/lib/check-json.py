@@ -4064,6 +4064,15 @@ def check_application_traces(folder):
             found += check_dst_witness(folder, reference, of(remote, reference["DstLog"]))
         else:
             print("  ℹ️ daylight saving witnesses not placed (a zone without daylight saving time)")
+    if wanted("ssh") and "SshKeys" in reference:
+        # The private keys beside their public halves: only the public taken.
+        manifest = json.dumps(load(folder, os.path.join("exhibits", "MANIFEST.json")) or {}).lower()
+        ssh_text = json.dumps(rows("ssh"))
+        publics = [k for k in reference["SshKeys"] if any(str(r.get("File", "")).lower() == (k + ".pub").lower() for r in rows("ssh"))]
+        privates = [k for k in reference["SshKeys"] if json.dumps(k.lower())[1:-1] + '"' in manifest]
+        report(len(publics) == 2 and not privates and "never taken" not in ssh_text and "public key" in ssh_text,
+               "ssh.json: the 2 public halves of the witness keys converted; their private keys neither in the manifest nor in the JSON",
+               f"ssh.json: witness keys not as expected — public halves found {publics}, private keys in the manifest {privates}")
     if wanted("ssh"):
         ssh = of(rows("ssh"), reference["SshLog"])
         report(len(ssh) == 1 and ssh[0].get("TimeUtc") == "2026-11-08T13:03:21.123Z" and "TimeZoneAssumed" not in ssh[0],

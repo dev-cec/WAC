@@ -64,6 +64,15 @@ $decoy = "$profilePath\AppData\Roaming\TeamViewer\wac-trace-decoy.txt"
 Put $decoy "2026-11-08 14:03:21 wac-trace-decoy: TeamViewer's filter does not take this name`r`n"
 $ssh = "$env:ProgramData\ssh\logs\wac-trace-witness.log"
 Put $ssh "2026-11-08T14:03:21.123+01:00 sshd[42]: wac-trace-witness accepted publickey`r`n"
+# Private keys beside their public half, as OpenSSH lays them out: the public
+# halves taken, the private ones never (decision of 2026-11-08). Names of the
+# witness's own, so that no real key of a machine is ever touched; the content
+# is no key, only a marker the checks look for.
+$sshKeys = @("$env:ProgramData\ssh\ssh_host_wac_witness_key", "$profilePath\.ssh\wac_witness_key")
+foreach ($key in $sshKeys) {
+    Put $key "wac-trace-witness private key, never taken`r`n"
+    Put "$key.pub" "ssh-ed25519 AAAAwacwitness wac-trace-witness public key`r`n"
+}
 $winscp = "$profilePath\AppData\Roaming\WinSCP.ini"
 Put $winscp "[Sessions\wac-trace-witness]`r`nHostName=witness.example`r`nPassword=wac-trace-secret-1`r`nPortNumber=2222`r`n"
 $filezilla = "$profilePath\AppData\Roaming\FileZilla\sitemanager.xml"
@@ -311,6 +320,7 @@ $reference = @"
  "TeamViewerUtc": "$expectedUtc",
  "Decoy": "$($decoy.Replace('\', '\\'))",
  "SshLog": "$($ssh.Replace('\', '\\'))",
+ "SshKeys": ["$($sshKeys[0].Replace('\', '\\'))", "$($sshKeys[1].Replace('\', '\\'))"],
  "WinScp": "$($winscp.Replace('\', '\\'))",
  "FileZilla": "$($filezilla.Replace('\', '\\'))",
  "PCloud": "$($pcloud.Replace('\', '\\'))",
