@@ -277,8 +277,8 @@ void suspectOffset(std::mt19937_64& rng) {
 	noon.wYear = 2026; noon.wMonth = 1; noon.wDay = 15; noon.wHour = 12;
 	FILETIME localNoon = { 0, 0 };
 	SystemTimeToFileTime(&noon, &localNoon);
-	check(localTimeToIso8601Utc(localNoon) == L"2026-01-15T17:00:00.0000000Z",
-	      L"localTimeToIso8601Utc(12:00 at UTC-05:00) = " + localTimeToIso8601Utc(localNoon));
+	check(timeToIso8601Utc(suspectLocalToUtc(localNoon)) == L"2026-01-15T17:00:00.0000000Z",
+	      L"12:00 at UTC-05:00 in UTC = " + timeToIso8601Utc(suspectLocalToUtc(localNoon)));
 	// Null in, out of range: a null date, never a shifted one.
 	check(value(utcToSuspectLocal(filetime(0))) == 0, L"utcToSuspectLocal(null) should be null");
 	check(value(suspectLocalToUtc(filetime(0))) == 0, L"suspectLocalToUtc(null) should be null");
@@ -458,8 +458,8 @@ void seasonalOffsets() {
 	check(utcTimeToIso8601Local(summerFt) == L"2026-07-15T14:00:00.0000000+02:00",
 	      L"summer UTC -> local: " + utcTimeToIso8601Local(summerFt));
 	// A local date stored by the artefact (Amcache, FAT date): its UTC and its label.
-	check(localTimeToIso8601Utc(winterFt) == L"2026-01-15T11:00:00.0000000Z",
-	      L"winter local -> UTC: " + localTimeToIso8601Utc(winterFt));
+	check(timeToIso8601Utc(suspectLocalToUtc(winterFt)) == L"2026-01-15T11:00:00.0000000Z",
+	      L"winter local -> UTC: " + timeToIso8601Utc(suspectLocalToUtc(winterFt)));
 	check(timeToIso8601Local(winterFt) == L"2026-01-15T12:00:00.0000000+01:00",
 	      L"winter local label: " + timeToIso8601Local(winterFt));
 	// The hour repeated on 25 October 2026 (03:00 -> 02:00): two UTC instants, two labels.

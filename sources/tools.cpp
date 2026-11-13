@@ -1335,10 +1335,6 @@ std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc, Precision precis
 	return formatLocal(shifted(filetimeUtc, -bias * MINUTE_100NS), bias, precision);
 }
 
-std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal, Precision precision) {
-	return timeToIso8601Utc(suspectLocalToUtc(filetimeLocal), precision);
-}
-
 std::wstring decodeText(const std::string& bytes, UINT codePage)
 {
 	//used to log, so no log to this call function

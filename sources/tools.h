@@ -807,21 +807,6 @@ bool iso8601UtcToFiletime(const std::wstring& text, FILETIME& filetime);
 */
 std::wstring timeToIso8601Local(const FILETIME& filetime, Precision precision = Precision::HundredNanoseconds);
 
-/*! Converts a FILETIME **expressed in local time** to UTC, then formats it as
-* ISO 8601 with the "Z" suffix.
-* For the dates really stored in local time: the dates of FAT volumes,
-* setupapi.dev.log, OLE dates. Most Windows artefacts store UTC — BAM,
-* UserAssist, USBSTOR, Amcache, ShimCache, and the FAT-format dates of shell
-* items (shortcuts, jump lists, shellbags) were all once read as local time
-* by mistake, each shifted by the time-zone offset; each is now confronted
-* with an independent source by check-json.py or the test VM.
-* The offset is the suspect's (suspectLocalToUtc), not the running machine's.
-* @param filetimeLocal the instant, in the examined machine's local time
-* @param precision the precision of the source (see Precision): the digits of fraction written
-* @return "YYYY-MM-DDTHH:MM:SSZ", or "" if the date is null
-*/
-std::wstring localTimeToIso8601Utc(const FILETIME& filetimeLocal, Precision precision = Precision::HundredNanoseconds);
-
 /*! Converts a FILETIME **expressed in UTC** to the local time of the EXAMINED
 * machine, then formats it as ISO 8601 with the offset in force AT THAT DATE.
 *
