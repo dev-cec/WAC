@@ -2317,6 +2317,15 @@ table's path is taken, not that every version of the product writes there.
         (\texttt{office\_cache}). Never taken: the files a user keeps in a
         synchronised folder (Google Drive's content cache), virtual machines'
         disks and memory.
+        \textbf{Limits.} The volume added is not measured for messaging,
+        taken with its caches (several GB possible), nor for
+        \path|Windows.old| and the Office document cache, absent from the
+        test machines: each product is switched off in \fichier{wac.yml}.
+        WireGuard writes in its \path|Data| folder only a binary log,
+        \path|log.bin|, listed unconverted (measured); the encrypted
+        configuration of a tunnel imported through its interface
+        (\path|.conf.dpapi|) is not. The validation file gives, product by
+        product, what was installed and measured.
   \item[\fichier{application\_registry.json}]
         what PuTTY, WinSCP, 7-Zip and WinRAR keep in each user's hive: one
         element per key holding values, \champ{SID} and \champ{SIDName},

@@ -2418,6 +2418,15 @@ chemin de la table est pris, pas que chaque version du produit écrit là.
         que l'utilisateur garde dans un dossier synchronisé (le cache de
         contenu de Google Drive), les disques et la mémoire des machines
         virtuelles.
+        \textbf{Limites.} Le volume ajouté n'est pas mesuré pour les
+        messageries, prises avec leurs caches (plusieurs Go possibles), ni
+        pour \path|Windows.old| et le cache des documents Office, absents des
+        machines de test : chaque produit se coupe dans \fichier{wac.yml}.
+        WireGuard n'écrit dans son dossier \path|Data| qu'un journal binaire,
+        \path|log.bin|, listé non converti (mesuré) ; la configuration chiffrée
+        d'un tunnel importé par son interface (\path|.conf.dpapi|) ne l'est
+        pas. Le dossier de validation donne, produit par produit, ce qui a été
+        installé et mesuré.
   \item[\fichier{application\_registry.json}]
         ce que PuTTY, WinSCP, 7-Zip et WinRAR gardent dans la ruche de chaque
         utilisateur : un élément par clé portant des valeurs, \champ{SID} et

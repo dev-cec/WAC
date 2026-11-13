@@ -885,6 +885,13 @@ a domain controller's real \fichier{netlogon.log}, its lines without a year
   & safeguard: a date without a year is not completed \\
 a user's file in Google Drive's cache & safeguard: synchronised content is not
   taken \\
+witnesses in the layout of XP and Server~2003 (profile, All Users)
+  & profiles' traces collected but not converted; All Users looked for next to
+  the system's profile, under \path|system32\config| \\
+witness SSH private keys beside their public half & safeguard: only the
+  public half is taken \\
+a certification authority's database / CertSvc's configuration & safeguard:
+  the database listed, not converted \\
 \multicolumn{2}{@{}l}{\textit{Harness}} \\
 each script pushed into the VM parsed by its own PowerShell
   & four witness scripts refused whole by PowerShell~2 (Server~2008~R2): their
@@ -928,19 +935,34 @@ mRemoteNG & \texttt{2026-11-11 20:24:14,845} & local & start provoked & ms \\
 OpenVPN & \texttt{2026-11-11 20:24:46} & local & connection provoked & s \\
 Tailscale (service) & \texttt{2026-11-11T20:25:02.820+01:00} & offset written & installation provoked & ms \\
 UltraViewer (service) & \texttt{11/11/2026 20:25:51} & local, the culture's format & installation provoked & \textbf{not read} \\
+WireGuard (tunnel) & \path|Data\log.bin|, binary & --- & test tunnel started & \textbf{not read}, listed \\
 \bottomrule
 \end{longtable}
 
 UltraViewer's date follows the culture of the account writing it
 (\texttt{dd/mm/yyyy} in French, \texttt{m/d/yyyy} and AM/PM in US
 English): reading it "day first" without that culture would date another
-machine wrong. The line is therefore given with its text, without a date. The
+machine wrong. The line is therefore given with its text, without a date.
+WireGuard (1.1.1, installed, a test tunnel started, then uninstalled) writes
+in \path|Program Files\WireGuard\Data| only \path|log.bin|, a binary ring log:
+taken and listed unconverted; its uninstallation deletes the folder. The
 other products of the application traces' table were not present on the test
 machines: their time is assumed local, unverified.
 
 \section{Reference result}
 
-Final series on the code of 4.0.0, 7 and 8 November, \wac{} started from a USB
+Final series on the code of 5.0.0, 12 and 13 November 2026, \wac{} started from
+a USB key, number of checks passed, no failure: Windows~11, 677; Server~2025
+domain controller, 682; these two cycles after the fixes of the code and
+security review, conversion identical byte for byte, harmlessness confirmed.
+On the code before the review: Server~2025, 624; 2022 roles, 647;
+Server~2008~R2, 489; Server~2003, 125, the applications' traces in XP's
+profile layout included. The failures met on the way came from two defects of
+\wac{}, fixed and tested: under XP and Server~2003, the profiles' traces were
+collected but not converted, and All Users was looked for in the wrong place;
+and from the harness, four witness scripts refused by PowerShell~2.
+
+Before it, final series on the code of 4.0.0, 7 and 8 November, \wac{} started from a USB
 key as in the field, checks passed: Windows~11, 605; Server~2025, 566; 2022,
 586; Core~2022, 534; 2019, 540; 2016, 521; 2012~R2, 505; 2012, 497; 2008~R2,
 431; Server~2003, 109; domain controller 2022, 609; roles 2022, 583; domain
@@ -951,7 +973,7 @@ pair (Server~2016): fixed. A second conversion on the roles VM, one in 22,
 could not delete the previous working copy, its cause lost: \wac{} now gives
 the real error and the entry that holds.
 
-Before it: 30 October 2026, on the code of version 3.0.1 (Windows~11 build 26200,
+Earlier: 30 October 2026, on the code of version 3.0.1 (Windows~11 build 26200,
 Paris time zone), 553 checks passed, no failure; 29 October, on Windows~8.1, on
 the code of 3.0.0, 462; on the code of 4.0, 4 November, on a domain controller
 under Server~2022, 571, among them the 3,711 directory objects identical to

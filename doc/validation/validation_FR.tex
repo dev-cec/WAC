@@ -919,6 +919,13 @@ vrai \fichier{netlogon.log} d'un contrôleur, ses lignes sans année
   & garde-fou : une date sans année n'est pas complétée \\
 fichier d'utilisateur dans le cache de Google Drive & garde-fou : le contenu
   synchronisé n'est pas pris \\
+témoins dans la disposition de XP et de Server~2003 (profil, All Users)
+  & traces des profils collectées mais non converties ; All Users cherché à
+  côté du profil du système, sous \path|system32\config| \\
+clés privées SSH témoins à côté de leur moitié publique & garde-fou : seule
+  la moitié publique est prise \\
+base d'une autorité de certification / configuration de CertSvc & garde-fou :
+  la base listée, non convertie \\
 \multicolumn{2}{@{}l}{\textit{Harnais}} \\
 chaque script poussé dans la VM analysé par son propre PowerShell
   & quatre scripts témoins refusés entiers par PowerShell~2 (Server~2008~R2) :
@@ -962,20 +969,36 @@ mRemoteNG & \texttt{2026-11-11 20:24:14,845} & local & démarrage provoqué & ms
 OpenVPN & \texttt{2026-11-11 20:24:46} & local & connexion provoquée & s \\
 Tailscale (service) & \texttt{2026-11-11T20:25:02.820+01:00} & décalage écrit & installation provoquée & ms \\
 UltraViewer (service) & \texttt{11/11/2026 20:25:51} & local, format de la culture & installation provoquée & \textbf{non lu} \\
+WireGuard (tunnel) & \path|Data\log.bin|, binaire & --- & tunnel de test démarré & \textbf{non lu}, listé \\
 \bottomrule
 \end{longtable}
 
 La date d'UltraViewer suit la culture du compte qui l'écrit
 (\texttt{jj/mm/aaaa} en français, \texttt{m/j/aaaa} et AM/PM en anglais
 des États-Unis) : la lire « jour d'abord » sans cette culture daterait faux
-une autre machine. La ligne est donc rendue avec son texte, sans date. Les
+une autre machine. La ligne est donc rendue avec son texte, sans date.
+WireGuard (1.1.1, installé, tunnel de test démarré, puis désinstallé) n'écrit
+dans \path|Program Files\WireGuard\Data| que \path|log.bin|, journal binaire en
+anneau : pris et listé non converti ; sa désinstallation efface le dossier. Les
 autres produits de la table des traces d'applications n'étaient pas présents
 dans les machines de test : leur heure est supposée locale, sans
 vérification.
 
 \section{Résultat de référence}
 
-Série finale sur le code de la 4.0.0, du 7 au 8 novembre, \wac{} lancé depuis
+Série finale sur le code de la 5.0.0, du 12 au 13 novembre 2026, \wac{} lancé
+depuis une clé USB, nombre de contrôles passés, aucun échec : Windows~11, 677 ;
+contrôleur de domaine Server~2025, 682 ; ces deux cycles après les correctifs
+de la revue de code et de sécurité, conversion identique octet pour octet,
+innocuité conforme. Sur le code d'avant la revue : Server~2025, 624 ; rôles
+2022, 647 ; Server~2008~R2, 489 ; Server~2003, 125, dont les traces
+d'applications dans la disposition des profils de XP. Les échecs relevés en
+chemin venaient de deux défauts de \wac{}, corrigés et testés : sous XP et
+Server~2003, les traces des profils étaient collectées mais pas converties, et
+All Users était cherché au mauvais endroit ; et du harnais, quatre scripts
+témoins refusés par PowerShell~2.
+
+Avant elle, série finale sur le code de la 4.0.0, du 7 au 8 novembre, \wac{} lancé depuis
 une clé USB comme sur le terrain, nombre de contrôles passés : Windows~11, 605 ;
 Server~2025, 566 ; 2022, 586 ; Core~2022, 534 ; 2019, 540 ; 2016, 521 ;
 2012~R2, 505 ; 2012, 497 ; 2008~R2, 431 ; Server~2003, 109 ; contrôleur 2022,
@@ -987,7 +1010,7 @@ Une seconde conversion sur la VM des rôles, une sur 22, n'a pu effacer la copie
 de travail précédente, cause perdue : \wac{} en dit désormais l'erreur réelle et
 l'entrée qui résiste.
 
-Avant elle : le 30 octobre 2026, sur le code de la version 3.0.1 (Windows~11
+Plus tôt : le 30 octobre 2026, sur le code de la version 3.0.1 (Windows~11
 build 26200, fuseau de Paris), 553 contrôles passés, aucun échec ; le 29 octobre,
 sous Windows~8.1, sur le code de la 3.0.0, 462 ; sur le code de la 4.0, le
 4 novembre, sur un contrôleur de domaine sous Server~2022, 571, dont les 3~711
