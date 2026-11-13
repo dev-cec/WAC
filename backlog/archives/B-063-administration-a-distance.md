@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire (5.0.0, code mis de côté) | P1 | moyen |
+| fait (442a9074) | P1 | moyen |
 
 ## Pourquoi
 Voie d'entrée et de maintien courante dans les rançongiciels, y compris sur des postes de travail : qui s'est connecté, d'où, quand.
@@ -33,3 +33,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062). Chemin de RustDesk écrit de mémoire : pas une cible de KAPE, non vérifié à ce jour.
 - 2026-11-05 : décision de l'utilisateur : la 4.0.0 se clôt avec les serveurs, cet artefact passe en **5.0.0**. Code écrit mais jamais compilé, retiré de `sources/` et gardé dans le `git stash` « 5.0.0 : traces d'applications », sur `1a05c822`.
 - 2026-11-12 : témoins faits. TeamViewer (ligne datée, suite, leurre, changement de fuseau, heures d'été) depuis le 2026-11-08 ; AnyDesk, RustDesk et mRemoteNG installés et mesurés le 2026-11-11 (B-077), leurs journaux restés dans `win11-test` confrontés à chaque cycle. Le chemin de RustDesk n'est plus de mémoire : son journal réel a été écrit à `%APPDATA%\RustDesk\log` et pris par WAC. Cycle ciblé sur `win11-test` : 75 ✅, 0 ❌.
+- 2026-11-13 : **fait.** Témoins : TeamViewer (ligne datée à la milliseconde, suite, leurre, changement de fuseau, heures d'été) ; AnyDesk, RustDesk, mRemoteNG et UltraViewer installés et mesurés (B-077). Critères communs tenus : témoins retrouvés sur `win11-test` (677 ✅) et sur le contrôleur `srv2025dc-test` (682 ✅) après la revue, et sur `srv2025-test`, `srv2022roles-test`, `srv2008r2-test` ; disposition XP et Server 2003 vérifiée sur `srv2003-test` (125 ✅ : une ligne Zoom dans le profil, un rapport Emsisoft sous All Users — deux défauts trouvés et corrigés en chemin, e342567a et 442a9074) ; interrupteurs par produit et de groupe, produit inconnu refusé (`config_test`, `application_traces_test`) ; innocuité conforme (lecture NTFS brute) ; limites dans les manuels FR et EN. Critère « un produit absent n'ajoute rien au journal d'investigation » corrigé par décision de l'utilisateur (2026-11-13) : un produit dont le dossier est absent n'ajoute rien ; un dossier générique lu sans pièce (Kaseya dans `\Windows\Temp`, WinSCP dans `AppData\Roaming`) est consigné à 0 fichier, chaque lecture faite étant dite.

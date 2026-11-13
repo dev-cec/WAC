@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours (compilé, tests verts ; témoin et cycles à faire) | P1 | moyen |
+| fait (442a9074) | P1 | moyen |
 
 ## Pourquoi
 Décision de l'utilisateur du 2026-11-05 : une option distincte par produit, regroupées par type, pour la 5.0.0. La comparaison à KAPE a montré des manques, sur les clients autant que sur les serveurs. Écrire un collecteur par produit serait disproportionné pour des dossiers à copier : une table suffit.
@@ -34,8 +34,8 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - [x] Mutations vues échouer
 - [x] `config_test` : option de produit, groupe coupé, clé inconnue
 - [x] Script témoin commun (`guest/application-traces-witness.ps1`) et contrôle dans `check-json.py`
-- [ ] Documentation FR et EN, tableau des artefacts
-- [ ] Série complète de cycles, clients et serveurs
+- [x] Documentation FR et EN, tableau des artefacts
+- [x] Série complète de cycles, clients et serveurs
 
 ## Journal
 - 2026-11-05 : fiche ouverte à la demande de l'utilisateur, le code étant déjà écrit (voir B-062). Écrit le 2026-11-05 pendant la série finale : aucun fichier compilé ni utilisé par les cycles n'a été modifié dans `build-windows/`, `bin/` ni dans `sources/wac.yml`. Chemins issus des cibles de KAPE, à l'exception de ceux signalés dans les fiches.
@@ -48,3 +48,4 @@ En plus de la définition de « fini » commune (backlog/README.md) :
 - 2026-11-12 : série complète, une VM à la fois, chacune reposée 20 min : `srv2025dc-test` 672 ✅, 0 ❌ (puis 53 ✅ en ciblé sur le vrai `netlogon.log`, 783504e9) ; `srv2025-test` 624 ✅, 0 ❌ (sshd provoqué, daté à la milliseconde) ; `srv2022roles-test` 647 ✅, 0 ❌ ; conversion déterministe sur chacune. `srv2008r2-test` : l'évaluation expirée l'éteignait toutes les heures (wlms) — réarmée par `slmgr /rearm` (10 jours, 4 réarmements restants) ; premier cycle 457 ✅, 0 ❌ mais quatre scripts témoins refusés entiers par PowerShell 2 (initialiseur d'objet C# 3 dans `Add-Type`, `TimeZoneInfo` sans `System.Core`, `Get-LocalUser`, `Mandatory` sans valeur, `-notin`, `[ordered]`), et `qga.py` rendait le code de la dernière commande native au lieu de celui de `-File`. Corrigés, chaque script poussé désormais analysé par le PowerShell de la VM (❌ s'il le refuse) (e47a67aa). Second cycle : 489 ✅, 0 ❌, tous les témoins des traces confrontés (TeamViewer à la milliseconde, changement de fuseau, heures répétée et sautée, Emsisoft, Zoom, PuTTY et WinSCP sans le mot de passe, leurre de Drive absent) ; ce qui reste non posé tient aux modules absents de 2008 R2 (stockage, SMB, pare-feu, Defender, PnP). Reste : `srv2003`, la documentation.
 - 2026-11-13 : `srv2003-test` (harnais XP, à froid ; l'activation du kit d'évaluation expire dans 2 jours, la VM sera à recréer ensuite) : 123 ✅, 0 ❌, sur le binaire final de la série (ec4278e3) ; zone en vigueur : les 27 événements EventLog 6005, 6006 et 6013, comme l'historique de WAC ; carving de niveau 3, les témoins tronqués retrouvés. La série de régression est complète : `win11-test`, `srv2025dc-test`, `srv2025-test`, `srv2022roles-test`, `srv2008r2-test`, `srv2003-test`, toutes à 0 ❌. Reste : la documentation.
 - 2026-11-13 : **défaut trouvé en vérifiant les critères des fiches avant leur clôture : sur XP et Server 2003, les traces des profils et de `ProgramData` étaient collectées mais pas converties.** Le critère « disposition XP et Server 2003 vérifiée sur `srv2003` » n'avait aucun témoin : le cycle `srv2003-test` (123 ✅) ne confrontait que des JSON valides et vides. `traceOwnerOf` comparait le chemin source aux dossiers de la table, écrits dans la disposition de Vista (`AppData\Roaming`, `ProgramData`) : un fichier pris sous `Documents and Settings\<user>\Application Data` ou `All Users\Application Data` n'appartenait à aucun produit et sortait du JSON sans un mot. Correctif : la traduction de `examinedFolderLayout` sortie en `xpFolderLayout` (artefact_catalogue), une seule, appliquée aussi au rattachement ; test : 3 contrôles (Application Data, Local Settings\Application Data, All Users), vus échouer par mutation, 1 453 verts. Témoin ajouté au harnais XP (`run-xp.cmd`) : une ligne Zoom dans le profil, un rapport Emsisoft sous All Users ; `check_xp_layout_traces`. Compilation et cycle `srv2003-test` à faire après le cycle de validation en cours.
+- 2026-11-13 : **fait.** Documentation FR et EN (manuels : sous-section des traces d'applications, copie de `wac.yml` clé à clé ; tableaux régénérés, guide des tests, dossiers de validation, d'innocuité et de comparaison, README) ; série complète sur les six VM de régression, toutes à 0 ❌ (Windows 11 677, contrôleur Server 2025 682, Server 2025 624, rôles 2022 647, Server 2008 R2 489, Server 2003 125). Les fiches B-063 à B-073 décrivaient une copie brute sans JSON : la conversion générique de B-076 l'a remplacée.

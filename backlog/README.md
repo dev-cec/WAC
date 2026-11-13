@@ -58,38 +58,19 @@ aux serveurs (web, Active Directory).
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
 
-### Clôture de la 4.0.0
-
-Revue de sécurité du code de la 4.0.0, avant sa publication.
-
-| Fiche | Sujet | Statut | Priorité | Effort |
-|---|---|---|---|---|
-
 ### Version 5.0 — traces d'applications, clients et serveurs
 
 Décision utilisateur du 2026-11-05 : la 4.0.0 se clôt avec les serveurs ; ces
 artefacts passent en 5.0.0, avec une option `wac.yml` par produit, regroupées
-par type. Ils valent pour les clients comme pour les serveurs. Code mis de côté
-dans un `git stash` (voir B-062).
+par type. Ils valent pour les clients comme pour les serveurs. Les traces
+(B-062 à B-070, B-072, B-073, B-076, B-077) sont faites et archivées ; restent la mesure du
+rôle AD CS, la revue et la documentation.
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-062](B-062-traces-applications-mecanisme.md) | Traces d'applications : mécanisme commun, une option `wac.yml` par produit | en cours (compilé, tests verts) | P1 | moyen |
-| [B-063](B-063-administration-a-distance.md) | `remote_administration` : outils d'administration à distance | à faire (5.0.0, code mis de côté) | P1 | moyen |
-| [B-064](B-064-antivirus-tiers.md) | `antivirus` : journaux des antivirus autres que Defender | à faire (5.0.0, code mis de côté) | P1 | moyen |
-| [B-065](B-065-messageries.md) | `messaging` : messageries | à faire (5.0.0, code mis de côté) | P2 | moyen |
-| [B-066](B-066-stockage-en-ligne.md) | `cloud_storage` : métadonnées du stockage en ligne | à faire (5.0.0, code mis de côté) | P2 | faible |
-| [B-067](B-067-transfert-de-fichiers.md) | `file_transfer` : outils de transfert de fichiers | à faire (5.0.0, code mis de côté) | P2 | faible |
-| [B-068](B-068-vpn.md) | `vpn` : clients VPN | à faire (5.0.0, code mis de côté) | P2 | faible |
-| [B-069](B-069-virtualisation.md) | `virtualisation` : VirtualBox, VMware Workstation, WSL | à faire (5.0.0, code mis de côté) | P2 | faible |
-| [B-070](B-070-openssh.md) | `ssh` : OpenSSH serveur et client | à faire (5.0.0, code mis de côté) | P1 | faible |
-| [B-071](B-071-applications-serveur-et-journaux.md) | `server_applications` et `server_logs` : applications et journaux de serveur | à faire (5.0.0, code mis de côté) | P1 | moyen |
-| [B-072](B-072-traces-systeme.md) | `system_traces` : ce que Windows garde en plus | à faire (5.0.0, code mis de côté) | P1 | moyen |
-| [B-073](B-073-registre-des-outils.md) | `application_registry` : PuTTY, WinSCP, WinRAR et 7-Zip dans le registre | à faire (5.0.0, code mis de côté) | P2 | faible |
-| [B-076](B-076-traces-applications-conversion.md) | Traces d'applications : conversion générique en JSON (journaux texte, texte structuré) | en cours (tests verts ; témoin et cycles à faire) | P1 | moyen |
-| [B-077](B-077-dates-supposees-verifiees.md) | Dates supposées : heure locale ou UTC vérifiée produit par produit, à la précision écrite | faite (2026-11-11) | P1 | moyen |
-| [B-074](B-074-revue-code-securite-5.0.md) | Revue de code et revue de sécurité de la 5.0.0 | à faire (en dernier) | P1 | fort |
-| [B-075](B-075-documentation-article-5.0.md) | Documentation de la 5.0.0 à jour et article de la 5.0.0 | à faire (après B-074, avant la publication) | P1 | moyen |
+| [B-071](B-071-applications-serveur-et-journaux.md) | `server_applications` et `server_logs` : applications et journaux de serveur | en cours (rôle AD CS installé sur `srv2022roles-test`, cycle ciblé à passer) | P1 | moyen |
+| [B-074](B-074-revue-code-securite-5.0.md) | Revue de code et revue de sécurité de la 5.0.0 | en cours (revue faite, constats corrigés ; clôture avec la publication) | P1 | fort |
+| [B-075](B-075-documentation-article-5.0.md) | Documentation de la 5.0.0 à jour et article de la 5.0.0 | en cours (documents et article faits ; PDF joints à la release) | P1 | moyen |
 
 ## Réalisé
 
