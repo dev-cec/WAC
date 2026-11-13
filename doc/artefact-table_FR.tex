@@ -268,6 +268,42 @@
 \texttt{dhcp\_server} & Windows Server 2003 & \texttt{Windows\textbackslash{}System32\textbackslash{}dhcp, ou là où le dit Services\textbackslash{}DHCPServer\textbackslash{}Parameters : dhcp.mdb et ses journaux, DhcpSrvLog-*.log} & ESE, texte séparé par des virgules & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement là où le rôle est installé. Mesuré sous Server 2022 ; le dhcp.mdb des versions antérieures est lu si ses tables portent les mêmes noms.} \\
 \addlinespace
+\texttt{antivirus} & Windows XP & \texttt{Journaux, rapports et index de quarantaine de 21 antivirus, sous ProgramData et dans chaque profil} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque produit a son interrupteur. Chemins tirés des cibles de KAPE ; un témoin prouve que le chemin est pris, pas que chaque version y écrit. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{cloud\_storage} & Windows XP & \texttt{Métadonnées de Box, Dropbox, Google Drive, pCloud et SugarSync dans chaque profil} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque produit a son interrupteur. Bases et journaux seulement, pas les fichiers de l'utilisateur. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{file\_transfer} & Windows XP & \texttt{Réglages et journaux de FileZilla, FreeFileSync, TeraCopy et WinSCP dans chaque profil} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque produit a son interrupteur. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{messaging} & Windows XP & \texttt{Discord, Cisco Jabber, Mattermost, Signal, Skype, Slack, Teams, Telegram, Viber, WhatsApp et Zoom dans chaque profil} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque produit a son interrupteur. Magasins locaux tels que les applications les gardent, souvent chiffrés ; caches compris, volumineux. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{remote\_administration} & Windows XP & \texttt{Journaux et réglages de 15 outils d'administration à distance, sous ProgramData, Program Files et dans chaque profil} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque produit a son interrupteur. Chemins tirés des cibles de KAPE, ceux de RustDesk de sa documentation ; un témoin prouve que le chemin est pris, pas que chaque version y écrit. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{server\_applications} & Windows XP & \texttt{ERRORLOG de SQL Server, journaux d'Exchange Server, FileZilla Server, Confluence, ManageEngine} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque produit a son interrupteur. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{server\_logs} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}CertLog, Windows\textbackslash{}debug (netlogon, NetSetup, dcpromo), LogFiles\textbackslash{}IN*.log, Windows\textbackslash{}Tracing} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque source a son interrupteur. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{ssh} & Windows XP & \texttt{ProgramData\textbackslash{}ssh, .ssh de chaque profil : configuration, journaux, clés autorisées et hôtes connus, clés publiques} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Aucune clé privée n'est prise. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{system\_traces} & Windows XP & \texttt{Ceux de Windows : pca, SchedLgU.txt, notifications, EventTranscript.db, Panther, Minidump, CrashDumps, shims personnalisés, Syscache, Windows.old…} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque source a son interrupteur et existe sur les versions qui l'écrivent. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{virtualisation} & Windows XP & \texttt{Configuration et journaux de VirtualBox et de VMware Workstation, dossiers personnels de WSL 1} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque produit a son interrupteur. Ni disque virtuel, ni mémoire. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{vpn} & Windows XP & \texttt{Configuration et journaux d'OpenVPN, Proton VPN, Tailscale et WireGuard} & journaux texte, XML, JSON, INI ; bases et binaires & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque produit a son interrupteur. Chemins de Tailscale et de WireGuard tirés de leur documentation. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.} \\
+\addlinespace
+\texttt{application\_registry} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software : SimonTatham\textbackslash{}PuTTY, Martin Prikryl\textbackslash{}WinSCP 2, WinRAR, 7-Zip} & valeurs de registre & oui \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Chaque produit a son interrupteur. Une valeur nommée comme un mot de passe n'est pas émise, sa présence est dite.} \\
+\addlinespace
 \texttt{user\_access\_log} & Windows 8 & \texttt{Windows\textbackslash{}System32\textbackslash{}LogFiles\textbackslash{}Sum, tous les fichiers : SystemIdentity.mdb, Current.mdb, la base d'une période passée et leurs journaux} & ESE ; dates en FILETIME dans des colonnes déclarées DateTime & oui \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Présent seulement sur un serveur. Mesuré sous Server 2022 et 2016 ; sous 2016, la base d'une période passée porte un nom de trois caractères aléatoires, sans extension.} \\
 \addlinespace

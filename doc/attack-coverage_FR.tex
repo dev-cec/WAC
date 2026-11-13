@@ -34,21 +34,21 @@
 \toprule
 \textbf{Composant de données} & \textbf{Sur le disque, hors des journaux} \\
 \midrule\endhead
-Process Creation & \texttt{prefetch}, \texttt{amcache}, \texttt{shimcache}, \texttt{bam}, \texttt{userassist}, \texttt{muicache}, \texttt{srum}, \texttt{program\_usage} \\
+Process Creation & \texttt{prefetch}, \texttt{amcache}, \texttt{shimcache}, \texttt{bam}, \texttt{userassist}, \texttt{muicache}, \texttt{srum}, \texttt{program\_usage}, \texttt{system\_traces} \\
 Process Access & — \\
 Process Modification & — \\
 Process Metadata & \texttt{processes} \\
 Process Termination & — \\
-Command Execution & \texttt{powershell\_history}, \texttt{prefetch} \\
-Script Execution & \texttt{powershell\_history}, \texttt{powershell\_profiles} \\
+Command Execution & \texttt{powershell\_history}, \texttt{prefetch}, \texttt{system\_traces} \\
+Script Execution & \texttt{powershell\_history}, \texttt{powershell\_profiles}, \texttt{system\_traces} \\
 OS API Execution & — \\
 Module Load & — \\
 File Creation & \texttt{mft}, \texttt{usn\_journal}, \texttt{zone\_identifiers} \\
 File Modification & \texttt{mft}, \texttt{usn\_journal}, \texttt{log\_file} \\
 File Deletion & \texttt{usn\_journal}, \texttt{deleted\_files}, \texttt{recycle\_bin} \\
-File Access & \texttt{jump\_lists}, \texttt{recent\_documents}, \texttt{shortcuts}, \texttt{shellbags}, \texttt{explorer\_recent\_docs} \\
+File Access & \texttt{jump\_lists}, \texttt{recent\_documents}, \texttt{shortcuts}, \texttt{shellbags}, \texttt{explorer\_recent\_docs}, \texttt{application\_registry} \\
 File Metadata & \texttt{mft}, \texttt{security\_descriptors}, \texttt{zone\_identifiers} \\
-Network Connection Creation & \texttt{srum}, \texttt{network}, \texttt{firewall\_log}, \texttt{rdp\_client}, \texttt{bits}, \texttt{web\_client} \\
+Network Connection Creation & \texttt{srum}, \texttt{network}, \texttt{firewall\_log}, \texttt{rdp\_client}, \texttt{bits}, \texttt{web\_client}, \texttt{remote\_administration}, \texttt{vpn}, \texttt{ssh}, \texttt{application\_registry} \\
 Network Traffic Content & \texttt{dns\_server} \\
 Network Traffic Flow & \texttt{srum}, \texttt{firewall\_log} \\
 Network Share Access & \texttt{mount\_points}, \texttt{network\_shares}, \texttt{shellbags}, \texttt{user\_access\_log} \\
@@ -63,9 +63,9 @@ Scheduled Job Creation & \texttt{scheduled\_tasks} \\
 Scheduled Job Modification & \texttt{scheduled\_tasks} \\
 Scheduled Job Metadata & \texttt{scheduled\_tasks} \\
 WMI Creation & \texttt{wmi} \\
-Logon Session Creation & \texttt{users}, \texttt{rdp\_server} \\
+Logon Session Creation & \texttt{users}, \texttt{rdp\_server}, \texttt{ssh}, \texttt{remote\_administration} \\
 Logon Session Metadata & \texttt{users}, \texttt{sessions}, \texttt{rdp\_server}, \texttt{user\_access\_log} \\
-User Account Authentication & \texttt{users} \\
+User Account Authentication & \texttt{users}, \texttt{server\_logs} \\
 User Account Creation & \texttt{users}, \texttt{active\_directory} \\
 User Account Modification & \texttt{users}, \texttt{local\_groups}, \texttt{active\_directory} \\
 User Account Deletion & \texttt{active\_directory} \\
@@ -78,7 +78,7 @@ Drive Modification & \texttt{ntfs\_volumes}, \texttt{boot\_records} \\
 Volume Creation & \texttt{mounted\_devices}, \texttt{ntfs\_volumes}, \texttt{shadow\_copies} \\
 Host Status & — \\
 Named Pipe Metadata & — \\
-Application Log Content & \texttt{defender}, \texttt{setupapi}, \texttt{error\_reports}, \texttt{intune\_logs}, \texttt{onedrive}, \texttt{web\_server} \\
+Application Log Content & \texttt{defender}, \texttt{setupapi}, \texttt{error\_reports}, \texttt{intune\_logs}, \texttt{onedrive}, \texttt{web\_server}, \texttt{antivirus}, \texttt{remote\_administration}, \texttt{messaging}, \texttt{file\_transfer}, \texttt{vpn}, \texttt{virtualisation}, \texttt{server\_applications}, \texttt{server\_logs}, \texttt{ssh}, \texttt{system\_traces}, \texttt{cloud\_storage} \\
 Web Credential Creation & \texttt{web\_client}, \texttt{dpapi\_master\_keys}, \texttt{cloud\_identity} \\
 Firmware Modification & — \\
 Active Directory Object Modification & \texttt{active\_directory}, \texttt{group\_policies} \\
@@ -87,7 +87,7 @@ Active Directory Object Creation & — \\
 Active Directory Object Deletion & — \\
 Active Directory Credential Request & — \\
 Cloud Service Metadata & \texttt{cloud\_identity} \\
-Cloud Storage Access & \texttt{onedrive} \\
+Cloud Storage Access & \texttt{onedrive}, \texttt{cloud\_storage} \\
 Instance Creation & — \\
 Instance Start & — \\
 Domain Registration & — \\

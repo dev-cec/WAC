@@ -152,8 +152,42 @@ PHRASES = [
     ("XML; W3C text, UTC; SQLite", "XML ; texte W3C, UTC ; SQLite"),
 ]
 # Whole cells that are one word.
-WHOLE = {"files": "fichiers", "text": "texte", "observation": "observation"}
+WHOLE = {"files": "fichiers", "text": "texte", "observation": "observation",
+         'Logs, reports and quarantine indexes of 21 antivirus products, under ProgramData and each profile': 'Journaux, rapports et index de quarantaine de 21 antivirus, sous ProgramData et dans chaque profil',
+         'text logs, XML, JSON, INI; databases and binaries': 'journaux texte, XML, JSON, INI ; bases et binaires',
+         'Metadata of Box, Dropbox, Google Drive, pCloud and SugarSync in each profile': 'Métadonnées de Box, Dropbox, Google Drive, pCloud et SugarSync dans chaque profil',
+         'FileZilla, FreeFileSync, TeraCopy and WinSCP settings and logs in each profile': 'Réglages et journaux de FileZilla, FreeFileSync, TeraCopy et WinSCP dans chaque profil',
+         'Discord, Cisco Jabber, Mattermost, Signal, Skype, Slack, Teams, Telegram, Viber, WhatsApp and Zoom in each profile': 'Discord, Cisco Jabber, Mattermost, Signal, Skype, Slack, Teams, Telegram, Viber, WhatsApp et Zoom dans chaque profil',
+         'Logs and settings of 15 remote administration tools, under ProgramData, Program Files and each profile': "Journaux et réglages de 15 outils d'administration à distance, sous ProgramData, Program Files et dans chaque profil",
+         "SQL Server's ERRORLOG, Exchange Server's logs, FileZilla Server, Confluence, ManageEngine": "ERRORLOG de SQL Server, journaux d'Exchange Server, FileZilla Server, Confluence, ManageEngine",
+         'Windows\\System32\\CertLog, Windows\\debug (netlogon, NetSetup, dcpromo), LogFiles\\IN*.log, Windows\\Tracing': 'Windows\\System32\\CertLog, Windows\\debug (netlogon, NetSetup, dcpromo), LogFiles\\IN*.log, Windows\\Tracing',
+         'ProgramData\\ssh, .ssh of each profile: configuration, logs, authorized and known hosts, public keys': 'ProgramData\\ssh, .ssh de chaque profil : configuration, journaux, clés autorisées et hôtes connus, clés publiques',
+         "Windows's own: pca, SchedLgU.txt, notifications, EventTranscript.db, Panther, Minidump, CrashDumps, custom shims, Syscache, Windows.old…": 'Ceux de Windows : pca, SchedLgU.txt, notifications, EventTranscript.db, Panther, Minidump, CrashDumps, shims personnalisés, Syscache, Windows.old…',
+         'VirtualBox and VMware Workstation configuration and logs, WSL 1 home folders': 'Configuration et journaux de VirtualBox et de VMware Workstation, dossiers personnels de WSL 1',
+         'OpenVPN, Proton VPN, Tailscale and WireGuard configuration and logs': "Configuration et journaux d'OpenVPN, Proton VPN, Tailscale et WireGuard",
+         'NTUSER.DAT\\Software: SimonTatham\\PuTTY, Martin Prikryl\\WinSCP 2, WinRAR, 7-Zip': 'NTUSER.DAT\\Software : SimonTatham\\PuTTY, Martin Prikryl\\WinSCP 2, WinRAR, 7-Zip',
+}
 NOTES = {
+    "Each product has its own switch. Databases and logs only, not the user's files. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.":
+        "Chaque produit a son interrupteur. Bases et journaux seulement, pas les fichiers de l'utilisateur. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
+    'Each product has its own switch. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.':
+        "Chaque produit a son interrupteur. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
+    'Each product has its own switch. Local stores as the applications keep them, often encrypted; caches included, large. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.':
+        "Chaque produit a son interrupteur. Magasins locaux tels que les applications les gardent, souvent chiffrés ; caches compris, volumineux. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
+    "Each product has its own switch. Paths from KAPE's targets, RustDesk's from its documentation; a witness proves the path is taken, not that every version writes there. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.":
+        "Chaque produit a son interrupteur. Chemins tirés des cibles de KAPE, ceux de RustDesk de sa documentation ; un témoin prouve que le chemin est pris, pas que chaque version y écrit. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
+    'Each source has its own switch. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.':
+        "Chaque source a son interrupteur. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
+    'No private key is taken. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.':
+        "Aucune clé privée n'est prise. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
+    'Each source has its own switch and exists on the versions that write it. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.':
+        "Chaque source a son interrupteur et existe sur les versions qui l'écrivent. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
+    'Each product has its own switch. No virtual disk, no memory. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.':
+        "Chaque produit a son interrupteur. Ni disque virtuel, ni mémoire. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
+    "Each product has its own switch. Tailscale's and WireGuard's paths from their documentation. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.":
+        "Chaque produit a son interrupteur. Chemins de Tailscale et de WireGuard tirés de leur documentation. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
+    'Each product has its own switch. A value named as a password is not emitted, its presence said.':
+        "Chaque produit a son interrupteur. Une valeur nommée comme un mot de passe n'est pas émise, sa présence est dite.",
     "Present only on a domain controller. A password stored in a preference is reported, its value not written.": "Présent seulement sur un contrôleur de domaine. Un mot de passe enregistré dans une préférence est signalé, sa valeur n'est pas écrite.",
     "Present only on a domain controller. Its secrets are not read.": "Présent seulement sur un contrôleur de domaine. Ses secrets ne sont pas lus.",
     "Present only where a web server is installed. Also Apache and nginx, found by their service or folder, and the data folders of MySQL, MariaDB and PostgreSQL, taken raw.":
@@ -180,6 +214,8 @@ NOTES = {
         "La partition système EFI n'existe que sur une machine démarrée en UEFI (Windows 8 et suivants, certains 7 et Vista).",
     "Present only on a machine joined to Entra ID or with a work account added.":
         "Présent seulement sur une machine inscrite à Entra ID ou portant un compte professionnel.",
+    "Each product has its own switch. Paths from KAPE's targets; a witness proves the path is taken, not that every version writes there. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.":
+        "Chaque produit a son interrupteur. Chemins tirés des cibles de KAPE ; un témoin prouve que le chemin est pris, pas que chaque version y écrit. Conversion générique : un journal texte, un élément par ligne avec la date qui l'ouvre ; XML, JSON et INI en structure, secrets écartés ; une base ou un binaire listés, gardés bruts.",
     "Present only where Defender for Endpoint is onboarded; its formats are not documented: copied raw, not converted.":
         "Présent seulement là où Defender for Endpoint est inscrit ; ses formats ne sont pas documentés : copié brut, non converti.",
     "Copied raw: not converted (kernel events in MOF form, providers' manifests).":

@@ -268,6 +268,42 @@
 \texttt{dhcp\_server} & Windows Server 2003 & \texttt{Windows\textbackslash{}System32\textbackslash{}dhcp, or where Services\textbackslash{}DHCPServer\textbackslash{}Parameters says: dhcp.mdb and its logs, DhcpSrvLog-*.log} & ESE, comma-separated text & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only where the role is installed. Measured on Server 2022; older versions' dhcp.mdb is read if its tables have the same names.} \\
 \addlinespace
+\texttt{antivirus} & Windows XP & \texttt{Logs, reports and quarantine indexes of 21 antivirus products, under ProgramData and each profile} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each product has its own switch. Paths from KAPE's targets; a witness proves the path is taken, not that every version writes there. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{cloud\_storage} & Windows XP & \texttt{Metadata of Box, Dropbox, Google Drive, pCloud and SugarSync in each profile} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each product has its own switch. Databases and logs only, not the user's files. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{file\_transfer} & Windows XP & \texttt{FileZilla, FreeFileSync, TeraCopy and WinSCP settings and logs in each profile} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each product has its own switch. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{messaging} & Windows XP & \texttt{Discord, Cisco Jabber, Mattermost, Signal, Skype, Slack, Teams, Telegram, Viber, WhatsApp and Zoom in each profile} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each product has its own switch. Local stores as the applications keep them, often encrypted; caches included, large. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{remote\_administration} & Windows XP & \texttt{Logs and settings of 15 remote administration tools, under ProgramData, Program Files and each profile} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each product has its own switch. Paths from KAPE's targets, RustDesk's from its documentation; a witness proves the path is taken, not that every version writes there. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{server\_applications} & Windows XP & \texttt{SQL Server's ERRORLOG, Exchange Server's logs, FileZilla Server, Confluence, ManageEngine} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each product has its own switch. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{server\_logs} & Windows XP & \texttt{Windows\textbackslash{}System32\textbackslash{}CertLog, Windows\textbackslash{}debug (netlogon, NetSetup, dcpromo), LogFiles\textbackslash{}IN*.log, Windows\textbackslash{}Tracing} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each source has its own switch. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{ssh} & Windows XP & \texttt{ProgramData\textbackslash{}ssh, .ssh of each profile: configuration, logs, authorized and known hosts, public keys} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape No private key is taken. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{system\_traces} & Windows XP & \texttt{Windows's own: pca, SchedLgU.txt, notifications, EventTranscript.db, Panther, Minidump, CrashDumps, custom shims, Syscache, Windows.old…} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each source has its own switch and exists on the versions that write it. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{virtualisation} & Windows XP & \texttt{VirtualBox and VMware Workstation configuration and logs, WSL 1 home folders} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each product has its own switch. No virtual disk, no memory. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{vpn} & Windows XP & \texttt{OpenVPN, Proton VPN, Tailscale and WireGuard configuration and logs} & text logs, XML, JSON, INI; databases and binaries & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each product has its own switch. Tailscale's and WireGuard's paths from their documentation. Converted generically: a text log one element per line with the time it starts with, XML, JSON and INI as their structure, secrets left out; a database or binary listed, kept raw.} \\
+\addlinespace
+\texttt{application\_registry} & Windows XP & \texttt{NTUSER.DAT\textbackslash{}Software: SimonTatham\textbackslash{}PuTTY, Martin Prikryl\textbackslash{}WinSCP 2, WinRAR, 7-Zip} & registry values & yes \\
+ & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Each product has its own switch. A value named as a password is not emitted, its presence said.} \\
+\addlinespace
 \texttt{user\_access\_log} & Windows 8 & \texttt{Windows\textbackslash{}System32\textbackslash{}LogFiles\textbackslash{}Sum, every file: SystemIdentity.mdb, Current.mdb, a past period's database and their logs} & ESE; dates as FILETIME in columns declared DateTime & yes \\
  & \multicolumn{4}{@{}L{12.8cm}@{}}{\itshape Present only on a server. Measured on Server 2022 and 2016; on 2016 a past period's database is named with three random characters, without extension.} \\
 \addlinespace
