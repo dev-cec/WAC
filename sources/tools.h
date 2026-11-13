@@ -406,7 +406,7 @@ std::wstring examinedLayout(const std::wstring& path);
 *         determinable local file: network share, relative path, variable
 *         specific to a user, or unknown variable
 */
-std::wstring normalizeFilePath(std::wstring path);
+std::wstring normalizeFilePath(std::wstring path);   // path_normalization.h, with conf.systemDrive
 
 /*! Resolves a binary path as the registry writes it.
 *

@@ -297,6 +297,13 @@ if [[ "${1:-}" == "--test" || "${2:-}" == "--test" ]]; then
     -o "$TESTS/artefact_catalogue_test"
   "$TESTS/artefact_catalogue_test" "$SRC/wac.yml" | tail -1 | sed 's/^/   /'
 
+  echo "== path_normalization_test (native, run here) =="
+  # THE normalisation of a file path, portable and shared with WAE word for
+  # word (WAE's wae/shared/, checked by its check-shared.sh).
+  g++ -std=c++17 -Wall -Wextra -I"$SRC" "$SRC/path_normalization.cpp" "$SRC/path_normalization_test.cpp" \
+    -o "$TESTS/path_normalization_test"
+  "$TESTS/path_normalization_test" | tail -1 | sed 's/^/   /'
+
   echo "== application_traces_test (native, run here) =="
   # The applications' traces table and its wildcards, portable C++ as well:
   # no private key taken, one key per product, the filter's patterns.
