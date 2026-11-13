@@ -275,6 +275,14 @@ Le cycle de test tourne sur `win11-test`, ou sur la machine que nomme `WAC_VM`
   (`Get-PnpDevice`, `Get-LocalUser`, `tar.exe`…) échoue seule, le dit dans la
   référence (`witness_failed=`), et les contrôles l'affichent avant leur propre
   résultat ;
+- chaque script que pousse le harnais doit s'analyser sous PowerShell 2
+  (Server 2008 R2) : aucune construction d'une version plus récente (`-in`,
+  `-notin`, `[ordered]`, `Mandatory` sans valeur, un initialiseur d'objet dans
+  `Add-Type`), une cmdlet plus récente seulement dans une section qui peut
+  échouer seule. Le PowerShell de la VM analyse chaque script à son envoi
+  (`put_guest_script`) : un refus est un ❌, tous ses contrôles tournant sinon
+  sur une référence vide. Sous PowerShell 2 et 3, `qga.py` charge d'abord
+  `guest/ps2-compat.ps1` et rend le code de sortie d'un script comme `-File` ;
 - `Get-AuthenticodeSignature` ne lit pas les signatures par catalogue avant
   PowerShell 5.1 : les fichiers qu'il dit non signés ne sont pas confrontés.
 

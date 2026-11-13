@@ -262,6 +262,14 @@ The test cycle runs on `win11-test`, or on the machine `WAC_VM` names
   a section that needs a tool of Windows 10 (`Get-PnpDevice`, `Get-LocalUser`,
   `tar.exe`…) fails alone, says so in the reference (`witness_failed=`), and
   the checks print it before their own result;
+- every script the harness pushes must parse under PowerShell 2 (Server
+  2008 R2): no construct of a later version (`-in`, `-notin`, `[ordered]`,
+  `Mandatory` without a value, an object initialiser in `Add-Type`), a later
+  cmdlet only inside a section that may fail alone. The VM's own PowerShell
+  parses each script as it is pushed (`put_guest_script`): one it refuses is a
+  ❌, since all its checks would otherwise run on an empty reference. Under
+  PowerShell 2 and 3, `qga.py` loads `guest/ps2-compat.ps1` first and gives a
+  script's exit code as `-File` does;
 - `Get-AuthenticodeSignature` does not read catalog signatures before
   PowerShell 5.1: the files it calls unsigned are not confronted.
 
