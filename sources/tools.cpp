@@ -746,6 +746,18 @@ HRESULT loadProfileList() {
 	   reaches every user created afterwards — read like the others, under a
 	   SID that cannot be one (DEFAULT_PROFILE_SID). Its path is a value of
 	   ProfileList itself, not a subkey. */
+	/* The shared folders of XP and Server 2003 (All Users), as ProfileList names
+	   them: under ProfilesDirectory, named AllUsersProfile. Vista and later
+	   have ProgramData instead, and no AllUsersProfile: the default stays. */
+	std::wstring profilesDirectory, allUsers;
+	if (getRegSzValue(hKey, NULL, L"ProfilesDirectory", &profilesDirectory) == ERROR_SUCCESS
+	    && getRegSzValue(hKey, NULL, L"AllUsersProfile", &allUsers) == ERROR_SUCCESS && !allUsers.empty()) {
+		const std::wstring expanded = expandProfilePath(profilesDirectory);
+		if (!expanded.empty()) {
+			conf.allUsersProfile = expanded + L"\\" + allUsers;
+			log(2, L"❇️All Users -> " + conf.allUsersProfile);
+		}
+	}
 	std::wstring defaultPath;
 	if (getRegSzValue(hKey, NULL, L"Default", &defaultPath) == ERROR_SUCCESS) {
 		const std::wstring expanded = expandProfilePath(defaultPath);
@@ -926,7 +938,7 @@ std::wstring extractedPath(const std::wstring& absolute) {
 std::wstring examinedLayout(const std::wstring& path) {
 	std::vector<std::wstring> roots;
 	for (const std::tuple<std::wstring, std::wstring>& profileEntry : conf.profiles) roots.push_back(std::get<1>(profileEntry));
-	return examinedFolderLayout(path, conf.examinedVersion, roots);
+	return examinedFolderLayout(path, conf.examinedVersion, roots, conf.allUsersProfile);
 }
 
 std::wstring originalPath(const std::wstring& extracted) {

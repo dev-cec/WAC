@@ -104,6 +104,7 @@ struct AppliConf {
 	ORHKEY Software = { 0 };//!< Reg Key to access CurrentControlSet/Software hive
 	ProductSwitches traceProducts;  //!< what wac.yml switches off and on among the products of application_traces.h and application_registry
 	std::vector<std::tuple<std::wstring, std::wstring>> profiles;//!< vector to store SID and profiles of users present on the machine
+	std::wstring allUsersProfile = L"\\Documents and Settings\\All Users";//!< where XP and Server 2003 keep the shared folders (ProfileList: ProfilesDirectory and AllUsersProfile); their default when not read
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);//!< handle of the console
 	std::ofstream log;//!< handle of the output log file, for the debug mode (UTF-8 bytes)
 	int loglevel = 0; //!< log level (0 by default), set on the command line

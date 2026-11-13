@@ -211,15 +211,18 @@ const ArtefactForm& formOf(const ArtefactEntry& entry, const WindowsVersion& ver
  *  the collection and the conversion alike, rather than by each collector.
  *
  *  A path under a profile is translated after that profile's folder; a path
- *  under `\\ProgramData` goes to `All Users`, next to the first profile (the
- *  profiles folder of XP), or under `\\Documents and Settings` without one.
+ *  under `\\ProgramData` goes to the machine's All Users folder, which its
+ *  ProfileList names (ProfilesDirectory and AllUsersProfile). Deduced from the
+ *  first profile before, it was wrong on Server 2003: the system's profile
+ *  comes first, under `Windows\\system32\\config`.
  *  From Vista on, or for a build not read (0), the path is returned as is.
  *  @param path absolute, with its letter or relative to the system volume
  *  @param version the examined Windows
  *  @param profileRoots the examined machine's profile folders, absolute
+ *  @param allUsers its All Users folder, with or without its letter
  *  @return the path on that version */
 std::wstring examinedFolderLayout(const std::wstring& path, const WindowsVersion& version,
-                                  const std::vector<std::wstring>& profileRoots);
+                                  const std::vector<std::wstring>& profileRoots, const std::wstring& allUsers);
 
 /*! The translation examinedFolderLayout applies before Vista, whatever the
  *  version: where Windows XP and Server 2003 keep a folder Vista lays out as
@@ -227,5 +230,8 @@ std::wstring examinedFolderLayout(const std::wstring& path, const WindowsVersion
  *  layout (traceOwnerOf).
  *  @param path absolute, with its letter or relative to the system volume
  *  @param profileRoots the profile folders the path may lie in, absolute
+ *  @param allUsers the All Users folder, with or without its letter; a
+ *         component may be a pattern (traceOwnerOf: `\\*\\All Users`)
  *  @return the path in the layout of XP, or as given when none applies */
-std::wstring xpFolderLayout(const std::wstring& path, const std::vector<std::wstring>& profileRoots);
+std::wstring xpFolderLayout(const std::wstring& path, const std::vector<std::wstring>& profileRoots,
+                            const std::wstring& allUsers);

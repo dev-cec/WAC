@@ -407,6 +407,11 @@ bool fileUnder(const std::vector<std::wstring>& file, const std::vector<std::wst
 	return true;
 }
 
+/*! All Users of XP and Server 2003, wherever their profiles folder lies
+ *  (ProfilesDirectory): the conversion matches a path, it does not read the
+ *  machine's ProfileList. */
+const wchar_t* const XP_ALL_USERS = L"\\*\\All Users";
+
 //! The profiles a PROFILE_MARK folder may stand for, as the collection finds them (ProfileList).
 const wchar_t* const PROFILE_ROOTS[] = { L"\\Users\\*", L"\\Documents and Settings\\*",
 	L"\\Windows\\System32\\config\\systemprofile", L"\\Windows\\ServiceProfiles\\*" };
@@ -428,7 +433,7 @@ TraceOwner traceOwnerOf(const std::wstring& sourcePath) {
 				   collected there belonged to no product and left the JSON. */
 				auto holds = [&](const std::wstring& folder, const std::vector<std::wstring>& roots) {
 					return fileUnder(file, pathComponents(folder), piece.depth)
-					    || fileUnder(file, pathComponents(xpFolderLayout(folder, roots)), piece.depth);
+					    || fileUnder(file, pathComponents(xpFolderLayout(folder, roots, XP_ALL_USERS)), piece.depth);
 				};
 				if (piece.folder.compare(0, mark.size(), mark) != 0) {
 					if (holds(piece.folder, {})) return { &group, &product };

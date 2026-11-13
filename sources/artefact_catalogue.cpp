@@ -506,28 +506,25 @@ bool replaceFolder(std::wstring& rest, const std::pair<const wchar_t*, const wch
 } // namespace
 
 std::wstring examinedFolderLayout(const std::wstring& path, const WindowsVersion& version,
-                                  const std::vector<std::wstring>& profileRoots) {
+                                  const std::vector<std::wstring>& profileRoots, const std::wstring& allUsers) {
 	if (version.build == 0 || version.build >= VISTA) return path;
-	return xpFolderLayout(path, profileRoots);
+	return xpFolderLayout(path, profileRoots, allUsers);
 }
 
-std::wstring xpFolderLayout(const std::wstring& path, const std::vector<std::wstring>& profileRoots) {
+std::wstring xpFolderLayout(const std::wstring& path, const std::vector<std::wstring>& profileRoots,
+                            const std::wstring& allUsers) {
 	for (std::wstring root : profileRoots) {
 		while (!root.empty() && root.back() == L'\\') root.pop_back();
 		if (root.empty() || !startsWithFolder(path, root)) continue;
 		std::wstring rest = path.substr(root.size());
 		return replaceFolder(rest, XP_PROFILE_FOLDERS) ? root + rest : path;
 	}
-	// A shared folder: from the volume's root, the letter kept if the path has one.
+	// A shared folder: in All Users, from the volume's root, the letter kept if the path has one.
 	const size_t letter = path.size() >= 2 && path[1] == L':' ? 2 : 0;
 	std::wstring rest = path.substr(letter);
 	if (!replaceFolder(rest, XP_COMMON_FOLDERS)) return path;
-	std::wstring profiles = L"\\Documents and Settings";
-	if (!profileRoots.empty()) {
-		const std::wstring& first = profileRoots.front();
-		const size_t slash = first.find_last_of(L'\\', first.find_last_not_of(L'\\'));
-		const size_t start = first.size() >= 2 && first[1] == L':' ? 2 : 0;
-		if (slash != std::wstring::npos && slash > start) profiles = first.substr(start, slash - start);
-	}
-	return path.substr(0, letter) + profiles + L"\\All Users" + rest;
+	const size_t allUsersLetter = allUsers.size() >= 2 && allUsers[1] == L':' ? 2 : 0;
+	std::wstring folder = allUsers.substr(allUsersLetter);
+	while (!folder.empty() && folder.back() == L'\\') folder.pop_back();
+	return path.substr(0, letter) + folder + rest;
 }

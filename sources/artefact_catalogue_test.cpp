@@ -275,7 +275,8 @@ int main(int argc, char** argv) {
 	   where XP keeps the same data; from Vista on, and while the version is
 	   not read, nothing moves. */
 	const std::vector<std::wstring> xpProfiles = { L"C:\\Documents and Settings\\Administrator", L"C:\\Documents and Settings\\wac" };
-	const auto onXpLayout = [&](const std::wstring& path) { return examinedFolderLayout(path, xp, xpProfiles); };
+	const std::wstring xpAllUsers = L"C:\\Documents and Settings\\All Users";
+	const auto onXpLayout = [&](const std::wstring& path) { return examinedFolderLayout(path, xp, xpProfiles, xpAllUsers); };
 	check(onXpLayout(L"C:\\Documents and Settings\\wac\\AppData\\Local\\Microsoft\\Terminal Server Client\\Cache")
 	      == L"C:\\Documents and Settings\\wac\\Local Settings\\Application Data\\Microsoft\\Terminal Server Client\\Cache",
 	      "XP: AppData\\Local is Local Settings\\Application Data");
@@ -298,12 +299,16 @@ int main(int argc, char** argv) {
 	check(onXpLayout(L"C:\\ProgramData\\Microsoft\\Network\\Downloader")
 	      == L"C:\\Documents and Settings\\All Users\\Application Data\\Microsoft\\Network\\Downloader",
 	      "XP: ProgramData is All Users\\Application Data, the letter kept");
-	check(examinedFolderLayout(L"\\ProgramData\\x", xp, { L"D:\\Profiles\\wac" }) == L"\\Profiles\\All Users\\Application Data\\x",
-	      "XP: All Users is next to the profiles");
+	check(examinedFolderLayout(L"\\ProgramData\\x", xp, { L"D:\\Profiles\\wac" }, L"D:\\Profiles\\All Users")
+	      == L"\\Profiles\\All Users\\Application Data\\x", "XP: All Users as ProfileList names it");
+	// Server 2003 lists the system's profile first: All Users is not next to it.
+	check(examinedFolderLayout(L"\\ProgramData\\x", xp, { L"C:\\WINDOWS\\system32\\config\\systemprofile", L"C:\\Documents and Settings\\wac" },
+	                           xpAllUsers) == L"\\Documents and Settings\\All Users\\Application Data\\x",
+	      "XP: All Users from ProfileList, not from the first profile");
 	check(onXpLayout(L"\\Windows\\Prefetch") == L"\\Windows\\Prefetch", "XP: a system folder moves not");
-	check(examinedFolderLayout(L"C:\\Users\\wac\\AppData\\Local", seven, { L"C:\\Users\\wac" }) == L"C:\\Users\\wac\\AppData\\Local",
+	check(examinedFolderLayout(L"C:\\Users\\wac\\AppData\\Local", seven, { L"C:\\Users\\wac" }, xpAllUsers) == L"C:\\Users\\wac\\AppData\\Local",
 	      "Windows 7: nothing moves");
-	check(examinedFolderLayout(L"\\ProgramData", WindowsVersion{}, xpProfiles) == L"\\ProgramData", "a version not read: nothing moves");
+	check(examinedFolderLayout(L"\\ProgramData", WindowsVersion{}, xpProfiles, xpAllUsers) == L"\\ProgramData", "a version not read: nothing moves");
 
 	std::printf("%llu check(s), %llu failure(s)\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
