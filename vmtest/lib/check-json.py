@@ -6088,9 +6088,9 @@ def check_amcache_inventory_databases(folder):
     apart by Python's sqlite3 module from the working copies the harness
     fetched: every row of every Inventory*_N table must be an entry of WAC's
     JSON carrying that database's name (InventoryDatabase), by its ItemKey —
-    none lost, none made up. The executables both the hive and a database
-    list are counted, for the record (a choice of B-081: kept twice, each
-    with its source).
+    none lost, none made up. An executable both the hive and a database
+    hold is one object, its database's name and the hive's key time together
+    (merged, decision of 2026-11-14), unless their values disagree.
     """
     import shutil, sqlite3, tempfile
     if switched_off(folder, "amcache_applications.json"):
@@ -6126,14 +6126,23 @@ def check_amcache_inventory_databases(folder):
         rows_total += len(theirs)
         if theirs != mine:
             wrong.append(f"{base}: {len(theirs - mine)} row(s) not in WAC, {len(mine - theirs)} not in the database")
-    hive_files = {e.get("KeyName") for e in load(folder, "amcache_application_files.json") or []
-                  if isinstance(e, dict) and not e.get("InventoryDatabase")}
-    db_files = {e.get("KeyName") for e in load(folder, "amcache_application_files.json") or []
-                if isinstance(e, dict) and e.get("InventoryDatabase")}
+    # An executable both sources hold is one object (merged, B-081), unless
+    # their values disagree: then both are given.
+    files = [e for e in load(folder, "amcache_application_files.json") or [] if isinstance(e, dict)]
+    by_key = collections.defaultdict(list)
+    for e in files:
+        by_key[e.get("KeyName")].append(e)
+    merged = sum(1 for e in files if e.get("InventoryDatabase") and e.get("KeyLastWriteTimeUtc"))
+    for key, group in by_key.items():
+        hive = [e for e in group if not e.get("InventoryDatabase")]
+        base = [e for e in group if e.get("InventoryDatabase")]
+        if key and hive and base and all(hive[0].get(f) == base[0].get(f) for f in hive[0] if f in base[0]
+                                         and not f.startswith("KeyLastWriteTime")):
+            wrong.append(f"{key}: in the hive and a database, the same values, written twice")
     ok = not wrong
     print(f"  {'✅' if ok else '❌'} amcache: {len(found_dbs)} inventory database(s), {rows_total} row(s) read by Python's "
-          f"sqlite3, each an entry of WAC with its database's name; executables in the hive AND a database: "
-          f"{len(hive_files & db_files)}" + ("" if ok else f": {wrong[:3]}"))
+          f"sqlite3, each an entry of WAC with its database's name; {merged} executable(s) of both the hive and a "
+          f"database, one object each" + ("" if ok else f": {wrong[:3]}"))
     return 0 if ok else 1
 
 
