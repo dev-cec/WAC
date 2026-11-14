@@ -136,7 +136,7 @@ void securityRoles(const EventRoleInput& e, const Data& d, RecordContext& c) {
 	}
 	else if (e.id == 4697) {
 		c.kind = ContextKind::Installation;
-		c.subject.path = contextPath(commandProgram(d[L"ServiceFileName"]));
+		c.subject.path = serviceProgram(d[L"ServiceFileName"]);
 		c.subject.name = d[L"ServiceName"];
 		c.how.commandLine = d[L"ServiceFileName"];
 		subjectActor();
@@ -200,7 +200,7 @@ void otherRoles(const EventRoleInput& e, const Data& d, RecordContext& c) {
 	const std::wstring& p = e.provider;
 	if (p == L"Service Control Manager" && e.id == 7045) {
 		c.kind = ContextKind::Installation;
-		c.subject.path = contextPath(commandProgram(d[L"ImagePath"]));
+		c.subject.path = serviceProgram(d[L"ImagePath"]);
 		c.subject.name = d[L"ServiceName"];
 		c.how.commandLine = d[L"ImagePath"];
 	}

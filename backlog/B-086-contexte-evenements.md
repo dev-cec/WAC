@@ -51,3 +51,8 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   du cache web effacés par Windows à 18:09:07-08, avant la collecte de
   18:11 (`FILE_DELETE` du journal USN) — les deux contrôles reconnaissent
   désormais cette preuve. Rejoués : verts (HTA en avertissement).
+- 2026-11-15 : cycle `win11-test` : **308 ✅, 1 ❌**, trouvé par le contrôle :
+  un service à `ImagePath` relatif (pilote `KslD` :
+  `system32\drivers\KslD.sys`) n'avait pas de chemin — Windows le lit
+  depuis le dossier de Windows. `serviceProgram` (socle) applique cette
+  règle (7045, 4697 ; B-088 s'en servira) ; test, mutation vue échouer.
