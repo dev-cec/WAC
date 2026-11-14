@@ -504,6 +504,7 @@ def cross_checks(folder):
     found += guarded(check_context_volumes, folder)
     found += guarded(check_context_executions, folder)
     found += guarded(check_context_events, folder)
+    found += guarded(check_context_arrivals, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6301,6 +6302,74 @@ def check_context_events(folder):
           + ", ".join(f"{n} {k}" for k, n in sorted(counted.items()))
           + f"; the Sysmon witness's {len(witnessed)} ProcessCreate name wac-sysmon-witness.exe with Sysmon's SHA-256"
           + ("" if ok else f": {wrong[:2] if wrong else 'no event of the table found'}"))
+    return 0 if ok else 1
+
+
+def check_context_arrivals(folder):
+    """The Context of the arrivals (B-087), on the harness's witnesses:
+    - each download the harness made (webdownload=, webiedownload=: URL and
+      saved path, known here) is, in web_client.json, an Arrival whose
+      subject is the saved file and whose How.Url is the URL; and the
+      Zone.Identifier of that file, when Windows wrote one, an Arrival of the
+      same file;
+    - the mail witness: each message of the PST pypff read
+      (tools/pst-corpus/pst-reference.txt) carries, as Related Attachment,
+      the SHA-256 of each of its attachments as pypff computed them.
+    """
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    lines = open(path, encoding="utf-8", errors="replace").read().splitlines() if os.path.exists(path) else []
+    downloads = []
+    for l in lines:
+        if l.startswith("webdownload="):
+            parts = l[len("webdownload="):].split("|")
+            if len(parts) == 3:
+                downloads.append((parts[1], parts[2]))
+        elif l.startswith("webiedownload="):
+            parts = l[len("webiedownload="):].split("|")
+            if len(parts) == 2:
+                downloads.append((parts[0], parts[1]))
+    web = [c for _, c in contexts(folder, "web_client.json")]
+    zones = [c for _, c in contexts(folder, "zone_identifiers.json")]
+    wrong, seen = [], 0
+    for url, target in downloads:
+        mine = [c for c in web if c.get("Kind") == "Arrival"
+                and ((c.get("Subject") or {}).get("Path") or "").lower() == target.lower()]
+        if not mine or not any((c.get("How") or {}).get("Url") == url for c in mine):
+            wrong.append(f"download {url} -> {target}: Context {mine[:1]}")
+            continue
+        seen += 1
+        zone = [c for c in zones if ((c.get("Subject") or {}).get("Path") or "").lower() == target.lower()]
+        if zone and zone[0].get("Kind") != "Arrival":
+            wrong.append(f"Zone.Identifier of {target}: Context {zone[0]}")
+    # The mail witness.
+    mails = 0
+    witness = os.path.join(folder, "reference", "emails.txt")
+    vm_path, local = (open(witness, encoding="utf-8").read().strip()[len("pst="):].split("|", 1) + [""])[:2] \
+        if os.path.exists(witness) else ("", "")
+    reference = os.path.join(os.path.dirname(local), "pst-reference.txt") if local else ""
+    if vm_path and os.path.exists(reference):
+        name = ntpath.basename(vm_path).lower()
+        expected = {}
+        for line in open(reference, encoding="utf-8", errors="replace"):
+            parts = line.rstrip("\n").split("|")
+            if parts[0].lower() == name and parts[1] != "-" and len(parts) == 8 and parts[6]:
+                expected[int(parts[1])] = {a.split(":")[-1].lower() for a in parts[6].split(";") if a}
+        messages = {r.get("NodeId"): c for r, c in contexts(folder, "emails.json")
+                    if r.get("Type") == "Message" and name in (r.get("Source") or "").lower()}
+        for nid, shas in expected.items():
+            c = messages.get(nid)
+            got = {(r.get("Sha256") or "").lower() for r in (c or {}).get("Related") or [] if r.get("Role") == "Attachment"}
+            if c is None or got != shas:
+                wrong.append(f"message {nid}: attachments {sorted(got)}, pypff {sorted(shas)}")
+            else:
+                mails += 1
+    if not downloads and not mails:
+        print("  ⏭️  no download nor mail witness: arrivals' Context not checked")
+        return 0
+    ok = not wrong
+    print(f"  {'✅' if ok else '❌'} Context of arrivals: {seen} download(s) of the harness an Arrival of the saved file from its URL"
+          f" (Zone.Identifier alike), {mails} message(s) of the mail witness with pypff's attachment SHA-256"
+          + ("" if ok else f": {wrong[:2]}"))
     return 0 if ok else 1
 
 
