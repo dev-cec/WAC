@@ -93,3 +93,13 @@ ligne dans `check-json.py`.
   égales ; 9 exécutables dans la ruche seule. **À décider** : garder les
   deux entrées (aujourd'hui), ou les fusionner en une (champs de la base +
   date de la clé de la ruche, source dite) — recommandé : fusionner.
+- 2026-11-14 : **décision de l'utilisateur : un seul objet par exécutable.**
+  `mergeInventorySources` : l'entrée de la ruche est fondue dans celle de la
+  base de même table et `KeyName` (la date de clé de la ruche et ses valeurs
+  absentes de la base s'y joignent) ; si une valeur commune diffère, rien
+  n'est fondu (deux sources en désaccord, toutes deux données). Test :
+  fusion, entrée de la ruche seule gardée, désaccord gardé en deux ;
+  mutation (fusion malgré le désaccord) vue échouer ; 337/337, `bin/` =
+  compilation. Contrôle du harnais : un exécutable des deux sources, mêmes
+  valeurs, écrit deux fois = ❌ (rejoué sur la collecte d'avant : ❌, vu).
+  Manuels FR et EN. Reste : cycle VM.

@@ -3,8 +3,10 @@
  */
 #include "reg_amcache.h"
 #include "registry_common.h"
+#include <algorithm>
 #include <cwctype>
 #include <filesystem>
+#include <map>
 
 namespace {
 
@@ -231,6 +233,41 @@ HRESULT readInventoryDatabase(const std::wstring& workingFile, const std::wstrin
 	return ERROR_SUCCESS;
 }
 
+void mergeInventorySources(std::vector<AmcacheEntry>& entries) {
+	// The databases' entries by table and KeyName.
+	std::map<std::pair<std::wstring, std::wstring>, size_t> fromDatabase;
+	for (size_t i = 0; i < entries.size(); ++i)
+		if (!entries[i].database.empty() && !entries[i].keyName.empty())
+			fromDatabase.emplace(std::make_pair(entries[i].table, entries[i].keyName), i);
+	std::vector<bool> merged(entries.size(), false);
+	for (size_t i = 0; i < entries.size(); ++i) {
+		AmcacheEntry& hive = entries[i];
+		if (!hive.database.empty()) continue;
+		const auto match = fromDatabase.find(std::make_pair(hive.table, hive.keyName));
+		if (match == fromDatabase.end()) continue;
+		AmcacheEntry& database = entries[match->second];
+		bool agree = true;
+		std::vector<std::pair<std::wstring, Json>> missing;
+		for (const auto& [name, value] : hive.values) {
+			const auto same = std::find_if(database.values.begin(), database.values.end(),
+			                               [&](const std::pair<std::wstring, Json>& v) { return v.first == name; });
+			if (same == database.values.end()) missing.emplace_back(name, value);
+			else if (same->second.dump() != value.dump()) agree = false;
+		}
+		if (!agree) continue;
+		database.keyLastWriteUtc = hive.keyLastWriteUtc;
+		database.values.insert(database.values.end(), missing.begin(), missing.end());
+		merged[i] = true;
+	}
+	size_t kept = 0;
+	for (size_t i = 0; i < entries.size(); ++i)
+		if (!merged[i]) {
+			if (kept != i) entries[kept] = std::move(entries[i]);
+			++kept;
+		}
+	entries.erase(entries.begin() + (std::ptrdiff_t)kept, entries.end());
+}
+
 bool Amcache::readInventoryDatabases() {
 	const std::wstring folder = extractedPath(L"\\Windows\\AppCompat\\Programs");
 	std::error_code ec;
@@ -296,6 +333,7 @@ HRESULT Amcache::getData() {
 	const bool recent = readRecentFileCache();
 	const HRESULT hr = readHive();
 	const bool inventory = readInventoryDatabases();
+	mergeInventorySources(entries);
 	// Windows 7 without KB2952664 has no Amcache.hve: RecentFileCache.bcf is its answer.
 	return (hr != ERROR_SUCCESS && (recent || inventory)) ? ERROR_SUCCESS : hr;
 }

@@ -80,6 +80,9 @@ struct AmcacheEntry {
 	 *  @param database the database on the examined machine */
 	AmcacheEntry(const SqliteRow& row, const std::wstring& table, const std::wstring& database);
 
+	//! An entry with nothing read yet: the tests build one by its members.
+	AmcacheEntry() = default;
+
 	/*! Converts the entry to JSON.
 	 *  @param withTable whether to name the table (entries of amcache_inventory.json)
 	 *  @return its JSON object */
@@ -112,6 +115,17 @@ std::wstring inventoryTableName(const std::wstring& sqliteTable);
  *  @return S_OK, or why the database could not be opened */
 HRESULT readInventoryDatabase(const std::wstring& workingFile, const std::wstring& original,
                               std::vector<AmcacheEntry>& entries);
+
+/*! One object per entry, when the hive and an inventory database both hold
+ *  it (B-081). Measured on Windows 11 26300: 386 executables are in both, the
+ *  hive keeping only ProgramId and the SHA-1, the database everything else;
+ *  written twice, an executable read as two objects in WAE. An entry of the
+ *  hive is merged into the database's of the same table and KeyName: the
+ *  hive's key time and its values the database has not join it. When a value
+ *  both hold differs, nothing is merged: two sources that disagree are both
+ *  given, never one chosen silently.
+ *  @param entries every entry, the hive's and the databases'; merged in place */
+void mergeInventorySources(std::vector<AmcacheEntry>& entries);
 
 /*! Every table of the Amcache hive, and the paths of RecentFileCache.bcf. */
 struct Amcache {

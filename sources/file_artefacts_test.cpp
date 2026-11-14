@@ -788,6 +788,33 @@ void defenderHistory() {
 		      && field(file, L"LastModifiedUtc") == L"<absent>",
 		      "amcache: an executable of an inventory database: SHA-1 from FileId, its path, the bytes it covers; NULL left out");
 		std::filesystem::remove_all(root, ec);
+
+		/* The hive and a database both holding an executable (Windows 11
+		   26300: the hive its ProgramId and SHA-1, the database the rest):
+		   one object. A hive-only entry stays; two sources that disagree stay two. */
+		auto make = [](const std::wstring& key, const std::wstring& database, const std::wstring& sha1) {
+			AmcacheEntry e;
+			e.table = L"InventoryApplicationFile";
+			e.keyName = key;
+			e.database = database;
+			e.values.emplace_back(L"ProgramId", Json::str(L"0000f519"));
+			e.values.emplace_back(L"AmcacheSha1", Json::str(sha1));
+			if (database.empty()) e.keyLastWriteUtc = filetimeFromTicks(134390627729655477ULL);
+			else e.values.emplace_back(L"LongPath", Json::str(L"c:\\windows\\" + key.substr(0, key.find(L'|'))));
+			return e;
+		};
+		std::vector<AmcacheEntry> both = { make(L"a.exe|1", L"", L"aa"), make(L"a.exe|1", L"InventoryApplicationFile.db", L"aa"),
+		                                   make(L"hive.exe|2", L"", L"bb"),
+		                                   make(L"c.exe|3", L"", L"cc"), make(L"c.exe|3", L"InventoryApplicationFile.db", L"cd") };
+		mergeInventorySources(both);
+		size_t aCount = 0;
+		Json merged = Json::obj();
+		for (const AmcacheEntry& e : both)
+			if (e.keyName == L"a.exe|1") { ++aCount; merged = e.toJson(false); }
+		check(both.size() == 4 && aCount == 1 && field(merged, L"LongPath") == L"c:\\windows\\a.exe"
+		      && field(merged, L"KeyLastWriteTimeUtc") == L"2026-11-13T16:59:32.9655477Z"
+		      && field(merged, L"InventoryDatabase") == L"InventoryApplicationFile.db" && field(merged, L"AmcacheSha1") == L"aa",
+		      "amcache: the hive's entry merged into the database's (its key time joins); hive-only kept; disagreeing sources both kept");
 	}
 	{
 		/* B-082: the two CRC-32 of an EVTX chunk. A chunk of known bytes whose
