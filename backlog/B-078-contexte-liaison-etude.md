@@ -42,24 +42,84 @@ Server 2025 du 2026-11-13, dans WAE) :
 - L'étude se refait **complète, sur la VM Windows 11** (un poste client :
   Prefetch, BAM, UserAssist, jump lists… vivants), artefact par artefact.
 
-## Schéma de départ (à confirmer par l'étude)
-Champs sans valeur non émis (règle commune n° 1).
+## Schéma proposé (2026-11-14, à valider par l'utilisateur)
+Établi sur les deux collectes Windows 11 (VM neuve, puis VM qui a vécu),
+les deux tableaux et la table des rôles ci-dessous. Un bloc par
+enregistrement ; champs sans valeur non émis (règle commune n° 1) ; les
+instants restent dans les champs de l'enregistrement (la chronologie de WAE
+les lit déjà), `Context` ne porte que des **identités**.
 ```
 "Context": {
-  "Kind": "Execution|Arrival|Presence|Creation|Modification|Deletion|Persistence|Installation|Account|Logon|Network|Detection|Configuration|Access",
-  "Subject": { "Path": "C:\\Windows\\System32\\cmd.exe", "Name": "cmd.exe", "Ntfs": "C:|1234|5",
-               "Sha1": "…", "Sha256": "…", "Md5": "…", "Sid": "…", "Software": "…", "Device": "…" },
-  "Actor":   { "Sid": "S-1-5-21-…-1000", "User": "WACTEST\\wac", "LogonId": "0x3e7",
-               "Process": { "Path": "…", "Pid": 1234, "StartUtc": "…" } },
-  "How":     { "ParentPath": "…", "CommandLine": "…", "Url": "…", "Host": "…", "RemoteAddress": "…",
-               "VolumeSerial": "…", "DeviceSerial": "…" },
-  "Evidence":{ "Path": "C:\\Windows\\System32\\winevt\\Logs\\Security.evtx" }
+  "Kind": "Execution",
+  "Subject": { "Path": "C:\\Windows\\System32\\cmd.exe", "Ntfs": "C:|1234|5",
+               "Sha1": "…", "Sha256": "…", "Md5": "…" },
+  "Related": [ { "Role": "LoadedFile", "Path": "C:\\Windows\\System32\\kernel32.dll", "Sha256": "…" } ],
+  "Actor":   { "Sid": "S-1-5-21-…-1000", "User": "WAC-TEST\\wac", "LogonId": "0x3e7",
+               "Process": { "Path": "…", "Pid": 1234, "Guid": "{…}" } },
+  "How":     { "Parent": { "Path": "…", "Pid": 1200 }, "CommandLine": "…", "Url": "…", "Host": "…",
+               "RemoteAddress": "…", "RemotePort": 445, "LogonType": 10,
+               "VolumeSerial": "60E59B9E", "Device": "USBSTOR\\…" },
+  "Evidence":{ "Path": "C:\\Windows\\Prefetch\\CMD.EXE-0BD30981.pf" }
 }
 ```
-Chemins par `normalizeFilePath` (partagée avec WAE), empreintes complètes
-seulement ; `investigation.json` → `Host.Volumes` (lettre,
-`\Device\HarddiskVolumeN`, GUID, numéro de série) et `Host.Profiles`
-(SID ↔ dossier).
+- **`Kind`** (un seul) : `Execution`, `Arrival` (téléchargement, pièce
+  jointe, copie), `Presence` (le fichier a existé : MFT, Amcache,
+  ShimCache), `Creation`, `Modification`, `Deletion`, `Access` (ouverture
+  d'un fichier, d'un dossier), `Persistence`, `Installation` (logiciel,
+  service, pilote, appareil), `Account` (création, modification, groupe),
+  `Logon`, `Network`, `Detection`, `Configuration`.
+- **`Subject`**, l'objet dont l'enregistrement parle, d'une seule sorte :
+  fichier (`Path`, `Ntfs`, empreintes **complètes** seulement — un SHA-1
+  d'Amcache qui ne couvre pas tout le fichier n'est pas `Sha1`), compte
+  (`Sid`, `User`), logiciel (`Software` : identifiant d'installation),
+  appareil (`Device` : identifiant d'instance, `Serial`), adresse
+  (`Address`, `Host`), tâche ou service (`Name`).
+- **`Related`** : les autres objets que nomme l'enregistrement, avec leur
+  rôle (`LoadedFile` du Prefetch, `Target` d'un raccourci, `Attachment`
+  d'un courriel, `Member` d'un groupe, `Destination` de BITS…).
+- **`Actor`** : qui a agi — compte (`Sid`, et `User` quand seul un nom est
+  donné, traduit en SID par `Host.Profiles` quand c'est possible), session
+  (`LogonId`), processus (`Path`, `Pid`, `Guid` de Sysmon). Le compte du
+  fournisseur d'un événement n'est pas l'acteur, sauf où la table le dit.
+- **`How`** : comment — parent, ligne de commande, URL et hôte d'origine,
+  adresse et port distants, type d'ouverture de session, volume
+  (numéro de série) ou appareil d'origine.
+- **`Evidence.Path`** : le fichier où WAC a lu l'enregistrement, **jamais
+  le sujet** (le constat de l'étude : `File` d'un journal texte n'est pas
+  ce dont il parle).
+- **Formes** : chemins par `normalizeFilePath` (une seule fonction, partagée
+  avec WAE), `\Device\HarddiskVolumeN\`, `\VOLUME{…}`, dossiers connus,
+  variables d'environnement et `%USERPROFILE%` résolus par `Host.Volumes`
+  et `Host.Profiles` ; un exécutable séparé de ses arguments ; SID en
+  texte ; NTFS `Lettre:|entrée|séquence`.
+- `investigation.json` : `Host.Volumes` (lettre, `\Device\HarddiskVolumeN`,
+  GUID, numéro de série), `Host.Profiles` (SID ↔ dossier), relevés à la
+  collecte.
+
+## Découpage en fiches (après validation du schéma)
+Le socle d'abord (B-079), puis une fiche par famille ; chacune : les JSON de
+la famille, leur `Context` selon les tableaux ci-dessous, un témoin de
+valeur connue par sorte d'objet, un contrôle de `check-json.py`.
+1. **B-079 socle** : type et écriture de `Context`, `Host.Volumes`,
+   `Host.Profiles`, résolution des chemins, `Evidence`, `EnablePrefetcher`.
+2. **Exécutions** : Prefetch, BAM, UserAssist, MUICache, SRUM,
+   `program_usage`, `processes`, Amcache, ShimCache, `error_reports`.
+3. **Événements** : la table des rôles (Security, Sysmon, SCM, BITS,
+   PowerShell, TaskScheduler, sessions de bureau, WMI, Defender, MSI, PnP).
+4. **Arrivées** : Zone.Identifier, BITS, `web_client`, courriels.
+5. **Persistance** : Run, `persistence`, services, tâches planifiées,
+   démarrage, WMI, profils PowerShell.
+6. **Système de fichiers** : MFT, journal USN, fichiers supprimés,
+   corbeille, FAT.
+7. **Accès** : raccourcis, jump lists, RecentDocs, shellbags, Office,
+   `activities_cache`, `search_index`, vignettes.
+8. **Comptes et sessions** : `users`, groupes, `Sessions`, RDP, SAM.
+9. **Appareils et volumes** : USBSTOR, `devices`, `setupapi`, points de
+   montage, `mounted_device`.
+10. **Réseau et défense** : `network`, pare-feu, partages, Defender,
+    Sysmon, configuration.
+11. **Traces d'applications et serveurs** : `Evidence` toujours, `Subject`
+    seulement où la ligne nomme un objet.
 
 ## Méthode
 1. Cycle complet sur `win11-test` : la collecte de référence cliente.
@@ -222,7 +282,8 @@ l'avance, et les champs de `Context` qui la portent.
       Amcache ; nouveau cycle, tableaux confirmés
 - [x] Table des rôles des événements, première passe (identifiants absents
       à confirmer sur la VM qui a vécu)
-- [ ] Schéma arrêté ; fiches par famille créées
+- [x] Schéma proposé et découpage en fiches (2026-11-14)
+- [ ] Schéma validé par l'utilisateur ; fiches par famille créées
 
 ## Journal
 - 2026-11-13 : ébauche dans WAE (`backlog/etudes/`), depuis la collecte
@@ -252,3 +313,5 @@ l'avance, et les champs de `Context` qui la portent.
   que `conhost.exe` (clé lue en direct dans la VM : ni `taskkill.exe` ni
   `cmd.exe`) ; WAC lit juste, le contrôle accepte désormais l'hôte de
   console à défaut. ❌ quarantaine Defender : à expliquer.
+- 2026-11-14 : schéma proposé (`Kind`, `Subject`, `Related`, `Actor`,
+  `How`, `Evidence`) et découpage en 11 fiches, à valider.
