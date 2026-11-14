@@ -17327,7 +17327,9 @@ const Translation TABLE_GUID[] = {
 	{L"{289a9a43-be44-4057-a41b-587a76d7e7f9}", L"Sync Results"},
 	{L"{0f214138-b1d3-4a90-bba9-27cbc0c5389a}", L"Sync Setup"},
 	{L"{1ac14e77-02e7-4e5d-b744-2eb1ae5198b7}", L"System32"},
-	{L"{d65231b0-b2f1-4857-a4ce-a8e7c6ea7d27}", L"System32"},
+	// SystemX86 by its canonical name: "System32" confused it with {1ac14e77-…},
+	// and it is SysWOW64 on a 64-bit Windows (B-085).
+	{L"{d65231b0-b2f1-4857-a4ce-a8e7c6ea7d27}", L"SystemX86"},
 	{L"{a63293e8-664e-48db-a079-df759e0509f7}", L"Templates"},
 	{L"{9e3995ab-1f9c-4f13-b827-48b24b6c7174}", L"User Pinned"},
 	{L"{0762d272-c50a-4bb0-a382-697dcd729b80}", L"Users"},

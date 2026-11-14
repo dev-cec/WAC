@@ -58,6 +58,7 @@
 #include "running_machine.h"
 #include "context.h"
 #include "srum.h"
+#include "trans_id.h"
 #include "scheduledTasks.h"
 #include "reg_userassists.h"
 #include "xml_light.h"
@@ -867,13 +868,18 @@ void defenderHistory() {
 		conf.systemDrive = L"C:";
 		conf.profiles = { { L"S-1-5-21-1-2-3-1000", L"C:\\Users\\wac" } };
 		check(knownFolderPath(L"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\cmd.exe", L"") == L"C:\\Windows\\System32\\cmd.exe"
-		      && knownFolderPath(L"{d65231b0-b2f1-4857-a4ce-a8e7c6ea7d27}\\cmd.exe", L"") == L"C:\\Windows\\SysWOW64\\cmd.exe"
+		      && knownFolderPathFor(L"{d65231b0-b2f1-4857-a4ce-a8e7c6ea7d27}\\cmd.exe", L"", WindowsBits::Bits64)
+		         == L"C:\\Windows\\SysWOW64\\cmd.exe"
+		      && knownFolderPathFor(L"{d65231b0-b2f1-4857-a4ce-a8e7c6ea7d27}\\cmd.exe", L"", WindowsBits::Bits32)
+		         == L"C:\\Windows\\System32\\cmd.exe"
+		      && knownFolderPathFor(L"{d65231b0-b2f1-4857-a4ce-a8e7c6ea7d27}\\cmd.exe", L"", WindowsBits::Unknown).empty()
+		      && trans_guid_to_wstring(L"{d65231b0-b2f1-4857-a4ce-a8e7c6ea7d27}") == L"SystemX86"
 		      && knownFolderPath(L"{A77F5D77-2E2B-44C3-A6A2-ABA601054A51}\\Tool.lnk", L"S-1-5-21-1-2-3-1000")
 		         == L"C:\\Users\\wac\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Tool.lnk"
 		      && knownFolderPath(L"{A77F5D77-2E2B-44C3-A6A2-ABA601054A51}\\Tool.lnk", L"S-1-5-21-9").empty()
 		      && knownFolderPath(L"{00000000-0000-0000-0000-000000000000}\\x.exe", L"").empty()
 		      && contextNtfs(L"c:\\x.exe", 1234, 5) == L"C:|1234|5" && contextNtfs(L"x.exe", 1, 1).empty(),
-		      "context: known folders on their real folder (SysWOW64 apart), NTFS identity (B-085)");
+		      "context: known folders on their real folder, SystemX86 by the examined Windows' bitness, named apart (B-085)");
 		const RecordContext byPath = srumContext(L"C:\\Tools\\a.exe", L"S-1-5-19", L"ApplicationTimeline");
 		const RecordContext byName = srumContext(L"!!svchost.exe!2045/05/31:04:32:22!1b148![Wcmsvc]", L"", L"NetworkUsage");
 		const RecordContext byApp = srumContext(L"Microsoft.WindowsStore_22.0_x64__8wekyb3d8bbwe", L"", L"ApplicationTimeline");

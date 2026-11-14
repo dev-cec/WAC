@@ -116,7 +116,22 @@ std::wstring systemHiveEvidence(const wchar_t* hive) {
 	return contextPath(conf.systemDrive + L"\\Windows\\System32\\config\\" + hive);
 }
 
+WindowsBits examinedWindowsBits() {
+	static WindowsBits bits = WindowsBits::Unknown;
+	if (bits != WindowsBits::Unknown || !conf.CurrentControlSet) return bits;   // read once the hive is open
+	std::wstring architecture;
+	if (getRegSzValue(conf.CurrentControlSet, L"Control\\Session Manager\\Environment", L"PROCESSOR_ARCHITECTURE",
+	                  &architecture) != ERROR_SUCCESS) return bits;
+	if (architecture == L"AMD64" || architecture == L"ARM64" || architecture == L"IA64") bits = WindowsBits::Bits64;
+	else if (architecture == L"x86" || architecture == L"ARM") bits = WindowsBits::Bits32;
+	return bits;
+}
+
 std::wstring knownFolderPath(const std::wstring& cited, const std::wstring& sid) {
+	return knownFolderPathFor(cited, sid, examinedWindowsBits());
+}
+
+std::wstring knownFolderPathFor(const std::wstring& cited, const std::wstring& sid, WindowsBits bits) {
 	const size_t close = cited.find(L'}');
 	if (cited.empty() || cited[0] != L'{' || close == std::wstring::npos) return L"";
 	std::wstring id = cited.substr(0, close + 1);
@@ -128,7 +143,9 @@ std::wstring knownFolderPath(const std::wstring& cited, const std::wstring& sid)
 	const Folder FOLDERS[] = {
 		{ L"{F38BF404-1D43-42F2-9305-67DE0B28FC23}", windir, false },                                    // Windows
 		{ L"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}", windir + L"\\System32", false },                  // System
-		{ L"{D65231B0-B2F1-4857-A4CE-A8E7C6EA7D27}", windir + L"\\SysWOW64", false },                  // SystemX86
+		// SystemX86: SysWOW64 on a 64-bit Windows, System32 on a 32-bit one; not known: no path.
+		{ L"{D65231B0-B2F1-4857-A4CE-A8E7C6EA7D27}", bits == WindowsBits::Bits64 ? windir + L"\\SysWOW64"
+		                                             : bits == WindowsBits::Bits32 ? windir + L"\\System32" : L"", false },
 		{ L"{905E63B6-C1BF-494E-B29C-65B732D3D21A}", conf.systemDrive + L"\\Program Files", false },  // ProgramFiles
 		{ L"{6D809377-6AF0-444B-8957-A3773F02200E}", conf.systemDrive + L"\\Program Files", false },  // ProgramFilesX64
 		{ L"{7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E}", conf.systemDrive + L"\\Program Files (x86)", false },   // ProgramFilesX86
@@ -143,6 +160,7 @@ std::wstring knownFolderPath(const std::wstring& cited, const std::wstring& sid)
 	};
 	for (const Folder& f : FOLDERS) {
 		if (id != f.id) continue;
+		if (f.base.empty()) return L"";
 		if (!f.user) return contextPath(f.base + rest);
 		for (const auto& [profileSid, folder] : conf.profiles)
 			if (_wcsicmp(profileSid.c_str(), sid.c_str()) == 0) return contextPath(folder + f.base + rest);

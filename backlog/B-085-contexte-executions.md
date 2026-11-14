@@ -53,3 +53,11 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   Rejoués sur la collecte : verts. Contrôle des exécutions vert du premier
   coup (processus et Prefetch de WAC : `W:\wac\WAC.exe`, SHA-256 du binaire
   calculé sur l'hôte) ; 9 volumes égaux à `Win32_Volume`.
+- 2026-11-14 : **défaut de UserAssist corrigé** (demande de l'utilisateur) :
+  `trans_id` nomme `{D65231B0-…}` par son nom canonique `SystemX86` (il
+  était « System32 », comme `{1AC14E77-…}`). Et un défaut de ce jour dans
+  `knownFolderPath` : SystemX86 est SysWOW64 sur un Windows 64 bits mais
+  System32 sur un 32 bits — résolu par l'architecture de la machine
+  examinée (`PROCESSOR_ARCHITECTURE` de sa ruche SYSTEM), aucun chemin si
+  elle n'est pas lue. Test des trois cas et du nom ; mutation (SysWOW64
+  pour un 32 bits) vue échouer ; 341/341, `bin/` = compilation.

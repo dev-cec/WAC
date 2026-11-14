@@ -126,17 +126,31 @@ std::wstring contextNtfs(const std::wstring& path, unsigned long long entry, uns
  *  @param fingerprint the file's fingerprints, empty when not read */
 void setFileObject(ContextObject& object, const std::wstring& cited, const BinaryFingerprint& fingerprint);
 
+/*! The bitness of the examined Windows, which a few known folders depend on. */
+enum class WindowsBits { Unknown, Bits32, Bits64 };
+
+/*! The examined Windows' bitness, from PROCESSOR_ARCHITECTURE in its SYSTEM
+ *  hive (Session Manager\Environment): AMD64, ARM64 and IA64 are 64-bit,
+ *  x86 and ARM 32-bit. Read once the hive is open; Unknown before, or when
+ *  the value cannot be read — never the analysis workstation's. */
+WindowsBits examinedWindowsBits();
+
 /*! A path that begins with a known folder's identifier, as UserAssist and
  *  jump lists write it ("{1AC14E77-…}\cmd.exe"), on its real folder: the
  *  machine's folders from the system drive, a user's from the profile of
  *  \a sid (Host.Profiles). WAC's display name of the folder is not enough:
- *  {1AC14E77-…} (System32) and {D65231B0-…} (SysWOW64) are both named
- *  "System32".
+ *  {1AC14E77-…} (System32) and {D65231B0-…} (SystemX86) were both named
+ *  "System32", and SystemX86 is SysWOW64 on a 64-bit Windows.
  *  @param cited the path as written, its folder an identifier in braces
  *  @param sid the account whose profile a user folder is in
  *  @return the path (contextPath), or "" when the identifier is not one
  *          of those known here */
 std::wstring knownFolderPath(const std::wstring& cited, const std::wstring& sid);
+
+/*! knownFolderPath for a Windows of the bitness given: SystemX86
+ *  ({D65231B0-…}) is SysWOW64 on a 64-bit Windows, System32 on a 32-bit one,
+ *  and gives no path when the bitness is not known. What the tests call. */
+std::wstring knownFolderPathFor(const std::wstring& cited, const std::wstring& sid, WindowsBits bits);
 
 /*! The Evidence of a record read in a system hive: its file on the examined
  *  machine ("C:\Windows\System32\config\SYSTEM").
