@@ -49,3 +49,7 @@ correctif ; cycle `win11-test` : `web_client.json` sans date tronquée.
   `bin/WAC.exe` = compilation. Tous les tests unitaires sans argument
   verts. Reste : cycle VM (`web_client` sans `0828`, `ExpiryNever`), les
   autres sentinelles et `check-json.py` (qui s'arrêtait sur la date).
+- 2026-11-14 : `check-json.py` (`check_webcache`) : la référence (dissect)
+  ne déborde plus au-delà de 9999, et exige `ExpiryNever: true` sans
+  `ExpiryUtc` pour le FILETIME maximal ; rejouée sur la collecte faite avec
+  l'ancien binaire : ❌ `ExpiryUtc 0828-…` (le défaut, vu), plus de plantage.

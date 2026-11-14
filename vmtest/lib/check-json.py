@@ -5667,8 +5667,12 @@ def check_webcache(folder, records):
     def iso(ticks):
         if not ticks:
             return None
-        t = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=ticks // 10)
+        try:
+            t = datetime.datetime(1601, 1, 1) + datetime.timedelta(microseconds=ticks // 10)
+        except OverflowError:   # beyond 9999: no date ISO 8601 can say, WAC writes none (B-080)
+            return None
         return t.strftime("%Y-%m-%dT%H:%M:%S.%f") + str(ticks % 10) + "Z"
+    NEVER = 0x7FFFFFFFFFFFFFFF   # Windows' "never": WAC writes ExpiryNever, no date
     history = reference_history(folder)
     conversion = load(folder, "conversion.json")
     end = (((conversion or {}).get("Host") or {}).get("SuspectTimeZone") or {}).get("HistoryEndUtc") \
@@ -5730,6 +5734,11 @@ def check_webcache(folder, records):
                 for field, value in expected.items():
                     if value is not None and r.get(field) != value:
                         wrong.append(f"{name} {e.get('EntryId')} {field}: dissect {value}, WAC {r.get(field)}")
+                expiry = e.get("ExpiryTime")
+                if expiry and iso(expiry) is None and (r.get("ExpiryUtc") is not None
+                                                       or r.get("ExpiryNever") is not (True if expiry == NEVER else None)):
+                    wrong.append(f"{name} {e.get('EntryId')} ExpiryTime {expiry:#x}: WAC ExpiryUtc {r.get('ExpiryUtc')}, "
+                                 f"ExpiryNever {r.get('ExpiryNever')}")
                 if lived and len(lived) == 1 and r.get("ModifiedAlsoPossibleUtc"):
                     wrong.append(f"{name} {e.get('EntryId')}: lived once, WAC says {r.get('ModifiedAlsoPossibleUtc')} possible")
         ok = theirs == len(mine) and not wrong
