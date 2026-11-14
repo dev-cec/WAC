@@ -2509,6 +2509,39 @@ known folders (\fichier{FolderDescriptions}), and each user's classes
 named, with the module that serves it. A GUID nothing names is published
 without a name.
 
+\section{The linking context (\champ{Context})}
+
+Every record of the execution artefacts (Prefetch, BAM, UserAssist, MUICache,
+SRUM, processes, Amcache, ShimCache, \fichier{program\_usage.json}, error
+reports) carries a \champ{Context} block, which the other families of
+artefacts receive in turn. It holds identities only --- the dates stay in the
+record's fields --- and serves to relate the artefacts: the same file, account
+or software has the same form whatever artefact names it.
+\begin{description}
+  \item[\champ{Kind}] what the record attests: \texttt{Execution},
+        \texttt{Presence} (the file existed, with no proof it ran: Amcache,
+        ShimCache), \texttt{Installation}, \texttt{Configuration},
+        \texttt{Network}…
+  \item[\champ{Subject}] the object it is about: a file (\champ{Path},
+        \champ{Ntfs} \texttt{C:|entry|sequence}, fingerprints of the
+        \emph{whole} file only), a software (\champ{Software}), a device
+        (\champ{Device}), or a name alone (\champ{Name}) when the source gives
+        no path.
+  \item[\champ{Related}] the other objects named, each with its role
+        (\texttt{LoadedFile} of a Prefetch, \texttt{Target} of a shortcut).
+  \item[\champ{Actor}] who acted: account (\champ{Sid}), session, process.
+  \item[\champ{How}] how: parent process, command line, origin.
+  \item[\champ{Evidence}] the file \wac{} read the record in, never mistaken
+        for the subject.
+\end{description}
+Paths are brought to one form: a volume cited by its device
+(\path|\Device\HarddiskVolume3|, BAM, SRUM) or by its GUID is put back on its
+letter, a known folder (UserAssist) on its real folder --- System32 and SysWOW64
+kept apart. \fichier{investigation.json} gives, in \champ{Host.Volumes} and
+\champ{Host.Profiles}, the volumes (letter, device name, GUID, serial number)
+and the profiles (SID, folder) observed at the collection, which these
+resolutions use.
+
 \section{A missing field is not an empty field}
 
 A value with no source is not emitted at all. An empty key would read as a

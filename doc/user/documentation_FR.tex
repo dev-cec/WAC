@@ -2617,6 +2617,40 @@ chaque utilisateur (\fichier{UsrClass.dat}). Un composant installé sur la
 machine y est donc nommé, avec le module qui le sert. Un GUID que rien ne nomme
 est publié sans nom.
 
+\section{Le contexte de liaison (\champ{Context})}
+
+Chaque enregistrement des artefacts d'exécution (Prefetch, BAM, UserAssist,
+MUICache, SRUM, processus, Amcache, ShimCache, \fichier{program\_usage.json},
+rapports d'erreur) porte un bloc \champ{Context}, que les autres familles
+d'artefacts reçoivent à leur tour. Il ne contient que des identités --- les
+dates restent dans les champs de l'enregistrement --- et sert à relier les
+artefacts entre eux : le même fichier, le même compte, le même logiciel y
+ont la même forme, quel que soit l'artefact qui les nomme.
+\begin{description}
+  \item[\champ{Kind}] ce que l'enregistrement atteste : \texttt{Execution},
+        \texttt{Presence} (le fichier a existé, sans preuve qu'il ait tourné :
+        Amcache, ShimCache), \texttt{Installation}, \texttt{Configuration},
+        \texttt{Network}…
+  \item[\champ{Subject}] l'objet dont il parle : un fichier (\champ{Path},
+        \champ{Ntfs} \texttt{C:|entrée|séquence}, empreintes du fichier
+        \emph{entier} seulement), un logiciel (\champ{Software}), un appareil
+        (\champ{Device}), ou un nom seul (\champ{Name}) quand la source ne
+        donne pas de chemin.
+  \item[\champ{Related}] les autres objets nommés, chacun avec son rôle
+        (\texttt{LoadedFile} d'un Prefetch, \texttt{Target} d'un raccourci).
+  \item[\champ{Actor}] qui a agi : compte (\champ{Sid}), session, processus.
+  \item[\champ{How}] comment : processus parent, ligne de commande, origine.
+  \item[\champ{Evidence}] le fichier où \wac{} a lu l'enregistrement, jamais
+        confondu avec le sujet.
+\end{description}
+Les chemins sont ramenés à une seule forme : un volume cité par son
+périphérique (\path|\Device\HarddiskVolume3|, BAM, SRUM) ou par son GUID est
+remis sur sa lettre, un dossier connu (UserAssist) sur son dossier réel ---
+System32 et SysWOW64 distingués. \fichier{investigation.json} donne, dans
+\champ{Host.Volumes} et \champ{Host.Profiles}, les volumes (lettre, nom de
+périphérique, GUID, numéro de série) et les profils (SID, dossier) relevés à
+la collecte, qui servent à ces résolutions.
+
 \section{Un champ absent n'est pas un champ vide}
 
 Une valeur sans source n'est pas émise du tout. Une clé vide se lirait comme une
