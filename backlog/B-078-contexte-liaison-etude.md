@@ -242,3 +242,6 @@ l'avance, et les champs de `Context` qui la portent.
   sur une VM qui a vécu.
 - 2026-11-14 : table des rôles des événements, établie sur les 59 645
   événements de la collecte ; 4698, 5140, 5156, Sysmon 3 et 11 absents.
+- 2026-11-14 : tâche d'évaluation lancée sur `win11-test` : l'inventaire
+  d'Amcache n'est pas vide, il est passé en bases SQLite (`Inventory*.db`),
+  non prélevées par WAC → B-081.
