@@ -665,14 +665,16 @@ fetch_results() {
   # The thumbnail of the B-026 witness, exported by WAC: only its own, out of
   # the thousands a cache holds. The working copy of Thunderbird's Inbox
   # (B-017), which check-json.py reads with Python's mailbox module. And the
-  # working copies of the Prefetch files, which libscca reads below.
+  # working copies of the Prefetch files, which libscca reads below. And the
+  # Amcache inventory databases with their journals (B-081), which
+  # check-json.py reads with Python's sqlite3 module.
   local thumbnailId
   thumbnailId=$(sed -n 's/^thumbcache=\([0-9a-f]\{16\}\)|.*/\1/p' "$OUTPUT/reference/file-artefacts.txt" 2>/dev/null | tr -d '\r' | head -1)
   # Built apart: within ${thumbnailId:+…}, the "}" of a script block would end the expansion.
   local thumbnailQuery=""
   [[ -n "$thumbnailId" ]] && thumbnailQuery="; Get-ChildItem -LiteralPath '$vm\\thumbcache' -Recurse -Filter '$thumbnailId.*' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | ForEach-Object { \$_.FullName }"
   local rdpFiles
-  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | Where-Object { \$_.FullName -like '*Terminal Server Client*' } | ForEach-Object { \$_.FullName }; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -Filter '*.bmp' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | ForEach-Object { \$_.FullName }$thumbnailQuery; Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -Force -Filter 'Inbox' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | Where-Object { \$_.FullName -like '*Thunderbird*' } | ForEach-Object { \$_.FullName }; Get-ChildItem -LiteralPath '$vm\\working\\Windows\\Prefetch' -Force -Filter '*.pf' -ErrorAction SilentlyContinue | ForEach-Object { \$_.FullName }" 2>/dev/null | tr -d '\r' || true)
+  rdpFiles=$($QGA run -- powershell.exe -NoProfile -Command "Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -Force -Filter 'Cache*.bin' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | Where-Object { \$_.FullName -like '*Terminal Server Client*' } | ForEach-Object { \$_.FullName }; Get-ChildItem -LiteralPath '$vm\\rdp_cache' -Recurse -Filter '*.bmp' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | ForEach-Object { \$_.FullName }$thumbnailQuery; Get-ChildItem -LiteralPath '$vm\\working\\Users' -Recurse -Force -Filter 'Inbox' -ErrorAction SilentlyContinue | Where-Object { -not \$_.PSIsContainer } | Where-Object { \$_.FullName -like '*Thunderbird*' } | ForEach-Object { \$_.FullName }; Get-ChildItem -LiteralPath '$vm\\working\\Windows\\Prefetch' -Force -Filter '*.pf' -ErrorAction SilentlyContinue | ForEach-Object { \$_.FullName }; Get-ChildItem -LiteralPath '$vm\\working\\Windows\\AppCompat\\Programs' -Force -Filter 'Inventory*.db*' -ErrorAction SilentlyContinue | ForEach-Object { \$_.FullName }" 2>/dev/null | tr -d '\r' || true)
   while read -r f; do
     [[ -z "$f" ]] && continue
     # The prefix quoted: unquoted, the backslashes of the VM's path are read as escapes.

@@ -76,3 +76,10 @@ ligne dans `check-json.py`.
   `amcache_inventory` non vides sur Windows 11 26300, doublons
   d'`InventoryApplicationFile` mesurés) et un contrôle dans `check-json.py`
   (le module `sqlite3` de Python relit les bases de `working/`).
+- 2026-11-14 : harnais : bases d'inventaire et journaux rapatriés de
+  `working/` ; `check_amcache_inventory_databases` (Python `sqlite3`, journaux
+  rejoués sur une copie) : chaque `ItemKey` de chaque table `Inventory*` doit
+  être une entrée de WAC portant le nom de sa base, et réciproquement ;
+  doublons ruche/base comptés. Rejoué sur les bases copiées de la VM et les
+  JSON de l'ancien WAC : ❌ 113 programmes et 44 raccourcis absents (le
+  défaut, vu).

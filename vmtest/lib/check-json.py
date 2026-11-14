@@ -500,6 +500,7 @@ def cross_checks(folder):
     found += guarded(check_prefetchs, folder)
     found += guarded(check_prefetch_runs, folder)
     found += guarded(check_amcache_windows8, folder)
+    found += guarded(check_amcache_inventory_databases, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6080,6 +6081,60 @@ def check_prefetch_runs(folder):
     print(f"  ✅ prefetchs.json: TASKKILL.EXE last run {gap:.0f} s before the collection, as the harness ran it; "
           f"{count} run(s), {len(set(runs))} time(s) kept")
     return 0
+
+
+def check_amcache_inventory_databases(folder):
+    """The Amcache inventory databases of Windows 11 26300 on (B-081), read
+    apart by Python's sqlite3 module from the working copies the harness
+    fetched: every row of every Inventory*_N table must be an entry of WAC's
+    JSON carrying that database's name (InventoryDatabase), by its ItemKey —
+    none lost, none made up. The executables both the hive and a database
+    list are counted, for the record (a choice of B-081: kept twice, each
+    with its source).
+    """
+    import shutil, sqlite3, tempfile
+    if switched_off(folder, "amcache_applications.json"):
+        print("  ⏭️  amcache not requested: inventory databases not checked")
+        return 0
+    found_dbs = []
+    for root, _, files in os.walk(os.path.join(folder, "working", "Windows")):
+        if os.path.normcase(root).lower().endswith(os.path.join("appcompat", "programs")):
+            found_dbs += [os.path.join(root, f) for f in files if f.lower().startswith("inventory") and f.lower().endswith(".db")]
+    if not found_dbs:
+        print("  ⏭️  no inventory database fetched (a Windows before 26300): not checked")
+        return 0
+    entries = []
+    for name in ("amcache_applications.json", "amcache_application_files.json", "amcache_inventory.json"):
+        d = load(folder, name)
+        entries += [e for e in d or [] if isinstance(e, dict)] if isinstance(d, list) else []
+    wrong, rows_total = [], 0
+    for db in sorted(found_dbs):
+        base = os.path.basename(db)
+        mine = {e.get("KeyName") for e in entries if e.get("InventoryDatabase") == base}
+        work = tempfile.mkdtemp(prefix="wac-inventory-")
+        try:
+            for suffix in ("", "-wal", "-journal"):   # the journals replayed, as WAC does on its copy
+                if os.path.exists(db + suffix):
+                    shutil.copyfile(db + suffix, os.path.join(work, base + suffix))
+            connection = sqlite3.connect(os.path.join(work, base))
+            theirs = set()
+            for (table,) in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'Inventory%'"):
+                theirs |= {k for (k,) in connection.execute(f'SELECT ItemKey FROM "{table}"') if k is not None}
+            connection.close()
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+        rows_total += len(theirs)
+        if theirs != mine:
+            wrong.append(f"{base}: {len(theirs - mine)} row(s) not in WAC, {len(mine - theirs)} not in the database")
+    hive_files = {e.get("KeyName") for e in load(folder, "amcache_application_files.json") or []
+                  if isinstance(e, dict) and not e.get("InventoryDatabase")}
+    db_files = {e.get("KeyName") for e in load(folder, "amcache_application_files.json") or []
+                if isinstance(e, dict) and e.get("InventoryDatabase")}
+    ok = not wrong
+    print(f"  {'✅' if ok else '❌'} amcache: {len(found_dbs)} inventory database(s), {rows_total} row(s) read by Python's "
+          f"sqlite3, each an entry of WAC with its database's name; executables in the hive AND a database: "
+          f"{len(hive_files & db_files)}" + ("" if ok else f": {wrong[:3]}"))
+    return 0 if ok else 1
 
 
 def check_amcache_windows8(folder):
