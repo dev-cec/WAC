@@ -1238,7 +1238,13 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         que liste \fichier{RecentFileCache.bcf}, sont donnés dans
         \fichier{amcache\_application\_files.json} avec \champ{Table}
         \texttt{RecentFileCache} : leur chemin seulement, le fichier ne porte
-        aucune date.
+        aucune date. Depuis Windows~11 build~26300, l'inventaire quitte en
+        partie la ruche pour des bases SQLite posées à côté, une par table
+        (\fichier{InventoryApplication.db}, \fichier{InventoryDevicePnp.db}…) :
+        \wac{} les prélève avec leurs journaux et les convertit comme la ruche
+        (mêmes noms, mêmes conversions) ; une telle entrée porte le nom de sa
+        base (\champ{InventoryDatabase}) et la date de sa dernière mise à jour
+        (\champ{LastModified}), au lieu d'une date de clé.
   \item[\fichier{shimcache.json}] cache de compatibilité : chemin et date de
         modification du fichier, position dans le cache (\champ{CachePosition},
         0 pour la plus récente). Une entrée prouve que le binaire était présent,
@@ -2119,7 +2125,9 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         DetectionHistory, qui survit à l'effacement du journal d'événements :
         menace, ressource (fichier, clé), compte, processus, date de détection
         initiale, entrée de quarantaine, et les propriétés nommées
-        \champ{ThreatTracking} (empreintes, taille, heure de début). Le format
+        \champ{ThreatTracking} (empreintes, taille, heure de début). Une
+        propriété d'un type que \wac{} ne sait pas lire est donnée avec ce type
+        (\champ{UndecodedType}) : la lecture du sac s'arrête là, et le dit. Le format
         n'est pas documenté : seuls les champs dont la position a été confirmée
         contre \texttt{MSFT\_MpThreatDetection} sont nommés ; les autres sont
         rendus tels que lus (\champ{UnnamedFields} : position, type, valeur),
@@ -2480,6 +2488,12 @@ est et converti avec les autres :
         enregistrements, que WAC relit. L'Observateur d'événements ne les montre
         plus ; ils restent la trace de ce que l'effacement voulait faire
         disparaître, et ne doivent jamais être lus comme des événements vivants.
+  \item[\champ{EvtChunkChecksumMismatch}] \texttt{true} quand le bloc du
+        journal qui porte l'événement ne vérifie pas l'une de ses deux sommes
+        de contrôle (CRC-32 de l'en-tête et des enregistrements) : ses octets
+        ont changé depuis que Windows les a écrits --- bloc réécrit pendant la
+        copie du journal ouvert, ou endommagé. L'événement est donné, mais son
+        contenu peut appartenir à un autre.
 \end{description}
 
 \begin{note}[Messages incomplets]
@@ -2603,7 +2617,10 @@ est publié sans nom.
 
 Une valeur sans source n'est pas émise du tout. Une clé vide se lirait comme une
 lecture ratée, et ne se distinguerait pas de « la ruche ne contient pas cette
-valeur ». Ce qui n'a pas pu être lu est consigné dans
+valeur ». Il en va de même d'une date que la norme ISO~8601 ne sait pas écrire
+(au-delà de l'an 9999) ; la plus grande date de Windows, qui signifie
+« jamais » (une entrée qui n'expire pas), s'écrit \champ{<Nom>Never} :
+\texttt{true}, sans date. Ce qui n'a pas pu être lu est consigné dans
 \fichier{investigation.json}.
 
 \section{Artefact non collecté}

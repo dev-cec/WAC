@@ -1211,6 +1211,13 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \fichier{RecentFileCache.bcf}, are given in
         \fichier{amcache\_application\_files.json} with \champ{Table}
         \texttt{RecentFileCache}: their path only, the file holds no date.
+        From Windows~11 build~26300, the inventory partly leaves the hive for
+        SQLite databases beside it, one per table
+        (\fichier{InventoryApplication.db}, \fichier{InventoryDevicePnp.db}…):
+        \wac{} takes them with their journals and converts them as the hive
+        (same names, same conversions); such an entry carries its database's
+        name (\champ{InventoryDatabase}) and the time of its last update
+        (\champ{LastModified}), instead of a key's time.
   \item[\fichier{shimcache.json}] compatibility cache: path and modification date
         of the file, position in the cache (\champ{CachePosition}, 0 for the most
         recent). An entry proves the binary was present, not that it ran. The
@@ -2039,7 +2046,9 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         file, which survives the clearing of the event log: threat, resource
         (file, key), account, process, initial detection date, quarantine
         entry, and the named \champ{ThreatTracking} properties (fingerprints,
-        size, start time). The format is undocumented: only the fields whose
+        size, start time). A property of a type \wac{} cannot read is given
+        with that type (\champ{UndecodedType}): the reading of the bag stops
+        there, and says so. The format is undocumented: only the fields whose
         position was confirmed against \texttt{MSFT\_MpThreatDetection} are
         named; the others are given as read (\champ{UnnamedFields}: offset,
         type, value), without a meaning made up. Defender of Windows~8.1
@@ -2376,6 +2385,11 @@ with the others:
         WAC reads again. Event Viewer no longer shows them; they remain the
         trace of what the clearing meant to erase, and must never be read as
         live events.
+  \item[\champ{EvtChunkChecksumMismatch}] \texttt{true} when the log chunk
+        holding the event fails one of its two checksums (CRC-32 of the header
+        and of the records): its bytes changed since Windows wrote them --- a
+        chunk rewritten while the open log was copied, or damaged. The event
+        is given, but its content may belong to another.
 \end{description}
 
 \begin{note}[Incomplete messages]
@@ -2495,7 +2509,9 @@ without a name.
 
 A value with no source is not emitted at all. An empty key would read as a
 failed read, and could not be told apart from ``the hive does not hold this
-value''. What could not be read is recorded in \fichier{investigation.json}.
+value''. So is a date ISO~8601 cannot write (beyond year 9999); Windows'
+largest date, which means ``never'' (an entry that does not expire), is
+written \champ{<Name>Never}: \texttt{true}, with no date. What could not be read is recorded in \fichier{investigation.json}.
 
 \section{Artefact not collected}
 
