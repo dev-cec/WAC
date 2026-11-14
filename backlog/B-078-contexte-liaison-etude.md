@@ -42,7 +42,7 @@ Server 2025 du 2026-11-13, dans WAE) :
 - L'étude se refait **complète, sur la VM Windows 11** (un poste client :
   Prefetch, BAM, UserAssist, jump lists… vivants), artefact par artefact.
 
-## Schéma proposé (2026-11-14, à valider par l'utilisateur)
+## Schéma validé (utilisateur, 2026-11-14)
 Établi sur les deux collectes Windows 11 (VM neuve, puis VM qui a vécu),
 les deux tableaux et la table des rôles ci-dessous. Un bloc par
 enregistrement ; champs sans valeur non émis (règle commune n° 1) ; les
@@ -283,7 +283,7 @@ l'avance, et les champs de `Context` qui la portent.
 - [x] Table des rôles des événements, première passe (identifiants absents
       à confirmer sur la VM qui a vécu)
 - [x] Schéma proposé et découpage en fiches (2026-11-14)
-- [ ] Schéma validé par l'utilisateur ; fiches par famille créées
+- [x] Schéma validé par l'utilisateur ; fiches par famille créées (B-085 à B-094)
 
 ## Journal
 - 2026-11-13 : ébauche dans WAE (`backlog/etudes/`), depuis la collecte
@@ -315,3 +315,5 @@ l'avance, et les champs de `Context` qui la portent.
   console à défaut. ❌ quarantaine Defender : à expliquer.
 - 2026-11-14 : schéma proposé (`Kind`, `Subject`, `Related`, `Actor`,
   `How`, `Evidence`) et découpage en 11 fiches, à valider.
+- 2026-11-14 : schéma et découpage **validés par l'utilisateur** ; fiches B-085
+  à B-094 créées ; suite : B-079 (socle).
