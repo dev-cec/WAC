@@ -80,7 +80,7 @@ session RDP, exécution connue) : pour chacun, l'histoire attendue écrite à
 l'avance, et les champs de `Context` qui la portent.
 
 ## Tâches
-- [ ] Cycle complet `win11-test`, collecte de référence cliente
+- [x] Cycle `win11-test`, collecte de référence cliente
 - [ ] Tableau par JSON (Kind, sujet, acteur, comment, à calculer)
 - [ ] Tableau par sorte d'objet
 - [ ] Schéma arrêté ; fiches par famille créées
@@ -90,3 +90,11 @@ l'avance, et les champs de `Context` qui la portent.
   Server 2025 ; constats ci-dessus.
 - 2026-11-14 : décisions de l'utilisateur (ci-dessus) ; l'ébauche devient
   cette fiche, WAE n'en garde pas de copie.
+- 2026-11-14 : cycle `win11-test` (sans l'étape 7), première collecte de la
+  VM recréée le 2026-11-13 (build 26300) : 297 ✅, 3 ❌. Expliqués :
+  `check_web_client` s'arrête sur une date fausse écrite par WAC (année
+  30828 tronquée en `0828`, fiche B-080) ; `bams.json` (l'entrée de
+  `taskkill.exe` lancé juste avant la collecte absente) et
+  `defender_quarantine.json` (entrée EICAR absente) : écritures différées
+  de Windows sur une VM neuve, à revoir au prochain cycle avant de parler
+  de régression.

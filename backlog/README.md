@@ -81,6 +81,7 @@ d'artefacts naîtront de B-078.
 |---|---|---|---|---|
 | [B-078](B-078-contexte-liaison-etude.md) | Contexte de liaison : étude complète sur Windows 11, avec WAE | en cours | P1 | gros |
 | [B-079](B-079-contexte-liaison-socle.md) | Contexte de liaison : socle commun (`Context`, volumes, profils) | à faire | P1 | moyen |
+| [B-080](B-080-dates-au-dela-de-9999.md) | Dates au-delà de l'an 9999 écrites tronquées (`0828` pour 30828) | à faire | P1 | petit |
 
 ## Réalisé
 
