@@ -1244,7 +1244,11 @@ n'est pas émis (voir chapitre~\ref{chap:lecture}).
         \wac{} les prélève avec leurs journaux et les convertit comme la ruche
         (mêmes noms, mêmes conversions) ; une telle entrée porte le nom de sa
         base (\champ{InventoryDatabase}) et la date de sa dernière mise à jour
-        (\champ{LastModified}), au lieu d'une date de clé.
+        (\champ{LastModified}), au lieu d'une date de clé. Un exécutable que la
+        ruche et une base portent toutes deux (la ruche n'en garde que
+        l'identifiant de programme et le SHA-1) n'est écrit qu'une fois : avec
+        le nom de sa base et la date de sa clé de la ruche ; si les deux
+        sources se contredisaient, les deux entrées seraient données.
   \item[\fichier{shimcache.json}] cache de compatibilité : chemin et date de
         modification du fichier, position dans le cache (\champ{CachePosition},
         0 pour la plus récente). Une entrée prouve que le binaire était présent,

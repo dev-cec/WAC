@@ -1217,7 +1217,11 @@ a value is not emitted (see chapter~\ref{chap:lecture}).
         \wac{} takes them with their journals and converts them as the hive
         (same names, same conversions); such an entry carries its database's
         name (\champ{InventoryDatabase}) and the time of its last update
-        (\champ{LastModified}), instead of a key's time.
+        (\champ{LastModified}), instead of a key's time. An executable both
+        the hive and a database hold (the hive keeps only its program
+        identifier and SHA-1) is written once: with its database's name and
+        its hive key's time; were the two sources to disagree, both entries
+        would be given.
   \item[\fichier{shimcache.json}] compatibility cache: path and modification date
         of the file, position in the cache (\champ{CachePosition}, 0 for the most
         recent). An entry proves the binary was present, not that it ran. The
