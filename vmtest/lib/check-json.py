@@ -2216,10 +2216,22 @@ def check_small_file_artefacts(folder):
             # harness then deleted before the collection is recovered among the
             # deleted files ($DeletedFiles\<entry>-<sequence>_<name>), not lost.
             recovered = {re.sub(r"^(\d+-\d+_)+", "", p.rsplit("\\", 1)[-1]) for p in copied if "\\$deletedfiles\\" in p}
-            missing = {t for t in traces - copied if t.rsplit("\\", 1)[-1] not in recovered}
+            # Or its deletion recorded by the USN journal before the collection
+            # started: Defender's rotation, measured 2026-11-14 (deleted 2 min 33
+            # before the collection, its clusters reused, not recovered).
+            inv = load(folder, "investigation.json")
+            inv = inv[0] if isinstance(inv, list) and inv else inv
+            start = ((inv or {}).get("Collection") or {}).get("StartUtc") if isinstance(inv, dict) else None
+            usn = load(folder, "usn_journal.json")
+            deleted_before = {(u.get("FileName") or u.get("Path") or "").rsplit("\\", 1)[-1].lower()
+                              for u in (usn if isinstance(usn, list) else [])
+                              if isinstance(u, dict) and "FILE_DELETE" in (u.get("Reasons") or "")
+                              and start and (u.get("TimestampUtc") or "") < start}
+            missing = {t for t in traces - copied if t.rsplit("\\", 1)[-1] not in recovered
+                       and t.rsplit("\\", 1)[-1] not in deleted_before}
             report(not missing,
                    f"exhibits: the {len(traces)} Defender WPP trace(s) Windows lists, copied raw"
-                   f" ({len(traces - copied)} deleted by Defender since, recovered)",
+                   f" ({len(traces - copied)} deleted by Defender since, recovered or their deletion in the USN journal)",
                    f"exhibits: Defender WPP traces not copied: {sorted(missing)[:3]}")
 
     # DPAPI master keys (B-032): the key files Windows lists, each with its
@@ -2337,6 +2349,22 @@ def check_small_file_artefacts(folder):
                 print(f"  ⚠️  web_client.json: HTA {url}: Windows deleted its cached copy {name} before this collection "
                       "(FILE_DELETE in the USN journal) — the WebCache entry is found, the copy cannot be confronted")
                 continue
+            # Or Windows scavenged its cache, entry and file, before the
+            # collection (2026-11-14: the HTA deleted at 18:09:07, Defender's
+            # traces a second later, the collection at 18:11): its deletion is
+            # in the USN journal, nothing was left for WAC to find.
+            if not entry:
+                token = ntpath.basename(url).rsplit(".", 1)[0].lower()
+                inv = load(folder, "investigation.json")
+                inv = inv[0] if isinstance(inv, list) and inv else inv
+                start = ((inv or {}).get("Collection") or {}).get("StartUtc") if isinstance(inv, dict) else None
+                journal = load(folder, "usn_journal.json")
+                if start and isinstance(journal, list) and any(
+                        (r.get("Name") or "").lower().startswith(token) and "FILE_DELETE" in (r.get("Reasons") or "")
+                        and (r.get("TimestampUtc") or "") < start for r in journal if isinstance(r, dict)):
+                    print(f"  ⚠️  web_client.json: HTA {url}: Windows scavenged its cache before this collection "
+                          "(entry gone, FILE_DELETE of the copy in the USN journal) — nothing left to confront")
+                    continue
             report(entry and cached.get("SHA256") == digest,
                    f"web_client.json: the HTA run by mshta.exe found in the WebCache, its cached copy {ntpath.basename(entry.get('CachedFile', ''))} collected, same SHA-256",
                    f"web_client.json: HTA {url}: entry {entry.get('CachedFile') if entry else 'missing'}, exhibit {cached.get('SHA256')}")
@@ -6220,6 +6248,9 @@ def check_context_events(folder):
         m = re.search(r"\.(exe|com|bat|cmd|dll|sys|ps1|vbs|js|scr)(?=$|[\s,])", command, re.I)
         return command[:m.end()] if m else command.split(" ")[0]
     def same_path(a, b):
+        # A name that is no path (the kernel's "Registry", "MemCompression"
+        # processes) gives none: WAC writes no path for it.
+        b = b if b and ":\\" in b else None
         return (a or "").lower() == (b or "").lower() or (not a and not b)
     wrong, counted = [], collections.Counter()
     for e in events:
