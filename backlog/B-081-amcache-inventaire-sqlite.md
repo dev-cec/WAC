@@ -83,3 +83,13 @@ ligne dans `check-json.py`.
   doublons ruche/base comptés. Rejoué sur les bases copiées de la VM et les
   JSON de l'ancien WAC : ❌ 113 programmes et 44 raccourcis absents (le
   défaut, vu).
+- 2026-11-14 : cycle `win11-test` : **305 ✅, 0 ❌**. 21 bases, 1 120 lignes
+  relues par Python, toutes dans les JSON de WAC ; `amcache_applications`
+  0 → 113 programmes, `amcache_inventory` 0 → 621 (pilotes 400, appareils
+  102, raccourcis 44…). **Doublons mesurés** : 386 exécutables à la fois
+  dans la ruche (395) et dans `InventoryApplicationFile.db` ; la ruche n'en
+  garde que `ProgramId` et le SHA-1 (`FileId`), la base tout le reste
+  (chemin, nom, taille, `LinkDate`, type) ; valeurs communes toujours
+  égales ; 9 exécutables dans la ruche seule. **À décider** : garder les
+  deux entrées (aujourd'hui), ou les fusionner en une (champs de la base +
+  date de la clé de la ruche, source dite) — recommandé : fusionner.
