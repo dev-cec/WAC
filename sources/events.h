@@ -122,6 +122,8 @@ struct Event {
 	std::vector<std::wstring> rawValues;
 	//! The name of each of rawValues (Data's Name, a UserData leaf's element); "" for a classic event's data
 	std::vector<std::wstring> rawNames;
+	//! The log file on the examined machine: the Evidence of the event's Context (B-086); set by the reader
+	std::wstring evidencePath;
 	//! The event's values in its template's order (EvtxRecord::values), for a message whose names do not line up
 	std::vector<std::wstring> templateValues;
 

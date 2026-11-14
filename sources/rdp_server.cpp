@@ -51,6 +51,7 @@ HRESULT RdpServer::getData() {
 			const std::unique_ptr<XmlNode> root = xmlParse(e.xml, true);
 			if (!root) return true;
 			Event ev(*root, channel, e.id, fileName);
+			ev.evidencePath = originalPath(file.path.wstring());
 			std::map<std::wstring, std::wstring> data;
 			for (size_t i = 0; i < ev.rawNames.size() && i < ev.rawValues.size(); ++i)
 				if (!ev.rawNames[i].empty()) data.emplace(ev.rawNames[i], ev.rawValues[i]);

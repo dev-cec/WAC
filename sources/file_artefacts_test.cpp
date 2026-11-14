@@ -59,6 +59,7 @@
 #include "context.h"
 #include "srum.h"
 #include "trans_id.h"
+#include "event_roles.h"
 #include "scheduledTasks.h"
 #include "reg_userassists.h"
 #include "xml_light.h"
@@ -888,6 +889,73 @@ void defenderHistory() {
 		      && byApp.subject.software == L"Microsoft.WindowsStore_22.0_x64__8wekyb3d8bbwe"
 		      && byPath.evidence == L"C:\\Windows\\System32\\sru\\SRUDB.dat",
 		      "srum: an application by its path, its name alone or its identifier; network tables: Network (B-085)");
+
+		// B-086: the program of a command line, its arguments left.
+		check(commandProgram(L"\"C:\\Program Files\\A B\\x.exe\" -s") == L"C:\\Program Files\\A B\\x.exe"
+		      && commandProgram(L"C:\\Program Files\\A B\\x.exe -s --k") == L"C:\\Program Files\\A B\\x.exe"
+		      && commandProgram(L"%SystemRoot%\\System32\\svchost.exe -k netsvcs") == L"%SystemRoot%\\System32\\svchost.exe"
+		      && commandProgram(L"C:\\Windows\\system32\\rundll32.exe C:\\x.dll,Entry") == L"C:\\Windows\\system32\\rundll32.exe"
+		      && commandProgram(L"notepad file.txt") == L"notepad",
+		      "context: a command line's program, quoted or with spaces, its arguments left (B-086)");
+
+		/* B-086: the role table. A 4688: who started what, from which parent,
+		   in which session; a 4624: who logged on, the session, how; a 4732: the
+		   group and its new member; a 7045: the service's program apart from its
+		   arguments; Sysmon 1: hashes and process GUIDs; an identifier not in
+		   the table: no Context; "-" is no value. */
+		auto event = [](const wchar_t* provider, unsigned long long id,
+		                std::vector<std::pair<std::wstring, std::wstring>> data) {
+			EventRoleInput e;
+			e.provider = provider;
+			e.id = id;
+			e.data = std::move(data);
+			e.evidence = L"C:\\Windows\\System32\\winevt\\Logs\\Security.evtx";
+			return eventContext(e);
+		};
+		const RecordContext created = event(L"Microsoft-Windows-Security-Auditing", 4688, {
+			{ L"SubjectUserSid", L"S-1-5-21-1-2-3-1000" }, { L"SubjectLogonId", L"0x3e8a1" },
+			{ L"NewProcessId", L"0x1c4" }, { L"NewProcessName", L"C:\\Windows\\System32\\cmd.exe" },
+			{ L"ProcessId", L"0x9f0" }, { L"CommandLine", L"cmd /c whoami" }, { L"TargetUserSid", L"S-1-0-0" },
+			{ L"TargetLogonId", L"0x0" }, { L"ParentProcessName", L"C:\\Windows\\explorer.exe" } });
+		check(created.kind == ContextKind::Execution && created.subject.path == L"C:\\Windows\\System32\\cmd.exe"
+		      && created.actor.sid == L"S-1-5-21-1-2-3-1000" && created.actor.logonId == L"0x3e8a1"
+		      && created.actor.process.pidKnown && created.actor.process.pid == 0x1c4
+		      && created.how.parent.path == L"C:\\Windows\\explorer.exe" && created.how.parent.pid == 0x9f0
+		      && created.how.commandLine == L"cmd /c whoami"
+		      && created.evidence == L"C:\\Windows\\System32\\winevt\\Logs\\Security.evtx",
+		      "events: a 4688's roles, the null SID and 0x0 of its target taken for no value (B-086)");
+		const RecordContext logon = event(L"Microsoft-Windows-Security-Auditing", 4624, {
+			{ L"SubjectUserSid", L"S-1-5-18" }, { L"TargetUserSid", L"S-1-5-21-1-2-3-1000" }, { L"TargetUserName", L"wac" },
+			{ L"TargetDomainName", L"WAC-TEST" }, { L"TargetLogonId", L"0x3e8a1" }, { L"LogonType", L"10" },
+			{ L"IpAddress", L"192.168.1.20" }, { L"WorkstationName", L"-" } });
+		check(logon.kind == ContextKind::Logon && logon.subject.sid == L"S-1-5-21-1-2-3-1000" && logon.subject.user == L"WAC-TEST\\wac"
+		      && logon.actor.logonId == L"0x3e8a1" && logon.how.logonType == 10 && logon.how.remoteAddress == L"192.168.1.20"
+		      && logon.how.host.empty() && logon.actor.sid.empty(),
+		      "events: a 4624's account, session and origin; the service that logged it is not the actor (B-086)");
+		const RecordContext member = event(L"Microsoft-Windows-Security-Auditing", 4732, {
+			{ L"MemberSid", L"S-1-5-21-1-2-3-1001" }, { L"TargetSid", L"S-1-5-32-544" }, { L"TargetUserName", L"Administrators" },
+			{ L"TargetDomainName", L"Builtin" }, { L"SubjectUserSid", L"S-1-5-21-1-2-3-1000" } });
+		check(member.kind == ContextKind::Account && member.subject.sid == L"S-1-5-32-544" && member.related.size() == 1
+		      && member.related[0].role == L"Member" && member.related[0].sid == L"S-1-5-21-1-2-3-1001"
+		      && member.actor.sid == L"S-1-5-21-1-2-3-1000",
+		      "events: a 4732's group, its new member and who added it (B-086)");
+		const RecordContext service = event(L"Service Control Manager", 7045, {
+			{ L"ServiceName", L"WacWitness" }, { L"ImagePath", L"\"C:\\wac test\\svc.exe\" -run" }, { L"AccountName", L"LocalSystem" } });
+		check(service.kind == ContextKind::Installation && service.subject.path == L"C:\\wac test\\svc.exe"
+		      && service.subject.name == L"WacWitness" && service.how.commandLine == L"\"C:\\wac test\\svc.exe\" -run"
+		      && service.actor.sid.empty() && service.actor.user.empty(),
+		      "events: a 7045's program apart from its arguments, its account not taken for the actor (B-086)");
+		const RecordContext sysmon = event(L"Microsoft-Windows-Sysmon", 1, {
+			{ L"ProcessGuid", L"{aa}" }, { L"ProcessId", L"452" }, { L"Image", L"C:\\Tools\\a.exe" },
+			{ L"Hashes", L"SHA1=11,MD5=22,SHA256=33,IMPHASH=44" }, { L"User", L"WAC-TEST\\wac" }, { L"LogonId", L"0x3e8a1" },
+			{ L"ParentProcessGuid", L"{bb}" }, { L"ParentImage", L"C:\\Windows\\explorer.exe" } });
+		check(sysmon.kind == ContextKind::Execution && sysmon.subject.sha256 == L"33" && sysmon.subject.md5 == L"22"
+		      && sysmon.subject.sha1 == L"11" && sysmon.actor.process.guid == L"{aa}" && sysmon.actor.process.pid == 452
+		      && sysmon.how.parent.guid == L"{bb}" && sysmon.actor.user == L"WAC-TEST\\wac",
+		      "events: Sysmon 1's hashes and process GUIDs (B-086)");
+		check(event(L"Microsoft-Windows-Security-Auditing", 5379, { { L"SubjectUserSid", L"S-1-5-18" } }).kind == ContextKind::None
+		      && event(L"Microsoft-Windows-Kernel-Cache", 104, {}).kind == ContextKind::None,
+		      "events: an identifier the table does not hold gets no Context (B-086)");
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;
 	}

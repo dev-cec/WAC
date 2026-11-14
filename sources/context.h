@@ -152,6 +152,15 @@ std::wstring knownFolderPath(const std::wstring& cited, const std::wstring& sid)
  *  and gives no path when the bitness is not known. What the tests call. */
 std::wstring knownFolderPathFor(const std::wstring& cited, const std::wstring& sid, WindowsBits bits);
 
+/*! The program a command line runs, its arguments left: what is between
+ *  the quotes when it is quoted; otherwise up to the first executable
+ *  extension (.exe, .com, .bat, .cmd, .dll, .sys, .ps1, .vbs, .js, .scr)
+ *  followed by a space or the end — "C:\Program Files\A B\x.exe -s" keeps
+ *  its spaces —; otherwise up to the first space.
+ *  @param command the command as written (a service's ImagePath, a Run value)
+ *  @return the program's path, not yet normalised */
+std::wstring commandProgram(const std::wstring& command);
+
 /*! The Evidence of a record read in a system hive: its file on the examined
  *  machine ("C:\Windows\System32\config\SYSTEM").
  *  @param hive "SYSTEM", "SOFTWARE", "SAM"… */

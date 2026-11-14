@@ -2,6 +2,8 @@
  *  \brief The linking context of a record (see context.h).
  */
 #include "context.h"
+#include <algorithm>
+#include <cwctype>
 #include "running_machine.h"
 #include "tools.h"
 #include "binaires.h"
@@ -173,4 +175,28 @@ std::wstring userHiveEvidence(const std::wstring& sid) {
 	for (const auto& [profileSid, folder] : conf.profiles)
 		if (_wcsicmp(profileSid.c_str(), sid.c_str()) == 0) return contextPath(folder + L"\\NTUSER.DAT");
 	return L"";
+}
+
+std::wstring commandProgram(const std::wstring& command) {
+	size_t start = 0;
+	while (start < command.size() && iswspace(command[start])) ++start;
+	if (start < command.size() && command[start] == L'"') {
+		const size_t close = command.find(L'"', start + 1);
+		return command.substr(start + 1, close == std::wstring::npos ? std::wstring::npos : close - start - 1);
+	}
+	std::wstring lower = command.substr(start);
+	for (wchar_t& c : lower) c = (wchar_t)towlower(c);
+	size_t best = std::wstring::npos;
+	for (const wchar_t* extension : { L".exe", L".com", L".bat", L".cmd", L".dll", L".sys", L".ps1", L".vbs", L".js", L".scr" }) {
+		const std::wstring e(extension);
+		for (size_t at = lower.find(e); at != std::wstring::npos; at = lower.find(e, at + 1)) {
+			const size_t end = at + e.size();
+			if (end == lower.size() || iswspace(lower[end]) || lower[end] == L',') {
+				best = std::min(best, end);
+				break;
+			}
+		}
+	}
+	if (best == std::wstring::npos) best = lower.find(L' ');
+	return command.substr(start, best == std::wstring::npos ? std::wstring::npos : best);
 }

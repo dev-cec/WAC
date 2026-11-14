@@ -1,4 +1,5 @@
 #include "events.h"
+#include "event_roles.h"
 #include "evtx.h"
 #include "event_log_files.h"
 #include "evt.h"
@@ -243,6 +244,15 @@ Json Event::toJson() const {
 	o.add(L"EvtRecovered",               evtRecovered);
 	o.add(L"EvtChunkChecksumMismatch",   evtChunkChecksumMismatch);
 	o.add(L"EvtEventMessage",            evtEventMessage);
+	// Context (B-086): the roles of the event's data, by its provider and identifier.
+	EventRoleInput roles;
+	roles.provider = evtSystemProviderName.kind() == Json::Kind::Str ? evtSystemProviderName.text() : L"";
+	if (evtSystemEventID.kind() == Json::Kind::Num) roles.id = std::wcstoull(evtSystemEventID.text().c_str(), nullptr, 10);
+	for (size_t i = 0; i < rawNames.size() && i < rawValues.size(); ++i)
+		if (!rawNames[i].empty()) roles.data.emplace_back(rawNames[i], rawValues[i]);
+	roles.systemUserId = evtSystemUserID.kind() == Json::Kind::Str ? evtSystemUserID.text() : L"";
+	roles.evidence = evidencePath;
+	addContext(o, eventContext(roles));
 	return o;
 }
 
@@ -349,6 +359,7 @@ HRESULT Events::getData() {
 					return true;
 				}
 				Event ev(*root, channel, e.id, fileName);
+				ev.evidencePath = originalPath(logFile.path.wstring());
 				if (seen) {
 					const std::wstring key = channel + L"|" + std::to_wstring(e.id) + L"|"
 					                       + (ev.evtSystemTimeCreated.kind() == Json::Kind::Str ? ev.evtSystemTimeCreated.text() : std::wstring());
