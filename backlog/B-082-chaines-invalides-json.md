@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | petit |
+| à valider | P1 | petit |
 
 ## Pourquoi
 Trouvé par WAE (E-010) le 2026-11-14, à l'import de la collecte
@@ -71,3 +71,9 @@ le canal égale celui que donne `Get-WinEvent` pour le même `EventRecordID`.
   (`search_index.cpp` : `utf16Strings` refuse une demi-paire isolée,
   `InvertedOnly*` en hexadécimal) et son test (`file_artefacts_test`) ; à
   compiler et voir échouer par mutation après le cycle en cours.
+- 2026-11-14 : cycle de la VM qui a vécu : `events.json` **sans** demi-paire
+  (l'événement AppX corrompu ne se reproduit pas : en faveur d'un
+  enregistrement réécrit pendant la copie à chaud) ; `search_index.json` :
+  78, celles d'`InvertedOnly*`. Correctif de 2 compilé ; mutations vues
+  échouer (demi-paire acceptée ; `InvertedOnly*` deviné en texte),
+  restaurées, recompilées. Reste : CRC des blocs EVTX (1), cycle VM.

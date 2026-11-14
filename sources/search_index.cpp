@@ -61,6 +61,18 @@ bool utf16Strings(const std::vector<uint8_t>& bytes, std::vector<std::wstring>& 
 	std::wstring current;
 	for (size_t i = 0; i + 1 < bytes.size(); i += 2) {
 		const wchar_t c = (wchar_t)readLittleEndian<uint16_t>(bytes.data() + i);
+		/* A surrogate must pair: a high one followed by a low one. Bytes that
+		   break the rule are not UTF-16 text — written as text, they put a
+		   lone \udXXX in the JSON, which is not Unicode (B-082). */
+		if (c >= 0xD800 && c <= 0xDBFF) {
+			const wchar_t low = i + 3 < bytes.size() ? (wchar_t)readLittleEndian<uint16_t>(bytes.data() + i + 2) : 0;
+			if (low < 0xDC00 || low > 0xDFFF) return false;
+			current += c;
+			current += low;
+			i += 2;
+			continue;
+		}
+		if (c >= 0xDC00 && c <= 0xDFFF) return false;
 		if (c == 0) {
 			if (!current.empty()) strings.push_back(current);
 			current.clear();
@@ -176,6 +188,14 @@ void addSearchBlob(Json& o, const std::wstring& key, int variantType, const std:
 		GUID guid;
 		memcpy(&guid, bytes.data(), sizeof guid);
 		o.add(key, Json::str(guid_to_wstring(guid)));
+		return;
+	}
+	/* The index's own bookkeeping, bytes by nature (an MD5, a list of process
+	   ids), declared VT_BLOB like the text lists (System.Author, System.Kind):
+	   written in hexadecimal, never guessed as text — 16 random bytes are
+	   often "valid" UTF-16 of no meaning (B-082). */
+	if (key == L"InvertedOnlyMD5" || key == L"InvertedOnlyPids") {
+		o.add(key, Json::str(toHexadecimal(bytes.data(), bytes.size())));
 		return;
 	}
 	std::vector<std::wstring> strings;

@@ -3183,11 +3183,17 @@ int wmain(int argc, wchar_t** argv) {
 		addSearchBlob(o, L"Keywords", 0x101F, { 'a', 0, 0, 0, 'b', 0, 0, 0 });                   // VT_VECTOR | VT_LPWSTR
 		addSearchBlob(o, L"Odd", 65, { 'f', 0, 'o' });                                           // odd size: not UTF-16
 		addSearchBlob(o, L"Zero", 64, { 0, 0, 0, 0, 0, 0, 0, 0 });                               // a zero date: nothing
+		// B-082: a lone surrogate is not text; the index's MD5 is bytes even when they read as UTF-16.
+		addSearchBlob(o, L"Lone", 65, { 0xC0, 0xD9, 'a', 0 });                                    // high surrogate, no low one
+		addSearchBlob(o, L"Pair", 65, { 0x3D, 0xD8, 0x00, 0xDE });                                // U+1F600, a valid pair
+		addSearchBlob(o, L"InvertedOnlyMD5", 65, { 0x63, 0xCF, 0xA8, 0x1E, 0x66, 0xCD, 0xE6, 0xE3 });   // "읣Ẩ쵦" as UTF-16
 		const Json* keywords = o.find(L"Keywords");
 		check(text(L"DateModifiedUtc").compare(0, 19, L"2026-03-06T23:54:20") == 0 && text(L"Size") == L"2850"
 		      && text(L"VolumeId") == L"{3DCA16FA-6CCE-1546-9B57-1D6441CB0488}" && text(L"Kind") == L"folder"
 		      && keywords && keywords->size() == 2 && text(L"Odd") == L"66006F" && !o.find(L"ZeroUtc"),
 		      "search index: FILETIME, VT_UI8, CLSID, UTF-16 text and vector decoded; odd blob in hex; zero date left out");
+		check(text(L"Lone") == L"C0D96100" && text(L"Pair") == L"\U0001F600" && text(L"InvertedOnlyMD5") == L"63CFA81E66CDE6E3",
+		      "search index: a lone surrogate in hex, a surrogate pair kept; InvertedOnlyMD5 always in hex (B-082)");
 	}
 	{
 		/* Windows 7's index (SystemIndex_0A): two AutoSummary values as the
