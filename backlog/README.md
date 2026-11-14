@@ -83,6 +83,7 @@ d'artefacts naîtront de B-078.
 | [B-079](B-079-contexte-liaison-socle.md) | Contexte de liaison : socle commun (`Context`, volumes, profils) | à faire | P1 | moyen |
 | [B-080](B-080-dates-au-dela-de-9999.md) | Dates au-delà de l'an 9999 écrites tronquées (`0828` pour 30828) | à faire | P1 | petit |
 | [B-081](B-081-amcache-inventaire-sqlite.md) | Amcache sur Windows 11 récent : l'inventaire passé en bases SQLite | à faire | P1 | moyen |
+| [B-082](B-082-chaines-invalides-json.md) | Chaînes invalides dans le JSON : canal lu au-delà de sa fin, `VT_BLOB` en texte | à faire | P1 | petit |
 
 ## Réalisé
 
