@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | moyen |
+| en cours | P1 | moyen |
 
 ## Pourquoi
 Ce que toutes les familles de B-078 partagent, fait une fois : l'écriture du
@@ -27,9 +27,18 @@ profils à `ProfileList` lue par l'hôte ; témoins des chemins de périphériqu
 résolus.
 
 ## Tâches
-- [ ] Après B-078 : type `Context`, écriture commune, test unitaire
-- [ ] `Host.Volumes`, `Host.Profiles`, résolution des chemins de périphérique
-- [ ] `Evidence.Path`, `EnablePrefetcher`
+- [x] Type `Context` (`context.h`/`.cpp` : `ContextKind`, `ContextObject`,
+      `RecordContext`, `addContext`), écriture commune, test unitaire
+- [x] `Host.Volumes` (relevé : nom de périphérique par `QueryDosDeviceW`,
+      GUID), `Host.Profiles`, `onDriveLetter` (périphérique, GUID ; test)
+- [ ] Contrôle du harnais : `Host.Volumes` contre `Win32_Volume` (référence
+      prise dans la VM) et contre les chemins de BAM
+- [x] `Evidence.Path` (dans le type ; écrit par chaque famille)
+- [x] `EnablePrefetcher` : déjà écrit dans `OperatingSystem.json` (relevé)
 
 ## Journal
 - 2026-11-14 : fiche créée avec B-078.
+- 2026-11-14 : type `Context`, `Host.Volumes`, `Host.Profiles`,
+  `onDriveLetter` écrits avec leurs tests (non compilés : cycle B-081 en
+  cours) ; `EnablePrefetcher` déjà relevé. Reste : compiler, mutation,
+  contrôle du harnais (après le cycle), cycle.
