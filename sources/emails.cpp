@@ -2,6 +2,7 @@
  *  \brief The mail of every profile (see emails.h).
  */
 #include "emails.h"
+#include "context.h"
 #include "pst_messages.h"
 #include "mbox_mail.h"
 #include "conversions.h"
@@ -168,6 +169,29 @@ Json mboxRecord(const MimeMessage& m, const std::wstring& folder) {
 
 } // namespace
 
+void addMessageContext(Json& record, const std::wstring& sid, const std::wstring& mailbox) {
+	RecordContext context;
+	context.kind = ContextKind::Arrival;
+	if (const Json* attachments = record.find(L"Attachments"))
+		for (const auto& member : attachments->members()) {
+			ContextObject attachment;
+			attachment.role = L"Attachment";
+			if (const Json* name = member.second.find(L"FileName")) attachment.name = name->text();
+			if (const Json* sha = member.second.find(L"Sha256")) attachment.sha256 = sha->text();
+			context.related.push_back(std::move(attachment));
+		}
+	if (const Json* sender = record.find(L"SenderAddress")) {
+		ContextObject from;
+		from.role = L"Sender";
+		from.name = sender->text();
+		context.related.push_back(std::move(from));
+	}
+	context.actor.sid = sid;
+	context.evidence = contextPath(mailbox);
+	addContext(record, context);
+}
+
+
 std::wstring plainExtension(const std::wstring& name) {
 	const size_t dot = name.find_last_of(L'.');
 	if (dot == std::wstring::npos || name.size() - dot - 1 < 1 || name.size() - dot - 1 > 8) return L"";
@@ -209,6 +233,7 @@ HRESULT Emails::getData() {
 				addUser(record, sid);
 				record.add(L"Source", Json::str(source));
 				record.merge(o);
+				addMessageContext(record, sid, source);
 				records_.push(std::move(record));
 				++count;
 			}, unreadable);
@@ -246,6 +271,7 @@ void Emails::readThunderbird(const std::wstring& sid, const std::wstring& profil
 			record.add(L"Source", Json::str(source));
 			record.add(L"Folder", Json::str(relative));
 			record.merge(mboxRecord(m, base + L"\\" + std::to_wstring(m.offset)));
+			addMessageContext(record, sid, source);
 			records_.push(std::move(record));
 			++count;
 		}, skipped);

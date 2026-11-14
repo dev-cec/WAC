@@ -87,7 +87,7 @@ le 2026-11-14 : le socle B-079, puis une fiche par famille d'artefacts
 | [B-084](B-084-defender-sac-type-8.md) | Defender : un type inconnu du sac `ThreatTracking` coupait la suite en silence | à valider | P1 | petit |
 | [B-085](B-085-contexte-executions.md) | Contexte de liaison : exécutions | à valider | P1 | moyen |
 | [B-086](B-086-contexte-evenements.md) | Contexte de liaison : événements | à valider | P1 | moyen |
-| [B-087](B-087-contexte-arrivees.md) | Contexte de liaison : arrivées | à faire | P1 | moyen |
+| [B-087](B-087-contexte-arrivees.md) | Contexte de liaison : arrivées | à valider | P1 | moyen |
 | [B-088](B-088-contexte-persistance.md) | Contexte de liaison : persistance | à faire | P1 | moyen |
 | [B-089](B-089-contexte-systeme-fichiers.md) | Contexte de liaison : système de fichiers | à faire | P1 | moyen |
 | [B-090](B-090-contexte-acces.md) | Contexte de liaison : accès | à faire | P1 | moyen |

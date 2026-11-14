@@ -200,3 +200,24 @@ std::wstring commandProgram(const std::wstring& command) {
 	if (best == std::wstring::npos) best = lower.find(L' ');
 	return command.substr(start, best == std::wstring::npos ? std::wstring::npos : best);
 }
+
+std::wstring urlHost(const std::wstring& url) {
+	const size_t scheme = url.find(L"://");
+	if (scheme == std::wstring::npos || scheme == 0) return L"";
+	std::wstring authority = url.substr(scheme + 3);
+	authority = authority.substr(0, authority.find_first_of(L"/?#"));
+	const size_t at = authority.rfind(L'@');
+	if (at != std::wstring::npos) authority = authority.substr(at + 1);
+	if (!authority.empty() && authority[0] == L'[') authority = authority.substr(0, authority.find(L']') + 1);   // [IPv6]:port
+	else authority = authority.substr(0, authority.find(L':'));
+	for (wchar_t& c : authority) c = (wchar_t)towlower(c);
+	return authority;
+}
+
+std::wstring serviceProgram(const std::wstring& imagePath) {
+	std::wstring program = commandProgram(imagePath);
+	// Relative to the Windows folder, as the service control manager reads it (measured: KslD, 7045).
+	if (!program.empty() && program.find(L':') == std::wstring::npos && program[0] != L'\\' && program[0] != L'%')
+		program = L"\\SystemRoot\\" + program;
+	return contextPath(program);
+}

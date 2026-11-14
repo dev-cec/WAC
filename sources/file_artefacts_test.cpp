@@ -60,6 +60,7 @@
 #include "srum.h"
 #include "trans_id.h"
 #include "event_roles.h"
+#include "bits_jobs.h"
 #include "scheduledTasks.h"
 #include "reg_userassists.h"
 #include "xml_light.h"
@@ -897,6 +898,11 @@ void defenderHistory() {
 		      && commandProgram(L"C:\\Windows\\system32\\rundll32.exe C:\\x.dll,Entry") == L"C:\\Windows\\system32\\rundll32.exe"
 		      && commandProgram(L"notepad file.txt") == L"notepad",
 		      "context: a command line's program, quoted or with spaces, its arguments left (B-086)");
+		// A service's ImagePath relative to the Windows folder (a driver, measured: KslD).
+		check(serviceProgram(L"system32\\drivers\\KslD.sys") == L"C:\\Windows\\system32\\drivers\\KslD.sys"
+		      && serviceProgram(L"\\SystemRoot\\System32\\drivers\\x.sys") == L"C:\\Windows\\System32\\drivers\\x.sys"
+		      && serviceProgram(L"\"C:\\Program Files\\A\\svc.exe\" -k") == L"C:\\Program Files\\A\\svc.exe",
+		      "context: a service's program, a relative ImagePath read from the Windows folder (B-086)");
 
 		/* B-086: the role table. A 4688: who started what, from which parent,
 		   in which session; a 4624: who logged on, the session, how; a 4732: the
@@ -963,6 +969,79 @@ void defenderHistory() {
 		check(event(L"Microsoft-Windows-Security-Auditing", 5379, { { L"SubjectUserSid", L"S-1-5-18" } }).kind == ContextKind::None
 		      && event(L"Microsoft-Windows-Kernel-Cache", 104, {}).kind == ContextKind::None,
 		      "events: an identifier the table does not hold gets no Context (B-086)");
+
+		/* B-087: arrivals. The host of a URL; a Zone.Identifier's file from
+		   its HostUrl; a BITS job's files, source and notified program; a web
+		   download and a local file visited; a message's attachment. */
+		check(urlHost(L"http://User@Example.COM:8080/x?y") == L"example.com" && urlHost(L"https://[::1]:443/") == L"[::1]"
+		      && urlHost(L"not a url").empty(),
+		      "context: the host of a URL, lower case, without user nor port (B-087)");
+		// A member by its path, "" when one is missing: a test fails, it does not crash.
+		auto at = [](const Json* j, std::initializer_list<const wchar_t*> path) {
+			for (const wchar_t* key : path) j = j ? j->find(key) : nullptr;
+			return j ? j->text() : std::wstring();
+		};
+		ZoneIdentifier zone;
+		zone.path = L"C:\\Users\\wac\\Downloads\\x.exe";
+		zone.values = { { L"ZoneId", L"3" }, { L"HostUrl", L"https://dl.example.com/x.exe" } };
+		const Json zoneRecord = zone.toJson();   // kept: a pointer into a temporary would dangle
+		const Json* zoneContext = zoneRecord.find(L"Context");
+		check(at(zoneContext, { L"Kind" }) == L"Arrival"
+		      && at(zoneContext, { L"Subject", L"Path" }) == L"C:\\Users\\wac\\Downloads\\x.exe"
+		      && at(zoneContext, { L"How", L"Host" }) == L"dl.example.com"
+		      && at(zoneContext, { L"Evidence", L"Path" }) == L"C:\\Users\\wac\\Downloads\\x.exe:Zone.Identifier",
+		      "zone identifiers: the file arrived from its HostUrl, the stream for evidence (B-087)");
+		BitsFile first, second;
+		first.id = L"f1"; first.parsed = true; first.source = L"http://bits.example.com/a.bin"; first.destination = L"C:\\Temp\\a.bin";
+		second.id = L"f2"; second.parsed = true; second.source = L"http://bits.example.com/b.bin"; second.destination = L"C:\\Temp\\b.bin";
+		BitsJob job;
+		job.parsed = true; job.type = 0; job.ownerSid = L"S-1-5-18"; job.notifyProgram = L"C:\\Windows\\System32\\cmd.exe";
+		job.fileIds = { L"f1", L"f2" };
+		const Json jobRecord = job.toJson({ first, second });
+		const Json* jobContext = jobRecord.find(L"Context");
+		check(at(jobContext, { L"Kind" }) == L"Arrival" && at(jobContext, { L"Subject", L"Path" }) == L"C:\\Temp\\a.bin"
+		      && jobContext && jobContext->find(L"Related") && jobContext->find(L"Related")->size() == 2
+		      && at(jobContext, { L"How", L"Host" }) == L"bits.example.com" && at(jobContext, { L"Actor", L"Sid" }) == L"S-1-5-18",
+		      "bits: the files a download brought, its source, the program notified, the owner (B-087)");
+		WebClientRecord download, visit;
+		download.type = L"Download"; download.sid = L"S-1-5-21-1-2-3-1000"; download.source = L"C:\\Users\\wac\\History";
+		download.fields = Json::obj();
+		download.fields.add(L"Url", Json::str(L"https://cdn.example.com/setup.exe"));
+		download.fields.add(L"TargetPath", Json::str(L"C:\\Users\\wac\\Downloads\\setup.exe"));
+		visit.type = L"CacheEntry"; visit.fields = Json::obj();
+		visit.fields.add(L"Url", Json::str(L"Visited: wac@file:///C:/Users/wac/Documents/report.docx"));
+		WebClientRecord ie;   // the WebCache's iedownload: URL and saved path nested in Download
+		ie.type = L"CacheEntry"; ie.fields = Json::obj();
+		ie.fields.add(L"Url", Json::str(L"iedownload:{0BA49E81-E028-11F1-902D-5254006C2D9F}"));
+		Json nested = Json::obj();
+		nested.add(L"Url", Json::str(L"http://127.0.0.1:8765/ie/wac-dl-ie.txt"));
+		nested.add(L"TargetPath", Json::str(L"C:\\Users\\wac\\Downloads\\wac-dl-ie.txt"));
+		ie.fields.add(L"Download", std::move(nested));
+		const RecordContext ieSaved = ie.context();
+		check(ieSaved.kind == ContextKind::Arrival && ieSaved.subject.path == L"C:\\Users\\wac\\Downloads\\wac-dl-ie.txt"
+		      && ieSaved.how.url == L"http://127.0.0.1:8765/ie/wac-dl-ie.txt",
+		      "web: Internet Explorer's download, its URL and saved path nested in Download (B-087)");
+		const RecordContext saved = download.context(), opened = visit.context();
+		check(saved.kind == ContextKind::Arrival && saved.subject.path == L"C:\\Users\\wac\\Downloads\\setup.exe"
+		      && saved.how.host == L"cdn.example.com"
+		      && opened.kind == ContextKind::Access && opened.subject.path == L"C:\\Users\\wac\\Documents\\report.docx"
+		      && opened.how.url.empty(),
+		      "web: a download arrived from its URL; a local file visited is an access to that file (B-087)");
+		Json message = Json::obj();
+		Json attachments = Json::arr();
+		Json attachment = Json::obj();
+		attachment.add(L"FileName", Json::str(L"invoice.pdf.exe"));
+		attachment.add(L"Sha256", Json::str(L"ab12"));
+		attachments.push(std::move(attachment));
+		message.add(L"SenderAddress", Json::str(L"x@example.com"));
+		message.add(L"Attachments", std::move(attachments));
+		addMessageContext(message, L"S-1-5-21-1-2-3-1000", L"C:\\Users\\wac\\mail.pst");
+		const Json* mailContext = message.find(L"Context");
+		check(at(mailContext, { L"Kind" }) == L"Arrival" && mailContext && mailContext->find(L"Related")
+		      && mailContext->find(L"Related")->size() == 2
+		      && mailContext->dump().find(L"\"Sha256\": \"ab12\"") != std::wstring::npos
+		      && mailContext->dump().find(L"\"Role\": \"Sender\"") != std::wstring::npos,
+		      "emails: a message's attachments by name and SHA-256, its sender, the mailbox for evidence (B-087)");
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;
 	}
@@ -1272,7 +1351,8 @@ void securityDescriptors() {
 			      && ace->find(L"Sid")->text() == L"S-1-1-0" && ace->find(L"Mask")
 			      && ace->find(L"Mask")->text() == L"0x001f01ff",
 			      "sds: owner, ACE SID and mask decoded");
-			const Json* mismatch = e[1].toJson().find(L"HashMismatch");
+			const Json damaged = e[1].toJson();   // kept: a pointer into a temporary would dangle
+			const Json* mismatch = damaged.find(L"HashMismatch");
 			check(!first.find(L"HashMismatch") && mismatch && mismatch->text() == L"true",
 			      "sds: HashMismatch emitted only for the damaged descriptor");
 		}

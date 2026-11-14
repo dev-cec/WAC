@@ -3,6 +3,7 @@
  */
 #include "conversions.h"
 #include "bits_jobs.h"
+#include "context.h"
 #include "ese_recovery.h"
 #include "consigne.h"
 #include "ese_database.h"
@@ -268,6 +269,35 @@ Json BitsJob::toJson(const std::vector<BitsFile>& files) const {
 	for (const BitsFile& f : inlineFiles) list.push(f.toJson());
 	if (!list.empty()) o.add(L"Files", std::move(list));
 	o.add(L"Blob", Json::str(toHexadecimal(blob.data(), blob.size())));
+	/* Context (B-087): a download brought its files — the first is the
+	   subject, the others beside it —, from their source; the program BITS
+	   notifies at the end runs when the job ends, an attacker's persistence. */
+	std::vector<const BitsFile*> mine;
+	for (const std::wstring& fileId : fileIds) {
+		const auto file = std::find_if(files.begin(), files.end(), [&](const BitsFile& f) { return f.id == fileId; });
+		if (file != files.end() && file->parsed) mine.push_back(&*file);
+	}
+	for (const BitsFile& f : inlineFiles) if (f.parsed) mine.push_back(&f);
+	RecordContext context;
+	context.kind = parsed && type != 0 ? ContextKind::Network : ContextKind::Arrival;   // 0: Download
+	for (size_t i = 0; i < mine.size(); ++i) {
+		ContextObject& object = i == 0 ? context.subject : context.related.emplace_back();
+		if (i != 0) object.role = L"Destination";
+		object.path = contextPath(mine[i]->destination);
+	}
+	if (!mine.empty()) {
+		context.how.url = mine.front()->source;
+		context.how.host = urlHost(mine.front()->source);
+	}
+	if (!notifyProgram.empty()) {
+		ContextObject notified;
+		notified.role = L"NotifyProgram";
+		notified.path = contextPath(notifyProgram);
+		context.related.push_back(std::move(notified));
+	}
+	context.actor.sid = ownerSid;
+	context.evidence = contextPath(queueFile.empty() ? conf.systemDrive.substr(0, 2) + DATABASE : queueFile);
+	addContext(o, context);
 	return o;
 }
 

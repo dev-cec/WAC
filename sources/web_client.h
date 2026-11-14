@@ -80,6 +80,7 @@
 #include <vector>
 #include <windows.h>
 #include "tools.h"
+#include "context.h"
 
 /*! A Chromium browser's user data folder, relative to a profile. */
 struct ChromiumRoot {
@@ -186,6 +187,11 @@ struct WebClientRecord {
 	std::wstring sid;               //!< the Windows profile it belongs to
 	std::wstring source;            //!< the database, on the examined machine
 	Json fields = Json::obj();      //!< the record's own fields
+	/*! The record's linking context (B-087): a file saved from the web
+	 *  arrived from its URL; a page visited, typed or searched is an access, to
+	 *  a local file or a host. */
+	RecordContext context() const;
+
 	//! @return the record as a JSON object
 	Json toJson() const;
 };

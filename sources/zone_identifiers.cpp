@@ -2,6 +2,7 @@
  *  \brief Zone.Identifier streams (see zone_identifiers.h).
  */
 #include "zone_identifiers.h"
+#include "context.h"
 
 std::wstring zoneName(const std::wstring& zoneId) {
 	static const wchar_t* const NAMES[] = { L"Local machine", L"Local intranet", L"Trusted sites",
@@ -45,6 +46,18 @@ Json ZoneIdentifier::toJson() const {
 		list.push(std::move(pair));
 	}
 	o.add(L"Values", std::move(list));
+	/* Context (B-087): the file came, from where its stream says; the stream
+	   is the evidence. */
+	RecordContext context;
+	context.kind = ContextKind::Arrival;
+	context.subject.path = pathComplete ? contextPath(path) : L"";   // a path cut short names no file
+	for (const auto& [name, value] : values)
+		if (name == L"HostUrl") {
+			context.how.url = value;
+			context.how.host = urlHost(value);
+		}
+	if (!context.subject.path.empty()) context.evidence = context.subject.path + L":Zone.Identifier";
+	addContext(o, context);
 	return o;
 }
 

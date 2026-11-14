@@ -746,6 +746,51 @@ std::wstring transitionQualifiers(int64_t transition) {
 	return text;
 }
 
+RecordContext WebClientRecord::context() const {
+	/* Internet Explorer's downloads (the WebCache's iedownload container)
+	   hold their URL and saved path in a nested Download object; the entry's
+	   own Url is only "iedownload:{GUID}". */
+	const Json* download = fields.find(L"Download");
+	const Json& from = download && download->kind() == Json::Kind::Obj ? *download : fields;
+	auto text = [&](const wchar_t* name) { const Json* v = from.find(name); return v ? v->text() : std::wstring(); };
+	RecordContext c;
+	std::wstring url = text(L"Url"), user, page;
+	if (splitWebCacheUrl(url, user, page)) url = page;   // "Visited: wac@file:///C:/…": the page
+	const std::wstring target = text(L"TargetPath");
+	if (type == L"Download" || !target.empty()) {
+		// A file saved from the web: it arrived, from there.
+		c.kind = ContextKind::Arrival;
+		c.subject.path = contextPath(target);
+	}
+	else {
+		/* A page visited, typed, searched, kept in a session or a cookie: an
+		   access, to a local file or a host. What the browser keeps for a host
+		   — a saved login, a form's entry, a prediction, an icon — is a setting
+		   of it, not a visit. */
+		const bool kept = type == L"SavedLogin" || type == L"FormEntry" || type == L"TypedInput"
+		                  || type == L"AddressBarPrediction" || type == L"Favicon";
+		c.kind = kept ? ContextKind::Configuration : ContextKind::Access;
+		if (url.compare(0, 8, L"file:///") == 0) c.subject.path = contextPath(fileUriToPath(url));
+		else c.subject.host = urlHost(url);
+	}
+	if (url.compare(0, 8, L"file:///") != 0) {
+		c.how.url = url;
+		c.how.host = urlHost(url);
+	}
+	const Json* cachedField = fields.find(L"CachedFile");
+	const std::wstring cached = cachedField ? cachedField->text() : L"";
+	if (!cached.empty()) {
+		ContextObject copy;
+		copy.role = L"CachedFile";
+		copy.path = contextPath(cached);
+		c.related.push_back(std::move(copy));
+	}
+	c.actor.sid = sid;
+	// A registry source is written "NTUSER.DAT\Software\…": the user's hive is the evidence.
+	c.evidence = source.compare(0, 10, L"NTUSER.DAT") == 0 ? userHiveEvidence(sid) : contextPath(source);
+	return c;
+}
+
 Json WebClientRecord::toJson() const {
 	Json o = Json::obj();
 	o.add(L"Type", Json::str(type));
@@ -754,6 +799,7 @@ Json WebClientRecord::toJson() const {
 	addUser(o, sid);
 	o.add(L"Source", Json::str(source));
 	o.merge(fields);
+	addContext(o, context());   // B-087
 	return o;
 }
 

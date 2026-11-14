@@ -64,6 +64,15 @@ extern const wchar_t THUNDERBIRD_FOLDER[];
 //! The new Outlook's (olk.exe) local data, relative to a profile: collected, not decoded.
 extern const wchar_t OUTLOOK_NEW_FOLDER[];
 
+/*! Adds a message's linking context (B-087), the same for a PST and an mbox
+ *  message: what arrived are its attachments — each by its name and the
+ *  SHA-256 of its bytes, the whole file —, sent by its sender, to the
+ *  profile's account; the mailbox is the evidence.
+ *  @param record the message's record, its fields already in
+ *  @param sid the profile's account
+ *  @param mailbox the mailbox on the examined machine */
+void addMessageContext(Json& record, const std::wstring& sid, const std::wstring& mailbox);
+
 /*! A file name's extension, if it is a plain one (1 to 8 letters or digits),
  *  for naming an exported attachment; empty otherwise.
  *  @param name the attachment's name, as the message gives it

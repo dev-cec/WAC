@@ -163,6 +163,20 @@ std::wstring knownFolderPathFor(const std::wstring& cited, const std::wstring& s
  *  @return the program's path, not yet normalised */
 std::wstring commandProgram(const std::wstring& command);
 
+/*! The host of a URL: after "scheme://", without user@ nor :port, in lower
+ *  case ("http://User@Example.com:8080/x" gives "example.com"); "" when the
+ *  text is no URL. The same host whatever artefact cites it (B-087).
+ *  @param url the URL as written */
+std::wstring urlHost(const std::wstring& url);
+
+/*! The program of a service, as Windows reads its ImagePath: its command's
+ *  program (commandProgram), and a path with neither drive nor leading
+ *  backslash relative to the Windows folder — a driver's
+ *  "system32\drivers\x.sys" is %SystemRoot%\system32\drivers\x.sys.
+ *  @param imagePath the service's ImagePath, as written
+ *  @return the program's path, normalised (contextPath); "" if none */
+std::wstring serviceProgram(const std::wstring& imagePath);
+
 /*! The Evidence of a record read in a system hive: its file on the examined
  *  machine ("C:\Windows\System32\config\SYSTEM").
  *  @param hive "SYSTEM", "SOFTWARE", "SAM"… */
