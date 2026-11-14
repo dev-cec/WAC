@@ -3,6 +3,7 @@
  */
 #include "reg_amcache.h"
 #include "registry_common.h"
+#include "context.h"
 #include <algorithm>
 #include <cwctype>
 #include <filesystem>
@@ -303,7 +304,58 @@ Json AmcacheEntry::toJson(bool withTable) const {
 		o.add(L"UnnamedValues", std::move(list));
 	}
 	addFingerprints(o, fingerprint);
+	addContext(o, context());
 	return o;
+}
+
+RecordContext AmcacheEntry::context() const {
+	auto text = [&](const wchar_t* name) {
+		for (const auto& [n, v] : values) if (n == name && v.kind() == Json::Kind::Str) return v.text();
+		return std::wstring();
+	};
+	auto has = [&](const wchar_t* name) {
+		return std::any_of(values.begin(), values.end(), [&](const std::pair<std::wstring, Json>& v) { return v.first == name; });
+	};
+	RecordContext c;
+	if (table == L"InventoryApplicationFile" || table == L"File") {
+		// Inventoried: the file existed, which is no proof it ran.
+		c.kind = ContextKind::Presence;
+		setFileObject(c.subject, text(L"LongPath"), fingerprint);
+		// Amcache's SHA-1 covers the first 30 MiB only: a whole file's alone is one.
+		if (c.subject.sha1.empty() && !has(L"AmcacheSha1CoversBytes")) c.subject.sha1 = text(L"AmcacheSha1");
+		if (mftReferenceKnown) c.subject.ntfs = contextNtfs(c.subject.path, mftEntry, mftSequence);
+		c.subject.software = text(L"ProgramId");
+	}
+	else if (table == L"InventoryApplication" || table == L"Programs") {
+		c.kind = ContextKind::Installation;
+		c.subject.software = text(L"ProgramId").empty() ? keyName : text(L"ProgramId");
+		c.subject.name = text(L"Name");
+		c.actor.sid = text(L"UserSid");
+	}
+	else if (table == L"InventoryDriverBinary") {
+		c.kind = ContextKind::Installation;
+		std::wstring path = keyName;   // "c:/windows/system32/drivers/x.sys"
+		std::replace(path.begin(), path.end(), L'/', L'\\');
+		c.subject.path = contextPath(path);
+		if (!has(L"AmcacheSha1CoversBytes")) c.subject.sha1 = text(L"AmcacheSha1");
+	}
+	else if (table == L"InventoryApplicationShortcut") {
+		c.kind = ContextKind::Presence;
+		c.subject.path = contextPath(text(L"ShortcutPath"));
+		ContextObject target;
+		target.role = L"Target";
+		target.path = contextPath(text(L"ShortcutTargetPath"));
+		target.software = text(L"ShortcutProgramId");
+		c.related.push_back(std::move(target));
+	}
+	else if (table == L"InventoryDevicePnp") {
+		c.kind = ContextKind::Installation;
+		c.subject.device = keyName;
+	}
+	else c.kind = ContextKind::Configuration;
+	c.evidence = database.empty() ? contextPath(conf.systemDrive + L"\\Windows\\AppCompat\\Programs\\Amcache.hve")
+	                              : contextPath(conf.systemDrive + L"\\Windows\\AppCompat\\Programs\\" + database);
+	return c;
 }
 
 bool decodeRecentFileCache(const std::vector<uint8_t>& bytes, std::vector<std::wstring>& paths) {
@@ -423,6 +475,12 @@ HRESULT Amcache::toJson() {
 		o.add(L"Table", Json::str(L"RecentFileCache"));
 		o.add(L"Source", Json::str(recentFileCache));
 		o.add(L"Path", Json::str(path));
+		// The executables run since the last inventory (reg_amcache.h): an execution.
+		RecordContext context;
+		context.kind = ContextKind::Execution;
+		context.subject.path = contextPath(path);
+		context.evidence = contextPath(recentFileCache);
+		addContext(o, context);
 		files.push(std::move(o));
 	}
 	HRESULT hr = writeJsonFile("amcache_applications.json", applications);

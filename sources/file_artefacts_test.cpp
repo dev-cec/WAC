@@ -55,6 +55,9 @@
 #include "events.h"
 #include "evt.h"
 #include "evtx.h"
+#include "running_machine.h"
+#include "context.h"
+#include "srum.h"
 #include "scheduledTasks.h"
 #include "reg_userassists.h"
 #include "xml_light.h"
@@ -815,6 +818,72 @@ void defenderHistory() {
 		      && field(merged, L"KeyLastWriteTimeUtc") == L"2026-11-13T16:59:32.9655477Z"
 		      && field(merged, L"InventoryDatabase") == L"InventoryApplicationFile.db" && field(merged, L"AmcacheSha1") == L"aa",
 		      "amcache: the hive's entry merged into the database's (its key time joins); hive-only kept; disagreeing sources both kept");
+	}
+	{
+		/* B-079: a volume cited by its device (BAM, SRUM) or its GUID, on its
+		   letter; HarddiskVolume3 is not HarddiskVolume31; a volume not
+		   observed stays as cited. */
+		RunningMachine::Volume c, d;
+		c.mountPoint = L"C:"; c.deviceName = L"\\Device\\HarddiskVolume3"; c.guid = L"{5e0a1b2c-0000-0000-0000-100000000000}";
+		d.mountPoint = L"D:"; d.deviceName = L"\\Device\\HarddiskVolume31";
+		const std::vector<RunningMachine::Volume> volumes = { c, d };
+		check(onDriveLetterAmong(L"\\Device\\HarddiskVolume3\\Windows\\System32\\cmd.exe", volumes) == L"C:\\Windows\\System32\\cmd.exe"
+		      && onDriveLetterAmong(L"\\device\\harddiskvolume31\\Tools\\x.exe", volumes) == L"D:\\Tools\\x.exe"
+		      && onDriveLetterAmong(L"\\\\?\\Volume{5e0a1b2c-0000-0000-0000-100000000000}\\Users", volumes) == L"C:\\Users"
+		      && onDriveLetterAmong(L"\\Device\\HarddiskVolume9\\a.exe", volumes) == L"\\Device\\HarddiskVolume9\\a.exe",
+		      "running machine: a volume cited by its device or its GUID on its letter, an unknown one as cited (B-079)");
+
+		// The Context: an empty one is not emitted; members without value neither.
+		Json none = Json::obj();
+		addContext(none, RecordContext());
+		RecordContext context;
+		context.kind = ContextKind::Execution;
+		context.subject.path = L"C:\\Windows\\System32\\cmd.exe";
+		context.subject.sha256 = L"ab";
+		ContextObject loaded;
+		loaded.role = L"LoadedFile";
+		loaded.path = L"C:\\Windows\\System32\\kernel32.dll";
+		context.related = { loaded, ContextObject() };
+		context.actor.sid = L"S-1-5-21-1-2-3-1000";
+		context.actor.process.pid = 0;
+		context.actor.process.pidKnown = true;
+		context.evidence = L"C:\\Windows\\Prefetch\\CMD.EXE-0BD30981.pf";
+		Json record = Json::obj();
+		addContext(record, context);
+		const std::wstring text = record.dump();
+		check(none.dump().find(L"Context") == std::wstring::npos
+		      && text.find(L"\"Kind\": \"Execution\"") != std::wstring::npos
+		      && text.find(L"\"Role\": \"LoadedFile\"") != std::wstring::npos
+		      && text.find(L"\"Pid\": 0") != std::wstring::npos
+		      && text.find(L"\"How\"") == std::wstring::npos && text.find(L"\"Md5\"") == std::wstring::npos
+		      && text.find(L"\"Evidence\"") != std::wstring::npos && record.find(L"Context")->find(L"Related")->size() == 1,
+		      "context: what is said written, nothing empty, a pid of 0 kept when known (B-079)");
+
+		/* B-085: a known folder on its real folder — System32 and SysWOW64,
+		   both named "System32" by the display table, kept apart; a user
+		   folder in its profile; an identifier not known: nothing. */
+		const std::wstring savedDrive = conf.systemDrive;
+		const auto savedProfiles = conf.profiles;
+		conf.systemDrive = L"C:";
+		conf.profiles = { { L"S-1-5-21-1-2-3-1000", L"C:\\Users\\wac" } };
+		check(knownFolderPath(L"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\cmd.exe", L"") == L"C:\\Windows\\System32\\cmd.exe"
+		      && knownFolderPath(L"{d65231b0-b2f1-4857-a4ce-a8e7c6ea7d27}\\cmd.exe", L"") == L"C:\\Windows\\SysWOW64\\cmd.exe"
+		      && knownFolderPath(L"{A77F5D77-2E2B-44C3-A6A2-ABA601054A51}\\Tool.lnk", L"S-1-5-21-1-2-3-1000")
+		         == L"C:\\Users\\wac\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Tool.lnk"
+		      && knownFolderPath(L"{A77F5D77-2E2B-44C3-A6A2-ABA601054A51}\\Tool.lnk", L"S-1-5-21-9").empty()
+		      && knownFolderPath(L"{00000000-0000-0000-0000-000000000000}\\x.exe", L"").empty()
+		      && contextNtfs(L"c:\\x.exe", 1234, 5) == L"C:|1234|5" && contextNtfs(L"x.exe", 1, 1).empty(),
+		      "context: known folders on their real folder (SysWOW64 apart), NTFS identity (B-085)");
+		const RecordContext byPath = srumContext(L"C:\\Tools\\a.exe", L"S-1-5-19", L"ApplicationTimeline");
+		const RecordContext byName = srumContext(L"!!svchost.exe!2045/05/31:04:32:22!1b148![Wcmsvc]", L"", L"NetworkUsage");
+		const RecordContext byApp = srumContext(L"Microsoft.WindowsStore_22.0_x64__8wekyb3d8bbwe", L"", L"ApplicationTimeline");
+		check(byPath.kind == ContextKind::Execution && byPath.subject.path == L"C:\\Tools\\a.exe" && byPath.actor.sid == L"S-1-5-19"
+		      && byName.kind == ContextKind::Network && byName.subject.name == L"svchost.exe" && byName.subject.path.empty()
+		      && byApp.subject.software == L"Microsoft.WindowsStore_22.0_x64__8wekyb3d8bbwe"
+		      && byPath.evidence == L"C:\\Windows\\System32\\sru\\SRUDB.dat",
+		      "srum: an application by its path, its name alone or its identifier; network tables: Network (B-085)");
+		conf.systemDrive = savedDrive;
+		conf.profiles = savedProfiles;
 	}
 	{
 		/* B-082: the two CRC-32 of an EVTX chunk. A chunk of known bytes whose

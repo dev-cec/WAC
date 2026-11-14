@@ -2,6 +2,7 @@
  *  \brief Decoding of the AppCompatCache value (see reg_shimcache.h).
  */
 #include "reg_shimcache.h"
+#include "context.h"
 
 namespace {
 /*! Header size of the Windows 8 and 8.1 value. Its first DWORD does not tell
@@ -73,6 +74,13 @@ Json Shimcache::toJson() {
 		o.add(L"LastUpdate",    Json::str(utcTimeToIso8601Local(lastUpdateUtc)));
 		o.add(L"LastUpdateUtc", Json::str(timeToIso8601Utc(lastUpdateUtc)));
 	}
+	/* Context (B-085): an entry proves the file existed and was looked at by
+	   the compatibility engine, not that it ran. */
+	RecordContext context;
+	context.kind = ContextKind::Presence;
+	setFileObject(context.subject, path, fingerprint);
+	context.evidence = systemHiveEvidence(L"SYSTEM");
+	addContext(o, context);
 	return o;
 }	//! Releases the memory held by the entry.
 

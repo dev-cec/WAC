@@ -2,6 +2,7 @@
  *  \brief Windows Error Reporting (see error_reports.h).
  */
 #include "error_reports.h"
+#include "context.h"
 #include "consigne.h"
 #include <cerrno>
 #include <cwchar>
@@ -82,6 +83,13 @@ Json ErrorReport::toJson() const {
 		all.push(std::move(pair));
 	}
 	o.add(L"Values", std::move(all));
+	// Context (B-085): the program that failed was running; the report is the evidence.
+	RecordContext context;
+	context.kind = ContextKind::Execution;
+	for (const auto& [k, v] : values)
+		if (k == L"AppPath") context.subject.path = contextPath(v);
+	context.evidence = contextPath(file);
+	addContext(o, context);
 	return o;
 }
 

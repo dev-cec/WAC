@@ -37,6 +37,7 @@
 struct UserAssist {
 public:
 	std::wstring Sid = L"";      //!< SID of the user who started it
+	std::wstring decodedName = L"";   //!< the name ROT13-decoded, its known folder still an identifier (B-085)
 	std::wstring Class = L"";    //!< GUID of the subkey: shortcuts, or executables
 	std::wstring Name = L"";     //!< what was started, ROT13-decoded and its
 	                             //!< known folder GUIDs resolved to paths

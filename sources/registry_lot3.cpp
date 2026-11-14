@@ -2,6 +2,7 @@
  *  \brief Registry artefacts of the third lot (see registry_lot3.h).
  */
 #include "registry_lot3.h"
+#include "context.h"
 #include "idList.h"
 #include "recent_docs.h"
 #include "ip_address.h"
@@ -561,6 +562,23 @@ Json ProgramUsage::toJson() const {
 	o.add(L"Name", Json::str(name));
 	for (const auto& [n, v] : values) o.add(n, v);
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	/* Context (B-085). What each source attests: a run (the Program
+	   Compatibility Assistant's store, the last use of an application, RADAR's
+	   diagnosis of a running program, the program an extension was opened
+	   with), or a setting (a default program, compatibility layers, a pinned
+	   shortcut — its name is the pinned .lnk, which its resolved Target
+	   repeats). A program by its path, an application by its identifier, or
+	   its name alone. */
+	RecordContext context;
+	const bool run = source == L"CompatibilityAssistant\\Store" || source == L"JumplistData" || source == L"RADAR"
+	                 || source == L"FileExts\\OpenWithList";
+	context.kind = run ? ContextKind::Execution : ContextKind::Configuration;
+	if (name.find(L":\\") != std::wstring::npos) context.subject.path = contextPath(name);
+	else if (source == L"JumplistData" || source == L"FileExts\\UserChoice") context.subject.software = name;
+	else context.subject.name = name;
+	context.actor.sid = sid;
+	context.evidence = sid.empty() ? systemHiveEvidence(L"SOFTWARE") : userHiveEvidence(sid);
+	addContext(o, context);
 	return o;
 }
 

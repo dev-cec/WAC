@@ -2,6 +2,7 @@
  *  \brief Decoding of the Prefetch files, compressed or not (see prefetchs.h).
  */
 #include "prefetchs.h"
+#include "context.h"
 #include <map>
 #include "consigne.h"
 #include "conversions.h"
@@ -554,6 +555,24 @@ Json Prefetch::toJson() {
 	o.add(L"FormatVersion",  Json::num((long long)version));
 	o.add(L"FileCount", Json::num((unsigned long long)filenames.size()));
 	o.add(L"FileNames",      std::move(fns));
+	/* Context (B-085): the executable ran; the files it loaded are named
+	   beside it, each by its path and, when Windows wrote it, its $MFT
+	   reference — the executable's own among them gives the subject's. */
+	RecordContext context;
+	context.kind = ContextKind::Execution;
+	setFileObject(context.subject, fullPath, fingerprint);
+	for (const Filename& fn : filenames) {
+		const bool itself = !fullPath.empty() && _wcsicmp(fn.fullPath.c_str(), fullPath.c_str()) == 0;
+		ContextObject& object = itself ? context.subject : context.related.emplace_back();
+		if (!itself) {
+			object.role = L"LoadedFile";
+			setFileObject(object, fn.fullPath, fn.fingerprint);
+		}
+		if (fn.referenceKnown)
+			object.ntfs = contextNtfs(fn.fullPath, fn.reference.entryIndex, fn.reference.sequenceNumber);
+	}
+	context.evidence = contextPath(pathOriginal);
+	addContext(o, context);
 	return o;
 }
 

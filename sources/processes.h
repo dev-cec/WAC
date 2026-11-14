@@ -63,6 +63,8 @@ struct Process {
 	                                  //!< the processes it could not be read on
 	std::vector<std::wstring> processModules; //!< the DLLs loaded by the process. The
 	                                  //!< first entry is the executable's own path
+	std::wstring imagePath;          //!< the executable's path: the first module, or asked
+	                                  //!< with PROCESS_QUERY_LIMITED_INFORMATION (B-085)
 
 	/*! Reads a process from a Toolhelp snapshot entry.
 	* @param pe32 the entry describing the process.

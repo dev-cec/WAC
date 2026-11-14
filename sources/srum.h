@@ -31,6 +31,7 @@
 #include <windows.h>
 #include "ese_database.h"
 #include "tools.h"
+#include "context.h"
 
 /*! The documented name of a provider's table (NetworkUsage…), or empty. */
 std::wstring srumProviderName(const std::wstring& table);
@@ -45,6 +46,15 @@ std::wstring srumKey(const std::wstring& column);
 std::wstring srumIdentity(unsigned type, const std::vector<uint8_t>& blob);
 
 //! SRUM (srum.json).
+/*! The linking context of a usage row of SRUM (B-085): the application it
+ *  counts, by the identity SruDbIdMapTable gives — a path on its volume's
+ *  device, a program's name only ("!!svchost.exe!…"), or a packaged
+ *  application's identifier —, and the account.
+ *  @param app the row's application identity
+ *  @param userSid its account's SID
+ *  @param provider the table's provider (NetworkUsage…: Network) */
+RecordContext srumContext(const std::wstring& app, const std::wstring& userSid, const std::wstring& provider);
+
 class Srum {
 public:
 	HRESULT getData();          //!< @return ERROR_SUCCESS, or why SRUDB.dat cannot be read

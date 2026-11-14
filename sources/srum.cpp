@@ -106,6 +106,21 @@ void addSrumValue(Json& row, const EseColumn& c, const EseCell& cell) {
 
 } // namespace
 
+RecordContext srumContext(const std::wstring& app, const std::wstring& userSid, const std::wstring& provider) {
+	RecordContext c;
+	c.kind = provider.compare(0, 7, L"Network") == 0 ? ContextKind::Network : ContextKind::Execution;
+	if (_wcsnicmp(app.c_str(), L"\\Device\\", 8) == 0 || app.find(L":\\") != std::wstring::npos)
+		c.subject.path = contextPath(app);
+	else if (app.compare(0, 2, L"!!") == 0)
+		// "!!svchost.exe!2045/05/31:04:32:22!1b148![…]": a program's name and
+		// link date, no path — the name alone, never a made-up path.
+		c.subject.name = app.substr(2, app.find(L'!', 2) == std::wstring::npos ? std::wstring::npos : app.find(L'!', 2) - 2);
+	else c.subject.software = app;   // a packaged application's identifier
+	c.actor.sid = userSid;
+	c.evidence = contextPath(conf.systemDrive + L"\\Windows\\System32\\sru\\SRUDB.dat");
+	return c;
+}
+
 HRESULT Srum::toJson() {
 	JsonArrayWriter out("srum.json");
 	for (const EseTable& table : database_.tables()) {
@@ -114,6 +129,7 @@ HRESULT Srum::toJson() {
 		const std::wstring provider = srumProviderName(table.name);
 		for (const EseRecord& r : database_.records(table)) {
 			Json row = Json::obj();
+			std::wstring app, userSid;   // the row's identities, for its Context
 			row.add(L"Table", Json::str(table.name));
 			row.add(L"Provider", Json::str(provider));
 			for (const EseCell& cell : r)
@@ -124,8 +140,12 @@ HRESULT Srum::toJson() {
 					const auto identity = (c.name == L"AppId" || c.name == L"UserId") && !cell.values.empty()
 					                      ? identities_.find((int32_t)eseCellInteger(cell).value_or(0)) : identities_.end();
 					if (identity == identities_.end()) continue;
-					if (c.name == L"AppId") row.add(L"App", Json::str(identity->second.second));
+					if (c.name == L"AppId") {
+						app = identity->second.second;
+						row.add(L"App", Json::str(app));
+					}
 					else if (identity->second.first == ID_TYPE_SID) {
+						userSid = identity->second.second;
 						row.add(L"UserSID", Json::str(identity->second.second));
 						row.add(L"UserName", Json::str(getNameFromSid(identity->second.second)));
 					}
@@ -137,6 +157,7 @@ HRESULT Srum::toJson() {
 						const auto identity = identities_.find((int32_t)eseCellInteger(cell).value_or(0));
 						if (identity != identities_.end()) row.add(L"Identity", Json::str(identity->second.second));
 					}
+			if (table.name != IDENTITIES && !app.empty()) addContext(row, srumContext(app, userSid, provider));
 			out.add(row);
 		}
 	}

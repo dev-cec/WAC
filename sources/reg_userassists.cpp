@@ -2,11 +2,13 @@
  *  \brief Reading of the UserAssist keys (see reg_userassists.h).
  */
 #include "reg_userassists.h"
+#include "context.h"
 #include <cstring>
 
 UserAssist::UserAssist(std::wstring hKey, const std::wstring& valueName, const std::vector<BYTE>& data, std::wstring _sid) {
 	log(3, L"🔈ROT13 Name");
 	Name = ROT13(valueName); // ROT13 of the value's name, to recover the executable's name
+	decodedName = Name;      // before its known folder becomes a display name: the Context resolves it
 	log(2, L"❇️UserAssist Name : " + Name);
 	Sid = _sid;
 	Class = hKey;
@@ -60,6 +62,20 @@ Json UserAssist::toJson() {
 	}
 	o.add(L"LastRun",       Json::str(utcTimeToIso8601Local(lastRunUtc)));
 	o.add(L"LastRunUtc",    Json::str(timeToIso8601Utc(lastRunUtc)));
+	/* Context (B-085). A program by its known folder ("{1AC14E77-…}\cmd.exe")
+	   or its full path; an application by its identifier ("…!App"), a
+	   software. The UEME_CTL… values are the Explorer's own counters: no
+	   execution, no Context. */
+	if (decodedName.compare(0, 8, L"UEME_CTL") != 0) {
+		RecordContext context;
+		context.kind = ContextKind::Execution;
+		if (!decodedName.empty() && decodedName[0] == L'{') context.subject.path = knownFolderPath(decodedName, Sid);
+		else if (decodedName.find(L":\\") != std::wstring::npos) context.subject.path = contextPath(decodedName);
+		else context.subject.software = decodedName;
+		context.actor.sid = Sid;
+		context.evidence = userHiveEvidence(Sid);
+		addContext(o, context);
+	}
 	return o;
 }
 

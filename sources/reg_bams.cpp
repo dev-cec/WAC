@@ -3,6 +3,7 @@
  */
 #include "reg_bams.h"
 #include "registry_common.h"
+#include "context.h"
 #include <cstring>
 
 Bam::Bam(const std::vector<BYTE>& data, std::wstring valueName, std::wstring psid) {
@@ -24,6 +25,16 @@ Json Bam::toJson() const {
 	o.add(L"Name",             Json::str(name));      // raw path
 	o.add(L"LastExecution",    Json::str(utcTimeToIso8601Local(executionTimeUtc)));
 	o.add(L"LastExecutionUtc", Json::str(timeToIso8601Utc(executionTimeUtc)));
+	/* Context (B-085): BAM names an executable by its volume's device
+	   (\Device\HarddiskVolume3\…), or a packaged application by its
+	   identifier, with no path: a software, not a file. */
+	RecordContext context;
+	context.kind = ContextKind::Execution;
+	if (name.find(L'\\') != std::wstring::npos) context.subject.path = contextPath(name);
+	else context.subject.software = name;
+	context.actor.sid = sid;
+	context.evidence = systemHiveEvidence(L"SYSTEM");
+	addContext(o, context);
 	return o;
 }
 

@@ -2,6 +2,7 @@
  *  \brief Collection of the running processes, their owners and their modules (see processes.h).
  */
 #include "processes.h"
+#include "context.h"
 #include "live_snapshot.h"
 
 #include <wtsapi32.h>
@@ -88,6 +89,20 @@ Process::Process(const PROCESSENTRY32W* pe32) {
 	const HRESULT result = ListProcessModules();
 	if (result != ERROR_SUCCESS)
 		log(2, L"🔥ListProcessModules : ", result);
+	/* The executable's path (B-085): what relates the process to its Prefetch,
+	   its Amcache entry, its file. The first module when the list was read;
+	   otherwise asked with the least right that gives it,
+	   PROCESS_QUERY_LIMITED_INFORMATION, which a protected process grants
+	   (lsass, services, Defender: refused the module list). */
+	if (!processModules.empty()) imagePath = processModules.front();
+	else if (HANDLE limited = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId)) {
+		std::vector<wchar_t> image(32768);
+		DWORD size = (DWORD)image.size();
+		if (QueryFullProcessImageNameW(limited, 0, image.data(), &size)) imagePath.assign(image.data(), size);
+		else log(2, L"🔥QueryFullProcessImageNameW", GetLastError());
+		CloseHandle(limited);
+	}
+	else log(2, L"🔥OpenProcess (limited query)", GetLastError());
 }
 
 /*! The modules of the process, through a handle opened with the least the
@@ -172,6 +187,7 @@ Json Process::toJson() const {
 	// "Nom" was the only key in French of the whole output, among SID, Owner,
 	// ProcessId… One single language for the keys (naming pass).
 	o.add(L"Name",           Json::str(processName));
+	o.add(L"ImagePath",      Json::str(imagePath));
 	addFingerprints(o, fingerprint);
 	// The owner's NAME is added by the conversion (writeProcessesFromSnapshot),
 	// from the hives: the snapshot keeps what was observed, the SID.
@@ -290,6 +306,28 @@ HRESULT writeProcessesFromSnapshot() {
 			o.add(field.first, field.second);
 			if (field.first == L"SID") o.add(L"Owner", Json::str(getNameFromSid(field.second.text())));
 		}
+		/* Context (B-085): the process ran, observed live — no file of the
+		   evidence holds it, hence no Evidence. Its fingerprints are those of
+		   the whole executable (binaires.h). */
+		auto text = [&](const wchar_t* key) { const Json* v = process.second.find(key); return v ? v->text() : std::wstring(); };
+		RecordContext context;
+		context.kind = ContextKind::Execution;
+		context.subject.path = contextPath(text(L"ImagePath"));
+		context.subject.md5 = text(L"MD5");
+		context.subject.sha1 = text(L"SHA1");
+		context.subject.sha256 = text(L"SHA256");
+		context.actor.sid = text(L"SID");
+		context.actor.process.path = context.subject.path;
+		// The snapshot is read back as any input: a number that is not one is left out.
+		auto number = [&](const wchar_t* key, unsigned long long& value) {
+			const std::wstring t = text(key);
+			wchar_t* end = nullptr;
+			value = t.empty() ? 0 : wcstoull(t.c_str(), &end, 10);
+			return !t.empty() && end && *end == L'\0' && iswdigit(t[0]);
+		};
+		context.actor.process.pidKnown = number(L"ProcessId", context.actor.process.pid);
+		context.how.parent.pidKnown = number(L"ParentProcessId", context.how.parent.pid);
+		addContext(o, context);
 		arr.push(std::move(o));
 	}
 	return writeJsonFile("processes.json", arr);

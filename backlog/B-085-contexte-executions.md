@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -20,10 +20,26 @@ Cycle `win11-test` : témoin exécuté de chemin et d'empreinte connus : un mêm
 d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
 
 ## Tâches
-- [ ] `Context` de chaque JSON de la famille, selon les tableaux de B-078
-- [ ] Tests unitaires, mutation vue échouer
+- [x] `Context` de chaque JSON de la famille, selon les tableaux de B-078
+- [x] Tests unitaires, mutation vue échouer
 - [ ] Témoins et contrôles du harnais ; cycle vert
-- [ ] Manuels FR et EN
+- [x] Manuels FR et EN
 
 ## Journal
 - 2026-11-14 : fiche créée (découpage de B-078 validé par l'utilisateur).
+- 2026-11-14 : `Context` écrit pour Prefetch (sujet + fichiers chargés en
+  `Related`, références NTFS), BAM (périphérique → lettre ; paquet →
+  `Software`), UserAssist (dossier connu → dossier réel ; `UEME_CTL…` sans
+  Context), MUICache (suffixe retiré ; `Evidence` = la ruche lue :
+  UsrClass.dat, NTUSER.DAT avant Vista), SRUM (chemin, nom seul ou
+  application ; tables réseau `Network`), processus (**chemin de l'image
+  relevé** : premier module, ou `PROCESS_QUERY_LIMITED_INFORMATION` pour
+  les processus protégés), Amcache (présence, installation, pilote,
+  raccourci, appareil ; SHA-1 seulement s'il couvre tout le fichier),
+  ShimCache (présence), `program_usage` (exécution ou réglage selon la
+  source), rapports d'erreur. Constat : UserAssist nomme « System32 »
+  System32 et SysWOW64 (`trans_id`) — le `Context` les distingue, le
+  champ `Name` garde le défaut (à corriger à part). Contrôle du harnais :
+  WAC lui-même pour témoin (chemin et SHA-256 du binaire calculé sur
+  l'hôte, dans son processus et son Prefetch) ; aucun chemin laissé en
+  `\Device\…` ou en variable. Reste : cycle VM.

@@ -51,6 +51,7 @@
 #include "tools.h"
 #include "binaires.h"
 #include "sqlite_reader.h"
+#include "context.h"
 
 /*! One entry of an Amcache table: one key, every value of it. */
 struct AmcacheEntry {
@@ -87,6 +88,10 @@ struct AmcacheEntry {
 	 *  @param withTable whether to name the table (entries of amcache_inventory.json)
 	 *  @return its JSON object */
 	Json toJson(bool withTable) const;
+
+	/*! The entry's linking context (B-085): what it attests by its table
+	 *  (an executable's presence, an installation…), of which object. */
+	RecordContext context() const;
 };
 
 /*! Decodes RecentFileCache.bcf (see the file's header). Every count is

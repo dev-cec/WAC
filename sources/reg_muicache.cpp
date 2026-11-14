@@ -2,6 +2,7 @@
  *  \brief Reading of the MUICache key (see reg_muicache.h).
  */
 #include "reg_muicache.h"
+#include "context.h"
 
 Muicache::Muicache(ORHKEY hKey, std::wstring valueName, std::wstring profile) {
 	
@@ -26,6 +27,18 @@ Json Muicache::toJson() {
 	addUser(o, sid);
 	o.add(L"Name",    Json::str(name));    // raw path
 	o.add(L"Data",    Json::str(data));
+	/* Context (B-085): the shell cached the name of a program it started —
+	   the value's name is its path followed by the property
+	   (".FriendlyAppName", ".ApplicationCompany"). */
+	RecordContext context;
+	context.kind = ContextKind::Execution;
+	const size_t property = name.rfind(L'.');
+	const std::wstring program = property != std::wstring::npos && property > name.rfind(L'\\')
+	                             && _wcsicmp(name.c_str() + property, L".exe") != 0 ? name.substr(0, property) : name;
+	context.subject.path = contextPath(program);
+	context.actor.sid = sid;
+	context.evidence = contextPath(hive);   // UsrClass.dat, or NTUSER.DAT before Vista
+	addContext(o, context);
 	return o;
 }
 
@@ -68,6 +81,7 @@ void readMuiCacheKey(const std::wstring& hive, const wchar_t* key, const std::ws
 			if (type != REG_SZ) continue;
 			log(1, L"➕Muicache");
 			entries.push_back(Muicache(muiKey, valueName, sid));
+			entries.back().hive = originalPath(hive);
 		}
 		ORCloseKey(muiKey);
 	}
