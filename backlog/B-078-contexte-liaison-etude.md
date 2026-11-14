@@ -147,6 +147,58 @@ actuel, et ce que WAC doit calculer pour l'écrire dans `Context`.
 | active_directory_*, dns_server_*, dhcp_server_*, web_server_*, user_access_log, group_policies, hyperv_machines, server_applications | Account / Configuration / Access | objet AD (`ObjectGUID`, SID), zone, bail (`IpAddress`, MAC), site, client (`Address`) | — | — | SID des objets AD ; bail → adresse ↔ machine |
 | investigation, conversion, OperatingSystem, event_log_configuration, root_certificates | Configuration (la collecte, le système) | — | — | — | `Host.Volumes`, `Host.Profiles` (B-079) |
 
+## Table des rôles des événements (collecte Windows 11, 59 645 événements)
+Les champs viennent de `EvtEventData[].Name`, tels que relevés ; `—` : aucun.
+Les identifiants absents de cette collecte (4698, 4697, 5140, 5145, 5156,
+Sysmon 3 et 11, TaskScheduler 106 et 200) sont à confirmer sur la VM qui a
+vécu, avec une politique d'audit et une configuration Sysmon qui les
+produisent.
+
+| Source | Identifiant | Kind | Sujet | Acteur | Comment |
+|---|---|---|---|---|---|
+| Security | 4624 | Logon | `TargetUserSid`, `TargetLogonId` | `SubjectUserSid` (le service qui ouvre) | `LogonType`, `IpAddress`, `IpPort`, `WorkstationName`, `ProcessName` |
+| Security | 4634, 4647 | Logon (fin) | `TargetUserSid`, `TargetLogonId` | — | `LogonType` |
+| Security | 4648 | Logon (identifiants explicites) | `TargetUserName`, `TargetServerName` | `SubjectUserSid`, `SubjectLogonId` | `ProcessName`, `IpAddress` |
+| Security | 4672 | Logon (privilèges) | `SubjectUserSid`, `SubjectLogonId` | — | `PrivilegeList` |
+| Security | 4688 | Execution | `NewProcessName` (+ `NewProcessId`) | `SubjectUserSid`/`SubjectLogonId` ; `TargetUserSid`/`TargetLogonId` quand renseignés | `ParentProcessName`, `ProcessId`, `CommandLine`, `TokenElevationType` |
+| Security | 4696 | Execution (jeton) | `TargetProcessName` | `TargetUserSid` | `ProcessName` |
+| Security | 4720, 4722, 4724, 4725, 4726, 4738, 4781 | Account | `TargetSid` | `SubjectUserSid`, `SubjectLogonId` | nouveau nom (4781 `NewTargetUserName`) |
+| Security | 4728, 4729, 4732, 4733 | Account (groupe) | `MemberSid` ; groupe `TargetSid` | `SubjectUserSid` | — |
+| Security | 4731, 4735, 4737 | Account (groupe créé, modifié) | `TargetSid` | `SubjectUserSid` | — |
+| Security | 4717, 4718 | Account (droit d'accès système) | `TargetSid` | `SubjectUserSid` | `AccessGranted` / `AccessRemoved` |
+| Security | 4798, 4799 | Account (énumération) | `TargetSid` | `SubjectUserSid` | `CallerProcessName` |
+| Security | 4616 | Configuration (heure changée) | — | `SubjectUserSid` | `ProcessName`, `PreviousTime`, `NewTime` |
+| Security | 4907 | Configuration (audit d'objet) | `ObjectName` | `SubjectUserSid` | `ProcessName` |
+| Security | 5379, 5382 | Access (identifiants lus) | `TargetName` / `Resource` | `SubjectUserSid` | `ClientProcessId` |
+| Sysmon | 1 | Execution | `Image`, `Hashes`, `ProcessGuid` | `User`, `LogonId` | `ParentImage`, `ParentProcessGuid`, `CommandLine`, `CurrentDirectory` |
+| Sysmon | 5 | Execution (fin) | `Image`, `ProcessGuid` | `User` | — |
+| Sysmon | 23 | Deletion | `TargetFilename`, `Hashes` | `User` | `Image` |
+| Service Control Manager | 7045 | Installation (service) | `ImagePath` (chemin séparé des arguments) | `AccountName` (compte du service, pas l'auteur) | `ServiceName`, `StartType` |
+| Service Control Manager | 7040, 7023, 7026, 7030 | Configuration | service (`param1`) | — | — |
+| MsiInstaller | 1033, 11707, 1040, 1042 | Installation | produit (dans le message seulement : à extraire) | `EvtSystemUserID` | — |
+| Kernel-PnP | 400, 410, 430 | Installation (appareil) | `DeviceInstanceId` | — | `DriverName`, `ParentDeviceInstanceId` |
+| Partition | 1006 | Access (disque branché) | `SerialNumber`, `Model` | — | `BusType` |
+| DriverFrameworks-UserMode | 10000, 10001 | Installation (appareil) | `DeviceId` | — | — |
+| Bits-Client | 3, 59, 60, 16403 | Arrival | `LocalName` (16403) | `jobOwner`, `User` | `url`, `RemoteName`, `processPath` |
+| PowerShell | 4104 | Execution (script) | `Path` quand présent | `EvtSystemUserID` | `ScriptBlockText` |
+| PowerShell | 4100, 4103 | Execution (commande) | — | `ContextInfo` (utilisateur, hôte) | `Payload` |
+| TaskScheduler | 808 | Persistence (tâche) | `Task` | — | — |
+| TerminalServices-LocalSessionManager | 21, 22, 24, 25 | Logon (session de bureau) | `User` (nom → SID par `Host.Profiles`) | — | `Address`, `SessionID` |
+| TerminalServices-LocalSessionManager | 23, 41, 42 | Logon (fin) | `User` | — | `SessionID` |
+| WMI-Activity | 5857, 5860, 5861 | Persistence (WMI) | `ProviderPath`, `CONSUMER` | `User` | `HostProcess`, `Query` |
+| Windows Defender | 1116, 1117 | Detection | `Path` (préfixe `file:_` à retirer) | `Detection User` | `Process Name`, `Threat Name`, `Origin Name` |
+| Windows Defender | 1000, 1001, 2000…, 5007 | Configuration | — | `SID` | `Old Value`, `New Value` (5007) |
+
+Remarques :
+- `EvtSystemUserID` (le compte du fournisseur) n'est **pas** l'acteur en
+  général (`S-1-5-18` pour presque tout) : il ne l'est que là où la table le
+  dit.
+- Plusieurs rôles sont des **noms** et non des SID (`User` des sessions de
+  bureau, `Detection User`, `ContextInfo`) : WAC les traduit par
+  `Host.Profiles` et le SAM, et garde le nom dans `Actor.User`.
+- Les liens entre événements se font par `LogonId` (4624 → 4688, 4672) et
+  par `ProcessGuid` (Sysmon 1 → 5, 23) : ce sont des clés de `Context`.
+
 ## Tableau par sorte d'objet (le dossier dans WAE)
 | Objet | Clés d'identité (Context) | Ce que le dossier réunit |
 |---|---|---|
@@ -168,7 +220,8 @@ l'avance, et les champs de `Context` qui la portent.
 - [x] Tableau par sorte d'objet, première passe
 - [ ] VM qui a vécu (redémarrages, une journée) : ShimCache, inventaire
       Amcache ; nouveau cycle, tableaux confirmés
-- [ ] Table des rôles des événements (identifiant → sujet, acteur, comment)
+- [x] Table des rôles des événements, première passe (identifiants absents
+      à confirmer sur la VM qui a vécu)
 - [ ] Schéma arrêté ; fiches par famille créées
 
 ## Journal
@@ -187,3 +240,5 @@ l'avance, et les champs de `Context` qui la portent.
 - 2026-11-14 : première passe des deux tableaux sur la collecte Windows 11 ;
   ShimCache et inventaire Amcache vides sur VM neuve (expliqué), à revoir
   sur une VM qui a vécu.
+- 2026-11-14 : table des rôles des événements, établie sur les 59 645
+  événements de la collecte ; 4698, 5140, 5156, Sysmon 3 et 11 absents.
