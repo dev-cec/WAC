@@ -501,6 +501,8 @@ def cross_checks(folder):
     found += guarded(check_prefetch_runs, folder)
     found += guarded(check_amcache_windows8, folder)
     found += guarded(check_amcache_inventory_databases, folder)
+    found += guarded(check_context_volumes, folder)
+    found += guarded(check_context_executions, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6081,6 +6083,103 @@ def check_prefetch_runs(folder):
     print(f"  ✅ prefetchs.json: TASKKILL.EXE last run {gap:.0f} s before the collection, as the harness ran it; "
           f"{count} run(s), {len(set(runs))} time(s) kept")
     return 0
+
+
+def contexts(folder, name):
+    """The Context of each record of a JSON of WAC (B-079), {} when absent."""
+    d = load(folder, name)
+    if isinstance(d, list):
+        rows = d
+    else:
+        lists = [v for v in d.values() if isinstance(v, list)] if isinstance(d, dict) else []
+        rows = lists[0] if lists else []
+    return [(r, r.get("Context") or {}) for r in rows if isinstance(r, dict)]
+
+
+def check_context_volumes(folder):
+    """The volumes WAC observed (investigation.json, Host.Volumes, B-079)
+    against Win32_Volume read in the VM (reference/volumes.txt): same letter,
+    GUID and serial number. And the device names: every BAM path cited on its
+    device (\\Device\\HarddiskVolumeN\\…) resolved by WAC to a letter must
+    be a file the $MFT holds there — a wrong device-to-letter map would put
+    the path on another volume.
+    """
+    reference = os.path.join(folder, "reference", "volumes.txt")
+    inv = load(folder, "investigation.json")
+    inv = inv[0] if isinstance(inv, list) and inv else inv
+    volumes = ((inv or {}).get("Host") or {}).get("Volumes") if isinstance(inv, dict) else None
+    if not os.path.exists(reference) or not volumes:
+        print("  ⏭️  no volumes reference, or no Host.Volumes: volumes not checked")
+        return 0
+    wrong = []
+    by_letter = {(v.get("MountPoint") or "").upper(): v for v in volumes}
+    for line in open(reference, encoding="utf-8", errors="replace"):
+        parts = line.strip().split("|")
+        if len(parts) != 3:
+            continue
+        letter, device_id, serial = parts[0].upper(), parts[1], parts[2].upper()
+        mine = by_letter.get(letter)
+        guid = device_id[device_id.find("{"):device_id.find("}") + 1].upper()
+        if not mine or (mine.get("Guid") or "").upper() != guid or (mine.get("Serial") or "").upper() != serial:
+            wrong.append(f"{letter}: Windows {guid} {serial}, WAC {mine}")
+    # BAM's device paths, on their letter, against the $MFT.
+    mft = load(folder, "mft.json")
+    mft = mft if isinstance(mft, list) else []
+    paths = {(m.get("Path") or "").lower() for m in mft if isinstance(m, dict)}
+    resolved, absent = 0, []
+    for bam, context in contexts(folder, "bams.json"):
+        if not (bam.get("Name") or "").lower().startswith("\\device\\"):
+            continue
+        path = (context.get("Subject") or {}).get("Path")
+        if not path or path.lower().startswith("\\device"):
+            absent.append(f"{bam.get('Name')}: not resolved")
+        elif paths and path.lower() not in paths:
+            absent.append(f"{path}: not in mft.json")
+        else:
+            resolved += 1
+    ok = not wrong and not absent
+    print(f"  {'✅' if ok else '❌'} investigation.json: {len(by_letter)} volume(s) as Win32_Volume lists them (GUID, serial); "
+          f"{resolved} BAM path(s) on their device resolved to a letter where the $MFT holds them"
+          + ("" if ok else f": {(wrong + absent)[:3]}"))
+    return 0 if ok else 1
+
+
+def check_context_executions(folder):
+    """WAC as its own witness of an execution (B-085): the binary the harness
+    ran, by its path in the VM and its SHA-256 computed on the host
+    (reference/wac-binary.txt), must be the Context's subject of WAC's own
+    process — path and SHA-256 — and of its Prefetch when Windows wrote one.
+    And no Context of the family left a path in a form WAC resolves
+    (\\Device\\…, a variable).
+    """
+    reference = os.path.join(folder, "reference", "wac-binary.txt")
+    if not os.path.exists(reference):
+        print("  ⏭️  no reference of WAC's binary: executions not checked")
+        return 0
+    path, sha256 = open(reference, encoding="utf-8").read().strip().split("|")
+    wrong = []
+    process = [c for _, c in contexts(folder, "processes.json")
+               if ((c.get("Subject") or {}).get("Path") or "").lower() == path.lower()]
+    if not process:
+        wrong.append(f"no process whose Context.Subject.Path is {path}")
+    elif (process[0]["Subject"].get("Sha256") or "").lower() != sha256.lower():
+        wrong.append(f"WAC's process: Sha256 {process[0]['Subject'].get('Sha256')}, binary {sha256}")
+    prefetch = [c for r, c in contexts(folder, "prefetchs.json") if (r.get("Filename") or "").upper() == "WAC.EXE"]
+    prefetch_ok = [c for c in prefetch if ((c.get("Subject") or {}).get("Path") or "").lower() == path.lower()]
+    if prefetch and not prefetch_ok:
+        wrong.append(f"WAC.EXE's Prefetch: Context.Subject.Path {[(c.get('Subject') or {}).get('Path') for c in prefetch]}")
+    unresolved = []
+    for name in ("prefetchs.json", "bams.json", "userassists.json", "muicache.json", "processes.json", "shimcache.json",
+                 "amcache_application_files.json", "error_reports.json", "program_usage.json"):
+        for _, c in contexts(folder, name):
+            p = (c.get("Subject") or {}).get("Path") or ""
+            if p.lower().startswith("\\device") or "%" in p:
+                unresolved.append(f"{name}: {p}")
+    ok = not wrong and not unresolved
+    print(f"  {'✅' if ok else '❌'} Context of executions: WAC's own process ({path}, its SHA-256 computed on the host)"
+          f"{' and its Prefetch' if prefetch_ok else ''} named so; no path left in a form WAC resolves"
+          + ("" if ok else f": {(wrong + unresolved)[:3]}"))
+    return 0 if ok else 1
 
 
 def check_amcache_inventory_databases(folder):

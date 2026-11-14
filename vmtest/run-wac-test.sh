@@ -249,6 +249,10 @@ $QGA run --shell "reg unload HKLM\\WAC_TEST >nul 2>&1 & exit /b 0" >/dev/null 2>
 BITS_SUFFIX=""
 [[ "$($QGA run -- powershell.exe -NoProfile -Command '[IntPtr]::Size' 2>/dev/null | tr -d '\r')" == 4 ]] && BITS_SUFFIX=32
 $QGA write "$ROOT/build-windows/WAC$BITS_SUFFIX.exe" "$WACDIR\\WAC.exe"
+# The binary run in the VM, by its path there and its SHA-256 computed here:
+# the Context of WAC's own process and Prefetch must name it (B-085).
+mkdir -p "$OUTPUT/reference"
+printf '%s|%s\n' "$WACDIR\\WAC.exe" "$(sha256sum "$ROOT/build-windows/WAC$BITS_SUFFIX.exe" | cut -d' ' -f1)" > "$OUTPUT/reference/wac-binary.txt"
 # No configuration file left by an earlier cycle: the runs below give their
 # options, and must behave as without wac.yml (step 8 tests the file).
 $QGA run --shell "del $WACDIR\\wac.yml 2>nul & exit /b 0" >/dev/null 2>&1 || true
@@ -796,6 +800,13 @@ $QGA run -- powershell.exe -NoProfile -Command \
   > "$OUTPUT/reference/pe-build.txt" 2>/dev/null \
   && echo "   + reference/pe-build.txt" || echo "   ⚠️ PE build reference not read"
 fi
+
+# The volumes as Windows lists them (Win32_Volume): letter, GUID path,
+# serial number — what Host.Volumes of investigation.json must give (B-079).
+$QGA run -- powershell.exe -NoProfile -Command \
+  'Get-CimInstance Win32_Volume | Where-Object { $_.DriveLetter } | ForEach-Object { "{0}|{1}|{2:X8}" -f $_.DriveLetter, $_.DeviceID, $_.SerialNumber }' \
+  > "$OUTPUT/reference/volumes.txt" 2>/dev/null \
+  && echo "   + reference/volumes.txt" || echo "   ⚠️ volumes reference not read"
 
 # The last write of each Prefetch file as Windows gives it, for the dates of
 # the file artefacts (WAC reads them in the manifest, from the raw $MFT), and
