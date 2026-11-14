@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | petit |
+| en cours | P1 | petit |
 
 ## Pourquoi
 Trouvé par le cycle `win11-test` du 2026-11-14 (B-078) : `web_client.json`
@@ -35,3 +35,11 @@ correctif ; cycle `win11-test` : `web_client.json` sans date tronquée.
 
 ## Journal
 - 2026-11-14 : fiche créée (cycle B-078).
+- 2026-11-14 : correctif écrit, non compilé (cycle en cours) :
+  `formatIso8601` n'écrit plus d'année au-delà de 9999 (chaîne vide, champ
+  non émis par `Json::add`) ; `addDate` écrit `<clé>Never: true` pour le
+  FILETIME maximal (0x7FFFFFFFFFFFFFFF, « jamais » de Windows) ; test
+  `iso8601_dates_test.cpp` (dernière seconde de 9999, première de 10000,
+  « jamais ») à brancher dans `build-windows.sh` après le cycle, et à voir
+  échouer par mutation. Restent : les autres sentinelles (PE à 0, 9999 d'AD)
+  et `check-json.py`.

@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | petit |
+| en cours | P1 | petit |
 
 ## Pourquoi
 Trouvé par WAE (E-010) le 2026-11-14, à l'import de la collecte
@@ -33,12 +33,17 @@ contrôle de `check-json.py` ne l'a vu : un JSON valide d'apparence, faux.
   les enregistrements d'un bloc qui ne les vérifie pas ; confirmer que 1
   en vient ; sinon trouver la cause et la corriger, test unitaire sur un enregistrement
   dont le canal est le plus long relevé (`Microsoft-Windows-AppXDeploymentServer/Operational`).
-- 2 : `VT_BLOB` (et tout type non texte) en hexadécimal ; test unitaire.
-- `Json` : ne jamais écrire une demi-paire isolée (une chaîne UTF-16
-  invalide dite comme telle, ou ses unités en hexadécimal) — défense de
-  dernier rang, avec test.
-- `check-json.py` : refuser toute demi-paire isolée dans tout JSON du cycle
-  (`json.loads` les accepte : contrôle explicite).
+- 2 : la table de Windows déclare aussi `VT_BLOB` (65) pour des listes de
+  textes (`System.Author`, `System.Kind`, `System.Keywords`) : le texte
+  reste deviné, mais `utf16Strings` refuse une demi-paire isolée, et
+  `InvertedOnlyMD5`/`InvertedOnlyPids` (octets par nature) sont toujours en
+  hexadécimal ; test dans `file_artefacts_test`.
+- **Pas** de changement de `jsonEscape` : une demi-paire isolée y est
+  échappée exprès (`\udXXX`) — un nom NTFS peut en porter une (mesuré :
+  bases de User Access Logging, Server 2016), et la convertir en U+FFFD
+  rendrait deux noms identiques. C'est une sortie légitime de WAC, que WAE
+  doit lire (WAE E-022). Le défaut est d'en produire là où la source n'en
+  a pas.
 
 ## Référence indépendante
 WAE (lecture stricte, RapidJSON avec validation d'encodage) importe les deux
@@ -61,3 +66,8 @@ le canal égale celui que donne `Get-WinEvent` pour le même `EventRecordID`.
   bloc ne les vérifie pas (sans le taire ni le jeter) ; contrôle à confirmer
   sur le journal du prochain cycle (les `.evtx` de ce cycle ne sont pas sur
   l'hôte).
+- 2026-11-14 : `jsonEscape` échappe exprès les demi-paires isolées (noms
+  NTFS) : la tâche « ne jamais en écrire » retirée. Correctif de 2 écrit
+  (`search_index.cpp` : `utf16Strings` refuse une demi-paire isolée,
+  `InvertedOnly*` en hexadécimal) et son test (`file_artefacts_test`) ; à
+  compiler et voir échouer par mutation après le cycle en cours.
