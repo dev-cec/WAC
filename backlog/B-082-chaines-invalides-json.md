@@ -29,7 +29,9 @@ contrôle de `check-json.py` ne l'a vu : un JSON valide d'apparence, faux.
    s'écrit en hexadécimal, jamais en texte (sauf type texte déclaré).
 
 ## À faire
-- Trouver la cause de 1, la corriger, test unitaire sur un enregistrement
+- Vérifier les CRC des blocs EVTX (en-tête, enregistrements) et marquer
+  les enregistrements d'un bloc qui ne les vérifie pas ; confirmer que 1
+  en vient ; sinon trouver la cause et la corriger, test unitaire sur un enregistrement
   dont le canal est le plus long relevé (`Microsoft-Windows-AppXDeploymentServer/Operational`).
 - 2 : `VT_BLOB` (et tout type non texte) en hexadécimal ; test unitaire.
 - `Json` : ne jamais écrire une demi-paire isolée (une chaîne UTF-16
@@ -46,3 +48,16 @@ le canal égale celui que donne `Get-WinEvent` pour le même `EventRecordID`.
 ## Journal
 - 2026-11-14 : fiche créée (WAE E-010) ; les deux fichiers de la collecte
   `win11-test` du jour.
+- 2026-11-14 : lecture du décodeur (`evtx.cpp`) : toutes les lectures
+  (`name`, `value` T_STRING, CDATA) sont bornées par la taille du bloc ; la
+  longueur de la chaîne est juste (≈ 50 caractères, celle du vrai nom),
+  seuls les 25 derniers sont étrangers. Hypothèse : les octets sont **dans
+  le bloc** — enregistrement réécrit pendant la copie à chaud du journal
+  (journal ouvert, `dirty`), non une lecture hors tampon. WAC ne vérifie
+  **aucune somme de contrôle EVTX** : le format en porte deux par bloc
+  (CRC32 de l'en-tête, octets 0–0x78 et 0x80–0x200, stocké à 0x7C ; CRC32
+  des enregistrements, de 0x200 à la fin des données, stocké à 0x34).
+  À faire en plus : vérifier ces CRC, et dire par enregistrement que son
+  bloc ne les vérifie pas (sans le taire ni le jeter) ; contrôle à confirmer
+  sur le journal du prochain cycle (les `.evtx` de ce cycle ne sont pas sur
+  l'hôte).
