@@ -1,6 +1,7 @@
 #include "evtx.h"
 #include "xml_light.h"
 #include "tools.h"
+#include "zip.h"
 #include <cstring>
 #include <sstream>
 
@@ -684,6 +685,17 @@ std::wstring EvtxChannelFromFileName(const std::wstring& fileName) {
 	return r;
 }
 
+EvtxChunkChecksums evtxChunkChecksums(const uint8_t* chunk, size_t size, size_t liveEnd) {
+	EvtxChunkChecksums sums;
+	if (size < RECORDS_START || liveEnd < RECORDS_START || liveEnd > size) return sums;
+	// The header's CRC skips its own field and the 4 bytes before it (0x78..0x80).
+	std::vector<uint8_t> header(chunk, chunk + 0x78);
+	header.insert(header.end(), chunk + 0x80, chunk + RECORDS_START);
+	sums.headerMatches = Crc32(header.data(), header.size()) == readLittleEndian<uint32_t>(chunk, size, 0x7C);
+	sums.recordsMatch = Crc32(chunk + RECORDS_START, liveEnd - RECORDS_START) == readLittleEndian<uint32_t>(chunk, size, 0x34);
+	return sums;
+}
+
 HRESULT EvtxReadFile(const std::wstring& path,
                         const std::function<bool(const EvtxRecord&)>& onRecord,
                         EvtxSummary* summary) {
@@ -759,6 +771,13 @@ HRESULT EvtxReadFile(const std::wstring& path,
 		const bool clearedChunk = readLittleEndian<uint64_t>(chunk.data(), read, 24) == UINT64_MAX;
 		const size_t recordsEnd = clearedChunk ? read : liveEnd;
 
+		/*  The chunk's two CRC-32: a chunk rewritten while the live log was
+		    copied gave an event whose text ended in foreign bytes (B-082).
+		    Its records are still given — they may be all there is —, flagged. */
+		const EvtxChunkChecksums sums = evtxChunkChecksums(chunk.data(), read, liveEnd);
+		const bool checksumMismatch = !sums.headerMatches || !sums.recordsMatch;
+		if (checksumMismatch) ++b.chunksChecksumMismatch;
+
 		Decoder decoder(chunk.data(), read);
 		size_t p = RECORDS_START;
 		while (p + 24 <= recordsEnd) {
@@ -770,6 +789,7 @@ HRESULT EvtxReadFile(const std::wstring& path,
 
 			EvtxRecord e;
 			e.recovered = p >= liveEnd;
+			e.chunkChecksumMismatch = checksumMismatch;
 			e.id = readLittleEndian<uint64_t>(chunk.data(), read, p + 8);
 			const uint64_t v = readLittleEndian<uint64_t>(chunk.data(), read, p + 16);
 			e.writtenUtc.dwLowDateTime  = (DWORD)(v & 0xFFFFFFFFULL);
@@ -802,6 +822,7 @@ HRESULT EvtxReadFile(const std::wstring& path,
 	if (b.recovered) diag << L" (" << b.recovered << L" recovered past the live area)";
 	if (b.unreadable) diag << L", " << b.unreadable << L" unreadable";
 	if (chunksSkipped) diag << L", " << chunksSkipped << L" damaged chunk(s)";
+	if (b.chunksChecksumMismatch) diag << L", " << b.chunksChecksumMismatch << L" chunk(s) failing their checksum";
 	if (b.dirty) diag << L", log not closed cleanly";
 	b.diagnostic = diag.str();
 	b.chunksSkipped = chunksSkipped;

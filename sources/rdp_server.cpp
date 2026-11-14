@@ -57,6 +57,7 @@ HRESULT RdpServer::getData() {
 			const auto type = data.find(L"LogonType");
 			if (!isIncomingRdpEvent(channel, ev.messageEventId, type == data.end() ? L"" : type->second)) return true;
 			if (e.recovered) ev.evtRecovered = Json::boolean(true);
+			if (e.chunkChecksumMismatch) ev.evtChunkChecksumMismatch = Json::boolean(true);
 			Json o = ev.toJson();
 			for (const auto& [field, names] : NORMALISED)
 				for (const std::wstring& name : names) {

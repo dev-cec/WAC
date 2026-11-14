@@ -241,6 +241,7 @@ Json Event::toJson() const {
 	o.add(L"EvtEventData",               evtEventData);
 	o.add(L"EvtSourceLog",               evtSourceLog);
 	o.add(L"EvtRecovered",               evtRecovered);
+	o.add(L"EvtChunkChecksumMismatch",   evtChunkChecksumMismatch);
 	o.add(L"EvtEventMessage",            evtEventMessage);
 	return o;
 }
@@ -359,6 +360,7 @@ HRESULT Events::getData() {
 				// A processing error's values are not the template's (see Event::Event).
 				if (!ev.processingError) ev.templateValues = e.values;
 				if (e.recovered) ev.evtRecovered = Json::boolean(true);
+				if (e.chunkChecksumMismatch) ev.evtChunkChecksumMismatch = Json::boolean(true);
 				lap(buildTime);
 				/*  PLAIN-TEXT MESSAGE. Rebuilt from the provider's resources, which
 				    only the API could do until now. The resource file is

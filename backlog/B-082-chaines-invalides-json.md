@@ -77,3 +77,13 @@ le canal égale celui que donne `Get-WinEvent` pour le même `EventRecordID`.
   78, celles d'`InvertedOnly*`. Correctif de 2 compilé ; mutations vues
   échouer (demi-paire acceptée ; `InvertedOnly*` deviné en texte),
   restaurées, recompilées. Reste : CRC des blocs EVTX (1), cycle VM.
+- 2026-11-14 : CRC des blocs EVTX vérifiés (`evtxChunkChecksums`, `Crc32`
+  de `zip.h`) : en-tête (0..0x78 et 0x80..0x200, stocké à 0x7C),
+  enregistrements (0x200..fin de la zone vive, stocké à 0x34). Un bloc en
+  désaccord garde ses enregistrements, marqués `EvtChunkChecksumMismatch:
+  true` (`events.json`, `rdp_server.json`) ; le bilan du journal compte ces
+  blocs. Test contre des CRC calculés à part par zlib ; mutation (en-tête
+  couvrant 0x78..0x80) vue échouer, restaurée, recompilée. **À mesurer au
+  cycle** : combien de blocs d'un journal ouvert sont en désaccord (si le
+  bloc en cours d'écriture l'est toujours, ses événements seraient marqués
+  à tort : à voir avant de valider).

@@ -735,6 +735,30 @@ void defenderHistory() {
 	parseBag(noLength, none);
 	check(none.empty(), "DetectionHistory: a bag whose length matches no layout read anyway");
 	{
+		/* B-082: the two CRC-32 of an EVTX chunk. A chunk of known bytes whose
+		   checksums zlib computed apart (Python, 2026-11-14): records 512..800,
+		   then the header with that value in it, skipping 0x78..0x80. */
+		std::vector<uint8_t> c(1024);
+		for (size_t i = 0; i < c.size(); ++i) c[i] = (uint8_t)((i * 7) % 251);
+		const size_t live = 800;
+		auto put32 = [&](size_t at, uint32_t v) { for (int k = 0; k < 4; ++k) c[at + k] = (uint8_t)(v >> (8 * k)); };
+		put32(0x34, 0xEB6C34D5);
+		put32(0x7C, 0xB9377029);
+		const EvtxChunkChecksums sound = evtxChunkChecksums(c.data(), c.size(), live);
+		std::vector<uint8_t> keep = c;
+		c[900] ^= 1;    // past the live records: not covered
+		c[0x7A] ^= 1;   // in the 4 bytes the header's CRC skips
+		const EvtxChunkChecksums uncovered = evtxChunkChecksums(c.data(), c.size(), live);
+		c = keep; c[700] ^= 1;
+		const EvtxChunkChecksums records = evtxChunkChecksums(c.data(), c.size(), live);
+		c = keep; c[0x10] ^= 1;
+		const EvtxChunkChecksums header = evtxChunkChecksums(c.data(), c.size(), live);
+		check(sound.headerMatches && sound.recordsMatch && uncovered.headerMatches && uncovered.recordsMatch
+		      && records.headerMatches && !records.recordsMatch && !header.headerMatches && header.recordsMatch
+		      && !evtxChunkChecksums(c.data(), 100, 512).headerMatches,
+		      "evtx: a chunk's two CRC-32 as zlib computes them, each over its own bytes (B-082)");
+	}
+	{
 		// Windows 11 26300 (2026-11-14): ThreatTrackingFileIdentity, type 8 — bytes
 		// with their length — before ThreatTrackingSha1. Unknown, it stopped the
 		// bag and the SHA-1 after it was lost; an unknown type is now said.

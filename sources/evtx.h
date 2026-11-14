@@ -69,7 +69,24 @@ struct EvtxRecord {
 	 *  Kept, since it is the trace the clearing meant to erase, but flagged so
 	 *  that it is never read as a live event. */
 	bool recovered = false;
+	/*! Its chunk fails one of the two CRC-32 its header holds (header,
+	 *  records; evtxChunkChecksums): bytes changed since Windows wrote them —
+	 *  a chunk rewritten while the live log was copied, a damage. The record
+	 *  is kept and given, flagged: its content may be another's (B-082). */
+	bool chunkChecksumMismatch = false;
 };
+
+/*! The two checksums of an EVTX chunk, against those its header holds. */
+struct EvtxChunkChecksums {
+	bool headerMatches = false;    //!< CRC-32 of bytes 0..0x78 and 0x80..0x200, stored at 0x7C
+	bool recordsMatch = false;     //!< CRC-32 of bytes 0x200..liveEnd, stored at 0x34
+};
+
+/*! Computes the checksums of \a chunk (\a size bytes, at least 512) whose
+ *  live records end at \a liveEnd (the header's free-space offset, already
+ *  bounded by the caller to 512..size).
+ *  @return what matches; both false when the chunk is shorter than its header */
+EvtxChunkChecksums evtxChunkChecksums(const uint8_t* chunk, size_t size, size_t liveEnd);
 
 /*! Result of reading an .evtx file: enough to tell, in the report, an empty
 *  log from an unreadable one.
@@ -80,6 +97,7 @@ struct EvtxSummary {
 	unsigned long long recovered = 0;      //!< of which read past the live area (see EvtxRecord::recovered)
 	unsigned long long unreadable = 0;    //!< discarded records
 	unsigned long long chunksSkipped = 0; //!< damaged chunks skipped (no signature)
+	unsigned long long chunksChecksumMismatch = 0; //!< chunks failing a CRC-32, their records flagged
 	bool headerValid = false;            //!< "ElfFile\0" signature found
 	bool dirty = false;                    //!< log marked "dirty"
 	std::wstring diagnostic;              //!< sentence for the audit log

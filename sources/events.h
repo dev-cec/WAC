@@ -89,6 +89,10 @@ struct Event {
 	*  EvtxRecord::recovered): residue of a cleared log, which Windows' own
 	*  viewer no longer shows. Omitted for a live event. */
 	Json evtRecovered = Json::null();
+	/*! `true` when the record's chunk fails its CRC-32 (EvtxRecord::
+	*  chunkChecksumMismatch): bytes changed since Windows wrote them, the
+	*  content may be another's. Omitted when the checksums match. */
+	Json evtChunkChecksumMismatch = Json::null();
 	/*! Plain-text message, rebuilt from the provider's resources.
 	*
 	*  Omitted when it could not be: provider not declared, resource binary
