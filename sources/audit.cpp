@@ -3,6 +3,7 @@
  */
 #include "audit.h"
 #include "conversions.h"
+#include "running_machine.h"
 #include <vector>
 #include "tools.h"
 
@@ -228,6 +229,29 @@ Json auditContext() {
 	Json host = Json::obj();
 	host.add(L"ComputerName", Json::str(g_machine));
 	host.add(L"SystemDrive",  Json::str(conf.systemDrive));
+	/* The volumes and the profiles as the collection observed them (B-079):
+	   the names under which artefacts cite the same volume or the same
+	   account, so that an analysis can relate them — and check WAC's own
+	   resolutions (onDriveLetter, Context). */
+	Json volumes = Json::arr();
+	for (const RunningMachine::Volume& v : runningMachine().volumes) {
+		Json o = Json::obj();
+		o.add(L"MountPoint", Json::str(v.mountPoint));
+		o.add(L"DeviceName", Json::str(v.deviceName));
+		o.add(L"Guid", Json::str(v.guid));
+		o.add(L"Serial", Json::str(v.serial));
+		o.add(L"FileSystem", Json::str(v.fileSystem));
+		volumes.push(std::move(o));
+	}
+	host.add(L"Volumes", std::move(volumes));
+	Json profiles = Json::arr();
+	for (const auto& [sid, folder] : conf.profiles) {
+		Json o = Json::obj();
+		o.add(L"Sid", Json::str(sid));
+		o.add(L"Folder", Json::str(folder));
+		profiles.push(std::move(o));
+	}
+	host.add(L"Profiles", std::move(profiles));
 
 	/* TWO time zones, and that is deliberate.
 	   - SuspectTimeZone: read in the examined SYSTEM hive. It is THE one used to

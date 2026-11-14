@@ -73,6 +73,17 @@ Json observeVolumes() {
 		// Which volumes hold executables to collect: fixed ones, not the collection medium.
 		v.add(L"DriveType", Json::num((unsigned long long)GetDriveTypeW(volume)));
 		if (fileSystem[0]) v.add(L"FileSystem", Json::str(fileSystem));
+		// The other names Windows gives the same volume (B-079): its device,
+		// as BAM and SRUM cite it, and its GUID, as \\?\\Volume{…} does.
+		wchar_t device[MAX_PATH + 1] = L"";
+		if (mountPoint.size() == 2 && QueryDosDeviceW(mountPoint.c_str(), device, ARRAYSIZE(device)))
+			v.add(L"DeviceName", Json::str(device));
+		else if (mountPoint.size() == 2)
+			log(2, L"🔥QueryDosDeviceW " + mountPoint, GetLastError());
+		const std::wstring name(volume);
+		const size_t open = name.find(L'{'), close = name.find(L'}');
+		if (open != std::wstring::npos && close != std::wstring::npos && close > open)
+			v.add(L"Guid", Json::str(name.substr(open, close - open + 1)));
 		volumes.push(std::move(v));
 	} while (FindNextVolumeW(search, volume, ARRAYSIZE(volume)));
 	FindVolumeClose(search);
@@ -157,6 +168,9 @@ const RunningMachine& runningMachine() {
 				long long type = 0;
 				if (snapshotInteger(member.second, L"DriveType", type) && type >= 0 && type <= 6) v.driveType = (UINT)type;
 				if (const Json* fs = member.second.find(L"FileSystem")) v.fileSystem = fs->text();
+				if (serial) v.serial = serial->text();
+				if (const Json* d = member.second.find(L"DeviceName")) v.deviceName = d->text();
+				if (const Json* g = member.second.find(L"Guid")) v.guid = g->text();
 				m.volumes.push_back(std::move(v));
 			}
 		return m;
@@ -171,4 +185,24 @@ std::vector<std::wstring> fixedNtfsVolumes() {
 			volumes.push_back(v.mountPoint);
 	if (volumes.empty()) volumes.push_back(conf.systemDrive);
 	return volumes;
+}
+
+std::wstring onDriveLetterAmong(const std::wstring& cited, const std::vector<RunningMachine::Volume>& volumes) {
+	auto startsWithFolded = [&](const std::wstring& prefix) {
+		return !prefix.empty() && cited.size() >= prefix.size() && _wcsnicmp(cited.c_str(), prefix.c_str(), prefix.size()) == 0
+		       && (cited.size() == prefix.size() || cited[prefix.size()] == L'\\');
+	};
+	for (const RunningMachine::Volume& v : volumes) {
+		if (v.mountPoint.size() != 2) continue;
+		// \Device\HarddiskVolume3 and \Device\HarddiskVolume31 differ: the
+		// prefix must end at a separator, which startsWithFolded asks.
+		if (startsWithFolded(v.deviceName)) return v.mountPoint + cited.substr(v.deviceName.size());
+		for (const std::wstring& form : { L"\\\\?\\Volume" + v.guid, L"\\??\\Volume" + v.guid })
+			if (!v.guid.empty() && startsWithFolded(form)) return v.mountPoint + cited.substr(form.size());
+	}
+	return cited;
+}
+
+std::wstring onDriveLetter(const std::wstring& cited) {
+	return onDriveLetterAmong(cited, runningMachine().volumes);
 }

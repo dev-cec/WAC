@@ -33,6 +33,9 @@ struct RunningMachine {
 		std::wstring mountPoint;   //!< "C:"
 		UINT driveType = DRIVE_UNKNOWN;   //!< GetDriveTypeW: DRIVE_FIXED, DRIVE_REMOVABLE…
 		std::wstring fileSystem;   //!< "NTFS", "FAT32"…
+		std::wstring serial;       //!< "60E59B9E": what shortcuts and Prefetch cite
+		std::wstring deviceName;   //!< "\Device\HarddiskVolume3": what BAM and SRUM cite (B-079)
+		std::wstring guid;         //!< "{5e0a…}": what \\?\Volume{…} and VSS cite (B-079)
 	};
 	std::vector<Volume> volumes;   //!< every volume with a mount point
 };
@@ -52,3 +55,16 @@ const RunningMachine& runningMachine();
  *  @return their mount points, "C:", "D:"…; the system drive alone if none
  *          was observed */
 std::vector<std::wstring> fixedNtfsVolumes();
+
+/*! A path as the examined machine cites it, on its drive letter: a volume
+ *  named by its device ("\Device\HarddiskVolume3\Windows\…", BAM, SRUM)
+ *  or by its GUID ("\\?\Volume{…}\…"), resolved by the volumes the
+ *  collection observed (B-079). Read at conversion from the snapshot: the
+ *  analysis workstation's volumes are never consulted.
+ *  @param cited the path as written
+ *  @return the path on its letter; `cited` unchanged when its volume is not
+ *          one of those observed (a volume gone, another machine's) */
+std::wstring onDriveLetter(const std::wstring& cited);
+
+/*! onDriveLetter among \a volumes given: what the tests call. */
+std::wstring onDriveLetterAmong(const std::wstring& cited, const std::vector<RunningMachine::Volume>& volumes);
