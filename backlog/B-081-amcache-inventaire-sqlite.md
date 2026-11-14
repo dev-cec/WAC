@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | moyen |
+| en cours | P1 | moyen |
 
 ## Pourquoi
 Trouvé par l'étude B-078 sur `win11-test` (Windows 11 26H2, build
@@ -55,3 +55,16 @@ ligne dans `check-json.py`.
 ## Journal
 - 2026-11-14 : fiche créée (étude B-078) ; bases listées et quatre
   d'entre elles lues sur `win11-test` 26300.
+- 2026-11-14 : écrit, non compilé (cycle en cours) : prélèvement de
+  `appcompat\Programs\*.db` et de leurs `-wal`/`-journal` sous la clé
+  `amcache` ; `readInventoryDatabase` : chaque table `Inventory*_N` (suffixe
+  retiré, `Metadata_N` et les tables d'autres bases laissées), chaque ligne
+  convertie **par la même fonction que la ruche** (`addInventoryValue` :
+  `FileId` → `AmcacheSha1`, `LowerCaseLongPath` → `LongPath`,
+  `InstallDate`/`LinkDate` texte en UTC — format relevé identique,
+  `11/13/2026 00:00:00`), `ItemKey` → `KeyName`, `LastModified` (FILETIME)
+  → `LastModified`/`LastModifiedUtc`, NULL non émis ; champ
+  `InventoryDatabase` (nom de la base). Mêmes JSON que la ruche
+  (applications, fichiers, inventaire). Test dans `file_artefacts_test`.
+  **À décider au cycle** : doublons possibles d'`InventoryApplicationFile`
+  (ruche et base) — à mesurer avant de trancher.
