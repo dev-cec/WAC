@@ -50,3 +50,13 @@ résolus.
   `setFileObject`, `knownFolderPath`, `systemHiveEvidence`,
   `userHiveEvidence`. Manuels FR et EN (section « Le contexte de
   liaison »). Reste : cycle VM.
+- 2026-11-14 : cycle `win11-test` : 305 ✅, 2 ❌, **deux défauts du harnais,
+  pas de WAC**, corrigés : le contrôle des volumes cherchait les chemins de
+  BAM sans les noms de liens physiques (`HardLinkPaths` : System32\winlogon.exe
+  est un lien vers WinSxS) et exigeait chaque fichier présent (BAM garde un
+  programme supprimé depuis : C:\wae\wae.exe) — il vérifie désormais la
+  correspondance périphérique → lettre ; le contrôle des noms de SID entrait
+  dans les blocs `Context`, qui ne portent que des SID par construction.
+  Rejoués sur la collecte : verts. Contrôle des exécutions vert du premier
+  coup (processus et Prefetch de WAC : `W:\wac\WAC.exe`, SHA-256 du binaire
+  calculé sur l'hôte) ; 9 volumes égaux à `Win32_Volume`.

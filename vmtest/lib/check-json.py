@@ -6125,22 +6125,33 @@ def check_context_volumes(folder):
     # BAM's device paths, on their letter, against the $MFT.
     mft = load(folder, "mft.json")
     mft = mft if isinstance(mft, list) else []
-    paths = {(m.get("Path") or "").lower() for m in mft if isinstance(m, dict)}
-    resolved, absent = 0, []
+    # A file with hard links is one record: its other names are in HardLinkPaths
+    # (System32\\winlogon.exe is a link to WinSxS).
+    paths = {(p or "").lower() for m in mft if isinstance(m, dict) for p in [m.get("Path")] + (m.get("HardLinkPaths") or [])}
+    # Per device, the map is right when its paths are found on the letter given
+    # to it; a single path absent is a program deleted since (BAM keeps it:
+    # measured, C:\\wae\\wae.exe), said, not a failure.
+    found_by_device, absent, unresolved = collections.Counter(), [], []
     for bam, context in contexts(folder, "bams.json"):
-        if not (bam.get("Name") or "").lower().startswith("\\device\\"):
+        name = bam.get("Name") or ""
+        if not name.lower().startswith("\\device\\"):
             continue
+        device = "\\".join(name.split("\\")[:3]).lower()
         path = (context.get("Subject") or {}).get("Path")
         if not path or path.lower().startswith("\\device"):
-            absent.append(f"{bam.get('Name')}: not resolved")
-        elif paths and path.lower() not in paths:
-            absent.append(f"{path}: not in mft.json")
+            unresolved.append(f"{name}: not resolved")
+        elif not paths or path.lower() in paths:
+            found_by_device[device] += 1
         else:
-            resolved += 1
-    ok = not wrong and not absent
+            absent.append(path)
+    devices = {"\\".join((b.get("Name") or "").split("\\")[:3]).lower() for b, _ in contexts(folder, "bams.json")
+               if (b.get("Name") or "").lower().startswith("\\device\\")}
+    unmapped = [d for d in devices if not found_by_device[d]]
+    ok = not wrong and not unresolved and not unmapped
     print(f"  {'✅' if ok else '❌'} investigation.json: {len(by_letter)} volume(s) as Win32_Volume lists them (GUID, serial); "
-          f"{resolved} BAM path(s) on their device resolved to a letter where the $MFT holds them"
-          + ("" if ok else f": {(wrong + absent)[:3]}"))
+          f"{sum(found_by_device.values())} BAM path(s) on their device resolved to a letter where the $MFT holds them"
+          + (f", {len(absent)} absent from it (deleted since: {absent[:2]})" if absent else "")
+          + ("" if ok else f": {(wrong + unresolved + [d + ': no path found on its letter' for d in unmapped])[:3]}"))
     return 0 if ok else 1
 
 
@@ -6964,8 +6975,10 @@ def check_account_names(folder):
                 pairs.add((sid.upper(), o.get("SIDName") or o.get("SidName") or o.get("Owner")))
             if isinstance(o.get("RunAsSid"), str):
                 pairs.add((o["RunAsSid"].upper(), o.get("RunAs")))
-            for v in o.values():
-                walk(v)
+            # A Context (B-079) carries SIDs only, by design: the record names them.
+            for k, v in o.items():
+                if k != "Context":
+                    walk(v)
         elif isinstance(o, list):
             for v in o:
                 walk(v)
