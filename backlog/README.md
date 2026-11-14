@@ -69,6 +69,19 @@ archivées.
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
 
+### Prochaine version — le contexte de liaison pour WAE
+
+Décision utilisateur du 2026-11-14 : WAC écrit dans chaque enregistrement un
+bloc `Context` (ce que l'enregistrement atteste, son sujet, son acteur, le
+comment, son origine) pour que WAE ouvre le dossier de n'importe quel objet.
+Étude complète sur la VM Windows 11 d'abord ; les fiches par famille
+d'artefacts naîtront de B-078.
+
+| Fiche | Sujet | Statut | Priorité | Effort |
+|---|---|---|---|---|
+| [B-078](B-078-contexte-liaison-etude.md) | Contexte de liaison : étude complète sur Windows 11, avec WAE | en cours | P1 | gros |
+| [B-079](B-079-contexte-liaison-socle.md) | Contexte de liaison : socle commun (`Context`, volumes, profils) | à faire | P1 | moyen |
+
 ## Réalisé
 
 Dans [archives/](archives/) :
