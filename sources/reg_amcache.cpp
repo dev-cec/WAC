@@ -3,6 +3,8 @@
  */
 #include "reg_amcache.h"
 #include "registry_common.h"
+#include <cwctype>
+#include <filesystem>
 
 namespace {
 
@@ -57,11 +59,13 @@ void addWindows8Value(AmcacheEntry& e, const std::wstring& name, DWORD type, con
 	e.unnamed.push_back(std::move(unnamed));
 }
 
-/*! Converts one value by its name (see the file's header), or as stored. */
-void addValue(AmcacheEntry& e, const std::wstring& name, DWORD type, const std::vector<BYTE>& data) {
-	if (e.table == L"File" || e.table == L"Programs") return addWindows8Value(e, name, type, data);
-	const Json value = registryValueToJson(type, data);
-	const std::wstring text = type == REG_SZ ? readWideZ(data.data(), data.size(), 0) : L"";
+/*! Converts one value of an inventory table by its name (see the file's
+ *  header), or as stored — the same for the hive and the databases (B-081).
+ *  @param value the value as stored
+ *  @param text its text when it is one, "" otherwise
+ *  @param seconds a 32-bit number when it is one (DriverTimeStamp), null otherwise */
+void addInventoryValue(AmcacheEntry& e, const std::wstring& name, const Json& value, const std::wstring& text,
+                       const uint32_t* seconds) {
 	const bool driver = e.table == L"InventoryDriverBinary";
 	// "0000" + the SHA-1 of the file: FileId of an executable, DriverId of a driver.
 	if ((name == L"FileId" || (name == L"DriverId" && driver)) && text.size() == 44 && text.compare(0, 4, L"0000") == 0)
@@ -69,10 +73,9 @@ void addValue(AmcacheEntry& e, const std::wstring& name, DWORD type, const std::
 	else if (!text.empty() && (name == L"LinkDate" || (name == L"InstallDate" && e.table == L"InventoryApplication")
 	                           || (name == L"DriverLastWriteTime" && driver)))
 		addUtcTextDate(e.values, name, text);
-	else if (name == L"DriverTimeStamp" && type == REG_DWORD && data.size() >= 4) {
+	else if (name == L"DriverTimeStamp" && seconds) {
 		// The driver's PE TimeDateStamp: seconds since 1970, UTC by definition.
-		DWORD seconds; memcpy(&seconds, data.data(), 4);
-		const FILETIME utc = unixToFiletime(seconds);
+		const FILETIME utc = unixToFiletime(*seconds);
 		e.values.emplace_back(L"DriverTimeStamp",    Json::str(utcTimeToIso8601Local(utc, Precision::Second)));
 		e.values.emplace_back(L"DriverTimeStampUtc", Json::str(timeToIso8601Utc(utc, Precision::Second)));
 	}
@@ -80,6 +83,38 @@ void addValue(AmcacheEntry& e, const std::wstring& name, DWORD type, const std::
 		e.values.emplace_back(L"LongPath", value);
 	else
 		e.values.emplace_back(registryNameToJsonKey(name), value);
+}
+
+/*! Converts one value of the hive by its name, or as stored. */
+void addValue(AmcacheEntry& e, const std::wstring& name, DWORD type, const std::vector<BYTE>& data) {
+	if (e.table == L"File" || e.table == L"Programs") return addWindows8Value(e, name, type, data);
+	const std::wstring text = type == REG_SZ ? readWideZ(data.data(), data.size(), 0) : L"";
+	uint32_t dword = 0;
+	if (type == REG_DWORD && data.size() >= 4) memcpy(&dword, data.data(), 4);
+	addInventoryValue(e, name, registryValueToJson(type, data), text, type == REG_DWORD && data.size() >= 4 ? &dword : nullptr);
+}
+
+/*! An executable's entry (InventoryApplicationFile, File): its file
+ *  fingerprinted with `--binary`, and the bytes its AmcacheSha1 covers said. */
+void finishFileEntry(AmcacheEntry& e) {
+	if (e.table != L"InventoryApplicationFile" && e.table != L"File") return;
+	auto& values = e.values;
+	auto& fingerprint = e.fingerprint;
+	bool sha1 = false;
+	unsigned long long size = 0;
+	for (const auto& [n, v] : values) {
+		// With --binary, the file the entry names is fingerprinted if it is still there.
+		if (n == L"LongPath" && v.kind() == Json::Kind::Str) fingerprint = FingerprintFile(v.text());
+		if (n == L"AmcacheSha1") sha1 = true;
+		if (n == L"Size" && v.kind() == Json::Kind::Num) size = std::stoull(v.text());
+	}
+	/* Amcache hashes only the first 31,457,280 bytes (30 MiB) of a file: the
+	   SHA-1 of a larger file is not that of the file — measured on the test
+	   VM, mrt.exe and OneDriveSetup.exe. Said beside it, so that no one
+	   concludes to a modified file from a hash that never covered it whole. */
+	const unsigned long long AMCACHE_HASHED_BYTES = 31457280ULL;
+	if (sha1 && size > AMCACHE_HASHED_BYTES)
+		values.emplace_back(L"AmcacheSha1CoversBytes", Json::num(AMCACHE_HASHED_BYTES));
 }
 
 } // namespace
@@ -129,28 +164,92 @@ AmcacheEntry::AmcacheEntry(ORHKEY key, const std::wstring& _table, const std::ws
 			mftReferenceKnown = true;
 		}
 	}
-	if (table != L"InventoryApplicationFile" && table != L"File") return;
-	bool sha1 = false;
-	unsigned long long size = 0;
-	for (const auto& [n, v] : values) {
-		// With --binary, the file the entry names is fingerprinted if it is still there.
-		if (n == L"LongPath" && v.kind() == Json::Kind::Str) fingerprint = FingerprintFile(v.text());
-		if (n == L"AmcacheSha1") sha1 = true;
-		if (n == L"Size" && v.kind() == Json::Kind::Num) size = std::stoull(v.text());
+	finishFileEntry(*this);
+}
+
+AmcacheEntry::AmcacheEntry(const SqliteRow& row, const std::wstring& _table, const std::wstring& _database)
+	: table(_table), database(_database) {
+	for (int c = 0; c < row.columnCount(); ++c) {
+		const std::wstring name = row.name(c);
+		const SqliteType type = row.type(c);
+		if (type == SqliteType::Null) continue;
+		if (name == L"ItemKey") { keyName = row.text(c); continue; }
+		// LastModified: when Windows updated the entry, a FILETIME (measured:
+		// 134390627729655477 is 2026-11-13). Not the hive's key time: its own name.
+		if (name == L"LastModified" && type == SqliteType::Integer) {
+			const FILETIME utc = filetimeFromTicks((uint64_t)row.integer(c));
+			values.emplace_back(L"LastModified", Json::str(utcTimeToIso8601Local(utc)));
+			values.emplace_back(L"LastModifiedUtc", Json::str(timeToIso8601Utc(utc)));
+			continue;
+		}
+		if (type == SqliteType::Integer) {
+			const int64_t number = row.integer(c);
+			// A PE TimeDateStamp is stored signed (-1167992687): its 32 bits are the seconds.
+			const uint32_t seconds = (uint32_t)number;
+			addInventoryValue(*this, name, Json::num((long long)number), L"", &seconds);
+		}
+		else if (type == SqliteType::Text) {
+			const std::wstring text = row.text(c);
+			addInventoryValue(*this, name, Json::str(text), text, nullptr);
+		}
+		else if (type == SqliteType::Blob) {
+			const std::vector<uint8_t> bytes = row.blob(c);
+			addInventoryValue(*this, name, Json::str(toHexadecimal(bytes.data(), bytes.size())), L"", nullptr);
+		}
+		else addInventoryValue(*this, name, Json::real(row.real(c)), L"", nullptr);
 	}
-	/* Amcache hashes only the first 31,457,280 bytes (30 MiB) of a file: the
-	   SHA-1 of a larger file is not that of the file — measured on the test
-	   VM, mrt.exe and OneDriveSetup.exe. Said beside it, so that no one
-	   concludes to a modified file from a hash that never covered it whole. */
-	const unsigned long long AMCACHE_HASHED_BYTES = 31457280ULL;
-	if (sha1 && size > AMCACHE_HASHED_BYTES)
-		values.emplace_back(L"AmcacheSha1CoversBytes", Json::num(AMCACHE_HASHED_BYTES));
+	finishFileEntry(*this);
+}
+
+std::wstring inventoryTableName(const std::wstring& sqliteTable) {
+	if (sqliteTable.compare(0, 9, L"Inventory") != 0) return L"";
+	const size_t underscore = sqliteTable.rfind(L'_');
+	if (underscore == std::wstring::npos || underscore + 1 == sqliteTable.size()) return sqliteTable;
+	for (size_t i = underscore + 1; i < sqliteTable.size(); ++i)
+		if (!iswdigit(sqliteTable[i])) return sqliteTable;
+	return sqliteTable.substr(0, underscore);
+}
+
+HRESULT readInventoryDatabase(const std::wstring& workingFile, const std::wstring& original,
+                              std::vector<AmcacheEntry>& entries) {
+	SqliteDatabase db;
+	const HRESULT hr = db.open(workingFile);
+	if (hr != ERROR_SUCCESS) return hr;
+	std::vector<std::wstring> tables;
+	const HRESULT listed = db.query("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
+	                                [&](const SqliteRow& row) { tables.push_back(row.text(0)); });
+	if (listed != ERROR_SUCCESS) return listed;
+	const std::wstring databaseName = original.substr(original.find_last_of(L"\\/") + 1);
+	for (const std::wstring& t : tables) {
+		const std::wstring table = inventoryTableName(t);
+		if (table.empty()) continue;
+		const size_t before = entries.size();
+		const HRESULT read = db.queryTable(t, [&](const SqliteRow& row) { entries.emplace_back(row, table, databaseName); });
+		log(2, (read == ERROR_SUCCESS ? L"❇️Amcache " : L"🔥Amcache ") + table + L" (" + databaseName + L"): "
+		       + std::to_wstring(entries.size() - before) + L" entry(ies)", read);
+	}
+	return ERROR_SUCCESS;
+}
+
+bool Amcache::readInventoryDatabases() {
+	const std::wstring folder = extractedPath(L"\\Windows\\AppCompat\\Programs");
+	std::error_code ec;
+	if (!std::filesystem::is_directory(folder, ec)) return false;
+	bool any = false;
+	for (const std::filesystem::directory_entry& f : std::filesystem::directory_iterator(folder, ec)) {
+		if (!f.is_regular_file(ec) || toLower(f.path().extension().wstring()) != L".db") continue;
+		const HRESULT hr = readInventoryDatabase(f.path().wstring(), originalPath(f.path().wstring()), entries);
+		if (hr == ERROR_SUCCESS) any = true;
+		else log(2, L"🔥Amcache: inventory database unreadable: " + f.path().wstring(), hr);
+	}
+	return any;
 }
 
 Json AmcacheEntry::toJson(bool withTable) const {
 	Json o = Json::obj();
 	if (withTable) o.add(L"Table", Json::str(table));
 	o.add(L"KeyName", Json::str(keyName));
+	o.add(L"InventoryDatabase", Json::str(database));
 	o.add(L"VolumeGuid", Json::str(volume));
 	if (mftReferenceKnown) {
 		Json reference = Json::obj();
@@ -196,8 +295,9 @@ HRESULT Amcache::getData() {
 	log(0, L"*******************************************************************************************************************");
 	const bool recent = readRecentFileCache();
 	const HRESULT hr = readHive();
+	const bool inventory = readInventoryDatabases();
 	// Windows 7 without KB2952664 has no Amcache.hve: RecentFileCache.bcf is its answer.
-	return (hr != ERROR_SUCCESS && recent) ? ERROR_SUCCESS : hr;
+	return (hr != ERROR_SUCCESS && (recent || inventory)) ? ERROR_SUCCESS : hr;
 }
 
 bool Amcache::readRecentFileCache() {

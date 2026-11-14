@@ -812,8 +812,11 @@ HRESULT ExtractFileArtefactsRaw() {
 	if (conf.artefacts.prefetch) addTarget(L"\\Windows\\Prefetch", { L".pf" });
 	// Windows XP and Server 2003 keep their scheduled tasks as .job files (scheduledTasks.h).
 	if (conf.artefacts.scheduledTasks) addTarget(L"\\Windows\\Tasks", { L".job" });
-	// RecentFileCache.bcf: Windows 7's list of the executables run lately (reg_amcache.h).
-	if (conf.artefacts.amcache) addTarget(L"\\Windows\\AppCompat\\Programs", { L".bcf" });
+	/* RecentFileCache.bcf: Windows 7's list of the executables run lately; the
+	   inventory databases of Windows 11 26300 on, with their journals (B-081;
+	   reg_amcache.h). */
+	if (conf.artefacts.amcache)
+		addTarget(L"\\Windows\\AppCompat\\Programs", { L".bcf", L".db", L"*.db-wal", L"*.db-journal" });
 
 	/* Event logs: extracted ONLY on request (--events). They are the system's
 	   largest artefacts — over a hundred megabytes on an ordinary installation,

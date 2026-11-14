@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Trouvé par l'étude B-078 sur `win11-test` (Windows 11 26H2, build
@@ -68,3 +68,11 @@ ligne dans `check-json.py`.
   (applications, fichiers, inventaire). Test dans `file_artefacts_test`.
   **À décider au cycle** : doublons possibles d'`InventoryApplicationFile`
   (ruche et base) — à mesurer avant de trancher.
+- 2026-11-14 : compilé sans avertissement ; `file_artefacts_test` 336/336
+  (nom de table sans suffixe ; un programme et un exécutable d'une base
+  construite au format relevé, convertis comme la ruche) ; mutation (suffixe
+  `_N` gardé) vue échouer, restaurée, recompilée, `bin/WAC.exe` =
+  compilation. Reste : cycle VM (bases prélevées, `amcache_applications` et
+  `amcache_inventory` non vides sur Windows 11 26300, doublons
+  d'`InventoryApplicationFile` mesurés) et un contrôle dans `check-json.py`
+  (le module `sqlite3` de Python relit les bases de `working/`).

@@ -735,6 +735,61 @@ void defenderHistory() {
 	parseBag(noLength, none);
 	check(none.empty(), "DetectionHistory: a bag whose length matches no layout read anyway");
 	{
+		/* B-081: an inventory database of Windows 11 26300, as the test VM's
+		   InventoryApplication.db and InventoryApplicationFile.db lay it out
+		   (2026-11-14): a table "<Name>_N", Metadata_N beside it. */
+		check(inventoryTableName(L"InventoryApplication_0") == L"InventoryApplication"
+		      && inventoryTableName(L"InventoryDevicePnp_2") == L"InventoryDevicePnp"
+		      && inventoryTableName(L"InventoryMiscellaneousUUPInfo") == L"InventoryMiscellaneousUUPInfo"
+		      && inventoryTableName(L"Metadata_0").empty() && inventoryTableName(L"Inventory_x").size() == 11,
+		      "amcache: an inventory table's name without its suffix; other tables left out");
+		const std::filesystem::path root = std::filesystem::temp_directory_path() / L"wac-inventory-test";
+		std::error_code ec;
+		std::filesystem::remove_all(root, ec);
+		std::filesystem::create_directories(root, ec);
+		conf._outputDir = (root / L"output").wstring();   // SqliteDatabase copies the base into its working folder
+		const std::filesystem::path db = root / L"Inventory.db";
+		sqlite3* writer = nullptr;
+		sqlite3_open_v2(encodeText(db.wstring()).c_str(), &writer, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+		sqlite3_exec(writer,
+			"CREATE TABLE InventoryApplication_0 (ItemKey TEXT PRIMARY KEY, \"ProgramId\" TEXT, \"Name\" TEXT, \"InstallDate\" TEXT,"
+			" \"UserSid\" TEXT, \"LastModified\" INTEGER DEFAULT 0);"
+			"INSERT INTO InventoryApplication_0 VALUES('0000a4a5', '0000a4a5', 'WAC witness', '11/13/2026 17:00:00', '', 134390627729655477);"
+			"CREATE TABLE InventoryApplicationFile_0 (ItemKey TEXT PRIMARY KEY, \"FileId\" TEXT, \"LowerCaseLongPath\" TEXT,"
+			" \"Size\" INTEGER, \"LastModified\" INTEGER);"
+			"INSERT INTO InventoryApplicationFile_0 VALUES('wac.exe|1', '0000b68764138e0fbce95c439b98f701a240b8cbd96e',"
+			" 'c:\\wactest\\wac.exe', 40000000, NULL);"
+			"CREATE TABLE Metadata_0 (Name TEXT PRIMARY KEY, Value TEXT);"
+			"INSERT INTO Metadata_0 VALUES('ProviderSyncId', '{46e84e78}');",
+			nullptr, nullptr, nullptr);
+		sqlite3_close(writer);
+		std::vector<AmcacheEntry> inventory;
+		const HRESULT read = readInventoryDatabase(db.wstring(), L"C:\\Windows\\AppCompat\\Programs\\Inventory.db", inventory);
+		// Found by their table: the tables are read in sqlite_master's name order.
+		auto entryOf = [&](const wchar_t* table, bool withTable) {
+			for (const AmcacheEntry& e : inventory) if (e.table == table) return e.toJson(withTable);
+			return Json::obj();
+		};
+		const Json program = entryOf(L"InventoryApplication", true);
+		const Json file = entryOf(L"InventoryApplicationFile", false);
+		auto field = [](const Json& o, const wchar_t* k) { const Json* v = o.find(k); return v ? v->text() : std::wstring(L"<absent>"); };
+		if (read != ERROR_SUCCESS || inventory.size() != 2)   // said, so that a failure tells its cause
+			wprintf(L"  inventory database: read 0x%08lX, %zu entry(ies)\n", (unsigned long)read, inventory.size());
+		else
+			wprintf(L"  inventory database read: %ls\n  %ls\n", program.dump().c_str(), file.dump().c_str());
+		check(read == ERROR_SUCCESS && inventory.size() == 2 && field(program, L"Table") == L"InventoryApplication"
+		      && field(program, L"KeyName") == L"0000a4a5" && field(program, L"InventoryDatabase") == L"Inventory.db"
+		      && field(program, L"Name") == L"WAC witness" && field(program, L"UserSid") == L"<absent>"
+		      && field(program, L"LastModifiedUtc") == L"2026-11-13T16:59:32.9655477Z"
+		      && field(program, L"InstallDateUtc").compare(0, 4, L"2026") == 0,
+		      "amcache: a program of an inventory database, named and converted as the hive's");
+		check(field(file, L"AmcacheSha1") == L"b68764138e0fbce95c439b98f701a240b8cbd96e"
+		      && field(file, L"LongPath") == L"c:\\wactest\\wac.exe" && field(file, L"AmcacheSha1CoversBytes") == L"31457280"
+		      && field(file, L"LastModifiedUtc") == L"<absent>",
+		      "amcache: an executable of an inventory database: SHA-1 from FileId, its path, the bytes it covers; NULL left out");
+		std::filesystem::remove_all(root, ec);
+	}
+	{
 		/* B-082: the two CRC-32 of an EVTX chunk. A chunk of known bytes whose
 		   checksums zlib computed apart (Python, 2026-11-14): records 512..800,
 		   then the header with that value in it, skipping 0x78..0x80. */

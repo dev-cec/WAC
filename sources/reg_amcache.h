@@ -50,6 +50,7 @@
 #include "offline_registry.h"
 #include "tools.h"
 #include "binaires.h"
+#include "sqlite_reader.h"
 
 /*! One entry of an Amcache table: one key, every value of it. */
 struct AmcacheEntry {
@@ -62,6 +63,7 @@ struct AmcacheEntry {
 	bool mftReferenceKnown = false; //!< File (Windows 8): the key's name gave the file's $MFT reference
 	unsigned long long mftEntry = 0, mftSequence = 0; //!< that reference
 	BinaryFingerprint fingerprint;  //!< fingerprints of the file an InventoryApplicationFile entry names, with `--binary`
+	std::wstring database = L"";    //!< the inventory database the entry comes from (Windows 11 26300 on); empty: the hive
 
 	/*! Reads one entry.
 	 *  @param key its key, already open
@@ -69,6 +71,14 @@ struct AmcacheEntry {
 	 *  @param name name of its key
 	 *  @param volume File of Windows 8: the volume's GUID */
 	AmcacheEntry(ORHKEY key, const std::wstring& table, const std::wstring& name, const std::wstring& volume = L"");
+
+	/*! Reads one row of an inventory database (B-081): its columns are the
+	 *  hive's values, converted the same way; ItemKey is the key's name,
+	 *  LastModified (a FILETIME) the entry's update.
+	 *  @param row the row
+	 *  @param table the table, its "_N" suffix removed ("InventoryApplication")
+	 *  @param database the database on the examined machine */
+	AmcacheEntry(const SqliteRow& row, const std::wstring& table, const std::wstring& database);
 
 	/*! Converts the entry to JSON.
 	 *  @param withTable whether to name the table (entries of amcache_inventory.json)
@@ -83,6 +93,25 @@ struct AmcacheEntry {
  *  @param paths receives the paths, in the file's order
  *  @return false if the signature is not there */
 bool decodeRecentFileCache(const std::vector<uint8_t>& bytes, std::vector<std::wstring>& paths);
+
+/*! The inventory table a table of an inventory database holds: its name
+ *  without the "_N" suffix Windows adds ("InventoryApplication_0"), when it is
+ *  an Inventory* table; "" for any other (Metadata_0, Mare.db's).
+ *  @param sqliteTable the name sqlite_master gives */
+std::wstring inventoryTableName(const std::wstring& sqliteTable);
+
+/*! Reads every inventory table of one database (B-081).
+ *  WHY. From Windows 11 26300 (measured 2026-11-14), the inventory leaves
+ *  Amcache.hve for SQLite databases beside it, one per table
+ *  (InventoryApplication.db, InventoryApplicationShortcut.db,
+ *  InventoryDevicePnp.db…): the hive keeps InventoryApplicationFile, the
+ *  programs, shortcuts, devices and drivers are no longer in it.
+ *  @param workingFile the database in the working copy
+ *  @param original its path on the examined machine
+ *  @param entries receives the entries, appended
+ *  @return S_OK, or why the database could not be opened */
+HRESULT readInventoryDatabase(const std::wstring& workingFile, const std::wstring& original,
+                              std::vector<AmcacheEntry>& entries);
 
 /*! Every table of the Amcache hive, and the paths of RecentFileCache.bcf. */
 struct Amcache {
@@ -112,6 +141,10 @@ private:
 	/*! Opens Amcache.hve and reads every table under `Root`.
 	 *  @return S_OK, or why the hive or its root could not be read */
 	HRESULT readHive();
+
+	/*! Reads the inventory databases beside the hive (Windows 11 26300 on).
+	 *  @return true if at least one was read */
+	bool readInventoryDatabases();
 
 	/*! Reads the files of one volume of the Windows 8 File table.
 	 *  @param volumeKey the volume's key, open
