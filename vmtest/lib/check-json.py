@@ -6651,8 +6651,19 @@ def check_utc_sources(folder):
         runs = [instant(b.get("LastExecutionUtc") or b["executionTimeUtc"]) for b in bams
                 if (b.get("LastExecutionUtc") or b.get("executionTimeUtc")) and (b.get("Name") or "").lower().endswith("\\taskkill.exe")]
         gaps = [(instant(start) - r).total_seconds() for r in runs]
+        # Windows 11 26300 (measured 2026-11-14, live key read in the VM)
+        # keeps no entry for a console program run as SYSTEM — neither
+        # taskkill.exe nor cmd.exe —, only the console host, conhost.exe, at
+        # the time of the command: it then stands for the harness's taskkill.
+        hosts = [(instant(start) - instant(b["LastExecutionUtc"])).total_seconds() for b in bams
+                 if b.get("LastExecutionUtc") and b.get("SID") == "S-1-5-18"
+                 and (b.get("Name") or "").lower().endswith("\\conhost.exe")]
         if any(0 <= g <= 300 for g in gaps):
             print(f"  ✅ bams.json: taskkill.exe executed {min(g for g in gaps if g >= 0):.0f} s before the collection, as the harness did")
+        elif not runs and any(0 <= g <= 300 for g in hosts):
+            print(f"  ✅ bams.json: no entry for console programs (Windows 11 26300 keeps the console host only): "
+                  f"conhost.exe of SYSTEM executed {min(g for g in hosts if g >= 0):.0f} s before the collection, "
+                  f"the harness's taskkill.exe")
         else:
             print(f"  ❌ bams.json: taskkill.exe, run just before the collection, found at gaps {[round(g) for g in gaps]} s")
             found += 1

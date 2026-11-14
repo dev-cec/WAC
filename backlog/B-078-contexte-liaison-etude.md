@@ -245,3 +245,10 @@ l'avance, et les champs de `Context` qui la portent.
 - 2026-11-14 : tâche d'évaluation lancée sur `win11-test` : l'inventaire
   d'Amcache n'est pas vide, il est passé en bases SQLite (`Inventory*.db`),
   non prélevées par WAC → B-081.
+- 2026-11-14 : cycle sur la VM qui a vécu (redémarrée, tâche d'évaluation
+  passée) : 299 ✅, 3 ❌. ShimCache rempli (117 entrées). Inventaire Amcache
+  toujours vide : en bases SQLite (B-081). ❌ `web_client` : B-080. ❌ BAM :
+  Windows 11 26300 ne garde, pour un programme en console lancé par SYSTEM,
+  que `conhost.exe` (clé lue en direct dans la VM : ni `taskkill.exe` ni
+  `cmd.exe`) ; WAC lit juste, le contrôle accepte désormais l'hôte de
+  console à défaut. ❌ quarantaine Defender : à expliquer.
