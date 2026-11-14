@@ -503,6 +503,7 @@ def cross_checks(folder):
     found += guarded(check_amcache_inventory_databases, folder)
     found += guarded(check_context_volumes, folder)
     found += guarded(check_context_executions, folder)
+    found += guarded(check_context_events, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6190,6 +6191,85 @@ def check_context_executions(folder):
     print(f"  {'✅' if ok else '❌'} Context of executions: WAC's own process ({path}, its SHA-256 computed on the host)"
           f"{' and its Prefetch' if prefetch_ok else ''} named so; no path left in a form WAC resolves"
           + ("" if ok else f": {(wrong + unresolved)[:3]}"))
+    return 0 if ok else 1
+
+
+def check_context_events(folder):
+    """The Context of the events (B-086), two ways.
+    - The roles, computed again here, in Python, from each event's data, for
+      the identifiers whose roles a mistake would swap — 4688 (who started
+      what, from which parent), 4624 (whose session, from where), 4732 (the
+      group and its new member), 7045 (the service's program apart from its
+      arguments) —: every such event of the collection, WAC's Context equal.
+    - The Sysmon witness (sysmon-witness.ps1): its ProcessCreate events, by
+      record number as Get-WinEvent read them, name wac-sysmon-witness.exe,
+      with the SHA-256 Sysmon itself computed and the process's GUID.
+    """
+    events = load(folder, "events.json")
+    if not isinstance(events, list) or not events:
+        print("  ⏭️  no events.json: the events' Context not checked")
+        return 0
+    def data(e):
+        return {d.get("Name"): d.get("Value") for d in e.get("EvtEventData") or [] if isinstance(d, dict) and d.get("Name")}
+    def value(v):
+        return None if v in (None, "", "-", "S-1-0-0", "NULL SID") else v
+    def program(command):
+        command = (command or "").strip()
+        if command.startswith('"'):
+            return command[1:].split('"', 1)[0]
+        m = re.search(r"\.(exe|com|bat|cmd|dll|sys|ps1|vbs|js|scr)(?=$|[\s,])", command, re.I)
+        return command[:m.end()] if m else command.split(" ")[0]
+    def same_path(a, b):
+        return (a or "").lower() == (b or "").lower() or (not a and not b)
+    wrong, counted = [], collections.Counter()
+    for e in events:
+        if not isinstance(e, dict):
+            continue
+        provider, eid, c, d = e.get("EvtSystemProviderName"), e.get("EvtSystemEventID"), e.get("Context") or {}, data(e)
+        subject, actor, how = c.get("Subject") or {}, c.get("Actor") or {}, c.get("How") or {}
+        if provider == "Microsoft-Windows-Security-Auditing" and eid == 4688:
+            sid = value(d.get("TargetUserSid")) or value(d.get("SubjectUserSid"))
+            ok = (c.get("Kind") == "Execution" and same_path(subject.get("Path"), value(d.get("NewProcessName")))
+                  and actor.get("Sid") == sid and same_path((how.get("Parent") or {}).get("Path"), value(d.get("ParentProcessName"))))
+        elif provider == "Microsoft-Windows-Security-Auditing" and eid == 4624:
+            ok = (c.get("Kind") == "Logon" and subject.get("Sid") == value(d.get("TargetUserSid"))
+                  and actor.get("LogonId") == value(d.get("TargetLogonId")) and "Sid" not in actor
+                  and str(how.get("LogonType", "")) == str(d.get("LogonType", "")))
+        elif provider == "Microsoft-Windows-Security-Auditing" and eid == 4732:
+            members = [r for r in c.get("Related") or [] if r.get("Role") == "Member"]
+            ok = (c.get("Kind") == "Account" and subject.get("Sid") == value(d.get("TargetSid"))
+                  and members and members[0].get("Sid") == value(d.get("MemberSid")))
+        elif provider == "Service Control Manager" and eid == 7045:
+            ok = (c.get("Kind") == "Installation" and subject.get("Name") == d.get("ServiceName")
+                  and how.get("CommandLine") == d.get("ImagePath")
+                  and (subject.get("Path") or "").lower().endswith(ntpath.basename(program(d.get("ImagePath"))).lower()))
+        else:
+            continue
+        counted[eid] += 1
+        if not ok:
+            wrong.append(f"{eid} record {e.get('EvtSystemEventRecordId')}: Context {c}")
+    # The Sysmon witness.
+    ref = {}
+    path = os.path.join(folder, "reference", "sysmon.txt")
+    if os.path.exists(path):
+        for line in open(path, encoding="utf-8", errors="replace"):
+            if "=" in line:
+                k, v = line.strip().split("=", 1)
+                ref[k] = v
+    ids = [int(i) for i in ref.get("sysmon_event", "").split(",") if i.strip().isdigit()]
+    witnessed = [e for e in events if isinstance(e, dict) and e.get("EvtSystemEventID") == 1
+                 and e.get("EvtSystemProviderName") == "Microsoft-Windows-Sysmon" and e.get("EvtSystemEventRecordId") in ids]
+    for e in witnessed:
+        c, d = e.get("Context") or {}, data(e)
+        sha = dict(p.split("=", 1) for p in (d.get("Hashes") or "").split(",") if "=" in p).get("SHA256")
+        if not ((c.get("Subject") or {}).get("Path") or "").lower().endswith("\\wac-sysmon-witness.exe") \
+                or (c.get("Subject") or {}).get("Sha256") != sha or not ((c.get("Actor") or {}).get("Process") or {}).get("Guid"):
+            wrong.append(f"Sysmon witness record {e.get('EvtSystemEventRecordId')}: Context {c}")
+    ok = not wrong and sum(counted.values()) > 0
+    print(f"  {'✅' if ok else '❌'} events.json Context: roles equal to Python's for "
+          + ", ".join(f"{n} {k}" for k, n in sorted(counted.items()))
+          + f"; the Sysmon witness's {len(witnessed)} ProcessCreate name wac-sysmon-witness.exe with Sysmon's SHA-256"
+          + ("" if ok else f": {wrong[:2] if wrong else 'no event of the table found'}"))
     return 0 if ok else 1
 
 
