@@ -83,8 +83,8 @@ Json RecordContext::toJson() const {
 	way.add(L"Url", Json::str(how.url));
 	way.add(L"Host", Json::str(how.host));
 	way.add(L"RemoteAddress", Json::str(how.remoteAddress));
-	if (how.remotePort) way.add(L"RemotePort", Json::num(how.remotePort));
-	if (how.logonType) way.add(L"LogonType", Json::num(how.logonType));
+	if (how.remotePortKnown) way.add(L"RemotePort", Json::num(how.remotePort));
+	if (how.logonTypeKnown) way.add(L"LogonType", Json::num(how.logonType));
 	way.add(L"VolumeSerial", Json::str(how.volumeSerial));
 	way.add(L"Device", Json::str(how.device));
 	o.add(L"How", std::move(way));

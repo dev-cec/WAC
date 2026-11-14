@@ -932,6 +932,13 @@ void defenderHistory() {
 		      && logon.actor.logonId == L"0x3e8a1" && logon.how.logonType == 10 && logon.how.remoteAddress == L"192.168.1.20"
 		      && logon.how.host.empty() && logon.actor.sid.empty(),
 		      "events: a 4624's account, session and origin; the service that logged it is not the actor (B-086)");
+		// SYSTEM's own logon at boot is of type 0: a value, written.
+		const RecordContext boot = event(L"Microsoft-Windows-Security-Auditing", 4624, {
+			{ L"TargetUserSid", L"S-1-5-18" }, { L"TargetLogonId", L"0x3e7" }, { L"LogonType", L"0" } });
+		Json bootRecord = Json::obj();
+		addContext(bootRecord, boot);
+		check(boot.how.logonTypeKnown && boot.how.logonType == 0 && bootRecord.dump().find(L"\"LogonType\": 0") != std::wstring::npos,
+		      "events: a logon of type 0 (SYSTEM at boot) keeps its type (B-086)");
 		const RecordContext member = event(L"Microsoft-Windows-Security-Auditing", 4732, {
 			{ L"MemberSid", L"S-1-5-21-1-2-3-1001" }, { L"TargetSid", L"S-1-5-32-544" }, { L"TargetUserName", L"Administrators" },
 			{ L"TargetDomainName", L"Builtin" }, { L"SubjectUserSid", L"S-1-5-21-1-2-3-1000" } });

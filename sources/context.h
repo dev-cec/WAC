@@ -93,8 +93,10 @@ struct RecordContext {
 		std::wstring url;
 		std::wstring host;
 		std::wstring remoteAddress;
-		unsigned remotePort = 0;          //!< 0: not said
-		unsigned logonType = 0;           //!< 0: not said (Windows' types start at 2)
+		unsigned remotePort = 0;
+		bool remotePortKnown = false;     //!< a port of 0 is a value: known apart
+		unsigned logonType = 0;
+		bool logonTypeKnown = false;      //!< type 0 is SYSTEM's own logon at boot: known apart
 		std::wstring volumeSerial;        //!< the volume the subject came from
 		std::wstring device;              //!< the device it came from
 	} how;                                //!< how

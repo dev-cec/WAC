@@ -83,7 +83,10 @@ void securityRoles(const EventRoleInput& e, const Data& d, RecordContext& c) {
 		c.how.remoteAddress = d[L"IpAddress"];
 		c.how.host = d[L"WorkstationName"];
 		unsigned long long type = 0;
-		if (processId(d[L"LogonType"], type) && type < 100) c.how.logonType = (unsigned)type;
+		if (processId(d[L"LogonType"], type) && type < 100) {
+			c.how.logonType = (unsigned)type;
+			c.how.logonTypeKnown = true;   // 0 included: SYSTEM's logon at boot
+		}
 	}
 	else if (in(e.id, { 4634, 4647 })) {
 		c.kind = ContextKind::Logon;
@@ -168,7 +171,10 @@ void sysmonRoles(const EventRoleInput& e, const Data& d, RecordContext& c) {
 		c.subject.host = d[L"DestinationHostname"];
 		setProcess(c.actor.process, d[L"Image"], d[L"ProcessId"], d[L"ProcessGuid"]);
 		unsigned long long port = 0;
-		if (processId(d[L"DestinationPort"], port) && port < 65536) c.how.remotePort = (unsigned)port;
+		if (processId(d[L"DestinationPort"], port) && port < 65536) {
+			c.how.remotePort = (unsigned)port;
+			c.how.remotePortKnown = true;
+		}
 	}
 	else if (e.id == 5) {
 		c.kind = ContextKind::Execution;

@@ -41,3 +41,13 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   `bin/` = compilation. Contrôle du harnais : rôles recalculés en Python
   pour chaque 4688, 4624, 4732, 7045 de la collecte ; témoin Sysmon (chemin,
   SHA-256 de Sysmon, GUID) ; rejoué sur la collecte sans Context : ❌ (vu).
+- 2026-11-14 : cycle `win11-test` : 305 ✅, 3 ❌, expliqués un par un.
+  (1) **Défaut de WAC trouvé par le contrôle** : `LogonType` 0 (ouverture
+  de session de SYSTEM au démarrage) n'était pas écrit — 0 servait à dire
+  « non dit » dans `RecordContext` ; indicateurs `logonTypeKnown` et
+  `remotePortKnown`, test, mutation. (2) Contrôle : le pseudo-processus
+  `Registry` (4688) n'a pas de chemin, WAC n'en écrit pas, le contrôle en
+  attendait un — corrigé. (3) Hors famille : traces WPP de Defender et HTA
+  du cache web effacés par Windows à 18:09:07-08, avant la collecte de
+  18:11 (`FILE_DELETE` du journal USN) — les deux contrôles reconnaissent
+  désormais cette preuve. Rejoués : verts (HTA en avertissement).
