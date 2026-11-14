@@ -65,6 +65,9 @@ struct DetectionField {
 struct DetectionProperty {
 	std::wstring name;
 	Json value = Json::null();
+	//! A value of a type not decoded: its type, said; the bag's reading stops
+	//! there (its length is unknown), and the stop is said, not hidden. 0: decoded.
+	uint32_t undecodedType = 0;
 };
 
 /*! A resource of a detection: its type ("file", "regkey", "process"…) and path. */

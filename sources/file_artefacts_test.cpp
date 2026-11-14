@@ -734,6 +734,43 @@ void defenderHistory() {
 	std::vector<DetectionProperty> none;
 	parseBag(noLength, none);
 	check(none.empty(), "DetectionHistory: a bag whose length matches no layout read anyway");
+	{
+		// Windows 11 26300 (2026-11-14): ThreatTrackingFileIdentity, type 8 — bytes
+		// with their length — before ThreatTrackingSha1. Unknown, it stopped the
+		// bag and the SHA-1 after it was lost; an unknown type is now said.
+		auto property = [&](const std::wstring& n, uint32_t type, const std::vector<uint8_t>& payload) {
+			const std::vector<uint8_t> nb = wide(n);
+			std::vector<uint8_t> out = number32((uint32_t)nb.size());
+			out.insert(out.end(), nb.begin(), nb.end());
+			for (uint8_t x : number32(type)) out.push_back(x);
+			out.insert(out.end(), payload.begin(), payload.end());
+			return out;
+		};
+		auto bagOf = [&](std::vector<uint8_t> props) {
+			std::vector<uint8_t> bagged = number32((uint32_t)props.size() + 4);
+			bagged.insert(bagged.end(), props.begin(), props.end());
+			return bagged;
+		};
+		std::vector<uint8_t> identity = number32(3);
+		identity.insert(identity.end(), { 0xAB, 0xCD, 0xEF });
+		const std::vector<uint8_t> sha1Text = wide(L"3395856ce81f2b7382dee72602f798b642f14140");
+		std::vector<uint8_t> sha1 = number32((uint32_t)sha1Text.size());
+		sha1.insert(sha1.end(), sha1Text.begin(), sha1Text.end());
+		std::vector<uint8_t> props = property(L"ThreatTrackingFileIdentity", 8, identity);
+		const std::vector<uint8_t> after = property(L"ThreatTrackingSha1", 6, sha1);
+		props.insert(props.end(), after.begin(), after.end());
+		std::vector<DetectionProperty> read26300;
+		parseBag(bagOf(props), read26300);
+		check(read26300.size() == 2 && read26300[0].value.text() == L"ABCDEF" && read26300[1].name == L"ThreatTrackingSha1"
+		      && read26300[1].value.text() == L"3395856ce81f2b7382dee72602f798b642f14140",
+		      "DetectionHistory: a type 8 property in hexadecimal, the SHA-1 after it read (Windows 11 26300)");
+		std::vector<uint8_t> unknown = property(L"ThreatTrackingNext", 0x63, { 1, 2, 3, 4 });
+		unknown.insert(unknown.end(), after.begin(), after.end());
+		std::vector<DetectionProperty> stopped;
+		parseBag(bagOf(unknown), stopped);
+		check(stopped.size() == 1 && stopped[0].name == L"ThreatTrackingNext" && stopped[0].undecodedType == 0x63,
+		      "DetectionHistory: a property of an unknown type said with its type, where the reading stops");
+	}
 	// The date before the entry, and the numbers not confirmed, stay unnamed — as read.
 	size_t dates = 0;
 	for (const DetectionField& f : d.unnamed) dates += f.type == 0x0A;

@@ -84,6 +84,7 @@ d'artefacts naîtront de B-078.
 | [B-080](B-080-dates-au-dela-de-9999.md) | Dates au-delà de l'an 9999 écrites tronquées (`0828` pour 30828) | à faire | P1 | petit |
 | [B-081](B-081-amcache-inventaire-sqlite.md) | Amcache sur Windows 11 récent : l'inventaire passé en bases SQLite | à faire | P1 | moyen |
 | [B-082](B-082-chaines-invalides-json.md) | Chaînes invalides dans le JSON : canal lu au-delà de sa fin, `VT_BLOB` en texte | à faire | P1 | petit |
+| [B-084](B-084-defender-sac-type-8.md) | Defender : un type inconnu du sac `ThreatTracking` coupait la suite en silence | à valider | P1 | petit |
 | [B-083](B-083-revue-securite-publication-5.1.md) | Revue de code et de sécurité, puis publication de la 5.1.0 (en dernier) | à faire | P1 | fort |
 
 ## Réalisé

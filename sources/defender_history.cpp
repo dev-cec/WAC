@@ -278,7 +278,24 @@ void parseBag(const std::vector<uint8_t>& bag, std::vector<DetectionProperty>& o
 			property.value = Json::str(readWideZ(b, p + 4 + bytes, p + 4));
 			p += 4 + bytes;
 		}
-		else return;
+		/* Bytes with their length: ThreatTrackingFileIdentity (96 bytes, the
+		   file's SHA-256 at the end), new in Windows 11 26300's Defender
+		   (measured 2026-11-14). Not known, the type stopped the bag there and
+		   the seven properties after it — ThreatTrackingSha1, MD5, Size… —
+		   were lost without a word. Its layout is not documented: written in
+		   hexadecimal, as read. */
+		else if (type == 8 && fits(size, p, 4) && fits(size, p + 4, readLittleEndian<uint32_t>(b + p))) {
+			const uint32_t bytes = readLittleEndian<uint32_t>(b + p);
+			property.value = Json::str(toHexadecimal(b + p + 4, bytes));
+			p += 4 + bytes;
+		}
+		else {
+			// A type not known, or a length beyond the bag: its size cannot be
+			// known, nothing after it can be read — said with its type.
+			property.undecodedType = type;
+			out.push_back(std::move(property));
+			return;
+		}
 		out.push_back(std::move(property));
 	}
 }
@@ -365,6 +382,7 @@ Json DefenderDetection::toJson() const {
 			Json item = Json::obj();
 			item.add(L"Name", Json::str(p.name));
 			item.add(L"Value", Json(p.value));
+			if (p.undecodedType) item.add(L"UndecodedType", Json::num(p.undecodedType));
 			list.push(std::move(item));
 		}
 		o.add(L"ThreatTracking", std::move(list));
