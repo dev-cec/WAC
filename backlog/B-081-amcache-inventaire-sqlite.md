@@ -103,3 +103,7 @@ ligne dans `check-json.py`.
   compilation. Contrôle du harnais : un exécutable des deux sources, mêmes
   valeurs, écrit deux fois = ❌ (rejoué sur la collecte d'avant : ❌, vu).
   Manuels FR et EN. Reste : cycle VM.
+- 2026-11-14 : cycle `win11-test` de la fusion : **306 ✅, 0 ❌** ;
+  `amcache_application_files.json` 781 → 395 entrées (386 fusionnées, 9 de
+  la ruche seule), aucun doublon ; contrôle Python vert. Définition de
+  « fini » remplie : **à valider** par l'utilisateur.
