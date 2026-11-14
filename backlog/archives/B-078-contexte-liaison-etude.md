@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | gros |
+| fait (7f86bfcc) | P1 | gros |
 
 ## Pourquoi
 Demande de l'utilisateur (2026-11-13 et 14). WAE doit pouvoir ouvrir le

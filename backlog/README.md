@@ -74,12 +74,12 @@ archivées.
 Décision utilisateur du 2026-11-14 : WAC écrit dans chaque enregistrement un
 bloc `Context` (ce que l'enregistrement atteste, son sujet, son acteur, le
 comment, son origine) pour que WAE ouvre le dossier de n'importe quel objet.
-Étude complète sur la VM Windows 11 d'abord ; les fiches par famille
-d'artefacts naîtront de B-078.
+L'étude B-078 (faite, archivée) a arrêté le schéma, validé par l'utilisateur
+le 2026-11-14 : le socle B-079, puis une fiche par famille d'artefacts
+(B-085 à B-094), et la revue avec la publication en dernier (B-083).
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-078](B-078-contexte-liaison-etude.md) | Contexte de liaison : étude complète sur Windows 11, avec WAE | en cours | P1 | gros |
 | [B-079](B-079-contexte-liaison-socle.md) | Contexte de liaison : socle commun (`Context`, volumes, profils) | à faire | P1 | moyen |
 | [B-080](B-080-dates-au-dela-de-9999.md) | Dates au-delà de l'an 9999 écrites tronquées (`0828` pour 30828) | à faire | P1 | petit |
 | [B-081](B-081-amcache-inventaire-sqlite.md) | Amcache sur Windows 11 récent : l'inventaire passé en bases SQLite | à valider | P1 | moyen |
