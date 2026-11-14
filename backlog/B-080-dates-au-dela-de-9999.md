@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | petit |
+| à valider | P1 | petit |
 
 ## Pourquoi
 Trouvé par le cycle `win11-test` du 2026-11-14 (B-078) : `web_client.json`
@@ -43,3 +43,9 @@ correctif ; cycle `win11-test` : `web_client.json` sans date tronquée.
   « jamais ») à brancher dans `build-windows.sh` après le cycle, et à voir
   échouer par mutation. Restent : les autres sentinelles (PE à 0, 9999 d'AD)
   et `check-json.py`.
+- 2026-11-14 : compilé sans avertissement ; `iso8601_dates_test` (branché
+  dans `build-windows.sh`) vert sous Wine ; mutation (année > 9999 de
+  nouveau écrite) vue échouer (2 contrôles), restaurée, recompilée,
+  `bin/WAC.exe` = compilation. Tous les tests unitaires sans argument
+  verts. Reste : cycle VM (`web_client` sans `0828`, `ExpiryNever`), les
+  autres sentinelles et `check-json.py` (qui s'arrêtait sur la date).

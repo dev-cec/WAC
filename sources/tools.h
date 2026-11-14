@@ -826,7 +826,9 @@ std::wstring utcTimeToIso8601Local(const FILETIME& filetimeUtc, Precision precis
 
 /*! Adds a date in both forms: `<key>Utc` in UTC and `<key>` in the SUSPECT's
 * local time (utcTimeToIso8601Local). Nothing is written for a null date: a
-* "1601-01-01" would read as a real date the format never carried.
+* "1601-01-01" would read as a real date the format never carried. The
+* largest FILETIME (0x7FFFFFFFFFFFFFFF, Windows' "never") is written
+* `<key>Never: true`, no date being writable for it (year 30828, B-080).
 * @param o the object
 * @param key the name of the local form; the UTC form is `key` + "Utc"
 * @param utc the date, UTC */

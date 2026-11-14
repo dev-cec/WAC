@@ -1130,6 +1130,11 @@ namespace {
 std::wstring formatIso8601(const SYSTEMTIME& st, long fraction100ns, const std::wstring& suffix,
                            Precision precision) {
 	if (st.wYear <= 1601) return L"";        // null date: an empty string, not 1601
+	/*  Beyond 9999, ISO 8601 has no four-digit year: fourDigits kept the last
+	    four, and the largest FILETIME — Windows' "never" — came out as year
+	    0828 instead of 30828 (B-080), a date valid in appearance and 29 000
+	    years off. Not a date this format can say: not emitted. */
+	if (st.wYear > 9999) return L"";
 	std::wstring s;
 	s.reserve(33);
 	fourDigits(s, st.wYear);   s += L'-';
@@ -1957,6 +1962,12 @@ std::vector<std::filesystem::path> listFilesByExtension(const std::filesystem::p
 
 void addDate(Json& o, const std::wstring& key, const FILETIME& utc) {
 	if (utc.dwLowDateTime == 0 && utc.dwHighDateTime == 0) return;
+	// The largest FILETIME is Windows' "never" (an entry that does not
+	// expire): said as such, since no date can be written for it (B-080).
+	if (utc.dwLowDateTime == 0xFFFFFFFF && utc.dwHighDateTime == 0x7FFFFFFF) {
+		o.add(key + L"Never", Json::boolean(true));
+		return;
+	}
 	o.add(key + L"Utc", Json::str(timeToIso8601Utc(utc)));
 	o.add(key,          Json::str(utcTimeToIso8601Local(utc)));
 }
