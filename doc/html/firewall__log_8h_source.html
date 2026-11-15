@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -109,24 +109,29 @@ $(function(){initNavTree('firewall__log_8h_source.html','',''); });
 <div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span></div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>std::vector&lt;std::wstring&gt; <a class="code hl_function" href="firewall__log_8h.html#af4b192356a04ff105a61e41ad96bfda8">firewallLogFiles</a>();</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>std::vector&lt;W3cLogEntry&gt; <a class="code hl_function" href="firewall__log_8h.html#ac9e10f30e7560b9a733a18c26221c787">parseFirewallLog</a>(<span class="keyword">const</span> std::wstring&amp; <a class="code hl_function" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>, <span class="keyword">const</span> std::wstring&amp; file);</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span></div>
-<div class="foldopen" id="foldopen00051" data-start="{" data-end="};">
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="classFirewallLog.html">   51</a></span><span class="keyword">class </span><a class="code hl_class" href="classFirewallLog.html">FirewallLog</a> {</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    HRESULT <a class="code hl_function" href="classFirewallLog.html#a9f72f4f584bc40c7857b10e42701bcc9">getData</a>();          </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    HRESULT <a class="code hl_function" href="classFirewallLog.html#afb4cff9dcb8076548425c3dab8e4c685">toJson</a>();           </div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classFirewallLog.html#a2d0d8dae00861eecb1b52c81b1660cf4">clear</a>();               </div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    std::vector&lt;W3cLogEntry&gt; entries_;</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>};</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><a class="code hl_class" href="classJson.html">Json</a> <a class="code hl_function" href="firewall__log_8h.html#a696c063a0632d05c00129c38c77fa8c9">firewallLogEntryJson</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structW3cLogEntry.html">W3cLogEntry</a>&amp; e);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>std::vector&lt;W3cLogEntry&gt; <a class="code hl_function" href="firewall__log_8h.html#ac9e10f30e7560b9a733a18c26221c787">parseFirewallLog</a>(<span class="keyword">const</span> std::wstring&amp; <a class="code hl_function" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>, <span class="keyword">const</span> std::wstring&amp; file);</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span></div>
+<div class="foldopen" id="foldopen00059" data-start="{" data-end="};">
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="classFirewallLog.html">   59</a></span><span class="keyword">class </span><a class="code hl_class" href="classFirewallLog.html">FirewallLog</a> {</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    HRESULT <a class="code hl_function" href="classFirewallLog.html#a9f72f4f584bc40c7857b10e42701bcc9">getData</a>();          </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    HRESULT <a class="code hl_function" href="classFirewallLog.html#afb4cff9dcb8076548425c3dab8e4c685">toJson</a>();           </div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classFirewallLog.html#a2d0d8dae00861eecb1b52c81b1660cf4">clear</a>();               </div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    std::vector&lt;W3cLogEntry&gt; entries_;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>};</div>
 </div>
-<div class="ttc" id="aclassFirewallLog_html"><div class="ttname"><a href="classFirewallLog.html">FirewallLog</a></div><div class="ttdef"><b>Definition</b> firewall_log.h:51</div></div>
-<div class="ttc" id="aclassFirewallLog_html_a2d0d8dae00861eecb1b52c81b1660cf4"><div class="ttname"><a href="classFirewallLog.html#a2d0d8dae00861eecb1b52c81b1660cf4">FirewallLog::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">releases the entries</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:82</div></div>
-<div class="ttc" id="aclassFirewallLog_html_a9f72f4f584bc40c7857b10e42701bcc9"><div class="ttname"><a href="classFirewallLog.html#a9f72f4f584bc40c7857b10e42701bcc9">FirewallLog::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:62</div></div>
-<div class="ttc" id="aclassFirewallLog_html_afb4cff9dcb8076548425c3dab8e4c685"><div class="ttname"><a href="classFirewallLog.html#afb4cff9dcb8076548425c3dab8e4c685">FirewallLog::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:81</div></div>
-<div class="ttc" id="afirewall__log_8h_html_ac9e10f30e7560b9a733a18c26221c787"><div class="ttname"><a href="firewall__log_8h.html#ac9e10f30e7560b9a733a18c26221c787">parseFirewallLog</a></div><div class="ttdeci">std::vector&lt; W3cLogEntry &gt; parseFirewallLog(const std::wstring &amp;text, const std::wstring &amp;file)</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:58</div></div>
-<div class="ttc" id="afirewall__log_8h_html_af4b192356a04ff105a61e41ad96bfda8"><div class="ttname"><a href="firewall__log_8h.html#af4b192356a04ff105a61e41ad96bfda8">firewallLogFiles</a></div><div class="ttdeci">std::vector&lt; std::wstring &gt; firewallLogFiles()</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:41</div></div>
+<div class="ttc" id="aclassFirewallLog_html"><div class="ttname"><a href="classFirewallLog.html">FirewallLog</a></div><div class="ttdef"><b>Definition</b> firewall_log.h:59</div></div>
+<div class="ttc" id="aclassFirewallLog_html_a2d0d8dae00861eecb1b52c81b1660cf4"><div class="ttname"><a href="classFirewallLog.html#a2d0d8dae00861eecb1b52c81b1660cf4">FirewallLog::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">releases the entries</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:125</div></div>
+<div class="ttc" id="aclassFirewallLog_html_a9f72f4f584bc40c7857b10e42701bcc9"><div class="ttname"><a href="classFirewallLog.html#a9f72f4f584bc40c7857b10e42701bcc9">FirewallLog::getData</a></div><div class="ttdeci">HRESULT getData()</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:63</div></div>
+<div class="ttc" id="aclassFirewallLog_html_afb4cff9dcb8076548425c3dab8e4c685"><div class="ttname"><a href="classFirewallLog.html#afb4cff9dcb8076548425c3dab8e4c685">FirewallLog::toJson</a></div><div class="ttdeci">HRESULT toJson()</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:120</div></div>
+<div class="ttc" id="aclassJson_html"><div class="ttname"><a href="classJson.html">Json</a></div><div class="ttdef"><b>Definition</b> json.h:77</div></div>
+<div class="ttc" id="afirewall__log_8h_html_a696c063a0632d05c00129c38c77fa8c9"><div class="ttname"><a href="firewall__log_8h.html#a696c063a0632d05c00129c38c77fa8c9">firewallLogEntryJson</a></div><div class="ttdeci">Json firewallLogEntryJson(const W3cLogEntry &amp;e)</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:82</div></div>
+<div class="ttc" id="afirewall__log_8h_html_ac9e10f30e7560b9a733a18c26221c787"><div class="ttname"><a href="firewall__log_8h.html#ac9e10f30e7560b9a733a18c26221c787">parseFirewallLog</a></div><div class="ttdeci">std::vector&lt; W3cLogEntry &gt; parseFirewallLog(const std::wstring &amp;text, const std::wstring &amp;file)</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:59</div></div>
+<div class="ttc" id="afirewall__log_8h_html_af4b192356a04ff105a61e41ad96bfda8"><div class="ttname"><a href="firewall__log_8h.html#af4b192356a04ff105a61e41ad96bfda8">firewallLogFiles</a></div><div class="ttdeci">std::vector&lt; std::wstring &gt; firewallLogFiles()</div><div class="ttdef"><b>Definition</b> firewall_log.cpp:42</div></div>
+<div class="ttc" id="astructW3cLogEntry_html"><div class="ttname"><a href="structW3cLogEntry.html">W3cLogEntry</a></div><div class="ttdef"><b>Definition</b> w3c_log.h:41</div></div>
 <div class="ttc" id="atools_8h_html"><div class="ttname"><a href="tools_8h.html">tools.h</a></div><div class="ttdoc">Shared tools: configuration, console display, log, registry reads, time formatting,...</div></div>
 <div class="ttc" id="atranslations_8cpp_html_afb33c4ec2161fe76968e7f0abca58d2b"><div class="ttname"><a href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a></div><div class="ttdeci">std::wstring text(Text id, Language language, std::initializer_list&lt; std::wstring &gt; arguments)</div><div class="ttdef"><b>Definition</b> translations.cpp:441</div></div>
 <div class="ttc" id="aw3c__log_8h_html"><div class="ttname"><a href="w3c__log_8h.html">w3c_log.h</a></div><div class="ttdoc">Logs in the W3C extended format: the Windows Firewall&#39;s (pfirewall.log, firewall_log....</div></div>

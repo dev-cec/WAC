@@ -1,5 +1,6 @@
 var deleted__files_8cpp =
 [
+    [ "addDeletedContext", "deleted__files_8cpp.html#a919bc2e4d06a04c77576962f175bc4fc", null ],
     [ "carveClusters", "deleted__files_8cpp.html#aa01ba1aa010f205ac58b7ac1da776dfc", null ],
     [ "checkRuns", "deleted__files_8cpp.html#ac54ac29945318e8f6bef6b2986ab351d", null ],
     [ "DeletedFilesCollect", "deleted__files_8cpp.html#a766011dc5a457479034a5b956057ee23", null ],

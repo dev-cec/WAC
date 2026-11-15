@@ -3,6 +3,8 @@ var structEvent =
     [ "Event", "structEvent.html#aa620ab50f7f105a84e4eb0fdefed02e6", null ],
     [ "clear", "structEvent.html#a0862af1471604bf30a4f50a5e028637a", null ],
     [ "toJson", "structEvent.html#ac83247741a82814a4adcf83cbd9545a8", null ],
+    [ "evidencePath", "structEvent.html#a73eb67c65e70c8c45f5c95f8183dcfc2", null ],
+    [ "evtChunkChecksumMismatch", "structEvent.html#a1f645370c522acb2fe281e4612fd68f0", null ],
     [ "evtEventData", "structEvent.html#a71647f03eadce96ebc1a8be134997ac1", null ],
     [ "evtEventMessage", "structEvent.html#aa097f313be20ae3f527b1fea4b952109", null ],
     [ "evtRecovered", "structEvent.html#a71b2b0695b5e13daced0283b8ddac925", null ],

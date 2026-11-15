@@ -6,6 +6,7 @@ var structRecentDoc =
     [ "RecentDoc", "structRecentDoc.html#af501edc675fb4bcebe3b08956c862f6e", null ],
     [ "addExtraData", "structRecentDoc.html#aa3ff65febbdc82b6bdd67c72693b88f4", null ],
     [ "clear", "structRecentDoc.html#af15bb7889021d9d5d94a142add483ab2", null ],
+    [ "context", "structRecentDoc.html#afb750c4044897ab3f9cf42097c166c01", null ],
     [ "operator=", "structRecentDoc.html#a3390989fed87f1a03f791166b3b97478", null ],
     [ "operator=", "structRecentDoc.html#aa3b50b93a413d7024bd193df6070d44f", null ],
     [ "parseExtraData", "structRecentDoc.html#a1c27b96c13437c25238876e3198203a6", null ],

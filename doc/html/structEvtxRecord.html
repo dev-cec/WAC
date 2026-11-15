@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -114,10 +114,26 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:add3b36b24f347ee5b2470cb853f107f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">event body, as XML  <br /></td></tr>
 <tr class="memitem:ae74f980877a73a12e79b03b7af3ed469" id="r_ae74f980877a73a12e79b03b7af3ed469"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae74f980877a73a12e79b03b7af3ed469">values</a></td></tr>
 <tr class="memitem:af7175d834f1246f129f2fc0f909e82bc" id="r_af7175d834f1246f129f2fc0f909e82bc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af7175d834f1246f129f2fc0f909e82bc">recovered</a> = false</td></tr>
+<tr class="memitem:a446e3397e0632b1a37df5704ef945b04" id="r_a446e3397e0632b1a37df5704ef945b04"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a446e3397e0632b1a37df5704ef945b04">chunkChecksumMismatch</a> = false</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One event record, as read from the file. </p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="a446e3397e0632b1a37df5704ef945b04" name="a446e3397e0632b1a37df5704ef945b04"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a446e3397e0632b1a37df5704ef945b04">&#9670;&#160;</a></span>chunkChecksumMismatch</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool EvtxRecord::chunkChecksumMismatch = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Its chunk fails one of the two CRC-32 its header holds (header, records; evtxChunkChecksums): bytes changed since Windows wrote them — a chunk rewritten while the live log was copied, a damage. The record is kept and given, flagged: its content may be another's (B-082). </p>
+
+</div>
+</div>
 <a id="ab95dee9aa29e0410795b1c6d0c9d8aeb" name="ab95dee9aa29e0410795b1c6d0c9d8aeb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab95dee9aa29e0410795b1c6d0c9d8aeb">&#9670;&#160;</a></span>id</h2>
 

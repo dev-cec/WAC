@@ -5,6 +5,7 @@ var structProcess =
     [ "ListProcessModules", "structProcess.html#a7a6a600d33cfcb0562b343387d18142c", null ],
     [ "toJson", "structProcess.html#a52e7bd6674292dceb89548c23a728a1a", null ],
     [ "fingerprint", "structProcess.html#a0e24fcbb33791dd76dd6a3573a679604", null ],
+    [ "imagePath", "structProcess.html#a0ca0f63730d1a797c8a210ac6824e63d", null ],
     [ "processId", "structProcess.html#a4b57a7a4812659dba500cf10dde16a41", null ],
     [ "processModules", "structProcess.html#af5cfb626c462aff996f17dfa4ead5d11", null ],
     [ "processModulesAccess", "structProcess.html#a8b3911da4331faf0010b9d0b2cee0094", null ],

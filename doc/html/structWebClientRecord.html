@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -103,6 +103,7 @@ $(function(){initNavTree('structWebClientRecord.html','','structWebClientRecord-
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a82cedb9c2a35ec71c4002c4cce20e053" id="r_a82cedb9c2a35ec71c4002c4cce20e053"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structRecordContext.html">RecordContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a82cedb9c2a35ec71c4002c4cce20e053">context</a> () const</td></tr>
 <tr class="memitem:a517f8253e0722eeaa3084f080a3ef765" id="r_a517f8253e0722eeaa3084f080a3ef765"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a517f8253e0722eeaa3084f080a3ef765">toJson</a> () const</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
@@ -118,10 +119,29 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a51122a06c3b8cb0f81384817d4437459" id="r_a51122a06c3b8cb0f81384817d4437459"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a51122a06c3b8cb0f81384817d4437459">source</a></td></tr>
 <tr class="memdesc:a51122a06c3b8cb0f81384817d4437459"><td class="mdescLeft">&#160;</td><td class="mdescRight">the database, on the examined machine  <br /></td></tr>
 <tr class="memitem:ae07510492f445d1260defc5751fa9441" id="r_ae07510492f445d1260defc5751fa9441"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae07510492f445d1260defc5751fa9441">fields</a> = <a class="el" href="classJson.html#a2d01c95f7974c2348717c56917dd11b7">Json::obj</a>()</td></tr>
+<tr class="memdesc:ae07510492f445d1260defc5751fa9441"><td class="mdescLeft">&#160;</td><td class="mdescRight">the record's own fields  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One record of web_client.json: a URL, a visit, a download or a search term. </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a82cedb9c2a35ec71c4002c4cce20e053" name="a82cedb9c2a35ec71c4002c4cce20e053"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a82cedb9c2a35ec71c4002c4cce20e053">&#9670;&#160;</a></span>context()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structRecordContext.html">RecordContext</a> WebClientRecord::context </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The record's linking context (B-087): a file saved from the web arrived from its URL; a page visited, typed or searched is an access, to a local file or a host. </p>
+
+</div>
+</div>
 <a id="a517f8253e0722eeaa3084f080a3ef765" name="a517f8253e0722eeaa3084f080a3ef765"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a517f8253e0722eeaa3084f080a3ef765">&#9670;&#160;</a></span>toJson()</h2>
 
@@ -184,6 +204,7 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
 <p>the record's own fields </p>
 
 </div>

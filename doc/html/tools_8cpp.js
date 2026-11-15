@@ -79,6 +79,7 @@ var tools_8cpp =
     [ "timeToIso8601Local", "tools_8cpp.html#aa0312e6483cd343a68056ad75af47ad1", null ],
     [ "timeToIso8601Utc", "tools_8cpp.html#a490325ea7147082304f9c3874bf0f3d3", null ],
     [ "toLower", "tools_8cpp.html#a91174db2a2f6918c424af0beb323d74e", null ],
+    [ "toUpper", "tools_8cpp.html#a0b3a2f2915ff3286dff5b51e038410a9", null ],
     [ "unixToFiletime", "tools_8cpp.html#a52489c895869c2cf97325ce9aafc4a5c", null ],
     [ "utcTimeToIso8601Local", "tools_8cpp.html#abc0f1497d47e582d91bb5ffcf40a7c17", null ],
     [ "utcToSuspectLocal", "tools_8cpp.html#a2db11fd993cf754bcb19e0731955b6ab", null ],

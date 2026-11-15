@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -102,6 +102,7 @@ $(function(){initNavTree('emails_8cpp.html','',''); });
 <p>The mail of every profile (see <a class="el" href="emails_8h.html" title="The mail of every profile: Outlook&#39;s PST and OST files, their messages and attachments (emails....">emails.h</a>).  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="emails_8h_source.html">emails.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="context_8h_source.html">context.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="pst__messages_8h_source.html">pst_messages.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="mbox__mail_8h_source.html">mbox_mail.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
@@ -112,6 +113,7 @@ $(function(){initNavTree('emails_8cpp.html','',''); });
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a8720064661134b790e57766073cb03aa" id="r_a8720064661134b790e57766073cb03aa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8720064661134b790e57766073cb03aa">addMessageContext</a> (<a class="el" href="classJson.html">Json</a> &amp;record, const std::wstring &amp;sid, const std::wstring &amp;mailbox)</td></tr>
 <tr class="memitem:af987c65a4de64854088e7a51d7a05a18" id="r_af987c65a4de64854088e7a51d7a05a18"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af987c65a4de64854088e7a51d7a05a18">plainExtension</a> (const std::wstring &amp;name)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-var-members" class="groupheader"><a id="var-members" name="var-members"></a>
@@ -130,6 +132,40 @@ Variables</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The mail of every profile (see <a class="el" href="emails_8h.html" title="The mail of every profile: Outlook&#39;s PST and OST files, their messages and attachments (emails....">emails.h</a>). </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a8720064661134b790e57766073cb03aa" name="a8720064661134b790e57766073cb03aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8720064661134b790e57766073cb03aa">&#9670;&#160;</a></span>addMessageContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addMessageContext </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>record</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>sid</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>mailbox</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds a message's linking context (B-087), the same for a PST and an mbox message: what arrived are its attachments — each by its name and the SHA-256 of its bytes, the whole file —, sent by its sender, to the profile's account; the mailbox is the evidence. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">record</td><td>the message's record, its fields already in </td></tr>
+    <tr><td class="paramname">sid</td><td>the profile's account </td></tr>
+    <tr><td class="paramname">mailbox</td><td>the mailbox on the examined machine </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="af987c65a4de64854088e7a51d7a05a18" name="af987c65a4de64854088e7a51d7a05a18"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af987c65a4de64854088e7a51d7a05a18">&#9670;&#160;</a></span>plainExtension()</h2>
 

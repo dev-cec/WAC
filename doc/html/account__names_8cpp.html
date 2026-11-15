@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,6 +116,7 @@ Functions</h2></td></tr>
 <tr class="memitem:a6e78e5535417d69d0554125e9c1db8c0" id="r_a6e78e5535417d69d0554125e9c1db8c0"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6e78e5535417d69d0554125e9c1db8c0">serviceSid</a> (const std::wstring &amp;service)</td></tr>
 <tr class="memitem:a65c8e3b7f555514165f7e701a3e207e8" id="r_a65c8e3b7f555514165f7e701a3e207e8"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a65c8e3b7f555514165f7e701a3e207e8">loadAccountNames</a> ()</td></tr>
 <tr class="memitem:ab29ec2bd73a4de1536739ac5cd16ecff" id="r_ab29ec2bd73a4de1536739ac5cd16ecff"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab29ec2bd73a4de1536739ac5cd16ecff">getNameFromSid</a> (std::wstring _sid)</td></tr>
+<tr class="memitem:a4cca3c7ed865c232f3919db70ee098fa" id="r_a4cca3c7ed865c232f3919db70ee098fa"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4cca3c7ed865c232f3919db70ee098fa">localAccountSid</a> (const std::wstring &amp;account, const std::wstring &amp;computerName)</td></tr>
 <tr class="memitem:af6ff8959f12a2e202311a9b02d08396c" id="r_af6ff8959f12a2e202311a9b02d08396c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af6ff8959f12a2e202311a9b02d08396c">addUser</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;sid)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
@@ -188,6 +189,35 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Builds the table SID -&gt; name from the evidence. To be called once the profiles are read (loadProfileList) and conf.CurrentControlSet is open, BEFORE any artefact that names an account is read or written. </p><dl class="section return"><dt>Returns</dt><dd>ERROR_SUCCESS, or the error that kept the SAM from being read (the other sources are loaded all the same) </dd></dl>
+
+</div>
+</div>
+<a id="a4cca3c7ed865c232f3919db70ee098fa" name="a4cca3c7ed865c232f3919db70ee098fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4cca3c7ed865c232f3919db70ee098fa">&#9670;&#160;</a></span>localAccountSid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring localAccountSid </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>account</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>computerName</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The SID of a local account a record names by "MACHINE\name" or by its name alone (Defender's DomainUser, a log's user): its SAM name, among the machine's accounts (S-1-5-21-…). Another domain than the machine's gives none — a domain account of the same name is another account. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">account</td><td>the account as written </td></tr>
+    <tr><td class="paramname">computerName</td><td>the examined machine's NetBIOS name </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the SID; "" when no local account has that name </dd></dl>
 
 </div>
 </div>

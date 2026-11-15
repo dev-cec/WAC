@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -112,6 +112,7 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a8720064661134b790e57766073cb03aa" id="r_a8720064661134b790e57766073cb03aa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8720064661134b790e57766073cb03aa">addMessageContext</a> (<a class="el" href="classJson.html">Json</a> &amp;record, const std::wstring &amp;sid, const std::wstring &amp;mailbox)</td></tr>
 <tr class="memitem:af987c65a4de64854088e7a51d7a05a18" id="r_af987c65a4de64854088e7a51d7a05a18"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af987c65a4de64854088e7a51d7a05a18">plainExtension</a> (const std::wstring &amp;name)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-var-members" class="groupheader"><a id="var-members" name="var-members"></a>
@@ -133,6 +134,40 @@ Variables</h2></td></tr>
 <p>THE SOURCES. Outlook keeps its mailboxes as PST files (archives, POP accounts: <span class="tt">Documents\\Outlook Files</span>) and OST files (the offline copy of an Exchange or Microsoft 365 mailbox: <span class="tt">AppData\\Local\\Microsoft\\Outlook</span>), read by <a class="el" href="pst__file_8h.html" title="Outlook&#39;s data files, PST and OST, read with WAC&#39;s own code: the node and block layer (NDB) and the l...">pst_file.h</a> and <a class="el" href="pst__messages_8h.html" title="The messages of a PST or OST file: folders, messages, recipients, attachments, bodies — the messaging...">pst_messages.h</a>. The files Outlook opened from a message are in <span class="tt">INetCache\\Content.Outlook</span>, the new Outlook's (olk.exe) local data in <span class="tt">AppData\\Local\\Microsoft\\Olk</span>: collected as they are, not decoded — no sample of the latter to check a decoder on. Thunderbird keeps each folder as an mbox file in its profiles (<span class="tt">AppData\\Roaming\\Thunderbird\\Profiles</span>), read by <a class="el" href="mbox__mail_8h.html" title="Thunderbird&#39;s mailboxes: mbox files and the MIME messages in them.">mbox_mail.h</a>; the profiles are collected whole — the address book and the settings with the mail.</p>
 <p>THE OUTPUT. A record per mailbox file — its kind, version, the number of messages read and of those that could not be — and a record per message: its folder, class, subject, sender, recipients, times, Internet message identifier and transport headers. Each body (text, HTML) and each attachment is written next to the JSON, under <span class="tt">emails\\&lt;SID&gt;\\&lt;file&gt;\\&lt;message&gt;\\</span>, and the JSON gives its SHA-256. The attachment's own name, chosen by whoever sent it, is never a path: the file is named by its rank, with the name's extension when it is a plain one; the name itself is in the JSON. </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a8720064661134b790e57766073cb03aa" name="a8720064661134b790e57766073cb03aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8720064661134b790e57766073cb03aa">&#9670;&#160;</a></span>addMessageContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addMessageContext </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>record</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>sid</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>mailbox</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds a message's linking context (B-087), the same for a PST and an mbox message: what arrived are its attachments — each by its name and the SHA-256 of its bytes, the whole file —, sent by its sender, to the profile's account; the mailbox is the evidence. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">record</td><td>the message's record, its fields already in </td></tr>
+    <tr><td class="paramname">sid</td><td>the profile's account </td></tr>
+    <tr><td class="paramname">mailbox</td><td>the mailbox on the examined machine </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="af987c65a4de64854088e7a51d7a05a18" name="af987c65a4de64854088e7a51d7a05a18"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af987c65a4de64854088e7a51d7a05a18">&#9670;&#160;</a></span>plainExtension()</h2>
 

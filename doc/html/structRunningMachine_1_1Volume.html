@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -109,10 +109,32 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a5dd9487923826aade0f1d0543fed0884"><td class="mdescLeft">&#160;</td><td class="mdescRight">GetDriveTypeW: DRIVE_FIXED, DRIVE_REMOVABLE…  <br /></td></tr>
 <tr class="memitem:aaf85417983eb865be2cc2954f0646c49" id="r_aaf85417983eb865be2cc2954f0646c49"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf85417983eb865be2cc2954f0646c49">fileSystem</a></td></tr>
 <tr class="memdesc:aaf85417983eb865be2cc2954f0646c49"><td class="mdescLeft">&#160;</td><td class="mdescRight">"NTFS", "FAT32"…  <br /></td></tr>
+<tr class="memitem:a01640c04407dc9c32bfea75be50a47af" id="r_a01640c04407dc9c32bfea75be50a47af"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a01640c04407dc9c32bfea75be50a47af">serial</a></td></tr>
+<tr class="memdesc:a01640c04407dc9c32bfea75be50a47af"><td class="mdescLeft">&#160;</td><td class="mdescRight">"60E59B9E": what shortcuts and <a class="el" href="structPrefetch.html">Prefetch</a> cite  <br /></td></tr>
+<tr class="memitem:a07138b964b9e8ce753849e667e2c33e9" id="r_a07138b964b9e8ce753849e667e2c33e9"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a07138b964b9e8ce753849e667e2c33e9">deviceName</a></td></tr>
+<tr class="memdesc:a07138b964b9e8ce753849e667e2c33e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">"\Device\HarddiskVolume3": what BAM and SRUM cite (B-079)  <br /></td></tr>
+<tr class="memitem:ad59e71331ea35078844746769af38ede" id="r_ad59e71331ea35078844746769af38ede"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad59e71331ea35078844746769af38ede">guid</a></td></tr>
+<tr class="memdesc:ad59e71331ea35078844746769af38ede"><td class="mdescLeft">&#160;</td><td class="mdescRight">"{5e0a…}": what \?\Volume{…} and VSS cite (B-079)  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A mounted volume, as observed. </p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="a07138b964b9e8ce753849e667e2c33e9" name="a07138b964b9e8ce753849e667e2c33e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a07138b964b9e8ce753849e667e2c33e9">&#9670;&#160;</a></span>deviceName</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RunningMachine::Volume::deviceName</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>"\Device\HarddiskVolume3": what BAM and SRUM cite (B-079) </p>
+
+</div>
+</div>
 <a id="a5dd9487923826aade0f1d0543fed0884" name="a5dd9487923826aade0f1d0543fed0884"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5dd9487923826aade0f1d0543fed0884">&#9670;&#160;</a></span>driveType</h2>
 
@@ -145,6 +167,22 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ad59e71331ea35078844746769af38ede" name="ad59e71331ea35078844746769af38ede"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad59e71331ea35078844746769af38ede">&#9670;&#160;</a></span>guid</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RunningMachine::Volume::guid</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>"{5e0a…}": what \?\Volume{…} and VSS cite (B-079) </p>
+
+</div>
+</div>
 <a id="a30d03405a91e81012d741bd1ed0e53f2" name="a30d03405a91e81012d741bd1ed0e53f2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a30d03405a91e81012d741bd1ed0e53f2">&#9670;&#160;</a></span>mountPoint</h2>
 
@@ -158,6 +196,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>"C:" </p>
+
+</div>
+</div>
+<a id="a01640c04407dc9c32bfea75be50a47af" name="a01640c04407dc9c32bfea75be50a47af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a01640c04407dc9c32bfea75be50a47af">&#9670;&#160;</a></span>serial</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring RunningMachine::Volume::serial</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>"60E59B9E": what shortcuts and <a class="el" href="structPrefetch.html">Prefetch</a> cite </p>
 
 </div>
 </div>

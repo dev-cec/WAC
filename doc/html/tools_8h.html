@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -224,6 +224,7 @@ Functions</h2></td></tr>
 <tr class="memitem:a229f23807f3e0ecd7ad5f4c0a39156e9" id="r_a229f23807f3e0ecd7ad5f4c0a39156e9"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a229f23807f3e0ecd7ad5f4c0a39156e9">encodeText</a> (const std::wstring &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>, UINT codePage=CP_UTF8)</td></tr>
 <tr class="memitem:a39f06ea897c5d9cfa9c5db5deb82bab0" id="r_a39f06ea897c5d9cfa9c5db5deb82bab0"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a39f06ea897c5d9cfa9c5db5deb82bab0">loadSuspectAnsiCodePage</a> ()</td></tr>
 <tr class="memitem:a91174db2a2f6918c424af0beb323d74e" id="r_a91174db2a2f6918c424af0beb323d74e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a91174db2a2f6918c424af0beb323d74e">toLower</a> (std::wstring s)</td></tr>
+<tr class="memitem:a0b3a2f2915ff3286dff5b51e038410a9" id="r_a0b3a2f2915ff3286dff5b51e038410a9"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0b3a2f2915ff3286dff5b51e038410a9">toUpper</a> (std::wstring s)</td></tr>
 <tr class="memitem:ab46321ecb3e6f33f6a4351d808fca517" id="r_ab46321ecb3e6f33f6a4351d808fca517"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab46321ecb3e6f33f6a4351d808fca517">isOutputFolderName</a> (const std::wstring &amp;name)</td></tr>
 <tr class="memitem:a45f9fd820885488926e162c9f91a8ec8" id="r_a45f9fd820885488926e162c9f91a8ec8"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a45f9fd820885488926e162c9f91a8ec8">splitLines</a> (const std::wstring &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>)</td></tr>
 <tr class="memitem:a2b4cfa2b19dd3138efd1cdca232d614e" id="r_a2b4cfa2b19dd3138efd1cdca232d614e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2b4cfa2b19dd3138efd1cdca232d614e">isMuiReference</a> (const std::wstring &amp;value)</td></tr>
@@ -533,7 +534,7 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Adds a date in both forms: <span class="tt">&lt;key&gt;Utc</span> in UTC and <span class="tt">&lt;key&gt;</span> in the SUSPECT's local time (utcTimeToIso8601Local). Nothing is written for a null date: a "1601-01-01" would read as a real date the format never carried. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Adds a date in both forms: <span class="tt">&lt;key&gt;Utc</span> in UTC and <span class="tt">&lt;key&gt;</span> in the SUSPECT's local time (utcTimeToIso8601Local). Nothing is written for a null date: a "1601-01-01" would read as a real date the format never carried. The largest FILETIME (0x7FFFFFFFFFFFFFFF, Windows' "never") is written <span class="tt">&lt;key&gt;Never: true</span>, no date being writable for it (year 30828, B-080). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">o</td><td>the object </td></tr>
     <tr><td class="paramname">key</td><td>the name of the local form; the UTC form is <span class="tt">key</span> + "Utc" </td></tr>
@@ -2759,6 +2760,30 @@ conf.systemDrive)</span>, ignored the volume subfolder: a file coming from <span
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the string in lower case </dd></dl>
+
+</div>
+</div>
+<a id="a0b3a2f2915ff3286dff5b51e038410a9" name="a0b3a2f2915ff3286dff5b51e038410a9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b3a2f2915ff3286dff5b51e038410a9">&#9670;&#160;</a></span>toUpper()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring toUpper </td>
+          <td>(</td>
+          <td class="paramtype">std::wstring</td>          <td class="paramname"><span class="paramname"><em>s</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Upper case, as toLower lower case (towupper): device identifiers, serial numbers, known folders' identifiers. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">s</td><td>the text </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>it in upper case </dd></dl>
 
 </div>
 </div>

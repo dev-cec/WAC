@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -107,6 +107,7 @@ $(function(){initNavTree('deleted__files_8cpp.html','',''); });
 <code>#include &quot;<a class="el" href="audit_8h_source.html">audit.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="binaires_8h_source.html">binaires.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="context_8h_source.html">context.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="live__snapshot_8h_source.html">live_snapshot.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="mft_8h_source.html">mft.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="usn__journal_8h_source.html">usn_journal.h</a>&quot;</code><br />
@@ -134,11 +135,64 @@ Functions</h2></td></tr>
 <tr class="memitem:aa01ba1aa010f205ac58b7ac1da776dfc" id="r_aa01ba1aa010f205ac58b7ac1da776dfc"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa01ba1aa010f205ac58b7ac1da776dfc">carveClusters</a> (const <a class="el" href="structClusterSource.html">ClusterSource</a> &amp;volume, uint64_t maxFile, const std::function&lt; void(const <a class="el" href="structCarvedFile.html">CarvedFile</a> &amp;)&gt; &amp;found)</td></tr>
 <tr class="memitem:ab179b5dffb2ceea1213fb51882261799" id="r_ab179b5dffb2ceea1213fb51882261799"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab179b5dffb2ceea1213fb51882261799">safeFileName</a> (const std::wstring &amp;name)</td></tr>
 <tr class="memitem:abf75dff7a85354590d742c4d3cc3a0ca" id="r_abf75dff7a85354590d742c4d3cc3a0ca"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structIndexSlackEntry.html">IndexSlackEntry</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abf75dff7a85354590d742c4d3cc3a0ca">indexSlackEntries</a> (const uint8_t *block, size_t size, bool inUse, uint64_t directory)</td></tr>
+<tr class="memitem:a919bc2e4d06a04c77576962f175bc4fc" id="r_a919bc2e4d06a04c77576962f175bc4fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a919bc2e4d06a04c77576962f175bc4fc">addDeletedContext</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const std::wstring &amp;path, const std::wstring &amp;ntfs, const std::wstring &amp;wholeSha256, const std::wstring &amp;evidence, const std::wstring &amp;currentPath)</td></tr>
 <tr class="memitem:a766011dc5a457479034a5b956057ee23" id="r_a766011dc5a457479034a5b956057ee23"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a766011dc5a457479034a5b956057ee23">DeletedFilesCollect</a> ()</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Deleted files recovered by raw reading (see <a class="el" href="deleted__files_8h.html" title="DELETED FILES: the content a deleted file still has on the disk, recovered by raw reading (deleted_fi...">deleted_files.h</a>). </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a919bc2e4d06a04c77576962f175bc4fc" name="a919bc2e4d06a04c77576962f175bc4fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a919bc2e4d06a04c77576962f175bc4fc">&#9670;&#160;</a></span>addDeletedContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addDeletedContext </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>o</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>path</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>ntfs</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>wholeSha256</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>evidence</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>currentPath</em></span><span class="paramdefsep"> = </span><span class="paramdefval">std::wstring()</span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds the Context of a deleted file: a Deletion — or a Modification when the file lives on under another name —, its former path when whole, its NTFS identity, and the SHA-256 of its content only when every byte of it was recovered: a partial content, or one read on a contiguity assumed, is not the file's, and would relate it to nothing or to the wrong file. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>the record </td></tr>
+    <tr><td class="paramname">path</td><td>its former path, "" when incomplete </td></tr>
+    <tr><td class="paramname">ntfs</td><td>contextNtfs, "" on FAT and for a carved file </td></tr>
+    <tr><td class="paramname">wholeSha256</td><td>the SHA-256 of the whole content, "" otherwise </td></tr>
+    <tr><td class="paramname">evidence</td><td>where WAC read it </td></tr>
+    <tr><td class="paramname">currentPath</td><td>its path now, when it was renamed and not deleted </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="aa01ba1aa010f205ac58b7ac1da776dfc" name="aa01ba1aa010f205ac58b7ac1da776dfc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa01ba1aa010f205ac58b7ac1da776dfc">&#9670;&#160;</a></span>carveClusters()</h2>
 

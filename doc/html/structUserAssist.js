@@ -6,6 +6,7 @@ var structUserAssist =
     [ "Class", "structUserAssist.html#afa49227090ce0422a8ee62e67caa82e5", null ],
     [ "Count", "structUserAssist.html#a25f060e1fa0a1ad2b68a711fd6f56db5", null ],
     [ "countKnown", "structUserAssist.html#a7c405786cbe2981af3685338d50185d7", null ],
+    [ "decodedName", "structUserAssist.html#a1a0acf392ec370dc1366ce95c4109a7a", null ],
     [ "FocusCount", "structUserAssist.html#a5ba8b3e449ec33c381c7f5db6403ea93", null ],
     [ "FocusTimeMs", "structUserAssist.html#aee34fa909378a40e4a9b10da56b8c11b", null ],
     [ "lastRunUtc", "structUserAssist.html#a2a04a92cffe7c9881f0eac6713adbde7", null ],

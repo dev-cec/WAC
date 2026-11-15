@@ -1,6 +1,7 @@
 var emails_8h =
 [
     [ "Emails", "classEmails.html", "classEmails" ],
+    [ "addMessageContext", "emails_8h.html#a8720064661134b790e57766073cb03aa", null ],
     [ "plainExtension", "emails_8h.html#af987c65a4de64854088e7a51d7a05a18", null ],
     [ "OUTLOOK_DATA_FOLDER", "emails_8h.html#aade360daae21ee9e7553e74fff698ace", null ],
     [ "OUTLOOK_FILES_FOLDER", "emails_8h.html#ae77c696ef4344d2d8392e5682487644b", null ],

@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -103,9 +103,17 @@ $(function(){initNavTree('reg__amcache_8cpp.html','',''); });
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="reg__amcache_8h_source.html">reg_amcache.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="registry__common_8h_source.html">registry_common.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="context_8h_source.html">context.h</a>&quot;</code><br />
+<code>#include &lt;algorithm&gt;</code><br />
+<code>#include &lt;cwctype&gt;</code><br />
+<code>#include &lt;filesystem&gt;</code><br />
+<code>#include &lt;map&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:aeee89c66dcc823847c1d2071243e0ef0" id="r_aeee89c66dcc823847c1d2071243e0ef0"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeee89c66dcc823847c1d2071243e0ef0">inventoryTableName</a> (const std::wstring &amp;sqliteTable)</td></tr>
+<tr class="memitem:a44d09e1689f87584ac571cbba75027e6" id="r_a44d09e1689f87584ac571cbba75027e6"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a44d09e1689f87584ac571cbba75027e6">readInventoryDatabase</a> (const std::wstring &amp;workingFile, const std::wstring &amp;original, std::vector&lt; <a class="el" href="structAmcacheEntry.html">AmcacheEntry</a> &gt; &amp;entries)</td></tr>
+<tr class="memitem:a15a612ace96cfba7160eba02c9227dfb" id="r_a15a612ace96cfba7160eba02c9227dfb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a15a612ace96cfba7160eba02c9227dfb">mergeInventorySources</a> (std::vector&lt; <a class="el" href="structAmcacheEntry.html">AmcacheEntry</a> &gt; &amp;entries)</td></tr>
 <tr class="memitem:ac7e8272ea4cdce2f970eff660f7bf36d" id="r_ac7e8272ea4cdce2f970eff660f7bf36d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac7e8272ea4cdce2f970eff660f7bf36d">decodeRecentFileCache</a> (const std::vector&lt; uint8_t &gt; &amp;bytes, std::vector&lt; std::wstring &gt; &amp;paths)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
@@ -137,6 +145,87 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>false if the signature is not there </dd></dl>
+
+</div>
+</div>
+<a id="aeee89c66dcc823847c1d2071243e0ef0" name="aeee89c66dcc823847c1d2071243e0ef0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeee89c66dcc823847c1d2071243e0ef0">&#9670;&#160;</a></span>inventoryTableName()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring inventoryTableName </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>sqliteTable</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The inventory table a table of an inventory database holds: its name without the "_N" suffix Windows adds ("InventoryApplication_0"), when it is an Inventory* table; "" for any other (Metadata_0, Mare.db's). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sqliteTable</td><td>the name sqlite_master gives </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a15a612ace96cfba7160eba02c9227dfb" name="a15a612ace96cfba7160eba02c9227dfb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a15a612ace96cfba7160eba02c9227dfb">&#9670;&#160;</a></span>mergeInventorySources()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void mergeInventorySources </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structAmcacheEntry.html">AmcacheEntry</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>entries</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>One object per entry, when the hive and an inventory database both hold it (B-081). Measured on Windows 11 26300: 386 executables are in both, the hive keeping only ProgramId and the SHA-1, the database everything else; written twice, an executable read as two objects in WAE. An entry of the hive is merged into the database's of the same table and KeyName: the hive's key time and its values the database has not join it. When a value both hold differs, nothing is merged: two sources that disagree are both given, never one chosen silently. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">entries</td><td>every entry, the hive's and the databases'; merged in place </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a44d09e1689f87584ac571cbba75027e6" name="a44d09e1689f87584ac571cbba75027e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a44d09e1689f87584ac571cbba75027e6">&#9670;&#160;</a></span>readInventoryDatabase()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">HRESULT readInventoryDatabase </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>workingFile</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>original</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structAmcacheEntry.html">AmcacheEntry</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>entries</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads every inventory table of one database (B-081). WHY. From Windows 11 26300 (measured 2026-11-14), the inventory leaves Amcache.hve for SQLite databases beside it, one per table (InventoryApplication.db, InventoryApplicationShortcut.db, InventoryDevicePnp.db…): the hive keeps InventoryApplicationFile, the programs, shortcuts, devices and drivers are no longer in it. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">workingFile</td><td>the database in the working copy </td></tr>
+    <tr><td class="paramname">original</td><td>its path on the examined machine </td></tr>
+    <tr><td class="paramname">entries</td><td>receives the entries, appended </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>S_OK, or why the database could not be opened </dd></dl>
 
 </div>
 </div>

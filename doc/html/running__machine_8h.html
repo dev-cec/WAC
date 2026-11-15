@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -118,6 +118,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a6aca12cc0b8b76d011ecdd2dc65cb3aa" id="r_a6aca12cc0b8b76d011ecdd2dc65cb3aa"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6aca12cc0b8b76d011ecdd2dc65cb3aa">snapshotRunningMachine</a> ()</td></tr>
 <tr class="memitem:ae65285bc40f0c829e47e0894a7bc227d" id="r_ae65285bc40f0c829e47e0894a7bc227d"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structRunningMachine.html">RunningMachine</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae65285bc40f0c829e47e0894a7bc227d">runningMachine</a> ()</td></tr>
 <tr class="memitem:a7fcb67eb8458577b505d08d504db6530" id="r_a7fcb67eb8458577b505d08d504db6530"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7fcb67eb8458577b505d08d504db6530">fixedNtfsVolumes</a> ()</td></tr>
+<tr class="memitem:a7457c9e662b97e3afa5568ddc7cabb9a" id="r_a7457c9e662b97e3afa5568ddc7cabb9a"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7457c9e662b97e3afa5568ddc7cabb9a">onDriveLetter</a> (const std::wstring &amp;cited)</td></tr>
+<tr class="memitem:a0987de38e5797feadcdd6a7bc107da2f" id="r_a0987de38e5797feadcdd6a7bc107da2f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0987de38e5797feadcdd6a7bc107da2f">onDriveLetterAmong</a> (const std::wstring &amp;cited, const std::vector&lt; <a class="el" href="structRunningMachine_1_1Volume.html">RunningMachine::Volume</a> &gt; &amp;volumes)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>What the conversion needs to know of the RUNNING examined machine, observed live and recorded as a sealed snapshot. </p>
@@ -138,6 +140,52 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>The fixed NTFS volumes of the examined machine, as observed: those WAC reads raw beyond the system volume (binaries, recycle bins). Removable volumes — the collection medium among them — are left out. </p><dl class="section return"><dt>Returns</dt><dd>their mount points, "C:", "D:"…; the system drive alone if none was observed </dd></dl>
+
+</div>
+</div>
+<a id="a7457c9e662b97e3afa5568ddc7cabb9a" name="a7457c9e662b97e3afa5568ddc7cabb9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7457c9e662b97e3afa5568ddc7cabb9a">&#9670;&#160;</a></span>onDriveLetter()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring onDriveLetter </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>cited</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A path as the examined machine cites it, on its drive letter: a volume named by its device ("\Device\HarddiskVolume3\Windows\…", BAM, SRUM) or by its GUID ("\\?\Volume{…}\…"), resolved by the volumes the collection observed (B-079). Read at conversion from the snapshot: the analysis workstation's volumes are never consulted. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cited</td><td>the path as written </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the path on its letter; <span class="tt">cited</span> unchanged when its volume is not one of those observed (a volume gone, another machine's) </dd></dl>
+
+</div>
+</div>
+<a id="a0987de38e5797feadcdd6a7bc107da2f" name="a0987de38e5797feadcdd6a7bc107da2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0987de38e5797feadcdd6a7bc107da2f">&#9670;&#160;</a></span>onDriveLetterAmong()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring onDriveLetterAmong </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>cited</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="structRunningMachine_1_1Volume.html">RunningMachine::Volume</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>volumes</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>onDriveLetter among <em class="arg">volumes</em> given: what the tests call. </p>
 
 </div>
 </div>

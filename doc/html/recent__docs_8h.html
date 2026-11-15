@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -115,6 +115,7 @@ $(function(){initNavTree('recent__docs_8h.html','',''); });
 <code>#include &quot;<a class="el" href="link__tracking_8h_source.html">link_tracking.h</a>&quot;</code><br />
 <code>#include &lt;optional&gt;</code><br />
 <code>#include &quot;<a class="el" href="quickdigest5_8h_source.html">quickdigest5.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="context_8h_source.html">context.h</a>&quot;</code><br />
 </div>
 <p><a href="recent__docs_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -126,6 +127,7 @@ Classes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:adb3868c0fbe9578a285ae5a17b1152fb" id="r_adb3868c0fbe9578a285ae5a17b1152fb"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adb3868c0fbe9578a285ae5a17b1152fb">internetShortcutUrl</a> (const std::string &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>)</td></tr>
+<tr class="memitem:ae24184e01e0747413a11424d015fe54c" id="r_ae24184e01e0747413a11424d015fe54c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae24184e01e0747413a11424d015fe54c">addJumpListContext</a> (<a class="el" href="classJson.html">Json</a> &amp;item, <a class="el" href="structRecordContext.html">RecordContext</a> context, const std::wstring &amp;application)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Recent documents: the .lnk shortcuts of <span class="tt">\\Recent</span>. </p>
@@ -137,6 +139,40 @@ Functions</h2></td></tr>
 <p>A TIME TRAP. The three timestamps of the .lnk header (offsets 28, 36, 44) are in UTC — MS-SHLLINK — despite field names that do not say so. Treating them as local times shifted the dates by the time-area offset, where no format check could see it.</p>
 <p>The structured content of the shortcut (ID list, extension blocks, properties) is parsed by <span class="tt"><a class="el" href="idList_8h.html" title="Shell items, ID lists and extension blocks: the structures behind shortcuts, shellbags,...">idList.h</a></span>. </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="ae24184e01e0747413a11424d015fe54c" name="ae24184e01e0747413a11424d015fe54c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae24184e01e0747413a11424d015fe54c">&#9670;&#160;</a></span>addJumpListContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void addJumpListContext </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson.html">Json</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>item</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structRecordContext.html">RecordContext</a></td>          <td class="paramname"><span class="paramname"><em>context</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>application</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Adds the Context of an item of a jump list: its context, the application of the list beside its target (role "Application", by its name). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">item</td><td>the item's JSON object </td></tr>
+    <tr><td class="paramname">context</td><td>the item's context (<a class="el" href="structRecentDoc.html#afb750c4044897ab3f9cf42097c166c01">RecentDoc::context</a>, its Kind set) </td></tr>
+    <tr><td class="paramname">application</td><td>the jump list's application, resolved from its AppID </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="adb3868c0fbe9578a285ae5a17b1152fb" name="adb3868c0fbe9578a285ae5a17b1152fb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adb3868c0fbe9578a285ae5a17b1152fb">&#9670;&#160;</a></span>internetShortcutUrl()</h2>
 

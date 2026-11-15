@@ -16,10 +16,12 @@ var searchData=
   ['collectedartefacts_13',['CollectedArtefacts',['../structAppliConf_1_1CollectedArtefacts.html',1,'AppliConf']]],
   ['configurationfile_14',['ConfigurationFile',['../structConfigurationFile.html',1,'']]],
   ['connection_15',['Connection',['../structConnection.html',1,'']]],
-  ['controlpanel_16',['ControlPanel',['../structControlPanel.html',1,'']]],
-  ['controlpanelcategory_17',['ControlPanelCategory',['../structControlPanelCategory.html',1,'']]],
-  ['copiedvolumesource_18',['CopiedVolumeSource',['../classCopiedVolumeSource.html',1,'']]],
-  ['customcategoryheader_19',['CustomCategoryHeader',['../structCustomCategoryHeader.html',1,'']]],
-  ['customdestination_20',['CustomDestination',['../structCustomDestination.html',1,'']]],
-  ['customdestinationcategory_21',['CustomDestinationCategory',['../structCustomDestinationCategory.html',1,'']]]
+  ['contextobject_16',['ContextObject',['../structContextObject.html',1,'']]],
+  ['contextprocess_17',['ContextProcess',['../structContextProcess.html',1,'']]],
+  ['controlpanel_18',['ControlPanel',['../structControlPanel.html',1,'']]],
+  ['controlpanelcategory_19',['ControlPanelCategory',['../structControlPanelCategory.html',1,'']]],
+  ['copiedvolumesource_20',['CopiedVolumeSource',['../classCopiedVolumeSource.html',1,'']]],
+  ['customcategoryheader_21',['CustomCategoryHeader',['../structCustomCategoryHeader.html',1,'']]],
+  ['customdestination_22',['CustomDestination',['../structCustomDestination.html',1,'']]],
+  ['customdestinationcategory_23',['CustomDestinationCategory',['../structCustomDestinationCategory.html',1,'']]]
 ];

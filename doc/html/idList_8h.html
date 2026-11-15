@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -176,6 +176,7 @@ Classes</h2></td></tr>
 <tr class="memitem:TypedShellItem" id="r_TypedShellItem"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTypedShellItem.html">TypedShellItem</a></td></tr>
 <tr class="memitem:DelegateFolder" id="r_DelegateFolder"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDelegateFolder.html">DelegateFolder</a></td></tr>
 <tr class="memitem:UnknownShellItem" id="r_UnknownShellItem"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnknownShellItem.html">UnknownShellItem</a></td></tr>
+<tr class="memitem:ShellItemPath" id="r_ShellItemPath"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShellItemPath.html">ShellItemPath</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -185,6 +186,7 @@ Functions</h2></td></tr>
 <tr class="memitem:aff717f550427ea233692c75c1853e92c" id="r_aff717f550427ea233692c75c1853e92c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aff717f550427ea233692c75c1853e92c">addFolderTypeNames</a> (<a class="el" href="classJson.html">Json</a> &amp;o, const <a class="el" href="structFolderTypeNames.html">FolderTypeNames</a> &amp;names)</td></tr>
 <tr class="memitem:a7525f17aa1303b4d68eae831fb5e5bfc" id="r_a7525f17aa1303b4d68eae831fb5e5bfc"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7525f17aa1303b4d68eae831fb5e5bfc">getType</a> (unsigned int type)</td></tr>
 <tr class="memitem:aaaeebaeb43ac7bb1e0975edf384904b0" id="r_aaaeebaeb43ac7bb1e0975edf384904b0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaaeebaeb43ac7bb1e0975edf384904b0">getValue</a> (LPBYTE buffer, unsigned int *pos, unsigned short valueType, unsigned int level, unsigned int inputSize, bool *typeNotDecoded=<a class="el" href="module__nullptr.html">nullptr</a>)</td></tr>
+<tr class="memitem:ad267d1ef50c3d7bfea7989f916e8337c" id="r_ad267d1ef50c3d7bfea7989f916e8337c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad267d1ef50c3d7bfea7989f916e8337c">stepShellItemPath</a> (<a class="el" href="structShellItemPath.html">ShellItemPath</a> &amp;place, const <a class="el" href="structIdList.html">IdList</a> &amp;item)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Shell items, ID lists and extension blocks: the structures behind shortcuts, shellbags, MRU lists and jump lists. </p>
@@ -401,6 +403,37 @@ not supported" case. Decoding the count then delegating each element to the scal
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the decoded item; an <a class="el" href="structUnknownShellItem.html">UnknownShellItem</a> with the raw bytes when no type is recognised — never null </dd></dl>
+
+</div>
+</div>
+<a id="ad267d1ef50c3d7bfea7989f916e8337c" name="ad267d1ef50c3d7bfea7989f916e8337c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad267d1ef50c3d7bfea7989f916e8337c">&#9670;&#160;</a></span>stepShellItemPath()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void stepShellItemPath </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structShellItemPath.html">ShellItemPath</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>place</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structIdList.html">IdList</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>item</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>One step down a PIDL: what <em class="arg">item</em> adds to <em class="arg">place</em>. A volume ("C:\")
+or a share (\\server\share) starts a path; a file entry adds its long
+name (block 0xbeef0004, else its primary name) and its $MFT reference to
+a path started; a root item that is a known folder ("This PC\Documents", {D3162B92-…}) starts its folder in the profile of the place's account; an archive's entry gives its name, no path — it is no file of the volume; any other item — the Computer, a control panel, a known folder by its GUID — ends what can be placed: guessed, a path would name another folder than the one browsed. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">place</td><td>the path so far, changed in place </td></tr>
+    <tr><td class="paramname">item</td><td>the next item </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

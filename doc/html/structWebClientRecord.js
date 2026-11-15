@@ -1,5 +1,6 @@
 var structWebClientRecord =
 [
+    [ "context", "structWebClientRecord.html#a82cedb9c2a35ec71c4002c4cce20e053", null ],
     [ "toJson", "structWebClientRecord.html#a517f8253e0722eeaa3084f080a3ef765", null ],
     [ "browser", "structWebClientRecord.html#afc6a2163f76fcd5f0ded65ae039ccecf", null ],
     [ "browserProfile", "structWebClientRecord.html#a1afb38641bf76085e0de780901fdd38b", null ],

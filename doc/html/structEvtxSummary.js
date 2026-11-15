@@ -1,6 +1,7 @@
 var structEvtxSummary =
 [
     [ "chunks", "structEvtxSummary.html#afd77a86fe1fd2a0fc0dd5e9b87751702", null ],
+    [ "chunksChecksumMismatch", "structEvtxSummary.html#acaae6689d3bee5f4b1cf7be23d4c1a72", null ],
     [ "chunksSkipped", "structEvtxSummary.html#a64807eb96b4413f33b0bdaf581142cf7", null ],
     [ "diagnostic", "structEvtxSummary.html#a40ce38e07788b6236d64cdeac87ff231", null ],
     [ "dirty", "structEvtxSummary.html#ac4901023942f24af9d1cc39085869453", null ],

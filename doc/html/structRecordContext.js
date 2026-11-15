@@ -1,0 +1,25 @@
+var structRecordContext =
+[
+    [ "toJson", "structRecordContext.html#a15d7d91030de58fdb3f2f84aa26c383d", null ],
+    [ "actor", "structRecordContext.html#a18e3440c36f6f8c8fb64493a24232137", null ],
+    [ "commandLine", "structRecordContext.html#ac3682972143e865536f50d8c1e87829e", null ],
+    [ "device", "structRecordContext.html#a711a96abfb045f1ce768c36143671b64", null ],
+    [ "evidence", "structRecordContext.html#aa5a7e01c79b2a8be8e10249fd280bc9b", null ],
+    [ "host", "structRecordContext.html#ab80c07babb6fbdf4bd696c2f611ecece", null ],
+    [ "how", "structRecordContext.html#a9e6329a1705668d06c4dbc09a2e8b3b6", null ],
+    [ "kind", "structRecordContext.html#af316c9c0d009a2ec2b0c385595d9c774", null ],
+    [ "logonId", "structRecordContext.html#a7064339a7e3b76925793417095c5fee9", null ],
+    [ "logonType", "structRecordContext.html#af1123b49be55413d996e23bed89bf6f5", null ],
+    [ "logonTypeKnown", "structRecordContext.html#aacff825f95cb6085896dc489b7155c1f", null ],
+    [ "parent", "structRecordContext.html#a49e8b0111cb4dc528cbd242dd04ca251", null ],
+    [ "process", "structRecordContext.html#a112df9bde25deab6cd91c22ab09c8235", null ],
+    [ "related", "structRecordContext.html#a51bf0fb780d10faeb22a1175a355de7c", null ],
+    [ "remoteAddress", "structRecordContext.html#a9c543fc79d122fb6a6bfda650b33b10b", null ],
+    [ "remotePort", "structRecordContext.html#ae78ff4608d4f4582b2bf42c49a5388f1", null ],
+    [ "remotePortKnown", "structRecordContext.html#af6e13bd6775b1021e0604e58a839b74d", null ],
+    [ "sid", "structRecordContext.html#a18979a0178a9fa1764f28caad8b9b54f", null ],
+    [ "subject", "structRecordContext.html#afa0c9d65fa97215b72ce0bea32841d51", null ],
+    [ "url", "structRecordContext.html#a59569e56eceab4d1e2f5306489e8e220", null ],
+    [ "user", "structRecordContext.html#a582aad88c74317610976049896b51804", null ],
+    [ "volumeSerial", "structRecordContext.html#ae7b5a879c6adc510360907489c6ae1ab", null ]
+];

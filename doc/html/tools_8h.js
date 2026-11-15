@@ -105,6 +105,7 @@ var tools_8h =
     [ "timeToIso8601Local", "tools_8h.html#a339f3424e4771fcd9cd009e2e5a35f23", null ],
     [ "timeToIso8601Utc", "tools_8h.html#a89cc7be3be8d6e85f9b70d4fabcab57b", null ],
     [ "toLower", "tools_8h.html#a91174db2a2f6918c424af0beb323d74e", null ],
+    [ "toUpper", "tools_8h.html#a0b3a2f2915ff3286dff5b51e038410a9", null ],
     [ "unixToFiletime", "tools_8h.html#a52489c895869c2cf97325ce9aafc4a5c", null ],
     [ "utcTimeToIso8601Local", "tools_8h.html#a0eab7996fa09bca54687f5a91454722d", null ],
     [ "utcToSuspectLocal", "tools_8h.html#a2db11fd993cf754bcb19e0731955b6ab", null ],

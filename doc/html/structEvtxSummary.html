@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -113,6 +113,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a279b72d04f530520e4986b24b7bbfe11"><td class="mdescLeft">&#160;</td><td class="mdescRight">discarded records  <br /></td></tr>
 <tr class="memitem:a64807eb96b4413f33b0bdaf581142cf7" id="r_a64807eb96b4413f33b0bdaf581142cf7"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a64807eb96b4413f33b0bdaf581142cf7">chunksSkipped</a> = 0</td></tr>
 <tr class="memdesc:a64807eb96b4413f33b0bdaf581142cf7"><td class="mdescLeft">&#160;</td><td class="mdescRight">damaged chunks skipped (no signature)  <br /></td></tr>
+<tr class="memitem:acaae6689d3bee5f4b1cf7be23d4c1a72" id="r_acaae6689d3bee5f4b1cf7be23d4c1a72"><td class="memItemLeft" align="right" valign="top">unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acaae6689d3bee5f4b1cf7be23d4c1a72">chunksChecksumMismatch</a> = 0</td></tr>
+<tr class="memdesc:acaae6689d3bee5f4b1cf7be23d4c1a72"><td class="mdescLeft">&#160;</td><td class="mdescRight">chunks failing a CRC-32, their records flagged  <br /></td></tr>
 <tr class="memitem:afb2f72fe736c44b5af6571b4c0da0044" id="r_afb2f72fe736c44b5af6571b4c0da0044"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afb2f72fe736c44b5af6571b4c0da0044">headerValid</a> = false</td></tr>
 <tr class="memdesc:afb2f72fe736c44b5af6571b4c0da0044"><td class="mdescLeft">&#160;</td><td class="mdescRight">"ElfFile\0" signature found  <br /></td></tr>
 <tr class="memitem:ac4901023942f24af9d1cc39085869453" id="r_ac4901023942f24af9d1cc39085869453"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac4901023942f24af9d1cc39085869453">dirty</a> = false</td></tr>
@@ -136,6 +138,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>chunks walked </p>
+
+</div>
+</div>
+<a id="acaae6689d3bee5f4b1cf7be23d4c1a72" name="acaae6689d3bee5f4b1cf7be23d4c1a72"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acaae6689d3bee5f4b1cf7be23d4c1a72">&#9670;&#160;</a></span>chunksChecksumMismatch</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long long EvtxSummary::chunksChecksumMismatch = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>chunks failing a CRC-32, their records flagged </p>
 
 </div>
 </div>

@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -115,6 +115,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af501edc675fb4bcebe3b08956c862f6e" id="r_af501edc675fb4bcebe3b08956c862f6e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af501edc675fb4bcebe3b08956c862f6e">RecentDoc</a> (LPBYTE buffer, size_t size, std::wstring _path, std::wstring _sid)</td></tr>
 <tr class="memitem:aa3ff65febbdc82b6bdd67c72693b88f4" id="r_aa3ff65febbdc82b6bdd67c72693b88f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa3ff65febbdc82b6bdd67c72693b88f4">addExtraData</a> (<a class="el" href="classJson.html">Json</a> &amp;o)</td></tr>
 <tr class="memitem:af58fdeb82ad390a3a171535cc21e5e29" id="r_af58fdeb82ad390a3a171535cc21e5e29"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af58fdeb82ad390a3a171535cc21e5e29">toJson</a> ()</td></tr>
+<tr class="memitem:afb750c4044897ab3f9cf42097c166c01" id="r_afb750c4044897ab3f9cf42097c166c01"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structRecordContext.html">RecordContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afb750c4044897ab3f9cf42097c166c01">context</a> () const</td></tr>
 <tr class="memitem:af15bb7889021d9d5d94a142add483ab2" id="r_af15bb7889021d9d5d94a142add483ab2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af15bb7889021d9d5d94a142add483ab2">clear</a> ()</td></tr>
 <tr class="memdesc:af15bb7889021d9d5d94a142add483ab2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases the memory held by the shortcut.  <br /></td></tr>
 </table><table class="memberdecls">
@@ -364,6 +365,24 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Releases the memory held by the shortcut. </p>
+
+</div>
+</div>
+<a id="afb750c4044897ab3f9cf42097c166c01" name="afb750c4044897ab3f9cf42097c166c01"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb750c4044897ab3f9cf42097c166c01">&#9670;&#160;</a></span>context()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structRecordContext.html">RecordContext</a> RecentDoc::context </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The linking context of the opening the shortcut attests (B-090): an Access of its target — the local path of its LinkInfo, otherwise its USERPROFILE… path on the profile of its user —, or of a URL; the volume the target was on by its serial number, the share's host, the user whose folder holds it, the file it was read in. </p><dl class="section return"><dt>Returns</dt><dd>the context; its Kind for the caller to change </dd></dl>
 
 </div>
 </div>

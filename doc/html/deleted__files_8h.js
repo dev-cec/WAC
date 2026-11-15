@@ -16,6 +16,7 @@ var deleted__files_8h =
       [ "Zeroed", "deleted__files_8h.html#af0cf9ba4202bce178c613da6ee53355eaccb602a05d0e65e8416c643f0e32bd64", null ],
       [ "NotRecoverable", "deleted__files_8h.html#af0cf9ba4202bce178c613da6ee53355ea9e8770624a0a9ae69f4c32736ca854c1", null ]
     ] ],
+    [ "addDeletedContext", "deleted__files_8h.html#a4b9fed5a9a2b39bc068d1ad01e0cc0d0", null ],
     [ "carveClusters", "deleted__files_8h.html#aa01ba1aa010f205ac58b7ac1da776dfc", null ],
     [ "checkRuns", "deleted__files_8h.html#ac54ac29945318e8f6bef6b2986ab351d", null ],
     [ "DeletedFilesCollect", "deleted__files_8h.html#a766011dc5a457479034a5b956057ee23", null ],

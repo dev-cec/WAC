@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -112,10 +112,12 @@ $(function(){initNavTree('evtx_8h.html','',''); });
 Classes</h2></td></tr>
 <tr class="memitem:EvtxRecord" id="r_EvtxRecord"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxRecord.html">EvtxRecord</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">One event record, as read from the file.  <a href="structEvtxRecord.html#details">More...</a><br /></td></tr>
+<tr class="memitem:EvtxChunkChecksums" id="r_EvtxChunkChecksums"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxChunkChecksums.html">EvtxChunkChecksums</a></td></tr>
 <tr class="memitem:EvtxSummary" id="r_EvtxSummary"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structEvtxSummary.html">EvtxSummary</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ada4ab09d2501fb669ceaf636cc9adbee" id="r_ada4ab09d2501fb669ceaf636cc9adbee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structEvtxChunkChecksums.html">EvtxChunkChecksums</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ada4ab09d2501fb669ceaf636cc9adbee">evtxChunkChecksums</a> (const uint8_t *chunk, size_t size, size_t liveEnd)</td></tr>
 <tr class="memitem:afdec56de451b97d4bc69c2c822284ac6" id="r_afdec56de451b97d4bc69c2c822284ac6"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afdec56de451b97d4bc69c2c822284ac6">EvtxReadFile</a> (const std::wstring &amp;path, const std::function&lt; bool(const <a class="el" href="structEvtxRecord.html">EvtxRecord</a> &amp;)&gt; &amp;onRecord, <a class="el" href="structEvtxSummary.html">EvtxSummary</a> *summary=<a class="el" href="module__nullptr.html">nullptr</a>)</td></tr>
 <tr class="memitem:a90bcf726a67d0c4a538595fe689de038" id="r_a90bcf726a67d0c4a538595fe689de038"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a90bcf726a67d0c4a538595fe689de038">EvtxXmlEscape</a> (const std::wstring &amp;s)</td></tr>
 <tr class="memitem:a35239b1da0e8481cc5c9e92b5955797e" id="r_a35239b1da0e8481cc5c9e92b5955797e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a35239b1da0e8481cc5c9e92b5955797e">EvtxChannelFromFileName</a> (const std::wstring &amp;fileName)</td></tr>
@@ -161,6 +163,33 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the channel name </dd></dl>
+
+</div>
+</div>
+<a id="ada4ab09d2501fb669ceaf636cc9adbee" name="ada4ab09d2501fb669ceaf636cc9adbee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada4ab09d2501fb669ceaf636cc9adbee">&#9670;&#160;</a></span>evtxChunkChecksums()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structEvtxChunkChecksums.html">EvtxChunkChecksums</a> evtxChunkChecksums </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *</td>          <td class="paramname"><span class="paramname"><em>chunk</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>size</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>liveEnd</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Computes the checksums of <em class="arg">chunk</em> (<em class="arg">size</em> bytes, at least 512) whose live records end at <em class="arg">liveEnd</em> (the header's free-space offset, already bounded by the caller to 512..size). </p><dl class="section return"><dt>Returns</dt><dd>what matches; both false when the chunk is shorter than its header </dd></dl>
 
 </div>
 </div>

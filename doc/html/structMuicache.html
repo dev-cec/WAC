@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,6 +116,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a4a410c185199ddb48554ad7fb544c584"><td class="mdescLeft">&#160;</td><td class="mdescRight">path and file name of the executable  <br /></td></tr>
 <tr class="memitem:ad18520c39dc4b05028409e321382db0f" id="r_ad18520c39dc4b05028409e321382db0f"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad18520c39dc4b05028409e321382db0f">data</a> = L&quot;&quot;</td></tr>
 <tr class="memdesc:ad18520c39dc4b05028409e321382db0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">display name, as read from the binary's resources  <br /></td></tr>
+<tr class="memitem:ae5c88de2364db6b8c7ff044cbc7a66de" id="r_ae5c88de2364db6b8c7ff044cbc7a66de"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae5c88de2364db6b8c7ff044cbc7a66de">hive</a> = L&quot;&quot;</td></tr>
+<tr class="memdesc:ae5c88de2364db6b8c7ff044cbc7a66de"><td class="mdescLeft">&#160;</td><td class="mdescRight">the hive the entry was read in, on the examined machine (Evidence, B-085)  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One MUICache entry: an executable, and the name the shell displayed. </p>
@@ -206,6 +208,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>display name, as read from the binary's resources </p>
+
+</div>
+</div>
+<a id="ae5c88de2364db6b8c7ff044cbc7a66de" name="ae5c88de2364db6b8c7ff044cbc7a66de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae5c88de2364db6b8c7ff044cbc7a66de">&#9670;&#160;</a></span>hive</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Muicache::hive = L&quot;&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>the hive the entry was read in, on the examined machine (Evidence, B-085) </p>
 
 </div>
 </div>

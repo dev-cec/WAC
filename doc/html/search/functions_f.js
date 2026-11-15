@@ -88,10 +88,11 @@ var searchData=
   ['process_85',['Process',['../structProcess.html#a2617bdc70bccc46a00fceefb67d62f15',1,'Process']]],
   ['processelevated_86',['processElevated',['../tools_8cpp.html#a0b6c3a95cb425bc203b4abc6cc378cc8',1,'processElevated(bool &amp;elevated):&#160;tools.cpp'],['../tools_8h.html#a0b6c3a95cb425bc203b4abc6cc378cc8',1,'processElevated(bool &amp;elevated):&#160;tools.cpp']]],
   ['processmodulesofownprocess_87',['processModulesOfOwnProcess',['../file__artefacts__test_8cpp.html#aecdc5acc5d8b0b18823948100286718b',1,'file_artefacts_test.cpp']]],
-  ['properties_88',['properties',['../classPstFile.html#ae524a58dfef2673ac1dc52efedf59037',1,'PstFile']]],
-  ['property_89',['Property',['../structProperty.html#acc6fc70dfc3d794307729ab6c203c514',1,'Property']]],
-  ['pstinteger_90',['pstInteger',['../pst__file_8cpp.html#ac9a3aab73c6b84f258bc983fc5f0defb',1,'pstInteger(const PstProperties &amp;properties, uint16_t id):&#160;pst_file.cpp'],['../pst__file_8h.html#ac9a3aab73c6b84f258bc983fc5f0defb',1,'pstInteger(const PstProperties &amp;properties, uint16_t id):&#160;pst_file.cpp']]],
-  ['pstnodetype_91',['pstNodeType',['../pst__file_8h.html#a3cf20d6b2f5cb923781b9bc85ff8cfb3',1,'pst_file.h']]],
-  ['pstvaluetext_92',['pstValueText',['../pst__file_8cpp.html#a9e168b0bc6d694c923d667f68e849fa6',1,'pstValueText(const PstValue &amp;v):&#160;pst_file.cpp'],['../pst__file_8h.html#a6dbfcec47eb9223571211bbc3aae149d',1,'pstValueText(const PstValue &amp;value):&#160;pst_file.cpp']]],
-  ['push_93',['push',['../classJson.html#a2d8d3cd489e1b9d9716322bdd88db40f',1,'Json']]]
+  ['profileowner_88',['profileOwner',['../context_8cpp.html#ad334a93b17757d0897c769f6c959dfac',1,'profileOwner(const std::wstring &amp;path):&#160;context.cpp'],['../context_8h.html#ad334a93b17757d0897c769f6c959dfac',1,'profileOwner(const std::wstring &amp;path):&#160;context.cpp']]],
+  ['properties_89',['properties',['../classPstFile.html#ae524a58dfef2673ac1dc52efedf59037',1,'PstFile']]],
+  ['property_90',['Property',['../structProperty.html#acc6fc70dfc3d794307729ab6c203c514',1,'Property']]],
+  ['pstinteger_91',['pstInteger',['../pst__file_8cpp.html#ac9a3aab73c6b84f258bc983fc5f0defb',1,'pstInteger(const PstProperties &amp;properties, uint16_t id):&#160;pst_file.cpp'],['../pst__file_8h.html#ac9a3aab73c6b84f258bc983fc5f0defb',1,'pstInteger(const PstProperties &amp;properties, uint16_t id):&#160;pst_file.cpp']]],
+  ['pstnodetype_92',['pstNodeType',['../pst__file_8h.html#a3cf20d6b2f5cb923781b9bc85ff8cfb3',1,'pst_file.h']]],
+  ['pstvaluetext_93',['pstValueText',['../pst__file_8cpp.html#a9e168b0bc6d694c923d667f68e849fa6',1,'pstValueText(const PstValue &amp;v):&#160;pst_file.cpp'],['../pst__file_8h.html#a6dbfcec47eb9223571211bbc3aae149d',1,'pstValueText(const PstValue &amp;value):&#160;pst_file.cpp']]],
+  ['push_94',['push',['../classJson.html#a2d8d3cd489e1b9d9716322bdd88db40f',1,'Json']]]
 ];

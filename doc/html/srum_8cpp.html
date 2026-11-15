@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -112,10 +112,48 @@ Functions</h2></td></tr>
 <tr class="memitem:a2608df3d2f4e6b1ff52a5e2831d7198c" id="r_a2608df3d2f4e6b1ff52a5e2831d7198c"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2608df3d2f4e6b1ff52a5e2831d7198c">srumProviderName</a> (const std::wstring &amp;table)</td></tr>
 <tr class="memitem:abc040ba736b854689169229b79a4e809" id="r_abc040ba736b854689169229b79a4e809"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abc040ba736b854689169229b79a4e809">srumKey</a> (const std::wstring &amp;column)</td></tr>
 <tr class="memitem:a0ad3cb57555108f914e6c1d8b2de4bb4" id="r_a0ad3cb57555108f914e6c1d8b2de4bb4"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0ad3cb57555108f914e6c1d8b2de4bb4">srumIdentity</a> (unsigned type, const std::vector&lt; uint8_t &gt; &amp;blob)</td></tr>
+<tr class="memitem:a987f152f0e879eef0fdf2aa49cacfd95" id="r_a987f152f0e879eef0fdf2aa49cacfd95"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structRecordContext.html">RecordContext</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a987f152f0e879eef0fdf2aa49cacfd95">srumContext</a> (const std::wstring &amp;app, const std::wstring &amp;userSid, const std::wstring &amp;provider)</td></tr>
+<tr class="memdesc:a987f152f0e879eef0fdf2aa49cacfd95"><td class="mdescLeft">&#160;</td><td class="mdescRight">SRUM (srum.json).  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>System Resource Usage Monitor (see <a class="el" href="srum_8h.html" title="System Resource Usage Monitor: \Windows\System32\sru\SRUDB.dat (srum.json).">srum.h</a>). </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a987f152f0e879eef0fdf2aa49cacfd95" name="a987f152f0e879eef0fdf2aa49cacfd95"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a987f152f0e879eef0fdf2aa49cacfd95">&#9670;&#160;</a></span>srumContext()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structRecordContext.html">RecordContext</a> srumContext </td>
+          <td>(</td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>app</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>userSid</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::wstring &amp;</td>          <td class="paramname"><span class="paramname"><em>provider</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>SRUM (srum.json). </p>
+<p>The linking context of a usage row of SRUM (B-085): the application it counts, by the identity SruDbIdMapTable gives — a path on its volume's device, a program's name only ("!!svchost.exe!…"), or a packaged application's identifier —, and the account. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">app</td><td>the row's application identity </td></tr>
+    <tr><td class="paramname">userSid</td><td>its account's SID </td></tr>
+    <tr><td class="paramname">provider</td><td>the table's provider (NetworkUsage…: Network) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a0ad3cb57555108f914e6c1d8b2de4bb4" name="a0ad3cb57555108f914e6c1d8b2de4bb4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0ad3cb57555108f914e6c1d8b2de4bb4">&#9670;&#160;</a></span>srumIdentity()</h2>
 

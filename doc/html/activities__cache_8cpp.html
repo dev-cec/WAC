@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -103,6 +103,7 @@ $(function(){initNavTree('activities__cache_8cpp.html','',''); });
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="activities__cache_8h_source.html">activities_cache.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="consigne_8h_source.html">consigne.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="context_8h_source.html">context.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="conversions_8h_source.html">conversions.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="sqlite__reader_8h_source.html">sqlite_reader.h</a>&quot;</code><br />
 <code>#include &lt;algorithm&gt;</code><br />
@@ -117,6 +118,8 @@ Functions</h2></td></tr>
 Variables</h2></td></tr>
 <tr class="memitem:a7e52acc2bf92a20f4dcc2198b9310132" id="r_a7e52acc2bf92a20f4dcc2198b9310132"><td class="memItemLeft" align="right" valign="top">const wchar_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7e52acc2bf92a20f4dcc2198b9310132">CONNECTED_DEVICES_FOLDER</a> [] = L&quot;\\AppData\\Local\\ConnectedDevicesPlatform&quot;</td></tr>
 <tr class="memdesc:a7e52acc2bf92a20f4dcc2198b9310132"><td class="mdescLeft">&#160;</td><td class="mdescRight">Folder of the Connected <a class="el" href="classDevices.html" title="Devices the machine has known (devices.json).">Devices</a> Platform, relative to a profile.  <br /></td></tr>
+<tr class="memitem:ad9565edfea32e0ab7fc2fa7b8e4e3e99" id="r_ad9565edfea32e0ab7fc2fa7b8e4e3e99"><td class="memItemLeft" align="right" valign="top">const int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad9565edfea32e0ab7fc2fa7b8e4e3e99">ACTIVITY_OPENED</a> = 5</td></tr>
+<tr class="memitem:acd41e5f937ba5f91da5600b5096f3c02" id="r_acd41e5f937ba5f91da5600b5096f3c02"><td class="memItemLeft" align="right" valign="top">const int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acd41e5f937ba5f91da5600b5096f3c02">ACTIVITY_IN_USE</a> = 6</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Windows Timeline (ActivitiesCache.db): see <a class="el" href="activities__cache_8h.html" title="Windows Timeline: the activities of ActivitiesCache.db, per profile.">activities_cache.h</a>. </p>
@@ -157,6 +160,35 @@ Variables</h2></td></tr>
 </div>
 </div>
 <a name="doc-var-members" id="doc-var-members"></a><h2 id="header-doc-var-members" class="groupheader">Variable Documentation</h2>
+<a id="acd41e5f937ba5f91da5600b5096f3c02" name="acd41e5f937ba5f91da5600b5096f3c02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd41e5f937ba5f91da5600b5096f3c02">&#9670;&#160;</a></span>ACTIVITY_IN_USE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const int ACTIVITY_IN_USE = 6</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad9565edfea32e0ab7fc2fa7b8e4e3e99" name="ad9565edfea32e0ab7fc2fa7b8e4e3e99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9565edfea32e0ab7fc2fa7b8e4e3e99">&#9670;&#160;</a></span>ACTIVITY_OPENED</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const int ACTIVITY_OPENED = 5</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The Timeline's kinds that relate an object (B-090): 5, an application, file or page opened; 6, an application in use. The others — settings synchronised (11), clipboard (10, 16) — name no file. Windows 11 writes only those others. </p>
+
+</div>
+</div>
 <a id="a7e52acc2bf92a20f4dcc2198b9310132" name="a7e52acc2bf92a20f4dcc2198b9310132"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7e52acc2bf92a20f4dcc2198b9310132">&#9670;&#160;</a></span>CONNECTED_DEVICES_FOLDER</h2>
 

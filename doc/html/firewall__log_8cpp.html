@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -103,6 +103,7 @@ $(function(){initNavTree('firewall__log_8cpp.html','',''); });
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="firewall__log_8h_source.html">firewall_log.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="registry__common_8h_source.html">registry_common.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="context_8h_source.html">context.h</a>&quot;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;set&gt;</code><br />
 </div><table class="memberdecls">
@@ -110,10 +111,35 @@ $(function(){initNavTree('firewall__log_8cpp.html','',''); });
 Functions</h2></td></tr>
 <tr class="memitem:af4b192356a04ff105a61e41ad96bfda8" id="r_af4b192356a04ff105a61e41ad96bfda8"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af4b192356a04ff105a61e41ad96bfda8">firewallLogFiles</a> ()</td></tr>
 <tr class="memitem:ac9e10f30e7560b9a733a18c26221c787" id="r_ac9e10f30e7560b9a733a18c26221c787"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structW3cLogEntry.html">W3cLogEntry</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac9e10f30e7560b9a733a18c26221c787">parseFirewallLog</a> (const std::wstring &amp;<a class="el" href="translations_8cpp.html#afb33c4ec2161fe76968e7f0abca58d2b">text</a>, const std::wstring &amp;file)</td></tr>
+<tr class="memitem:a696c063a0632d05c00129c38c77fa8c9" id="r_a696c063a0632d05c00129c38c77fa8c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a696c063a0632d05c00129c38c77fa8c9">firewallLogEntryJson</a> (const <a class="el" href="structW3cLogEntry.html">W3cLogEntry</a> &amp;e)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The Windows <a class="el" href="classFirewall.html" title="Firewall rules and profile settings (firewall.json).">Firewall</a>'s log (see <a class="el" href="firewall__log_8h.html" title="The Windows Firewall&#39;s log, pfirewall.log (backlog B-052).">firewall_log.h</a>). </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a696c063a0632d05c00129c38c77fa8c9" name="a696c063a0632d05c00129c38c77fa8c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a696c063a0632d05c00129c38c77fa8c9">&#9670;&#160;</a></span>firewallLogEntryJson()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classJson.html">Json</a> firewallLogEntryJson </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structW3cLogEntry.html">W3cLogEntry</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>e</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A line of the firewall's log as JSON, with its Context (B-093): the remote machine — the destination of a packet SEND, the source of one RECEIVE —, its port, the process by its PID; a line without direction names no remote side. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">e</td><td>the line </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>its JSON object </dd></dl>
+
+</div>
+</div>
 <a id="af4b192356a04ff105a61e41ad96bfda8" name="af4b192356a04ff105a61e41ad96bfda8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af4b192356a04ff105a61e41ad96bfda8">&#9670;&#160;</a></span>firewallLogFiles()</h2>
 

@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -105,6 +105,7 @@ $(function(){initNavTree('structDetectionProperty.html','','structDetectionPrope
 Public Attributes</h2></td></tr>
 <tr class="memitem:a8b87861af776736fd6797ccddea78672" id="r_a8b87861af776736fd6797ccddea78672"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8b87861af776736fd6797ccddea78672">name</a></td></tr>
 <tr class="memitem:ab4195d405d9010ab4f10a883b483dcb7" id="r_ab4195d405d9010ab4f10a883b483dcb7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classJson.html">Json</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab4195d405d9010ab4f10a883b483dcb7">value</a> = <a class="el" href="classJson.html#a5bc2d676aa8d106a2c98ca3ee41cc4e6">Json::null</a>()</td></tr>
+<tr class="memitem:ab28c367a75418cf401dad2f0992257e4" id="r_ab28c367a75418cf401dad2f0992257e4"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab28c367a75418cf401dad2f0992257e4">undecodedType</a> = 0</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A property of a named bag (type 0x28), such as ThreatTrackingSha256. </p>
@@ -120,6 +121,21 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="ab28c367a75418cf401dad2f0992257e4" name="ab28c367a75418cf401dad2f0992257e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab28c367a75418cf401dad2f0992257e4">&#9670;&#160;</a></span>undecodedType</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t DetectionProperty::undecodedType = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>A value of a type not decoded: its type, said; the bag's reading stops there (its length is unknown), and the stop is said, not hidden. 0: decoded. </p>
 
 </div>
 </div>

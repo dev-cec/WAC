@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -116,6 +116,10 @@ Classes</h2></td></tr>
 <tr class="memitem:MftEntry" id="r_MftEntry"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry.html">MftEntry</a></td></tr>
 <tr class="memitem:MftEntry_3A_3ALink" id="r_MftEntry_3A_3ALink"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMftEntry_1_1Link.html">MftEntry::Link</a></td></tr>
 <tr class="memitem:Mft" id="r_Mft"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMft.html">Mft</a></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a89faaad4e7c06e019b2973845396a1ac" id="r_a89faaad4e7c06e019b2973845396a1ac"><td class="memItemLeft" align="right" valign="top">unsigned&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a89faaad4e7c06e019b2973845396a1ac">livedSequence</a> (unsigned freedSequence)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>THE $MFT of the system volume: every file, present or deleted, with its dates — the base of the file system's timeline. </p>
@@ -126,7 +130,41 @@ Classes</h2></td></tr>
 <p>READ FROM THE EXHIBIT. The $MFT is copied raw by the collection (ExtractNtfsMetadataRaw, <a class="el" href="raw__collect_8h.html" title="Orchestration of the offline extraction of artefacts (WAC).">raw_collect.h</a>) and read here from the exhibit store, in place: a conversion on an analysis workstation reads the same bytes. Up to gigabytes: it is read by blocks, and mft.json is written as it goes (<a class="el" href="classJsonArrayWriter.html">JsonArrayWriter</a>), never held in memory. Only what the paths need is kept — each record's name and parent.</p>
 <p>THE PATH of a record is rebuilt from its parent references up to the root. A parent reference carries the SEQUENCE number of the parent record: if the record was reused since, the parent named now is another directory, and the path is marked incomplete rather than made up. A deleted record keeps its content, its sequence number raised by one: that is accepted.</p>
 <p>THE DATES are written in UTC only: the timeline tools work in UTC, and the pairs local/UTC of the other artefacts would double a file that already counts one object per file of the volume. </p>
-</div></div><!-- contents -->
+</div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a89faaad4e7c06e019b2973845396a1ac" name="a89faaad4e7c06e019b2973845396a1ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89faaad4e7c06e019b2973845396a1ac">&#9670;&#160;</a></span>livedSequence()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned livedSequence </td>
+          <td>(</td>
+          <td class="paramtype">unsigned</td>          <td class="paramname"><span class="paramname"><em>freedSequence</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>One record of the $MFT: a file or a directory, present or deleted.</p>
+<p>The sequence number a file had while it lived, from its record now free: NTFS adds one when it frees a record — measured on win11-test, the change journal's FILE_DELETE of a deleted witness names sequence 11, its free record holds 12; ntfs-3g does the same. The file's references elsewhere (journal, $I30, shortcuts, shellbags) carry the lived one. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">freedSequence</td><td>the free record's sequence number </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the file's, 0 when it cannot be told (a sequence of 0 or 1: wrapped, or never used) </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <div id="page-nav" class="page-nav-panel">
 <div id="page-nav-resize-handle"></div>

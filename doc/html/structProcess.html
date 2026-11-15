@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -131,6 +131,7 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a8b3911da4331faf0010b9d0b2cee0094"><td class="mdescLeft">&#160;</td><td class="mdescRight">the processes it could not be read on  <br /></td></tr>
 <tr class="memitem:af5cfb626c462aff996f17dfa4ead5d11" id="r_af5cfb626c462aff996f17dfa4ead5d11"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::wstring &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af5cfb626c462aff996f17dfa4ead5d11">processModules</a></td></tr>
 <tr class="memdesc:af5cfb626c462aff996f17dfa4ead5d11"><td class="mdescLeft">&#160;</td><td class="mdescRight">first entry is the executable's own path  <br /></td></tr>
+<tr class="memitem:a0ca0f63730d1a797c8a210ac6824e63d" id="r_a0ca0f63730d1a797c8a210ac6824e63d"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0ca0f63730d1a797c8a210ac6824e63d">imagePath</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>One running process, and the modules it has loaded. </p>
@@ -239,6 +240,21 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>fingerprints of that executable, if <span class="tt">--binary</span> was given </p>
+
+</div>
+</div>
+<a id="a0ca0f63730d1a797c8a210ac6824e63d" name="a0ca0f63730d1a797c8a210ac6824e63d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ca0f63730d1a797c8a210ac6824e63d">&#9670;&#160;</a></span>imagePath</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::wstring Process::imagePath</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>the executable's path: the first module, or asked with PROCESS_QUERY_LIMITED_INFORMATION (B-085) </p>
 
 </div>
 </div>

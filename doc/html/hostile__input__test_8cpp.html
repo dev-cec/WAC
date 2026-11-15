@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -103,7 +103,9 @@ $(function(){initNavTree('hostile__input__test_8cpp.html','',''); });
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;windows.h&gt;</code><br />
 <code>#include &lt;cstdio&gt;</code><br />
+<code>#include &lt;algorithm&gt;</code><br />
 <code>#include &lt;cstdint&gt;</code><br />
+<code>#include &lt;cwctype&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;random&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
@@ -111,6 +113,7 @@ $(function(){initNavTree('hostile__input__test_8cpp.html','',''); });
 <code>#include &quot;<a class="el" href="active__directory_8h_source.html">active_directory.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="application__trace__files_8h_source.html">application_trace_files.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="audit_8h_source.html">audit.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="context_8h_source.html">context.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="dhcp__server_8h_source.html">dhcp_server.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="dns__server_8h_source.html">dns_server.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="group__policies_8h_source.html">group_policies.h</a>&quot;</code><br />
@@ -127,6 +130,7 @@ $(function(){initNavTree('hostile__input__test_8cpp.html','',''); });
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a2bbfba67f4661f053dcf61009fcc1173" id="r_a2bbfba67f4661f053dcf61009fcc1173"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2bbfba67f4661f053dcf61009fcc1173">contextFormsOnHostileText</a> (std::mt19937 &amp;random)</td></tr>
 <tr class="memitem:aa3a67a95d5205c37194aa17a9e4255e3" id="r_aa3a67a95d5205c37194aa17a9e4255e3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa3a67a95d5205c37194aa17a9e4255e3">wmain</a> (int argc, wchar_t **argv)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-var-members" class="groupheader"><a id="var-members" name="var-members"></a>
@@ -140,6 +144,24 @@ Variables</h2></td></tr>
 <p>The mutation run has a fixed seed, so a failure reproduces. Binary inputs lie against a guard page (<a class="el" href="guard__page_8h.html" title="Test support: an input placed against a PAGE_NOACCESS page.">guard_page.h</a>); an exception that escapes a reader ends the test, as it would end a collection.</p>
 <p>Usage: hostile_input_test [mutations per input] — built by <span class="tt">build-windows.sh --test</span>, runs under Wine. Exit code: 0 if all checks hold. </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function Documentation</h2>
+<a id="a2bbfba67f4661f053dcf61009fcc1173" name="a2bbfba67f4661f053dcf61009fcc1173"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2bbfba67f4661f053dcf61009fcc1173">&#9670;&#160;</a></span>contextFormsOnHostileText()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void contextFormsOnHostileText </td>
+          <td>(</td>
+          <td class="paramtype">std::mt19937 &amp;</td>          <td class="paramname"><span class="paramname"><em>random</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The forms of the linking context (<a class="el" href="context_8h.html" title="The linking context of a record (Context): what the record attests, of which object,...">context.h</a>, B-079 to B-094) on texts a machine may hold — device names, volume names, command lines, URLs, shares, paths with variables —, made of the characters that shape them: no crash, and each form what it claims. A device in its one form (upper case, three parts, no '#'); a volume's GUID of 38 characters in lower case; a remote machine a host or an address, never both; a serial in upper case. </p>
+
+</div>
+</div>
 <a id="aa3a67a95d5205c37194aa17a9e4255e3" name="aa3a67a95d5205c37194aa17a9e4255e3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa3a67a95d5205c37194aa17a9e4255e3">&#9670;&#160;</a></span>wmain()</h2>
 

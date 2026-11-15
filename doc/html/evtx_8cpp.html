@@ -29,7 +29,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.0.0</span>
+   <div id="projectname">WAC (Windows Artefacts Collector)<span id="projectnumber">&#160;5.1.0</span>
    </div>
    <div id="projectbrief">Artefact collector for Windows 10 and later</div>
   </td>
@@ -104,6 +104,7 @@ $(function(){initNavTree('evtx_8cpp.html','',''); });
 <div class="textblock"><code>#include &quot;<a class="el" href="evtx_8h_source.html">evtx.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="xml__light_8h_source.html">xml_light.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="tools_8h_source.html">tools.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="zip_8h_source.html">zip.h</a>&quot;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
 <code>#include &lt;sstream&gt;</code><br />
 </div><table class="memberdecls">
@@ -111,6 +112,7 @@ $(function(){initNavTree('evtx_8cpp.html','',''); });
 Functions</h2></td></tr>
 <tr class="memitem:a90bcf726a67d0c4a538595fe689de038" id="r_a90bcf726a67d0c4a538595fe689de038"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a90bcf726a67d0c4a538595fe689de038">EvtxXmlEscape</a> (const std::wstring &amp;s)</td></tr>
 <tr class="memitem:a35239b1da0e8481cc5c9e92b5955797e" id="r_a35239b1da0e8481cc5c9e92b5955797e"><td class="memItemLeft" align="right" valign="top">std::wstring&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a35239b1da0e8481cc5c9e92b5955797e">EvtxChannelFromFileName</a> (const std::wstring &amp;fileName)</td></tr>
+<tr class="memitem:ada4ab09d2501fb669ceaf636cc9adbee" id="r_ada4ab09d2501fb669ceaf636cc9adbee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structEvtxChunkChecksums.html">EvtxChunkChecksums</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ada4ab09d2501fb669ceaf636cc9adbee">evtxChunkChecksums</a> (const uint8_t *chunk, size_t size, size_t liveEnd)</td></tr>
 <tr class="memitem:a4b464839a755e02f007a402ac2f663be" id="r_a4b464839a755e02f007a402ac2f663be"><td class="memItemLeft" align="right" valign="top">HRESULT&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4b464839a755e02f007a402ac2f663be">EvtxReadFile</a> (const std::wstring &amp;path, const std::function&lt; bool(const <a class="el" href="structEvtxRecord.html">EvtxRecord</a> &amp;)&gt; &amp;onRecord, <a class="el" href="structEvtxSummary.html">EvtxSummary</a> *summary)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
@@ -140,6 +142,33 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the channel name </dd></dl>
+
+</div>
+</div>
+<a id="ada4ab09d2501fb669ceaf636cc9adbee" name="ada4ab09d2501fb669ceaf636cc9adbee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada4ab09d2501fb669ceaf636cc9adbee">&#9670;&#160;</a></span>evtxChunkChecksums()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structEvtxChunkChecksums.html">EvtxChunkChecksums</a> evtxChunkChecksums </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *</td>          <td class="paramname"><span class="paramname"><em>chunk</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>size</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>liveEnd</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Computes the checksums of <em class="arg">chunk</em> (<em class="arg">size</em> bytes, at least 512) whose live records end at <em class="arg">liveEnd</em> (the header's free-space offset, already bounded by the caller to 512..size). </p><dl class="section return"><dt>Returns</dt><dd>what matches; both false when the chunk is shorter than its header </dd></dl>
 
 </div>
 </div>
