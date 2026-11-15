@@ -106,3 +106,13 @@ pas corriger ; ce qui n'a pas été examiné.
   n'ajoute aucune valeur nouvelle, et un secret LSA n'y est que nommé
   (contrôlé par `check-json.py`). Rien de nouveau n'est écrit dans les
   journaux ni sur la console.
+- 2026-11-15 : **revue du code** ajouté depuis `5.0.0`. Aucune déclaration
+  sans appelant parmi les fonctions de `context.h` ; résultats d'appels lus
+  (`getRegSzValue`, `QueryDosDeviceW`, `Json::parse`, `snapshotInteger`,
+  `wcstoul`). **Copier-coller, corrigé** : la coupe des blancs recopiée trois
+  fois et sept boucles de casse dans `context.cpp`, et une seconde
+  `toUpper` dans `dns_server.cpp` ; une seule de chaque désormais
+  (`withoutSurroundingSpace`, `toUpper` et `toLower` de `tools`).
+- 2026-11-15 : VM `srv2025-test` recréée (`create-vm.sh srv2025`) pour le
+  cycle serveur, comme pour la 5.0.0 : contrôleur de sa forêt `wac.test`,
+  rôles, serveurs web.

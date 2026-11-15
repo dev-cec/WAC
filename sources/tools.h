@@ -983,6 +983,12 @@ HRESULT loadSuspectAnsiCodePage();
 */
 std::wstring toLower(std::wstring s);
 
+/*! Upper case, as toLower lower case (towupper): device identifiers, serial
+ *  numbers, known folders' identifiers.
+ *  @param s the text
+ *  @return it in upper case */
+std::wstring toUpper(std::wstring s);
+
 /*! Whether a value names the output folder as WAC accepts it: one folder of
  *  the current directory — the collection key —, by its name. A separator, a
  *  drive (`C:case`, relative to C:'s current directory) or `..` would put

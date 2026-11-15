@@ -12,6 +12,13 @@
 
 namespace {
 
+//! A text without the blanks before and after it, as a record may write a name.
+std::wstring withoutSurroundingSpace(std::wstring text) {
+	while (!text.empty() && iswspace(text.front())) text.erase(0, 1);
+	while (!text.empty() && iswspace(text.back())) text.pop_back();
+	return text;
+}
+
 /*! A process as JSON; empty members not emitted. */
 Json processJson(const ContextProcess& p) {
 	Json o = Json::obj();
@@ -171,7 +178,7 @@ std::wstring knownFolderPathFor(const std::wstring& cited, const std::wstring& s
 	const size_t close = cited.find(L'}');
 	if (cited.empty() || cited[0] != L'{' || close == std::wstring::npos) return L"";
 	std::wstring id = cited.substr(0, close + 1);
-	for (wchar_t& c : id) c = (wchar_t)towupper(c);
+	id = toUpper(id);
 	const std::wstring rest = cited.substr(close + 1);
 	const std::wstring windir = conf.systemDrive + L"\\Windows";
 	// KNOWNFOLDERID (knownfolders.h): the folders that hold programs, and the user's own.
@@ -234,8 +241,7 @@ std::wstring commandProgram(const std::wstring& command) {
 		const size_t close = command.find(L'"', start + 1);
 		return command.substr(start + 1, close == std::wstring::npos ? std::wstring::npos : close - start - 1);
 	}
-	std::wstring lower = command.substr(start);
-	for (wchar_t& c : lower) c = (wchar_t)towlower(c);
+	const std::wstring lower = toLower(command.substr(start));
 	size_t best = std::wstring::npos;
 	for (const wchar_t* extension : { L".exe", L".com", L".bat", L".cmd", L".dll", L".sys", L".ps1", L".vbs", L".js", L".scr" }) {
 		const std::wstring e(extension);
@@ -260,7 +266,7 @@ std::wstring urlHost(const std::wstring& url) {
 	if (at != std::wstring::npos) authority = authority.substr(at + 1);
 	if (!authority.empty() && authority[0] == L'[') authority = authority.substr(0, authority.find(L']') + 1);   // [IPv6]:port
 	else authority = authority.substr(0, authority.find(L':'));
-	for (wchar_t& c : authority) c = (wchar_t)towlower(c);
+	authority = toLower(authority);
 	return authority;
 }
 
@@ -303,9 +309,7 @@ std::wstring userPath(const std::wstring& cited, const std::wstring& sid) {
 }
 
 void setCitedLocation(RecordContext& context, const std::wstring& cited, const std::wstring& sid) {
-	std::wstring location = cited;
-	while (!location.empty() && iswspace(location.front())) location.erase(0, 1);
-	while (!location.empty() && iswspace(location.back())) location.pop_back();
+	std::wstring location = withoutSurroundingSpace(cited);
 	if (_wcsnicmp(location.c_str(), L"file:", 5) == 0) {
 		location.erase(0, 5);
 		/* file:///C:/x is a local path, file://server/x a share's, both
@@ -324,7 +328,7 @@ void setCitedLocation(RecordContext& context, const std::wstring& cited, const s
 	if (location.compare(0, 2, L"\\\\") == 0) {
 		const size_t end = location.find(L'\\', 2);
 		std::wstring host = location.substr(2, end == std::wstring::npos ? std::wstring::npos : end - 2);
-		for (wchar_t& c : host) c = (wchar_t)towlower(c);
+		host = toLower(host);
 		if (host != L"?" && host != L".") {   // \\?\ and \\.\ are local prefixes
 			context.how.host = host;
 			return;
@@ -356,13 +360,11 @@ bool isIpv4(const std::wstring& text) {
 } // namespace
 
 void setRemoteObject(ContextObject& object, const std::wstring& cited) {
-	std::wstring host = cited;
-	while (!host.empty() && iswspace(host.front())) host.erase(0, 1);
-	while (!host.empty() && iswspace(host.back())) host.pop_back();
+	std::wstring host = withoutSurroundingSpace(cited);
 	if (host.empty()) return;
 	// An IPv6 address alone: several colons, no brackets — not a host and a port.
 	if (std::count(host.begin(), host.end(), L':') > 1 && host.front() != L'[') {
-		for (wchar_t& c : host) c = (wchar_t)towlower(c);
+		host = toLower(host);
 		object.address = host;
 		return;
 	}
@@ -410,19 +412,13 @@ std::wstring deviceSerial(const std::wstring& device) {
 }
 
 std::wstring contextSerial(const std::wstring& cited) {
-	std::wstring serial = cited;
-	while (!serial.empty() && iswspace(serial.front())) serial.erase(0, 1);
-	while (!serial.empty() && iswspace(serial.back())) serial.pop_back();
-	for (wchar_t& c : serial) c = (wchar_t)towupper(c);
-	return serial;
+	return toUpper(withoutSurroundingSpace(cited));
 }
 
 std::wstring contextVolumeGuid(const std::wstring& cited) {
 	const size_t open = cited.find(L'{');
 	if (open == std::wstring::npos || open + 38 > cited.size() || cited[open + 37] != L'}') return L"";
-	std::wstring guid = cited.substr(open, 38);
-	for (wchar_t& c : guid) c = (wchar_t)towlower(c);
-	return guid;
+	return toLower(cited.substr(open, 38));
 }
 
 std::wstring userCommandProgram(const std::wstring& command, const std::wstring& sid) {

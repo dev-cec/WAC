@@ -22,11 +22,7 @@ const size_t ORIGIN_MAX = 255;        //!< RFC 1035's longest name: repeated $OR
 const size_t ENTRY_WORDS_MAX = 70000; //!< more than a record's 64 KiB of data can hold: a forged open parenthesis swallows no more
 const size_t LOG_LINE_MAX = 65536;    //!< a debug log line is short; a forged one of millions of words is not cut into them
 
-//! A word in upper case: record types and classes are case-insensitive (RFC 1035).
-std::wstring toUpper(std::wstring word) {
-	std::transform(word.begin(), word.end(), word.begin(), [](wchar_t c) { return (wchar_t)towupper(c); });
-	return word;
-}
+// Record types and classes are case-insensitive (RFC 1035): compared in upper case (toUpper, tools.h).
 
 //! The record classes of RFC 1035.
 bool isDnsClass(const std::wstring& word) {
