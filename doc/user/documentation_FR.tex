@@ -2637,8 +2637,10 @@ recherches, Office, Timeline, index de recherche, vignettes : le document ou
 le dossier ouvert, son volume par son numéro de série ; le dossier d'un
 shellbag reconstitué de son volume vers le bas, jamais deviné sous un dossier
 connu ; un raccourci du Bureau, qu'un installateur pose, n'atteste aucune
-ouverture et n'a pas de \champ{Kind}) ; les autres familles le reçoivent à
-leur tour. Il ne contient que des identités --- les
+ouverture et n'a pas de \champ{Kind}) et les comptes et sessions (comptes,
+groupes et leurs membres, sessions par leur \champ{LogonId} --- la forme
+\texttt{0x3e7} des événements ---, connexions RDP sortantes par la machine
+distante, droits et secrets LSA, jonction à un annuaire, clés DPAPI) ; les autres familles le reçoivent à leur tour. Il ne contient que des identités --- les
 dates restent dans les champs de l'enregistrement --- et sert à relier les
 artefacts entre eux : le même fichier, le même compte, le même logiciel y
 ont la même forme, quel que soit l'artefact qui les nomme.

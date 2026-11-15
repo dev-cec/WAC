@@ -2,6 +2,7 @@
  *  \brief Collection of the open logon sessions (see sessions.h).
  */
 #include "sessions.h"
+#include "context.h"
 #include "live_snapshot.h"
 
 /* An LSA_UNICODE_STRING is a length and a buffer, not a NUL-terminated text:
@@ -131,8 +132,19 @@ HRESULT writeSessionsFromSnapshot() {
 	Json arr = Json::arr();
 	for (const auto& session : snapshot.members()) {
 		Json o = Json::obj();
+		/* B-091: the logon, by its account and its LUID — "0x3e7", the form
+		   of the events' LogonId, which relates them. Read from LSA: no file. */
+		RecordContext context;
+		context.kind = ContextKind::Logon;
 		for (const auto& field : session.second.members()) {
-			long long ticks = 0;
+			long long ticks = 0, number = 0;
+			if (field.first == L"SID") context.subject.sid = field.second.text();
+			else if (field.first == L"SessionId" && snapshotInteger(field.second, number))
+				context.actor.logonId = L"0x" + to_hex((unsigned long long)number, 1);
+			else if (field.first == L"LogonType" && snapshotInteger(field.second, number)) {
+				context.how.logonType = (unsigned)number;
+				context.how.logonTypeKnown = true;
+			}
 			if (field.first != L"StartTime100ns") o.add(field.first, field.second);
 			else if (snapshotInteger(field.second, ticks) && ticks > 0) {
 				const FILETIME start = filetimeFromTicks(ticks);
@@ -140,6 +152,7 @@ HRESULT writeSessionsFromSnapshot() {
 				o.add(L"StartTimeUtc", Json::str(timeToIso8601Utc(start)));
 			}
 		}
+		addContext(o, context);
 		arr.push(std::move(o));
 	}
 	return writeJsonFile("Sessions.json", arr);

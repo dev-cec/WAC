@@ -56,6 +56,10 @@
 #include "portable_conversions.h"
 #include "registry_lot3.h"
 #include "activities_cache.h"
+#include "users.h"
+#include "local_groups.h"
+#include "security_hive.h"
+#include "cloud_identity.h"
 #include "rdp_server.h"
 #include "thumbcache.h"
 #include "reg_amcache.h"
@@ -1325,6 +1329,69 @@ void defenderHistory() {
 		check(at(indexedContext, { L"Kind" }) == L"Presence"
 		      && at(indexedContext, { L"Subject", L"Path" }) == L"C:\\ProgramData\\Microsoft\\Windows\\Start Menu",
 		      "search index: an item present by its URL, not its translated display path (B-090)");
+
+		/* B-091: accounts and sessions. A remote machine by name or address;
+		   an account by its SID, its profile beside it; a group and its
+		   members; an outgoing RDP connection; a right; a secret; a join. */
+		auto remote = [](const std::wstring& cited) {
+			ContextObject o;
+			setRemoteObject(o, cited);
+			return o.address.empty() ? L"host " + o.host : L"address " + o.address;
+		};
+		check(remote(L"Srv-01.Corp.example:3389") == L"host srv-01.corp.example" && remote(L"10.0.0.5:3389") == L"address 10.0.0.5"
+		      && remote(L"admin@10.0.0.5") == L"address 10.0.0.5" && remote(L"[fe80::1]:3389") == L"address fe80::1"
+		      && remote(L"FE80::1") == L"address fe80::1" && remote(L"10.0.0.256") == L"host 10.0.0.256",
+		      "context: a remote machine by name or address, its port and user left (B-091)");
+		User account;
+		account.name = L"wac";
+		account.SID = wac;
+		account.profile = L"C:\\Users\\wac";
+		const Json accountRecord = account.toJson();
+		const Json* accountContext = accountRecord.find(L"Context");
+		check(at(accountContext, { L"Kind" }) == L"Account" && at(accountContext, { L"Subject", L"Sid" }) == wac
+		      && accountContext && accountContext->dump().find(L"\"Role\": \"Profile\"") != std::wstring::npos
+		      && at(accountContext, { L"Evidence", L"Path" }) == L"C:\\Windows\\System32\\config\\SAM",
+		      "users: the account by its SID, its profile beside it, the SAM the evidence (B-091)");
+		LocalGroup administrators;
+		administrators.sid = L"S-1-5-32-544";
+		administrators.name = L"Administrators";
+		administrators.members = { wac };
+		const Json groupRecord = administrators.toJson();
+		const Json* groupContext = groupRecord.find(L"Context");
+		check(at(groupContext, { L"Subject", L"Sid" }) == L"S-1-5-32-544" && groupContext
+		      && groupContext->dump().find(L"\"Role\": \"Member\"") != std::wstring::npos
+		      && groupContext->dump().find(L"\"Sid\": \"" + wac + L"\"") != std::wstring::npos,
+		      "local groups: the group by its SID, each member beside it (B-091)");
+		RdpClientRecord server;
+		server.type = L"Server";
+		server.sid = wac;
+		server.source = L"NTUSER.DAT\\Software\\Microsoft\\Terminal Server Client\\Servers\\wac-rdp-witness.invalid";
+		server.fields.add(L"Host", Json::str(L"WAC-RDP-Witness.invalid"));
+		server.fields.add(L"UsernameHint", Json::str(L"WACTEST\\witness"));
+		const Json serverRecord = server.toJson();
+		const Json* serverContext = serverRecord.find(L"Context");
+		check(at(serverContext, { L"Kind" }) == L"Logon" && at(serverContext, { L"Subject", L"Host" }) == L"wac-rdp-witness.invalid"
+		      && at(serverContext, { L"Actor", L"Sid" }) == wac && serverContext
+		      && serverContext->dump().find(L"WACTEST\\\\witness") != std::wstring::npos
+		      && at(serverContext, { L"Evidence", L"Path" }) == L"C:\\Users\\wac\\NTUSER.DAT",
+		      "rdp client: the machine connected to, the account given, the user's hive (B-091)");
+		AccountRight right;
+		right.sid = wac;
+		LsaSecret secret;
+		secret.name = L"_SC_WacSvc";
+		const Json rightRecord = right.toJson(), secretRecord = secret.toJson();
+		check(at(rightRecord.find(L"Context"), { L"Subject", L"Sid" }) == wac
+		      && at(secretRecord.find(L"Context"), { L"Subject", L"Name" }) == L"_SC_WacSvc"
+		      && at(secretRecord.find(L"Context"), { L"Evidence", L"Path" }) == L"C:\\Windows\\System32\\config\\SECURITY",
+		      "security: a right's account by its SID, a secret by its name (B-091)");
+		CloudRegistration join;
+		join.source = L"CloudDomainJoin\\JoinInfo";
+		join.keyName = L"ABCDEF";
+		join.values = { { L"UserEmail", Json::str(L"wac@example.com") } };
+		const Json joinRecord = join.toJson();
+		check(at(joinRecord.find(L"Context"), { L"Subject", L"User" }) == L"wac@example.com"
+		      && at(joinRecord.find(L"Context"), { L"Evidence", L"Path" }) == L"C:\\Windows\\System32\\config\\SYSTEM",
+		      "cloud identity: the joined account by its address, the machine's hive (B-091)");
 
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;

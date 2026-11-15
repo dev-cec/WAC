@@ -2,6 +2,7 @@
  *  \brief The Entra ID registrations (see cloud_identity.h).
  */
 #include "cloud_identity.h"
+#include "context.h"
 
 const wchar_t* const CLOUD_TOKEN_FOLDERS[2] = {
 	L"\\AppData\\Local\\Microsoft\\TokenBroker",
@@ -44,6 +45,16 @@ Json CloudRegistration::toJson() const {
 	o.add(L"KeyName", Json::str(keyName));
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
 	for (const auto& [name, value] : values) o.add(name, value);
+	/* B-091: the machine or the user joined to a directory: the account by
+	   its address (UserEmail), the user of a WorkplaceJoin its actor. */
+	RecordContext context;
+	context.kind = ContextKind::Account;
+	const Json* email = o.find(L"UserEmail");
+	if (email) context.subject.user = email->text();
+	context.subject.name = keyName;
+	context.actor.sid = sid;
+	context.evidence = sid.empty() ? systemHiveEvidence(L"SYSTEM") : userHiveEvidence(sid);
+	addContext(o, context);
 	return o;
 }
 

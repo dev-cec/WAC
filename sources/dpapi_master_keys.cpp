@@ -2,6 +2,7 @@
  *  \brief DPAPI master keys (see dpapi_master_keys.h).
  */
 #include "dpapi_master_keys.h"
+#include "context.h"
 #include "consigne.h"
 #include <cstring>
 #include <filesystem>
@@ -144,6 +145,12 @@ Json DpapiMasterKey::toJson() const {
 		o.add(L"Preferred", Json::boolean(true));
 		addDate(o, L"PreferredExpires", preferredExpiresUtc);
 	}
+	/* B-091: whose key it is — the account of its folder; the machine's
+	   (Scope System) has none. The file itself is the evidence. */
+	RecordContext context;
+	context.subject.sid = sid;
+	context.evidence = path;
+	addContext(o, context);
 	return o;
 }
 

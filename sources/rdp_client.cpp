@@ -2,6 +2,7 @@
  *  \brief Outgoing Remote Desktop connections: see rdp_client.h.
  */
 #include "rdp_client.h"
+#include "context.h"
 #include "conversions.h"
 #include "consigne.h"
 #include "registry_common.h"
@@ -400,6 +401,28 @@ Json RdpClientRecord::toJson() const {
 	addUser(o, sid);
 	o.add(L"Source", Json::str(source));
 	o.merge(fields);
+	/* B-091: a connection the user made to a remote machine — the machine
+	   the subject, by name or address, the account it was given beside it.
+	   A bitmap cache names no machine. */
+	RecordContext context;
+	const Json* settings = fields.find(L"Settings");
+	const Json* remote = type == L"RecentConnection" ? fields.find(L"Target")
+	                   : type == L"Server" ? fields.find(L"Host")
+	                   : settings ? settings->find(L"FullAddress") : nullptr;
+	if (remote) {
+		context.kind = ContextKind::Logon;
+		setRemoteObject(context.subject, remote->text());
+	}
+	const Json* account = type == L"Server" ? fields.find(L"UsernameHint") : settings ? settings->find(L"Username") : nullptr;
+	if (account && !account->text().empty()) {
+		ContextObject given;
+		given.role = L"Account";
+		given.user = account->text();
+		context.related.push_back(std::move(given));
+	}
+	context.actor.sid = sid;
+	context.evidence = source.compare(0, 11, L"NTUSER.DAT\\") == 0 ? userHiveEvidence(sid) : source;
+	addContext(o, context);
 	return o;
 }
 

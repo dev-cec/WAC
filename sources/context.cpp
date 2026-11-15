@@ -302,6 +302,45 @@ void setCitedLocation(RecordContext& context, const std::wstring& cited, const s
 	context.subject.path = userPath(location, sid);
 }
 
+namespace {
+
+//! Whether a text is a dotted IPv4 address: four numbers of at most 255.
+bool isIpv4(const std::wstring& text) {
+	unsigned parts = 0, value = 0, digits = 0;
+	for (size_t i = 0; i <= text.size(); ++i) {
+		if (i == text.size() || text[i] == L'.') {
+			if (digits == 0 || value > 255) return false;
+			++parts;
+			value = digits = 0;
+		} else if (iswdigit(text[i]) && digits < 3) {
+			value = value * 10 + (text[i] - L'0');
+			++digits;
+		} else {
+			return false;
+		}
+	}
+	return parts == 4;
+}
+
+} // namespace
+
+void setRemoteObject(ContextObject& object, const std::wstring& cited) {
+	std::wstring host = cited;
+	while (!host.empty() && iswspace(host.front())) host.erase(0, 1);
+	while (!host.empty() && iswspace(host.back())) host.pop_back();
+	if (host.empty()) return;
+	// An IPv6 address alone: several colons, no brackets — not a host and a port.
+	if (std::count(host.begin(), host.end(), L':') > 1 && host.front() != L'[') {
+		for (wchar_t& c : host) c = (wchar_t)towlower(c);
+		object.address = host;
+		return;
+	}
+	host = urlHost(L"remote://" + host);   // one parser of user@, :port and [IPv6]
+	if (host.size() > 2 && host.front() == L'[' && host.back() == L']') object.address = host.substr(1, host.size() - 2);
+	else if (isIpv4(host)) object.address = host;
+	else object.host = host;
+}
+
 std::wstring userCommandProgram(const std::wstring& command, const std::wstring& sid) {
 	return userPath(commandProgram(command), sid);
 }

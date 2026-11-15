@@ -508,6 +508,7 @@ def cross_checks(folder):
     found += guarded(check_context_persistence, folder)
     found += guarded(check_context_filesystem, folder)
     found += guarded(check_context_accesses, folder)
+    found += guarded(check_context_accounts, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6589,6 +6590,72 @@ def check_context_accesses(folder):
     ok = not wrong
     print(f"  {'✅' if ok else '❌'} Context of accesses: {len(seen)} witness(es) the subject of their record ({', '.join(seen)})"
           + ("" if ok else f": {wrong[:3]}"))
+    return 0 if ok else 1
+
+
+def check_context_accounts(folder):
+    """The Context of accounts and sessions (B-091). The witness account
+    wacpw: users.json, and every local group the harness lists it in
+    (Get-LocalGroupMember), name the same SID — the subject of the account,
+    a Member of the group. Each group's members in its Context are those
+    Windows gives. The interactive sessions LSA listed: their LUID is the
+    LogonId a 4624 of the Security log gives the same account — two sources
+    for one logon. The RDP server the harness wrote: the subject of its
+    record, the account hint beside it."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  no witness reference: the Context of accounts not checked")
+        return 0
+    lines = open(path, encoding="utf-8-sig", errors="replace").read().splitlines()
+    def ref(key):
+        return [l[len(key) + 1:].split("|") for l in lines if l.startswith(key + "=")]
+    def subject(c, key):
+        return str((c.get("Subject") or {}).get(key) or "")
+    def related(c, role, key):
+        return {str(o.get(key) or "") for o in c.get("Related") or [] if o.get("Role") == role}
+    wrong, seen = [], []
+    users = {str(r.get("Name", "")).lower(): c for r, c in contexts(folder, "users.json")}
+    groups = {subject(c, "Sid"): c for _, c in contexts(folder, "local_groups.json") if c.get("Kind") == "Account"}
+    witness = users.get("wacpw")
+    if witness is not None:
+        sid = subject(witness, "Sid")
+        if witness.get("Kind") != "Account" or not sid.startswith("S-1-5-21-"):
+            wrong.append(f"users.json wacpw: Context {witness}")
+        for group, members in ref("localgroup"):
+            expected = {m for m in members.split(",") if m}
+            mine = related(groups.get(group, {}), "Member", "Sid")
+            if group in groups and mine != expected:
+                wrong.append(f"local_groups.json {group}: members {sorted(mine)}, Windows {sorted(expected)}")
+            if sid in expected and sid not in mine:
+                wrong.append(f"local_groups.json {group}: wacpw ({sid}) not a Member")
+        seen.append("account wacpw in its groups")
+    logons = {}
+    for _, c in contexts(folder, "events.json"):
+        if c.get("Kind") == "Logon" and (c.get("Actor") or {}).get("LogonId"):
+            logons.setdefault(c["Actor"]["LogonId"], set()).add(subject(c, "Sid"))
+    interactive = [c for _, c in contexts(folder, "Sessions.json")
+                   if c.get("Kind") == "Logon" and (c.get("How") or {}).get("LogonType") in (2, 10, 11)]
+    for c in interactive:
+        logon = (c.get("Actor") or {}).get("LogonId", "")
+        if not re.fullmatch(r"0x[0-9a-f]+", logon):
+            wrong.append(f"Sessions.json: LogonId {logon!r} not in the events' form")
+    matched = [c for c in interactive if subject(c, "Sid") in logons.get((c.get("Actor") or {}).get("LogonId"), set())]
+    if interactive and logons:
+        if matched:
+            seen.append(f"{len(matched)}/{len(interactive)} interactive session(s) by the LogonId of their 4624")
+        else:
+            wrong.append(f"Sessions.json: no interactive session's LogonId among the {len(logons)} of the events' logons")
+    for host, user, *_ in ref("rdpserver"):
+        mine = [c for _, c in contexts(folder, "rdp_client.json") if subject(c, "Host") == host.lower()]
+        if not mine or mine[0].get("Kind") != "Logon" or user not in related(mine[0], "Account", "User"):
+            wrong.append(f"rdp_client.json {host}: Context {mine[:1]}")
+        else:
+            seen.append("RDP server")
+    if not seen and not wrong:
+        print("  ⏭️  no account witness: the Context of accounts not checked")
+        return 0
+    ok = not wrong
+    print(f"  {'✅' if ok else '❌'} Context of accounts and sessions: {'; '.join(seen)}" + ("" if ok else f": {wrong[:3]}"))
     return 0 if ok else 1
 
 

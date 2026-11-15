@@ -2,6 +2,7 @@
  *  \brief Implementation of the local groups reading (see local_groups.h).
  */
 #include "local_groups.h"
+#include "context.h"
 #include "registry_common.h"
 
 #include <cstring>
@@ -115,6 +116,19 @@ Json LocalGroup::toJson() const {
 		o.add(L"Members", arr);
 	}
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	// B-091: the group by its SID, each member beside it.
+	RecordContext context;
+	context.kind = ContextKind::Account;
+	context.subject.sid = sid;
+	context.subject.name = name;
+	for (const std::wstring& member : members) {
+		ContextObject m;
+		m.role = L"Member";
+		m.sid = member;
+		context.related.push_back(std::move(m));
+	}
+	context.evidence = systemHiveEvidence(L"SAM");
+	addContext(o, context);
 	return o;
 }
 

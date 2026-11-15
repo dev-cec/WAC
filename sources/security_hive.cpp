@@ -2,6 +2,7 @@
  *  \brief The SECURITY hive (see security_hive.h).
  */
 #include "security_hive.h"
+#include "context.h"
 #include "registry_common.h"
 #include <cstring>
 #include <cstdint>
@@ -86,6 +87,13 @@ Json LsaSecret::toJson() const {
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
 	addDate(o, L"CurrentValueSet", currentSetUtc);
 	addDate(o, L"PreviousValueSet", previousSetUtc);
+	/* B-091: a secret LSA keeps, by its name — "_SC_<service>" a service's
+	   password, "DefaultPassword" the automatic logon's. */
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	context.subject.name = name;
+	context.evidence = systemHiveEvidence(L"SECURITY");
+	addContext(o, context);
 	return o;
 }
 
@@ -202,6 +210,11 @@ Json AccountRight::toJson() const {
 		o.add(L"LogonRights", std::move(arr));
 	}
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	RecordContext context;   // B-091: the account given these rights
+	context.kind = ContextKind::Account;
+	context.subject.sid = sid;
+	context.evidence = systemHiveEvidence(L"SECURITY");
+	addContext(o, context);
 	return o;
 }
 

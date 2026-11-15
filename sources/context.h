@@ -202,6 +202,14 @@ std::wstring userPath(const std::wstring& cited, const std::wstring& sid);
  *  @param sid the account whose variables apply; empty for the machine */
 void setCitedLocation(RecordContext& context, const std::wstring& cited, const std::wstring& sid);
 
+/*! A remote machine as an object: an IP address in Address, a name in Host
+ *  (lower case), from what a record writes — "host", "host:3389",
+ *  "user@host", "[::1]:3389", "10.0.0.5". Told apart by the text alone: no
+ *  resolution, no network library.
+ *  @param object receives Address or Host
+ *  @param cited the machine as written */
+void setRemoteObject(ContextObject& object, const std::wstring& cited);
+
 /*! The program of a command a user's hive or task holds: userPath of its
  *  commandProgram.
  *  @param command the command as written

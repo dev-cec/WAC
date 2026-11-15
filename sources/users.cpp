@@ -2,6 +2,7 @@
  *  \brief Offline reading of the local accounts in the SAM hive (see users.h).
  */
 #include "users.h"
+#include "context.h"
 #include "registry_common.h"
 
 namespace {
@@ -208,6 +209,16 @@ HRESULT openSam(ORHKEY* hSam, std::wstring* base) {
 Json User::toJson() const {
 	log(3, L"🔈user toJson");
 	Json o = Json::obj();
+	RecordContext context;   // B-091: the account, by its SID; its profile beside it
+	context.kind = ContextKind::Account;
+	context.subject.sid = SID;
+	if (!profile.empty()) {
+		ContextObject folder;
+		folder.role = L"Profile";
+		folder.path = contextPath(profile);
+		context.related.push_back(std::move(folder));
+	}
+	context.evidence = systemHiveEvidence(L"SAM");
 	o.add(L"Name",     Json::str(name));
 	if (!fullName.empty()) o.add(L"FullName", Json::str(fullName));
 	if (!comment.empty())  o.add(L"Comment",  Json::str(comment));
@@ -263,6 +274,7 @@ Json User::toJson() const {
 		o.add(d.name,    Json::str(local));
 		o.add(d.nameUtc, Json::str(timeToIso8601Utc(*d.ft)));
 	}
+	addContext(o, context);
 	return o;
 }
 

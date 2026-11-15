@@ -2527,8 +2527,11 @@ accesses (shortcuts, jump lists, RecentDocs, shellbags, typed paths,
 searches, Office, Timeline, search index, thumbnails: the document or folder
 opened, its volume by its serial number; a shellbag's folder rebuilt from its
 volume down, never guessed under a known folder; a Desktop shortcut, which an
-installer lays, attests no opening and has no \champ{Kind}); the other
-families receive it in turn. It holds identities only --- the dates stay in the
+installer lays, attests no opening and has no \champ{Kind}) and the accounts
+and sessions (accounts, groups and their members, sessions by their
+\champ{LogonId} --- the events' \texttt{0x3e7} form ---, outgoing RDP
+connections by the remote machine, LSA rights and secrets, directory joins,
+DPAPI keys); the other families receive it in turn. It holds identities only --- the dates stay in the
 record's fields --- and serves to relate the artefacts: the same file, account
 or software has the same form whatever artefact names it.
 \begin{description}
