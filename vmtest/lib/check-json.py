@@ -512,6 +512,7 @@ def cross_checks(folder):
     found += guarded(check_context_devices, folder)
     found += guarded(check_context_network, folder)
     found += guarded(check_context_traces, folder)
+    found += guarded(check_no_lone_surrogates, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6872,6 +6873,45 @@ def check_context_traces(folder):
     ok = not wrong
     print(f"  {'✅' if ok else '❌'} Context of application traces: {rows} row(s), each read in its own file, no subject made up, "
           f"its profile's account the actor" + ("" if ok else f": {len(wrong)} wrong, {wrong[:2]}"))
+    return 0 if ok else 1
+
+
+def check_no_lone_surrogates(folder):
+    """No half of a UTF-16 surrogate pair alone in any JSON (B-082, B-083):
+    it is no Unicode, WAE refused a whole file for one, and json.load takes
+    it. Allowed only in the names a file system or a database holds as
+    written, which may be ill-formed UTF-16 and are then kept so (WAE E-022):
+    the paths and names of mft.json, usn_journal.json, deleted_files.json,
+    and the User Access Logging's rows."""
+    raw = {"mft.json", "usn_journal.json", "deleted_files.json", "user_access_log.json"}
+    def strings(value, path=""):
+        if isinstance(value, dict):
+            for k, v in value.items():
+                yield from strings(v, path + "." + k)
+        elif isinstance(value, list):
+            for v in value:
+                yield from strings(v, path + "[]")
+        elif isinstance(value, str):
+            yield path, value
+    wrong, allowed, files = [], 0, 0
+    for name in sorted(n for n in os.listdir(folder) if n.endswith(".json")):
+        try:
+            with open(os.path.join(folder, name), encoding="utf-8-sig") as f:
+                data = json.load(f)
+        except Exception:
+            continue   # an unreadable JSON is the format check's failure
+        files += 1
+        for path, text in strings(data):
+            if not any(0xD800 <= ord(c) <= 0xDFFF for c in text):
+                continue
+            if name in raw:
+                allowed += 1
+            else:
+                wrong.append(f"{name} {path}: {text[:60]!r}")
+    ok = not wrong
+    print(f"  {'✅' if ok else '❌'} no lone surrogate in the {files} JSON"
+          + (f" ({allowed} in names kept as the file system wrote them)" if allowed else "")
+          + ("" if ok else f": {len(wrong)}, {wrong[:3]}"))
     return 0 if ok else 1
 
 

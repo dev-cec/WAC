@@ -19,7 +19,9 @@
  */
 #include <windows.h>
 #include <cstdio>
+#include <algorithm>
 #include <cstdint>
+#include <cwctype>
 #include <filesystem>
 #include <random>
 #include <string>
@@ -27,6 +29,7 @@
 #include "active_directory.h"
 #include "application_trace_files.h"
 #include "audit.h"
+#include "context.h"
 #include "dhcp_server.h"
 #include "dns_server.h"
 #include "group_policies.h"
@@ -318,6 +321,47 @@ void mutationRun(size_t rounds) {
 
 } // namespace
 
+/*! The forms of the linking context (context.h, B-079 to B-094) on texts a
+ *  machine may hold — device names, volume names, command lines, URLs, shares,
+ *  paths with variables —, made of the characters that shape them: no crash,
+ *  and each form what it claims. A device in its one form (upper case, three
+ *  parts, no '#'); a volume's GUID of 38 characters in lower case; a remote
+ *  machine a host or an address, never both; a serial in upper case. */
+void contextFormsOnHostileText(std::mt19937& random) {
+	const std::wstring ALPHABET = L"\\/:#{}&%?.@[]=; -_~$aAzZ09fF\x00e9\x4e2d\xd800\xdc00\xffff\t\"'";
+	std::uniform_int_distribution<size_t> length(0, 80), pick(0, ALPHABET.size() - 1);
+	const wchar_t* PREFIXES[] = { L"", L"USBSTOR\\", L"\\\\?\\", L"\\??\\Volume{", L"_??_", L"##?#", L"file:///", L"file:",
+	                              L"http://", L"%USERPROFILE%/", L"\\\\", L"C:\\", L"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\",
+	                              L"SWD#WPDBUSENUM#_??_" };
+	std::uniform_int_distribution<size_t> prefix(0, sizeof(PREFIXES) / sizeof(*PREFIXES) - 1);
+	bool forms = true;
+	for (int n = 0; n < 20000; ++n) {
+		std::wstring text = PREFIXES[prefix(random)];
+		for (size_t k = length(random); k > 0; --k) text += ALPHABET[pick(random)];
+		const std::wstring device = contextDevice(text);
+		if (!device.empty() && (device.find(L'#') != std::wstring::npos || std::count(device.begin(), device.end(), L'\\') < 2))
+			forms = false;
+		for (wchar_t c : device) if (c != (wchar_t)towupper(c)) forms = false;
+		const std::wstring serial = contextSerial(deviceSerial(device.empty() ? text : device));
+		for (wchar_t c : serial) if (c != (wchar_t)towupper(c)) forms = false;
+		const std::wstring guid = contextVolumeGuid(text);
+		if (!guid.empty() && (guid.size() != 38 || guid.front() != L'{' || guid.back() != L'}')) forms = false;
+		ContextObject remote;
+		setRemoteObject(remote, text);
+		if (!remote.host.empty() && !remote.address.empty()) forms = false;
+		RecordContext located;
+		setCitedLocation(located, text, L"S-1-5-21-1-2-3-1000");
+		(void)commandProgram(text);
+		(void)serviceProgram(text);
+		(void)urlHost(text);
+		(void)subjectPathIfDifferent(text);
+		(void)profileOwner(text);
+		(void)knownFolderPathFor(text, L"S-1-5-21-1-2-3-1000", WindowsBits::Bits64);
+		(void)contextNtfs(text, (unsigned long long)n, (unsigned)n);
+	}
+	check(forms, "context forms on hostile text: no crash, each form what it claims");
+}
+
 int wmain(int argc, wchar_t** argv) {
 	const size_t rounds = argc > 1 ? (size_t)_wtoi(argv[1]) : 2000;
 	forgedIndexNames();
@@ -327,6 +371,12 @@ int wmain(int argc, wchar_t** argv) {
 	scriptNumbersAreAscii();
 	hostileSqliteDatabase();
 	apacheDefinesDoNotGrowWithoutBound();
+	{
+		std::mt19937 random(20261115);
+		conf.systemDrive = L"C:";
+		conf.profiles = { { L"S-1-5-21-1-2-3-1000", L"C:\\Users\\wac" } };
+		contextFormsOnHostileText(random);
+	}
 	mutationRun(rounds);
 	printf("%u checks, %u failed\n", g_checks, g_failures);
 	return g_failures ? 1 : 0;
