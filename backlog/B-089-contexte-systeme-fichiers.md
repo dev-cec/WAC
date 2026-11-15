@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -73,3 +73,9 @@ l'USN. Un renommage de l'USN est deux enregistrements (`RENAME_OLD_NAME`,
   (`subjectPathIfDifferent`) : le lecteur prend alors ce `Path`, s'il est
   complet. Règle consignée dans les manuels et dans WAE E-014 ; les
   contrôles du harnais lisent le chemin effectif (`subject_path`).
+- 2026-11-15 : cycle `win11-test` (`ff0257c0`) : 316 ✅, 0 ❌. Taille,
+  rapportée à la collecte d'avant le contexte : `mft.json` 196 → 242 Mo
+  (+23 %, au lieu de +39 %) ; `usn_journal.json` 143 → 182 Mo pour 11 % de
+  lignes en moins (322 086 au lieu de 360 928), soit 396 → 564 octets par
+  ligne (+43 %, au lieu de +58 % par ligne). Ce qui reste : le bloc lui-même
+  (`Kind`, `Ntfs`, `Evidence`) et son indentation.
