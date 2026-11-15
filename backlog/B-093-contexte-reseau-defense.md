@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -46,8 +46,8 @@ résolus : ils restent en `Actor.User`.
 ## Tâches
 - [x] `Context` de chaque JSON de la famille, selon les tableaux de B-078
 - [x] Tests unitaires, mutation vue échouer
-- [ ] Témoins et contrôles du harnais ; cycle vert
-- [ ] Manuels FR et EN
+- [x] Témoins et contrôles du harnais ; cycle vert
+- [x] Manuels FR et EN
 
 ## Journal
 - 2026-11-14 : fiche créée (découpage de B-078 validé par l'utilisateur).
@@ -58,3 +58,4 @@ résolus : ils restent en `Actor.User`.
   `hosts`, règle de pare-feu et proxy ; chaque connexion par le chemin de
   son processus, les témoins d'exclusion et de partage. Mutation vue échouer
   (côté distant inversé dans le journal du pare-feu), restauration.
+- 2026-11-15 : cycle `win11-test` (`7ece1838`) : 316 ✅, 1 ❌ du contrôle lui-même — l'exclusion du processus `wac-excluded.exe`, un nom seul, était attendue en chemin ; WAC l'écrit à juste titre en `Name`. Contrôle corrigé, rejoué sur la même collecte : vert (EICAR par la détection, la quarantaine avec son SHA-256 et la suppression du journal ; hosts, règle, proxy, exclusions, partage ; 41 connexions par le chemin de leur processus).

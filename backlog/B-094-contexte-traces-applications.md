@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -45,8 +45,8 @@ nomment ni fichier, ni compte, ni machine qu'un autre artefact cite.
 ## Tâches
 - [x] `Context` de chaque JSON de la famille, selon les tableaux de B-078
 - [x] Tests unitaires, mutation vue échouer
-- [ ] Témoins et contrôles du harnais ; cycle vert
-- [ ] Manuels FR et EN
+- [x] Témoins et contrôles du harnais ; cycle vert
+- [x] Manuels FR et EN
 
 ## Journal
 - 2026-11-14 : fiche créée (découpage de B-078 validé par l'utilisateur).
@@ -57,3 +57,4 @@ nomment ni fichier, ni compte, ni machine qu'un autre artefact cite.
   enregistrement DNS est déjà absolu, sa zone ne s'y ajoute pas. Mutation
   vue échouer (`profileOwner` sans la borne du dossier : `C:\Users\wacky`
   pris pour le profil `C:\Users\wac`), restauration.
+- 2026-11-15 : cycle `win11-test` (`bd9cdf03`) : `check_context_traces` vert, 28 049 lignes lues chacune dans son fichier, sans sujet inventé, avec le compte de leur profil.

@@ -6790,7 +6790,9 @@ def check_context_network(folder):
             continue
         configuration = load(folder, "defender_configuration.json")
         exclusions = (configuration or {}).get("Exclusions") or [] if isinstance(configuration, dict) else []
-        if any(subject(e.get("Context") or {}, "Path").lower() == value.lower() for e in exclusions):
+        # A process excluded by its name alone names no file: its subject is that name.
+        key = "Path" if "\\" in value else "Name"
+        if any(subject(e.get("Context") or {}, key).lower() == value.lower() for e in exclusions):
             seen.append(f"exclusion {kind}")
         else:
             wrong.append(f"defender_configuration.json: no exclusion whose subject is {value}")
