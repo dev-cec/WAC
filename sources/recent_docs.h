@@ -38,6 +38,7 @@
 #include "link_tracking.h"
 #include <optional>
 #include "quickdigest5.h"
+#include "context.h"
 
 /*! One recent document: a .lnk shortcut, and the file it points to. */
 /*! The target of an Internet shortcut (.url): the URL= line of its
@@ -149,9 +150,24 @@ public:
 	 *  @return its JSON object. */
 	Json toJson();
 
+	/*! The linking context of the opening the shortcut attests (B-090): an
+	 *  Access of its target — the local path of its LinkInfo, otherwise its
+	 *  %USERPROFILE%… path on the profile of its user —, or of a URL; the
+	 *  volume the target was on by its serial number, the share's host, the
+	 *  user whose folder holds it, the file it was read in.
+	 *  @return the context; its Kind for the caller to change */
+	RecordContext context() const;
+
 	//! Releases the memory held by the shortcut.
 	void clear();
 };
+
+/*! Adds the Context of an item of a jump list: its context, the application
+ *  of the list beside its target (role "Application", by its name).
+ *  @param item the item's JSON object
+ *  @param context the item's context (RecentDoc::context, its Kind set)
+ *  @param application the jump list's application, resolved from its AppID */
+void addJumpListContext(Json& item, RecordContext context, const std::wstring& application);
 
 /*! All the recent documents of every user of the machine. */
 struct RecentDocs {

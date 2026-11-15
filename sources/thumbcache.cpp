@@ -4,6 +4,7 @@
 #include "thumbcache.h"
 #include "conversions.h"
 #include "consigne.h"
+#include "context.h"
 #include "sha.h"
 #include "oleparser.h"
 #include <algorithm>
@@ -305,6 +306,14 @@ HRESULT Thumbcaches::getData() {
 					const std::wstring image = exportImage(folder, e, cacheId, data);
 					if (!image.empty()) o.add(L"Image", Json::str(image));
 				}
+				/* Its user and its cache (B-090). The file shown is named by
+				   no path here, only by ThumbnailCacheId, which the search
+				   index shares: WAE relates them. The Sha256 is the image's,
+				   never the file's. */
+				RecordContext context;
+				context.actor.sid = sid;
+				context.evidence = source;
+				addContext(o, context);
 				entries_.push(std::move(o));
 			}
 			log(2, L"❇️" + source + L" : " + std::to_wstring(cache.entries.size()) + L" entry(ies)");
@@ -351,6 +360,13 @@ void Thumbcaches::readThumbsDb() {
 				if (out) o.add(L"Image", Json::str(image));
 				else log(2, L"🔥Thumbnail not written: " + image);
 			}
+			/* The file had a thumbnail in its folder's Thumbs.db: it was
+			   there (B-090); the image's Sha256 is no fingerprint of it. */
+			RecordContext context;
+			context.kind = ContextKind::Presence;
+			context.subject.path = contextPath(source.parent_path().wstring() + L"\\" + t.name);
+			context.evidence = exhibit.sourcePath;
+			addContext(o, context);
 			entries_.push(std::move(o));
 		}
 		log(2, L"❇️" + exhibit.sourcePath + L" : " + std::to_wstring(thumbnails.size()) + L" thumbnail(s)");

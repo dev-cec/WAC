@@ -2,6 +2,7 @@
  *  \brief Registry artefacts of the second lot (see registry_lot2.h).
  */
 #include "registry_lot2.h"
+#include "context.h"
 #include "authenticode.h"
 #include "sha.h"
 
@@ -32,6 +33,13 @@ Json TrustRecord::toJson() const {
 	addDate(o, L"Trusted", trustedUtc);
 	o.add(L"MacrosEnabled", Json::boolean(macrosEnabled));
 	o.add(L"Data", Json::str(data));
+	// An opening of the document, by its user, which Office recorded (B-090).
+	RecordContext context;
+	context.kind = ContextKind::Access;
+	setCitedLocation(context, document, sid);
+	context.actor.sid = sid;
+	context.evidence = userHiveEvidence(sid);
+	addContext(o, context);
 	return o;
 }
 
@@ -73,6 +81,15 @@ Json ExplorerInput::toJson() const {
 	o.add(L"MruPosition", Json::num(mruPosition));
 	o.add(L"Text", Json::str(text));
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	/* An access (B-090): the folder typed, or the text searched — no
+	   object then, its name the text, which another search may share. */
+	RecordContext context;
+	context.kind = ContextKind::Access;
+	if (typedPath) setCitedLocation(context, text, sid);
+	if (context.subject.path.empty() && context.how.url.empty() && context.how.host.empty()) context.subject.name = text;
+	context.actor.sid = sid;
+	context.evidence = userHiveEvidence(sid);
+	addContext(o, context);
 	return o;
 }
 
@@ -93,6 +110,7 @@ HRESULT TypedPaths::getData() {
 			e.sid = sid;
 			e.mruPosition = number - 1;
 			e.text = valueText(type, data);
+			e.typedPath = true;
 			e.keyLastWriteUtc = written;
 			entries_.push_back(std::move(e));
 		}

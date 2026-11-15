@@ -58,6 +58,8 @@ std::vector<CustomCategoryHeader> customDestinationCategories(const uint8_t* dat
 struct CustomDestinationCategory {
 	std::vector<RecentDoc> recentDocs; //!< its entries, each a complete shortcut
 
+	std::wstring application;   //!< the jump list's application, for each item's Context
+
 	//! Builds an empty category.
 	CustomDestinationCategory() {};
 

@@ -3,6 +3,7 @@
  */
 #include "activities_cache.h"
 #include "consigne.h"
+#include "context.h"
 #include "conversions.h"
 #include "sqlite_reader.h"
 #include <algorithm>
@@ -61,7 +62,39 @@ void addColumn(Json& o, const SqliteRow& row, int column) {
 	}
 }
 
+/*! The program an activity's AppId names: its "x_exe_path" entry, else its
+ *  "windows_win32" one — a path, or a known folder's identifier then a name
+ *  ("{1AC14E77-…}\\notepad.exe"); an application model identifier
+ *  ("Microsoft.Windows.Explorer") is a name, no path.
+ *  @param appId the AppId column, a JSON list of {application, platform}
+ *  @param sid the profile's account, for its known folders
+ *  @param name receives the application's name when no path is found
+ *  @return the program's path; "" when the AppId names none */
+std::wstring activityProgram(const std::wstring& appId, const std::wstring& sid, std::wstring& name) {
+	Json list = Json::null();
+	std::wstring error;
+	if (!Json::parse(appId, list, error) || list.kind() != Json::Kind::Arr) return L"";
+	std::wstring win32;
+	for (const auto& entry : list.members()) {
+		const Json* application = entry.second.find(L"application");
+		const Json* platform = entry.second.find(L"platform");
+		if (!application || !platform || application->text().empty()) continue;
+		if (platform->text() == L"x_exe_path") return contextPath(application->text());
+		if (platform->text() == L"windows_win32" && win32.empty()) win32 = application->text();
+	}
+	if (win32.empty()) return L"";
+	const std::wstring path = win32[0] == L'{' ? knownFolderPath(win32, sid) : contextPath(win32);
+	if (path.empty()) name = win32;
+	return path;
+}
+
 } // namespace
+
+/*! The Timeline's kinds that relate an object (B-090): 5, an application,
+ *  file or page opened; 6, an application in use. The others — settings
+ *  synchronised (11), clipboard (10, 16) — name no file. Windows 11 writes
+ *  only those others. */
+const int ACTIVITY_OPENED = 5, ACTIVITY_IN_USE = 6;
 
 Json TimelineActivity::toJson() const {
 	Json o = Json::obj();
@@ -69,6 +102,26 @@ Json TimelineActivity::toJson() const {
 	o.add(L"Path", Json::str(path));
 	o.add(L"Table", Json::str(table));
 	o.merge(columns);   // the columns at the record's level, already filtered by add
+	RecordContext context;
+	const Json* type = columns.find(L"ActivityType");
+	const Json* appId = columns.find(L"AppId");
+	const std::wstring kind = type ? type->text() : L"";
+	if (appId && (kind == std::to_wstring(ACTIVITY_OPENED) || kind == std::to_wstring(ACTIVITY_IN_USE))) {
+		context.kind = kind == std::to_wstring(ACTIVITY_IN_USE) ? ContextKind::Execution : ContextKind::Access;
+		std::wstring name;
+		ContextObject program;
+		program.path = activityProgram(appId->text(), sid, name);
+		program.name = name;
+		if (context.kind == ContextKind::Execution) {
+			context.subject = std::move(program);
+		} else if (!program.path.empty() || !program.name.empty()) {
+			program.role = L"Application";   // what opened; the content opened stays in the Payload
+			context.related.push_back(std::move(program));
+		}
+	}
+	context.actor.sid = sid;
+	context.evidence = path;
+	addContext(o, context);
 	return o;
 }
 

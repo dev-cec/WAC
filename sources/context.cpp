@@ -235,8 +235,8 @@ std::wstring profileOf(const std::wstring& sid) {
 
 } // namespace
 
-std::wstring userCommandProgram(const std::wstring& command, const std::wstring& sid) {
-	std::wstring program = commandProgram(command);
+std::wstring userPath(const std::wstring& cited, const std::wstring& sid) {
+	std::wstring program = cited;
 	const std::wstring profile = sid.empty() ? L"" : profileOf(sid);
 	if (!profile.empty()) {
 		const std::pair<const wchar_t*, std::wstring> VARIABLES[] = {
@@ -252,6 +252,41 @@ std::wstring userCommandProgram(const std::wstring& command, const std::wstring&
 		}
 	}
 	return contextPath(program);
+}
+
+void setCitedLocation(RecordContext& context, const std::wstring& cited, const std::wstring& sid) {
+	std::wstring location = cited;
+	while (!location.empty() && iswspace(location.front())) location.erase(0, 1);
+	while (!location.empty() && iswspace(location.back())) location.pop_back();
+	if (_wcsnicmp(location.c_str(), L"file:", 5) == 0) {
+		location.erase(0, 5);
+		/* file:///C:/x is a local path, file://server/x a share's, both
+		   URL-encoded; file:C:/x, the search indexer's, is written raw —
+		   decoded, a "%" of a name would be taken for an escape. */
+		if (location.compare(0, 2, L"//") == 0) {
+			location = decodeText(decodeURIComponent(encodeText(location)), CP_UTF8);
+			if (location.compare(0, 3, L"///") == 0) location.erase(0, 3);
+		}
+	} else if (location.find(L"://") != std::wstring::npos) {
+		context.how.url = location;
+		context.how.host = urlHost(location);
+		return;
+	}
+	for (wchar_t& c : location) if (c == L'/') c = L'\\';
+	if (location.compare(0, 2, L"\\\\") == 0) {
+		const size_t end = location.find(L'\\', 2);
+		std::wstring host = location.substr(2, end == std::wstring::npos ? std::wstring::npos : end - 2);
+		for (wchar_t& c : host) c = (wchar_t)towlower(c);
+		if (host != L"?" && host != L".") {   // \\?\ and \\.\ are local prefixes
+			context.how.host = host;
+			return;
+		}
+	}
+	context.subject.path = userPath(location, sid);
+}
+
+std::wstring userCommandProgram(const std::wstring& command, const std::wstring& sid) {
+	return userPath(commandProgram(command), sid);
 }
 
 std::wstring hiveEvidence(const std::wstring& hive, const std::wstring& sid) {

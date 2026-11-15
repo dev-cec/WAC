@@ -213,6 +213,14 @@ Json ExplorerRecentDoc::toJson() const {
 	o.add(L"Name", Json::str(name));
 	o.add(L"Shortcut", shortcut);
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	/* An opening (B-090). The list keeps the name alone, not its folder:
+	   the subject is named, and the shortcut of Recent gives the path. */
+	RecordContext context;
+	context.kind = ContextKind::Access;
+	context.subject.name = name;
+	context.actor.sid = sid;
+	context.evidence = userHiveEvidence(sid);
+	addContext(o, context);
 	return o;
 }
 

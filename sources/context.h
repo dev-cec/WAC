@@ -182,10 +182,28 @@ std::wstring urlHost(const std::wstring& url);
  *  @return the program's path, normalised (contextPath); "" if none */
 std::wstring serviceProgram(const std::wstring& imagePath);
 
-/*! The program of a command a user's hive or task holds: commandProgram,
- *  its variables of that user (%USERPROFILE%, %APPDATA%, %LOCALAPPDATA%,
- *  %TEMP%, %TMP%) on the profile of \a sid (Host.Profiles), then
- *  contextPath — which expands the machine's own (%windir%…).
+/*! A path a user's hive or file holds: its variables of that user
+ *  (%USERPROFILE%, %APPDATA%, %LOCALAPPDATA%, %TEMP%, %TMP%) on the profile
+ *  of \a sid (Host.Profiles), then contextPath — which expands the
+ *  machine's own (%windir%…). A document's path keeps its spaces.
+ *  @param cited the path as written
+ *  @param sid the account; empty for the machine
+ *  @return the path; "" if it names no determinable file */
+std::wstring userPath(const std::wstring& cited, const std::wstring& sid);
+
+/*! What an access names, in whatever form a source writes it, set on a
+ *  context: a path (its user's variables expanded, "/" read as "\" — Office
+ *  writes "%USERPROFILE%/Documents/x.docm"); a file: URL as that path —
+ *  file:///C:/x decoded, the indexer's file:C:/x raw; another URL as How.Url and How.Host; a share (\\server\share)
+ *  by its host, a path WAC cannot place on a local volume left unwritten.
+ *  One function, so that the same document has one form whatever names it.
+ *  @param context receives Subject.Path, or How.Url and How.Host
+ *  @param cited the location as written
+ *  @param sid the account whose variables apply; empty for the machine */
+void setCitedLocation(RecordContext& context, const std::wstring& cited, const std::wstring& sid);
+
+/*! The program of a command a user's hive or task holds: userPath of its
+ *  commandProgram.
  *  @param command the command as written
  *  @param sid the account; empty for the machine
  *  @return the program's path; "" if it names no determinable file */

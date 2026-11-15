@@ -2522,7 +2522,12 @@ PowerShell profiles, WMI: the program started, apart from its arguments) and
 the file system (MFT, USN journal, deleted files, recycle bin, FAT: presence,
 creation, modification or deletion, the file by its path and NTFS identity ---
 for a freed record, the one the file had, one sequence before; a
-deleted file's fingerprint only when all its content came back); the other
+deleted file's fingerprint only when all its content came back) and the
+accesses (shortcuts, jump lists, RecentDocs, shellbags, typed paths,
+searches, Office, Timeline, search index, thumbnails: the document or folder
+opened, its volume by its serial number; a shellbag's folder rebuilt from its
+volume down, never guessed under a known folder; a Desktop shortcut, which an
+installer lays, attests no opening and has no \champ{Kind}); the other
 families receive it in turn. It holds identities only --- the dates stay in the
 record's fields --- and serves to relate the artefacts: the same file, account
 or software has the same form whatever artefact names it.

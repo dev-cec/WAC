@@ -109,6 +109,11 @@ Json ShortcutItem::toJson() const {
 	o.add(L"Scope", Json::str(sid.empty() ? L"AllUsers" : L"User"));
 	addUser(o, sid);
 	o.merge(shortcut->toJson());
+	/* A shortcut of the Desktop or the Start menu is no opening: an installer
+	   lays most of them. Its target and its user, without a Kind (B-090). */
+	RecordContext context = shortcut->context();
+	context.kind = ContextKind::None;
+	addContext(o, context);
 	return o;
 }
 

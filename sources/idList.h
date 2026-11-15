@@ -1421,4 +1421,22 @@ struct UnknownShellItem :IShellItem {
 
 };
 
+/*! A folder's place, walked down the shell items that name it (B-090). */
+struct ShellItemPath {
+	std::wstring path;                  //!< "C:\Users\wac", "\\server\share\x"; "" when no item placed it
+	unsigned long long mftEntry = 0;    //!< the last folder's $MFT reference (block 0xbeef0004, version 7 on)
+	unsigned mftSequence = 0;
+	std::wstring lastName;              //!< the last item's name, even when the path is not known
+};
+
+/*! One step down a PIDL: what \a item adds to \a place. A volume ("C:\")
+ *  or a share (\\server\share) starts a path; a file entry adds its long
+ *  name (block 0xbeef0004, else its primary name) and its $MFT reference to
+ *  a path started; an archive's entry gives its name, no path — it is no
+ *  file of the volume; any other item — the Computer, a control panel, a known
+ *  folder by its GUID — ends what can be placed: guessed, a path would
+ *  name another folder than the one browsed.
+ *  @param place the path so far, changed in place
+ *  @param item the next item */
+void stepShellItemPath(ShellItemPath& place, const IdList& item);
 

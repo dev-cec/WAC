@@ -52,6 +52,10 @@
 #include "deleted_files.h"
 #include "fat_volumes.h"
 #include "mft.h"
+#include "idList.h"
+#include "portable_conversions.h"
+#include "registry_lot3.h"
+#include "activities_cache.h"
 #include "rdp_server.h"
 #include "thumbcache.h"
 #include "reg_amcache.h"
@@ -1180,6 +1184,129 @@ void defenderHistory() {
 		      && at(presentContext, { L"Evidence", L"Path" }) == L"\\\\.\\I:"
 		      && at(erasedContext, { L"Kind" }) == L"Deletion" && at(erasedContext, { L"Subject", L"Path" }).empty(),
 		      "fat: an entry present or deleted, a name without its first letter not written (B-089)");
+
+		/* B-090: accesses. A location in each form a source writes it; a
+		   shortcut's target and volume; a folder's path walked down its
+		   shell items; Office's document; a typed path, a search; a Timeline
+		   activity; an indexed item by its URL, not its translated name. */
+		const std::wstring wac = L"S-1-5-21-1-2-3-1000";
+		auto located = [&](const std::wstring& cited, const std::wstring& sid) {
+			RecordContext c;
+			setCitedLocation(c, cited, sid);
+			return c;
+		};
+		check(located(L"%USERPROFILE%/Documents/x.docm", wac).subject.path == L"C:\\Users\\wac\\Documents\\x.docm"
+		      && located(L"file:///C:/A%20B/x.txt", L"").subject.path == L"C:\\A B\\x.txt"
+		      && located(L"file:C:/Users/wac/50%25.txt", L"").subject.path == L"C:\\Users\\wac\\50%25.txt"
+		      && located(L"https://Docs.Example.com/x.docx", wac).how.host == L"docs.example.com"
+		      && located(L"https://Docs.Example.com/x.docx", wac).subject.path.empty()
+		      && located(L"\\\\Srv\\share\\x", L"").how.host == L"srv" && located(L"\\\\Srv\\share\\x", L"").subject.path.empty()
+		      && located(L"\\\\?\\C:\\x", L"").subject.path == L"C:\\x",
+		      "context: a location by path, user variable, file: URL (encoded or the indexer's raw), URL, share (B-090)");
+		std::vector<uint8_t> lnk(76, 0);
+		lnk[0] = 0x4C;
+		const uint8_t LINK_CLSID[16] = { 0x01, 0x14, 0x02, 0, 0, 0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46 };
+		std::memcpy(lnk.data() + 4, LINK_CLSID, 16);
+		lnk[20] = 0x02;                                    // HasLinkInfo
+		auto put32 = [&](uint32_t v) { for (int i = 0; i < 4; ++i) lnk.push_back((uint8_t)(v >> (8 * i))); };
+		const std::string document = "E:\\exfil\\plan.docx";
+		const uint32_t volumeIdSize = 0x11, basePath = 0x1C + volumeIdSize;
+		const uint32_t suffix = basePath + (uint32_t)document.size() + 1;
+		put32(suffix + 1); put32(0x1C); put32(1); put32(0x1C); put32(basePath); put32(0); put32(suffix);
+		put32(volumeIdSize); put32(2); put32(0x0A1B2C3D); put32(0x10);   // a removable volume, its serial
+		lnk.push_back(0);
+		for (char c : document) lnk.push_back((uint8_t)c);
+		lnk.push_back(0);
+		lnk.push_back(0);
+		put32(0);
+		RecentDoc recentShortcut(lnk.data(), lnk.size(), L"\\Users\\wac\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\plan.lnk", wac);
+		const RecordContext openedContext = recentShortcut.context();
+		check(openedContext.kind == ContextKind::Access && openedContext.subject.path == L"E:\\exfil\\plan.docx"
+		      && openedContext.how.volumeSerial == L"0A1B2C3D" && openedContext.actor.sid == wac
+		      && openedContext.evidence == L"C:\\Users\\wac\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\plan.lnk",
+		      "shortcut: an access of its target, the volume by its serial, its user, the .lnk the evidence (B-090)");
+		// A shellbag's folder: the volume C:\, then "wac docs" with its $MFT reference (block 0xbeef0004, version 9).
+		std::vector<uint8_t> volumeItem(25, 0);
+		volumeItem[0] = 25;
+		volumeItem[2] = 0x2F;
+		std::memcpy(volumeItem.data() + 3, "C:\\", 3);
+		const std::wstring longName = L"wac docs";
+		const size_t blockSize = 46 + (longName.size() + 1) * 2 + 2, blockAt = 24;
+		std::vector<uint8_t> folderItem(blockAt + blockSize + 2, 0);
+		writeLittleEndian<uint16_t>(folderItem.data(), (uint16_t)folderItem.size());
+		folderItem[2] = 0x31;                              // a folder, its primary name in ASCII
+		writeLittleEndian<uint16_t>(folderItem.data() + 12, 0x10);
+		std::memcpy(folderItem.data() + 14, "WACDOC~1", 9);   // the 8.3 name; the long name prevails
+		uint8_t* block = folderItem.data() + blockAt;
+		writeLittleEndian<uint16_t>(block, (uint16_t)blockSize);
+		writeLittleEndian<uint16_t>(block + 2, 9);
+		writeLittleEndian<uint32_t>(block + 4, 0xBEEF0004);
+		writeLittleEndian<uint16_t>(block + 16, 0x2E);
+		writeLittleEndian<uint64_t>(block + 20, (5ULL << 48) | 0x1234);
+		for (size_t i = 0; i < longName.size(); ++i) writeLittleEndian<uint16_t>(block + 46 + 2 * i, (uint16_t)longName[i]);
+		writeLittleEndian<uint16_t>(folderItem.data() + folderItem.size() - 2, (uint16_t)blockAt);
+		IdList volumeList(volumeItem.data(), 0), folderList(folderItem.data(), 0);
+		ShellItemPath place;
+		stepShellItemPath(place, volumeList);
+		const std::wstring root = place.path;
+		stepShellItemPath(place, folderList);
+		check(root == L"C:\\" && place.path == L"C:\\wac docs" && place.mftEntry == 0x1234 && place.mftSequence == 5,
+		      "shellbags: a folder's path from its volume down its long names, its $MFT reference (B-090)");
+		ShellItemPath lost;
+		stepShellItemPath(lost, folderList);
+		check(lost.path.empty() && lost.lastName == L"wac docs", "shellbags: a folder no volume placed has a name, no path (B-090)");
+		TrustRecord trusted;
+		trusted.sid = wac;
+		trusted.document = L"%USERPROFILE%/Documents/wac-macro-test.docm";
+		const Json trustedRecord = trusted.toJson();
+		const Json* trustedContext = trustedRecord.find(L"Context");
+		check(at(trustedContext, { L"Kind" }) == L"Access"
+		      && at(trustedContext, { L"Subject", L"Path" }) == L"C:\\Users\\wac\\Documents\\wac-macro-test.docm"
+		      && at(trustedContext, { L"Actor", L"Sid" }) == wac && at(trustedContext, { L"Evidence", L"Path" }) == L"C:\\Users\\wac\\NTUSER.DAT",
+		      "office: the trusted document on its user's profile (B-090)");
+		ExplorerInput typed, searched;
+		typed.sid = searched.sid = wac;
+		typed.typedPath = true;
+		typed.text = L"\\\\wac-test.invalid\\share";
+		searched.text = L"C:\\not a path, a search";
+		const Json typedRecord = typed.toJson(), searchedRecord = searched.toJson();
+		const Json* typedContext = typedRecord.find(L"Context");
+		const Json* searchedContext = searchedRecord.find(L"Context");
+		check(at(typedContext, { L"How", L"Host" }) == L"wac-test.invalid" && at(typedContext, { L"Subject", L"Name" }).empty()
+		      && at(searchedContext, { L"Subject", L"Name" }) == L"C:\\not a path, a search"
+		      && at(searchedContext, { L"Subject", L"Path" }).empty(),
+		      "typed paths: a share by its host; a search is a text, never a path (B-090)");
+		TimelineActivity inUse, settings;
+		inUse.sid = settings.sid = wac;
+		inUse.path = settings.path = L"C:\\Users\\wac\\AppData\\Local\\ConnectedDevicesPlatform\\L.wac\\ActivitiesCache.db";
+		inUse.columns.add(L"ActivityType", Json::num(6));
+		inUse.columns.add(L"AppId", Json::str(L"[{\"application\":\"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\\\notepad.exe\","
+		                                        L"\"platform\":\"windows_win32\"},{\"application\":\"\",\"platform\":\"packageId\"}]"));
+		settings.columns.add(L"ActivityType", Json::num(11));
+		settings.columns.add(L"AppId", Json::str(L"[{\"application\":\"x\",\"platform\":\"x_exe_path\"}]"));
+		const Json inUseRecord = inUse.toJson(), settingsRecord = settings.toJson();
+		const Json* inUseContext = inUseRecord.find(L"Context");
+		const Json* settingsContext = settingsRecord.find(L"Context");
+		check(at(inUseContext, { L"Kind" }) == L"Execution" && at(inUseContext, { L"Subject", L"Path" }) == L"C:\\Windows\\System32\\notepad.exe"
+		      && at(settingsContext, { L"Kind" }).empty() && at(settingsContext, { L"Actor", L"Sid" }) == wac,
+		      "timeline: an application in use by its AppId; a synchronised setting relates nothing (B-090)");
+		ExplorerRecentDoc recent;
+		recent.sid = wac;
+		recent.name = L"plan.docx";
+		const Json recentRecord = recent.toJson();
+		const Json* recentContext = recentRecord.find(L"Context");
+		check(at(recentContext, { L"Kind" }) == L"Access" && at(recentContext, { L"Subject", L"Name" }) == L"plan.docx"
+		      && at(recentContext, { L"Subject", L"Path" }).empty(),
+		      "explorer recent docs: the document by its name, the list keeping no folder (B-090)");
+		SearchIndexItem indexed;
+		indexed.path = L"C:\\ProgramData\\Microsoft\\Search\\Data\\Applications\\Windows\\Windows.db";
+		indexed.fields.add(L"ItemPathDisplay", Json::str(L"C:\\ProgramData\\Microsoft\\Windows\\Menu Démarrer"));
+		indexed.fields.add(L"ItemUrl", Json::str(L"file:C:/ProgramData/Microsoft/Windows/Start Menu"));
+		const Json indexedRecord = indexed.toJson();
+		const Json* indexedContext = indexedRecord.find(L"Context");
+		check(at(indexedContext, { L"Kind" }) == L"Presence"
+		      && at(indexedContext, { L"Subject", L"Path" }) == L"C:\\ProgramData\\Microsoft\\Windows\\Start Menu",
+		      "search index: an item present by its URL, not its translated display path (B-090)");
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;
 	}

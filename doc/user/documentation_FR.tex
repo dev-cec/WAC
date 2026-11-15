@@ -2631,8 +2631,14 @@ lancé, séparé de ses arguments) et le système de fichiers (MFT, journal USN,
 fichiers supprimés, corbeille, FAT : présence, création, modification ou
 suppression, le fichier par son chemin et son identité NTFS --- pour un
 enregistrement libéré, celle qu'avait le fichier, une séquence avant ; l'empreinte
-d'un fichier supprimé seulement quand tout son contenu est revenu) ; les
-autres familles le reçoivent à leur tour. Il ne contient que des identités --- les
+d'un fichier supprimé seulement quand tout son contenu est revenu) et les
+accès (raccourcis, jump lists, RecentDocs, shellbags, chemins tapés,
+recherches, Office, Timeline, index de recherche, vignettes : le document ou
+le dossier ouvert, son volume par son numéro de série ; le dossier d'un
+shellbag reconstitué de son volume vers le bas, jamais deviné sous un dossier
+connu ; un raccourci du Bureau, qu'un installateur pose, n'atteste aucune
+ouverture et n'a pas de \champ{Kind}) ; les autres familles le reçoivent à
+leur tour. Il ne contient que des identités --- les
 dates restent dans les champs de l'enregistrement --- et sert à relier les
 artefacts entre eux : le même fichier, le même compte, le même logiciel y
 ont la même forme, quel que soit l'artefact qui les nomme.

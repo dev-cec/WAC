@@ -89,7 +89,15 @@ CustomDestinationCategory::CustomDestinationCategory(LPBYTE buffer, size_t buffe
 Json CustomDestinationCategory::toJson() {
 	log(3, L"🔈CustomDestinationCategory toJson");
 	Json arr = Json::arr();
-	for (RecentDoc& r : recentDocs) arr.push(r.toJson());
+	for (RecentDoc& r : recentDocs) {
+		Json item = r.toJson();
+		/* What an application lays in its own list — tasks, pinned or
+		   frequent items — attests no opening by itself: no Kind (B-090). */
+		RecordContext context = r.context();
+		context.kind = ContextKind::None;
+		addJumpListContext(item, std::move(context), application);
+		arr.push(std::move(item));
+	}
 	Json o = Json::obj();
 	o.add(L"RecentDocs", std::move(arr));
 	return o;
@@ -133,6 +141,7 @@ CustomDestination::CustomDestination(std::filesystem::path _path, std::wstring _
 		if (size > 24) {
 			log(3, L"🔈CustomDestinationCategory");
 			category = std::make_unique<CustomDestinationCategory>(buffer, size, path, _sid);
+			category->application = application;
 		}
 		else {
 			log(2, L"🔥" + pathOriginal + L" : no LNK to parse",ERROR_EMPTY );

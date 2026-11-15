@@ -156,6 +156,17 @@ Json AutomaticDestination::toJson() {
 	for (JumplistEntry& e : entries) {
 		Json item = e.lnk ? e.lnk->toJson() : Json::obj();
 		if (e.destList) item.add(L"DestList", e.destList->toJson());
+		/* An opening by the application (B-090): the shortcut's target, or
+		   the DestList's path when its stream is missing or names none. */
+		RecordContext context;
+		if (e.lnk) context = e.lnk->context();
+		context.kind = ContextKind::Access;
+		if (context.subject.path.empty() && context.how.url.empty() && e.destList
+		    && e.destList->pathObject.find(L":\\") != std::wstring::npos)
+			context.subject.path = contextPath(e.destList->pathObject);
+		context.actor.sid = Sid;
+		context.evidence = pathOriginal;
+		addJumpListContext(item, std::move(context), application);
 		lnks.push(std::move(item));
 	}
 	if (destListVersion) o.add(L"DestListVersion", Json::num((long long)destListVersion));

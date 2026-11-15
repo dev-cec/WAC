@@ -507,6 +507,7 @@ def cross_checks(folder):
     found += guarded(check_context_arrivals, folder)
     found += guarded(check_context_persistence, folder)
     found += guarded(check_context_filesystem, folder)
+    found += guarded(check_context_accesses, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6506,6 +6507,88 @@ def check_context_filesystem(folder):
     print(f"  {'✅' if ok else '❌'} Context of the file system: {counted} — kind and NTFS identity of every record of "
           f"mft.json and usn_journal.json; deleted witnesses by SHA-256 and the journal's identity; the bin's copy in mft.json"
           + ("" if ok else f": {len(wrong)} wrong, {wrong[:3]}"))
+    return 0 if ok else 1
+
+
+def check_context_accesses(folder):
+    """The Context of accesses (B-090), on the harness's witnesses, each the
+    subject of the right record: the document added to the recent documents
+    by the shell (the shortcut Recent holds names its path; Explorer's list
+    its name), the shortcut to the winter file (its target, the .lnk the
+    evidence), Office's trusted document on its user's profile, the typed
+    share by its host, the search by its text. The shellbags: the folder of
+    the ZIP Explorer browsed, by the path the harness made it at — and by the
+    NTFS identity mft.json gives that path, two sources for one folder."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  no witness reference: the Context of accesses not checked")
+        return 0
+    lines = open(path, encoding="utf-8-sig", errors="replace").read().splitlines()
+    def ref(key):
+        return [l[len(key) + 1:].split("|") for l in lines if l.startswith(key + "=")]
+    def subject(c, key):
+        return str((c.get("Subject") or {}).get(key) or "")
+    def access(name, test):
+        return [c for _, c in contexts(folder, name) if c.get("Kind") == "Access" and test(c)]
+    def walk(bags):
+        for b in bags or []:
+            if isinstance(b, dict):
+                yield b
+                yield from walk(b.get("Children"))
+    wrong, seen = [], []
+    for sid, extension, name in ref("recentdoc"):
+        document = "c:\\users\\wac\\documents\\" + name.lower()
+        if not access("recentdocs.json", lambda c: subject(c, "Path").lower() == document
+                      and (c.get("Actor") or {}).get("Sid") == sid):
+            wrong.append(f"recentdocs.json: no Access of {document} by {sid}")
+        elif not access("explorer_recent_docs.json", lambda c: subject(c, "Name").lower() == name.lower()):
+            wrong.append(f"explorer_recent_docs.json: no Access named {name}")
+        else:
+            seen.append("recent document")
+    for link, target, *_ in ref("lnkwinter"):
+        if access("recentdocs.json", lambda c: subject(c, "Path").lower() == target.lower()
+                  and str((c.get("Evidence") or {}).get("Path", "")).lower() == link.lower()):
+            seen.append("shortcut")
+        else:
+            wrong.append(f"recentdocs.json: no Access of {target} read in {link}")
+    for sid, document in ref("trust"):
+        expected = document.replace("%USERPROFILE%", "C:\\Users\\wac").replace("/", "\\").lower()
+        if access("office_trust_records.json", lambda c: subject(c, "Path").lower() == expected):
+            seen.append("office")
+        else:
+            wrong.append(f"office_trust_records.json: no Access of {expected}")
+    for sid, position, share in ref("typedpath"):
+        host = share.lstrip("\\").split("\\")[0].lower()
+        if access("typed_paths.json", lambda c: (c.get("How") or {}).get("Host") == host):
+            seen.append("typed path")
+        else:
+            wrong.append(f"typed_paths.json: no Access of host {host}")
+    for sid, text in ref("search"):
+        if access("word_wheel_query.json", lambda c: subject(c, "Name") == text):
+            seen.append("search")
+        else:
+            wrong.append(f"word_wheel_query.json: no Access named {text}")
+    if ref("zipentry"):
+        archive = "c:\\users\\wac\\documents\\wac-archive.zip"
+        bags = load(folder, "shellbags.json")
+        mine = [b.get("Context") or {} for b in walk(bags if isinstance(bags, list) else [])
+                if subject(b.get("Context") or {}, "Path").lower() == archive]
+        mft = load(folder, "mft.json")
+        record = next((e for e in mft or [] if isinstance(e, dict) and not e.get("Deleted")
+                       and str(e.get("Path", "")).lower() == archive), None) if isinstance(mft, list) else None
+        ntfs = f"{str(record.get('Volume', '')).upper()}|{record.get('Entry')}|{record.get('Sequence')}" if record else ""
+        if not mine:
+            wrong.append(f"shellbags.json: no folder whose subject is {archive}")
+        elif ntfs and not any(subject(c, "Ntfs") == ntfs for c in mine):
+            wrong.append(f"shellbags.json: {archive} by NTFS {[subject(c, 'Ntfs') for c in mine]}, mft.json {ntfs}")
+        else:
+            seen.append("shellbag" + (" with its NTFS identity" if ntfs else ""))
+    if not seen and not wrong:
+        print("  ⏭️  no access witness placed: the Context of accesses not checked")
+        return 0
+    ok = not wrong
+    print(f"  {'✅' if ok else '❌'} Context of accesses: {len(seen)} witness(es) the subject of their record ({', '.join(seen)})"
+          + ("" if ok else f": {wrong[:3]}"))
     return 0 if ok else 1
 
 

@@ -2,6 +2,7 @@
  *  \brief Windows Search index (Windows 11): see search_index.h.
  */
 #include "search_index.h"
+#include "context.h"
 #include "conversions.h"
 #include "ese_database.h"
 #include "ese_recovery.h"
@@ -215,6 +216,16 @@ Json SearchIndexItem::toJson() const {
 	o.add(L"Path", Json::str(path));
 	o.add(L"Table", Json::str(table));
 	o.merge(fields);   // the item's fields at the record's level, already filtered by add
+	/* The indexer saw the item: a presence, not an opening (B-090). Its
+	   path from its URL — ItemPathDisplay is translated ("Menu Démarrer"
+	   for Start Menu, measured), no file's path. */
+	RecordContext context;
+	context.kind = ContextKind::Presence;
+	const Json* url = fields.find(L"ItemUrl");
+	if (!url) url = fields.find(L"Url");
+	if (url) setCitedLocation(context, url->text(), L"");
+	context.evidence = path;
+	addContext(o, context);
 	return o;
 }
 

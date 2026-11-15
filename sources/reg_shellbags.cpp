@@ -2,8 +2,9 @@
  *  \brief Reading of the BagMRU tree (see reg_shellbags.h).
  */
 #include "reg_shellbags.h"
+#include "context.h"
 
-Json Shellbag::toJson() const {
+Json Shellbag::toJson(ShellItemPath place) const {
 	log(3, L"🔈Shellbag toJson");
 	Json o = Json::obj();
 	o.add(L"ID",      Json::num(id));
@@ -20,10 +21,25 @@ Json Shellbag::toJson() const {
 	o.add(L"KeyLastWriteTimeUtc", Json::str(timeToIso8601Utc(keyLastWriteTimeUtc)));
 	if (nodeSlot) o.add(L"NodeSlot", Json::num(*nodeSlot));
 	Json items = Json::arr();
-	for (const std::unique_ptr<IdList>& item : shellitems) items.push(item->toJson());
+	for (const std::unique_ptr<IdList>& item : shellitems) {
+		items.push(item->toJson());
+		stepShellItemPath(place, *item);
+	}
 	o.add(L"ShellItems", std::move(items));
+	/* The folder browsed (B-090): its path from the volume down, its NTFS
+	   identity when the item gives it; its name alone when no volume placed
+	   it (a known folder, a library). */
+	RecordContext context;
+	context.kind = ContextKind::Access;
+	setCitedLocation(context, place.path, sid);
+	if (!context.subject.path.empty() && place.mftEntry)
+		context.subject.ntfs = contextNtfs(context.subject.path, place.mftEntry, place.mftSequence);
+	if (context.subject.path.empty() && context.how.host.empty()) context.subject.name = place.lastName;
+	context.actor.sid = sid;
+	context.evidence = hiveEvidence(hive, sid);
+	addContext(o, context);
 	Json subfolders = Json::arr();
-	for (const Shellbag& c : children) subfolders.push(c.toJson());
+	for (const Shellbag& c : children) subfolders.push(c.toJson(place));
 	o.add(L"Children", std::move(subfolders));
 	return o;
 }

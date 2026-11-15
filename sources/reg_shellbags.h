@@ -47,9 +47,12 @@ public:
 	int mruPosition = 0;      //!< rank among its siblings in MRUListEx, 0 for the most recently browsed
 	std::optional<unsigned int> nodeSlot; //!< NodeSlot: number of the Bags key holding the folder's view settings
 
-	/*! Converts the shellbag and its children to JSON.
+	/*! Converts the shellbag and its children to JSON, each with the
+	 *  Context of the folder browsed (B-090).
+	 *  @param parent the place of the folder it was browsed from: its path
+	 *         is that of the parent, walked down its own shell items
 	 *  @return its JSON object. */
-	Json toJson() const;
+	Json toJson(ShellItemPath parent = ShellItemPath()) const;
 
 
 };

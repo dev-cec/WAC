@@ -3032,3 +3032,39 @@ std::unique_ptr<IShellItem> makeShellItem(LPBYTE buffer, int _level, bool Parent
 	}
 	return nullptr;   // no type recognised: never an implicit return
 }
+
+void stepShellItemPath(ShellItemPath& place, const IdList& item) {
+	place.mftEntry = 0;
+	place.mftSequence = 0;
+	place.lastName.clear();
+	const IShellItem* shellItem = item.shellItem.get();
+	if (const auto* volume = dynamic_cast<const VolumeShellItem*>(shellItem)) {
+		place.lastName = volume->name;
+		const bool letter = volume->name.size() >= 2 && iswalpha(volume->name[0]) && volume->name[1] == L':';
+		place.path = letter ? volume->name.substr(0, 2) + L"\\" : L"";   // "C:\": the root, a path of its own
+		return;
+	}
+	if (const auto* share = dynamic_cast<const NetworkShellItem*>(shellItem)) {
+		place.lastName = share->location;
+		place.path = share->location.compare(0, 2, L"\\\\") == 0 ? share->location : L"";
+		while (!place.path.empty() && place.path.back() == L'\\') place.path.pop_back();
+		return;
+	}
+	if (const auto* entry = dynamic_cast<const FileEntryShellItem*>(shellItem)) {
+		std::wstring name = entry->fsPrimaryName;
+		for (const std::unique_ptr<IExtensionBlock>& block : entry->extensionBlocks)
+			if (const auto* names = dynamic_cast<const Beef0004*>(block.get())) {
+				if (!names->longName.empty()) name = names->longName;
+				place.mftEntry = names->mftEntryNumber;
+				place.mftSequence = names->mftSequenceNumber;
+			}
+		place.lastName = name;
+		if (place.path.empty() || name.empty()) place.path.clear();
+		else place.path += (place.path.back() == L'\\' ? L"" : L"\\") + name;
+		return;
+	}
+	// An archive's entry: a name, no file of the volume — the path stops at the archive.
+	if (const auto* content = dynamic_cast<const ArchiveFileContent*>(shellItem)) place.lastName = content->name;
+	place.path.clear();
+}
+

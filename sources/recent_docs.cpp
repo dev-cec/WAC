@@ -487,6 +487,34 @@ Json RecentDoc::toJson() {
 	return o;
 }
 
+RecordContext RecentDoc::context() const {
+	RecordContext c;
+	c.kind = ContextKind::Access;
+	setCitedLocation(c, target, Sid);   // a path, or an Internet shortcut's URL
+	// Without LinkInfo (a shortcut made by a program), the path with its variables.
+	if (c.subject.path.empty() && c.how.url.empty() && c.how.host.empty()) setCitedLocation(c, targetEnvironment, Sid);
+	if (!c.subject.path.empty()) setFileObject(c.subject, c.subject.path, targetFingerprint);
+	c.how.volumeSerial = volumeSerial;
+	if (c.how.host.empty() && !netName.empty()) {   // a share's target: its server
+		RecordContext share;
+		setCitedLocation(share, netName, Sid);
+		c.how.host = share.how.host;
+	}
+	c.actor.sid = Sid;
+	c.evidence = path_original;
+	return c;
+}
+
+void addJumpListContext(Json& item, RecordContext context, const std::wstring& application) {
+	if (!application.empty()) {
+		ContextObject app;
+		app.role = L"Application";
+		app.name = application;
+		context.related.push_back(std::move(app));
+	}
+	addContext(item, context);
+}
+
 void RecentDoc::clear() {
 	log(3, L"🔈RecentDoc clear");
 	idLists.clear();   // destroys the elements -> really releases them
@@ -521,7 +549,11 @@ HRESULT RecentDocs::getData() {
 HRESULT RecentDocs::toJson() {
 	log(3, L"🔈RecentDocs toJson");
 	Json arr = Json::arr();
-	for (RecentDoc& r : recentdocs) arr.push(r.toJson());
+	for (RecentDoc& r : recentdocs) {
+		Json o = r.toJson();
+		addContext(o, r.context());
+		arr.push(std::move(o));
+	}
 	return writeJsonFile("recentdocs.json", arr);
 }
 

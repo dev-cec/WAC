@@ -72,6 +72,7 @@ struct ExplorerInput {
 	 *  as the shellbags' (it was a "Rank" from 1, a second name for one concept). */
 	unsigned mruPosition = 0;
 	std::wstring text;
+	bool typedPath = false;     //!< a location typed in Explorer's address bar; otherwise a searched text
 	FILETIME keyLastWriteUtc = { 0 };   //!< the key's last write: the date of position 0
 	Json toJson() const;        //!< @return the entry as a JSON object
 };
