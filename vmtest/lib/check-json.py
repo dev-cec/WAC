@@ -505,6 +505,7 @@ def cross_checks(folder):
     found += guarded(check_context_executions, folder)
     found += guarded(check_context_events, folder)
     found += guarded(check_context_arrivals, folder)
+    found += guarded(check_context_persistence, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6373,6 +6374,55 @@ def check_context_arrivals(folder):
     print(f"  {'✅' if ok else '❌'} Context of arrivals: {seen} download(s) of the harness an Arrival of the saved file from its URL"
           f" (Zone.Identifier alike), {mails} message(s) of the mail witness with pypff's attachment SHA-256"
           + ("" if ok else f": {wrong[:2]}"))
+    return 0 if ok else 1
+
+
+def check_context_persistence(folder):
+    """The Context of persistence (B-088), on the harness's witnesses: the
+    IFEO debugger and the SilentProcessExit monitor (persistence.json), the
+    startup folder's script with its SHA-256 (startup_folders.json), the
+    DEFAULT hive's Run values, one written with %SystemRoot% (run.json):
+    each is the subject, by its path, of the right record. And no service or
+    scheduled task left with a program in a form WAC resolves (\\Device\\…,
+    a variable)."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  no witness reference: persistence's Context not checked")
+        return 0
+    lines = open(path, encoding="utf-8", errors="replace").read().splitlines()
+    def ref(key):
+        return [l[len(key) + 1:].split("|") for l in lines if l.startswith(key + "=")]
+    def subjects(name):
+        return [((c.get("Subject") or {}).get("Path") or "").lower() for _, c in contexts(folder, name)
+                if c.get("Kind") == "Persistence"]
+    windows = ((load(folder, "OperatingSystem.json") or {}).get("SystemRoot") or "C:\\Windows") \
+        if isinstance(load(folder, "OperatingSystem.json"), dict) else "C:\\Windows"
+    expected = []
+    for image, debugger in ref("ifeo"):
+        expected.append(("persistence.json", debugger))
+    for image, monitor in ref("silent"):
+        expected.append(("persistence.json", monitor))
+    for name, value in ref("run_default") + ref("rundefault"):
+        expected.append(("run.json", re.sub(r"(?i)^%SystemRoot%", lambda m: windows, value)))
+    wrong, seen = [], 0
+    for file, program in expected:
+        if program.lower() in subjects(file):
+            seen += 1
+        else:
+            wrong.append(f"{file}: no Persistence whose subject is {program}")
+    for script, sha in ref("startup"):
+        mine = [c for _, c in contexts(folder, "startup_folders.json")
+                if ((c.get("Subject") or {}).get("Path") or "").lower() == script.lower()]
+        if not mine or (mine[0]["Subject"].get("Sha256") or "").lower() != sha.lower():
+            wrong.append(f"startup {script}: Context {mine[:1]}")
+        else:
+            seen += 1
+    unresolved = [f"{n}: {p}" for n in ("services.json", "ScheduledTasks.json") for p in subjects(n)
+                  if p.startswith("\\device") or "%" in p]
+    ok = not wrong and not unresolved and seen > 0
+    print(f"  {'✅' if ok else '❌'} Context of persistence: {seen} witness(es) of the harness the subject of their record "
+          f"(IFEO, SilentProcessExit, Run of DEFAULT, startup script with its SHA-256); no service nor task left unresolved"
+          + ("" if ok else f": {(wrong + unresolved)[:3]}"))
     return 0 if ok else 1
 
 
