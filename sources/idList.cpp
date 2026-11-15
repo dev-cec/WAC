@@ -333,7 +333,7 @@ std::wstring getType(unsigned int type) {
 	else if (type == 0x4000) return L"VT_BYREF";
 	else if (type == 0x8000) return L"VT_RESERVED";
 	else if (type == 0xffff) return L"VT_ILLEGAL";
-	else if (type == 0xfff) return L"VT_ILLEGALMASKED";
+	// VT_ILLEGALMASKED is 0xfff as VT_BSTR_BLOB is (wtypes.h): named once, above.
 	else if (type == 0x101F) return L"Vector<VT_LPWSTR>";
 	else if (type == 0x1011) return L"Vector<VT_UI1>";
 	else return L"0x" + to_hex(type);

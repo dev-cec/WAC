@@ -5,6 +5,18 @@
 #include "context.h"
 
 namespace {
+
+/*! The UTF-16 text of an entry's path, character by character: the value's
+ *  bytes have no alignment of their own, so no wchar_t is read through a
+ *  cast (cppcheck dangerousTypeCast, B-083).
+ *  @param bytes its first byte, `length` bytes readable
+ *  @param length its length in bytes
+ *  @return the text, an odd last byte left out */
+std::wstring utf16Text(const uint8_t* bytes, size_t length) {
+	std::wstring text(length / 2, L'\0');
+	for (size_t i = 0; i < text.size(); ++i) text[i] = (wchar_t)readLittleEndian<uint16_t>(bytes + 2 * i);
+	return text;
+}
 /*! Header size of the Windows 8 and 8.1 value. Its first DWORD does not tell
  *  them apart: 0 under Windows 8 and 8.1 (measured, builds 9200 and 9600) —
  *  neither a magic number nor a size. */
@@ -182,15 +194,15 @@ HRESULT Shimcaches::parse(const std::vector<BYTE>& value) {
 			break;
 		}
 		const size_t entryStart = offset;
-		const DWORD entrySize = *reinterpret_cast<const DWORD*>(data + offset + 8);
+		const DWORD entrySize = readLittleEndian<uint32_t>(data + offset + 8);
 		offset += 12;
-		const unsigned short pathSize = *reinterpret_cast<const unsigned short*>(data + offset);
+		const unsigned short pathSize = readLittleEndian<uint16_t>(data + offset);
 		offset += 2;
 		if (!fits(size, offset, (size_t)pathSize + 8 + 4)) {
 			log(2, L"🔥AppCompatCache: entry truncated at offset " + std::to_wstring(entryStart));
 			break;
 		}
-		const std::wstring path((const wchar_t*)(data + offset), pathSize / sizeof(wchar_t));
+		const std::wstring path = utf16Text(data + offset, pathSize);
 		offset += pathSize;
 		if (windows8) {
 			// Package name and the two flag DWORDs, skipped; the date and data size must still fit.
@@ -280,13 +292,13 @@ HRESULT Shimcaches::parsePathTable(const BYTE* data, size_t size, const Shimcach
 	for (size_t i = 0; i < count; ++i) {
 		const BYTE* e = data + table.header + i * entrySize;
 		const size_t pathLength = *reinterpret_cast<const unsigned short*>(e);
-		const uint64_t pathOffset = wide ? *reinterpret_cast<const uint64_t*>(e + 8) : *reinterpret_cast<const DWORD*>(e + 4);
-		const FILETIME modified = *reinterpret_cast<const FILETIME*>(e + (wide ? 16 : 8));
+		const uint64_t pathOffset = wide ? readLittleEndian<uint64_t>(e + 8) : readLittleEndian<uint32_t>(e + 4);
+		const FILETIME modified = filetimeFromTicks(readLittleEndian<uint64_t>(e + (wide ? 16 : 8)));
 		if (pathOffset > size || !fits(size, (size_t)pathOffset, pathLength)) {
 			log(2, L"🔥AppCompatCache of " + std::wstring(table.release) + L": path of entry " + std::to_wstring(i) + L" beyond the value");
 			continue;
 		}
-		addEntry(std::wstring((const wchar_t*)(data + pathOffset), pathLength / sizeof(wchar_t)), modified);
+		addEntry(utf16Text(data + pathOffset, pathLength), modified);
 		// Only a version read says the value is Server 2003's: unread, Vista's flags would be given as a size.
 		if (table.sizeAfterDate && conf.examinedVersion.build != 0) {
 			shimcaches.back().fileSize = readLittleEndian<uint64_t>(e + (wide ? 24 : 16));

@@ -149,9 +149,9 @@ void addRecordTimes(Json& row, const WrittenTime& time, bool writesUtc) {
 	if (local) {
 		if (bias.fromHistory) {
 			const long east = -bias.biasMinutes, minutes = east < 0 ? -east : east;
-			wchar_t offset[8];
-			swprintf(offset, 8, L"%lc%02ld:%02ld", east < 0 ? L'-' : L'+', minutes / 60, minutes % 60);
-			row.add(L"TimeZoneInForce", Json::str(offset));
+			const auto twoDigits = [](long value) { return (value < 10 ? L"0" : L"") + std::to_wstring(value); };
+			row.add(L"TimeZoneInForce", Json::str(std::wstring(1, east < 0 ? L'-' : L'+') + twoDigits(minutes / 60) + L":"
+			                                      + twoDigits(minutes % 60)));
 		}
 		/* Written perhaps while the zone changed at an unknown instant: the
 		   current zone's rules applied, and the interval of the change said,

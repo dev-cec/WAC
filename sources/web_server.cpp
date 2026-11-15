@@ -602,11 +602,13 @@ HRESULT WebServer::toJson() {
 	/* The logs, one file at a time and one line at a time: a busy server
 	   keeps millions of requests, which are written and forgotten. */
 	JsonArrayWriter out("web_server_logs.json");
-	for (const std::wstring& logFolder : iisSources(configuration_).logFolders) {
+	const IisSources sources = iisSources(configuration_);   // named: no reference into a temporary
+	for (const std::wstring& logFolder : sources.logFolders) {
 		const std::filesystem::path copy = extractedPath(logFolder);
 		std::error_code ec;
-		for (const std::filesystem::path& f : filesUnder(copy, LOG_DEPTH, [](const std::filesystem::path& p) {
-			     return toLower(p.extension().wstring()) == L".log"; })) {
+		const std::vector<std::filesystem::path> logs = filesUnder(copy, LOG_DEPTH, [](const std::filesystem::path& p) {
+			return toLower(p.extension().wstring()) == L".log"; });
+		for (const std::filesystem::path& f : logs) {
 			const std::wstring examined = logFolder + L"\\" + std::filesystem::relative(f, copy, ec).wstring();
 			std::string bytes;
 			if (!readWholeFile(f, LOG_MAX, bytes)) {

@@ -1837,15 +1837,12 @@ HRESULT processElevated(bool& elevated) {
 	if (read) { elevated = elevation.TokenIsElevated != 0; return ERROR_SUCCESS; }
 	if (error != ERROR_INVALID_PARAMETER) return error;
 	// Before Vista: member of the Administrators group (S-1-5-32-544), or not.
-	SID_IDENTIFIER_AUTHORITY authority = SECURITY_NT_AUTHORITY;
-	PSID administrators = nullptr;
-	if (!AllocateAndInitializeSid(&authority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &administrators))
-		return GetLastError();
+	// The group's SID in a buffer of its own (Windows XP on): nothing allocated, nothing to free.
+	BYTE administrators[SECURITY_MAX_SID_SIZE];
+	DWORD sidSize = sizeof(administrators);
+	if (!CreateWellKnownSid(WinBuiltinAdministratorsSid, nullptr, administrators, &sidSize)) return GetLastError();
 	BOOL member = FALSE;
-	const BOOL checked = CheckTokenMembership(nullptr, administrators, &member);
-	const DWORD membershipError = checked ? ERROR_SUCCESS : GetLastError();
-	FreeSid(administrators);
-	if (!checked) return membershipError;
+	if (!CheckTokenMembership(nullptr, administrators, &member)) return GetLastError();
 	elevated = member != FALSE;
 	return ERROR_SUCCESS;
 }
