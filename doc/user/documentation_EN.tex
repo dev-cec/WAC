@@ -2531,7 +2531,11 @@ installer lays, attests no opening and has no \champ{Kind}) and the accounts
 and sessions (accounts, groups and their members, sessions by their
 \champ{LogonId} --- the events' \texttt{0x3e7} form ---, outgoing RDP
 connections by the remote machine, LSA rights and secrets, directory joins,
-DPAPI keys); the other families receive it in turn. It holds identities only --- the dates stay in the
+DPAPI keys) and the devices and volumes (USBSTOR, devices, MountedDevices,
+MountPoints2, setupapi, NTFS volumes, shadow copies: a device in one form,
+\texttt{enumerator\textbackslash device\textbackslash instance} in upper
+case, its serial number taken from its instance, the volume by its GUID in
+\champ{Volume}); the other families receive it in turn. It holds identities only --- the dates stay in the
 record's fields --- and serves to relate the artefacts: the same file, account
 or software has the same form whatever artefact names it.
 \begin{description}
@@ -2542,7 +2546,7 @@ or software has the same form whatever artefact names it.
   \item[\champ{Subject}] the object it is about: a file (\champ{Path},
         \champ{Ntfs} \texttt{C:|entry|sequence}, fingerprints of the
         \emph{whole} file only), a software (\champ{Software}), a device
-        (\champ{Device}), or a name alone (\champ{Name}) when the source gives
+        (\champ{Device}), a volume by its GUID (\champ{Volume}), or a name alone (\champ{Name}) when the source gives
         no path.
   \item[\champ{Related}] the other objects named, each with its role
         (\texttt{LoadedFile} of a Prefetch, \texttt{Target} of a shortcut).

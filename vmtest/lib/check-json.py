@@ -509,6 +509,7 @@ def cross_checks(folder):
     found += guarded(check_context_filesystem, folder)
     found += guarded(check_context_accesses, folder)
     found += guarded(check_context_accounts, folder)
+    found += guarded(check_context_devices, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6656,6 +6657,69 @@ def check_context_accounts(folder):
         return 0
     ok = not wrong
     print(f"  {'✅' if ok else '❌'} Context of accounts and sessions: {'; '.join(seen)}" + ("" if ok else f": {wrong[:3]}"))
+    return 0 if ok else 1
+
+
+def check_context_devices(folder):
+    """The Context of devices and volumes (B-092): the chain device ↔ volume
+    ↔ letter ↔ serial number, on the keys the harness attaches (WACUSB0001
+    formatted WACFAT, WACUSB0002 WACEXFAT) and against Win32_Volume
+    (reference/volumes.txt), a source WAC does not read. USBSTOR names each
+    key's device with its serial; MountedDevices ties the volume GUID and the
+    letter Windows gives the key to that same device; ntfs_volumes.json
+    gives each NTFS volume the serial Win32_Volume gives its letter. Every
+    device of USBSTOR, devices.json and the PnP events in one form."""
+    volumes_path = os.path.join(folder, "reference", "volumes.txt")
+    refs_path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(volumes_path) or not os.path.exists(refs_path):
+        print("  ⏭️  no volume or witness reference: the Context of devices not checked")
+        return 0
+    volumes = {}
+    for line in open(volumes_path, encoding="utf-8-sig", errors="replace").read().splitlines():
+        parts = line.split("|")
+        if len(parts) == 3:
+            letter, name, serial = parts
+            match = re.search(r"\{[0-9a-fA-F-]{36}\}", name)
+            volumes[letter.upper()] = (match.group(0).lower() if match else "", serial.upper())
+    keys = {"WACFAT": "WACUSB0001", "WACEXFAT": "WACUSB0002"}
+    fat = [l[len("fat="):].split("|") for l in open(refs_path, encoding="utf-8-sig", errors="replace").read().splitlines()
+           if l.startswith("fat=")]
+    def subject(c, key):
+        return str((c.get("Subject") or {}).get(key) or "")
+    wrong, seen = [], []
+    usb = {subject(c, "Serial"): subject(c, "Device") for _, c in contexts(folder, "Usbstor.json") if c.get("Kind") == "Installation"}
+    mounted = contexts(folder, "mounted_device.json")
+    for letter, label, _ in fat:
+        serial = keys.get(label)
+        guid = volumes.get(letter.upper(), ("", ""))[0]
+        device = usb.get(serial or "")
+        if not device:
+            wrong.append(f"Usbstor.json: no device of serial {serial}")
+            continue
+        ties = [c for _, c in mounted if subject(c, "Device") == device]
+        by_guid = any(o.get("Volume") == guid for c in ties for o in c.get("Related") or [])
+        by_letter = any(str(o.get("Path", "")).upper() == letter.upper() + "\\" for c in ties for o in c.get("Related") or [])
+        if not guid or not by_guid:
+            wrong.append(f"mounted_device.json: volume {guid or '?'} ({letter}) not tied to {device}")
+        else:
+            seen.append(f"{serial} ↔ {guid} ↔ {letter}" + ("" if by_letter else " (letter not in MountedDevices)"))
+    for r, c in contexts(folder, "ntfs_volumes.json"):
+        letter = str(r.get("Volume", "")).upper()
+        if letter in volumes and subject(c, "Serial") != volumes[letter][1]:
+            wrong.append(f"ntfs_volumes.json {letter}: serial {subject(c, 'Serial')}, Win32_Volume {volumes[letter][1]}")
+        elif letter in volumes:
+            seen.append(f"{letter} serial")
+    forms = [(n, subject(c, "Device")) for n in ("Usbstor.json", "devices.json", "events.json", "mounted_device.json")
+             for _, c in contexts(folder, n) if subject(c, "Device")]
+    odd = [f"{n}: {d}" for n, d in forms if d != d.upper() or "#" in d or "/" in d or d.count("\\") < 2]
+    if odd:
+        wrong.append(f"devices not in their one form: {odd[:2]}")
+    if not seen and not wrong:
+        print("  ⏭️  no key attached: the Context of devices not checked")
+        return 0
+    ok = not wrong
+    print(f"  {'✅' if ok else '❌'} Context of devices and volumes: {'; '.join(seen)}; {len(forms)} device(s) in one form"
+          + ("" if ok else f": {wrong[:3]}"))
     return 0 if ok else 1
 
 

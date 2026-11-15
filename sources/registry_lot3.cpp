@@ -319,6 +319,15 @@ Json MountPoint::toJson() const {
 		}
 		o.add(L"Subkeys", std::move(list));
 	}
+	/* B-092: a volume, or a share, the user's Explorer mounted — the volume
+	   by its GUID, which MountedDevices ties to its device. */
+	RecordContext context;
+	context.kind = ContextKind::Access;
+	if (kind == L"Volume") context.subject.volume = contextVolumeGuid(name);
+	else if (!share.empty()) setCitedLocation(context, share, sid);
+	context.actor.sid = sid;
+	context.evidence = userHiveEvidence(sid);
+	addContext(o, context);
 	return o;
 }
 
@@ -703,6 +712,18 @@ Json DeviceTrace::toJson() const {
 	addDate(o, L"LastArrival", lastArrivalUtc);
 	addDate(o, L"LastRemoval", lastRemovalUtc);
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	/* B-092: the device, by its instance — the key under Enum, or the
+	   interface path a device class, a portable device names —, and its
+	   serial number. VolumeInfoCache names a drive letter, no device. */
+	RecordContext context;
+	const bool enumerated = source.compare(0, 5, L"Enum\\") == 0;
+	context.subject.device = contextDevice(enumerated ? source.substr(5) + L"\\" + name : name);
+	if (!context.subject.device.empty()) {
+		context.kind = ContextKind::Installation;
+		context.subject.serial = contextSerial(deviceSerial(context.subject.device));
+	}
+	context.evidence = systemHiveEvidence(source == L"WindowsPortableDevices" || source == L"VolumeInfoCache" ? L"SOFTWARE" : L"SYSTEM");
+	addContext(o, context);
 	return o;
 }
 

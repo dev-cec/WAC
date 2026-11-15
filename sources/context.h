@@ -66,8 +66,9 @@ struct ContextObject {
 	std::wstring user;          //!< "DOMAIN\name", when the record gives a name
 	// The others
 	std::wstring software;      //!< an installation's identifier
-	std::wstring device;        //!< a device's instance identifier
-	std::wstring serial;        //!< a device's or a volume's serial number
+	std::wstring device;        //!< a device's instance identifier (contextDevice)
+	std::wstring serial;        //!< a device's or a volume's serial number (contextSerial)
+	std::wstring volume;        //!< a volume's GUID, "{…}" in lower case (contextVolumeGuid)
 	std::wstring address;       //!< an IP address
 	std::wstring host;          //!< a host name
 	std::wstring name;          //!< a task's, a service's name
@@ -209,6 +210,33 @@ void setCitedLocation(RecordContext& context, const std::wstring& cited, const s
  *  @param object receives Address or Host
  *  @param cited the machine as written */
 void setRemoteObject(ContextObject& object, const std::wstring& cited);
+
+/*! THE form of a device's instance identifier, whatever names it: the
+ *  registry's key ("USBSTOR\Disk&Ven_QEMU&…\WACUSB0001&0"), a PnP event,
+ *  Amcache's ("usbstor/disk&ven_qemu&…/wacusb0001&0"), an interface path
+ *  ("\\?\USBSTOR#Disk&…#WACUSB0001&0#{53f56307-…}"), a portable device's
+ *  ("SWD#WPDBUSENUM#_??_USBSTOR#…"): enumerator\device\instance, in upper
+ *  case — Windows compares them so. A path ("C:\Windows\INF\x.inf") is none.
+ *  @param cited the identifier as written
+ *  @return the identifier; "" when the text names none */
+std::wstring contextDevice(const std::wstring& cited);
+
+/*! The serial number a device's instance carries: its instance part before
+ *  its last "&" ("WACUSB0001&0" gives WACUSB0001), or whole without one;
+ *  none when its second character is "&" — an identifier Windows made up
+ *  for a device without serial ("5&1e461e56&0&0").
+ *  @param device an instance identifier, enumerator\device\instance
+ *  @return the serial, in the case written; "" when it carries none */
+std::wstring deviceSerial(const std::wstring& device);
+
+/*! THE form of a serial number in a Context: trimmed, in upper case. */
+std::wstring contextSerial(const std::wstring& cited);
+
+/*! THE form of a volume's GUID: "{…}" in lower case, from
+ *  "\??\Volume{…}", "\\?\Volume{…}\", a MountPoints2 key, or the
+ *  GUID alone.
+ *  @return the GUID; "" when the text holds none */
+std::wstring contextVolumeGuid(const std::wstring& cited);
 
 /*! The program of a command a user's hive or task holds: userPath of its
  *  commandProgram.

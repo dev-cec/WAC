@@ -256,11 +256,12 @@ void otherRoles(const EventRoleInput& e, const Data& d, RecordContext& c) {
 	}
 	else if (p == L"Microsoft-Windows-Kernel-PnP" && in(e.id, { 400, 410, 430 })) {
 		c.kind = ContextKind::Installation;
-		c.subject.device = d[L"DeviceInstanceId"];
+		c.subject.device = contextDevice(d[L"DeviceInstanceId"]);
+		c.subject.serial = contextSerial(deviceSerial(c.subject.device));
 	}
 	else if (p == L"Microsoft-Windows-Partition" && e.id == 1006) {
 		c.kind = ContextKind::Access;
-		c.subject.serial = d[L"SerialNumber"];
+		c.subject.serial = contextSerial(d[L"SerialNumber"]);
 		c.subject.name = d[L"Model"];
 	}
 	else if (p == L"MsiInstaller" && in(e.id, { 1033, 1040, 1042, 11707 })) {

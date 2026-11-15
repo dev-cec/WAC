@@ -2,6 +2,7 @@
  *  \brief NTFS volumes (see ntfs_volumes.h).
  */
 #include "ntfs_volumes.h"
+#include "context.h"
 #include "consigne.h"
 #include "running_machine.h"
 #include <cstring>
@@ -60,6 +61,12 @@ Json NtfsVolumeInfo::toJson() const {
 		j.add(L"LowestValidUsn", Json::num((unsigned long long)journal->lowestValidUsn));
 		o.add(L"UsnJournal", std::move(j));
 	}
+	// B-092: the volume, by its letter and the serial number shortcuts and Prefetch files cite.
+	RecordContext context;
+	context.subject.path = contextPath(volume + L"\\");
+	if (boot) context.subject.serial = to_hex(boot->serialNumber & 0xFFFFFFFFULL, 8, HexLetters::Upper);
+	context.evidence = volume + L"\\$Boot";
+	addContext(o, context);
 	return o;
 }
 

@@ -1393,6 +1393,42 @@ void defenderHistory() {
 		      && at(joinRecord.find(L"Context"), { L"Evidence", L"Path" }) == L"C:\\Windows\\System32\\config\\SYSTEM",
 		      "cloud identity: the joined account by its address, the machine's hive (B-091)");
 
+		/* B-092: devices and volumes. One form of a device's instance from
+		   each source that names it; its serial; a volume's GUID; a device
+		   class's interface; a driver package is no device. */
+		const std::wstring WITNESS = L"USBSTOR\\DISK&VEN_QEMU&PROD_QEMU_HARDDISK&REV_2.5+\\WACUSB0001&0";
+		check(contextDevice(L"USBSTOR\\Disk&Ven_QEMU&Prod_QEMU_HARDDISK&Rev_2.5+\\WACUSB0001&0") == WITNESS
+		      && contextDevice(L"usbstor/disk&ven_qemu&prod_qemu_harddisk&rev_2.5+/wacusb0001&0") == WITNESS
+		      && contextDevice(L"##?#USBSTOR#Disk&Ven_QEMU&Prod_QEMU_HARDDISK&Rev_2.5+#WACUSB0001&0#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}") == WITNESS
+		      && contextDevice(L"_??_USBSTOR#Disk&Ven_QEMU&Prod_QEMU_HARDDISK&Rev_2.5+#WACUSB0001&0#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}") == WITNESS
+		      && contextDevice(L"SWD#WPDBUSENUM#_??_USBSTOR#DISK&VEN_QEMU&PROD_QEMU_HARDDISK&REV_2.5+#WACUSB0001&0#{53F56307-B6BF-11D0-94F2-00A0C91EFB8B}") == WITNESS
+		      && contextDevice(L"C:\\WINDOWS\\INF\\prnms009.Inf").empty() && contextDevice(L"C:").empty(),
+		      "context: one form of a device's instance from the registry, Amcache, an interface, a portable device (B-092)");
+		check(deviceSerial(WITNESS) == L"WACUSB0001" && deviceSerial(L"USB\\ROOT_HUB30\\5&1e461e56&0&0").empty()
+		      && deviceSerial(L"USB\\VID_0781&PID_5567\\4C530001") == L"4C530001"
+		      && contextVolumeGuid(L"\\??\\Volume{739F3724-AB72-417A-AF59-5C43FF17B553}") == L"{739f3724-ab72-417a-af59-5c43ff17b553}"
+		      && contextVolumeGuid(L"\\DosDevices\\C:").empty(),
+		      "context: a device's serial from its instance, none for one Windows made up; a volume's GUID (B-092)");
+		DeviceTrace interfaceTrace, letterCache;
+		interfaceTrace.source = L"DeviceClasses\\{53f56307-b6bf-11d0-94f2-00a0c91efb8b}";
+		interfaceTrace.name = L"##?#USBSTOR#Disk&Ven_QEMU&Prod_QEMU_HARDDISK&Rev_2.5+#WACUSB0001&0#{53f56307-b6bf-11d0-94f2-00a0c91efb8b}";
+		letterCache.source = L"VolumeInfoCache";
+		letterCache.name = L"E:";
+		const Json interfaceRecord = interfaceTrace.toJson(), letterRecord = letterCache.toJson();
+		check(at(interfaceRecord.find(L"Context"), { L"Kind" }) == L"Installation"
+		      && at(interfaceRecord.find(L"Context"), { L"Subject", L"Device" }) == WITNESS
+		      && at(interfaceRecord.find(L"Context"), { L"Subject", L"Serial" }) == L"WACUSB0001"
+		      && at(letterRecord.find(L"Context"), { L"Kind" }).empty()
+		      && at(letterRecord.find(L"Context"), { L"Subject", L"Device" }).empty(),
+		      "devices: an interface's device and serial; a drive letter's cache names no device (B-092)");
+		SetupApiSection driver, device;
+		driver.subject = L"C:\\WINDOWS\\INF\\prnms009.Inf";
+		device.subject = L"USBSTOR\\Disk&Ven_QEMU&Prod_QEMU_HARDDISK&Rev_2.5+\\WACUSB0001&0";
+		const Json driverRecord = driver.toJson(), deviceRecord = device.toJson();
+		check(at(driverRecord.find(L"Context"), { L"Subject", L"Path" }) == L"C:\\WINDOWS\\INF\\prnms009.Inf"
+		      && at(driverRecord.find(L"Context"), { L"Subject", L"Device" }).empty()
+		      && at(deviceRecord.find(L"Context"), { L"Subject", L"Device" }) == WITNESS,
+		      "setupapi: a driver package by its path, a device by its instance (B-092)");
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;
 	}

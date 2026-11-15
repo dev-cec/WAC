@@ -56,6 +56,7 @@ Json ContextObject::toJson() const {
 	o.add(L"Software", Json::str(software));
 	o.add(L"Device", Json::str(device));
 	o.add(L"Serial", Json::str(serial));
+	o.add(L"Volume", Json::str(volume));
 	o.add(L"Address", Json::str(address));
 	o.add(L"Host", Json::str(host));
 	o.add(L"Name", Json::str(name));
@@ -339,6 +340,59 @@ void setRemoteObject(ContextObject& object, const std::wstring& cited) {
 	if (host.size() > 2 && host.front() == L'[' && host.back() == L']') object.address = host.substr(1, host.size() - 2);
 	else if (isIpv4(host)) object.address = host;
 	else object.host = host;
+}
+
+std::wstring contextDevice(const std::wstring& cited) {
+	std::wstring id = cited;
+	// A portable device's name holds the device's own interface path after "_??_".
+	const size_t inner = id.find(L"_??_");
+	if (inner != std::wstring::npos) id = id.substr(inner + 4);
+	for (const wchar_t* prefix : { L"\\\\?\\", L"\\??\\", L"##?#" })
+		if (id.compare(0, wcslen(prefix), prefix) == 0) id = id.substr(wcslen(prefix));
+	for (wchar_t& c : id) {
+		if (c == L'/') c = L'\\';
+		c = (wchar_t)towupper(c);
+	}
+	if (id.find(L'#') != std::wstring::npos) {   // an interface path: its three first parts, its class GUID left
+		std::wstring parts[3];
+		size_t at = 0;
+		for (std::wstring& part : parts) {
+			const size_t end = id.find(L'#', at);
+			part = id.substr(at, end == std::wstring::npos ? std::wstring::npos : end - at);
+			at = end == std::wstring::npos ? id.size() : end + 1;
+		}
+		if (parts[2].empty() || parts[2][0] == L'{') return L"";
+		id = parts[0] + L"\\" + parts[1] + L"\\" + parts[2];
+	}
+	// enumerator\device\instance: two separators, none at an end; an enumerator
+	// has no ":" — "C:\Windows\INF\x.inf", a driver package's path, is no device.
+	if (std::count(id.begin(), id.end(), L'\\') < 2 || id.front() == L'\\' || id.back() == L'\\'
+	    || id.substr(0, id.find(L'\\')).find(L':') != std::wstring::npos) return L"";
+	return id;
+}
+
+std::wstring deviceSerial(const std::wstring& device) {
+	const size_t slash = device.rfind(L'\\');
+	const std::wstring instance = slash == std::wstring::npos ? device : device.substr(slash + 1);
+	if (instance.size() < 2 || instance[1] == L'&') return L"";
+	const size_t last = instance.rfind(L'&');
+	return last == std::wstring::npos ? instance : instance.substr(0, last);
+}
+
+std::wstring contextSerial(const std::wstring& cited) {
+	std::wstring serial = cited;
+	while (!serial.empty() && iswspace(serial.front())) serial.erase(0, 1);
+	while (!serial.empty() && iswspace(serial.back())) serial.pop_back();
+	for (wchar_t& c : serial) c = (wchar_t)towupper(c);
+	return serial;
+}
+
+std::wstring contextVolumeGuid(const std::wstring& cited) {
+	const size_t open = cited.find(L'{');
+	if (open == std::wstring::npos || open + 38 > cited.size() || cited[open + 37] != L'}') return L"";
+	std::wstring guid = cited.substr(open, 38);
+	for (wchar_t& c : guid) c = (wchar_t)towlower(c);
+	return guid;
 }
 
 std::wstring userCommandProgram(const std::wstring& command, const std::wstring& sid) {

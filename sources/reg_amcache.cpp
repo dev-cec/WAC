@@ -350,7 +350,8 @@ RecordContext AmcacheEntry::context() const {
 	}
 	else if (table == L"InventoryDevicePnp") {
 		c.kind = ContextKind::Installation;
-		c.subject.device = keyName;
+		c.subject.device = contextDevice(keyName);
+		c.subject.serial = contextSerial(deviceSerial(c.subject.device));
 	}
 	else c.kind = ContextKind::Configuration;
 	c.evidence = database.empty() ? contextPath(conf.systemDrive + L"\\Windows\\AppCompat\\Programs\\Amcache.hve")

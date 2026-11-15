@@ -2,6 +2,7 @@
  *  \brief Reading of the MountedDevices key (see reg_mounted_devices.h).
  */
 #include "reg_mounted_devices.h"
+#include "context.h"
 #include <cstring>
 
 MountedDevice::MountedDevice(ORHKEY hKey, PCWSTR szSubValue) {
@@ -64,6 +65,20 @@ Json MountedDevice::toJson() const {
 	if (hasPartitionOffset) o.add(L"PartitionOffset", Json::num(partitionOffset));
 	o.add(L"Device",        Json::str(device));
 	o.add(L"Data",          Json::str(data));
+	/* B-092: the tie of a volume — by its letter or its GUID — to the
+	   device that held it: the chain a shortcut's volume serial, a
+	   MountPoints2 key and USBSTOR's serial number go through. */
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	context.subject.device = contextDevice(device);
+	ContextObject volume;
+	volume.role = L"Volume";
+	volume.volume = contextVolumeGuid(drive);
+	const std::wstring DOS_DEVICES = L"\\DosDevices\\";
+	if (drive.compare(0, DOS_DEVICES.size(), DOS_DEVICES) == 0) volume.path = contextPath(drive.substr(DOS_DEVICES.size()) + L"\\");
+	if (!volume.volume.empty() || !volume.path.empty()) context.related.push_back(std::move(volume));
+	context.evidence = systemHiveEvidence(L"SYSTEM");
+	addContext(o, context);
 	return o;
 }
 

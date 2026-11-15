@@ -2640,7 +2640,12 @@ connu ; un raccourci du Bureau, qu'un installateur pose, n'atteste aucune
 ouverture et n'a pas de \champ{Kind}) et les comptes et sessions (comptes,
 groupes et leurs membres, sessions par leur \champ{LogonId} --- la forme
 \texttt{0x3e7} des événements ---, connexions RDP sortantes par la machine
-distante, droits et secrets LSA, jonction à un annuaire, clés DPAPI) ; les autres familles le reçoivent à leur tour. Il ne contient que des identités --- les
+distante, droits et secrets LSA, jonction à un annuaire, clés DPAPI) et les
+appareils et volumes (USBSTOR, appareils, MountedDevices, MountPoints2,
+setupapi, volumes NTFS, clichés : un appareil sous une seule forme,
+\texttt{enumérateur\textbackslash appareil\textbackslash instance} en
+majuscules, son numéro de série tiré de l'instance, le volume par son GUID
+dans \champ{Volume}) ; les autres familles le reçoivent à leur tour. Il ne contient que des identités --- les
 dates restent dans les champs de l'enregistrement --- et sert à relier les
 artefacts entre eux : le même fichier, le même compte, le même logiciel y
 ont la même forme, quel que soit l'artefact qui les nomme.
@@ -2652,7 +2657,7 @@ ont la même forme, quel que soit l'artefact qui les nomme.
   \item[\champ{Subject}] l'objet dont il parle : un fichier (\champ{Path},
         \champ{Ntfs} \texttt{C:|entrée|séquence}, empreintes du fichier
         \emph{entier} seulement), un logiciel (\champ{Software}), un appareil
-        (\champ{Device}), ou un nom seul (\champ{Name}) quand la source ne
+        (\champ{Device}), un volume par son GUID (\champ{Volume}), ou un nom seul (\champ{Name}) quand la source ne
         donne pas de chemin.
   \item[\champ{Related}] les autres objets nommés, chacun avec son rôle
         (\texttt{LoadedFile} d'un Prefetch, \texttt{Target} d'un raccourci).

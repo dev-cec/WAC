@@ -2,6 +2,7 @@
  *  \brief Reading of the Enum\\USBSTOR key (see reg_usbstors.h).
  */
 #include "reg_usbstors.h"
+#include "context.h"
 #include "registry_common.h"
 
 Usbstor::Usbstor(ORHKEY hKey_usb, const std::wstring& device, const std::wstring& instance)
@@ -31,11 +32,7 @@ Usbstor::Usbstor(ORHKEY hKey_usb, const std::wstring& device, const std::wstring
 		else if (field.rfind(L"Rev_", 0) == 0)  revision = field.substr(4);
 	}
 	// "<serial>&<n>". A second character "&" marks an identifier made up by Windows.
-	const size_t last = instanceId.rfind(L'&');
-	if (instanceId.size() > 1 && instanceId[1] != L'&' && last != std::wstring::npos && last > 0)
-		serialNumber = instanceId.substr(0, last);
-	else if (instanceId.size() > 1 && instanceId[1] != L'&' && last == std::wstring::npos)
-		serialNumber = instanceId;
+	serialNumber = deviceSerial(instanceId);
 
 	/* The two dates are device properties of type DEVPROP_TYPE_FILETIME, in
 	   UTC: 0066 = DEVPKEY_Device_LastArrivalDate, 0064 = DEVPKEY_Device_InstallDate.
@@ -80,6 +77,13 @@ Json Usbstor::toJson() {
 	o.add(L"LastInsertionUtc", Json::str(timeToIso8601Utc(lastInsertionUtc)));
 	o.add(L"FirstInsertion",   Json::str(utcTimeToIso8601Local(firstInsertionUtc)));
 	o.add(L"FirstInsertionUtc",Json::str(timeToIso8601Utc(firstInsertionUtc)));
+	// B-092: the device installed, by its instance and its serial number.
+	RecordContext context;
+	context.kind = ContextKind::Installation;
+	context.subject.device = contextDevice(L"USBSTOR\\" + deviceId + L"\\" + instanceId);
+	context.subject.serial = contextSerial(serialNumber);
+	context.evidence = systemHiveEvidence(L"SYSTEM");
+	addContext(o, context);
 	return o;
 }
 

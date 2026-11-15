@@ -2,6 +2,7 @@
  *  \brief Device installation log (see setupapi_log.h).
  */
 #include "setupapi_log.h"
+#include "context.h"
 #include <filesystem>
 #include <fstream>
 
@@ -145,6 +146,14 @@ Json SetupApiSection::toJson() const {
 	o.add(L"ExitStatus", Json::str(exitStatus));
 	o.add(L"File", Json::str(file));
 	o.add(L"Line", Json::num(line));
+	// B-092: a device installed, by its instance; or a driver package, by its path.
+	RecordContext context;
+	context.kind = ContextKind::Installation;
+	context.subject.device = contextDevice(subject);
+	if (context.subject.device.empty()) context.subject.path = contextPath(subject);
+	context.subject.serial = contextSerial(deviceSerial(context.subject.device));
+	context.evidence = contextPath(file);
+	addContext(o, context);
 	return o;
 }
 
