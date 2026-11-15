@@ -2511,10 +2511,15 @@ without a name.
 
 \section{The linking context (\champ{Context})}
 
-Every record of the execution artefacts (Prefetch, BAM, UserAssist, MUICache,
-SRUM, processes, Amcache, ShimCache, \fichier{program\_usage.json}, error
-reports) carries a \champ{Context} block, which the other families of
-artefacts receive in turn. It holds identities only --- the dates stay in the
+Every record carries a \champ{Context} block: the execution artefacts
+(Prefetch, BAM, UserAssist, MUICache, SRUM, processes, Amcache, ShimCache,
+\fichier{program\_usage.json}, error reports), the events (roles read by
+provider and identifier: who opened which session, started which process,
+installed which service; an identifier outside the table gets none), the
+arrivals (Zone.Identifier, BITS, web downloads and visits, mail attachments)
+and persistence (Run, registry mechanisms, services, scheduled tasks, startup,
+PowerShell profiles, WMI: the program started, apart from its arguments); the
+other families receive it in turn. It holds identities only --- the dates stay in the
 record's fields --- and serves to relate the artefacts: the same file, account
 or software has the same form whatever artefact names it.
 \begin{description}

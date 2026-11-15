@@ -2619,10 +2619,16 @@ est publié sans nom.
 
 \section{Le contexte de liaison (\champ{Context})}
 
-Chaque enregistrement des artefacts d'exécution (Prefetch, BAM, UserAssist,
-MUICache, SRUM, processus, Amcache, ShimCache, \fichier{program\_usage.json},
-rapports d'erreur) porte un bloc \champ{Context}, que les autres familles
-d'artefacts reçoivent à leur tour. Il ne contient que des identités --- les
+Chaque enregistrement porte un bloc \champ{Context} : les artefacts
+d'exécution (Prefetch, BAM, UserAssist, MUICache, SRUM, processus, Amcache,
+ShimCache, \fichier{program\_usage.json}, rapports d'erreur), les événements
+(rôles lus par fournisseur et identifiant : qui a ouvert quelle session, lancé
+quel processus, installé quel service ; un identifiant hors de la table n'en
+reçoit pas), les arrivées (Zone.Identifier, BITS, téléchargements et visites
+web, pièces jointes) et la persistance (Run, mécanismes du registre,
+services, tâches planifiées, démarrage, profils PowerShell, WMI : le programme
+lancé, séparé de ses arguments) ; les autres familles le reçoivent à leur
+tour. Il ne contient que des identités --- les
 dates restent dans les champs de l'enregistrement --- et sert à relier les
 artefacts entre eux : le même fichier, le même compte, le même logiciel y
 ont la même forme, quel que soit l'artefact qui les nomme.
