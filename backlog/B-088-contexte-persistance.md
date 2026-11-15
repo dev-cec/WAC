@@ -43,3 +43,7 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   DEFAULT (dont `%SystemRoot%`), script de démarrage et son SHA-256 ; aucun
   service ni tâche non résolu ; rejoué sur la collecte sans Context : ❌ (vu).
   Reste : cycle VM.
+- 2026-11-15 : cycle `win11-test` : **311 ✅, 0 ❌** ; les 5 témoins de
+  persistance sujets de leur enregistrement, aucun service ni tâche non
+  résolu. Définition de « fini » remplie (manuels : section « Le contexte de
+  liaison », commune aux familles) : **à valider**.
