@@ -81,9 +81,9 @@ le 2026-11-14 : le socle B-079, puis une fiche par famille d'artefacts
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
 | [B-079](B-079-contexte-liaison-socle.md) | Contexte de liaison : socle commun (`Context`, volumes, profils) | à valider | P1 | moyen |
-| [B-080](B-080-dates-au-dela-de-9999.md) | Dates au-delà de l'an 9999 écrites tronquées (`0828` pour 30828) | à faire | P1 | petit |
+| [B-080](B-080-dates-au-dela-de-9999.md) | Dates au-delà de l'an 9999 écrites tronquées (`0828` pour 30828) | à valider | P1 | petit |
 | [B-081](B-081-amcache-inventaire-sqlite.md) | Amcache sur Windows 11 récent : l'inventaire passé en bases SQLite | à valider | P1 | moyen |
-| [B-082](B-082-chaines-invalides-json.md) | Chaînes invalides dans le JSON : canal lu au-delà de sa fin, `VT_BLOB` en texte | à faire | P1 | petit |
+| [B-082](B-082-chaines-invalides-json.md) | Chaînes invalides dans le JSON : canal lu au-delà de sa fin, `VT_BLOB` en texte | à valider | P1 | petit |
 | [B-084](B-084-defender-sac-type-8.md) | Defender : un type inconnu du sac `ThreatTracking` coupait la suite en silence | à valider | P1 | petit |
 | [B-085](B-085-contexte-executions.md) | Contexte de liaison : exécutions | à valider | P1 | moyen |
 | [B-086](B-086-contexte-evenements.md) | Contexte de liaison : événements | à valider | P1 | moyen |
