@@ -6348,14 +6348,17 @@ def check_context_arrivals(folder):
         if os.path.exists(witness) else ("", "")
     reference = os.path.join(os.path.dirname(local), "pst-reference.txt") if local else ""
     if vm_path and os.path.exists(reference):
-        name = ntpath.basename(vm_path).lower()
+        # pypff's reference names the corpus file (zl_south-s_000.pst), the VM
+        # the copy it holds (wac-witness.pst): each looked up by its own.
+        name = os.path.basename(local).lower()
+        copy = ntpath.basename(vm_path).lower()
         expected = {}
         for line in open(reference, encoding="utf-8", errors="replace"):
             parts = line.rstrip("\n").split("|")
             if parts[0].lower() == name and parts[1] != "-" and len(parts) == 8 and parts[6]:
                 expected[int(parts[1])] = {a.split(":")[-1].lower() for a in parts[6].split(";") if a}
         messages = {r.get("NodeId"): c for r, c in contexts(folder, "emails.json")
-                    if r.get("Type") == "Message" and name in (r.get("Source") or "").lower()}
+                    if r.get("Type") == "Message" and copy in (r.get("Source") or "").lower()}
         for nid, shas in expected.items():
             c = messages.get(nid)
             got = {(r.get("Sha256") or "").lower() for r in (c or {}).get("Related") or [] if r.get("Role") == "Attachment"}

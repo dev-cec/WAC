@@ -56,3 +56,6 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   `system32\drivers\KslD.sys`) n'avait pas de chemin — Windows le lit
   depuis le dossier de Windows. `serviceProgram` (socle) applique cette
   règle (7045, 4697 ; B-088 s'en servira) ; test, mutation vue échouer.
+- 2026-11-15 : cycle `win11-test` : **310 ✅, 0 ❌** ; Context égal aux rôles
+  recalculés en Python pour 743 4624, 56 4688, 18 4732, 36 7045 ; témoin
+  Sysmon juste. Définition de « fini » remplie : **à valider**.

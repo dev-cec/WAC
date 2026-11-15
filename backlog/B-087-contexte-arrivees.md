@@ -44,3 +44,9 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   téléchargements du harnais (URL et chemin connus) et Zone.Identifier ;
   pièces jointes du PST de test contre `pypff` ; rejoué sur la collecte sans
   Context : ❌ (vu). Reste : cycle VM.
+- 2026-11-15 : cycle `win11-test` : **310 ✅, 0 ❌** ; le téléchargement
+  d'Internet Explorer du harnais : arrivée du fichier enregistré depuis son
+  URL. Le contrôle des courriels cherchait la référence `pypff` sous le nom
+  de la copie dans la VM (`wac-witness.pst`) au lieu de celui du corpus
+  (`zl_south-s_000.pst`) : corrigé ; rejoué : les 50 messages à pièces
+  jointes, SHA-256 égaux à ceux de `pypff`. **À valider**.
