@@ -1537,7 +1537,14 @@ Puis les lecteurs ajoutés par cette version (Apache, nginx, W3C, stratégies,
 métadonnées de réplication, nœuds d'index, zones et journal DNS, journal DHCP,
 \fichier{.vmcx} de Hyper-V) lisent des entrées mutées, graine fixe,
 les binaires contre une page de garde. Une exception qui s'échappe arrête le test,
-comme elle arrêterait une collecte. Référence : 23 contrôles, 38~000 entrées, aucun
+comme elle arrêterait une collecte. La version~5.1.0 y ajoute les formes du
+contexte de liaison (\fichier{context.h}) : 20~000 textes forgés à graine fixe
+(noms d'appareils, de volumes, lignes de commande, URL, partages, chemins à
+variables) passent par chaque fonction de forme, qui ne doit ni planter ni
+rendre autre chose que ce qu'elle dit --- un appareil en majuscules et en trois
+parties, un GUID de volume de 38 caractères en minuscules, une machine distante
+nom ou adresse, jamais les deux ; vu échouer sur un \texttt{contextDevice} qui ne
+met plus en majuscules. Référence : 24 contrôles, 46~000 entrées, aucun
 échec. Vu échouer : chacun des contrôles nommés sur le code d'avant la revue, la
 chaîne de \texttt{Define} montant à 26~Gio avant que le noyau ne tue le processus ;
 à lancer sous plafond de mémoire si cette borne est retirée.

@@ -1473,8 +1473,14 @@ a key of the record, an exception that ended a collection without seal or log. T
 version added (Apache, nginx, W3C, policies, \fichier{web.config},
 \fichier{applicationHost.config}, \fichier{Registry.pol}, replication metadata,
 index nodes, DNS zones and log, DHCP log, Hyper-V \fichier{.vmcx}) read mutated inputs, fixed seed, the binary ones against a guard page.
-An exception that escapes ends the test, as it would end a collection. Reference:
-23 checks, 38,000 inputs, no failure. Seen failing: each named check on the code
+An exception that escapes ends the test, as it would end a collection. Version
+5.1.0 adds the forms of the linking context (\fichier{context.h}): 20,000 texts
+forged with a fixed seed (device and volume names, command lines, URLs, shares,
+paths with variables) go through each form function, which must neither crash
+nor return anything but what it claims --- a device in upper case and in three
+parts, a volume's GUID of 38 characters in lower case, a remote machine a name
+or an address, never both; seen failing on a \texttt{contextDevice} that no
+longer upper-cases. Reference: 24 checks, 46,000 inputs, no failure. Seen failing: each named check on the code
 before the review, the chain of \texttt{Define} reaching 26~GiB before the kernel
 killed the process; run it under a memory ceiling if that bound is removed.
 

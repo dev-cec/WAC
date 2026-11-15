@@ -116,3 +116,9 @@ pas corriger ; ce qui n'a pas été examiné.
 - 2026-11-15 : VM `srv2025-test` recréée (`create-vm.sh srv2025`) pour le
   cycle serveur, comme pour la 5.0.0 : contrôleur de sa forêt `wac.test`,
   rôles, serveurs web.
+- 2026-11-15 : **documentation, moyen, corrigé** : ni le dossier de
+  validation ni le guide des tests ne parlaient du contexte de liaison, que
+  neuf contrôles du harnais vérifient. Section « Le contexte de liaison » du
+  dossier de validation (FR, EN) : chaque famille et ses deux sources ;
+  guide des tests : les formes du contexte dans `hostile_input_test`
+  (24 contrôles, 46 000 entrées).

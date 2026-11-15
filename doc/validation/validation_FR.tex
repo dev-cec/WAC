@@ -984,6 +984,49 @@ autres produits de la table des traces d'applications n'étaient pas présents
 dans les machines de test : leur heure est supposée locale, sans
 vérification.
 
+\section{Le contexte de liaison}
+
+Le bloc \champ{Context} relie les artefacts entre eux : le même fichier, le même
+compte, le même appareil doivent y avoir la même forme, quel que soit
+l'artefact qui les nomme. Un lien faux reste du JSON valide. Chaque famille a
+donc son contrôle dans \texttt{check-json.py}, sur une valeur posée par le
+harnais, et presque toujours par deux sources que \wac{} ne lit pas de la même
+façon :
+\begin{description}[style=nextline,leftmargin=1.2em]
+  \item[Exécutions] le processus de \wac{} lui-même et son Prefetch, par le
+    chemin et le SHA-256 calculés sur l'hôte.
+  \item[Événements] les rôles (sujet, acteur, comment) recalculés en Python
+    sur les données de chaque événement, et le témoin Sysmon.
+  \item[Arrivées] le téléchargement témoin, par son URL et son
+    Zone.Identifier ; les pièces jointes du courriel témoin, par le SHA-256
+    que donne \texttt{pypff}.
+  \item[Persistance] chaque mécanisme posé (IFEO, SilentProcessExit, Run,
+    script de démarrage avec son SHA-256) sujet de son enregistrement.
+  \item[Système de fichiers] chaque enregistrement libre de
+    \fichier{mft.json} et l'identité NTFS que le journal USN donne à sa
+    suppression : NTFS ajoute un à la séquence d'un enregistrement qu'il
+    libère, et le contexte écrit celle qu'avait le fichier (mesuré sur
+    22\,215 enregistrements) ; les fichiers supprimés par le SHA-256 que
+    Windows avait calculé.
+  \item[Accès] le document récent, le raccourci, le document d'Office, le
+    chemin tapé, la recherche, et le dossier d'archive parcouru, dont le
+    shellbag porte l'identité NTFS que donne \fichier{mft.json}.
+  \item[Comptes et sessions] le compte témoin membre de ses groupes tels que
+    Windows les donne ; chaque session interactive de LSA retrouvée par le
+    \champ{LogonId} de son événement 4624.
+  \item[Appareils et volumes] la chaîne clé USB, GUID, lettre et numéro de
+    série, confrontée à \texttt{Win32\_Volume}, que \wac{} ne lit pas.
+  \item[Réseau et défense] le fichier EICAR par la détection, par la
+    quarantaine (SHA-256 recalculé dans le contrôle) et par la suppression
+    du journal ; chaque connexion par le chemin de son processus.
+  \item[Traces d'applications] chaque ligne lue dans son propre fichier, sans
+    sujet inventé, avec le compte du profil qui la contient.
+\end{description}
+Tous les JSON du cycle sont enfin lus à la recherche d'une demi-paire de
+substitution isolée, qui n'est pas de l'Unicode (défaut trouvé par WAE, la
+version~5.1.0 l'a corrigé), hors des noms que le système de fichiers garde
+tels quels.
+
 \section{Résultat de référence}
 
 Série finale sur le code de la 5.0.0, du 12 au 13 novembre 2026, \wac{} lancé

@@ -949,6 +949,45 @@ taken and listed unconverted; its uninstallation deletes the folder. The
 other products of the application traces' table were not present on the test
 machines: their time is assumed local, unverified.
 
+\section{The linking context}
+
+The \champ{Context} block relates the artefacts: the same file, account or
+device must have the same form there, whatever artefact names it. A wrong link
+is still valid JSON. Each family therefore has its check in
+\texttt{check-json.py}, on a value the harness laid, and almost always by two
+sources \wac{} does not read in the same way:
+\begin{description}[style=nextline,leftmargin=1.2em]
+  \item[Executions] \wac{}'s own process and its Prefetch, by the path and
+    the SHA-256 computed on the host.
+  \item[Events] the roles (subject, actor, how) computed again in Python
+    from each event's data, and the Sysmon witness.
+  \item[Arrivals] the witness download, by its URL and its Zone.Identifier;
+    the witness mail's attachments, by the SHA-256 \texttt{pypff} gives.
+  \item[Persistence] each mechanism laid (IFEO, SilentProcessExit, Run,
+    startup script with its SHA-256) the subject of its record.
+  \item[File system] each free record of \fichier{mft.json} and the NTFS
+    identity the USN journal gives its deletion: NTFS adds one to the
+    sequence of a record it frees, and the context writes the one the file
+    had (measured on 22,215 records); the deleted files by the SHA-256
+    Windows had computed.
+  \item[Accesses] the recent document, the shortcut, the Office document,
+    the typed path, the search, and the archive folder browsed, whose
+    shellbag carries the NTFS identity \fichier{mft.json} gives.
+  \item[Accounts and sessions] the witness account a member of its groups as
+    Windows gives them; each interactive session of LSA found by the
+    \champ{LogonId} of its 4624 event.
+  \item[Devices and volumes] the chain USB key, GUID, letter and serial
+    number, against \texttt{Win32\_Volume}, which \wac{} does not read.
+  \item[Network and defence] the EICAR file by the detection, by the
+    quarantine (SHA-256 computed again in the check) and by the journal's
+    deletion; each connection by its process's path.
+  \item[Application traces] each line read in its own file, no subject made
+    up, with the account whose profile holds it.
+\end{description}
+Every JSON of the cycle is last read for a lone surrogate half, which is no
+Unicode (a fault WAE found, fixed in version~5.1.0), except in the names the
+file system keeps as written.
+
 \section{Reference result}
 
 Final series on the code of 5.0.0, 12 and 13 November 2026, \wac{} started from
