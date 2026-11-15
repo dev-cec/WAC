@@ -2,6 +2,7 @@
  *  \brief PowerShell profiles (see powershell_profiles.h).
  */
 #include "powershell_profiles.h"
+#include "context.h"
 #include "consigne.h"
 #include "sha.h"
 #include "user_shell_folders.h"
@@ -69,6 +70,14 @@ Json PowerShellProfile::toJson() const {
 	o.add(L"Size", Json::num(size));
 	o.add(L"Sha256", Json::str(sha256));
 	if (!content.empty()) o.add(L"Content", Json::str(content));
+	// Context (B-088): a script every PowerShell of its scope runs at start.
+	RecordContext context;
+	context.kind = ContextKind::Persistence;
+	context.subject.path = contextPath(path);
+	context.subject.sha256 = sha256;
+	context.actor.sid = folder.sid;
+	context.evidence = context.subject.path;
+	addContext(o, context);
 	return o;
 }
 

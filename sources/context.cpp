@@ -221,3 +221,42 @@ std::wstring serviceProgram(const std::wstring& imagePath) {
 		program = L"\\SystemRoot\\" + program;
 	return contextPath(program);
 }
+
+namespace {
+
+//! The profile folder of an account (Host.Profiles), "" when not known.
+std::wstring profileOf(const std::wstring& sid) {
+	for (const auto& [profileSid, folder] : conf.profiles)
+		if (_wcsicmp(profileSid.c_str(), sid.c_str()) == 0) return folder;
+	return L"";
+}
+
+} // namespace
+
+std::wstring userCommandProgram(const std::wstring& command, const std::wstring& sid) {
+	std::wstring program = commandProgram(command);
+	const std::wstring profile = sid.empty() ? L"" : profileOf(sid);
+	if (!profile.empty()) {
+		const std::pair<const wchar_t*, std::wstring> VARIABLES[] = {
+			{ L"%USERPROFILE%", profile }, { L"%APPDATA%", profile + L"\\AppData\\Roaming" },
+			{ L"%LOCALAPPDATA%", profile + L"\\AppData\\Local" }, { L"%TEMP%", profile + L"\\AppData\\Local\\Temp" },
+			{ L"%TMP%", profile + L"\\AppData\\Local\\Temp" } };
+		for (const auto& [variable, value] : VARIABLES) {
+			const size_t length = wcslen(variable);
+			if (program.size() >= length && _wcsnicmp(program.c_str(), variable, length) == 0) {
+				program = value + program.substr(length);
+				break;
+			}
+		}
+	}
+	return contextPath(program);
+}
+
+std::wstring hiveEvidence(const std::wstring& hive, const std::wstring& sid) {
+	if (_wcsicmp(hive.c_str(), L"NTUSER.DAT") == 0) return userHiveEvidence(sid);
+	if (_wcsicmp(hive.c_str(), L"UsrClass.dat") == 0) {
+		const std::wstring profile = profileOf(sid);
+		return profile.empty() ? L"" : contextPath(profile + L"\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat");
+	}
+	return hive.empty() ? L"" : systemHiveEvidence(hive.c_str());
+}

@@ -1,4 +1,5 @@
 #include "services.h"
+#include "context.h"
 #include "registry_common.h"
 #include "live_snapshot.h"
 #include <algorithm>
@@ -189,6 +190,34 @@ Json ServiceStruct::toJson() const {
 		o.add(L"Status",    Json::str(serviceStatus));
 		o.add(L"ProcessId", Json::num(serviceProcessId));
 	}
+	/* Context (B-088): what the service runs — its DLL when svchost hosts it,
+	   the code really executed, svchost beside it; otherwise its program, read
+	   as the service manager reads ImagePath (a driver's relative path). */
+	RecordContext context;
+	context.kind = ContextKind::Persistence;
+	context.subject.name = serviceName;
+	if (!serviceDll.empty()) {
+		setFileObject(context.subject, serviceDll, serviceDllFingerprint);
+		ContextObject host;
+		host.role = L"Host";
+		host.path = serviceProgram(serviceBinary);
+		context.related.push_back(std::move(host));
+	}
+	else {
+		context.subject.path = serviceProgram(serviceBinary);
+		context.subject.sha1 = serviceFingerprint.sha1;
+		context.subject.sha256 = serviceFingerprint.sha256;
+		context.subject.md5 = serviceFingerprint.md5;
+	}
+	if (!serviceFailureCommand.empty()) {
+		ContextObject failure;
+		failure.role = L"FailureCommand";
+		failure.path = serviceProgram(serviceFailureCommand);
+		context.related.push_back(std::move(failure));
+	}
+	context.how.commandLine = serviceBinary;
+	context.evidence = systemHiveEvidence(L"SYSTEM");
+	addContext(o, context);
 	return o;
 }
 

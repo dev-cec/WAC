@@ -177,6 +177,22 @@ std::wstring urlHost(const std::wstring& url);
  *  @return the program's path, normalised (contextPath); "" if none */
 std::wstring serviceProgram(const std::wstring& imagePath);
 
+/*! The program of a command a user's hive or task holds: commandProgram,
+ *  its variables of that user (%USERPROFILE%, %APPDATA%, %LOCALAPPDATA%,
+ *  %TEMP%, %TMP%) on the profile of \a sid (Host.Profiles), then
+ *  contextPath — which expands the machine's own (%windir%…).
+ *  @param command the command as written
+ *  @param sid the account; empty for the machine
+ *  @return the program's path; "" if it names no determinable file */
+std::wstring userCommandProgram(const std::wstring& command, const std::wstring& sid);
+
+/*! The Evidence of a record read in a hive by its name: SOFTWARE, SYSTEM,
+ *  SAM, SECURITY, DEFAULT in System32\config; NTUSER.DAT and UsrClass.dat
+ *  in the profile of \a sid.
+ *  @param hive the hive's name, as records write it
+ *  @param sid the account of a user hive */
+std::wstring hiveEvidence(const std::wstring& hive, const std::wstring& sid);
+
 /*! The Evidence of a record read in a system hive: its file on the examined
  *  machine ("C:\Windows\System32\config\SYSTEM").
  *  @param hive "SYSTEM", "SOFTWARE", "SAM"… */

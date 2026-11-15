@@ -60,6 +60,9 @@
 #include "srum.h"
 #include "trans_id.h"
 #include "event_roles.h"
+#include "wmi_persistence.h"
+#include "persistence.h"
+#include "services.h"
 #include "bits_jobs.h"
 #include "scheduledTasks.h"
 #include "reg_userassists.h"
@@ -1042,6 +1045,62 @@ void defenderHistory() {
 		      && mailContext->dump().find(L"\"Sha256\": \"ab12\"") != std::wstring::npos
 		      && mailContext->dump().find(L"\"Role\": \"Sender\"") != std::wstring::npos,
 		      "emails: a message's attachments by name and SHA-256, its sender, the mailbox for evidence (B-087)");
+
+		/* B-088: persistence. A user's command on their profile; the hive of a
+		   record; a service hosted by svchost (its DLL is the code run); a task
+		   whose first action is a COM handler (its name stays the task's); a
+		   value list; a WMI command line consumer. */
+		check(userCommandProgram(L"\"%APPDATA%\\Tool\\t.exe\" /min", L"S-1-5-21-1-2-3-1000")
+		         == L"C:\\Users\\wac\\AppData\\Roaming\\Tool\\t.exe"
+		      && userCommandProgram(L"%windir%\\system32\\SecurityHealthSystray.exe", L"") == L"C:\\Windows\\system32\\SecurityHealthSystray.exe"
+		      && hiveEvidence(L"NTUSER.DAT", L"S-1-5-21-1-2-3-1000") == L"C:\\Users\\wac\\NTUSER.DAT"
+		      && hiveEvidence(L"UsrClass.dat", L"S-1-5-21-1-2-3-1000") == L"C:\\Users\\wac\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat"
+		      && hiveEvidence(L"SOFTWARE", L"") == L"C:\\Windows\\System32\\config\\SOFTWARE",
+		      "context: a user's command on their profile, a record's hive by its name (B-088)");
+		ServiceStruct hosted;
+		hosted.serviceName = L"WacSvc";
+		hosted.serviceBinary = L"%SystemRoot%\\system32\\svchost.exe -k netsvcs -p";
+		hosted.serviceDll = L"C:\\wac\\evil.dll";
+		hosted.serviceFailureCommand = L"C:\\wac\\again.exe";
+		const Json hostedRecord = hosted.toJson();
+		const Json* hostedContext = hostedRecord.find(L"Context");
+		check(at(hostedContext, { L"Kind" }) == L"Persistence" && at(hostedContext, { L"Subject", L"Path" }) == L"C:\\wac\\evil.dll"
+		      && at(hostedContext, { L"Subject", L"Name" }) == L"WacSvc"
+		      && hostedContext && hostedContext->dump().find(L"C:\\\\Windows\\\\system32\\\\svchost.exe") != std::wstring::npos
+		      && hostedContext->dump().find(L"\"Role\": \"FailureCommand\"") != std::wstring::npos,
+		      "services: a hosted service's DLL as the subject, svchost and its failure command beside it (B-088)");
+		ScheduledTask task;
+		task.path = L"\\Wac\\Task";
+		task.runAsSid = L"S-1-5-21-1-2-3-1000";
+		Action com, exec;
+		com.type = L"ComHandler"; com.classId = L"{11111111-2222-3333-4444-555555555555}";
+		exec.type = L"Exec"; exec.command = L"%LOCALAPPDATA%\\w\\run.exe"; exec.arguments = L"-q";
+		task.actions = { com, exec };
+		const Json taskRecord = task.toJson();
+		const Json* taskContext = taskRecord.find(L"Context");
+		check(at(taskContext, { L"Subject", L"Name" }) == L"\\Wac\\Task"
+		      && at(taskContext, { L"Subject", L"Path" }) == L"C:\\Users\\wac\\AppData\\Local\\w\\run.exe"
+		      && at(taskContext, { L"How", L"CommandLine" }) == L"%LOCALAPPDATA%\\w\\run.exe -q"
+		      && taskContext && taskContext->dump().find(L"\"Role\": \"ComHandler\"") != std::wstring::npos,
+		      "tasks: the task named by its path, its Exec program the subject even after a COM handler (B-088)");
+		PersistenceEntry appInit;
+		appInit.mechanism = L"AppInit_DLLs"; appInit.hive = L"SOFTWARE";
+		appInit.values = { L"C:\\wac\\a.dll", L"C:\\wac\\b.dll" };
+		const Json appInitRecord = appInit.toJson();
+		const Json* appInitContext = appInitRecord.find(L"Context");
+		check(at(appInitContext, { L"Subject", L"Path" }) == L"C:\\wac\\a.dll" && at(appInitContext, { L"Subject", L"Name" }) == L"AppInit_DLLs"
+		      && appInitContext && appInitContext->find(L"Related") && appInitContext->find(L"Related")->size() == 1,
+		      "persistence: a mechanism's first value the subject, the others beside it (B-088)");
+		WmiSubscriptionObject consumer;
+		consumer.kind = L"Consumer"; consumer.className = L"CommandLineEventConsumer";
+		consumer.values = { { L"Name", Json::str(L"WacConsumer") },
+		                    { L"CommandLineTemplate", Json::str(L"C:\\Windows\\System32\\cmd.exe /c echo x") } };
+		const Json consumerRecord = consumer.toJson();
+		const Json* consumerContext = consumerRecord.find(L"Context");
+		check(at(consumerContext, { L"Subject", L"Path" }) == L"C:\\Windows\\System32\\cmd.exe"
+		      && at(consumerContext, { L"Subject", L"Name" }) == L"WacConsumer"
+		      && at(consumerContext, { L"How", L"CommandLine" }) == L"C:\\Windows\\System32\\cmd.exe /c echo x",
+		      "wmi: a command line consumer's program, its name and its command (B-088)");
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;
 	}

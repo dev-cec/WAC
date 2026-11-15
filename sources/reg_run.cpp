@@ -2,6 +2,7 @@
  *  \brief Reading of the Run and RunOnce keys (see reg_run.h).
  */
 #include "reg_run.h"
+#include "context.h"
 
 Json Run::toJson() {
 	log(3, L"🔈Run toJson");
@@ -19,6 +20,15 @@ Json Run::toJson() {
 	if (notification) o.add(L"Notification", Json::num((unsigned long long)*notification));
 	o.add(L"LastWriteTime",    Json::str(utcTimeToIso8601Local(lastWriteTimeUtc)));
 	o.add(L"LastWriteTimeUtc", Json::str(timeToIso8601Utc(lastWriteTimeUtc)));
+	// Context (B-088): a program set to start, apart from its arguments.
+	RecordContext context;
+	context.kind = ContextKind::Persistence;
+	context.subject.path = userCommandProgram(Value, Sid);
+	context.subject.name = Name;
+	context.how.commandLine = Value;
+	context.actor.sid = Sid;
+	context.evidence = hiveEvidence(Hive, Sid);
+	addContext(o, context);
 	return o;
 }
 

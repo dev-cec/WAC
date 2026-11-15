@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à faire | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -20,10 +20,26 @@ Cycle `win11-test` : témoins de persistance du harnais : chemin de l'exécutabl
 d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
 
 ## Tâches
-- [ ] `Context` de chaque JSON de la famille, selon les tableaux de B-078
-- [ ] Tests unitaires, mutation vue échouer
+- [x] `Context` de chaque JSON de la famille, selon les tableaux de B-078
+- [x] Tests unitaires, mutation vue échouer
 - [ ] Témoins et contrôles du harnais ; cycle vert
 - [ ] Manuels FR et EN
 
 ## Journal
 - 2026-11-14 : fiche créée (découpage de B-078 validé par l'utilisateur).
+- 2026-11-15 : `Context` écrit : Run (programme sans ses arguments,
+  variables d'un utilisateur sur son profil — `userCommandProgram` —, ruche
+  d'origine — `hiveEvidence` : SOFTWARE, DEFAULT, NTUSER.DAT), `persistence`
+  (premier programme du mécanisme, les autres valeurs en `Related`,
+  empreintes), services (la DLL d'un service hébergé par svchost est le code
+  exécuté, svchost et la commande de reprise en `Related` ; `ImagePath`
+  relatif lu depuis le dossier de Windows), tâches (nommées par leur chemin ;
+  programme de la première action Exec ; gestionnaires COM en `Related` ;
+  compte d'exécution), dossiers de démarrage (fichier et empreintes, cible
+  d'un raccourci), profils PowerShell, abonnements WMI (programme d'un
+  consommateur en ligne de commande, `CreatorSID`, dépôt). Tests ; mutation
+  (programme de la tâche pris hors de l'action Exec) vue échouer ; 361/361,
+  `bin/` = compilation. Contrôle du harnais : IFEO, SilentProcessExit, Run de
+  DEFAULT (dont `%SystemRoot%`), script de démarrage et son SHA-256 ; aucun
+  service ni tâche non résolu ; rejoué sur la collecte sans Context : ❌ (vu).
+  Reste : cycle VM.

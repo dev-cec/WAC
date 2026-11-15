@@ -2,6 +2,7 @@
  *  \brief Offline reading of the scheduled tasks (see scheduledTasks.h).
  */
 #include "scheduledTasks.h"
+#include "context.h"
 #include "registry_common.h"
 #include "xml_light.h"
 #include <filesystem>
@@ -300,6 +301,34 @@ Json ScheduledTask::toJson() const {
 	}
 	o.add(L"Triggers", std::move(jsonTriggers));
 
+	/* Context (B-088): the program the task runs — its first Exec action,
+	   apart from its arguments, its variables on the account it runs as —,
+	   the other actions beside it; the task named by its path. */
+	RecordContext context;
+	context.kind = ContextKind::Persistence;
+	context.subject.name = path;
+	bool programSet = false;
+	for (const Action& a : actions) {
+		const bool exec = a.type == L"Exec";
+		ContextObject& object = exec && !programSet ? context.subject : context.related.emplace_back();
+		if (exec) {
+			object.path = userCommandProgram(a.command, runAsSid);
+			object.sha1 = a.fingerprint.sha1;
+			object.sha256 = a.fingerprint.sha256;
+			object.md5 = a.fingerprint.md5;
+			if (!programSet) context.how.commandLine = a.arguments.empty() ? a.command : a.command + L" " + a.arguments;
+			else object.role = L"Action";
+			programSet = true;
+		}
+		else {
+			object.role = L"ComHandler";   // a COM handler, by its class
+			object.name = a.classId;
+		}
+	}
+	context.actor.sid = runAsSid;
+	if (runAsSid.empty()) context.actor.user = runAs;
+	context.evidence = contextPath(!sourceXml.empty() ? sourceXml : sourceJob);
+	addContext(o, context);
 	return o;
 }
 

@@ -2,6 +2,7 @@
  *  \brief Registry persistence beyond the Run keys (see persistence.h).
  */
 #include "persistence.h"
+#include "context.h"
 #include "registry_common.h"
 
 namespace {
@@ -151,6 +152,23 @@ Json PersistenceEntry::toJson() const {
 	}
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
 	addFingerprints(o, fingerprint, L"", L"");
+	/* Context (B-088): the program the mechanism starts (IFEO's debugger,
+	   Winlogon's shell, AppInit's DLL…); a list's other values beside it. */
+	RecordContext context;
+	context.kind = ContextKind::Persistence;
+	for (size_t i = 0; i < values.size(); ++i) {
+		ContextObject& object = i == 0 ? context.subject : context.related.emplace_back();
+		if (i != 0) object.role = L"Value";
+		object.path = userCommandProgram(values[i], sid);
+	}
+	context.subject.sha1 = fingerprint.sha1;
+	context.subject.sha256 = fingerprint.sha256;
+	context.subject.md5 = fingerprint.md5;
+	context.subject.name = mechanism;
+	if (!values.empty()) context.how.commandLine = values[0];
+	context.actor.sid = sid;
+	context.evidence = hiveEvidence(hive, sid);
+	addContext(o, context);
 	return o;
 }
 

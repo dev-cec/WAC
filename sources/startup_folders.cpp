@@ -2,6 +2,7 @@
  *  \brief Startup folders (see startup_folders.h).
  */
 #include "startup_folders.h"
+#include "context.h"
 #include "consigne.h"
 #include <filesystem>
 
@@ -51,6 +52,26 @@ Json StartupItem::toJson() const {
 	o.add(L"SHA1", Json::str(sha1));
 	o.add(L"SHA256", Json::str(sha256));
 	if (shortcut) o.add(L"Shortcut", shortcut->toJson());
+	/* Context (B-088): what is placed to start at logon — the file itself,
+	   whole fingerprints; a shortcut's target beside it. */
+	RecordContext context;
+	context.kind = ContextKind::Persistence;
+	context.subject.path = contextPath(path);
+	context.subject.md5 = md5;
+	context.subject.sha1 = sha1;
+	context.subject.sha256 = sha256;
+	if (shortcut) {
+		const Json link = shortcut->toJson();
+		if (const Json* target = link.find(L"Target")) {
+			ContextObject pointed;
+			pointed.role = L"Target";
+			pointed.path = userCommandProgram(target->text(), sid);
+			context.related.push_back(std::move(pointed));
+		}
+	}
+	context.actor.sid = sid;
+	context.evidence = context.subject.path;
+	addContext(o, context);
 	return o;
 }
 

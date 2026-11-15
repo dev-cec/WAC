@@ -2,6 +2,7 @@
  *  \brief WMI event subscriptions (see wmi_persistence.h).
  */
 #include "wmi_persistence.h"
+#include "context.h"
 #include "consigne.h"
 
 namespace {
@@ -55,6 +56,27 @@ Json WmiSubscriptionObject::toJson() const {
 		list.push(std::move(item));
 	}
 	o.add(L"Properties", std::move(list));
+	/* Context (B-088): a WMI subscription runs a consumer when its filter
+	   fires — a command line consumer's program is the subject; a filter, a
+	   binding or a script consumer by its name; its creator is the actor. */
+	auto text = [&](const wchar_t* name) {
+		for (const auto& [n, v] : values) if (n == name && v.kind() == Json::Kind::Str) return v.text();
+		return std::wstring();
+	};
+	RecordContext context;
+	context.kind = ContextKind::Persistence;
+	const std::wstring command = !text(L"ExecutablePath").empty() ? text(L"ExecutablePath") : text(L"CommandLineTemplate");
+	context.subject.path = userCommandProgram(command, L"");
+	context.how.commandLine = text(L"CommandLineTemplate");
+	context.subject.name = text(L"Name");
+	for (const auto& [n, v] : values)
+		if (n == L"CreatorSID") {
+			const Json sid = sidValue(v);
+			if (sid.kind() == Json::Kind::Str) context.actor.sid = sid.text();
+		}
+	const bool xp = !repositoryFile(L"fs\\index.btr").empty();
+	context.evidence = contextPath(conf.systemDrive.substr(0, 2) + REPOSITORY_FOLDER + (xp ? L"fs\\objects.data" : L"objects.data"));
+	addContext(o, context);
 	return o;
 }
 
