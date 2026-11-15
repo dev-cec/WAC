@@ -2530,8 +2530,11 @@ def check_small_file_artefacts(folder):
         report(sorted(names.lower().split(",")) == sorted(reference["secrets"].lower().split(",")),
                f"security.json: the {len(security.get('LsaSecrets', []))} LSA secret names read by Windows, no value",
                f"security.json: secret names {names} / Windows {reference['secrets']}")
+        # Its Context (B-091) names the secret, nothing of its value.
         leaked = [s for s in security.get("LsaSecrets", []) if set(s) - {"Name", "KeyLastWrite", "KeyLastWriteUtc",
-                  "CurrentValueSet", "CurrentValueSetUtc", "PreviousValueSet", "PreviousValueSetUtc"}]
+                  "CurrentValueSet", "CurrentValueSetUtc", "PreviousValueSet", "PreviousValueSetUtc", "Context"}
+                  or set((s.get("Context") or {}).get("Subject") or {}) - {"Name"}
+                  or set(s.get("Context") or {}) - {"Kind", "Subject", "Evidence"}]
         report(not leaked, "security.json: no field beyond names and dates", f"security.json: unexpected fields {leaked[:1]}")
         report((security.get("AuditPolicy") or {}).get("PolAdtEv") == reference.get("audit"),
                "security.json: PolAdtEv identical to Windows' byte for byte",

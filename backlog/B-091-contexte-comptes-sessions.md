@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -38,8 +38,8 @@ analyseur de `user@`, du port et de `[IPv6]`.
 ## Tâches
 - [x] `Context` de chaque JSON de la famille, selon les tableaux de B-078
 - [x] Tests unitaires, mutation vue échouer
-- [ ] Témoins et contrôles du harnais ; cycle vert
-- [ ] Manuels FR et EN
+- [x] Témoins et contrôles du harnais ; cycle vert
+- [x] Manuels FR et EN
 
 ## Journal
 - 2026-11-14 : fiche créée (découpage de B-078 validé par l'utilisateur).
@@ -49,3 +49,4 @@ analyseur de `user@`, du port et de `[IPv6]`.
   interactives de LSA retrouvées par le `LogonId` de leur 4624 ; le serveur RDP
   témoin. Mutation vue échouer (`isIpv4` toujours faux), restauration,
   `bin/WAC.exe` identique.
+- 2026-11-15 : cycle `win11-test` (`f5a5f378`) : `check_context_accounts` vert — `wacpw` dans ses groupes, 6 sessions interactives sur 6 retrouvées par le `LogonId` de leur 4624, le serveur RDP témoin. Un ancien contrôle de `security.json` refusait le champ `Context` ; il l'admet désormais, à condition qu'il ne nomme que le secret.

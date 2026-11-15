@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -38,8 +38,8 @@ l'USN. Un renommage de l'USN est deux enregistrements (`RENAME_OLD_NAME`,
 ## Tâches
 - [x] `Context` de chaque JSON de la famille, selon les tableaux de B-078
 - [ ] Tests unitaires, mutation vue échouer
-- [ ] Témoins et contrôles du harnais ; cycle vert
-- [ ] Manuels FR et EN
+- [x] Témoins et contrôles du harnais ; cycle vert
+- [x] Manuels FR et EN
 
 ## Journal
 - 2026-11-14 : fiche créée (découpage de B-078 validé par l'utilisateur).
@@ -66,3 +66,4 @@ l'USN. Un renommage de l'USN est deux enregistrements (`RENAME_OLD_NAME`,
   d'enregistrements), `deleted_files.json` +26 %. Le chemin est recopié dans
   `Subject.Path` à côté du `Path` de l'enregistrement. Signalé à
   l'utilisateur.
+- 2026-11-15 : cycle `win11-test` après la correction (`5957e1b1`) : `check_context_filesystem` vert — 18 010 enregistrements libres de `mft.json` recoupés avec la suppression du journal, les témoins supprimés et la corbeille.

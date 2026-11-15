@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -55,8 +55,8 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
 ## Tâches
 - [x] `Context` de chaque JSON de la famille, selon les tableaux de B-078
 - [x] Tests unitaires, mutation vue échouer
-- [ ] Témoins et contrôles du harnais ; cycle vert
-- [ ] Manuels FR et EN
+- [x] Témoins et contrôles du harnais ; cycle vert
+- [x] Manuels FR et EN
 
 ## Journal
 - 2026-11-14 : fiche créée (découpage de B-078 validé par l'utilisateur).
@@ -81,3 +81,4 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   Remarque : une redirection vers un partage n'est pas distinguée d'une
   absence de redirection par `redirectedShellFolder` ; le dossier par défaut
   est alors pris.
+- 2026-11-15 : cycle `win11-test` après la correction (`594dc94c`) : `check_context_accesses` vert, 6 témoins sur 6, dont le shellbag du ZIP avec l'identité NTFS que donne `mft.json`.

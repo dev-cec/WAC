@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| en cours | P1 | moyen |
+| à valider | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -52,8 +52,8 @@ ne les lisaient sous ce nom. À signaler à l'utilisateur.
 ## Tâches
 - [x] `Context` de chaque JSON de la famille, selon les tableaux de B-078
 - [x] Tests unitaires, mutation vue échouer
-- [ ] Témoins et contrôles du harnais ; cycle vert
-- [ ] Manuels FR et EN
+- [x] Témoins et contrôles du harnais ; cycle vert
+- [x] Manuels FR et EN
 
 ## Journal
 - 2026-11-14 : fiche créée (découpage de B-078 validé par l'utilisateur).
@@ -64,3 +64,4 @@ ne les lisaient sous ce nom. À signaler à l'utilisateur.
   la forme unique de chaque appareil cité. Mutation vue échouer
   (majuscules retirées de `contextDevice` : trois tests), restauration,
   `bin/WAC.exe` identique.
+- 2026-11-15 : cycle `win11-test` (`abfbf7d9`) : `check_context_devices` vert — WACUSB0001 ↔ `{9bbdb386-…}` ↔ `I:`, WACUSB0002 ↔ `{9bbdb391-…}` ↔ `J:`, les numéros de série de `C:` et `H:`, 272 appareils sous une seule forme.
