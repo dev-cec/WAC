@@ -268,7 +268,10 @@ Binaries (\opt{binary}) & Read by the raw reading; signatures and catalogues
 Processes & One kernel snapshot (\texttt{CreateToolhelp32Snapshot}, the
   process list only) and one query to the Terminal Services service
   (\texttt{WTSEnumerateProcessesW}) for the owners, which opens each process
-  with limited query (\texttt{0x1000}), LSASS included. \\
+  with limited query (\texttt{0x1000}), LSASS included; the path of each
+  process's image, in the same limited opening
+  (\texttt{PROCESS\_QUERY\_LIMITED\_INFORMATION},
+  \texttt{QueryFullProcessImageNameW}), from 5.1.0 on. \\
 Process modules & Each process opened with query and memory read only
   (\texttt{OpenProcess}, \texttt{PROCESS\_QUERY\_INFORMATION} and
   \texttt{PROCESS\_VM\_READ}, granted as \texttt{0x1410}), its list read
@@ -288,7 +291,8 @@ Network state (\texttt{artefacts.network}) & In-memory reading of the TCP/IP
 Clock and boot & In-memory queries to the kernel
   (\texttt{NtQuerySystemInformation}, \texttt{GetTickCount64}). \\
 Machine settings & System drive, code page, time zone, volumes and serial
-  numbers: in-memory queries, with no file opened. \\
+  numbers, each volume's device name (\texttt{QueryDosDeviceW}, from 5.1.0
+  on): in-memory queries, with no file opened. \\
 Process token & Reading of \wac{}'s own privileges, to check the administrator
   rights. No privilege is enabled or changed. \\
 Writing the results & To the \opt{output} folder only, relative to the current
@@ -360,8 +364,8 @@ Apart from \fichier{msvcrt.dll} (the C library):
     \texttt{CloseServiceHandle} (state of the services);
     \texttt{OpenProcessToken}, \texttt{GetTokenInformation},
     \texttt{GetUserNameW}, \texttt{GetLengthSid}, \texttt{IsValidSid}
-    (\wac{}'s own token); \texttt{AllocateAndInitializeSid},
-    \texttt{CheckTokenMembership}, \texttt{FreeSid} (membership of the
+    (\wac{}'s own token); \texttt{CreateWellKnownSid},
+    \texttt{CheckTokenMembership} (membership of the
     administrators group, the only elevation Windows~XP knows). No \texttt{Reg*} function, no function that changes
     a service.
   \item[Secur32.dll] \texttt{LsaEnumerateLogonSessions},

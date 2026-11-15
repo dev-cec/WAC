@@ -82,7 +82,7 @@ Les fiches B-079 à B-082 et B-084 à B-094, validées par l'utilisateur le
 
 | Fiche | Sujet | Statut | Priorité | Effort |
 |---|---|---|---|---|
-| [B-083](B-083-revue-securite-publication-5.1.md) | Revue de code et de sécurité, puis publication de la 5.1.0 (en dernier) | à faire | P1 | fort |
+| [B-083](B-083-revue-securite-publication-5.1.md) | Revue de code et de sécurité, puis publication de la 5.1.0 (en dernier) | en cours | P1 | fort |
 
 ## Réalisé
 

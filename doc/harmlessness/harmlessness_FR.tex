@@ -276,7 +276,10 @@ Binaires (\opt{binary}) & Lus par la lecture directe ; signatures et
 Processus & Un instantané du noyau (\texttt{CreateToolhelp32Snapshot}, la
   liste des processus seule) et une requête au service Terminal Services
   (\texttt{WTSEnumerateProcessesW}) pour les propriétaires, qui ouvre chaque
-  processus en lecture limitée (\texttt{0x1000}), LSASS compris. \\
+  processus en lecture limitée (\texttt{0x1000}), LSASS compris ; le chemin
+  de l'image de chaque processus, dans la même ouverture limitée
+  (\texttt{PROCESS\_QUERY\_LIMITED\_INFORMATION},
+  \texttt{QueryFullProcessImageNameW}), depuis la 5.1.0. \\
 Modules des processus & Chaque processus ouvert en requête et lecture mémoire
   seules (\texttt{OpenProcess}, \texttt{PROCESS\_QUERY\_INFORMATION} et
   \texttt{PROCESS\_VM\_READ}, accordés en \texttt{0x1410}), sa liste lue par
@@ -297,7 +300,9 @@ Sessions & Une requête en lecture à LSASS
 Horloge et démarrage & Requêtes en mémoire au noyau
   (\texttt{NtQuerySystemInformation}, \texttt{GetTickCount64}). \\
 Réglages de la machine & Lecteur système, page de code, fuseau horaire, volumes
-  et numéros de série : requêtes en mémoire, sans ouverture de fichier. \\
+  et numéros de série, nom de périphérique de chaque volume
+  (\texttt{QueryDosDeviceW}, depuis la 5.1.0) : requêtes en mémoire, sans
+  ouverture de fichier. \\
 Jeton du processus & Lecture des privilèges de \wac{} lui-même, pour vérifier
   les droits d'administrateur. Aucun privilège n'est activé ni modifié. \\
 Écriture des résultats & Sur le dossier \opt{output} uniquement, relatif au
@@ -371,8 +376,8 @@ Hors \fichier{msvcrt.dll} (la bibliothèque C) :
     \texttt{CloseServiceHandle} (état des services) ; \texttt{OpenProcessToken},
     \texttt{GetTokenInformation}, \texttt{GetUserNameW}, \texttt{GetLengthSid},
     \texttt{IsValidSid} (le jeton de \wac{} lui-même) ;
-    \texttt{AllocateAndInitializeSid}, \texttt{CheckTokenMembership},
-    \texttt{FreeSid} (l'appartenance au groupe des administrateurs, seule
+    \texttt{CreateWellKnownSid}, \texttt{CheckTokenMembership}
+    (l'appartenance au groupe des administrateurs, seule
     élévation que connaît Windows~XP). Aucune fonction
     \texttt{Reg*}, aucune fonction de modification de service.
   \item[Secur32.dll] \texttt{LsaEnumerateLogonSessions},
