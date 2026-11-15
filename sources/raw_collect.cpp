@@ -1404,7 +1404,7 @@ Json shadowCopyJson(const std::wstring& drive, const ShadowCopyInfo& copy, const
 	if (copy.deleted) o.add(L"Deleted", Json::boolean(true));
 	o.add(L"VolumeSize", Json::num(copy.volumeSize));
 	for (const auto& [value, name] : COPY_CONTEXTS)
-		if (copy.hasStore && copy.context == value) o.add(L"Context", Json::str(name));
+		if (copy.hasStore && copy.context == value) o.add(L"SnapshotContext", Json::str(name));   // "Context" is the linking block's (B-079)
 	Json attributes = Json::arr();
 	for (const auto& [bit, name] : COPY_ATTRIBUTES) if (copy.attributes & bit) attributes.push(Json::str(name));
 	if (!attributes.members().empty()) o.add(L"Attributes", std::move(attributes));

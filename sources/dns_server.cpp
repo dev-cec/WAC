@@ -213,7 +213,7 @@ Json DnsLogEntry::toJson() const {
 	Json o = Json::obj();
 	o.add(L"TimeAsStored", Json::str(timeAsStored));
 	o.add(L"Thread", Json::str(thread));
-	o.add(L"Context", Json::str(context));
+	o.add(L"DnsContext", Json::str(context));   // the log's column; "Context" is the linking block's (B-079)
 	o.add(L"Packet", Json::str(packet));
 	o.add(L"Protocol", Json::str(protocol));
 	o.add(L"Direction", Json::str(direction));

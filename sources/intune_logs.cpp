@@ -100,7 +100,7 @@ Json IntuneLogEntry::toJson() const {
 	}
 	o.add(L"Message", Json::str(message));
 	o.add(L"Component", Json::str(component));
-	o.add(L"Context", Json::str(context));
+	o.add(L"LogContext", Json::str(context));   // CMTrace's attribute; "Context" is the linking block's (B-079)
 	o.add(L"Type", Json::str(type));
 	o.add(L"Thread", Json::str(thread));
 	o.add(L"SourceFile", Json::str(sourceFile));
