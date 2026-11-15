@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (e9a7a3f5) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -50,3 +50,4 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   de la copie dans la VM (`wac-witness.pst`) au lieu de celui du corpus
   (`zl_south-s_000.pst`) : corrigé ; rejoué : les 50 messages à pièces
   jointes, SHA-256 égaux à ceux de `pypff`. **À valider**.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (e9a7a3f5).

@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (3986452d, 594dc94c) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -88,3 +88,4 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   objet virtuel de l'Explorateur, sans fichier). La règle « un
   enregistrement sans `Kind` entre dans le dossier de son sujet » est
   consignée dans WAE E-014.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (3986452d, 594dc94c).

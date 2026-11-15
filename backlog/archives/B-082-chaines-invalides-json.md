@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | petit |
+| fait (2c872ee1, b8825829) | P1 | petit |
 
 ## Pourquoi
 Trouvé par WAE (E-010) le 2026-11-14, à l'import de la collecte
@@ -87,3 +87,4 @@ le canal égale celui que donne `Get-WinEvent` pour le même `EventRecordID`.
   cycle** : combien de blocs d'un journal ouvert sont en désaccord (si le
   bloc en cours d'écriture l'est toujours, ses événements seraient marqués
   à tort : à voir avant de valider).
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (2c872ee1, b8825829).

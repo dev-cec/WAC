@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (91c0aefd, 5253203c) | P1 | moyen |
 
 ## Pourquoi
 Trouvé par l'étude B-078 sur `win11-test` (Windows 11 26H2, build
@@ -107,3 +107,4 @@ ligne dans `check-json.py`.
   `amcache_application_files.json` 781 → 395 entrées (386 fusionnées, 9 de
   la ruche seule), aucun doublon ; contrôle Python vert. Définition de
   « fini » remplie : **à valider** par l'utilisateur.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (91c0aefd, 5253203c).

@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (14cb6458) | P1 | moyen |
 
 ## Pourquoi
 Ce que toutes les familles de B-078 partagent, fait une fois : l'écriture du
@@ -60,3 +60,4 @@ résolus.
   Rejoués sur la collecte : verts. Contrôle des exécutions vert du premier
   coup (processus et Prefetch de WAC : `W:\wac\WAC.exe`, SHA-256 du binaire
   calculé sur l'hôte) ; 9 volumes égaux à `Win32_Volume`.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (14cb6458).

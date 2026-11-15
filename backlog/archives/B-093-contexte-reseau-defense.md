@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (7ece1838) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -59,3 +59,4 @@ résolus : ils restent en `Actor.User`.
   son processus, les témoins d'exclusion et de partage. Mutation vue échouer
   (côté distant inversé dans le journal du pare-feu), restauration.
 - 2026-11-15 : cycle `win11-test` (`7ece1838`) : 316 ✅, 1 ❌ du contrôle lui-même — l'exclusion du processus `wac-excluded.exe`, un nom seul, était attendue en chemin ; WAC l'écrit à juste titre en `Name`. Contrôle corrigé, rejoué sur la même collecte : vert (EICAR par la détection, la quarantaine avec son SHA-256 et la suppression du journal ; hosts, règle, proxy, exclusions, partage ; 41 connexions par le chemin de leur processus).
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (7ece1838).

@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (e51d94b8, 46be3d8e) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -61,3 +61,4 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   examinée (`PROCESSOR_ARCHITECTURE` de sa ruche SYSTEM), aucun chemin si
   elle n'est pas lue. Test des trois cas et du nom ; mutation (SysWOW64
   pour un 32 bits) vue échouer ; 341/341, `bin/` = compilation.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (e51d94b8, 46be3d8e).

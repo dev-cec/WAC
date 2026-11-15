@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | petit |
+| fait (f4407dfc) | P1 | petit |
 
 ## Pourquoi
 Cycle `win11-test` (Windows 11 26300) du 2026-11-14, deux fois de suite :
@@ -39,3 +39,4 @@ mis en quarantaine (EICAR).
   mutation (type 8 non lu) vue échouer, restaurée, recompilée,
   `bin/WAC.exe` = compilation. Reste : cycle VM (contrôle de la
   quarantaine vert).
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (f4407dfc).

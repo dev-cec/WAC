@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (6964886c, bc176171) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -47,3 +47,4 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   persistance sujets de leur enregistrement, aucun service ni tâche non
   résolu. Définition de « fini » remplie (manuels : section « Le contexte de
   liaison », commune aux familles) : **à valider**.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (6964886c, bc176171).

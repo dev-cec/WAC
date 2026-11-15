@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (48f207eb, 5957e1b1, ff0257c0) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -79,3 +79,4 @@ l'USN. Un renommage de l'USN est deux enregistrements (`RENAME_OLD_NAME`,
   lignes en moins (322 086 au lieu de 360 928), soit 396 → 564 octets par
   ligne (+43 %, au lieu de +58 % par ligne). Ce qui reste : le bloc lui-même
   (`Kind`, `Ntfs`, `Evidence`) et son indentation.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (48f207eb, 5957e1b1, ff0257c0).

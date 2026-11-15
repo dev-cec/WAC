@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | petit |
+| fait (3d8da791) | P1 | petit |
 
 ## Pourquoi
 Trouvé par le cycle `win11-test` du 2026-11-14 (B-078) : `web_client.json`
@@ -53,3 +53,4 @@ correctif ; cycle `win11-test` : `web_client.json` sans date tronquée.
   ne déborde plus au-delà de 9999, et exige `ExpiryNever: true` sans
   `ExpiryUtc` pour le FILETIME maximal ; rejouée sur la collecte faite avec
   l'ancien binaire : ❌ `ExpiryUtc 0828-…` (le défaut, vu), plus de plantage.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (3d8da791).

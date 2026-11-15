@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (abfbf7d9, ed435dce) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -67,3 +67,4 @@ ne les lisaient sous ce nom. Validé par l'utilisateur le 2026-11-15.
 - 2026-11-15 : cycle `win11-test` (`abfbf7d9`) : `check_context_devices` vert — WACUSB0001 ↔ `{9bbdb386-…}` ↔ `I:`, WACUSB0002 ↔ `{9bbdb391-…}` ↔ `J:`, les numéros de série de `C:` et `H:`, 272 appareils sous une seule forme.
 - 2026-11-15 : l'utilisateur valide l'ajout du champ `Volume` au schéma et
   les renommages `SnapshotContext`, `DnsContext`, `LogContext`.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (abfbf7d9, ed435dce).

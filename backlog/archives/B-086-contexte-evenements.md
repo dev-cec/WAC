@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (e1b24d14, 83ef5f43) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -59,3 +59,4 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
 - 2026-11-15 : cycle `win11-test` : **310 ✅, 0 ❌** ; Context égal aux rôles
   recalculés en Python pour 743 4624, 56 4688, 18 4732, 36 7045 ; témoin
   Sysmon juste. Définition de « fini » remplie : **à valider**.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (e1b24d14, 83ef5f43).

@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (bd9cdf03) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -58,3 +58,4 @@ nomment ni fichier, ni compte, ni machine qu'un autre artefact cite.
   vue échouer (`profileOwner` sans la borne du dossier : `C:\Users\wacky`
   pris pour le profil `C:\Users\wac`), restauration.
 - 2026-11-15 : cycle `win11-test` (`bd9cdf03`) : `check_context_traces` vert, 28 049 lignes lues chacune dans son fichier, sans sujet inventé, avec le compte de leur profil.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (bd9cdf03).

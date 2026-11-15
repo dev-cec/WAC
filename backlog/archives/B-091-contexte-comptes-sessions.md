@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| fait (f5a5f378) | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -50,3 +50,4 @@ analyseur de `user@`, du port et de `[IPv6]`.
   témoin. Mutation vue échouer (`isIpv4` toujours faux), restauration,
   `bin/WAC.exe` identique.
 - 2026-11-15 : cycle `win11-test` (`f5a5f378`) : `check_context_accounts` vert — `wacpw` dans ses groupes, 6 sessions interactives sur 6 retrouvées par le `LogonId` de leur 4624, le serveur RDP témoin. Un ancien contrôle de `security.json` refusait le champ `Context` ; il l'admet désormais, à condition qu'il ne nomme que le secret.
+- 2026-11-15 : validée par l'utilisateur ; fiche close et archivée (f5a5f378).
