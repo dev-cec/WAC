@@ -93,7 +93,7 @@ le 2026-11-14 : le socle B-079, puis une fiche par famille d'artefacts
 | [B-090](B-090-contexte-acces.md) | Contexte de liaison : accès | à valider | P1 | moyen |
 | [B-091](B-091-contexte-comptes-sessions.md) | Contexte de liaison : comptes et sessions | à valider | P1 | moyen |
 | [B-092](B-092-contexte-appareils-volumes.md) | Contexte de liaison : appareils et volumes | à valider | P1 | moyen |
-| [B-093](B-093-contexte-reseau-defense.md) | Contexte de liaison : réseau et défense | à faire | P1 | moyen |
+| [B-093](B-093-contexte-reseau-defense.md) | Contexte de liaison : réseau et défense | en cours | P1 | moyen |
 | [B-094](B-094-contexte-traces-applications.md) | Contexte de liaison : traces d'applications et serveurs | à faire | P1 | moyen |
 | [B-083](B-083-revue-securite-publication-5.1.md) | Revue de code et de sécurité, puis publication de la 5.1.0 (en dernier) | à faire | P1 | fort |
 

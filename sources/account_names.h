@@ -41,3 +41,12 @@ HRESULT loadAccountNames();
  *  @param service the service name (key name under Services)
  *  @return the SID, as text */
 std::wstring serviceSid(const std::wstring& service);
+
+/*! The SID of a local account a record names by "MACHINE\name" or by its
+ *  name alone (Defender's DomainUser, a log's user): its SAM name, among the
+ *  machine's accounts (S-1-5-21-…). Another domain than the machine's gives
+ *  none — a domain account of the same name is another account.
+ *  @param account the account as written
+ *  @param computerName the examined machine's NetBIOS name
+ *  @return the SID; "" when no local account has that name */
+std::wstring localAccountSid(const std::wstring& account, const std::wstring& computerName);

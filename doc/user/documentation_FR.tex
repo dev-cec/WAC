@@ -2645,7 +2645,10 @@ appareils et volumes (USBSTOR, appareils, MountedDevices, MountPoints2,
 setupapi, volumes NTFS, clichés : un appareil sous une seule forme,
 \texttt{enumérateur\textbackslash appareil\textbackslash instance} en
 majuscules, son numéro de série tiré de l'instance, le volume par son GUID
-dans \champ{Volume}) ; les autres familles le reçoivent à leur tour. Il ne contient que des identités --- les
+dans \champ{Volume}) et le réseau et la défense (connexions et journal du
+pare-feu par la machine distante et le chemin du processus, hosts, règles,
+proxy, réseaux connus, partages, détections et quarantaine de Defender par le
+fichier et l'empreinte de son contenu, exclusions, Sysmon) ; les autres familles le reçoivent à leur tour. Il ne contient que des identités --- les
 dates restent dans les champs de l'enregistrement --- et sert à relier les
 artefacts entre eux : le même fichier, le même compte, le même logiciel y
 ont la même forme, quel que soit l'artefact qui les nomme.

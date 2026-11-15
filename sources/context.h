@@ -143,6 +143,16 @@ enum class WindowsBits { Unknown, Bits32, Bits64 };
  *  the value cannot be read — never the analysis workstation's. */
 WindowsBits examinedWindowsBits();
 
+/*! The examined machine's NetBIOS name (Control\ComputerName in its SYSTEM
+ *  hive), read once the hive is open; "" before — never the analysis
+ *  workstation's. */
+std::wstring examinedComputerName();
+
+/*! The SID of the examined machine's local account a record names by
+ *  "MACHINE\name" (localAccountSid with examinedComputerName).
+ *  @return the SID; "" for another domain's account, or an unknown one */
+std::wstring contextAccountSid(const std::wstring& account);
+
 /*! A path that begins with a known folder's identifier, as UserAssist and
  *  jump lists write it ("{1AC14E77-…}\cmd.exe"), on its real folder: the
  *  machine's folders from the system drive, a user's from the profile of

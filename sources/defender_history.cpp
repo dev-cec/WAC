@@ -3,6 +3,7 @@
  */
 #include "conversions.h"
 #include "defender_history.h"
+#include "context.h"
 #include "consigne.h"
 #include "idList.h"
 #include "sha.h"
@@ -398,6 +399,33 @@ Json DefenderDetection::toJson() const {
 		}
 		o.add(L"UnnamedFields", std::move(list));
 	}
+	/* B-093: the file detected — the first file among the resources, the
+	   others beside it —, the threat's name, the user and the process. The
+	   quarantine entry it names relates the detection to its quarantine. */
+	RecordContext context;
+	context.kind = ContextKind::Detection;
+	for (const DetectionResource& r : resources) {
+		ContextObject resource;
+		resource.path = contextPath(r.path);
+		if (resource.path.empty()) continue;
+		if (context.subject.path.empty() && _wcsicmp(r.type.c_str(), L"file") == 0) context.subject.path = resource.path;
+		else {
+			resource.role = L"Resource";
+			context.related.push_back(std::move(resource));
+		}
+	}
+	context.subject.name = threatName;
+	if (!quarantineEntryId.empty()) {
+		ContextObject entry;
+		entry.role = L"QuarantineEntry";
+		entry.name = quarantineEntryId;
+		context.related.push_back(std::move(entry));
+	}
+	context.actor.user = domainUser;
+	context.actor.sid = contextAccountSid(domainUser);
+	context.actor.process.path = contextPath(processName);
+	context.evidence = file;
+	addContext(o, context);
 	return o;
 }
 
@@ -489,6 +517,32 @@ Json QuarantineEntry::toJson() const {
 	Json list = Json::arr();
 	for (const QuarantineResource& r : resources) list.push(r.toJson());
 	o.add(L"Resources", std::move(list));
+	/* B-093: the file removed, by its path and the fingerprints of the
+	   content Defender kept — the whole file, decrypted —, its entry's name
+	   the one its detection cites. */
+	RecordContext context;
+	context.kind = ContextKind::Detection;
+	for (const QuarantineResource& r : resources) {
+		ContextObject removed;
+		removed.path = contextPath(r.path);
+		if (removed.path.empty()) continue;
+		if (r.contentRead) {
+			removed.sha1 = r.contentSha1;
+			removed.sha256 = r.contentSha256;
+		}
+		if (context.subject.path.empty()) context.subject = std::move(removed);
+		else {
+			removed.role = L"Resource";
+			context.related.push_back(std::move(removed));
+		}
+	}
+	ContextObject entry;
+	entry.role = L"QuarantineEntry";
+	entry.name = entryId;
+	if (!entryId.empty()) context.related.push_back(std::move(entry));
+	context.subject.name = threatName;
+	context.evidence = file;
+	addContext(o, context);
 	return o;
 }
 

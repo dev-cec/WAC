@@ -510,6 +510,7 @@ def cross_checks(folder):
     found += guarded(check_context_accesses, folder)
     found += guarded(check_context_accounts, folder)
     found += guarded(check_context_devices, folder)
+    found += guarded(check_context_network, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6723,6 +6724,105 @@ def check_context_devices(folder):
     ok = not wrong
     print(f"  {'✅' if ok else '❌'} Context of devices and volumes: {'; '.join(seen)}; {len(forms)} device(s) in one form"
           + ("" if ok else f": {wrong[:3]}"))
+    return 0 if ok else 1
+
+
+def check_context_network(folder):
+    """The Context of network and defence (B-093). The EICAR file the
+    harness wrote: Defender's detection names it as its subject; the
+    quarantine entry that detection cites names the same file, with the
+    SHA-256 of the EICAR string computed here; the change journal records
+    its deletion under the same path — three sources, one file. The hosts
+    entry, the firewall rule and the proxy the harness wrote, each the
+    subject of its record. Each connection whose process processes.json
+    lists: that process by its image's path, not its name alone."""
+    import hashlib
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    if not os.path.exists(path):
+        print("  ⏭️  no witness reference: the Context of network and defence not checked")
+        return 0
+    lines = open(path, encoding="utf-8-sig", errors="replace").read().splitlines()
+    def ref(key):
+        return [l[len(key) + 1:].split("|") for l in lines if l.startswith(key + "=")]
+    def subject(c, key):
+        return str((c.get("Subject") or {}).get(key) or "")
+    def related(c, role, key):
+        return {str(o.get(key) or "") for o in c.get("Related") or [] if o.get("Role") == role}
+    eicar = hashlib.sha256(b"X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*").hexdigest().upper()
+    wrong, seen = [], []
+    for detection_id, file, *_ in ref("defender"):
+        detections = [c for r, c in contexts(folder, "defender_detections.json")
+                      if str(r.get("DetectionId", "")).lower() == detection_id.lower()]
+        if not detections or detections[0].get("Kind") != "Detection" or subject(detections[0], "Path").lower() != file.lower():
+            wrong.append(f"defender_detections.json {detection_id}: Context {detections[:1]}")
+            continue
+        entries = related(detections[0], "QuarantineEntry", "Name")
+        quarantine = [c for r, c in contexts(folder, "defender_quarantine.json") if r.get("EntryId") in entries]
+        if quarantine and (subject(quarantine[0], "Path").lower() != file.lower() or subject(quarantine[0], "Sha256") != eicar):
+            wrong.append(f"defender_quarantine.json {sorted(entries)}: Context {quarantine[0]}, EICAR {eicar}")
+        deleted = any(c.get("Kind") == "Deletion" and subject(c, "Path").lower() == file.lower()
+                      for _, c in contexts(folder, "usn_journal.json"))
+        seen.append("EICAR: detection" + (", quarantine with its SHA-256" if quarantine else "")
+                    + (", the journal's deletion" if deleted else ""))
+    for address, name in ref("hosts"):
+        mine = [c for _, c in contexts(folder, "hosts.json") if subject(c, "Address") == address]   # its Entries
+        if not mine or name.lower() not in related(mine[0], "HostName", "Host"):
+            wrong.append(f"hosts.json {address}: Context {mine[:1]}")
+        else:
+            seen.append("hosts")
+    for name, *_ in ref("fwrule"):
+        firewall = load(folder, "firewall.json")
+        rules = (firewall or {}).get("Rules") or [] if isinstance(firewall, dict) else []
+        if any(subject(r.get("Context") or {}, "Name") == name for r in rules):
+            seen.append("firewall rule")
+        else:
+            wrong.append(f"firewall.json: no rule whose subject is named {name}")
+    for sid, server in ref("proxy"):
+        address = server.rsplit(":", 1)[0]
+        if any(subject(c, "Address") == address and (c.get("Actor") or {}).get("Sid") == sid
+               for _, c in contexts(folder, "internet_settings.json")):
+            seen.append("proxy")
+        else:
+            wrong.append(f"internet_settings.json: no proxy {address} for {sid}")
+    for kind, value in ref("exclusions"):
+        if not value or kind not in ("Paths", "Processes"):
+            continue
+        configuration = load(folder, "defender_configuration.json")
+        exclusions = (configuration or {}).get("Exclusions") or [] if isinstance(configuration, dict) else []
+        if any(subject(e.get("Context") or {}, "Path").lower() == value.lower() for e in exclusions):
+            seen.append(f"exclusion {kind}")
+        else:
+            wrong.append(f"defender_configuration.json: no exclusion whose subject is {value}")
+    for name, folder_shared in ref("share"):
+        if any(subject(c, "Name") == name and subject(c, "Path").lower() == folder_shared.lower()
+               for _, c in contexts(folder, "network_shares.json")):
+            seen.append("share")
+        else:
+            wrong.append(f"network_shares.json: no share {name} of {folder_shared}")
+    processes = load(folder, "processes.json")
+    images = {str(p.get("ProcessId")): str(p.get("ImagePath") or "") for p in processes or [] if isinstance(p, dict)} \
+        if isinstance(processes, list) else {}
+    network = load(folder, "network.json")
+    connections = (network or {}).get("Connections") or [] if isinstance(network, dict) else []
+    resolved = unresolved = 0
+    for c in connections:
+        process = ((c.get("Context") or {}).get("Actor") or {}).get("Process") or {}
+        image = images.get(str(c.get("ProcessId")), "")
+        if not image:
+            continue
+        if str(process.get("Path", "")).lower() == image.lower():
+            resolved += 1
+        else:
+            unresolved += 1
+    if unresolved:
+        wrong.append(f"network.json: {unresolved} connection(s) whose process is not named by its image's path")
+    elif resolved:
+        seen.append(f"{resolved} connection(s) by their process's path")
+    if not seen and not wrong:
+        print("  ⏭️  no network or defence witness: not checked")
+        return 0
+    ok = not wrong
+    print(f"  {'✅' if ok else '❌'} Context of network and defence: {'; '.join(seen)}" + ("" if ok else f": {wrong[:3]}"))
     return 0 if ok else 1
 
 

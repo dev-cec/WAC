@@ -2,6 +2,7 @@
  *  \brief The hosts file (see hosts_file.h).
  */
 #include "hosts_file.h"
+#include "context.h"
 #include "consigne.h"
 #include <filesystem>
 #include "whole_file.h"
@@ -51,6 +52,19 @@ Json HostsEntry::toJson() const {
 	for (const std::wstring& n : names) list.push(Json::str(n));
 	o.add(L"Names", std::move(list));
 	o.add(L"Line", Json::num(line));
+	/* B-093: the names the machine sends to this address — a redirection
+	   (a security vendor's update host to 127.0.0.1), each name beside it. */
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	setRemoteObject(context.subject, address);
+	for (const std::wstring& n : names) {
+		ContextObject name;
+		name.role = L"HostName";
+		setRemoteObject(name, n);
+		context.related.push_back(std::move(name));
+	}
+	context.evidence = contextPath(conf.systemDrive + HOSTS_PATH);
+	addContext(o, context);
 	return o;
 }
 

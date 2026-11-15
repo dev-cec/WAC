@@ -241,6 +241,24 @@ Json InternetSettings::toJson() const {
 	addUser(o, sid);
 	for (const auto& [name, value] : values) o.add(name, Json::str(value));
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	/* B-093: the proxy the user's traffic goes through — its first server
+	   ("http=proxy:8080;https=…" gives proxy) —, its configuration script. */
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	for (const auto& [name, value] : values) {
+		if (name == L"ProxyServer") {
+			std::wstring first = value.substr(0, value.find(L';'));
+			const size_t equals = first.find(L'=');
+			if (equals != std::wstring::npos) first = first.substr(equals + 1);
+			setRemoteObject(context.subject, first);
+		} else if (name == L"AutoConfigUrl") {
+			context.how.url = value;
+			context.how.host = urlHost(value);
+		}
+	}
+	context.actor.sid = sid;
+	context.evidence = userHiveEvidence(sid);
+	addContext(o, context);
 	return o;
 }
 
@@ -314,6 +332,23 @@ Json FirewallRule::toJson() const {
 		if (count == 1) o.add(json, Json::str(value));
 	}
 	o.add(L"Fields", pairs(fields));
+	/* B-093: the program a rule lets through — %SystemRoot% resolved —, by
+	   its path; the rule's name; its service beside it. */
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	const Json* application = o.find(L"Application");
+	const Json* name = o.find(L"Name");
+	const Json* service = o.find(L"Service");
+	if (application) context.subject.path = contextPath(application->text());
+	if (name) context.subject.name = name->text();
+	if (service) {
+		ContextObject s;
+		s.role = L"Service";
+		s.name = service->text();
+		context.related.push_back(std::move(s));
+	}
+	context.evidence = systemHiveEvidence(L"SYSTEM");
+	addContext(o, context);
 	return o;
 }
 

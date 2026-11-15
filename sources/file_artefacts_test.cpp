@@ -60,6 +60,7 @@
 #include "local_groups.h"
 #include "security_hive.h"
 #include "cloud_identity.h"
+#include "account_names.h"
 #include "rdp_server.h"
 #include "thumbcache.h"
 #include "reg_amcache.h"
@@ -1429,6 +1430,90 @@ void defenderHistory() {
 		      && at(driverRecord.find(L"Context"), { L"Subject", L"Device" }).empty()
 		      && at(deviceRecord.find(L"Context"), { L"Subject", L"Device" }) == WITNESS,
 		      "setupapi: a driver package by its path, a device by its instance (B-092)");
+
+		/* B-093: network and defence. A hosts redirection; a rule's program;
+		   a firewall log line's remote side; the proxy; a share's folder; a
+		   detection and its quarantine by the same file; an exclusion; a
+		   local account by its name. */
+		HostsEntry redirected;
+		redirected.address = L"127.0.0.1";
+		redirected.names = { L"Update.Vendor.com" };
+		const Json hostsRecord = redirected.toJson();
+		check(at(hostsRecord.find(L"Context"), { L"Subject", L"Address" }) == L"127.0.0.1" && hostsRecord.find(L"Context")
+		      && hostsRecord.find(L"Context")->dump().find(L"\"Host\": \"update.vendor.com\"") != std::wstring::npos,
+		      "hosts: the address, each name sent to it beside it (B-093)");
+		FirewallRule rule;
+		rule.fields = { { L"Name", L"Wac rule" }, { L"App", L"%SystemRoot%\\System32\\svchost.exe" }, { L"Svc", L"WacSvc" } };
+		const Json ruleRecord = rule.toJson();
+		check(at(ruleRecord.find(L"Context"), { L"Subject", L"Path" }) == L"C:\\Windows\\System32\\svchost.exe"
+		      && at(ruleRecord.find(L"Context"), { L"Subject", L"Name" }) == L"Wac rule",
+		      "firewall: a rule's program, %SystemRoot% resolved, and its name (B-093)");
+		W3cLogEntry sent, received;
+		sent.file = received.file = L"C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.log";
+		sent.fields = { { L"Direction", L"SEND" }, { L"SourceAddress", L"10.0.2.15" }, { L"DestinationAddress", L"203.0.113.9" },
+		                { L"SourcePort", L"50000" }, { L"DestinationPort", L"443" }, { L"ProcessId", L"4242" } };
+		received.fields = { { L"Direction", L"RECEIVE" }, { L"SourceAddress", L"198.51.100.7" }, { L"DestinationAddress", L"10.0.2.15" },
+		                    { L"SourcePort", L"3389" }, { L"DestinationPort", L"51000" } };
+		const Json sentRecord = firewallLogEntryJson(sent), receivedRecord = firewallLogEntryJson(received);
+		check(at(sentRecord.find(L"Context"), { L"Subject", L"Address" }) == L"203.0.113.9"
+		      && at(sentRecord.find(L"Context"), { L"How", L"RemotePort" }) == L"443"
+		      && at(sentRecord.find(L"Context"), { L"Actor", L"Process", L"Pid" }) == L"4242"
+		      && at(receivedRecord.find(L"Context"), { L"Subject", L"Address" }) == L"198.51.100.7"
+		      && at(receivedRecord.find(L"Context"), { L"How", L"RemotePort" }) == L"3389",
+		      "firewall log: the remote side, destination of a SEND, source of a RECEIVE; the process (B-093)");
+		InternetSettings proxy;
+		proxy.sid = wac;
+		proxy.values = { { L"ProxyServer", L"http=Proxy.Corp:8080;https=other:8443" }, { L"AutoConfigUrl", L"http://wpad.corp/wpad.dat" } };
+		const Json proxyRecord = proxy.toJson();
+		check(at(proxyRecord.find(L"Context"), { L"Subject", L"Host" }) == L"proxy.corp"
+		      && at(proxyRecord.find(L"Context"), { L"How", L"Host" }) == L"wpad.corp",
+		      "internet settings: the proxy's first server, its configuration script's host (B-093)");
+		NetworkShare share;
+		share.name = L"Exfil";
+		share.fields = { { L"Path", L"C:\\Users\\wac\\Documents" } };
+		const Json shareRecord = share.toJson();
+		check(at(shareRecord.find(L"Context"), { L"Subject", L"Path" }) == L"C:\\Users\\wac\\Documents"
+		      && at(shareRecord.find(L"Context"), { L"Subject", L"Name" }) == L"Exfil",
+		      "network shares: the folder shared and the share's name (B-093)");
+		DefenderDetection detection;
+		detection.file = L"C:\\ProgramData\\Microsoft\\Windows Defender\\Scans\\History\\Service\\DetectionHistory\\00\\X";
+		detection.threatName = L"Virus:DOS/EICAR_Test_File";
+		detection.resources = { { L"file", L"C:\\wactest\\eicar-held\\wac-eicar.txt" } };
+		detection.quarantineEntryId = L"{EA6CA624-08A0-4AF0-B601-86CECA8CA840}";
+		detection.domainUser = L"OTHER-PC\\wac";
+		const Json detectionRecord = detection.toJson();
+		const Json* detectionContext = detectionRecord.find(L"Context");
+		QuarantineEntry quarantined;
+		quarantined.entryId = L"{EA6CA624-08A0-4AF0-B601-86CECA8CA840}";
+		QuarantineResource removed;
+		removed.type = L"file";
+		removed.path = L"C:\\wactest\\eicar-held\\wac-eicar.txt";
+		removed.contentRead = true;
+		removed.contentSha256 = L"275A021BBFB6489E54D471899F7DB9D1663FC695EC2FE2A2C4538AABF651FD0F";
+		quarantined.resources = { removed };
+		const Json quarantineRecord = quarantined.toJson();
+		const Json* quarantineContext = quarantineRecord.find(L"Context");
+		check(at(detectionContext, { L"Kind" }) == L"Detection"
+		      && at(detectionContext, { L"Subject", L"Path" }) == L"C:\\wactest\\eicar-held\\wac-eicar.txt"
+		      && at(detectionContext, { L"Actor", L"User" }) == L"OTHER-PC\\wac" && at(detectionContext, { L"Actor", L"Sid" }).empty()
+		      && at(quarantineContext, { L"Subject", L"Path" }) == L"C:\\wactest\\eicar-held\\wac-eicar.txt"
+		      && at(quarantineContext, { L"Subject", L"Sha256" }) == removed.contentSha256
+		      && detectionContext->dump().find(L"{EA6CA624-08A0-4AF0-B601-86CECA8CA840}") != std::wstring::npos
+		      && quarantineContext->dump().find(L"{EA6CA624-08A0-4AF0-B601-86CECA8CA840}") != std::wstring::npos,
+		      "defender: a detection and its quarantine name the same file and entry; another machine's user has no SID (B-093)");
+		DefenderExclusion excluded;
+		excluded.kind = L"Paths";
+		excluded.value = L"C:\\wac";
+		DefenderExclusion extension;
+		extension.kind = L"Extensions";
+		extension.value = L".ps1";
+		const Json excludedRecord = excluded.toJson(), extensionRecord = extension.toJson();
+		check(at(excludedRecord.find(L"Context"), { L"Subject", L"Path" }) == L"C:\\wac"
+		      && at(extensionRecord.find(L"Context"), { L"Subject", L"Name" }) == L".ps1",
+		      "defender: an excluded path by its path, an extension by its text (B-093)");
+		check(localAccountSid(L"OTHER-PC\\wac", L"WAC-TEST").empty() && localAccountSid(L"WAC-TEST\\nobody-at-all", L"WAC-TEST").empty(),
+		      "accounts: another domain's account, or an unknown name, has no local SID (B-093)");
+
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;
 	}

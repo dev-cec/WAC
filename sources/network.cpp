@@ -8,6 +8,7 @@
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include "network.h"
+#include "context.h"
 #include "system_library.h"
 #include "ip_address.h"
 #include "live_snapshot.h"
@@ -519,13 +520,15 @@ HRESULT writeNetworkFromSnapshot() {
 	if (hresult != ERROR_SUCCESS) return hresult;
 	// The processes observed, by PID: the owner of a connection named as
 	// observed at the same collection.
-	std::map<std::wstring, std::wstring> names;
+	std::map<std::wstring, std::wstring> names, images;
 	Json processes = Json::null();
 	if (readLiveSnapshot("processes.json", processes) == ERROR_SUCCESS)
 		for (const auto& process : processes.members()) {
 			const Json* pid = process.second.find(L"ProcessId");
 			const Json* name = process.second.find(L"Name");
+			const Json* image = process.second.find(L"ImagePath");
 			if (pid && name) names[pid->text()] = name->text();
+			if (pid && image) images[pid->text()] = image->text();
 		}
 	// Each connection with its process name after its PID, and its creation
 	// time local and UTC in place of the raw ticks; the other tables as observed.
@@ -535,6 +538,30 @@ HRESULT writeNetworkFromSnapshot() {
 		Json list = Json::arr();
 		for (const auto& connection : table.second.members()) {
 			Json o = Json::obj();
+			/* B-093: the connection, by its remote machine, and the process
+			   that held it — by its image's path, as observed at the same
+			   collection: the name alone relates to every program so named. */
+			RecordContext context;
+			context.kind = ContextKind::Network;
+			const Json* remote = connection.second.find(L"RemoteAddress");
+			const Json* remotePort = connection.second.find(L"RemotePort");
+			const Json* pid = connection.second.find(L"ProcessId");
+			long long number = 0;
+			// A listening socket's remote "0.0.0.0" or "::" is no machine.
+			if (remote && !remote->text().empty() && remote->text() != L"0.0.0.0" && remote->text() != L"::") {
+				context.subject.address = remote->text();
+				context.how.remoteAddress = remote->text();
+			}
+			if (remotePort && snapshotInteger(*remotePort, number)) {
+				context.how.remotePort = (unsigned)number;
+				context.how.remotePortKnown = true;
+			}
+			if (pid && snapshotInteger(*pid, number)) {
+				context.actor.process.pid = (unsigned long long)number;
+				context.actor.process.pidKnown = true;
+				const auto image = images.find(pid->text());
+				if (image != images.end()) context.actor.process.path = contextPath(image->second);
+			}
 			for (const auto& field : connection.second.members()) {
 				long long ticks = 0;
 				if (field.first != L"Created100ns") o.add(field.first, field.second);
@@ -548,6 +575,7 @@ HRESULT writeNetworkFromSnapshot() {
 					if (found != names.end()) o.add(L"Process", Json::str(found->second));
 				}
 			}
+			addContext(o, context);
 			list.push(std::move(o));
 		}
 		published.add(table.first, std::move(list));

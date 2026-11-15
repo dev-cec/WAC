@@ -2,6 +2,7 @@
  *  \brief Sysmon's configuration and archives (see sysmon.h).
  */
 #include "sysmon.h"
+#include "context.h"
 #include "sha.h"
 #include "portable_conversions.h"
 #include "tools.h"
@@ -112,6 +113,26 @@ Json SysmonEntry::toJson() const {
 		archived.push(std::move(a));
 	}
 	o.add(L"ArchivedFiles", archived);
+	/* B-093: Sysmon's service by its program, its driver beside it, and each
+	   file it archived (deleted files kept, FileDelete) with its SHA-256. */
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	context.subject.path = serviceProgram(s.serviceImagePath);
+	context.subject.name = s.service;
+	ContextObject driver;
+	driver.role = L"Driver";
+	driver.path = serviceProgram(s.driverImagePath);
+	driver.name = s.driver;
+	if (!driver.path.empty() || !driver.name.empty()) context.related.push_back(std::move(driver));
+	for (const SysmonArchivedFile& f : archivedFiles) {
+		ContextObject kept;
+		kept.role = L"Archived";
+		kept.path = contextPath(f.path);
+		kept.sha256 = f.sha256;
+		context.related.push_back(std::move(kept));
+	}
+	context.evidence = systemHiveEvidence(L"SYSTEM");
+	addContext(o, context);
 	return o;
 }
 

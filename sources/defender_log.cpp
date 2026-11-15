@@ -2,6 +2,7 @@
  *  \brief Microsoft Defender's support logs (see defender_log.h).
  */
 #include "defender_log.h"
+#include "context.h"
 #include "consigne.h"
 #include <filesystem>
 #include <fstream>
@@ -54,6 +55,9 @@ Json DefenderLog::toJson() const {
 	Json list = Json::arr();
 	for (const DefenderLogLine& l : lines) list.push(l.toJson());
 	o.add(L"Lines", std::move(list));
+	RecordContext context;   // B-093: a log of free text: where it was read, nothing to relate by
+	context.evidence = path;
+	addContext(o, context);
 	return o;
 }
 

@@ -6,6 +6,7 @@
 #include <cwctype>
 #include "running_machine.h"
 #include "tools.h"
+#include "account_names.h"
 #include "binaires.h"
 #include "user_shell_folders.h"
 
@@ -131,6 +132,18 @@ WindowsBits examinedWindowsBits() {
 	if (architecture == L"AMD64" || architecture == L"ARM64" || architecture == L"IA64") bits = WindowsBits::Bits64;
 	else if (architecture == L"x86" || architecture == L"ARM") bits = WindowsBits::Bits32;
 	return bits;
+}
+
+std::wstring examinedComputerName() {
+	static std::wstring name;
+	if (!name.empty() || !conf.CurrentControlSet) return name;
+	if (getRegSzValue(conf.CurrentControlSet, L"Control\\ComputerName\\ComputerName", L"ComputerName", &name) != ERROR_SUCCESS)
+		name.clear();
+	return name;
+}
+
+std::wstring contextAccountSid(const std::wstring& account) {
+	return localAccountSid(account, examinedComputerName());
 }
 
 std::wstring knownFolderPath(const std::wstring& cited, const std::wstring& sid) {

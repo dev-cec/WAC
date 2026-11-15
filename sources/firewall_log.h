@@ -41,6 +41,14 @@
  *  settings are not read; the defaults stay). */
 std::vector<std::wstring> firewallLogFiles();
 
+/*! A line of the firewall's log as JSON, with its Context (B-093): the
+ *  remote machine — the destination of a packet SEND, the source of one
+ *  RECEIVE —, its port, the process by its PID; a line without direction
+ *  names no remote side.
+ *  @param e the line
+ *  @return its JSON object */
+Json firewallLogEntryJson(const W3cLogEntry& e);
+
 /*! Reads the lines of a log: one connection allowed or dropped each.
  *  @param text the log, decoded
  *  @param file its path on the examined machine, recorded in each entry

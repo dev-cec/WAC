@@ -3,6 +3,7 @@
  */
 #include "firewall_log.h"
 #include "registry_common.h"
+#include "context.h"
 #include <filesystem>
 #include <set>
 
@@ -78,5 +79,47 @@ HRESULT FirewallLog::getData() {
 	return ERROR_SUCCESS;
 }
 
-HRESULT FirewallLog::toJson() { return writeList("firewall_log.json", entries_); }
+Json firewallLogEntryJson(const W3cLogEntry& e) {
+	Json o = e.toJson();
+	RecordContext context;
+	context.kind = ContextKind::Network;
+	std::wstring direction, source, destination, sourcePort, destinationPort, pid;
+	for (const auto& [key, value] : e.fields) {
+		if (key == L"Direction") direction = value;
+		else if (key == L"SourceAddress") source = value;
+		else if (key == L"DestinationAddress") destination = value;
+		else if (key == L"SourcePort") sourcePort = value;
+		else if (key == L"DestinationPort") destinationPort = value;
+		else if (key == L"ProcessId") pid = value;
+	}
+	// The remote side: the destination of what the machine sent, the source of what it received.
+	const bool received = _wcsicmp(direction.c_str(), L"RECEIVE") == 0;
+	const std::wstring& remote = received ? source : destination;
+	const std::wstring& remotePort = received ? sourcePort : destinationPort;
+	if (_wcsicmp(direction.c_str(), L"SEND") == 0 || received) {
+		setRemoteObject(context.subject, remote);
+		context.how.remoteAddress = context.subject.address;
+		wchar_t* end = nullptr;
+		const unsigned long port = remotePort.empty() ? 0 : wcstoul(remotePort.c_str(), &end, 10);
+		if (end && *end == L'\0' && port <= 65535) {
+			context.how.remotePort = (unsigned)port;
+			context.how.remotePortKnown = true;
+		}
+	}
+	wchar_t* end = nullptr;
+	const unsigned long long processId = pid.empty() ? 0 : wcstoull(pid.c_str(), &end, 10);
+	if (end && *end == L'\0') {
+		context.actor.process.pid = processId;
+		context.actor.process.pidKnown = true;
+	}
+	context.evidence = e.file;
+	addContext(o, context);
+	return o;
+}
+
+HRESULT FirewallLog::toJson() {
+	Json list = Json::arr();
+	for (const W3cLogEntry& e : entries_) list.push(firewallLogEntryJson(e));
+	return writeJsonFile("firewall_log.json", list);
+}
 void FirewallLog::clear() { entries_.clear(); }

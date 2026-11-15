@@ -98,6 +98,18 @@ Json DefenderExclusion::toJson() const {
 	o.add(L"Kind", Json::str(kind));
 	o.add(L"Value", Json::str(value));
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	/* B-093: what Defender no longer scans — a path or a process by its
+	   path, an address, an extension by its text. */
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	if (kind == L"Paths" || kind == L"Processes" || kind == L"TemporaryPaths") context.subject.path = contextPath(value);
+	else if (kind == L"IpAddresses") setRemoteObject(context.subject, value);
+	if (context.subject.path.empty() && context.subject.address.empty()) {
+		context.subject.host.clear();
+		context.subject.name = value;
+	}
+	context.evidence = systemHiveEvidence(L"SOFTWARE");
+	addContext(o, context);
 	return o;
 }
 
@@ -385,6 +397,13 @@ Json KnownNetwork::toJson() const {
 		}
 		o.add(L"Signatures", std::move(list));
 	}
+	// B-093: a network the machine joined, by its name (an SSID, a domain).
+	RecordContext context;
+	context.kind = ContextKind::Network;
+	for (const auto& [name, value] : values)
+		if (name == L"ProfileName") context.subject.name = value.text();
+	context.evidence = systemHiveEvidence(L"SOFTWARE");
+	addContext(o, context);
 	return o;
 }
 
@@ -757,6 +776,14 @@ Json NetworkShare::toJson() const {
 	for (const auto& [field, value] : fields) o.add(registryNameToJsonKey(field), Json::str(value));
 	o.add(L"SecurityDescriptor", securityDescriptor);
 	addDate(o, L"KeyLastWrite", keyLastWriteUtc);
+	// B-093: the folder the machine shares, by its path; the share by its name.
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	for (const auto& [field, value] : fields)
+		if (_wcsicmp(field.c_str(), L"Path") == 0) context.subject.path = contextPath(value);
+	context.subject.name = name;
+	context.evidence = systemHiveEvidence(L"SYSTEM");
+	addContext(o, context);
 	return o;
 }
 
@@ -847,6 +874,18 @@ Json NetworkAdapterConfiguration::toJson() const {
 	addDate(o, L"Ipv4KeyLastWrite", ipv4LastWriteUtc);
 	addSection(o, L"Ipv6", ipv6);
 	addSection(o, L"Kernel", kernel);
+	// B-093: the address the interface had — a fixed one, else its lease.
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	for (const wchar_t* key : { L"DhcpIPAddress", L"IPAddress" })   // IPAddress a list: its first
+		for (const auto& [n, v] : ipv4) {
+			if (n != key || !context.subject.address.empty()) continue;
+			const Json* first = v.kind() == Json::Kind::Arr && !v.members().empty() ? &v.members().front().second : &v;
+			if (first->kind() == Json::Kind::Str && first->text() != L"0.0.0.0") setRemoteObject(context.subject, first->text());
+		}
+	context.subject.host.clear();   // a text that is no address names no machine here
+	context.evidence = systemHiveEvidence(L"SYSTEM");
+	addContext(o, context);
 	return o;
 }
 

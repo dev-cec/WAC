@@ -169,6 +169,17 @@ std::wstring getNameFromSid(std::wstring _sid) {
 	return patternName(upper(_sid));
 }
 
+std::wstring localAccountSid(const std::wstring& account, const std::wstring& computerName) {
+	const size_t slash = account.find(L'\\');
+	if (slash != std::wstring::npos && (computerName.empty() || _wcsicmp(account.substr(0, slash).c_str(), computerName.c_str()) != 0))
+		return L"";
+	const std::wstring name = slash == std::wstring::npos ? account : account.substr(slash + 1);
+	if (name.empty()) return L"";
+	for (const auto& [sid, known] : g_names)
+		if (sid.compare(0, 9, L"S-1-5-21-") == 0 && _wcsicmp(known.c_str(), name.c_str()) == 0) return sid;
+	return L"";
+}
+
 void addUser(Json& o, const std::wstring& sid) {
 	o.add(L"SID", Json::str(sid));
 	if (sid == DEFAULT_PROFILE_SID) o.add(L"Profile", Json::str(L"Default"));
