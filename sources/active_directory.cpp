@@ -2,6 +2,7 @@
  *  \brief The Active Directory database of a domain controller (see active_directory.h).
  */
 #include "active_directory.h"
+#include "context.h"
 #include "conversions.h"
 #include "ese_recovery.h"
 #include "consigne.h"
@@ -241,6 +242,7 @@ HRESULT ActiveDirectory::getData() {
 	const auto& index = ExhibitStoreIndex();
 	const auto found = index.find(toLower(source));
 	if (found == index.end() || found->second.workingFile.empty()) return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+	databasePath_ = contextPath(found->second.sourcePath);
 	const HRESULT opened = OpenRecoveredEseDatabase(database_, found->second.workingFile, found->second.sourcePath,
 	                                                logFolder.empty() ? std::wstring() : std::wstring(extractedPath(logFolder)));
 	if (opened != ERROR_SUCCESS) return opened;
@@ -419,6 +421,17 @@ HRESULT ActiveDirectory::writeObjects(const EseTable& table) {
 			if (wcscmp(attribute->name, L"userAccountControl") == 0 && first.size() >= 4)
 				object.add(L"UserAccountControlFlags", userAccountControlFlags(readLittleEndian<uint32_t>(first.data())));
 		}
+		/* B-094: the directory's object by its SID — the account a SID of
+		   any other artefact names —, its account name, its GUID. */
+		RecordContext context;
+		context.kind = ContextKind::Account;
+		const Json* sid = object.find(L"ObjectSid");
+		const Json* account = object.find(L"SAMAccountName");
+		if (sid && sid->kind() == Json::Kind::Str) context.subject.sid = sid->text();
+		if (account && account->kind() == Json::Kind::Str) context.subject.user = account->text();
+		context.subject.name = name;
+		context.evidence = databasePath_;
+		addContext(object, context);
 		objects.add(object);
 		const EseCell* changes = cellOf(r, metadata);
 		if (!changes) return;
@@ -461,6 +474,16 @@ HRESULT ActiveDirectory::writeLinks() {
 			change.localUsn = numberIn(r, usn);
 			addChange(row, change, serverOf(change.invocationId));
 		}
+		// B-094: an object and the object its attribute (member, manager…) links to.
+		RecordContext context;
+		context.kind = ContextKind::Account;
+		context.subject.name = distinguishedName((uint32_t)numberIn(r, source));
+		ContextObject linked;
+		linked.role = L"Linked";
+		linked.name = distinguishedName((uint32_t)numberIn(r, target));
+		if (!linked.name.empty()) context.related.push_back(std::move(linked));
+		context.evidence = databasePath_;
+		addContext(row, context);
 		links.add(row);
 	});
 	return links.close();

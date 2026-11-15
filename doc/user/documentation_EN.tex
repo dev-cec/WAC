@@ -2538,7 +2538,12 @@ case, its serial number taken from its instance, the volume by its GUID in
 \champ{Volume}) and the network and defence (connections and the firewall's
 log by the remote machine and the process's path, hosts, rules, proxy, known
 networks, shares, Defender's detections and quarantine by the file and its
-content's fingerprint, exclusions, Sysmon); the other families receive it in turn. It holds identities only --- the dates stay in the
+content's fingerprint, exclusions, Sysmon) and the application and server
+traces (the file read in \champ{Evidence} and the account whose profile holds
+it, no subject for a line of free text; Active Directory's objects by their
+SID, DNS records and queries, DHCP leases, the clients of web sites and of
+the UAL by their address, group policies). A few overall settings, which
+name no object another artefact cites, have none. It holds identities only --- the dates stay in the
 record's fields --- and serves to relate the artefacts: the same file, account
 or software has the same form whatever artefact names it.
 \begin{description}

@@ -2,6 +2,7 @@
  *  \brief What remote and archive tools keep in each user's hive (see application_registry.h).
  */
 #include "application_registry.h"
+#include "context.h"
 #include "application_traces.h"
 #include "registry_common.h"
 
@@ -38,7 +39,26 @@ void walkKey(ORHKEY key, const std::wstring& path, const FILETIME& lastWrite, co
 		o.add(L"Key", Json::str(path));
 		addDate(o, L"KeyLastWrite", lastWrite);
 		if (hasPassword) o.add(L"HasPassword", Json::boolean(true));
+		/* B-094: a session's remote machine (HostName) and the account it
+		   logs on with, beside it; the user's hive the evidence. */
+		RecordContext context;
+		context.kind = ContextKind::Configuration;
+		for (const auto& value : values.members()) {
+			const Json* n = value.second.find(L"Name");
+			const Json* v = value.second.find(L"Value");
+			if (!n || !v || v->text().empty()) continue;
+			if (_wcsicmp(n->text().c_str(), L"HostName") == 0) setRemoteObject(context.subject, v->text());
+			else if (_wcsicmp(n->text().c_str(), L"UserName") == 0) {
+				ContextObject account;
+				account.role = L"Account";
+				account.user = v->text();
+				context.related.push_back(std::move(account));
+			}
+		}
+		context.actor.sid = sid;
+		context.evidence = userHiveEvidence(sid);
 		o.add(L"Values", std::move(values));
+		addContext(o, context);
 		out.push(std::move(o));
 	}
 	if (depth == 0) return;

@@ -511,6 +511,7 @@ def cross_checks(folder):
     found += guarded(check_context_accounts, folder)
     found += guarded(check_context_devices, folder)
     found += guarded(check_context_network, folder)
+    found += guarded(check_context_traces, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6823,6 +6824,41 @@ def check_context_network(folder):
         return 0
     ok = not wrong
     print(f"  {'✅' if ok else '❌'} Context of network and defence: {'; '.join(seen)}" + ("" if ok else f": {wrong[:3]}"))
+    return 0 if ok else 1
+
+
+def check_context_traces(folder):
+    """The Context of application traces (B-094), on every row of the eleven
+    groups of traces and of Intune's logs: its Evidence the file the row
+    was read in (File), never its subject; no Subject at all — a line of
+    free text names no object WAC can tell, and none is made up; its actor
+    the account whose profile holds that file, by investigation.json's
+    Host.Profiles, and none outside the profiles."""
+    investigation = load(folder, "investigation.json")
+    host = (investigation or {}).get("Host") or {} if isinstance(investigation, dict) else {}
+    profiles = [(str(p.get("Sid", "")), str(p.get("Path") or p.get("Folder") or "").lower())
+                for p in host.get("Profiles") or [] if isinstance(p, dict)]
+    def owner(path):
+        best = ("", 0)
+        for sid, root in profiles:
+            if root and path.lower().startswith(root + "\\") and len(root) > best[1]:
+                best = (sid, len(root))
+        return best[0]
+    wrong, rows = [], 0
+    for name in [g + ".json" for g in sorted(TRACE_GROUPS)] + ["intune_logs.json"]:
+        for r, c in contexts(folder, name):
+            rows += 1
+            file = str(r.get("File", ""))
+            evidence = str((c.get("Evidence") or {}).get("Path", ""))
+            sid = str((c.get("Actor") or {}).get("Sid", ""))
+            if evidence.lower() != file.lower() or c.get("Subject") or sid != owner(file):
+                wrong.append(f"{name} {file}: Context {c}, owner {owner(file) or 'none'}")
+    if not rows:
+        print("  ⏭️  no application trace converted: their Context not checked")
+        return 0
+    ok = not wrong
+    print(f"  {'✅' if ok else '❌'} Context of application traces: {rows} row(s), each read in its own file, no subject made up, "
+          f"its profile's account the actor" + ("" if ok else f": {len(wrong)} wrong, {wrong[:2]}"))
     return 0 if ok else 1
 
 

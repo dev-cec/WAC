@@ -2,6 +2,7 @@
  *  \brief The DNS Server role (see dns_server.h).
  */
 #include "dns_server.h"
+#include "context.h"
 #include "registry_common.h"
 #include "whole_file.h"
 #include <algorithm>
@@ -206,6 +207,18 @@ Json DnsZoneRecord::toJson() const {
 	o.add(L"Data", Json::str(data));
 	o.add(L"File", Json::str(file));
 	o.add(L"Line", Json::num(line));
+	/* B-094: the name the zone defines; an address record's address beside it. */
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	setRemoteObject(context.subject, name);   // already absolute, without its final dot
+	if (type == L"A" || type == L"AAAA") {
+		ContextObject address;
+		address.role = L"Address";
+		setRemoteObject(address, data);
+		context.related.push_back(std::move(address));
+	}
+	context.evidence = contextPath(file);
+	addContext(o, context);
 	return o;
 }
 
@@ -229,6 +242,21 @@ Json DnsLogEntry::toJson() const {
 	o.add(L"Text", Json::str(text));
 	o.add(L"File", Json::str(file));
 	o.add(L"Line", Json::num(line));
+	/* B-094: the client that asked, by its address; the name asked beside it. */
+	RecordContext context;
+	if (!remoteAddress.empty()) {
+		context.kind = ContextKind::Network;
+		setRemoteObject(context.subject, remoteAddress);
+		context.how.remoteAddress = context.subject.address;
+	}
+	if (!questionName.empty()) {
+		ContextObject asked;
+		asked.role = L"Question";
+		setRemoteObject(asked, questionName.back() == L'.' ? questionName.substr(0, questionName.size() - 1) : questionName);
+		context.related.push_back(std::move(asked));
+	}
+	context.evidence = contextPath(file);
+	addContext(o, context);
 	return o;
 }
 

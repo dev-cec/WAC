@@ -2,6 +2,7 @@
  *  \brief The Intune Management Extension's logs (see intune_logs.h).
  */
 #include "intune_logs.h"
+#include "context.h"
 #include "conversions.h"
 #include "registry_common.h"
 #include <algorithm>
@@ -106,6 +107,9 @@ Json IntuneLogEntry::toJson() const {
 	o.add(L"SourceFile", Json::str(sourceFile));
 	o.add(L"File", Json::str(file));
 	o.add(L"Line", Json::num(line));
+	RecordContext context;   // B-094: a message of free text: the log it was read in
+	context.evidence = contextPath(file);
+	addContext(o, context);
 	return o;
 }
 

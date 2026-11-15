@@ -2,6 +2,7 @@
  *  \brief The Hyper-V role (see hyperv.h).
  */
 #include "hyperv.h"
+#include "context.h"
 #include "registry_common.h"
 #include "whole_file.h"
 #include <cwctype>
@@ -146,5 +147,18 @@ HRESULT HyperV::getData() {
 	return ERROR_SUCCESS;
 }
 
-HRESULT HyperV::toJson() { return writeJsonFile("hyperv_machines.json", machines_); }
+HRESULT HyperV::toJson() {
+	// B-094: a virtual machine's configuration, read in its file.
+	Json list = Json::arr();
+	for (const auto& machine : machines_.members()) {
+		Json o = machine.second;
+		const Json* file = machine.second.find(L"File");
+		RecordContext context;
+		context.kind = ContextKind::Configuration;
+		if (file) context.evidence = contextPath(file->text());
+		addContext(o, context);
+		list.push(std::move(o));
+	}
+	return writeJsonFile("hyperv_machines.json", list);
+}
 void HyperV::clear() { machines_ = Json::arr(); }

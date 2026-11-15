@@ -2,6 +2,7 @@
  *  \brief User Access Logging (see user_access_log.h).
  */
 #include "user_access_log.h"
+#include "context.h"
 #include "consigne.h"
 #include "conversions.h"
 #include "ese_recovery.h"
@@ -138,6 +139,21 @@ void readRows(EseDatabase& database, const std::wstring& file, const RoleNames& 
 				days.push(std::move(entry));
 			}
 			row.add(L"Days", std::move(days));
+			/* B-094: the client that used a role of the server — by its
+			   address —, its account. */
+			RecordContext context;
+			const Json* address = row.find(L"Address");
+			const Json* account = row.find(L"AuthenticatedUserName");
+			if (address && !address->text().empty()) {
+				context.kind = ContextKind::Access;
+				setRemoteObject(context.subject, address->text());
+			}
+			if (account) {
+				context.actor.user = account->text();
+				context.actor.sid = contextAccountSid(account->text());
+			}
+			context.evidence = contextPath(conf.systemDrive + L"\\Windows\\System32\\LogFiles\\Sum\\" + file);
+			addContext(row, context);
 			rows.push(std::move(row));
 		}
 	}

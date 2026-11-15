@@ -2,6 +2,7 @@
  *  \brief The applications' traces converted (see application_trace_files.h).
  */
 #include "application_trace_files.h"
+#include "context.h"
 #include "consigne.h"
 #include "conversions.h"
 #include "group_policies.h"
@@ -371,13 +372,23 @@ HRESULT ApplicationTraceFiles::getData() {
 		if (owner.group != &group_
 		    || !traceProductWanted(conf.traceProducts, group_.key, owner.product->key, owner.product->onByDefault)) continue;
 		const std::wstring product = owner.product->name;
+		/* B-094: every row's Context — the file it was read in, never its
+		   subject, and the account whose profile holds that file. A line of
+		   free text names no object WAC can tell: no Subject is made up. */
+		RecordContext context;
+		context.actor.sid = profileOwner(exhibit.sourcePath);
+		context.evidence = contextPath(exhibit.sourcePath);
+		auto push = [&](Json& row) {
+			addContext(row, context);
+			rows_.push(std::move(row));
+		};
 		auto notConverted = [&](const wchar_t* reason) {
 			Json row = Json::obj();
 			row.add(L"Product", Json::str(product));
 			row.add(L"File", Json::str(exhibit.sourcePath));
 			row.add(L"Converted", Json::boolean(false));
 			row.add(L"Reason", Json::str(reason));
-			rows_.push(std::move(row));
+			push(row);
 		};
 		std::error_code ec;
 		const uintmax_t size = std::filesystem::file_size(std::filesystem::path(exhibit.workingFile), ec);
@@ -400,7 +411,7 @@ HRESULT ApplicationTraceFiles::getData() {
 				row.add(L"Format", Json::str(format == TraceFormat::Xml ? L"XML" : format == TraceFormat::Json ? L"JSON" : L"INI"));
 				if (hasPassword) row.add(L"HasPassword", Json::boolean(true));
 				row.add(L"Content", std::move(content));
-				rows_.push(std::move(row));
+				push(row);
 				continue;
 			}
 			log(2, L"🔥Malformed structured file, read as text: " + exhibit.sourcePath);
@@ -414,7 +425,7 @@ HRESULT ApplicationTraceFiles::getData() {
 			row.add(L"Text", Json::str(record.text));
 			if (record.truncated) row.add(L"Truncated", Json::boolean(true));
 			if (record.secretLeftOut) row.add(L"HasPassword", Json::boolean(true));
-			rows_.push(std::move(row));
+			push(row);
 		}
 	}
 	return ERROR_SUCCESS;

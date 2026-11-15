@@ -2,6 +2,7 @@
  *  \brief The group policies of a domain controller (see group_policies.h).
  */
 #include "group_policies.h"
+#include "context.h"
 #include "long_path.h"
 #include "whole_file.h"
 #include "xml_light.h"
@@ -327,7 +328,20 @@ HRESULT GroupPolicies::getData() {
 
 HRESULT GroupPolicies::toJson() {
 	JsonArrayWriter out("group_policies.json");
-	for (const Json& row : rows_) out.add(row);
+	for (const Json& row : rows_) {
+		/* B-094: a policy, or a folder of SYSVOL, read in its folder: its
+		   GUID names the policy the domain's objects link to (gPLink). */
+		Json o = row;
+		const Json* path = row.find(L"Path");
+		RecordContext context;
+		context.kind = ContextKind::Configuration;
+		if (path) {
+			context.evidence = contextPath(path->text());
+			context.subject.name = path->text().substr(path->text().find_last_of(L'\\') + 1);
+		}
+		addContext(o, context);
+		out.add(o);
+	}
 	return out.close();
 }
 

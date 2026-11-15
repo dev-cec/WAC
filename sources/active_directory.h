@@ -139,6 +139,7 @@ private:
 
 	bool opened_ = false;       //!< a database was found and opened
 	EseDatabase database_;
+	std::wstring databasePath_;                         //!< ntds.dit on the examined machine: every record's Evidence
 	std::map<uint32_t, TreeNode> tree_;                 //!< DNT → place
 	std::map<uint32_t, std::wstring> attributeNames_;   //!< internal identifier → LDAP name
 	std::map<uint32_t, std::wstring> classNames_;       //!< governsID → LDAP name

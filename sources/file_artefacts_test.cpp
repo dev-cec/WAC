@@ -61,6 +61,8 @@
 #include "security_hive.h"
 #include "cloud_identity.h"
 #include "account_names.h"
+#include "dns_server.h"
+#include "dhcp_server.h"
 #include "rdp_server.h"
 #include "thumbcache.h"
 #include "reg_amcache.h"
@@ -1514,6 +1516,47 @@ void defenderHistory() {
 		check(localAccountSid(L"OTHER-PC\\wac", L"WAC-TEST").empty() && localAccountSid(L"WAC-TEST\\nobody-at-all", L"WAC-TEST").empty(),
 		      "accounts: another domain's account, or an unknown name, has no local SID (B-093)");
 
+		/* B-094: application and server traces. A file in a profile has its
+		   owner; a zone's name and address; a DNS query's client and name; a
+		   lease's address and machine; a site's database. */
+		check(profileOwner(L"C:\\Users\\wac\\AppData\\Roaming\\x.log") == wac && profileOwner(L"C:\\Users\\wacky\\x.log").empty()
+		      && profileOwner(L"C:\\ProgramData\\x.log").empty(),
+		      "context: a file's profile owner, by its folder, a mere prefix of a name not one (B-094)");
+		DnsZoneRecord dnsRecord;
+		dnsRecord.zone = L"corp.example";
+		dnsRecord.name = L"www.corp.example";
+		dnsRecord.type = L"A";
+		dnsRecord.data = L"10.1.2.3";
+		dnsRecord.file = L"C:\\Windows\\System32\\dns\\corp.example.dns";
+		const Json zoneJson = dnsRecord.toJson();
+		check(at(zoneJson.find(L"Context"), { L"Subject", L"Host" }) == L"www.corp.example" && zoneJson.find(L"Context")
+		      && zoneJson.find(L"Context")->dump().find(L"\"Address\": \"10.1.2.3\"") != std::wstring::npos
+		      && at(zoneJson.find(L"Context"), { L"Evidence", L"Path" }) == L"C:\\Windows\\System32\\dns\\corp.example.dns",
+		      "dns: a zone's name, its address beside it, the zone file the evidence (B-094)");
+		DnsLogEntry query;
+		query.remoteAddress = L"10.0.2.15";
+		query.questionName = L"evil.example.";
+		query.file = L"C:\\Windows\\System32\\dns\\dns.log";
+		const Json queryJson = query.toJson();
+		check(at(queryJson.find(L"Context"), { L"Subject", L"Address" }) == L"10.0.2.15" && queryJson.find(L"Context")
+		      && queryJson.find(L"Context")->dump().find(L"\"Host\": \"evil.example\"") != std::wstring::npos,
+		      "dns log: the client by its address, the name it asked beside it (B-094)");
+		DhcpLogEntry lease;
+		lease.address = L"10.0.2.50";
+		lease.hostName = L"Laptop-7";
+		lease.file = L"C:\\Windows\\System32\\dhcp\\DhcpSrvLog-Mon.log";
+		const Json leaseJson = lease.toJson();
+		check(at(leaseJson.find(L"Context"), { L"Subject", L"Address" }) == L"10.0.2.50" && leaseJson.find(L"Context")
+		      && leaseJson.find(L"Context")->dump().find(L"\"Host\": \"laptop-7\"") != std::wstring::npos,
+		      "dhcp: the address leased, the machine it went to beside it (B-094)");
+		IisConnectionString connection;
+		connection.name = L"Db";
+		connection.databaseFile = L"C:\\inetpub\\wwwroot\\App_Data\\site.db";
+		connection.file = L"C:\\inetpub\\wwwroot\\web.config";
+		const Json connectionJson = connection.toJson();
+		check(at(connectionJson.find(L"Context"), { L"Subject", L"Path" }) == L"C:\\inetpub\\wwwroot\\App_Data\\site.db"
+		      && at(connectionJson.find(L"Context"), { L"Evidence", L"Path" }) == L"C:\\inetpub\\wwwroot\\web.config",
+		      "web server: a site's database by its file, its web.config the evidence (B-094)");
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;
 	}

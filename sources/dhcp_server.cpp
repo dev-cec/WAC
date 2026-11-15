@@ -2,6 +2,7 @@
  *  \brief The DHCP Server role (see dhcp_server.h).
  */
 #include "dhcp_server.h"
+#include "context.h"
 #include "ese_recovery.h"
 #include "registry_common.h"
 #include "whole_file.h"
@@ -103,6 +104,28 @@ std::wstring dhcpClientId(const std::vector<uint8_t>& value) {
 	return out;
 }
 
+/*! A lease's Context (B-094): the address given, the machine it was given
+ *  to beside it — the tie of an address to a machine at a date.
+ *  @param o the record
+ *  @param address the address leased
+ *  @param host the client's name
+ *  @param file the database or the log it was read in */
+static void addLeaseContext(Json& o, const std::wstring& address, const std::wstring& host, const std::wstring& file) {
+	RecordContext context;
+	if (!address.empty()) {
+		context.kind = ContextKind::Network;
+		setRemoteObject(context.subject, address);
+	}
+	if (!host.empty()) {
+		ContextObject machine;
+		machine.role = L"Machine";
+		setRemoteObject(machine, host);
+		context.related.push_back(std::move(machine));
+	}
+	context.evidence = contextPath(file);
+	addContext(o, context);
+}
+
 Json DhcpLogEntry::toJson() const {
 	Json o = Json::obj();
 	o.add(L"EventId", Json::str(eventId));
@@ -130,6 +153,7 @@ Json DhcpLogEntry::toJson() const {
 	o.add(L"SubnetPrefix", Json::str(subnetPrefix));
 	o.add(L"File", Json::str(file));
 	o.add(L"Line", Json::num(line));
+	addLeaseContext(o, address, hostName, file);
 	return o;
 }
 
@@ -217,6 +241,9 @@ void DhcpServer::readDatabase(const std::wstring& folder) {
 				}
 			}
 			o.add(L"File", Json::str(original));
+			const Json* address = o.find(L"Address");
+			const Json* host = o.find(L"HostName");
+			addLeaseContext(o, address ? address->text() : L"", host ? host->text() : L"", original);
 			leases_.push(std::move(o));
 		});
 	// IPv6 leases and multicast clients: no field named by WAC yet, the columns kept whole.

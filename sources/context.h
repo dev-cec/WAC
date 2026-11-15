@@ -143,6 +143,13 @@ enum class WindowsBits { Unknown, Bits32, Bits64 };
  *  the value cannot be read — never the analysis workstation's. */
 WindowsBits examinedWindowsBits();
 
+/*! The account whose profile holds a file (Host.Profiles): the profile
+ *  folder the path lies in, case ignored, the longest when one is inside
+ *  another. A file outside every profile has no owner here.
+ *  @param path the file's path, on its drive letter
+ *  @return the profile's SID; "" outside the profiles */
+std::wstring profileOwner(const std::wstring& path);
+
 /*! The examined machine's NetBIOS name (Control\ComputerName in its SYSTEM
  *  hive), read once the hive is open; "" before — never the analysis
  *  workstation's. */

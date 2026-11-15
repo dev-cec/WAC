@@ -134,6 +134,18 @@ WindowsBits examinedWindowsBits() {
 	return bits;
 }
 
+std::wstring profileOwner(const std::wstring& path) {
+	std::wstring owner;
+	size_t longest = 0;
+	for (const auto& [sid, folder] : conf.profiles)
+		if (folder.size() > longest && path.size() > folder.size() && path[folder.size()] == L'\\'
+		    && _wcsnicmp(path.c_str(), folder.c_str(), folder.size()) == 0) {
+			owner = sid;
+			longest = folder.size();
+		}
+	return owner;
+}
+
 std::wstring examinedComputerName() {
 	static std::wstring name;
 	if (!name.empty() || !conf.CurrentControlSet) return name;

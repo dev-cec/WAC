@@ -2648,7 +2648,13 @@ majuscules, son numéro de série tiré de l'instance, le volume par son GUID
 dans \champ{Volume}) et le réseau et la défense (connexions et journal du
 pare-feu par la machine distante et le chemin du processus, hosts, règles,
 proxy, réseaux connus, partages, détections et quarantaine de Defender par le
-fichier et l'empreinte de son contenu, exclusions, Sysmon) ; les autres familles le reçoivent à leur tour. Il ne contient que des identités --- les
+fichier et l'empreinte de son contenu, exclusions, Sysmon) et les traces
+d'applications et de serveurs (le fichier lu en \champ{Evidence} et le compte
+du profil qui le contient, sans sujet pour une ligne de texte libre ; objets
+d'Active Directory par leur SID, enregistrements et requêtes DNS, baux DHCP,
+clients des sites web et de l'UAL par leur adresse, stratégies de groupe).
+Quelques réglages d'ensemble, qui ne nomment aucun objet qu'un autre
+artefact cite, n'en ont pas. Il ne contient que des identités --- les
 dates restent dans les champs de l'enregistrement --- et sert à relier les
 artefacts entre eux : le même fichier, le même compte, le même logiciel y
 ont la même forme, quel que soit l'artefact qui les nomme.

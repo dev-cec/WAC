@@ -2,6 +2,7 @@
  *  \brief The web server of the examined machine: IIS (see web_server.h).
  */
 #include "web_server.h"
+#include "context.h"
 #include "web_installations.h"
 #include "registry_common.h"
 #include "sqlite_reader.h"
@@ -190,6 +191,26 @@ std::vector<std::wstring> workingSubfolders(const std::wstring& folder) {
  *  @param files their paths on the examined machine
  *  @param parse reads a line: its text, its file, its number
  *  @param out where they go */
+/*! A line of a web server's log as JSON, with its Context (B-094): the
+ *  client by its address, the page it asked for, its user; the log the
+ *  evidence. A line that names no client names no subject.
+ *  @param e the line
+ *  @return its JSON object */
+Json webLogEntryJson(const W3cLogEntry& e) {
+	Json o = e.toJson();
+	RecordContext context;
+	for (const auto& [key, value] : e.fields) {
+		if (key == L"ClientAddress") setRemoteObject(context.subject, value);
+		else if (key == L"UriStem") context.how.url = value;
+		else if (key == L"UserName") context.actor.user = value;
+		else if (key == L"Host") context.how.host = urlHost(L"http://" + value);
+	}
+	if (!context.subject.address.empty() || !context.subject.host.empty()) context.kind = ContextKind::Access;
+	context.evidence = contextPath(e.file);
+	addContext(o, context);
+	return o;
+}
+
 void writeTextLogs(const std::vector<std::wstring>& files,
                    W3cLogEntry (*parse)(const std::wstring&, const std::wstring&, unsigned long long),
                    JsonArrayWriter& out) {
@@ -203,7 +224,7 @@ void writeTextLogs(const std::vector<std::wstring>& files,
 		for (size_t i = 0; i < lines.size(); ++i) {
 			std::wstring line = lines[i];
 			if (!line.empty() && line.back() == L'\r') line.pop_back();
-			if (!line.empty()) out.add(parse(line, file, i + 1).toJson());
+			if (!line.empty()) out.add(webLogEntryJson(parse(line, file, i + 1)));
 		}
 		log(2, L"❇️" + file + L" : " + std::to_wstring(lines.size()) + L" line(s)");
 	}
@@ -280,6 +301,16 @@ Json IisSite::toJson() const {
 	o.add(L"LogFile", attributesJson(logFile));
 	o.add(L"LogFolder", Json::str(logFolder));
 	o.add(L"File", Json::str(file));
+	// B-094: the site by its name, its root folder; read in applicationHost.config.
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	context.subject.name = site.attribute(L"Name");
+	for (const auto& [application, directories] : applications)
+		for (const IisElement& d : directories)
+			if (context.subject.path.empty() && application.attribute(L"Path") == L"/" && d.attribute(L"Path") == L"/")
+				context.subject.path = contextPath(folder(d.attribute(L"PhysicalPath")));
+	context.evidence = contextPath(file);
+	addContext(o, context);
 	return o;
 }
 
@@ -383,6 +414,13 @@ Json IisConnectionString::toJson() const {
 	o.add(L"DatabaseFile", Json::str(databaseFile));
 	o.add(L"ProtectedBy", Json::str(protectedBy));
 	o.add(L"File", Json::str(file));
+	// B-094: the database a site connects to, by its file when it has one; its web.config.
+	RecordContext context;
+	context.kind = ContextKind::Configuration;
+	context.subject.path = contextPath(databaseFile);
+	context.subject.name = name;
+	context.evidence = contextPath(file);
+	addContext(o, context);
 	return o;
 }
 
@@ -576,7 +614,7 @@ HRESULT WebServer::toJson() {
 				continue;
 			}
 			const std::vector<W3cLogEntry> lines = parseIisLog(decodeTextFile(bytes), examined);
-			for (const W3cLogEntry& e : lines) out.add(e.toJson());
+			for (const W3cLogEntry& e : lines) out.add(webLogEntryJson(e));
 			log(2, L"❇️" + examined + L" : " + std::to_wstring(lines.size()) + L" line(s)");
 		}
 	}
