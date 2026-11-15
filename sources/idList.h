@@ -1427,12 +1427,15 @@ struct ShellItemPath {
 	unsigned long long mftEntry = 0;    //!< the last folder's $MFT reference (block 0xbeef0004, version 7 on)
 	unsigned mftSequence = 0;
 	std::wstring lastName;              //!< the last item's name, even when the path is not known
+	std::wstring sid;                   //!< the account whose known folders a root item names (knownFolderPath)
 };
 
 /*! One step down a PIDL: what \a item adds to \a place. A volume ("C:\")
  *  or a share (\\server\share) starts a path; a file entry adds its long
  *  name (block 0xbeef0004, else its primary name) and its $MFT reference to
- *  a path started; an archive's entry gives its name, no path — it is no
+ *  a path started; a root item that is a known folder ("This PC\Documents",
+ *  {D3162B92-…}) starts its folder in the profile of the place's account;
+ *  an archive's entry gives its name, no path — it is no
  *  file of the volume; any other item — the Computer, a control panel, a known
  *  folder by its GUID — ends what can be placed: guessed, a path would
  *  name another folder than the one browsed.

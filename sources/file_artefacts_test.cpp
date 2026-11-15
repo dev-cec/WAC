@@ -1255,6 +1255,24 @@ void defenderHistory() {
 		ShellItemPath lost;
 		stepShellItemPath(lost, folderList);
 		check(lost.path.empty() && lost.lastName == L"wac docs", "shellbags: a folder no volume placed has a name, no path (B-090)");
+		// "This PC\Documents" ({D3162B92-…}, a shell CLSID): the user's Documents, the folder below it.
+		const uint8_t DOCUMENTS[16] = { 0x92, 0x2B, 0x16, 0xD3, 0x65, 0x93, 0x7A, 0x46, 0x95, 0x6B, 0x92, 0x70, 0x3A, 0xCA, 0x08, 0xAF };
+		std::vector<uint8_t> rootItem(0x14, 0);
+		rootItem[0] = 0x14;
+		rootItem[2] = 0x1F;
+		rootItem[3] = 0x48;
+		std::memcpy(rootItem.data() + 4, DOCUMENTS, 16);
+		IdList rootList(rootItem.data(), 0);
+		ShellItemPath documents;
+		documents.sid = wac;
+		stepShellItemPath(documents, rootList);
+		stepShellItemPath(documents, folderList);
+		ShellItemPath nobody;
+		stepShellItemPath(nobody, rootList);
+		check(documents.path == L"C:\\Users\\wac\\Documents\\wac docs" && nobody.path.empty()
+		      && knownFolderPath(L"{5E6C858F-0E22-4760-9AFE-EA3317B67173}\\notes.txt", wac) == L"C:\\Users\\wac\\notes.txt",
+		      "shellbags: This PC's Documents in its user's profile, the folder below it; no account, no path; "
+		      "the profile itself (B-090)");
 		TrustRecord trusted;
 		trusted.sid = wac;
 		trusted.document = L"%USERPROFILE%/Documents/wac-macro-test.docm";
@@ -1307,6 +1325,7 @@ void defenderHistory() {
 		check(at(indexedContext, { L"Kind" }) == L"Presence"
 		      && at(indexedContext, { L"Subject", L"Path" }) == L"C:\\ProgramData\\Microsoft\\Windows\\Start Menu",
 		      "search index: an item present by its URL, not its translated display path (B-090)");
+
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;
 	}

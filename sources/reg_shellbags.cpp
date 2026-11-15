@@ -5,6 +5,7 @@
 #include "context.h"
 
 Json Shellbag::toJson(ShellItemPath place) const {
+	place.sid = sid;
 	log(3, L"🔈Shellbag toJson");
 	Json o = Json::obj();
 	o.add(L"ID",      Json::num(id));

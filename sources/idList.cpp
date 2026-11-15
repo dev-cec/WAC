@@ -3,6 +3,7 @@
  */
 #include "idList.h"
 #include "conversions.h"
+#include "context.h"
 #include <exception>
 #include <map>
 
@@ -3061,6 +3062,11 @@ void stepShellItemPath(ShellItemPath& place, const IdList& item) {
 		place.lastName = name;
 		if (place.path.empty() || name.empty()) place.path.clear();
 		else place.path += (place.path.back() == L'\\' ? L"" : L"\\") + name;
+		return;
+	}
+	if (const auto* root = dynamic_cast<const RootFolder*>(shellItem)) {
+		place.lastName = root->identifier;
+		place.path = knownFolderPath(root->guid, place.sid);   // "" for the Computer, the Network…
 		return;
 	}
 	// An archive's entry: a name, no file of the volume — the path stops at the archive.

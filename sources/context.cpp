@@ -7,6 +7,7 @@
 #include "running_machine.h"
 #include "tools.h"
 #include "binaires.h"
+#include "user_shell_folders.h"
 
 namespace {
 
@@ -142,8 +143,10 @@ std::wstring knownFolderPathFor(const std::wstring& cited, const std::wstring& s
 	for (wchar_t& c : id) c = (wchar_t)towupper(c);
 	const std::wstring rest = cited.substr(close + 1);
 	const std::wstring windir = conf.systemDrive + L"\\Windows";
-	// KNOWNFOLDERID (knownfolders.h): the folders that hold programs.
-	struct Folder { const wchar_t* id; std::wstring base; bool user; };
+	// KNOWNFOLDERID (knownfolders.h): the folders that hold programs, and the user's own.
+	/* A user folder by its place in the profile and its value of User Shell
+	   Folders, which says where it was moved (OneDrive, another disk). */
+	struct Folder { const wchar_t* id; std::wstring base; bool user; const wchar_t* shellFolder = nullptr; };
 	const Folder FOLDERS[] = {
 		{ L"{F38BF404-1D43-42F2-9305-67DE0B28FC23}", windir, false },                                    // Windows
 		{ L"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}", windir + L"\\System32", false },                  // System
@@ -159,15 +162,29 @@ std::wstring knownFolderPathFor(const std::wstring& cited, const std::wstring& s
 		{ L"{0139D44E-6AFE-49F2-8690-3DAFCAE6FFB8}", conf.systemDrive + L"\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", false },
 		{ L"{A77F5D77-2E2B-44C3-A6A2-ABA601054A51}", L"\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs", true },   // Programs
 		{ L"{9E3995AB-1F9C-4F13-B827-48B24B6C7174}", L"\\AppData\\Roaming\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned", true },
-		{ L"{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}", L"\\Desktop", true },
-		{ L"{374DE290-123F-4565-9164-39C4925E467B}", L"\\Downloads", true },
+		{ L"{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}", L"\\Desktop", true, L"Desktop" },
+		{ L"{374DE290-123F-4565-9164-39C4925E467B}", L"\\Downloads", true, L"{374DE290-123F-4565-9164-39C4925E467B}" },
+		{ L"{5E6C858F-0E22-4760-9AFE-EA3317B67173}", L"", true },                                       // Profile
+		{ L"{FDD39AD0-238F-46AF-ADB4-6C85480369C7}", L"\\Documents", true, L"Personal" },
+		{ L"{33E28130-4E1E-4676-835A-98395C3BC3BB}", L"\\Pictures", true, L"My Pictures" },
+		{ L"{4BD8D571-6D19-48D3-BE97-422220080E43}", L"\\Music", true, L"My Music" },
+		{ L"{18989B1D-99B5-455B-841C-AB7C74E4DDFC}", L"\\Videos", true, L"My Video" },
+		// The same folders as "This PC" names them (shell CLSIDs, Windows 10 on): shellbags' roots.
+		{ L"{D3162B92-9365-467A-956B-92703ACA08AF}", L"\\Documents", true, L"Personal" },
+		{ L"{24AD3AD4-A569-4530-98E1-AB02F9417AA8}", L"\\Pictures", true, L"My Pictures" },
+		{ L"{3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE}", L"\\Music", true, L"My Music" },
+		{ L"{F86FA3AB-70D2-4FC7-9C99-FCBF05467F3A}", L"\\Videos", true, L"My Video" },
+		{ L"{088E3905-0323-4B02-9826-5D99428E115F}", L"\\Downloads", true, L"{374DE290-123F-4565-9164-39C4925E467B}" },
 	};
 	for (const Folder& f : FOLDERS) {
 		if (id != f.id) continue;
-		if (f.base.empty()) return L"";
+		if (f.base.empty() && !f.user) return L"";   // SystemX86 of an unknown bitness; a user's base "" is the profile
 		if (!f.user) return contextPath(f.base + rest);
-		for (const auto& [profileSid, folder] : conf.profiles)
-			if (_wcsicmp(profileSid.c_str(), sid.c_str()) == 0) return contextPath(folder + f.base + rest);
+		for (const auto& [profileSid, folder] : conf.profiles) {
+			if (_wcsicmp(profileSid.c_str(), sid.c_str()) != 0) continue;
+			const std::wstring moved = f.shellFolder ? redirectedShellFolder(sid, folder, f.shellFolder, f.base.substr(1)) : L"";
+			return contextPath((moved.empty() ? folder + f.base : moved) + rest);
+		}
 		return L"";   // a user folder of an account without a known profile
 	}
 	return L"";

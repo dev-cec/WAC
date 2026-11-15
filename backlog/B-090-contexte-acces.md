@@ -68,4 +68,16 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   préparé. Compilation après le cycle de B-089.
 - 2026-11-15 : mutation vue échouer (`/` non converti : emplacements, Office,
   index de recherche), restauration, `bin/WAC.exe` identique ; tests verts.
-  `check_context_accesses` inséré dans `check-json.py`.
+  `check_context_accesses` inséré dans `check-json.py`. Commit `3986452d`.
+- 2026-11-15 : cycle `win11-test` (avec la correction de B-089) : 312 ✅,
+  1 ❌ : `check_context_accesses`, 5 témoins sur 6. Le shellbag du ZIP n'avait
+  pas de chemin : Explorer l'a enregistré sous « Ce PC\Documents », un
+  dossier racine désigné par le CLSID `{D3162B92-…}`, inconnu de la table
+  des dossiers connus. Corrigé : la table connaît les dossiers de
+  l'utilisateur (KNOWNFOLDERID et CLSID de « Ce PC » : Documents, Images,
+  Musique, Vidéos, Téléchargements, Bureau, profil), chacun suivant sa
+  redirection (`User Shell Folders`) ; la racine d'un shellbag se place par
+  cette table. Mutation vue échouer (CLSID de Documents retiré).
+  Remarque : une redirection vers un partage n'est pas distinguée d'une
+  absence de redirection par `redirectedShellFolder` ; le dossier par défaut
+  est alors pris.
