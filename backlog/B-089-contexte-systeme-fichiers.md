@@ -49,4 +49,20 @@ l'USN. Un renommage de l'USN est deux enregistrements (`RENAME_OLD_NAME`,
   (création, modification, suppression), `file_artefacts_test` (MFT, fichiers
   supprimés, corbeille Vista et XP, FAT). Contrôle `check_context_filesystem`
   écrit ; rejoué sur une collecte d'avant : il échoue sur chaque
-  enregistrement, comme attendu. Compilation avec mutation en cours.
+  enregistrement, comme attendu. Mutation vue échouer (SHA-256 retiré du
+  sujet, suppression de l'USN prise pour une modification), restauration,
+  `bin/WAC.exe` identique ; commit `48f207eb`.
+- 2026-11-15 : cycle `win11-test` : 311 ✅, 1 ❌, le nouveau contrôle. Défaut
+  réel : un enregistrement libéré porte la séquence du fichier plus un (NTFS
+  l'incrémente à la libération) ; le `Context` écrivait `H:|3058|12`, le
+  journal a supprimé `H:|3058|11`. Mesuré sur toute la collecte : 22 215
+  enregistrements libres de `mft.json` dont le journal donne la
+  suppression, tous à +1 sauf un à +2 (enregistrement réutilisé puis libéré
+  à nouveau). Corrigé : `livedSequence` (`mft.h`), pour `mft.json` et les
+  fichiers supprimés ; le contrôle recoupe désormais chaque enregistrement
+  libre avec le journal.
+- 2026-11-15 : taille, mesurée sur ce cycle : `mft.json` 196 → 273 Mo
+  (+39 %), `usn_journal.json` 143 → 230 Mo (+61 %, dont 2 % de plus
+  d'enregistrements), `deleted_files.json` +26 %. Le chemin est recopié dans
+  `Subject.Path` à côté du `Path` de l'enregistrement. Signalé à
+  l'utilisateur.

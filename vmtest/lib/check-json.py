@@ -6430,8 +6430,10 @@ def check_context_persistence(folder):
 def check_context_filesystem(folder):
     """The Context of the file system (B-089). Every record of mft.json and
     usn_journal.json: its NTFS identity the record's own volume, entry and
-    sequence, its Kind the one its fields say (a free record a Deletion; a
-    change by its Reasons). Then the harness's witnesses: each deleted file
+    sequence — for a free record of mft.json, the sequence the file had, one
+    before the record's: the change journal's deletion of that file names
+    it, a second source —, its Kind the one its fields say (a free record a
+    Deletion; a change by its Reasons). Then the harness's witnesses: each deleted file
     of C: whose content came back whole has, as its subject's SHA-256, the
     one Windows computed before the deletion, and the NTFS identity the
     change journal gave its deletion — two sources, one file; a content not
@@ -6445,14 +6447,6 @@ def check_context_filesystem(folder):
     def subject(c, key):
         return str((c.get("Subject") or {}).get(key) or "")
     wrong, counted = [], {}
-    mft = load(folder, "mft.json")
-    for r, c in contexts(folder, "mft.json") if isinstance(mft, list) else []:
-        counted["mft"] = counted.get("mft", 0) + 1
-        kind = "Deletion" if r.get("Deleted") else "Presence"
-        ntfs = f"{str(r.get('Volume', '')).upper()}|{r.get('Entry')}|{r.get('Sequence')}"
-        if c.get("Kind") != kind or subject(c, "Ntfs") != ntfs \
-                or (not r.get("PathIncomplete") and subject(c, "Path").lower() != str(r.get("Path", "")).lower()):
-            wrong.append(f"mft {r.get('Path')}: Context {c}")
     deleted_ids = {}
     for r, c in contexts(folder, "usn_journal.json"):
         counted["usn"] = counted.get("usn", 0) + 1
@@ -6463,6 +6457,21 @@ def check_context_filesystem(folder):
             wrong.append(f"usn {r.get('Path')} {reasons}: Context {c}")
         if kind == "Deletion":
             deleted_ids[str(r.get("Path", "")).lower()] = ntfs
+    mft = load(folder, "mft.json")
+    for r, c in contexts(folder, "mft.json") if isinstance(mft, list) else []:
+        counted["mft"] = counted.get("mft", 0) + 1
+        kind = "Deletion" if r.get("Deleted") else "Presence"
+        sequence = int(r.get("Sequence", 0))
+        lived = sequence - 1 if r.get("Deleted") else sequence
+        ntfs = f"{str(r.get('Volume', '')).upper()}|{r.get('Entry')}|{lived}" if lived > 0 else ""
+        if c.get("Kind") != kind or subject(c, "Ntfs") != ntfs \
+                or (not r.get("PathIncomplete") and subject(c, "Path").lower() != str(r.get("Path", "")).lower()):
+            wrong.append(f"mft {r.get('Path')}: Context {c}")
+        journal = deleted_ids.get(str(r.get("Path", "")).lower())
+        if r.get("Deleted") and journal and journal.split("|")[1] == str(r.get("Entry")):
+            counted["mft deleted, the journal's identity"] = counted.get("mft deleted, the journal's identity", 0) + 1
+            if subject(c, "Ntfs") != journal:
+                wrong.append(f"mft {r.get('Path')}: NTFS {subject(c, 'Ntfs')}, the journal deleted {journal}")
     files = load(folder, "deleted_files.json")
     by_path = {str(f.get("Path", "")).lower(): f for f in files or [] if isinstance(f, dict)} if isinstance(files, list) else {}
     for f in files if isinstance(files, list) else []:

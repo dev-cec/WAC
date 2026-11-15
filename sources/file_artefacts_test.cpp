@@ -1115,10 +1115,11 @@ void defenderHistory() {
 		const Json freedRecord = freed.toJson(L"C:\\Users\\wac\\x.txt", true, { L"C:\\Users\\wac\\y.txt" }, L"C:");
 		const Json* freedContext = freedRecord.find(L"Context");
 		check(at(freedContext, { L"Kind" }) == L"Deletion" && at(freedContext, { L"Subject", L"Path" }) == L"C:\\Users\\wac\\x.txt"
-		      && at(freedContext, { L"Subject", L"Ntfs" }) == L"C:|64|3" && at(freedContext, { L"Evidence", L"Path" }) == L"C:\\$MFT"
+		      && at(freedContext, { L"Subject", L"Ntfs" }) == L"C:|64|2" && at(freedContext, { L"Evidence", L"Path" }) == L"C:\\$MFT"
 		      && freedContext && freedContext->dump().find(L"\"Role\": \"HardLink\"") != std::wstring::npos
 		      && freedContext->dump().find(L"C:\\\\Users\\\\wac\\\\y.txt") != std::wstring::npos,
-		      "mft: a free record a deletion, by path and NTFS identity, its other name beside it (B-089)");
+		      "mft: a free record a deletion, by path and the NTFS identity the file had — one sequence before —, "
+		      "its other name beside it (B-089)");
 		MftEntry live;
 		live.entry = 70;
 		live.sequence = 1;

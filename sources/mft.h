@@ -42,6 +42,16 @@
 #include "tools.h"
 
 /*! One record of the $MFT: a file or a directory, present or deleted. */
+/*! The sequence number a file had while it lived, from its record now
+ *  free: NTFS adds one when it frees a record — measured on win11-test, the
+ *  change journal's FILE_DELETE of a deleted witness names sequence 11, its
+ *  free record holds 12; ntfs-3g does the same. The file's references
+ *  elsewhere (journal, $I30, shortcuts, shellbags) carry the lived one.
+ *  @param freedSequence the free record's sequence number
+ *  @return the file's, 0 when it cannot be told (a sequence of 0 or 1:
+ *          wrapped, or never used) */
+inline unsigned livedSequence(unsigned freedSequence) { return freedSequence > 1 ? freedSequence - 1 : 0; }
+
 struct MftEntry {
 	uint64_t entry = 0;              //!< record number (the file's identity on the volume)
 	uint16_t sequence = 0;           //!< sequence number: raised each time the record is freed

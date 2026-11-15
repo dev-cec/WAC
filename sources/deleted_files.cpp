@@ -642,10 +642,13 @@ void addRecoveredDigests(Json& o, const std::wstring& md5, const std::wstring& s
 	o.add(L"RecoveredSHA256", Json::str(sha256));
 }
 
-//! The Context of a deleted MFT record: its volume's $MFT the evidence.
+/*! The Context of a deleted MFT record: the identity the file had (its free
+ *  record's sequence is one past it, livedSequence), its volume's $MFT the
+ *  evidence. */
 void addRecordContext(Json& o, const Candidate& c, const std::wstring& wholeSha256) {
-	addDeletedContext(o, c.pathComplete ? c.path : std::wstring(), contextNtfs(c.volume + L"\\", c.entry, c.sequence),
-	                  wholeSha256, c.volume + L"\\$MFT");
+	const unsigned lived = livedSequence(c.sequence);
+	addDeletedContext(o, c.pathComplete ? c.path : std::wstring(),
+	                  lived ? contextNtfs(c.volume + L"\\", c.entry, lived) : std::wstring(), wholeSha256, c.volume + L"\\$MFT");
 }
 
 /*! The counts of a collection, for the investigation log. */
