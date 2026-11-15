@@ -107,6 +107,8 @@ std::wstring contextNtfs(const std::wstring& path, unsigned long long entry, uns
 	return std::wstring(1, (wchar_t)towupper(path[0])) + L":|" + std::to_wstring(entry) + L"|" + std::to_wstring(sequence);
 }
 
+std::wstring rawVolumeEvidence(const std::wstring& volume) { return L"\\\\.\\" + volume; }
+
 void setFileObject(ContextObject& object, const std::wstring& cited, const BinaryFingerprint& fingerprint) {
 	object.path = contextPath(cited);
 	object.sha1 = fingerprint.sha1;

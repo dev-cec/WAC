@@ -7,6 +7,7 @@
 #include "audit.h"
 #include "binaires.h"
 #include "consigne.h"
+#include "context.h"
 #include "live_snapshot.h"
 #include "mft.h"
 #include "usn_journal.h"
@@ -457,6 +458,23 @@ std::vector<IndexSlackEntry> indexSlackEntries(const uint8_t* block, size_t size
 	return found;
 }
 
+void addDeletedContext(Json& o, const std::wstring& path, const std::wstring& ntfs, const std::wstring& wholeSha256,
+                       const std::wstring& evidence, const std::wstring& currentPath) {
+	RecordContext context;
+	context.kind = currentPath.empty() ? ContextKind::Deletion : ContextKind::Modification;
+	if (!path.empty()) context.subject.path = contextPath(path);
+	context.subject.ntfs = ntfs;
+	context.subject.sha256 = wholeSha256;
+	if (!currentPath.empty()) {
+		ContextObject now;
+		now.role = L"CurrentName";
+		now.path = contextPath(currentPath);
+		context.related.push_back(std::move(now));
+	}
+	context.evidence = evidence;
+	addContext(o, context);
+}
+
 namespace {
 
 /*! A deleted file the $MFT copy lists, before its record is read again. */
@@ -624,6 +642,12 @@ void addRecoveredDigests(Json& o, const std::wstring& md5, const std::wstring& s
 	o.add(L"RecoveredSHA256", Json::str(sha256));
 }
 
+//! The Context of a deleted MFT record: its volume's $MFT the evidence.
+void addRecordContext(Json& o, const Candidate& c, const std::wstring& wholeSha256) {
+	addDeletedContext(o, c.pathComplete ? c.path : std::wstring(), contextNtfs(c.volume + L"\\", c.entry, c.sequence),
+	                  wholeSha256, c.volume + L"\\$MFT");
+}
+
 /*! The counts of a collection, for the investigation log. */
 struct Tally {
 	size_t listed = 0, copied = 0, partial = 0, lost = 0, notRead = 0;
@@ -640,8 +664,9 @@ struct Tally {
  *  @param c the file
  *  @param claims the clusters its volume's deleted records claim, or nullptr
  *  @param tally the counts, the bytes copied among them
- *  @return its object for the snapshot */
-Json recoverOne(const Candidate& c, const ClusterClaims* claims, Tally& tally) {
+ *  @param wholeSha256 receives the SHA-256 of its content when Recovered
+ *  @return its object for the snapshot, without its Context */
+Json recoverOne(const Candidate& c, const ClusterClaims* claims, Tally& tally, std::wstring& wholeSha256) {
 	Json o = describe(c);
 	const std::wstring letter = c.volume.substr(0, 1);
 	std::vector<uint8_t> bytes;
@@ -681,8 +706,11 @@ Json recoverOne(const Candidate& c, const ClusterClaims* claims, Tally& tally) {
 	for (const NtfsRun& run : record.data.runs)
 		if (run.lcn >= 0) tally.recovered[c.volume].add((uint64_t)run.lcn, run.count, 1);
 	if (recovery.state == RecoveryState::Partial) ++tally.partial;
+	const bool whole = recovery.state == RecoveryState::Recovered;
 	if (!copy) {
-		addRecoveredDigests(o, md5.hexDigest(), sha1.hexDigest(), sha256.hexDigest());
+		const std::wstring digest = sha256.hexDigest();
+		addRecoveredDigests(o, md5.hexDigest(), sha1.hexDigest(), digest);
+		if (whole) wholeSha256 = digest;
 		o.add(L"Copied", Json::boolean(false));
 		o.add(L"NotCopied", Json::str(L"larger than max_file_mib"));
 		return o;
@@ -696,6 +724,7 @@ Json recoverOne(const Candidate& c, const ClusterClaims* claims, Tally& tally) {
 	RawHiveExtraction line;
 	const RecoveredStorage stored = BinariesStoreRecovered(exhibitPath, c.path, content, method, line);
 	addRecoveredDigests(o, line.fingerprints.md5, line.fingerprints.sha1, line.fingerprints.sha256);
+	if (whole) wholeSha256 = line.fingerprints.sha256;
 	o.add(L"Copied", Json::boolean(stored.copied));
 	if (stored.copied) {
 		o.add(L"Exhibit", Json::str(exhibitPath));
@@ -733,6 +762,7 @@ size_t carveSource(const std::wstring& volume, const ClusterSource& source, uint
 		if (f.content.empty()) {
 			o.add(L"State", Json::str(L"NotRead"));
 			o.add(L"Reason", Json::str(L"larger than max_file_mib"));
+			addDeletedContext(o, std::wstring(), std::wstring(), std::wstring(), rawVolumeEvidence(volume));
 			files.push(std::move(o));
 			return;
 		}
@@ -746,9 +776,11 @@ size_t carveSource(const std::wstring& volume, const ClusterSource& source, uint
 			md5.update(f.content.data(), f.content.size());
 			sha1.update(f.content.data(), f.content.size());
 			sha256.update(f.content.data(), f.content.size());
-			addRecoveredDigests(o, md5.hexDigest(), sha1.hexDigest(), sha256.hexDigest());
+			const std::wstring digest = sha256.hexDigest();
+			addRecoveredDigests(o, md5.hexDigest(), sha1.hexDigest(), digest);
 			o.add(L"Copied", Json::boolean(false));
 			o.add(L"NotCopied", Json::str(L"max_total_mib reached"));
+			addDeletedContext(o, std::wstring(), std::wstring(), digest, rawVolumeEvidence(volume));
 			files.push(std::move(o));
 			return;
 		}
@@ -765,6 +797,7 @@ size_t carveSource(const std::wstring& volume, const ClusterSource& source, uint
 		}
 		if (!stored.signature.empty()) o.add(L"Signature", Json::str(stored.signature));
 		if (!stored.notCopied.empty()) o.add(L"NotCopied", Json::str(stored.notCopied));
+		addDeletedContext(o, std::wstring(), std::wstring(), line.fingerprints.sha256, rawVolumeEvidence(volume));
 		files.push(std::move(o));
 	});
 	printProgressEnd();
@@ -845,6 +878,13 @@ size_t collectFatDeleted(Json& files, Tally& tally) {
 		std::stable_sort(deleted.begin(), deleted.end(), [](const FatEntry& a, const FatEntry& b) { return ticks(a.modified) > ticks(b.modified); });
 		const std::wstring reading = L"Raw " + volume.type() + L" reading (\\\\.\\" + mountPoint + L")";
 		for (const FatEntry& e : deleted) {
+			/* Its Context as it goes into the list: the SHA-256 is the file's
+			   only when every byte was read on clusters known to be its own. */
+			const auto push = [&](Json& o, const std::wstring& wholeSha256) {
+				addDeletedContext(o, e.nameIncomplete ? std::wstring() : mountPoint + e.path, std::wstring(), wholeSha256,
+				                  rawVolumeEvidence(mountPoint));
+				files.push(std::move(o));
+			};
 			Json o = Json::obj();
 			o.add(L"Volume", Json::str(mountPoint));
 			o.add(L"Source", Json::str(L"FatEntry"));
@@ -858,7 +898,7 @@ size_t collectFatDeleted(Json& files, Tally& tally) {
 				o.add(L"State", Json::str(L"NotRead"));
 				o.add(L"Reason", Json::str(L"max_total_mib reached"));
 				++tally.notRead;   // counted as NTFS's are: the audit's total is all of them
-				files.push(std::move(o));
+				push(o, std::wstring());
 				continue;
 			}
 			// The chain erased: the clusters that follow the first, contiguous —
@@ -895,16 +935,18 @@ size_t collectFatDeleted(Json& files, Tally& tally) {
 			++read;
 			if (recovery.state != RecoveryState::Recovered && recovery.state != RecoveryState::Partial) {
 				++tally.lost;
-				files.push(std::move(o));
+				push(o, std::wstring());
 				continue;
 			}
 			if (recovery.state == RecoveryState::Partial) ++tally.partial;
 			tally.recovered[mountPoint].add(e.firstCluster - 2, clusters, 1);
+			const bool whole = recovery.state == RecoveryState::Recovered && e.contiguous;
 			if (!copy) {
-				addRecoveredDigests(o, md5.hexDigest(), sha1.hexDigest(), sha256.hexDigest());
+				const std::wstring digest = sha256.hexDigest();
+				addRecoveredDigests(o, md5.hexDigest(), sha1.hexDigest(), digest);
 				o.add(L"Copied", Json::boolean(false));
 				o.add(L"NotCopied", Json::str(L"larger than max_file_mib"));
-				files.push(std::move(o));
+				push(o, whole ? digest : std::wstring());
 				continue;
 			}
 			const std::wstring name = e.path.substr(e.path.find_last_of(L'\\') + 1);
@@ -923,7 +965,7 @@ size_t collectFatDeleted(Json& files, Tally& tally) {
 			}
 			if (!stored.signature.empty()) o.add(L"Signature", Json::str(stored.signature));
 			if (!stored.notCopied.empty()) o.add(L"NotCopied", Json::str(stored.notCopied));
-			files.push(std::move(o));
+			push(o, whole ? line.fingerprints.sha256 : std::wstring());
 		}
 		tally.recovered[mountPoint].finish();
 	}
@@ -1002,7 +1044,8 @@ size_t collectIndexSlack(const std::wstring& volume, Json& files) {
 				o.add(L"Source", Json::str(L"IndexSlack"));
 				o.add(L"Entry", Json::num(e.entry));
 				o.add(L"Sequence", Json::num(e.sequence));
-				o.add(L"Path", Json::str((folder.size() > 3 ? folder : folder.substr(0, 2)) + L"\\" + e.name));
+				const std::wstring path = (folder.size() > 3 ? folder : folder.substr(0, 2)) + L"\\" + e.name;
+				o.add(L"Path", Json::str(path));
 				o.add(L"ParentEntry", Json::num(directory));
 				o.add(L"Size", Json::num(e.size));
 				addUtcDate(o, L"FileNameCreatedUtc", e.created);
@@ -1016,6 +1059,8 @@ size_t collectIndexSlack(const std::wstring& volume, Json& files) {
 				const std::wstring now = mft.livePathOf(e.entry, e.sequence, complete);
 				if (!now.empty() && complete) o.add(L"CurrentPath", Json::str(now));
 				o.add(L"State", Json::str(L"NameOnly"));
+				addDeletedContext(o, path, contextNtfs(path, e.entry, e.sequence), std::wstring(),
+				                  (folder.size() > 3 ? folder : folder.substr(0, 3)) + L":$I30", complete ? now : std::wstring());
 				files.push(std::move(o));
 				++added;
 			}
@@ -1052,13 +1097,17 @@ HRESULT DeletedFilesCollect() {
 			Json o = describe(c);
 			o.add(L"State", Json::str(L"NotRead"));
 			o.add(L"Reason", Json::str(L"max_total_mib reached"));
+			addRecordContext(o, c, std::wstring());
 			files.push(std::move(o));
 			++tally.notRead;
 			continue;
 		}
 		printProgressStep(L"$DeletedFiles", (unsigned)k + 1, (unsigned)candidates.size());
 		const auto volumeClaims = claims.find(c.volume);
-		files.push(recoverOne(c, volumeClaims == claims.end() ? nullptr : &volumeClaims->second, tally));
+		std::wstring wholeSha256;
+		Json o = recoverOne(c, volumeClaims == claims.end() ? nullptr : &volumeClaims->second, tally, wholeSha256);
+		addRecordContext(o, c, wholeSha256);
+		files.push(std::move(o));
 		++tally.listed;
 	}
 	printProgressEnd();

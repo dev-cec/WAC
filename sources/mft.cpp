@@ -2,6 +2,7 @@
  *  \brief The $MFT of the system volume, read from its exhibit (see mft.h).
  */
 #include "mft.h"
+#include "context.h"
 #include "long_path.h"
 #include "conversions.h"
 #include "consigne.h"
@@ -155,6 +156,21 @@ Json MftEntry::toJson(const std::wstring& path, bool pathComplete,
 	Json list = Json::arr();
 	for (const std::wstring& s : streams) list.push(Json::str(s));
 	o.add(L"Streams", std::move(list));
+	/* Context (B-089): the file existed — or its record is free, a deletion —,
+	   by its path and its NTFS identity; its other names beside it. Kept short:
+	   hundreds of thousands of records. */
+	RecordContext context;
+	context.kind = inUse ? ContextKind::Presence : ContextKind::Deletion;
+	if (pathComplete) context.subject.path = contextPath(path);
+	context.subject.ntfs = contextNtfs(volume + L"\\", entry, sequence);
+	for (const std::wstring& other : hardLinkPaths) {
+		ContextObject link;
+		link.role = L"HardLink";
+		link.path = contextPath(other);
+		context.related.push_back(std::move(link));
+	}
+	context.evidence = volume + L"\\$MFT";
+	addContext(o, context);
 	return o;
 }
 

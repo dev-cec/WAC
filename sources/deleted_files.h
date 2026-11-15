@@ -246,6 +246,20 @@ uint64_t carveClusters(const ClusterSource& volume, uint64_t maxFile, const std:
  *  refuses in a name replaced by "_", at most 120 characters. */
 std::wstring safeFileName(const std::wstring& name);
 
+/*! Adds the Context of a deleted file: a Deletion — or a Modification when
+ *  the file lives on under another name —, its former path when whole, its
+ *  NTFS identity, and the SHA-256 of its content only when every byte of it
+ *  was recovered: a partial content, or one read on a contiguity assumed, is
+ *  not the file's, and would relate it to nothing or to the wrong file.
+ *  @param o the record
+ *  @param path its former path, "" when incomplete
+ *  @param ntfs contextNtfs, "" on FAT and for a carved file
+ *  @param wholeSha256 the SHA-256 of the whole content, "" otherwise
+ *  @param evidence where WAC read it
+ *  @param currentPath its path now, when it was renamed and not deleted */
+void addDeletedContext(Json& o, const std::wstring& path, const std::wstring& ntfs, const std::wstring& wholeSha256,
+                       const std::wstring& evidence, const std::wstring& currentPath = std::wstring());
+
 /*! --collect: recovers the deleted files of every fixed NTFS volume into the
  *  exhibit store, and writes the snapshot the conversion reads. To be called
  *  after the $MFT's working copy exists, and after the executables' walk

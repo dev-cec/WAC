@@ -2518,8 +2518,11 @@ provider and identifier: who opened which session, started which process,
 installed which service; an identifier outside the table gets none), the
 arrivals (Zone.Identifier, BITS, web downloads and visits, mail attachments)
 and persistence (Run, registry mechanisms, services, scheduled tasks, startup,
-PowerShell profiles, WMI: the program started, apart from its arguments); the
-other families receive it in turn. It holds identities only --- the dates stay in the
+PowerShell profiles, WMI: the program started, apart from its arguments) and
+the file system (MFT, USN journal, deleted files, recycle bin, FAT: presence,
+creation, modification or deletion, the file by its path and NTFS identity; a
+deleted file's fingerprint only when all its content came back); the other
+families receive it in turn. It holds identities only --- the dates stay in the
 record's fields --- and serves to relate the artefacts: the same file, account
 or software has the same form whatever artefact names it.
 \begin{description}

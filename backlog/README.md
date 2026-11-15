@@ -89,7 +89,7 @@ le 2026-11-14 : le socle B-079, puis une fiche par famille d'artefacts
 | [B-086](B-086-contexte-evenements.md) | Contexte de liaison : événements | à valider | P1 | moyen |
 | [B-087](B-087-contexte-arrivees.md) | Contexte de liaison : arrivées | à valider | P1 | moyen |
 | [B-088](B-088-contexte-persistance.md) | Contexte de liaison : persistance | à valider | P1 | moyen |
-| [B-089](B-089-contexte-systeme-fichiers.md) | Contexte de liaison : système de fichiers | à faire | P1 | moyen |
+| [B-089](B-089-contexte-systeme-fichiers.md) | Contexte de liaison : système de fichiers | en cours | P1 | moyen |
 | [B-090](B-090-contexte-acces.md) | Contexte de liaison : accès | à faire | P1 | moyen |
 | [B-091](B-091-contexte-comptes-sessions.md) | Contexte de liaison : comptes et sessions | à faire | P1 | moyen |
 | [B-092](B-092-contexte-appareils-volumes.md) | Contexte de liaison : appareils et volumes | à faire | P1 | moyen |

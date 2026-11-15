@@ -205,6 +205,23 @@ void journal(const std::wstring& folder) {
 	check(third.find(L"PathIncomplete") != nullptr, "the parent reused since is named");
 	reasons = third.find(L"Reasons");
 	check(reasons && reasons->text() == L"FILE_DELETE, CLOSE", "reasons of a deletion");
+
+	/* The Context (B-089): what the change was, from its reasons, and the
+	   file by its NTFS identity — the path only when it is whole. */
+	auto at = [](const Json& record, std::initializer_list<const wchar_t*> keys) {
+		const Json* j = record.find(L"Context");
+		for (const wchar_t* key : keys) j = j ? j->find(key) : nullptr;
+		return j ? j->text() : std::wstring();
+	};
+	check(at(first, { L"Kind" }) == L"Creation" && at(first, { L"Subject", L"Path" }) == L"C:\\file1.bin"
+	      && at(first, { L"Subject", L"Ntfs" }) == L"C:|64|1"
+	      && at(first, { L"Evidence", L"Path" }) == L"C:\\$Extend\\$UsnJrnl:$J",
+	      "context: a creation, its file by path and NTFS identity, the journal the evidence");
+	check(at(second, { L"Kind" }) == L"Modification" && at(second, { L"Subject", L"Ntfs" }) == L"C:|24|1",
+	      "context: neither a creation nor a deletion is a modification");
+	check(at(third, { L"Kind" }) == L"Deletion" && at(third, { L"Subject", L"Path" }).empty()
+	      && at(third, { L"Subject", L"Ntfs" }) == L"C:|65|1",
+	      "context: a deletion, an incomplete path not written, the NTFS identity kept");
 }
 
 //! Damaged records against a guard page on both sides.

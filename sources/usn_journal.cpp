@@ -2,6 +2,7 @@
  *  \brief The change journal of an NTFS volume, read from its exhibit (see usn_journal.h).
  */
 #include "usn_journal.h"
+#include "context.h"
 #include "mft.h"
 #include "conversions.h"
 #include "consigne.h"
@@ -103,7 +104,8 @@ Json UsnRecord::toJson(const Mft& mft) const {
 	o.add(L"Name", Json::str(name));
 	bool complete = true;
 	const std::wstring folder = mft.pathOf(parentEntry, parentSequence, complete);
-	o.add(L"Path", Json::str(folder.empty() ? std::wstring() : folder + (folder.back() == L'\\' ? L"" : L"\\") + name));
+	const std::wstring path = folder.empty() ? std::wstring() : folder + (folder.back() == L'\\' ? L"" : L"\\") + name;
+	o.add(L"Path", Json::str(path));
 	if (folder.empty() || !complete) o.add(L"PathIncomplete", Json::boolean(true));
 	o.add(L"Reasons", Json::str(reasonNames(reason)));
 	o.add(L"Sources", Json::str(sourceNames(sourceInfo)));
@@ -116,6 +118,17 @@ Json UsnRecord::toJson(const Mft& mft) const {
 	   $STANDARD_INFORMATION): 0 names no descriptor — $Secure numbers them from
 	   0x100 — and is not emitted. */
 	if (securityId) o.add(L"SecurityId", Json::num(securityId));
+	/* Context (B-089): what the change was, by its reasons — a creation, a
+	   deletion, otherwise a modification (data, name, attributes) —, of which
+	   file, by its path and NTFS identity. */
+	const uint32_t REASON_CREATE = 0x00000100, REASON_DELETE = 0x00000200;   // USN_REASON_FILE_CREATE, _FILE_DELETE
+	RecordContext context;
+	context.kind = (reason & REASON_DELETE) ? ContextKind::Deletion
+	             : (reason & REASON_CREATE) ? ContextKind::Creation : ContextKind::Modification;
+	if (complete) context.subject.path = contextPath(path);
+	context.subject.ntfs = contextNtfs(mft.volume() + L"\\", fileEntry, fileSequence);
+	context.evidence = mft.volume() + L"\\$Extend\\$UsnJrnl:$J";
+	addContext(o, context);
 	return o;
 }
 

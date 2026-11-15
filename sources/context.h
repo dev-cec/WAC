@@ -121,6 +121,11 @@ std::wstring contextPath(const std::wstring& cited);
  *  @return the identity, or "" when the path has no drive letter */
 std::wstring contextNtfs(const std::wstring& path, unsigned long long entry, unsigned sequence);
 
+/*! THE Evidence of what is read raw on a volume, outside any file (a FAT
+ *  directory entry, free clusters carved): the volume's device, \\.\C:.
+ *  @param volume "C:"… */
+std::wstring rawVolumeEvidence(const std::wstring& volume);
+
 /*! Fills a file object: its path (contextPath) and the fingerprints WAC
  *  computed on the whole file (binaires.h), never a partial one.
  *  @param object the object

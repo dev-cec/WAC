@@ -506,6 +506,7 @@ def cross_checks(folder):
     found += guarded(check_context_events, folder)
     found += guarded(check_context_arrivals, folder)
     found += guarded(check_context_persistence, folder)
+    found += guarded(check_context_filesystem, folder)
     found += guarded(check_prefetch_mft_references, folder)
     found += guarded(check_cited_fingerprints, folder)
     found += guarded(check_shimcache_dates, folder)
@@ -6423,6 +6424,79 @@ def check_context_persistence(folder):
     print(f"  {'✅' if ok else '❌'} Context of persistence: {seen} witness(es) of the harness the subject of their record "
           f"(IFEO, SilentProcessExit, Run of DEFAULT, startup script with its SHA-256); no service nor task left unresolved"
           + ("" if ok else f": {(wrong + unresolved)[:3]}"))
+    return 0 if ok else 1
+
+
+def check_context_filesystem(folder):
+    """The Context of the file system (B-089). Every record of mft.json and
+    usn_journal.json: its NTFS identity the record's own volume, entry and
+    sequence, its Kind the one its fields say (a free record a Deletion; a
+    change by its Reasons). Then the harness's witnesses: each deleted file
+    of C: whose content came back whole has, as its subject's SHA-256, the
+    one Windows computed before the deletion, and the NTFS identity the
+    change journal gave its deletion — two sources, one file; a content not
+    whole (Partial, or read on a contiguity assumed on FAT) carries none.
+    The file sent to the bin is the subject of its $I, its user the actor,
+    and the $R copy beside it a file mft.json lists."""
+    path = os.path.join(folder, "reference", "file-artefacts.txt")
+    lines = open(path, encoding="utf-8-sig", errors="replace").read().splitlines() if os.path.exists(path) else []
+    def ref(key):
+        return [l[len(key) + 1:].split("|") for l in lines if l.startswith(key + "=")]
+    def subject(c, key):
+        return str((c.get("Subject") or {}).get(key) or "")
+    wrong, counted = [], {}
+    mft = load(folder, "mft.json")
+    for r, c in contexts(folder, "mft.json") if isinstance(mft, list) else []:
+        counted["mft"] = counted.get("mft", 0) + 1
+        kind = "Deletion" if r.get("Deleted") else "Presence"
+        ntfs = f"{str(r.get('Volume', '')).upper()}|{r.get('Entry')}|{r.get('Sequence')}"
+        if c.get("Kind") != kind or subject(c, "Ntfs") != ntfs \
+                or (not r.get("PathIncomplete") and subject(c, "Path").lower() != str(r.get("Path", "")).lower()):
+            wrong.append(f"mft {r.get('Path')}: Context {c}")
+    deleted_ids = {}
+    for r, c in contexts(folder, "usn_journal.json"):
+        counted["usn"] = counted.get("usn", 0) + 1
+        reasons = str(r.get("Reasons", ""))
+        kind = "Deletion" if "FILE_DELETE" in reasons else "Creation" if "FILE_CREATE" in reasons else "Modification"
+        ntfs = f"{str(r.get('Volume', '')).upper()}|{r.get('FileEntry')}|{r.get('FileSequence')}"
+        if c.get("Kind") != kind or subject(c, "Ntfs") != ntfs:
+            wrong.append(f"usn {r.get('Path')} {reasons}: Context {c}")
+        if kind == "Deletion":
+            deleted_ids[str(r.get("Path", "")).lower()] = ntfs
+    files = load(folder, "deleted_files.json")
+    by_path = {str(f.get("Path", "")).lower(): f for f in files or [] if isinstance(f, dict)} if isinstance(files, list) else {}
+    for f in files if isinstance(files, list) else []:
+        c, state = f.get("Context") or {}, f.get("State")
+        whole = state in ("Recovered", "Carved")   # a carved file: cut where its structure ends
+        if whole != bool(subject(c, "Sha256")) or (whole and subject(c, "Sha256").upper() != str(f.get("RecoveredSHA256", "")).upper()):
+            wrong.append(f"deleted {f.get('Path')} {state}: subject's SHA-256 {subject(c, 'Sha256') or 'absent'}")
+    for file, size, digest, *rest in ref("deleted") + ref("fatdeleted"):
+        f = by_path.get(file.lower())
+        if not f or f.get("State") != "Recovered":
+            continue   # not recovered whole: check_deleted_files and check_deleted_fat say why
+        c = f.get("Context") or {}
+        counted["witness"] = counted.get("witness", 0) + 1
+        if c.get("Kind") != "Deletion" or subject(c, "Path").lower() != file.lower() or subject(c, "Sha256").upper() != digest.upper():
+            wrong.append(f"witness {file}: Context {c}")
+        elif f.get("Source") == "MftRecord" and file.lower() in deleted_ids and subject(c, "Ntfs") != deleted_ids[file.lower()]:
+            wrong.append(f"witness {file}: NTFS {subject(c, 'Ntfs')}, the journal deleted {deleted_ids[file.lower()]}")
+    live = {str(e.get("Path", "")).lower() for e in mft or [] if isinstance(e, dict) and not e.get("Deleted")} \
+        if isinstance(mft, list) else set()
+    for (recycled,) in ref("recycled"):
+        mine = [(r, c) for r, c in contexts(folder, "recycle_bin.json") if subject(c, "Path").lower() == recycled.lower()]
+        copies = [str(o.get("Path", "")) for _, c in mine for o in c.get("Related") or [] if o.get("Role") == "RecycledCopy"]
+        counted["recycled"] = len(mine)
+        if not mine or mine[0][1].get("Kind") != "Deletion" or not (mine[0][1].get("Actor") or {}).get("Sid") \
+                or (live and not any(p.lower() in live for p in copies)):
+            wrong.append(f"recycled {recycled}: Context {mine[0][1] if mine else 'absent'}, copy {copies} in mft.json: "
+                         f"{any(p.lower() in live for p in copies)}")
+    if not counted:
+        print("  ⏭️  no record of the file system: its Context not checked")
+        return 0
+    ok = not wrong
+    print(f"  {'✅' if ok else '❌'} Context of the file system: {counted} — kind and NTFS identity of every record of "
+          f"mft.json and usn_journal.json; deleted witnesses by SHA-256 and the journal's identity; the bin's copy in mft.json"
+          + ("" if ok else f": {len(wrong)} wrong, {wrong[:3]}"))
     return 0 if ok else 1
 
 

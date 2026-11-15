@@ -5,6 +5,7 @@
 #include "long_path.h"
 #include "audit.h"
 #include "consigne.h"
+#include "context.h"
 #include "idList.h"
 #include "quickdigest5.h"
 #include "running_machine.h"
@@ -227,6 +228,14 @@ Json FatVolumeEntry::toJson() const {
 	addFatDate(o, L"Modified", e.modified, e.modifiedUtc, e.modifiedOffset,
 	           fileSystem == L"exFAT" ? Precision::HundredNanoseconds : Precision::Second, copied ? &e.created : nullptr);
 	addFatDate(o, L"Accessed", e.accessed, e.accessedUtc, e.accessedOffset, Precision::Second);
+	/* Its Context: present, or deleted; its path when the name is whole —
+	   a deleted entry lost its first letter. FAT has no file identity of
+	   its own: the path alone relates it. Read raw on the volume. */
+	RecordContext context;
+	context.kind = e.deleted ? ContextKind::Deletion : ContextKind::Presence;
+	if (!e.nameIncomplete) context.subject.path = contextPath(volume + e.path);
+	context.evidence = rawVolumeEvidence(volume);
+	addContext(o, context);
 	return o;
 }
 

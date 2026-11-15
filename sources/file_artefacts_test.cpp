@@ -49,6 +49,9 @@
 #include "web_client.h"
 #include "search_index.h"
 #include "rdp_client.h"
+#include "deleted_files.h"
+#include "fat_volumes.h"
+#include "mft.h"
 #include "rdp_server.h"
 #include "thumbcache.h"
 #include "reg_amcache.h"
@@ -1101,6 +1104,81 @@ void defenderHistory() {
 		      && at(consumerContext, { L"Subject", L"Name" }) == L"WacConsumer"
 		      && at(consumerContext, { L"How", L"CommandLine" }) == L"C:\\Windows\\System32\\cmd.exe /c echo x",
 		      "wmi: a command line consumer's program, its name and its command (B-088)");
+
+		/* B-089: the file system. A record of the $MFT, free or in use, its
+		   other names beside it; a deleted file, its SHA-256 only when its
+		   content is whole; the bin's index and its copy; a FAT entry. */
+		MftEntry freed;
+		freed.entry = 64;
+		freed.sequence = 3;
+		freed.inUse = false;
+		const Json freedRecord = freed.toJson(L"C:\\Users\\wac\\x.txt", true, { L"C:\\Users\\wac\\y.txt" }, L"C:");
+		const Json* freedContext = freedRecord.find(L"Context");
+		check(at(freedContext, { L"Kind" }) == L"Deletion" && at(freedContext, { L"Subject", L"Path" }) == L"C:\\Users\\wac\\x.txt"
+		      && at(freedContext, { L"Subject", L"Ntfs" }) == L"C:|64|3" && at(freedContext, { L"Evidence", L"Path" }) == L"C:\\$MFT"
+		      && freedContext && freedContext->dump().find(L"\"Role\": \"HardLink\"") != std::wstring::npos
+		      && freedContext->dump().find(L"C:\\\\Users\\\\wac\\\\y.txt") != std::wstring::npos,
+		      "mft: a free record a deletion, by path and NTFS identity, its other name beside it (B-089)");
+		MftEntry live;
+		live.entry = 70;
+		live.sequence = 1;
+		live.inUse = true;
+		const Json liveRecord = live.toJson(L"C:\\?\\part", false, {}, L"C:");
+		const Json* liveContext = liveRecord.find(L"Context");
+		check(at(liveContext, { L"Kind" }) == L"Presence" && at(liveContext, { L"Subject", L"Path" }).empty()
+		      && at(liveContext, { L"Subject", L"Ntfs" }) == L"C:|70|1",
+		      "mft: a record in use a presence; an incomplete path not written (B-089)");
+		Json recovered = Json::obj();
+		addDeletedContext(recovered, L"C:\\Users\\wac\\gone.exe", L"C:|80|2", L"ab12", L"C:\\$MFT");
+		Json renamed = Json::obj();
+		addDeletedContext(renamed, L"C:\\old.txt", L"C:|81|1", L"", L"C:\\:$I30", L"C:\\new.txt");
+		Json carved = Json::obj();
+		addDeletedContext(carved, L"", L"", L"", rawVolumeEvidence(L"C:"));
+		const Json* recoveredContext = recovered.find(L"Context");
+		const Json* renamedContext = renamed.find(L"Context");
+		const Json* carvedContext = carved.find(L"Context");
+		check(at(recoveredContext, { L"Kind" }) == L"Deletion" && at(recoveredContext, { L"Subject", L"Path" }) == L"C:\\Users\\wac\\gone.exe"
+		      && at(recoveredContext, { L"Subject", L"Sha256" }) == L"ab12" && at(recoveredContext, { L"Subject", L"Ntfs" }) == L"C:|80|2",
+		      "deleted files: a whole content's SHA-256 in the subject (B-089)");
+		check(at(renamedContext, { L"Kind" }) == L"Modification" && at(renamedContext, { L"Subject", L"Sha256" }).empty()
+		      && renamedContext && renamedContext->dump().find(L"\"Role\": \"CurrentName\"") != std::wstring::npos
+		      && renamedContext->dump().find(L"C:\\\\new.txt") != std::wstring::npos,
+		      "deleted files: a name now another's is a renaming, the current name beside it (B-089)");
+		check(at(carvedContext, { L"Kind" }) == L"Deletion" && at(carvedContext, { L"Subject", L"Path" }).empty()
+		      && at(carvedContext, { L"Evidence", L"Path" }) == L"\\\\.\\C:",
+		      "deleted files: a carved file, read raw on its volume (B-089)");
+		RecycledFile bin;
+		bin.indexFile = L"C:\\$Recycle.Bin\\S-1-5-21-1-2-3-1000\\$IAB12CD.exe";
+		bin.sid = L"S-1-5-21-1-2-3-1000";
+		bin.version = 2;
+		bin.originalPath = L"C:\\Users\\wac\\evil.exe";
+		const Json binRecord = bin.toJson();
+		const Json* binContext = binRecord.find(L"Context");
+		check(at(binContext, { L"Kind" }) == L"Deletion" && at(binContext, { L"Subject", L"Path" }) == L"C:\\Users\\wac\\evil.exe"
+		      && at(binContext, { L"Actor", L"Sid" }) == L"S-1-5-21-1-2-3-1000"
+		      && at(binContext, { L"Evidence", L"Path" }) == L"C:\\$Recycle.Bin\\S-1-5-21-1-2-3-1000\\$IAB12CD.exe"
+		      && binContext && binContext->dump().find(L"$Recycle.Bin\\\\S-1-5-21-1-2-3-1000\\\\$RAB12CD.exe") != std::wstring::npos,
+		      "recycle bin: the original path deleted by the folder's user, the $R copy beside it (B-089)");
+		RecycledFile info2;
+		info2.indexFile = L"C:\\RECYCLER\\S-1-5-21-1-2-3-1000\\INFO2";
+		info2.recycledName = L"Dc1.txt";
+		info2.originalPath = L"C:\\a.txt";
+		const Json info2Record = info2.toJson();
+		const Json* info2Context = info2Record.find(L"Context");
+		check(info2Context && info2Context->dump().find(L"RECYCLER\\\\S-1-5-21-1-2-3-1000\\\\Dc1.txt") != std::wstring::npos,
+		      "recycle bin: Windows XP's copy named by INFO2 (B-089)");
+		FatVolumeEntry present, erased;
+		present.volume = erased.volume = L"I:";
+		present.entry.path = L"\\DIR\\kept.txt";
+		erased.entry.path = L"\\_ONE.TXT";
+		erased.entry.deleted = erased.entry.nameIncomplete = true;
+		const Json presentRecord = present.toJson(), erasedRecord = erased.toJson();
+		const Json* presentContext = presentRecord.find(L"Context");
+		const Json* erasedContext = erasedRecord.find(L"Context");
+		check(at(presentContext, { L"Kind" }) == L"Presence" && at(presentContext, { L"Subject", L"Path" }) == L"I:\\DIR\\kept.txt"
+		      && at(presentContext, { L"Evidence", L"Path" }) == L"\\\\.\\I:"
+		      && at(erasedContext, { L"Kind" }) == L"Deletion" && at(erasedContext, { L"Subject", L"Path" }).empty(),
+		      "fat: an entry present or deleted, a name without its first letter not written (B-089)");
 		conf.systemDrive = savedDrive;
 		conf.profiles = savedProfiles;
 	}

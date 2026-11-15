@@ -4,6 +4,7 @@
 #include "conversions.h"
 #include "recycle_bin.h"
 #include "consigne.h"
+#include "context.h"
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -104,6 +105,38 @@ bool parseInfo2(const std::vector<uint8_t>& bytes, const std::wstring& indexFile
 	return true;
 }
 
+/*! The copy of the deleted file in the bin, beside its index: INFO2's
+ *  D<letter><n> (Windows XP), or the `$R` named as its `$I` (Vista and later).
+ *  @return its path, "" when the index file is neither */
+static std::wstring recycledCopyPath(const RecycledFile& f) {
+	const size_t slash = f.indexFile.find_last_of(L'\\');
+	if (slash == std::wstring::npos) return std::wstring();
+	const std::wstring folder = f.indexFile.substr(0, slash + 1);
+	if (!f.recycledName.empty()) return folder + f.recycledName;
+	const std::wstring name = f.indexFile.substr(slash + 1);
+	if (name.size() > 2 && name.compare(0, 2, L"$I") == 0) return folder + L"$R" + name.substr(2);
+	return std::wstring();
+}
+
+/*! The Context of a deleted file: a Deletion of its original path, by the
+ *  user whose folder of the bin holds it, its copy in the bin related; the
+ *  index file the evidence. */
+static void addRecycledContext(Json& o, const RecycledFile& f) {
+	RecordContext context;
+	context.kind = ContextKind::Deletion;
+	context.subject.path = contextPath(f.originalPath);
+	const std::wstring copy = recycledCopyPath(f);
+	if (!f.unsupportedFormat && !copy.empty()) {
+		ContextObject recycled;
+		recycled.role = L"RecycledCopy";
+		recycled.path = contextPath(copy);
+		context.related.push_back(std::move(recycled));
+	}
+	context.actor.sid = f.sid;
+	context.evidence = f.indexFile;
+	addContext(o, context);
+}
+
 Json RecycledFile::toJson() const {
 	Json o = Json::obj();
 	addUser(o, sid);
@@ -111,6 +144,7 @@ Json RecycledFile::toJson() const {
 		o.add(L"IndexFile", Json::str(indexFile));
 		o.add(L"FormatVersion", Json::num(version));
 		addUnsupportedFormat(o, "recycle_bin", formatSignature(version));
+		addRecycledContext(o, *this);
 		return o;
 	}
 	o.add(L"OriginalPath", Json::str(originalPath));
@@ -119,6 +153,7 @@ Json RecycledFile::toJson() const {
 	addDate(o, L"Deleted", deletedUtc);
 	o.add(L"IndexFile", Json::str(indexFile));
 	o.add(L"FormatVersion", Json::num(version));
+	addRecycledContext(o, *this);
 	return o;
 }
 
