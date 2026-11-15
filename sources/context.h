@@ -116,6 +116,15 @@ struct RecordContext {
  *  @return the path, or "" when it names no determinable local file */
 std::wstring contextPath(const std::wstring& cited);
 
+/*! The subject's path of a record whose own Path is already in the
+ *  Context's form — mft.json, usn_journal.json, hundreds of thousands of
+ *  records each —: "" when contextPath leaves it unchanged, for the reader
+ *  to take the record's Path (decision of 2026-11-15: +39 % and +61 % on a
+ *  Windows 11 collection, written twice); the normalised path otherwise.
+ *  @param path the record's Path
+ *  @return what Subject.Path holds */
+std::wstring subjectPathIfDifferent(const std::wstring& path);
+
 /*! THE form of an NTFS identity in a Context: "C:|entry|sequence", the
  *  volume taken from the path's drive letter.
  *  @param path the file's path, with its drive letter

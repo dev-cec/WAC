@@ -2681,7 +2681,11 @@ remis sur sa lettre, un dossier connu (UserAssist) sur son dossier réel ---
 System32 et SysWOW64 distingués. \fichier{investigation.json} donne, dans
 \champ{Host.Volumes} et \champ{Host.Profiles}, les volumes (lettre, nom de
 périphérique, GUID, numéro de série) et les profils (SID, dossier) relevés à
-la collecte, qui servent à ces résolutions.
+la collecte, qui servent à ces résolutions. Dans \fichier{mft.json} et
+\fichier{usn\_journal.json}, des centaines de milliers d'enregistrements chacun,
+\champ{Subject.Path} n'est pas écrit quand il est identique au champ
+\champ{Path} de l'enregistrement : le sujet est alors ce \champ{Path}, s'il
+est complet (sans \champ{PathIncomplete}).
 
 \section{Un champ absent n'est pas un champ vide}
 

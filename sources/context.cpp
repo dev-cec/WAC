@@ -105,6 +105,11 @@ std::wstring contextPath(const std::wstring& cited) {
 	return normalizeFilePath(onDriveLetter(cited));
 }
 
+std::wstring subjectPathIfDifferent(const std::wstring& path) {
+	const std::wstring normalised = contextPath(path);
+	return normalised == path ? L"" : normalised;
+}
+
 std::wstring contextNtfs(const std::wstring& path, unsigned long long entry, unsigned sequence) {
 	if (path.size() < 2 || path[1] != L':' || !iswalpha(path[0])) return L"";
 	return std::wstring(1, (wchar_t)towupper(path[0])) + L":|" + std::to_wstring(entry) + L"|" + std::to_wstring(sequence);

@@ -2569,7 +2569,10 @@ letter, a known folder (UserAssist) on its real folder --- System32 and SysWOW64
 kept apart. \fichier{investigation.json} gives, in \champ{Host.Volumes} and
 \champ{Host.Profiles}, the volumes (letter, device name, GUID, serial number)
 and the profiles (SID, folder) observed at the collection, which these
-resolutions use.
+resolutions use. In \fichier{mft.json} and \fichier{usn\_journal.json},
+hundreds of thousands of records each, \champ{Subject.Path} is not written
+when it equals the record's own \champ{Path}: the subject is then that
+\champ{Path}, when it is complete (no \champ{PathIncomplete}).
 
 \section{A missing field is not an empty field}
 

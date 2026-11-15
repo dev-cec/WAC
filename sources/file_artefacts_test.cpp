@@ -1125,12 +1125,14 @@ void defenderHistory() {
 		freed.inUse = false;
 		const Json freedRecord = freed.toJson(L"C:\\Users\\wac\\x.txt", true, { L"C:\\Users\\wac\\y.txt" }, L"C:");
 		const Json* freedContext = freedRecord.find(L"Context");
-		check(at(freedContext, { L"Kind" }) == L"Deletion" && at(freedContext, { L"Subject", L"Path" }) == L"C:\\Users\\wac\\x.txt"
+		check(at(freedContext, { L"Kind" }) == L"Deletion" && at(freedContext, { L"Subject", L"Path" }).empty()
 		      && at(freedContext, { L"Subject", L"Ntfs" }) == L"C:|64|2" && at(freedContext, { L"Evidence", L"Path" }) == L"C:\\$MFT"
 		      && freedContext && freedContext->dump().find(L"\"Role\": \"HardLink\"") != std::wstring::npos
 		      && freedContext->dump().find(L"C:\\\\Users\\\\wac\\\\y.txt") != std::wstring::npos,
-		      "mft: a free record a deletion, by path and the NTFS identity the file had — one sequence before —, "
-		      "its other name beside it (B-089)");
+		      "mft: a free record a deletion, by the NTFS identity the file had — one sequence before —, "
+		      "its path the record's own, not written twice; its other name beside it (B-089)");
+		check(subjectPathIfDifferent(L"C:\\Users\\wac\\x.txt").empty() && subjectPathIfDifferent(L"c:\\x.txt") == L"C:\\x.txt",
+		      "mft, usn: a record's path in the Context's form not written again; one the form changes written (B-089)");
 		MftEntry live;
 		live.entry = 70;
 		live.sequence = 1;

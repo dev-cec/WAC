@@ -41,13 +41,13 @@ pour `Usbstor.json`), en majuscules (`contextSerial`).
 
 **Ajout au schéma** : `Volume`, le GUID d'un volume (`{…}` en minuscules),
 dans `ContextObject`. B-078 nomme ce GUID parmi les identités d'un volume ;
-aucun champ ne le portait. À signaler à l'utilisateur.
+aucun champ ne le portait. Validé par l'utilisateur le 2026-11-15.
 
 **Renommage préalable** : trois JSON avaient déjà un champ `Context` à eux,
 que le bloc de liaison aurait doublé : `shadow_copies.json` (contexte VSS →
 `SnapshotContext`), `dns_server.json` (colonne du journal → `DnsContext`),
 `intune_logs.json` (attribut CMTrace → `LogContext`). Ni WAE ni le harnais
-ne les lisaient sous ce nom. À signaler à l'utilisateur.
+ne les lisaient sous ce nom. Validé par l'utilisateur le 2026-11-15.
 
 ## Tâches
 - [x] `Context` de chaque JSON de la famille, selon les tableaux de B-078
@@ -65,3 +65,5 @@ ne les lisaient sous ce nom. À signaler à l'utilisateur.
   (majuscules retirées de `contextDevice` : trois tests), restauration,
   `bin/WAC.exe` identique.
 - 2026-11-15 : cycle `win11-test` (`abfbf7d9`) : `check_context_devices` vert — WACUSB0001 ↔ `{9bbdb386-…}` ↔ `I:`, WACUSB0002 ↔ `{9bbdb391-…}` ↔ `J:`, les numéros de série de `C:` et `H:`, 272 appareils sous une seule forme.
+- 2026-11-15 : l'utilisateur valide l'ajout du champ `Volume` au schéma et
+  les renommages `SnapshotContext`, `DnsContext`, `LogContext`.

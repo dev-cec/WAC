@@ -2,7 +2,7 @@
 
 | Statut | Priorité | Effort |
 |---|---|---|
-| à valider | P1 | moyen |
+| en cours | P1 | moyen |
 
 ## Pourquoi
 Famille de l'étude B-078 (schéma validé par l'utilisateur le 2026-11-14) :
@@ -67,3 +67,9 @@ l'USN. Un renommage de l'USN est deux enregistrements (`RENAME_OLD_NAME`,
   `Subject.Path` à côté du `Path` de l'enregistrement. Signalé à
   l'utilisateur.
 - 2026-11-15 : cycle `win11-test` après la correction (`5957e1b1`) : `check_context_filesystem` vert — 18 010 enregistrements libres de `mft.json` recoupés avec la suppression du journal, les témoins supprimés et la corbeille.
+- 2026-11-15 : décision de l'utilisateur sur la taille : « supprime les
+  doublons ». Dans `mft.json` et `usn_journal.json`, `Subject.Path` n'est
+  plus écrit quand il est identique au `Path` de l'enregistrement
+  (`subjectPathIfDifferent`) : le lecteur prend alors ce `Path`, s'il est
+  complet. Règle consignée dans les manuels et dans WAE E-014 ; les
+  contrôles du harnais lisent le chemin effectif (`subject_path`).

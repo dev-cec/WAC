@@ -213,10 +213,11 @@ void journal(const std::wstring& folder) {
 		for (const wchar_t* key : keys) j = j ? j->find(key) : nullptr;
 		return j ? j->text() : std::wstring();
 	};
-	check(at(first, { L"Kind" }) == L"Creation" && at(first, { L"Subject", L"Path" }) == L"C:\\file1.bin"
+	check(at(first, { L"Kind" }) == L"Creation" && at(first, { L"Subject", L"Path" }).empty()
 	      && at(first, { L"Subject", L"Ntfs" }) == L"C:|64|1"
 	      && at(first, { L"Evidence", L"Path" }) == L"C:\\$Extend\\$UsnJrnl:$J",
-	      "context: a creation, its file by path and NTFS identity, the journal the evidence");
+	      "context: a creation, its file by NTFS identity — its path the record's own, not written twice —, "
+	      "the journal the evidence");
 	check(at(second, { L"Kind" }) == L"Modification" && at(second, { L"Subject", L"Ntfs" }) == L"C:|24|1",
 	      "context: neither a creation nor a deletion is a modification");
 	check(at(third, { L"Kind" }) == L"Deletion" && at(third, { L"Subject", L"Path" }).empty()

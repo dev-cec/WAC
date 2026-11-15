@@ -33,7 +33,7 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
 | `search_index.json` | `Presence` | le chemin d'`ItemUrl` (`file:C:/…`) | la base |
 | `thumbcache.json` | aucun ; `Presence` du fichier pour `Thumbs.db` (XP) | — (`ThumbnailCacheId` seul) | acteur, le cache |
 
-**Écarts au tableau de B-078, à signaler à l'utilisateur** :
+**Écarts au tableau de B-078, validés par l'utilisateur le 2026-11-15** :
 - `shortcuts.json` et les jump lists personnalisées : pas de `Kind`. Un
   raccourci du Bureau ou du menu Démarrer, posé par un installateur, et ce
   qu'une application met dans sa propre liste (tâches, épinglés) n'attestent
@@ -82,3 +82,9 @@ d'objet, sur la valeur posée par le harnais, jamais sur la seule forme.
   absence de redirection par `redirectedShellFolder` ; le dossier par défaut
   est alors pris.
 - 2026-11-15 : cycle `win11-test` après la correction (`594dc94c`) : `check_context_accesses` vert, 6 témoins sur 6, dont le shellbag du ZIP avec l'identité NTFS que donne `mft.json`.
+- 2026-11-15 : l'utilisateur valide les écarts au tableau de B-078 ; un
+  raccourci doit ressortir avec sa cible dans la chronologie filtrée : il la
+  porte en `Subject` (72 raccourcis sur 93 du cycle ; les 21 autres visent un
+  objet virtuel de l'Explorateur, sans fichier). La règle « un
+  enregistrement sans `Kind` entre dans le dossier de son sujet » est
+  consignée dans WAE E-014.

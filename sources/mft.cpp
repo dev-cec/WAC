@@ -158,10 +158,12 @@ Json MftEntry::toJson(const std::wstring& path, bool pathComplete,
 	o.add(L"Streams", std::move(list));
 	/* Context (B-089): the file existed — or its record is free, a deletion —,
 	   by its path and the NTFS identity it had; its other names beside it. Kept short:
-	   hundreds of thousands of records. */
+	   hundreds of thousands of records. Its path is the record's own Path,
+	   already in the Context's form: not written twice (+39 % on a Windows
+	   11 collection, decision of 2026-11-15); written only when it differs. */
 	RecordContext context;
 	context.kind = inUse ? ContextKind::Presence : ContextKind::Deletion;
-	if (pathComplete) context.subject.path = contextPath(path);
+	if (pathComplete) context.subject.path = subjectPathIfDifferent(path);
 	const unsigned identity = inUse ? sequence : livedSequence(sequence);   // a free record's is one past the file's
 	if (identity) context.subject.ntfs = contextNtfs(volume + L"\\", entry, identity);
 	for (const std::wstring& other : hardLinkPaths) {

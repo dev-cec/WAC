@@ -6435,6 +6435,16 @@ def check_context_persistence(folder):
     return 0 if ok else 1
 
 
+def subject_path(record, context):
+    """The path a Context's subject names: Subject.Path, or — in mft.json and
+    usn_journal.json, where it is not written twice (2026-11-15) — the
+    record's own Path when that path is complete."""
+    written = str((context.get("Subject") or {}).get("Path") or "")
+    if written or record.get("PathIncomplete"):
+        return written
+    return str(record.get("Path") or "")
+
+
 def check_context_filesystem(folder):
     """The Context of the file system (B-089). Every record of mft.json and
     usn_journal.json: its NTFS identity the record's own volume, entry and
@@ -6473,8 +6483,9 @@ def check_context_filesystem(folder):
         lived = sequence - 1 if r.get("Deleted") else sequence
         ntfs = f"{str(r.get('Volume', '')).upper()}|{r.get('Entry')}|{lived}" if lived > 0 else ""
         if c.get("Kind") != kind or subject(c, "Ntfs") != ntfs \
-                or (not r.get("PathIncomplete") and subject(c, "Path").lower() != str(r.get("Path", "")).lower()):
-            wrong.append(f"mft {r.get('Path')}: Context {c}")
+                or (not r.get("PathIncomplete") and subject_path(r, c).lower() != str(r.get("Path", "")).lower()) \
+                or (subject(c, "Path") and subject(c, "Path") == r.get("Path")):
+            wrong.append(f"mft {r.get('Path')}: Context {c} (a path equal to the record's is not written twice)")
         journal = deleted_ids.get(str(r.get("Path", "")).lower())
         if r.get("Deleted") and journal and journal.split("|")[1] == str(r.get("Entry")):
             counted["mft deleted, the journal's identity"] = counted.get("mft deleted, the journal's identity", 0) + 1
@@ -6761,8 +6772,8 @@ def check_context_network(folder):
         quarantine = [c for r, c in contexts(folder, "defender_quarantine.json") if r.get("EntryId") in entries]
         if quarantine and (subject(quarantine[0], "Path").lower() != file.lower() or subject(quarantine[0], "Sha256") != eicar):
             wrong.append(f"defender_quarantine.json {sorted(entries)}: Context {quarantine[0]}, EICAR {eicar}")
-        deleted = any(c.get("Kind") == "Deletion" and subject(c, "Path").lower() == file.lower()
-                      for _, c in contexts(folder, "usn_journal.json"))
+        deleted = any(c.get("Kind") == "Deletion" and subject_path(r, c).lower() == file.lower()
+                      for r, c in contexts(folder, "usn_journal.json"))
         seen.append("EICAR: detection" + (", quarantine with its SHA-256" if quarantine else "")
                     + (", the journal's deletion" if deleted else ""))
     for address, name in ref("hosts"):

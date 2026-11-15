@@ -125,7 +125,7 @@ Json UsnRecord::toJson(const Mft& mft) const {
 	RecordContext context;
 	context.kind = (reason & REASON_DELETE) ? ContextKind::Deletion
 	             : (reason & REASON_CREATE) ? ContextKind::Creation : ContextKind::Modification;
-	if (complete) context.subject.path = contextPath(path);
+	if (complete) context.subject.path = subjectPathIfDifferent(path);   // the record's Path, not written twice (mft.cpp)
 	context.subject.ntfs = contextNtfs(mft.volume() + L"\\", fileEntry, fileSequence);
 	context.evidence = mft.volume() + L"\\$Extend\\$UsnJrnl:$J";
 	addContext(o, context);
